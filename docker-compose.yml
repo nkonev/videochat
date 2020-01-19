@@ -1,0 +1,20 @@
+# This file used for both developer and demo purposes.
+# It contains environment
+version: '3.7'
+
+services:
+  mongo:
+    image: mongo:4.2.2-bionic
+    restart: unless-stopped
+    ports:
+      - 47017:27017
+    volumes:
+      - mongo_videochat_data_dir:/data/db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+
+volumes:
+  mongo_videochat_data_dir:

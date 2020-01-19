@@ -1,0 +1,11 @@
+!.gitignore
+build
+.project
+.idea
+*.iml
+vendor
+.vendor-new
+minio-data
+blog-storage
+node_modules
+rice-box.go

@@ -1,0 +1,11 @@
+server:
+  address: ":1235"
+  shutdown.timeout: "10s"
+  body.limit: "100G"
+  url: http://localhost:1234
+
+
+mongo:
+  databaseUrl: "mongodb://127.0.0.1:47017/videochat"
+  connect:
+    timeout: '10s'

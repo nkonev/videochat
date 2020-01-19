@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style type="text/css">
+        video {
+            /*filter: opacity(0.5) saturate(200%);*/
+        }
+    </style>
+</head>
+<body>
+This is test https://www.html5rocks.com/en/tutorials/getusermedia/intro/
+<video autoplay></video>
+<script>
+    function hasGetUserMedia() {
+        return !!(navigator.mediaDevices &&
+            navigator.mediaDevices.getUserMedia);
+    }
+
+    if (hasGetUserMedia()) {
+        console.log("Good to go!");
+        const constraints = {
+            video: true,
+            audio: true
+        };
+
+        const video = document.querySelector('video');
+
+
+        window.AudioContext = window.AudioContext ||
+            window.webkitAudioContext;
+
+        const context = new AudioContext();
+
+        navigator.mediaDevices.getUserMedia(constraints).
+        then((stream) => {
+            video.srcObject = stream;
+
+            const microphone = context.createMediaStreamSource(stream);
+            const filter = context.createBiquadFilter();
+            // microphone -> filter -> destination
+            microphone.connect(filter);
+            filter.connect(context.destination);
+        });
+    } else {
+        alert('getUserMedia() is not supported by your browser');
+    }
+</script>
+</body>
+</html>
