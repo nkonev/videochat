@@ -13,6 +13,7 @@ import (
 	"go.uber.org/fx"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type staticMiddleware echo.MiddlewareFunc
@@ -40,7 +41,7 @@ func handleLog(e centrifuge.LogEntry) {
 	Logger.Printf("%s: %v", e.Message, e.Fields)
 }
 
-func configureCentrifuge() *centrifuge.Node {
+func configureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 	// We use default config here as starting point. Default config contains
 	// reasonable values for available options.
 	cfg := centrifuge.DefaultConfig
@@ -49,7 +50,7 @@ func configureCentrifuge() *centrifuge.Node {
 	// many security related checks in library. This is only to make example
 	// short. In real app you most probably want authenticate and authorize
 	// access to server. See godoc and examples in repo for more details.
-	cfg.ClientInsecure = true
+	cfg.ClientInsecure = false
 	// By default clients can not publish messages into channels. Setting this
 	// option to true we allow them to publish.
 	cfg.Publish = true
@@ -92,12 +93,27 @@ func configureCentrifuge() *centrifuge.Node {
 			return centrifuge.DisconnectReply{}
 		})
 
+		//node.On().ClientRefresh(func(ctx context.Context, client *centrifuge.Client, e centrifuge.RefreshEvent) centrifuge.RefreshReply {
+		//	Logger.Printf("user %s connection is going to expire, refreshing", client.UserID())
+		//	return centrifuge.RefreshReply{
+		//		ExpireAt: time.Now().Unix() + 10,
+		//	}
+		//})
+
 		// In our example transport will always be Websocket but it can also be SockJS.
 		transportName := client.Transport().Name()
 		// In our example clients connect with JSON protocol but it can also be Protobuf.
 		transportEncoding := client.Transport().Encoding()
 
 		Logger.Printf("client connected via %s (%s)", transportName, transportEncoding)
+	})
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			// do some work on application stop (like closing connections and files)
+			Logger.Infof("Stopping centrifuge")
+			return node.Shutdown(ctx)
+		},
 	})
 
 	return node
@@ -133,7 +149,7 @@ func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle, node *cen
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/connection/websocket", shim(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{})))
+	e.GET("/connection/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -146,12 +162,27 @@ func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle, node *cen
 	return e
 }
 
-func shim(h *centrifuge.WebsocketHandler) echo.HandlerFunc {
+func convert(h http.Handler) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		h.ServeHTTP(c.Response().Writer, c.Request())
 		return nil
 	}
 }
+
+func centrifugeAuthMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		newCtx := centrifuge.SetCredentials(ctx, &centrifuge.Credentials{
+			UserID:   "42",
+			// TODO to config and increase
+			ExpireAt: time.Now().Unix() + 10,
+			Info:     []byte(`{"name": "Alexander"}`),
+		})
+		r = r.WithContext(newCtx)
+		h.ServeHTTP(w, r)
+	})
+}
+
 
 func configureStaticMiddleware() staticMiddleware {
 	box := rice.MustFindBox("static").HTTPBox()
@@ -159,7 +190,7 @@ func configureStaticMiddleware() staticMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			reqUrl := c.Request().RequestURI
-			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/test-assets") {
+			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") {
 				http.FileServer(box).
 					ServeHTTP(c.Response().Writer, c.Request())
 				return nil
