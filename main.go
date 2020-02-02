@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/GeertJohan/go.rice"
+	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	. "github.com/nkonev/videochat/logger"
@@ -12,7 +13,6 @@ import (
 	"go.uber.org/fx"
 	"net/http"
 	"strings"
-	"github.com/centrifugal/centrifuge"
 )
 
 type staticMiddleware echo.MiddlewareFunc
@@ -73,7 +73,7 @@ func configureCentrifuge() *centrifuge.Node {
 		// disconnect client from server if needed. But now we just accept
 		// all subscriptions.
 		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
-			Logger.Printf("client subscribes on channel %s", e.Channel)
+			Logger.Printf("client id=%v, userId=%v subscribes on channel %s", client.ID(), client.UserID(), e.Channel)
 			return centrifuge.SubscribeReply{}
 		})
 
