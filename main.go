@@ -12,6 +12,7 @@ import (
 	"go.uber.org/fx"
 	"net/http"
 	"strings"
+	"github.com/centrifugal/centrifuge"
 )
 
 type staticMiddleware echo.MiddlewareFunc
@@ -24,17 +25,96 @@ func main() {
 		fx.Logger(Logger),
 		fx.Provide(
 			configureMongo,
+			configureCentrifuge,
 			configureEcho,
 			configureStaticMiddleware,
 		),
-		fx.Invoke(runEcho),
+		fx.Invoke(runCentrifuge, runEcho),
 	)
 	app.Run()
 
 	Logger.Infof("Exit program")
 }
 
-func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle) *echo.Echo {
+func handleLog(e centrifuge.LogEntry) {
+	Logger.Printf("%s: %v", e.Message, e.Fields)
+}
+
+func configureCentrifuge() *centrifuge.Node {
+	// We use default config here as starting point. Default config contains
+	// reasonable values for available options.
+	cfg := centrifuge.DefaultConfig
+	// In this example we want client to do all possible actions with server
+	// without any authentication and authorization. Insecure flag DISABLES
+	// many security related checks in library. This is only to make example
+	// short. In real app you most probably want authenticate and authorize
+	// access to server. See godoc and examples in repo for more details.
+	cfg.ClientInsecure = true
+	// By default clients can not publish messages into channels. Setting this
+	// option to true we allow them to publish.
+	cfg.Publish = true
+
+	// Centrifuge library exposes logs with different log level. In your app
+	// you can set special function to handle these log entries in a way you want.
+	cfg.LogLevel = centrifuge.LogLevelDebug
+	cfg.LogHandler = handleLog
+
+	// Node is the core object in Centrifuge library responsible for many useful
+	// things. Here we initialize new Node instance and pass config to it.
+	node, _ := centrifuge.New(cfg)
+
+	// ClientConnected node event handler is a point where you generally create a
+	// binding between Centrifuge and your app business logic. Callback function you
+	// pass here will be called every time new connection established with server.
+	// Inside this callback function you can set various event handlers for connection.
+	node.On().ClientConnected(func(ctx context.Context, client *centrifuge.Client) {
+		// Set Subscribe Handler to react on every channel subscribtion attempt
+		// initiated by client. Here you can theoretically return an error or
+		// disconnect client from server if needed. But now we just accept
+		// all subscriptions.
+		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
+			Logger.Printf("client subscribes on channel %s", e.Channel)
+			return centrifuge.SubscribeReply{}
+		})
+
+		// Set Publish Handler to react on every channel Publication sent by client.
+		// Inside this method you can validate client permissions to publish into
+		// channel. But in our simple chat app we allow everyone to publish into
+		// any channel.
+		client.On().Publish(func(e centrifuge.PublishEvent) centrifuge.PublishReply {
+			Logger.Printf("client publishes into channel %s: %s", e.Channel, string(e.Data))
+			return centrifuge.PublishReply{}
+		})
+
+		// Set Disconnect Handler to react on client disconnect events.
+		client.On().Disconnect(func(e centrifuge.DisconnectEvent) centrifuge.DisconnectReply {
+			Logger.Printf("client disconnected")
+			return centrifuge.DisconnectReply{}
+		})
+
+		// In our example transport will always be Websocket but it can also be SockJS.
+		transportName := client.Transport().Name()
+		// In our example clients connect with JSON protocol but it can also be Protobuf.
+		transportEncoding := client.Transport().Encoding()
+
+		Logger.Printf("client connected via %s (%s)", transportName, transportEncoding)
+	})
+
+	return node
+}
+
+func runCentrifuge(node *centrifuge.Node) {
+	// Run node.
+	Logger.Infof("Starting centrifuge...")
+	go func() {
+		if err := node.Run(); err != nil {
+			Logger.Fatalf("Error on start centrifuge: %v", err)
+		}
+	}()
+	Logger.Info("Centrifuge started.")
+}
+
+func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle, node *centrifuge.Node) *echo.Echo {
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
@@ -53,7 +133,7 @@ func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle) *echo.Ech
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	//e.GET("/users", fsh.UsersHandler)
+	e.GET("/connection/websocket", shim(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{})))
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -64,6 +144,13 @@ func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle) *echo.Ech
 	})
 
 	return e
+}
+
+func shim(h *centrifuge.WebsocketHandler) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		h.ServeHTTP(c.Response().Writer, c.Request())
+		return nil
+	}
 }
 
 func configureStaticMiddleware() staticMiddleware {

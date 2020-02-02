@@ -1,54 +1,37 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-    <style type="text/css">
-        video {
-            /*filter: opacity(0.5) saturate(200%);*/
-        }
-    </style>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="https://rawgit.com/centrifugal/centrifuge-js/master/dist/centrifuge.min.js"></script>
 </head>
 <body>
-This is test https://www.html5rocks.com/en/tutorials/getusermedia/intro/
-<video autoplay></video>
-<script>
-    function hasGetUserMedia() {
-        return !!(navigator.mediaDevices &&
-            navigator.mediaDevices.getUserMedia);
+<input type="text" id="input" />
+<script type="text/javascript">
+    // Create Centrifuge object with Websocket endpoint address set in main.go
+    var centrifuge = new Centrifuge('ws://localhost:1235/connection/websocket');
+    function drawText(text) {
+        var div = document.createElement('div');
+        div.innerHTML = text + '<br>';
+        document.body.appendChild(div);
     }
-
-    if (hasGetUserMedia()) {
-        console.log("Good to go!");
-        const constraints = {
-            video: true,
-            audio: true
-        };
-
-        const video = document.querySelector('video');
-
-
-        window.AudioContext = window.AudioContext ||
-            window.webkitAudioContext;
-
-        const context = new AudioContext();
-
-        navigator.mediaDevices.getUserMedia(constraints).
-        then((stream) => {
-            video.srcObject = stream;
-
-            const microphone = context.createMediaStreamSource(stream);
-            const filter = context.createBiquadFilter();
-            // microphone -> filter -> destination
-            microphone.connect(filter);
-            filter.connect(context.destination);
-        });
-    } else {
-        alert('getUserMedia() is not supported by your browser');
-    }
+    centrifuge.on('connect', function(ctx){
+        drawText('Connected over ' + ctx.transport);
+    });
+    centrifuge.on('disconnect', function(ctx){
+        drawText('Disconnected: ' + ctx.reason);
+    });
+    var sub = centrifuge.subscribe("chat", function(message) {
+        drawText(JSON.stringify(message));
+    })
+    var input = document.getElementById("input");
+    input.addEventListener('keyup', function(e) {
+        if (e.keyCode == 13) { // ENTER key pressed
+            sub.publish(this.value);
+            input.value = '';
+        }
+    });
+    // After setting event handlers – initiate actual connection with server.
+    centrifuge.connect();
 </script>
 </body>
 </html>
