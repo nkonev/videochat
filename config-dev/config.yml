@@ -4,6 +4,17 @@ server:
   body.limit: "100G"
   url: http://localhost:1234
 
+http:
+  idle:
+    conns:
+      max: 2
+    connTimeout: '10s'
+  disableCompression: false
+
+auth:
+  url: "http://localhost:8070/api/profile"
+  exclude:
+    - "^/public.*"
 
 mongo:
   databaseUrl: "mongodb://127.0.0.1:47017/videochat"

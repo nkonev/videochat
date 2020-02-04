@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/GeertJohan/go.rice"
 	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/nkonev/videochat/client"
 	. "github.com/nkonev/videochat/logger"
 	"github.com/nkonev/videochat/utils"
 	"github.com/spf13/viper"
@@ -17,6 +21,7 @@ import (
 )
 
 type staticMiddleware echo.MiddlewareFunc
+type authMiddleware echo.MiddlewareFunc
 
 func main() {
 	configFile := utils.InitFlag("./config-dev/config.yml")
@@ -26,9 +31,11 @@ func main() {
 		fx.Logger(Logger),
 		fx.Provide(
 			configureMongo,
+			client.NewRestClient,
 			configureCentrifuge,
 			configureEcho,
 			configureStaticMiddleware,
+			configureAuthMiddleware,
 		),
 		fx.Invoke(runCentrifuge, runEcho),
 	)
@@ -93,13 +100,6 @@ func configureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 			return centrifuge.DisconnectReply{}
 		})
 
-		//node.On().ClientRefresh(func(ctx context.Context, client *centrifuge.Client, e centrifuge.RefreshEvent) centrifuge.RefreshReply {
-		//	Logger.Printf("user %s connection is going to expire, refreshing", client.UserID())
-		//	return centrifuge.RefreshReply{
-		//		ExpireAt: time.Now().Unix() + 10,
-		//	}
-		//})
-
 		// In our example transport will always be Websocket but it can also be SockJS.
 		transportName := client.Transport().Name()
 		// In our example clients connect with JSON protocol but it can also be Protobuf.
@@ -130,7 +130,112 @@ func runCentrifuge(node *centrifuge.Node) {
 	Logger.Info("Centrifuge started.")
 }
 
-func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle, node *centrifuge.Node) *echo.Echo {
+type authResult struct {
+	userId int
+	userLogin string
+}
+
+func authorize(request *http.Request, httpClient client.RestClient) (*authResult, bool, error) {
+	whitelistStr := viper.GetStringSlice("auth.exclude")
+	whitelist := utils.StringsToRegexpArray(whitelistStr)
+	if utils.CheckUrlInWhitelist(whitelist, request.RequestURI) {
+		return nil, true, nil
+	}
+
+	sessionCookie, err := request.Cookie(utils.SESSION_COOKIE)
+	if err != nil {
+		Logger.Infof("Error get '%v' cookie: %v", utils.SESSION_COOKIE, err)
+		return nil, false, nil
+	}
+
+	authUrl := viper.GetString(utils.AUTH_URL)
+	// check cookie
+	req, err := http.NewRequest(
+		"GET", authUrl, nil,
+	)
+	if err != nil {
+		Logger.Errorf("Error during create request: %v", err)
+		return nil, false, err
+	}
+
+	req.AddCookie(sessionCookie)
+	req.Header.Add("Accept", "application/json")
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		Logger.Errorf("Error during requesting auth backend: %v", err)
+		return nil, false, err
+	}
+	defer resp.Body.Close()
+
+	// put user id, user name to context
+	b := resp.Body
+	decoder := json.NewDecoder(b)
+	var decodedResponse interface{}
+	err = decoder.Decode(&decodedResponse)
+	if err != nil {
+		Logger.Errorf("Error during decoding json: %v", err)
+		return nil, false, err
+	}
+
+	if resp.StatusCode == 401 {
+		return nil, false, nil
+	} else if resp.StatusCode == 200 {
+		dto := decodedResponse.(map[string]interface{})
+		i, ok := dto["id"].(float64)
+		if !ok {
+			Logger.Errorf("Error during casting to int")
+			return nil, false, errors.New("Error during casting to int")
+		}
+		str := fmt.Sprintf("%v", dto["login"])
+		return &authResult{userId: int(i), userLogin: str}, false, nil
+	} else {
+		Logger.Errorf("Unknown auth status %v", resp.StatusCode)
+		return nil, false, errors.New(fmt.Sprintf("Unknown auth status %v", resp.StatusCode))
+	}
+
+}
+
+func configureAuthMiddleware(httpClient client.RestClient) authMiddleware {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			authResult, whitelist, err := authorize(c.Request(), httpClient)
+			if err != nil {
+				return err
+			} else if whitelist {
+				return next(c)
+			} else if authResult == nil {
+				return c.JSON(http.StatusUnauthorized, &utils.H{"status": "unauthorized"})
+			} else {
+				c.Set(utils.USER_PRINCIPAL_DTO, authResult)
+				return next(c)
+			}
+		}
+	}
+}
+
+func centrifugeAuthMiddleware(h http.Handler, httpClient client.RestClient) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authResult, _, err := authorize(r, httpClient)
+		if err != nil {
+			Logger.Errorf("Error during try to authenticate centrifuge request: %v", err)
+			return
+		} else if authResult == nil {
+			Logger.Errorf("Not authenticated centrifuge request")
+			return
+		} else {
+			ctx := r.Context()
+			newCtx := centrifuge.SetCredentials(ctx, &centrifuge.Credentials{
+				UserID: fmt.Sprintf("%v", authResult.userId),
+				ExpireAt: time.Now().Unix() + 10,
+				Info:     []byte(fmt.Sprintf("{\"login\": \"%v\"}", authResult.userLogin)),
+			})
+			r = r.WithContext(newCtx)
+			h.ServeHTTP(w, r)
+		}
+	})
+}
+
+func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle, node *centrifuge.Node, httpClient client.RestClient) *echo.Echo {
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
@@ -149,7 +254,7 @@ func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle, node *cen
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/connection/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
+	e.GET("/connection/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}), httpClient)))
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -168,21 +273,6 @@ func convert(h http.Handler) echo.HandlerFunc {
 		return nil
 	}
 }
-
-func centrifugeAuthMiddleware(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		newCtx := centrifuge.SetCredentials(ctx, &centrifuge.Credentials{
-			UserID:   "42",
-			// TODO to config and increase
-			ExpireAt: time.Now().Unix() + 10,
-			Info:     []byte(`{"name": "Alexander"}`),
-		})
-		r = r.WithContext(newCtx)
-		h.ServeHTTP(w, r)
-	})
-}
-
 
 func configureStaticMiddleware() staticMiddleware {
 	box := rice.MustFindBox("static").HTTPBox()

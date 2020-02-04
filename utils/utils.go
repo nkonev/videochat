@@ -69,13 +69,11 @@ func InitViper(configFile string) {
 	}
 }
 
+const USER_PRINCIPAL_DTO = "userPrincipalDto"
 const USER_ID = "userId"
-const USER_ADMIN = "userAdmin"
 const USER_LOGIN = "userLogin"
-const DOWNLOAD_PREFIX = "/download/"
-const PUBLIC_PREFIX = "/public"
-const USER_PREFIX = "user"
-const LIMITED = "limited"
+const SESSION_COOKIE = "SESSION"
+const AUTH_URL = "auth.url"
 
 func GetMongoClient() *mongo.Client {
 	mongoUrl := GetMongoUrl()
@@ -89,4 +87,14 @@ func GetMongoClient() *mongo.Client {
 		log.Panicf("Error during connect: %v", err)
 	}
 	return client
+}
+
+func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
+	for _, regexp0 := range whitelist {
+		if regexp0.MatchString(uri) {
+			log.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
+			return true
+		}
+	}
+	return false
 }

@@ -6,6 +6,6 @@ build
 vendor
 .vendor-new
 minio-data
-blog-storage
+videochat
 node_modules
 rice-box.go
