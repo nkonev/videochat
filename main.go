@@ -17,7 +17,6 @@ import (
 	"go.uber.org/fx"
 	"net/http"
 	"strings"
-	"time"
 )
 
 type staticMiddleware echo.MiddlewareFunc
@@ -133,6 +132,8 @@ func runCentrifuge(node *centrifuge.Node) {
 type authResult struct {
 	userId    int64
 	userLogin string
+	expiresAtTimezone string
+	expiresAt int64
 }
 
 func authorize(request *http.Request, httpClient client.RestClient) (*authResult, bool, error) {
@@ -183,11 +184,23 @@ func authorize(request *http.Request, httpClient client.RestClient) (*authResult
 		dto := decodedResponse.(map[string]interface{})
 		i, ok := dto["id"].(float64)
 		if !ok {
-			Logger.Errorf("Error during casting to int")
 			return nil, false, errors.New("Error during casting to int")
 		}
-		str := fmt.Sprintf("%v", dto["login"])
-		return &authResult{userId: int64(i), userLogin: str}, false, nil
+		expiresAt, ok2 := dto["expiresAt"].(float64)
+		if !ok2 {
+			return nil, false, errors.New("Error during casting to int")
+		}
+		expiresAtTimezone, ok3 := dto["expiresTimezone"]
+		if !ok3 {
+			return nil, false, errors.New("Error during get tz")
+		}
+
+		return &authResult{
+			userId: int64(i),
+			userLogin: fmt.Sprintf("%v", dto["login"]),
+			expiresAt: int64(expiresAt),
+			expiresAtTimezone: fmt.Sprintf("%v", expiresAtTimezone),
+		}, false, nil
 	} else {
 		Logger.Errorf("Unknown auth status %v", resp.StatusCode)
 		return nil, false, errors.New(fmt.Sprintf("Unknown auth status %v", resp.StatusCode))
@@ -200,6 +213,7 @@ func configureAuthMiddleware(httpClient client.RestClient) authMiddleware {
 		return func(c echo.Context) error {
 			authResult, whitelist, err := authorize(c.Request(), httpClient)
 			if err != nil {
+				Logger.Errorf("Error during authorize: %v", err)
 				return err
 			} else if whitelist {
 				return next(c)
@@ -226,7 +240,8 @@ func centrifugeAuthMiddleware(h http.Handler, httpClient client.RestClient) http
 			ctx := r.Context()
 			newCtx := centrifuge.SetCredentials(ctx, &centrifuge.Credentials{
 				UserID:   fmt.Sprintf("%v", authResult.userId),
-				ExpireAt: time.Now().Unix() + 10,
+				// TODO handle timezone
+				ExpireAt: authResult.expiresAt,
 				Info:     []byte(fmt.Sprintf("{\"login\": \"%v\"}", authResult.userLogin)),
 			})
 			r = r.WithContext(newCtx)
