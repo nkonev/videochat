@@ -131,7 +131,7 @@ func runCentrifuge(node *centrifuge.Node) {
 }
 
 type authResult struct {
-	userId int
+	userId    int64
 	userLogin string
 }
 
@@ -187,7 +187,7 @@ func authorize(request *http.Request, httpClient client.RestClient) (*authResult
 			return nil, false, errors.New("Error during casting to int")
 		}
 		str := fmt.Sprintf("%v", dto["login"])
-		return &authResult{userId: int(i), userLogin: str}, false, nil
+		return &authResult{userId: int64(i), userLogin: str}, false, nil
 	} else {
 		Logger.Errorf("Unknown auth status %v", resp.StatusCode)
 		return nil, false, errors.New(fmt.Sprintf("Unknown auth status %v", resp.StatusCode))
@@ -225,7 +225,7 @@ func centrifugeAuthMiddleware(h http.Handler, httpClient client.RestClient) http
 		} else {
 			ctx := r.Context()
 			newCtx := centrifuge.SetCredentials(ctx, &centrifuge.Credentials{
-				UserID: fmt.Sprintf("%v", authResult.userId),
+				UserID:   fmt.Sprintf("%v", authResult.userId),
 				ExpireAt: time.Now().Unix() + 10,
 				Info:     []byte(fmt.Sprintf("{\"login\": \"%v\"}", authResult.userLogin)),
 			})
