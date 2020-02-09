@@ -130,10 +130,9 @@ func runCentrifuge(node *centrifuge.Node) {
 }
 
 type authResult struct {
-	userId    int64
-	userLogin string
-	expiresAtTimezone string
-	expiresAt int64
+	UserId    int64 `json:"id"`
+	UserLogin string `json:"login"`
+	ExpiresAt int64 `json:"expiresAt"` // in GMT
 }
 
 func authorize(request *http.Request, httpClient client.RestClient) (*authResult, bool, error) {
@@ -168,39 +167,18 @@ func authorize(request *http.Request, httpClient client.RestClient) (*authResult
 	}
 	defer resp.Body.Close()
 
-	// put user id, user name to context
-	b := resp.Body
-	decoder := json.NewDecoder(b)
-	var decodedResponse interface{}
-	err = decoder.Decode(&decodedResponse)
-	if err != nil {
-		Logger.Errorf("Error during decoding json: %v", err)
-		return nil, false, err
-	}
-
 	if resp.StatusCode == 401 {
 		return nil, false, nil
 	} else if resp.StatusCode == 200 {
-		dto := decodedResponse.(map[string]interface{})
-		i, ok := dto["id"].(float64)
-		if !ok {
-			return nil, false, errors.New("Error during casting to int")
+		b := resp.Body
+		decoder := json.NewDecoder(b)
+		var decodedResponse authResult
+		err = decoder.Decode(&decodedResponse)
+		if err != nil {
+			Logger.Errorf("Error during decoding json: %v", err)
+			return nil, false, err
 		}
-		expiresAt, ok2 := dto["expiresAt"].(float64)
-		if !ok2 {
-			return nil, false, errors.New("Error during casting to int")
-		}
-		expiresAtTimezone, ok3 := dto["expiresTimezone"]
-		if !ok3 {
-			return nil, false, errors.New("Error during get tz")
-		}
-
-		return &authResult{
-			userId: int64(i),
-			userLogin: fmt.Sprintf("%v", dto["login"]),
-			expiresAt: int64(expiresAt),
-			expiresAtTimezone: fmt.Sprintf("%v", expiresAtTimezone),
-		}, false, nil
+		return &decodedResponse, false, nil
 	} else {
 		Logger.Errorf("Unknown auth status %v", resp.StatusCode)
 		return nil, false, errors.New(fmt.Sprintf("Unknown auth status %v", resp.StatusCode))
@@ -239,10 +217,9 @@ func centrifugeAuthMiddleware(h http.Handler, httpClient client.RestClient) http
 		} else {
 			ctx := r.Context()
 			newCtx := centrifuge.SetCredentials(ctx, &centrifuge.Credentials{
-				UserID:   fmt.Sprintf("%v", authResult.userId),
-				// TODO handle timezone
-				ExpireAt: authResult.expiresAt,
-				Info:     []byte(fmt.Sprintf("{\"login\": \"%v\"}", authResult.userLogin)),
+				UserID:   fmt.Sprintf("%v", authResult.UserId),
+				ExpireAt: authResult.ExpiresAt,
+				Info:     []byte(fmt.Sprintf("{\"login\": \"%v\"}", authResult.UserLogin)),
 			})
 			r = r.WithContext(newCtx)
 			h.ServeHTTP(w, r)
