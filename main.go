@@ -171,9 +171,8 @@ func authorize(request *http.Request, httpClient client.RestClient) (*authResult
 		return nil, false, nil
 	} else if resp.StatusCode == 200 {
 		b := resp.Body
-		decoder := json.NewDecoder(b)
 		var decodedResponse authResult
-		err = decoder.Decode(&decodedResponse)
+		err = json.NewDecoder(b).Decode(&decodedResponse)
 		if err != nil {
 			Logger.Errorf("Error during decoding json: %v", err)
 			return nil, false, err
