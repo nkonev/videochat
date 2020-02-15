@@ -17,11 +17,11 @@ io.sockets.on('connection', function(socket) {
     function log() {
         var array = ['Message from server:'];
         array.push.apply(array, arguments);
-        socket.emit('log', array);
+        //socket.emit('log', array);
     }
 
     socket.on('message', function(message) {
-        log('Client said: ', message);
+        log('Received message: ', message);
         // for a real app, would be room-only (not broadcast)
         socket.broadcast.emit('message', message);
     });
@@ -50,6 +50,7 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('ipaddr', function() {
+        console.log('Received ipaddr');
         var ifaces = os.networkInterfaces();
         for (var dev in ifaces) {
             ifaces[dev].forEach(function(details) {

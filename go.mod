@@ -3,6 +3,7 @@ module github.com/nkonev/videochat
 require (
 	github.com/GeertJohan/go.rice v1.0.0
 	github.com/centrifugal/centrifuge v0.4.0
+	github.com/centrifugal/protocol v0.1.0
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect

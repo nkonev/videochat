@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/GeertJohan/go.rice"
 	"github.com/centrifugal/centrifuge"
+	"github.com/centrifugal/protocol"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/nkonev/videochat/client"
@@ -17,6 +18,7 @@ import (
 	"go.uber.org/fx"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type staticMiddleware echo.MiddlewareFunc
@@ -47,6 +49,27 @@ func handleLog(e centrifuge.LogEntry) {
 	Logger.Printf("%s: %v", e.Message, e.Fields)
 }
 
+func getChanPresenceStats(engine centrifuge.Engine, client *centrifuge.Client, e interface{}) *centrifuge.PresenceStats {
+	var channel string
+	switch v := e.(type) {
+	case centrifuge.SubscribeEvent:
+		channel = v.Channel
+		break
+	case centrifuge.UnsubscribeEvent:
+		channel = v.Channel
+		break
+	default:
+		Logger.Errorf("Unknown type of event")
+		return nil
+	}
+	stats, err := engine.PresenceStats(channel)
+	if err != nil {
+		Logger.Errorf("Error during get stats %v", err)
+	}
+	Logger.Printf("client id=%v, userId=%v subscribes on channel %s, channelStats.NumUsers %v", client.ID(), client.UserID(), channel, stats.NumUsers)
+	return &stats
+}
+
 func configureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 	// We use default config here as starting point. Default config contains
 	// reasonable values for available options.
@@ -70,6 +93,9 @@ func configureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 	// things. Here we initialize new Node instance and pass config to it.
 	node, _ := centrifuge.New(cfg)
 
+	engine, _ := centrifuge.NewMemoryEngine(node, centrifuge.MemoryEngineConfig{})
+	node.SetEngine(engine)
+
 	// ClientConnected node event handler is a point where you generally create a
 	// binding between Centrifuge and your app business logic. Callback function you
 	// pass here will be called every time new connection established with server.
@@ -79,9 +105,62 @@ func configureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 		// initiated by client. Here you can theoretically return an error or
 		// disconnect client from server if needed. But now we just accept
 		// all subscriptions.
+
 		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
-			Logger.Printf("client id=%v, userId=%v subscribes on channel %s", client.ID(), client.UserID(), e.Channel)
+			// TODO make same duration as session
+			d, _ := time.ParseDuration("24h")
+			clientInfo := &protocol.ClientInfo{
+				User:   client.ID(),
+				Client: client.UserID(),
+			}
+			err := engine.AddPresence(e.Channel, client.UserID(), clientInfo, d)
+			if err != nil {
+				Logger.Errorf("Error during AddPresence %v", err)
+			}
+
+			if e.Channel == "aux" {
+				stats := getChanPresenceStats(engine, client, e)
+
+				type s struct {
+					MessageType string `json:"type"`
+				}
+
+				if stats.NumUsers == 1 {
+					data, _ := json.Marshal(s{"created"})
+					Logger.Infof("Publishing created to channel %v", e.Channel)
+					//err := node.Publish(e.Channel, data)
+					err := client.Send(data)
+					if err != nil {
+						Logger.Errorf("Error during publishing created %v", err)
+					}
+				} else if stats.NumUsers > 1 {
+					data, _ := json.Marshal(s{"joined"})
+					Logger.Infof("Publishing joined to channel %v", e.Channel)
+					// send to existing subscribers
+					err := node.Publish(e.Channel, data)
+					if err != nil {
+						Logger.Errorf("Error during publishing joined %v", err)
+					}
+					// send to just subscribing client
+					err2 := client.Send(data)
+					if err2 != nil {
+						Logger.Errorf("Error during publishing joined %v", err2)
+					}
+
+				}
+			}
+
 			return centrifuge.SubscribeReply{}
+		})
+
+		client.On().Unsubscribe(func(e centrifuge.UnsubscribeEvent) centrifuge.UnsubscribeReply {
+			err := engine.RemovePresence(e.Channel, client.UserID())
+			if err != nil {
+				Logger.Errorf("Error during RemovePresence %v", err)
+			}
+			getChanPresenceStats(engine, client, e)
+
+			return centrifuge.UnsubscribeReply{}
 		})
 
 		// Set Publish Handler to react on every channel Publication sent by client.
@@ -130,9 +209,9 @@ func runCentrifuge(node *centrifuge.Node) {
 }
 
 type authResult struct {
-	UserId    int64 `json:"id"`
+	UserId    int64  `json:"id"`
 	UserLogin string `json:"login"`
-	ExpiresAt int64 `json:"expiresAt"` // in GMT
+	ExpiresAt int64  `json:"expiresAt"` // in GMT
 }
 
 func authorize(request *http.Request, httpClient client.RestClient) (*authResult, bool, error) {
