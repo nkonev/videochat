@@ -97,9 +97,9 @@
 
         var auxSub = centrifuge.subscribe("aux", function(message0) {
             var message = message0.data;
-            console.debug('Client received RAW message from channel:', message0);
+            //console.debug('Client received RAW message from channel:', message0);
             if (message0.info && message0.info.client == clientId) {
-                console.debug('Skipping self-directed RAW message from channel');
+                //console.debug('Skipping self-directed RAW message from channel');
                 return
             }
             console.log('Client received message from channel:', message);
