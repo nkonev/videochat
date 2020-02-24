@@ -17,6 +17,8 @@ import Popover from '@material-ui/core/Popover';
 import Typography from '@material-ui/core/Typography';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import BackupIcon from '@material-ui/icons/Backup';
+import Breadcrumbs from '@material-ui/core/Breadcrumbs';
+import Link from '@material-ui/core/Link';
 
 const circleCheckRadius = 34;
 const useStyles = makeStyles(theme => ({
@@ -261,6 +263,14 @@ function App() {
                 <header className={classes.appHeader}>
                     <div className="header-text">Videochat</div>
                 </header>
+                <Breadcrumbs aria-label="breadcrumb">
+                    <Link color="inherit" href="/">
+                        Chats
+                    </Link>
+                    <Link color="inherit" href="/">
+                        Current chat
+                    </Link>
+                </Breadcrumbs>
                 <List className="list-db-connections">
                     {connections.map((value, index) => {
                         return (
@@ -281,7 +291,7 @@ function App() {
                                         <Grid item>
                                             <Button variant="contained" color="primary"
                                                     onClick={() => handleEditModalOpen(value)}>
-                                                Edit
+                                                Share
                                             </Button>
                                         </Grid>
                                         <Grid item>
