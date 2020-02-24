@@ -325,6 +325,7 @@ func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle, node *cen
 	e.Use(middleware.BodyLimit(bodyLimit))
 
 	e.GET("/connection/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}), httpClient)))
+	e.GET("/users", userHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -342,6 +343,16 @@ func convert(h http.Handler) echo.HandlerFunc {
 		h.ServeHTTP(c.Response().Writer, c.Request())
 		return nil
 	}
+}
+
+type userDto struct {
+	Id int64 `json:"id"`
+	Login string `json:"login"`
+}
+
+func userHandler(c echo.Context) error {
+	usrs := []userDto{userDto{Login:"Terry", Id: 1}, userDto{Login:"Perry", Id: 2}}
+	return c.JSON(200, usrs)
 }
 
 func configureStaticMiddleware() staticMiddleware {

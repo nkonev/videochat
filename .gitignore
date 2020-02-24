@@ -9,3 +9,5 @@ minio-data
 videochat
 node_modules
 rice-box.go
+/static/favicon.ico
+/static/index.html
