@@ -16,5 +16,119 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  nginx:
+    image: nginx:1.16.0
+    restart: unless-stopped
+    ports:
+      - 8081:80
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+  postgres:
+    image: postgres:11.2
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    networks:
+      backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+  keycloak:
+    image: jboss/keycloak:8.0.0
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.frontend.rule=Host:auth.site.local
+      - traefik.port=8080
+    volumes:
+      - ./docker/keycloak-realm-export.json:/var/realm1.json
+      - ./docker/keycloak-scripts-launchers:/opt/jboss/startup-scripts
+      - ./docker/keycloak-scripts:/opt/jboss/cli-scripts
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_SCHEMA: public
+      DB_PASSWORD: password
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      KEYCLOAK_HOSTNAME: auth.site.local
+      KEYCLOAK_IMPORT: /var/realm1.json
+      # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
+      #JDBC_PARAMS: "ssl=true"
+    ports:
+      - 8844:8844
+    networks:
+      backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+  # fix 'aud' claim and 'client_id' do not match: https://stackoverflow.com/questions/53550321/keycloak-gatekeeper-aud-claim-and-client-id-do-not-match/53627747#53627747
+  gatekeeper:
+    image: keycloak/keycloak-gatekeeper:6.0.1
+    restart: unless-stopped
+    # https://www.keycloak.org/docs/latest/securing_apps/index.html#_keycloak_generic_adapter
+    volumes:
+      - ./docker/keycloak-gatekeeper.yml:/etc/keycloak-auth-proxy.conf
+    command:
+      ["--config=/etc/keycloak-auth-proxy.conf"]
+    labels:
+      - traefik.enable=true
+      - traefik.frontend.rule=Host:site.local
+      - traefik.port=3000
+    links:
+      - "keycloak:auth.site.local"
+    networks:
+      backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+  traefik:
+    image: traefik:1.7.12-alpine
+    hostname: traefik
+    restart: unless-stopped
+    command: -c /traefik.toml
+    ports:
+      - 8080:80
+      - 8010:8080
+    extra_hosts:
+      # When you apply firewalld rule these requests will go to you IDE-launched chat app
+      - "chat.site.local:172.27.0.1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker/traefik.toml:/traefik.toml
+    networks:
+      backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+
 volumes:
   mongo_videochat_data_dir:
+  postgres_data:
+
+networks:
+  backend:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/24

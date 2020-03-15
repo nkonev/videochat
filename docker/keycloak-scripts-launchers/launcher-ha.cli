@@ -1,0 +1,4 @@
+embed-server --server-config=standalone-ha.xml --std-out=echo
+run-batch --file=/opt/jboss/cli-scripts/change-admin-port.cli
+run-batch --file=/opt/jboss/cli-scripts/add-tracing.cli
+stop-embedded-server

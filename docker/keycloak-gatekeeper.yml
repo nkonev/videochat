@@ -1,0 +1,43 @@
+client-id: microservices-example-app
+client-secret: 619e9349-17c1-43ce-9789-7cd05223ba25 # require for access_type: confidential
+# Note the redirection-url is optional, it will default to the X-Forwarded-Proto / X-Forwarded-Host r the URL scheme and host not found
+# [port] this port must be equal to public port of traefik and equal to in-container port of keycloak
+discovery-url: http://auth.site.local:8080/auth/realms/microservices-example-realm
+#enable-default-deny: true
+#encryption_key: AgXa7xRcoClDEU0ZDSH4X0XhL5Qy2Z2j
+secure-cookie: false
+listen: 0.0.0.0:3000
+# the redirection url, essentially the site url, note: /oauth/callback is added at the end
+# seee also in realm-export.json
+redirection-url: http://site.local:8080
+enable-logging: true
+# the upstream endpoint which we should proxy request (http://app)
+# We send request to traefik internal endpoint for 1) able to working with many apps (chat, sender) 2) prevent to interfere with sending external requests to gatekeeper
+upstream-url: http://traefik:81
+resources:
+  - uri: /admin*
+    methods:
+      - GET
+    roles:
+      - client:test1
+      - client:test2
+    require-any-role: true
+    groups:
+      - admins
+      - users
+  - uri: /chat*
+    roles:
+      - uma_authorization
+    require-any-role: true
+  - uri: /public/*
+    white-listed: true
+  - uri: /favicon
+    white-listed: true
+  - uri: /css/*
+    white-listed: true
+  - uri: /img/*
+    white-listed: true
+headers:
+  myheader1: value_1
+  myheader2: value_2
+
