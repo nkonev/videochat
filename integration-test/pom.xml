@@ -8,7 +8,7 @@
     <artifactId>integration-test</artifactId>
     <version>0.0.0</version>
     <name>Integration Test Maven Project</name>
-    <url>https://github.com/spekframework/spek/blob/2.x/samples/maven/pom.xml</url>
+    <url>https://github.com/nkonev</url>
 
     <properties>
         <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
