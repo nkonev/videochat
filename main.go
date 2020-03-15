@@ -214,10 +214,18 @@ type authResult struct {
 	ExpiresAt int64  `json:"expiresAt"` // in GMT
 }
 
-// returns:
-// *authResult pionter or nil
-// is whitelisted
-// error
+// authorize checks authentication of each requests (websocket establishment or regular ones)
+//
+// Parameters:
+//
+//  - `request` : http request to check
+//  - `httpClient` : client to check authorization
+//
+// Returns:
+//
+//  - *authResult pointer or nil
+//  - is whitelisted
+//  - error
 func authorize(request *http.Request, httpClient client.RestClient) (*authResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
