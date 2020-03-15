@@ -14,7 +14,6 @@ import (
 	. "github.com/nkonev/videochat/logger"
 	"github.com/nkonev/videochat/utils"
 	"github.com/spf13/viper"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/fx"
 	"net/http"
 	"strings"
@@ -31,7 +30,6 @@ func main() {
 	app := fx.New(
 		fx.Logger(Logger),
 		fx.Provide(
-			configureMongo,
 			client.NewRestClient,
 			configureCentrifuge,
 			configureEcho,
@@ -214,6 +212,7 @@ type authResult struct {
 	ExpiresAt int64  `json:"expiresAt"` // in GMT
 }
 
+// TODO attach to keycloak or move this logic to keycloak
 // authorize checks authentication of each requests (websocket establishment or regular ones)
 //
 // Parameters:
@@ -382,19 +381,6 @@ func configureStaticMiddleware() staticMiddleware {
 			}
 		}
 	}
-}
-
-func configureMongo(lc fx.Lifecycle) *mongo.Client {
-	mongoClient := utils.GetMongoClient()
-	lc.Append(fx.Hook{
-		OnStop: func(ctx context.Context) error {
-			// do some work on application stop (like closing connections and files)
-			Logger.Infof("Stopping mongo client")
-			return mongoClient.Disconnect(ctx)
-		},
-	})
-
-	return mongoClient
 }
 
 // rely on viper import and it's configured by

@@ -1,17 +1,16 @@
 package utils
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 	"regexp"
-	"time"
 )
+
+const SESSION_COOKIE = "SESSION"
+const AUTH_URL = "auth.url"
+const USER_PRINCIPAL_DTO = "userPrincipalDto"
 
 type H map[string]interface{}
 
@@ -26,28 +25,6 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 		}
 	}
 	return regexps
-}
-
-func GetMongoDbName(mongoUrl string) string {
-	uri, err := connstring.Parse(mongoUrl)
-	if err != nil {
-		log.Panicf("Error during parsing url: %v", err)
-	}
-
-	return uri.Database
-}
-
-func GetMongoUrl() string {
-	return viper.GetString("mongo.databaseUrl")
-}
-
-func GetMongoConnectTimeout() time.Duration {
-	viper.SetDefault("mongo.connect.timeout", "10s")
-	return viper.GetDuration("mongo.connect.timeout")
-}
-
-func GetMongoDatabase(client *mongo.Client) *mongo.Database {
-	return client.Database(GetMongoDbName(GetMongoUrl()))
 }
 
 func InitFlag(defaultLocation string) string {
@@ -66,26 +43,6 @@ func InitViper(configFile string) {
 	if err := viper.ReadInConfig(); err != nil { // Handle errors reading the config file
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
-}
-
-const USER_PRINCIPAL_DTO = "userPrincipalDto"
-const USER_ID = "userId"
-const USER_LOGIN = "userLogin"
-const SESSION_COOKIE = "SESSION"
-const AUTH_URL = "auth.url"
-
-func GetMongoClient() *mongo.Client {
-	mongoUrl := GetMongoUrl()
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoUrl))
-	if err != nil {
-		log.Panicf("Error during create mongo client: %v", err)
-	}
-	ctx, _ := context.WithTimeout(context.Background(), GetMongoConnectTimeout())
-	err = client.Connect(ctx)
-	if err != nil {
-		log.Panicf("Error during connect: %v", err)
-	}
-	return client
 }
 
 func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {

@@ -3,20 +3,7 @@
 version: '3.7'
 
 services:
-  mongo:
-    image: mongo:4.2.2-bionic
-    restart: unless-stopped
-    ports:
-      - 47017:27017
-    volumes:
-      - mongo_videochat_data_dir:/data/db
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "1"
-
-  nginx:
+  nginx-frontend:
     image: nginx:1.16.0
     restart: unless-stopped
     ports:
@@ -28,9 +15,10 @@ services:
       options:
         max-size: "50m"
         max-file: "1"
-  postgres:
+  postgres-keycloak:
     image: postgres:11.2
     restart: unless-stopped
+    hostname: postgres-keycloak
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -57,7 +45,7 @@ services:
       - ./docker/keycloak-scripts:/opt/jboss/cli-scripts
     environment:
       DB_VENDOR: POSTGRES
-      DB_ADDR: postgres
+      DB_ADDR: postgres-keycloak
       DB_DATABASE: keycloak
       DB_USER: keycloak
       DB_SCHEMA: public
@@ -123,7 +111,6 @@ services:
         max-file: "1"
 
 volumes:
-  mongo_videochat_data_dir:
   postgres_data:
 
 networks:

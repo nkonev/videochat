@@ -2,7 +2,6 @@ server:
   address: ":1235"
   shutdown.timeout: "10s"
   body.limit: "100G"
-  url: http://localhost:1235
 
 http:
   idle:
@@ -15,8 +14,3 @@ auth:
   url: "http://localhost:8070/api/profile"
   exclude:
     - "^/public.*"
-
-mongo:
-  databaseUrl: "mongodb://127.0.0.1:47017/videochat"
-  connect:
-    timeout: '10s'
