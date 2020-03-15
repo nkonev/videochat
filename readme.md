@@ -36,7 +36,7 @@ Final architecture:
 
 ```
 127.0.0.1   auth.site.local
-127.0.0.1   chat.site.local
+127.0.0.1   video.site.local
 127.0.0.1   site.local
 ```
 
@@ -44,14 +44,14 @@ Final architecture:
 
 ```bash
 su -
-firewall-cmd --permanent --zone=public --add-rich-rule='rule family=ipv4 source address="172.27.0.0/16" accept'
+firewall-cmd --permanent --zone=public --add-rich-rule='rule family=ipv4 source address="172.28.0.0/16" accept'
 service firewalld restart
 ```
 
 Check
 ```bash
 docker-compose exec traefik sh
-wget -O - http://chat.site.local:10000/chat
+wget -O - http://video.site.local:10000/chat
 ```
 
 ## Start docker-compose
