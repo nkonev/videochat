@@ -4,9 +4,9 @@
 *.iml
 node_modules
 rice-box.go
-/video/static/favicon.ico
-/video/static/index.html
-/video/videochat
+/chat/static/favicon.ico
+/chat/static/index.html
+/chat/videochat
 vendor
 .vendor-new
 grpc
