@@ -67,7 +67,7 @@ services:
         max-file: "1"
   # fix 'aud' claim and 'client_id' do not match: https://stackoverflow.com/questions/53550321/keycloak-gatekeeper-aud-claim-and-client-id-do-not-match/53627747#53627747
   gatekeeper:
-    image: keycloak/keycloak-gatekeeper:6.0.1
+    image: keycloak/keycloak-gatekeeper:7.0.0
     restart: unless-stopped
     # https://www.keycloak.org/docs/latest/securing_apps/index.html#_keycloak_generic_adapter
     volumes:
