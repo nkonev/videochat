@@ -15,7 +15,6 @@ import (
 
 type H map[string]interface{}
 
-
 func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	regexps := make([]regexp.Regexp, len(strings))
 	for i, str := range strings {
@@ -51,7 +50,7 @@ func GetMongoDatabase(client *mongo.Client) *mongo.Database {
 	return client.Database(GetMongoDbName(GetMongoUrl()))
 }
 
-func InitFlag(defaultLocation string) (string) {
+func InitFlag(defaultLocation string) string {
 	configFile := flag.String("config", defaultLocation, "Path to config file")
 
 	flag.Parse()

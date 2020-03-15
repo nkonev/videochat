@@ -1,13 +1,9 @@
 !.gitignore
-build
 .project
 .idea
 *.iml
-vendor
-.vendor-new
-minio-data
-videochat
 node_modules
 rice-box.go
-/static/favicon.ico
-/static/index.html
+/video/static/favicon.ico
+/video/static/index.html
+/video/videochat
