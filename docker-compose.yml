@@ -37,8 +37,9 @@ services:
     restart: unless-stopped
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:auth.site.local
-      - traefik.port=8080
+      - traefik.http.routers.keycloak-container.rule=Host(`auth.site.local`)
+      - traefik.http.services.keycloak-service.loadbalancer.server.port=8080
+      - traefik.http.routers.keycloak-container.entrypoints=http
     volumes:
       - ./docker/keycloak-realm-export.json:/var/realm1.json
       - ./docker/keycloak-scripts-launchers:/opt/jboss/startup-scripts
@@ -76,8 +77,9 @@ services:
       ["--config=/etc/keycloak-auth-proxy.conf"]
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:site.local
-      - traefik.port=3000
+      - traefik.http.routers.gatekeeper-container.rule=Host(`site.local`)
+      - traefik.http.services.gatekeeper-service.loadbalancer.server.port=3000
+      - traefik.http.routers.gatekeeper-container.entrypoints=http
     links:
       - "keycloak:auth.site.local"
     networks:
@@ -88,10 +90,11 @@ services:
         max-size: "50m"
         max-file: "1"
   traefik:
-    image: traefik:1.7.12-alpine
+    image: traefik:v2.1.6
     hostname: traefik
     restart: unless-stopped
-    command: -c /traefik.toml
+    # The Static Configuration
+    command: --configFile=/traefik_conf/traefik.yml
     ports:
       - 8080:80
       - 8010:8080
@@ -101,7 +104,7 @@ services:
       - "chat.site.local:172.28.0.1"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./docker/traefik.toml:/traefik.toml
+      - ./docker/traefik_conf:/traefik_conf
     networks:
       backend:
     logging:
