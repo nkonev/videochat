@@ -2,7 +2,7 @@ server:
   address: ":1235"
   shutdown.timeout: "10s"
   body.limit: "100G"
-  url: http://localhost:1234
+  url: http://localhost:1235
 
 http:
   idle:

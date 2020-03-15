@@ -108,7 +108,7 @@ class KeycloakTest {
             do {
                 try {
                     val request = Request.Builder()
-                            .url("http://127.0.0.1:10000/chat/index.html")
+                            .url("http://127.0.0.1:1235/chat/index.html")
                             .build()
 
                     val response = client.newCall(request).execute()

@@ -109,7 +109,8 @@ services:
       - 8010:8080
     extra_hosts:
       # When you apply firewalld rule these requests will go to you IDE-launched chat app
-      - "chat.site.local:172.27.0.1"
+      # see also network definition in bottom
+      - "chat.site.local:172.28.0.1"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./docker/traefik.toml:/traefik.toml
