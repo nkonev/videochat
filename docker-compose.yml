@@ -33,7 +33,7 @@ services:
         max-size: "50m"
         max-file: "1"
   keycloak:
-    image: jboss/keycloak:8.0.0
+    image: jboss/keycloak:9.0.0
     restart: unless-stopped
     labels:
       - traefik.enable=true
