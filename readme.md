@@ -36,7 +36,7 @@ Final architecture:
 
 ```
 127.0.0.1   auth.site.local
-127.0.0.1   video.site.local
+127.0.0.1   chat.site.local
 127.0.0.1   site.local
 ```
 
@@ -51,7 +51,7 @@ service firewalld restart
 Check
 ```bash
 docker-compose exec traefik sh
-wget -O - http://video.site.local:10000/chat
+wget -O - http://chat.site.local:10000/chat
 ```
 
 ## Start docker-compose
