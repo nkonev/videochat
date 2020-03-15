@@ -7,3 +7,7 @@ rice-box.go
 /video/static/favicon.ico
 /video/static/index.html
 /video/videochat
+vendor
+.vendor-new
+grpc
+target
