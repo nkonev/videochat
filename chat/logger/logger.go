@@ -2,6 +2,7 @@ package logger
 
 import (
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"os"
 )
 
@@ -13,9 +14,10 @@ func init() {
 	Logger.SetOutput(os.Stdout)
 }
 
-func GetLogger(traceid string) *log.Entry {
+func GetLogEntry(request *http.Request) *log.Entry {
+	traceId := request.Header.Get("X-B3-Traceid")
 	return Logger.WithFields(
 		log.Fields{
-			"traceId": traceid,
+			"traceId": traceId,
 		})
 }

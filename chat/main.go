@@ -249,7 +249,7 @@ func authorize(request *http.Request) (*authResult, bool, error) {
 		Logger.Infof("Error during extract authResult: %v", err)
 		return nil, false, nil
 	}
-	GetLogger(request.Header.Get("X-B3-Traceid")).Infof("Success authResult: %v", *auth)
+	GetLogEntry(request).Infof("Success authResult: %v", *auth)
 	return auth, false, nil
 }
 
