@@ -27,17 +27,17 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	return regexps
 }
 
-func InitFlag(defaultLocation string) string {
-	configFile := flag.String("config", defaultLocation, "Path to config file")
+func InitFlags(defaultConfigLocation string) string {
+	configFile := flag.String("config", defaultConfigLocation, "Path to config file")
 
 	flag.Parse()
 	return *configFile
 }
 
-func InitViper(configFile string) {
+func InitViper(configFile, envPrefix string) {
 	viper.SetConfigFile(configFile)
 	// call multiple times to add many search paths
-	viper.SetEnvPrefix("BLOG_STORE")
+	viper.SetEnvPrefix(envPrefix)
 	viper.AutomaticEnv()
 	// Find and read the config file
 	if err := viper.ReadInConfig(); err != nil { // Handle errors reading the config file

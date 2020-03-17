@@ -24,8 +24,8 @@ type staticMiddleware echo.MiddlewareFunc
 type authMiddleware echo.MiddlewareFunc
 
 func main() {
-	configFile := utils.InitFlag("./chat/config-dev/config.yml")
-	utils.InitViper(configFile)
+	configFile := utils.InitFlags("./chat/config-dev/config.yml")
+	utils.InitViper(configFile, "VIDEOCHAT")
 
 	app := fx.New(
 		fx.Logger(Logger),
