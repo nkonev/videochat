@@ -119,12 +119,12 @@ func configureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 			if e.Channel == "aux" {
 				stats := getChanPresenceStats(engine, client, e)
 
-				type s struct {
+				type AuxChannelRequest struct {
 					MessageType string `json:"type"`
 				}
 
 				if stats.NumUsers == 1 {
-					data, _ := json.Marshal(s{"created"})
+					data, _ := json.Marshal(AuxChannelRequest{"created"})
 					Logger.Infof("Publishing created to channel %v", e.Channel)
 					//err := node.Publish(e.Channel, data)
 					err := client.Send(data)
@@ -132,7 +132,7 @@ func configureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 						Logger.Errorf("Error during publishing created %v", err)
 					}
 				} else if stats.NumUsers > 1 {
-					data, _ := json.Marshal(s{"joined"})
+					data, _ := json.Marshal(AuxChannelRequest{"joined"})
 					Logger.Infof("Publishing joined to channel %v", e.Channel)
 					// send to existing subscribers
 					err := node.Publish(e.Channel, data)
