@@ -21,10 +21,18 @@ import utils.FileUtils.getExistsFile
 import utils.ProcessUtils.launch
 import java.util.concurrent.TimeUnit
 
+val indexUrl = "http://127.0.0.1:1235/index.html"
+val authUrl = "http://auth.site.local:8080/auth"
+val chatUrl = "http://site.local:8080/chat"
+// https://sites.google.com/a/chromium.org/chromedriver/
+val chromeDriverVersion = "79.0.3945.36"
+val webdriverImplicitWaitSeconds = 30L
+val webdriverWaitTimeoutSeconds = 10L
+
 // https://medium.com/kotlin-lang-notes/selenium-kotlintest-4db1da9811cc
 class ProfilePage(private val driver: WebDriver) {
 
-    private val pageUrl = "http://site.local:8080/chat/profile"
+    private val pageUrl = chatUrl
 
     init {
         PageFactory.initElements(driver, this)
@@ -33,11 +41,12 @@ class ProfilePage(private val driver: WebDriver) {
     fun open() = driver.get(pageUrl)
 
     fun verifyUrl() {
-        WebDriverWait(driver, 10).until { it.currentUrl == pageUrl }
+        WebDriverWait(driver, webdriverWaitTimeoutSeconds).until { it.currentUrl == pageUrl }
     }
 
     fun verifyContent() {
-        Assert.assertTrue(driver.pageSource.contains("Hello Nikita Konev", false))
+        Assert.assertTrue(driver.pageSource.contains("Terry", false))
+        Assert.assertTrue(driver.pageSource.contains("Perry", false))
     }
 }
 
@@ -57,7 +66,7 @@ class LoginPage(private val driver: WebDriver) {
     lateinit var loginButton: WebElement
 
     fun verifyUrl() {
-        WebDriverWait(driver, 10).until { it.currentUrl.startsWith("http://auth.site.local:8080/auth") }
+        WebDriverWait(driver, webdriverWaitTimeoutSeconds).until { it.currentUrl.startsWith(authUrl) }
     }
 }
 
@@ -67,7 +76,6 @@ class KeycloakTest {
 
     var LOGGER: Logger = LoggerFactory.getLogger(KeycloakTest::class.java)
 
-    lateinit var javaProcess: Process
     lateinit var golangProcess: Process
 
     lateinit var client: OkHttpClient
@@ -78,16 +86,9 @@ class KeycloakTest {
         SLF4JBridgeHandler.removeHandlersForRootLogger()
         SLF4JBridgeHandler.install()
 
-        LOGGER.info("find jar")
-        val jar = getExistsFile("../chat/target/chat-app-0.0.0-jar-with-dependencies.jar", "./chat/target/chat-app-0.0.0-jar-with-dependencies.jar")
-        GlobalScope.launch {
-            LOGGER.info("start jar")
-            javaProcess = launch("java", "-jar", jar.canonicalPath)
-        }
-
         LOGGER.info("find go binary")
-        val bin = getExistsFile("../user-service/user-service", "./user-service/user-service")
-        val cfg = getExistsFile("../user-service/config-dev/config.yml", "./user-service/config-dev/config.yml")
+        val bin = getExistsFile("../chat/videochat", "./chat/videochat")
+        val cfg = getExistsFile("../chat/config-dev/config.yml", "./chat/config-dev/config.yml")
         GlobalScope.launch {
             LOGGER.info("start go binary")
             golangProcess = launch(bin.canonicalPath, "-config", cfg.canonicalPath)
@@ -101,45 +102,20 @@ class KeycloakTest {
                 .build()
 
 
-        runBlocking {     // but this expression blocks the main thread
+        runBlocking {     // this expression blocks the main thread
             var htmlResponded = false
             var num = 0
             val max = 100
             do {
                 try {
                     val request = Request.Builder()
-                            .url("http://127.0.0.1:1235/chat/index.html")
+                            .url(indexUrl)
                             .build()
 
                     val response = client.newCall(request).execute()
                     val html = response.body()!!.string()
                     LOGGER.info("{}/{} Response: {}", num, max, html)
-                    if (html.contains("Hello World!")) {
-                        htmlResponded = true
-                    } else {
-                        TimeUnit.SECONDS.sleep(1)
-                    }
-                } catch (e: Exception) {
-                    LOGGER.info("Exception: {}", e.message)
-                    TimeUnit.SECONDS.sleep(1)
-                }
-            } while (!htmlResponded && num++ < max)
-        }
-
-        runBlocking {     // but this expression blocks the main thread
-            var htmlResponded = false
-            var num = 0
-            val max = 100
-            do {
-                try {
-                    val request = Request.Builder()
-                            .url("http://127.0.0.1:1234")
-                            .build()
-
-                    val response = client.newCall(request).execute()
-                    val html = response.body()!!.string()
-                    LOGGER.info("{}/{} Response: {}", num, max, html)
-                    if (html.contains("app-container")) {
+                    if (html.contains("Videochat")) {
                         htmlResponded = true
                     } else {
                         TimeUnit.SECONDS.sleep(1)
@@ -155,12 +131,11 @@ class KeycloakTest {
 
     @BeforeMethod
     fun beforeMethod() {
-        // https://sites.google.com/a/chromium.org/chromedriver/
-        WebDriverManager.chromedriver().version("79.0.3945.36").setup();
+        WebDriverManager.chromedriver().version(chromeDriverVersion).setup();
 
         driver = ChromeDriver()
 
-        driver.manage()?.timeouts()?.implicitlyWait(30, TimeUnit.SECONDS)
+        driver.manage()?.timeouts()?.implicitlyWait(webdriverImplicitWaitSeconds, TimeUnit.SECONDS)
         driver.manage()?.window()?.maximize()
     }
 
@@ -218,12 +193,6 @@ class KeycloakTest {
 
     @AfterSuite
     fun afterSuite(){
-        try {
-            javaProcess.destroy()
-        } catch (e: Exception) {
-            LOGGER.error("Error during stop java process", e)
-        }
-
         try {
             golangProcess.destroy()
         } catch (e: Exception) {
