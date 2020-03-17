@@ -107,6 +107,8 @@ docker-compose exec keycloak /opt/jboss/keycloak/bin/jboss-cli.sh --connect
 
 [Protect Kubernetes Dashboard with OpenID Connect](https://itnext.io/protect-kubernetes-dashboard-with-openid-connect-104b9e75e39c)
 
+[WildFly Command Line Interface](https://docs.jboss.org/author/display/WFLY/Command+Line+Interface?_sscc=t)
+
 ### exporting (not always importable)
 ```bash
 docker-compose exec keycloak bash
