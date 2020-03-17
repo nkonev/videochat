@@ -12,3 +12,10 @@ func init() {
 	Logger.SetFormatter(&log.TextFormatter{ForceColors: true, FullTimestamp: true})
 	Logger.SetOutput(os.Stdout)
 }
+
+func GetLogger(traceid string) *log.Entry {
+	return Logger.WithFields(
+		log.Fields{
+			"traceId": traceid,
+		})
+}
