@@ -35,3 +35,4 @@ tracing:
   spanNameLimit: 150
   jaeger:
     propagation: b3
+    traceContextHeaderName: X-B3-Traceid

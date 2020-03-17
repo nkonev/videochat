@@ -214,6 +214,7 @@ type authResult struct {
 
 // TODO attach to keycloak or move this logic to keycloak
 // TODO do not invoke keycloak, just consume id, login, expiresAt from keycloak headers
+//  https://www.keycloak.org/docs/latest/securing_apps/index.html#upstream-headers
 // authorize checks authentication of each requests (websocket establishment or regular ones)
 //
 // Parameters:
