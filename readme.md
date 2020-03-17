@@ -109,6 +109,8 @@ docker-compose exec keycloak /opt/jboss/keycloak/bin/jboss-cli.sh --connect
 
 [WildFly Command Line Interface](https://docs.jboss.org/author/display/WFLY/Command+Line+Interface?_sscc=t)
 
+[Error:java: invalid source release: 8](https://stackoverflow.com/a/26009627)
+
 ### exporting (not always importable)
 ```bash
 docker-compose exec keycloak bash
