@@ -106,12 +106,12 @@ func configureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 
 		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
 			// TODO make same duration as session
-			d, _ := time.ParseDuration("24h")
+			presenceDuration, _ := time.ParseDuration("24h")
 			clientInfo := &protocol.ClientInfo{
 				User:   client.ID(),
 				Client: client.UserID(),
 			}
-			err := engine.AddPresence(e.Channel, client.UserID(), clientInfo, d)
+			err := engine.AddPresence(e.Channel, client.UserID(), clientInfo, presenceDuration)
 			if err != nil {
 				Logger.Errorf("Error during AddPresence %v", err)
 			}
