@@ -41,9 +41,9 @@ services:
       - traefik.http.services.keycloak-service.loadbalancer.server.port=8080
       - traefik.http.routers.keycloak-container.entrypoints=http
     volumes:
-      - ./docker/keycloak-realm-export.json:/var/realm1.json
+      - ./docker/keycloak-realm-export.json:/var/migration/realm1.json
       - ./docker/keycloak-scripts-launchers:/opt/jboss/startup-scripts
-      - ./docker/keycloak-scripts:/opt/jboss/cli-scripts
+      - ./docker/keycloak-scripts:/opt/jboss/my-cli-scripts
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: postgres-keycloak
@@ -54,9 +54,10 @@ services:
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: admin
       KEYCLOAK_HOSTNAME: auth.site.local
-      KEYCLOAK_IMPORT: /var/realm1.json
+      #KEYCLOAK_IMPORT: /var/realm1.json
       # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
       #JDBC_PARAMS: "ssl=true"
+    command: -b 0.0.0.0 -Dkeycloak.migration.action=import -Dkeycloak.migration.provider=dir -Dkeycloak.migration.dir=/var/migration -Dkeycloak.migration.strategy=OVERWRITE_EXISTING
     ports:
       - 8844:8844
     networks:
