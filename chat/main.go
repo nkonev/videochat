@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/GeertJohan/go.rice"
+	"github.com/araddon/dateparse"
 	"github.com/centrifugal/centrifuge"
 	"github.com/centrifugal/protocol"
 	"github.com/labstack/echo/v4"
@@ -207,14 +207,25 @@ func runCentrifuge(node *centrifuge.Node) {
 }
 
 type authResult struct {
-	UserId    int64  `json:"id"`
+	UserId    string `json:"id"`
 	UserLogin string `json:"login"`
-	ExpiresAt int64  `json:"expiresAt"` // in GMT
+	ExpiresAt int64  `json:"expiresAt"` // in GMT. in seconds
 }
 
-// TODO attach to keycloak or move this logic to keycloak
-// TODO do not invoke keycloak, just consume id, login, expiresAt from keycloak headers
-//  https://www.keycloak.org/docs/latest/securing_apps/index.html#upstream-headers
+func extractAuth(request *http.Request) (*authResult, error) {
+	expiresInString := request.Header.Get("X-Auth-Expiresin")
+	t, err := dateparse.ParseLocal(expiresInString)
+	if err != nil {
+		return nil, err
+	}
+	return &authResult{
+		UserId:    request.Header.Get("X-Auth-Subject"),
+		UserLogin: request.Header.Get("X-Auth-Username"),
+		ExpiresAt: t.Unix(),
+	}, nil
+}
+
+// https://www.keycloak.org/docs/latest/securing_apps/index.html#upstream-headers
 // authorize checks authentication of each requests (websocket establishment or regular ones)
 //
 // Parameters:
@@ -227,60 +238,25 @@ type authResult struct {
 //  - *authResult pointer or nil
 //  - is whitelisted
 //  - error
-func authorize(request *http.Request, httpClient client.RestClient) (*authResult, bool, error) {
+func authorize(request *http.Request) (*authResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
 	if utils.CheckUrlInWhitelist(whitelist, request.RequestURI) {
 		return nil, true, nil
 	}
-
-	sessionCookie, err := request.Cookie(utils.SESSION_COOKIE)
+	auth, err := extractAuth(request)
 	if err != nil {
-		Logger.Infof("Error get '%v' cookie: %v", utils.SESSION_COOKIE, err)
+		Logger.Infof("Error during extract authResult: %v", err)
 		return nil, false, nil
 	}
-
-	authUrl := viper.GetString(utils.AUTH_URL)
-	// check cookie
-	req, err := http.NewRequest(
-		"GET", authUrl, nil,
-	)
-	if err != nil {
-		Logger.Errorf("Error during create request: %v", err)
-		return nil, false, err
-	}
-
-	req.AddCookie(sessionCookie)
-	req.Header.Add("Accept", "application/json")
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		Logger.Errorf("Error during requesting auth backend: %v", err)
-		return nil, false, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 401 {
-		return nil, false, nil
-	} else if resp.StatusCode == 200 {
-		b := resp.Body
-		var decodedResponse authResult
-		err = json.NewDecoder(b).Decode(&decodedResponse)
-		if err != nil {
-			Logger.Errorf("Error during decoding json: %v", err)
-			return nil, false, err
-		}
-		return &decodedResponse, false, nil
-	} else {
-		Logger.Errorf("Unknown auth status %v", resp.StatusCode)
-		return nil, false, errors.New(fmt.Sprintf("Unknown auth status %v", resp.StatusCode))
-	}
-
+	Logger.Infof("Success authResult: %v", *auth)
+	return auth, false, nil
 }
 
-func configureAuthMiddleware(httpClient client.RestClient) authMiddleware {
+func configureAuthMiddleware() authMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			authResult, whitelist, err := authorize(c.Request(), httpClient)
+			authResult, whitelist, err := authorize(c.Request())
 			if err != nil {
 				Logger.Errorf("Error during authorize: %v", err)
 				return err
@@ -296,9 +272,9 @@ func configureAuthMiddleware(httpClient client.RestClient) authMiddleware {
 	}
 }
 
-func centrifugeAuthMiddleware(h http.Handler, httpClient client.RestClient) http.Handler {
+func centrifugeAuthMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authResult, _, err := authorize(r, httpClient)
+		authResult, _, err := authorize(r)
 		if err != nil {
 			Logger.Errorf("Error during try to authenticate centrifuge request: %v", err)
 			return
@@ -308,7 +284,7 @@ func centrifugeAuthMiddleware(h http.Handler, httpClient client.RestClient) http
 		} else {
 			ctx := r.Context()
 			newCtx := centrifuge.SetCredentials(ctx, &centrifuge.Credentials{
-				UserID:   fmt.Sprintf("%v", authResult.UserId),
+				UserID:   authResult.UserId,
 				ExpireAt: authResult.ExpiresAt,
 				Info:     []byte(fmt.Sprintf("{\"login\": \"%v\"}", authResult.UserLogin)),
 			})
@@ -318,14 +294,14 @@ func centrifugeAuthMiddleware(h http.Handler, httpClient client.RestClient) http
 	})
 }
 
-func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle, node *centrifuge.Node, httpClient client.RestClient) *echo.Echo {
+func configureEcho(staticMiddleware staticMiddleware, authMiddleware authMiddleware, lc fx.Lifecycle, node *centrifuge.Node) *echo.Echo {
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
 	e.Logger.SetOutput(Logger.Writer())
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
-
+	e.Use(echo.MiddlewareFunc(authMiddleware))
 	accessLoggerConfig := middleware.LoggerConfig{
 		Output: Logger.Writer(),
 		Format: `"remote_ip":"${remote_ip}",` +
@@ -337,7 +313,7 @@ func configureEcho(staticMiddleware staticMiddleware, lc fx.Lifecycle, node *cen
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/connection/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}), httpClient)))
+	e.GET("/connection/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
 	e.GET("/chat", userHandler)
 
 	lc.Append(fx.Hook{

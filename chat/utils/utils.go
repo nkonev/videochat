@@ -8,8 +8,6 @@ import (
 	"regexp"
 )
 
-const SESSION_COOKIE = "SESSION"
-const AUTH_URL = "auth.url"
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
 
 type H map[string]interface{}

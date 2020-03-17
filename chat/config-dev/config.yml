@@ -11,6 +11,5 @@ http:
   disableCompression: false
 
 auth:
-  url: "http://localhost:8070/api/profile"
   exclude:
     - "^/public.*"
