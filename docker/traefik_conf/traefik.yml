@@ -21,7 +21,7 @@ api:
   insecure: true
   dashboard: true
 log:
-  level: DEBUG
+  level: INFO
 accessLog:
   format: json
   fields:
