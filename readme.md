@@ -141,3 +141,6 @@ docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/export.json ./do
 # Clean .site.local cookies
 1. ![alt text](./.markdown/clean_cookies_1.png)
 2. ![alt text](./.markdown/clean_cookies_2.png)
+
+# Development
+https://www.npmjs.com/package/npm-check-updates
