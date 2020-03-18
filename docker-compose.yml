@@ -3,13 +3,14 @@
 version: '3.7'
 
 services:
-  nginx-frontend:
+  # static server
+  nginx:
     image: nginx:1.16.0
     restart: unless-stopped
     ports:
       - 8081:80
     volumes:
-      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend-nginx:/usr/share/nginx/html:ro
     logging:
       driver: "json-file"
       options:

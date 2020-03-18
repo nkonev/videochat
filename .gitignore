@@ -4,10 +4,9 @@
 *.iml
 node_modules
 rice-box.go
-/chat/static/favicon.ico
-/chat/static/index.html
 /chat/videochat
 vendor
 .vendor-new
 grpc
 target
+/frontend-nginx

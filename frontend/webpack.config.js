@@ -3,8 +3,8 @@ const CssExtractPlugin = require('mini-css-extract-plugin');
 const LiveReloadPlugin = require('webpack-livereload-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
-const contentStatic = path.join(__dirname, "../static");
-const contentBase = path.join(contentStatic, "/build");
+const contentStatic = path.join(__dirname, "../frontend-nginx");
+const contentBase = path.join(contentStatic, "/public");
 
 module.exports = (env, argv) => {
     const pluginsArray = [
