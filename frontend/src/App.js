@@ -5,6 +5,7 @@ import {
     Route,
     Link
 } from "react-router-dom";
+import Chat from "./Chat";
 
 /**
  * Main landing page user starts interaction from
@@ -45,7 +46,7 @@ function App() {
                         <About />
                     </Route>
                     <Route path="/public/chat">
-                        <Chats />
+                        <Chat />
                     </Route>
                     <Route path="/">
                         <Home />
@@ -62,10 +63,6 @@ function Home() {
 
 function About() {
     return <h2>About</h2>;
-}
-
-function Chats() {
-    return <h2>Chats</h2>;
 }
 
 export default (App);
