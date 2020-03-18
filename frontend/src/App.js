@@ -58,11 +58,16 @@ function App() {
 }
 
 function Home() {
-    return <h2>Home</h2>;
+    return <div>
+        <h2>Welcome</h2>
+        <text>Best place to chatting with your friends.</text>
+    </div>;
 }
 
 function About() {
-    return <h2>About</h2>;
+    return <div>
+        <text>This is best application for video calls and text messaging. We was hardworking.</text>
+    </div>;
 }
 
 export default (App);
