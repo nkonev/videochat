@@ -54,10 +54,7 @@ services:
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: admin
       KEYCLOAK_HOSTNAME: auth.site.local
-      #KEYCLOAK_IMPORT: /var/realm1.json
-      # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
-      #JDBC_PARAMS: "ssl=true"
-    command: -b 0.0.0.0 -Dkeycloak.migration.action=import -Dkeycloak.migration.provider=dir -Dkeycloak.migration.dir=/var/migration -Dkeycloak.migration.strategy=OVERWRITE_EXISTING
+      KEYCLOAK_IMPORT: /var/migration/realm1.json
     ports:
       - 8844:8844
     networks:
