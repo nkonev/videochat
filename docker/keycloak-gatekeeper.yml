@@ -15,29 +15,14 @@ enable-logging: true
 # We send request to traefik internal endpoint for 1) able to working with many apps (chat, sender) 2) prevent to interfere with sending external requests to gatekeeper
 upstream-url: http://traefik:81
 resources:
-  - uri: /admin*
-    methods:
-      - GET
-    roles:
-      - client:test1
-      - client:test2
-    require-any-role: true
-    groups:
-      - admins
-      - users
   - uri: /chat*
     roles:
       - uma_authorization
     require-any-role: true
+  # see also in traefik
+  - uri: /
+    white-listed: true
+  - uri: /index.html
+    white-listed: true
   - uri: /public/*
     white-listed: true
-  - uri: /favicon
-    white-listed: true
-  - uri: /css/*
-    white-listed: true
-  - uri: /img/*
-    white-listed: true
-headers:
-  myheader1: value_1
-  myheader2: value_2
-

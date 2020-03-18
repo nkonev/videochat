@@ -313,8 +313,8 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware authMiddlew
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/connection/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
-	e.GET("/chat", userHandler)
+	e.GET("/chat/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
+	e.GET("/chat", chatHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -334,13 +334,13 @@ func convert(h http.Handler) echo.HandlerFunc {
 	}
 }
 
-type userDto struct {
-	Id    int64  `json:"id"`
-	Login string `json:"login"`
+type ChatDto struct {
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
 }
 
-func userHandler(c echo.Context) error {
-	usrs := []userDto{userDto{Login: "Terry", Id: 1}, userDto{Login: "Perry", Id: 2}}
+func chatHandler(c echo.Context) error {
+	usrs := []ChatDto{ChatDto{Name: "With Terry", Id: 1}, ChatDto{Name: "Friday drunk", Id: 2}}
 	return c.JSON(200, usrs)
 }
 
@@ -372,5 +372,5 @@ func runEcho(e *echo.Echo) {
 			Logger.Infof("server shut down: %v", err)
 		}
 	}()
-	Logger.Info("Server started. Waiting for interrupt (2) (Ctrl+C)")
+	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }

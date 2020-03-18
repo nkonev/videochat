@@ -1,7 +1,8 @@
 http:
   routers:
-    routerInternal:
+    routerChat:
       entryPoints:
+        # entrypoint is defined in static config
         - "http-internal"
       rule: "PathPrefix(`/chat`)"
       service: chat-service

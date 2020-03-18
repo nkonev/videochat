@@ -1,0 +1,13 @@
+http:
+  routers:
+    routerFrontend:
+      entryPoints:
+        # entrypoint is defined in static config
+        - "http-internal"
+      rule: "Path(`/`) || Path(`/index.html`) || PathPrefix(`/public/`)"
+      service: frontend-service
+  services:
+    frontend-service:
+      loadBalancer:
+        servers:
+          - url: http://site.local:8081

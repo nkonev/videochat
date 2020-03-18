@@ -20,7 +20,7 @@
     <input type="text" id="input" />
     <script type="text/javascript">
         // Create Centrifuge object with Websocket endpoint address set in main.go
-        var url = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/connection/websocket";
+        var url = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/chat/websocket";
         var clientId;
         var centrifuge = new Centrifuge(url, {
             onRefresh: function(ctx){
