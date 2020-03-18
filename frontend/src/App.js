@@ -60,13 +60,13 @@ function App() {
 function Home() {
     return <div>
         <h2>Welcome</h2>
-        <text>Best place to chatting with your friends.</text>
+        <div>Best place to chatting with your friends.</div>
     </div>;
 }
 
 function About() {
     return <div>
-        <text>This is best application for video calls and text messaging. We was hardworking.</text>
+        This is best application for video calls and text messaging. We was hardworking.
     </div>;
 }
 

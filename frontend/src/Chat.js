@@ -280,7 +280,7 @@ function Chat() {
                                     <Grid container item xs onClick={() => handleDump(value.id)} alignItems="center" spacing={1} className="downloadable-clickable">
                                         <ListItemText>
                                             <Box fontFamily="Monospace" className="list-element">
-                                                {value.login}
+                                                {value.name}
                                             </Box>
                                         </ListItemText>
                                     </Grid>
