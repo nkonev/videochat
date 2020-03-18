@@ -1,5 +1,10 @@
 import React from "react";
 
+/**
+ * Main landing page user starts interaction from
+ * @returns {*}
+ * @constructor
+ */
 function App() {
     return (
         <div className="App">
