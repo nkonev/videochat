@@ -18,7 +18,7 @@ services:
         max-size: "50m"
         max-file: "1"
   postgres-keycloak:
-    image: postgres:11.2
+    image: postgres:12.2
     restart: unless-stopped
     hostname: postgres-keycloak
     volumes:
