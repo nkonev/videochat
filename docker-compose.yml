@@ -61,6 +61,8 @@ services:
       - 8844:8844
     networks:
       backend:
+        aliases:
+          - auth.site.local
     logging:
       driver: "json-file"
       options:
@@ -80,8 +82,6 @@ services:
       - traefik.http.routers.gatekeeper-container.rule=Host(`site.local`)
       - traefik.http.services.gatekeeper-service.loadbalancer.server.port=3000
       - traefik.http.routers.gatekeeper-container.entrypoints=http
-    links:
-      - "keycloak:auth.site.local"
     networks:
       backend:
     logging:
