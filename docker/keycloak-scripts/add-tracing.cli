@@ -1,3 +1,0 @@
-echo "adding tracing"
-
-/subsystem=undertow/server=default-server/host=default-host/setting=access-log:add(pattern="%h %t traceId=\"%{i,X-B3-Traceid}\" \"%r\" %s \"%{i,User-Agent}\"", use-server-log=true)

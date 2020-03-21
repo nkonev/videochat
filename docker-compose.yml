@@ -17,71 +17,15 @@ services:
       options:
         max-size: "50m"
         max-file: "1"
-  postgres-keycloak:
+  postgres:
     image: postgres:12.2
     restart: unless-stopped
-    hostname: postgres-keycloak
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
+      POSTGRES_DB: chat
+      POSTGRES_USER: chat
       POSTGRES_PASSWORD: password
-    networks:
-      backend:
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "1"
-  keycloak:
-    image: jboss/keycloak:9.0.0
-    restart: unless-stopped
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.keycloak-container.rule=Host(`auth.site.local`)
-      - traefik.http.services.keycloak-service.loadbalancer.server.port=8080
-      - traefik.http.routers.keycloak-container.entrypoints=http
-    volumes:
-      - ./docker/keycloak-realm-export.json:/var/migration/realm1.json
-      - ./docker/keycloak-scripts-launchers:/opt/jboss/startup-scripts
-      - ./docker/keycloak-scripts:/opt/jboss/my-cli-scripts
-    environment:
-      DB_VENDOR: POSTGRES
-      DB_ADDR: postgres-keycloak
-      DB_DATABASE: keycloak
-      DB_USER: keycloak
-      DB_SCHEMA: public
-      DB_PASSWORD: password
-      KEYCLOAK_USER: admin
-      KEYCLOAK_PASSWORD: admin
-      KEYCLOAK_HOSTNAME: auth.site.local
-      KEYCLOAK_IMPORT: /var/migration/realm1.json
-    ports:
-      - 8844:8844
-    networks:
-      backend:
-        aliases:
-          - auth.site.local
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "1"
-  # fix 'aud' claim and 'client_id' do not match: https://stackoverflow.com/questions/53550321/keycloak-gatekeeper-aud-claim-and-client-id-do-not-match/53627747#53627747
-  gatekeeper:
-    image: keycloak/keycloak-gatekeeper:7.0.0
-    restart: unless-stopped
-    # https://www.keycloak.org/docs/latest/securing_apps/index.html#_keycloak_generic_adapter
-    volumes:
-      - ./docker/keycloak-gatekeeper.yml:/etc/keycloak-auth-proxy.conf
-    command:
-      ["--config=/etc/keycloak-auth-proxy.conf"]
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.gatekeeper-container.rule=Host(`site.local`)
-      - traefik.http.services.gatekeeper-service.loadbalancer.server.port=3000
-      - traefik.http.routers.gatekeeper-container.entrypoints=http
     networks:
       backend:
     logging:
@@ -117,8 +61,25 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  redis:
+    image: redis:5.0.5
+    hostname: redis
+    restart: unless-stopped
+    ports:
+      - 36379:6379
+    volumes:
+      - redis_data_dir:/data
+    networks:
+      backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+
 volumes:
   postgres_data:
+  redis_data_dir:
 
 networks:
   backend:

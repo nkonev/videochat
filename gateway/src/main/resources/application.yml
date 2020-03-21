@@ -4,6 +4,8 @@ server:
   port: 8282
 
 spring:
+  redis:
+    port: 36379
   application:
     name: gateway
   cloud:

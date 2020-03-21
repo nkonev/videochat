@@ -89,40 +89,6 @@ firewall-cmd --get-default-zone
 
 [file provider documentation](https://docs.traefik.io/v1.7/configuration/backends/file/)
 
-## Keycloak
-[Admin Console](http://auth.site.local:8844/auth/admin) (Use admin:admin for authentication)
-
-### Exec cli
-```bash
-docker-compose exec keycloak /opt/jboss/keycloak/bin/jboss-cli.sh --connect
-```
-
-### exporting (not always importable)
-```bash
-docker-compose exec keycloak bash
-cd /opt/jboss/keycloak/
-bin/standalone.sh -Djboss.socket.binding.port-offset=100 -Dkeycloak.migration.action=export -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.file=/tmp/export.json
-^C
-exit
-```
-next on host
-```bash
-docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/export.json ./docker/export2.json
-```
-
-### Token introspection
-[token introspection](https://www.keycloak.org/docs/latest/authorization_services/index.html#_service_protection_token_introspection)
-
-### Verify JWT (Id token)
-1. Grab kc-access cookie
-2. Optional `curl http://auth.site.local:8080/auth/realms/social-sender-realm/protocol/openid-connect/certs | jq`
-3. Put JWT to [jwt.io debugger](https://jwt.io/)
-4. Go to admin console, Realm Settings and click on Public key with `kid` as in header in `jwt.io`.
-5. Add `-----BEGIN PUBLIC KEY-----` and append `-----END PUBLIC KEY-----` to this copied public key and paste resulting key to `Public key` field in `jwt.io`
-
-# TODO
-1. HowerFly ?
-
 
 # Clean .site.local cookies
 1. ![alt text](./.markdown/clean_cookies_1.png)
@@ -131,18 +97,9 @@ docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/export.json ./do
 # Development
 [node check updates](https://www.npmjs.com/package/npm-check-updates)
 
-[Keycloak + React](https://scalac.io/user-authentication-keycloak-1/)
-
-[OAuth 2.0 / OpenID Connect (ru)](https://habr.com/ru/post/281406/)
-
-[how to apply authentication to-any web-service in-15 minutes using keycloak](https://medium.com/docker-hacks/how-to-apply-authentication-to-any-web-service-in-15-minutes-using-keycloak-and-keycloak-proxy-e4dd88bc1cd5)
-
-[keycloak-gatekeeper: 'aud' claim and 'client_id' do not match](https://stackoverflow.com/questions/53550321/keycloak-gatekeeper-aud-claim-and-client-id-do-not-match/53627747#53627747)
-
-[user authentication keycloak](https://scalac.io/user-authentication-keycloak-2/)
-
-[Protect Kubernetes Dashboard with OpenID Connect](https://itnext.io/protect-kubernetes-dashboard-with-openid-connect-104b9e75e39c)
-
-[WildFly Command Line Interface](https://docs.jboss.org/author/display/WFLY/Command+Line+Interface?_sscc=t)
-
 [Error:java: invalid source release: 8](https://stackoverflow.com/a/26009627)
+
+[Reactive, Security, Session MongoDb](https://medium.com/@hantsy/build-a-reactive-application-with-spring-boot-2-0-and-angular-de0ee5837fed)
+
+https://www.baeldung.com/spring-session-reactive
+
