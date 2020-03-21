@@ -9,7 +9,7 @@ public class GatewayApplication {
 
     public static void main(String[] args) {
         // https://projectreactor.io/docs/core/release/reference/#reactor-tools-debug
-        //ReactorDebugAgent.init();
+        ReactorDebugAgent.init();
         SpringApplication.run(GatewayApplication.class, args);
     }
 
