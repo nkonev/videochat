@@ -1,0 +1,26 @@
+logging.level.org.springframework.cloud.gateway.filter: trace
+
+server:
+  port: 8282
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    loadbalancer:
+      cache:
+        ttl: 30s
+      ribbon:
+        enabled: false
+    gateway:
+      httpclient:
+        connect-timeout: 1000
+        response-timeout: 5s
+      routes:
+        - predicates:
+            - Path=/chat
+          uri: http://chat.site.local:1235
+          filters:
+            - name: Retry
+              args:
+                methods: GET
