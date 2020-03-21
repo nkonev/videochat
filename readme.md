@@ -92,24 +92,10 @@ firewall-cmd --get-default-zone
 ## Keycloak
 [Admin Console](http://auth.site.local:8844/auth/admin) (Use admin:admin for authentication)
 
-## Exec cli
+### Exec cli
 ```bash
 docker-compose exec keycloak /opt/jboss/keycloak/bin/jboss-cli.sh --connect
 ```
-
-[OAuth 2.0 / OpenID Connect (ru)](https://habr.com/ru/post/281406/)
-
-[how to apply authentication to-any web-service in-15 minutes using keycloak](https://medium.com/docker-hacks/how-to-apply-authentication-to-any-web-service-in-15-minutes-using-keycloak-and-keycloak-proxy-e4dd88bc1cd5)
-
-[keycloak-gatekeeper: 'aud' claim and 'client_id' do not match](https://stackoverflow.com/questions/53550321/keycloak-gatekeeper-aud-claim-and-client-id-do-not-match/53627747#53627747)
-
-[user authentication keycloak](https://scalac.io/user-authentication-keycloak-2/)
-
-[Protect Kubernetes Dashboard with OpenID Connect](https://itnext.io/protect-kubernetes-dashboard-with-openid-connect-104b9e75e39c)
-
-[WildFly Command Line Interface](https://docs.jboss.org/author/display/WFLY/Command+Line+Interface?_sscc=t)
-
-[Error:java: invalid source release: 8](https://stackoverflow.com/a/26009627)
 
 ### exporting (not always importable)
 ```bash
@@ -143,4 +129,20 @@ docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/export.json ./do
 2. ![alt text](./.markdown/clean_cookies_2.png)
 
 # Development
-https://www.npmjs.com/package/npm-check-updates
+[node check updates](https://www.npmjs.com/package/npm-check-updates)
+
+[Keycloak + React](https://scalac.io/user-authentication-keycloak-1/)
+
+[OAuth 2.0 / OpenID Connect (ru)](https://habr.com/ru/post/281406/)
+
+[how to apply authentication to-any web-service in-15 minutes using keycloak](https://medium.com/docker-hacks/how-to-apply-authentication-to-any-web-service-in-15-minutes-using-keycloak-and-keycloak-proxy-e4dd88bc1cd5)
+
+[keycloak-gatekeeper: 'aud' claim and 'client_id' do not match](https://stackoverflow.com/questions/53550321/keycloak-gatekeeper-aud-claim-and-client-id-do-not-match/53627747#53627747)
+
+[user authentication keycloak](https://scalac.io/user-authentication-keycloak-2/)
+
+[Protect Kubernetes Dashboard with OpenID Connect](https://itnext.io/protect-kubernetes-dashboard-with-openid-connect-104b9e75e39c)
+
+[WildFly Command Line Interface](https://docs.jboss.org/author/display/WFLY/Command+Line+Interface?_sscc=t)
+
+[Error:java: invalid source release: 8](https://stackoverflow.com/a/26009627)
