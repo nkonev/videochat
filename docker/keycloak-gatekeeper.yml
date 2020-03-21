@@ -1,8 +1,8 @@
-client-id: microservices-example-app
+client-id: backend-app
 client-secret: 619e9349-17c1-43ce-9789-7cd05223ba25 # require for access_type: confidential
 # Note the redirection-url is optional, it will default to the X-Forwarded-Proto / X-Forwarded-Host r the URL scheme and host not found
 # [port] this port must be equal to public port of traefik and equal to in-container port of keycloak
-discovery-url: http://auth.site.local:8080/auth/realms/microservices-example-realm
+discovery-url: http://auth.site.local:8080/auth/realms/secured-backend-realm
 #enable-default-deny: true
 #encryption_key: AgXa7xRcoClDEU0ZDSH4X0XhL5Qy2Z2j
 secure-cookie: false
