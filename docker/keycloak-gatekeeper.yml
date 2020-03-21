@@ -26,3 +26,4 @@ resources:
     white-listed: true
   - uri: /public/*
     white-listed: true
+verbose: true
