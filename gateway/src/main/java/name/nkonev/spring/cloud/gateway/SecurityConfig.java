@@ -78,7 +78,7 @@ public class SecurityConfig {
                 }).build();
                 return chain.filter(modifiedExchange);
             })
-            // prevent leak when no session or principal
+            // prevent leak when no session or principal - we always should invoke chain.filter(exchange) for close netty buffers
             .switchIfEmpty(chain.filter(exchange));
         }
 
