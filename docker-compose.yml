@@ -99,6 +99,7 @@ services:
       - 8080:80
       - 8010:8080
     extra_hosts:
+      # hosts to go outside from docker network to host-deployed chat app
       # When you apply firewalld rule these requests will go to you IDE-launched chat app
       # see also network definition in bottom
       - "chat.site.local:172.28.0.1"
@@ -108,6 +109,8 @@ services:
       - ./docker/traefik_conf:/traefik_conf
     networks:
       backend:
+        aliases:
+          - api-gateway.site.local
     logging:
       driver: "json-file"
       options:

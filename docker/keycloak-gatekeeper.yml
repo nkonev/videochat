@@ -13,7 +13,7 @@ redirection-url: http://site.local:8080
 enable-logging: true
 # the upstream endpoint which we should proxy request (http://app)
 # We send request to traefik internal endpoint for 1) able to working with many apps (chat, sender) 2) prevent to interfere with sending external requests to gatekeeper
-upstream-url: http://traefik:81
+upstream-url: http://api-gateway.site.local:81
 resources:
   - uri: /chat*
     roles:
