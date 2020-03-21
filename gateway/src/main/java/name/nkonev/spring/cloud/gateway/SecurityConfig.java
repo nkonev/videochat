@@ -4,14 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -25,7 +21,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoField;
 
 @EnableWebFluxSecurity
 public class SecurityConfig {
@@ -49,13 +44,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PreNettyRoutingFilter headerInserter() {
-        return new PreNettyRoutingFilter();
+    public InsertAuthHeadersFilter headerInserter() {
+        return new InsertAuthHeadersFilter();
     }
 
-    public static class PreNettyRoutingFilter implements GlobalFilter, Ordered {
+    // inserted before NettyRoutingFilter which containing http client
+    public static class InsertAuthHeadersFilter implements GlobalFilter, Ordered {
 
-        DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z")
+        private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z")
                 .withZone(ZoneId.systemDefault());
 
         @Override
@@ -78,7 +74,7 @@ public class SecurityConfig {
                 }).build();
                 return chain.filter(modifiedExchange);
             })
-            // prevent leak when no session or principal - we always should invoke chain.filter(exchange) for close netty buffers
+            // prevent leak when there aren't either session or principal - we always should invoke chain.filter(exchange) for close netty buffers
             .switchIfEmpty(chain.filter(exchange));
         }
 
