@@ -45,8 +45,8 @@ class ProfilePage(private val driver: WebDriver) {
     }
 
     fun verifyContent() {
-        Assert.assertTrue(driver.pageSource.contains("Terry", false))
-        Assert.assertTrue(driver.pageSource.contains("Perry", false))
+        Assert.assertTrue(driver.pageSource.contains("With Terry", false))
+        Assert.assertTrue(driver.pageSource.contains("Friday drunk", false))
     }
 }
 
@@ -115,7 +115,7 @@ class KeycloakTest {
                     val response = client.newCall(request).execute()
                     val html = response.body()!!.string()
                     LOGGER.info("{}/{} Response: {}", num, max, html)
-                    if (html.contains("Videochat")) {
+                    if (html.contains("index stub")) {
                         htmlResponded = true
                     } else {
                         TimeUnit.SECONDS.sleep(1)
