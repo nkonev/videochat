@@ -37,6 +37,7 @@ function App() {
     });
 
     return (
+        <Router>
         <header className="header">
             <div className="wrapper">
                 <div className="row">
@@ -45,11 +46,9 @@ function App() {
                              alt="Logo" className="logo__pic"/>
                     </div>
                     <nav className="menu">
-                        <a href="#" className="menu__item">Главная</a>
-                        <a href="#" className="menu__item">О нас</a>
-                        <a href="#" className="menu__item">Услуги</a>
-                        <a href="#" className="menu__item">Каталог</a>
-                        <a href="#" className="menu__item">Контакты</a>
+                        <Link className="menu__item" to="/">Главная</Link>
+                        <Link className="menu__item" to="/public/about">About</Link>
+                        <Link className="menu__item" to="/public/chat">Chats</Link>
                     </nav>
                     <div className="callback">
                         <button className="callback__btn">Заказать звонок</button>
@@ -57,6 +56,22 @@ function App() {
                 </div>
             </div>
         </header>
+
+        {/* A <Switch> looks through its children <Route>s and
+        renders the first one that matches the current URL. */}
+        <Switch>
+            <Route path="/public/about">
+                <About />
+            </Route>
+            <Route path="/public/chat">
+                <Chat />
+            </Route>
+            <Route path="/">
+                <Home />
+            </Route>
+        </Switch>
+
+        </Router>
     );
 }
 
