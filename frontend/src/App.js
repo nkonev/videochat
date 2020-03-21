@@ -16,6 +16,7 @@ import Chat from "./Chat";
 
 
 function App() {
+    // https://ru.reactjs.org/docs/hooks-effect.html
     useEffect(() => {
         function showHeader() {
             console.log("Called showHeader");
