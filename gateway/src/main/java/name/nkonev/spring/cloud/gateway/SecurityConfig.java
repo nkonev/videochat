@@ -78,7 +78,8 @@ public class SecurityConfig {
                     builder.header(X_AUTH_SUBJECT, principal.getName());
                     builder.header(X_AUTH_EXPIRESIN, expiresInString);
                 }).build();
-                LOGGER.info("Inserting Security headers {}='{}', {}='{}', {}='{}'",
+                LOGGER.info("{} '{}' inserting {}='{}', {}='{}', {}='{}'",
+                        modifiedExchange.getRequest().getMethod(), modifiedExchange.getRequest().getURI(),
                         X_AUTH_USERNAME, principal.getName(),
                         X_AUTH_SUBJECT, principal.getName(),
                         X_AUTH_EXPIRESIN, expiresInString
