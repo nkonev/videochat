@@ -1,9 +1,14 @@
-logging.level.org.springframework.cloud.gateway.filter: trace
+#logging.level.org.springframework.cloud.gateway.filter: trace
 
 server:
   port: 8282
 
 spring:
+#  resources:
+#    cache:
+#      cachecontrol:
+#        no-cache: false
+#        max-age: 40s
   redis:
     port: 36379
   sleuth:
@@ -39,7 +44,6 @@ spring:
 #              args:
 #                name: Connection
 #                value: keep-alive
-#
 #      filter:
 #        remove-hop-by-hop:
 #          headers:
