@@ -24,4 +24,9 @@ public class GatewayApplication {
     public Mono<String> hello() {
         return Mono.just("Hello, Spring!");
     }
+
+    @GetMapping("/self/hello")
+    public Mono<String> selfHello() {
+        return Mono.just("Hello, Spring!");
+    }
 }

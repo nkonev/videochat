@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -30,4 +31,18 @@ public class GatewayTest {
                 .expectStatus().isOk()
                 .expectBody(String.class).isEqualTo("Hello, Spring!");
     }
+
+    @WithMockUser(username = "jlong")
+    @Test
+    public void testSelfHello() {
+        webTestClient
+                // Create a GET request to test an endpoint
+                .get().uri("/self/hello")
+                .accept(MediaType.TEXT_PLAIN)
+                .exchange()
+                // and use the dedicated DSL to test assertions against the response
+                .expectStatus().isOk()
+                .expectBody(String.class).isEqualTo("Hello, Spring!");
+    }
+
 }
