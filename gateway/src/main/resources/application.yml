@@ -33,3 +33,18 @@ spring:
         - predicates:
             - Path=/,/public/**
           uri: http://localhost:8081
+# https://qua.name/antolius/spring-cloud-gateway-connection-header
+#          filters:
+#            - name: SetRequestHeader
+#              args:
+#                name: Connection
+#                value: keep-alive
+#
+#      filter:
+#        remove-hop-by-hop:
+#          headers:
+#            - te
+#            - trailer
+#            - proxy-authorization
+#            - proxy-authenticate
+#            - x-application-context

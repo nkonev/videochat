@@ -30,10 +30,10 @@ public class SecurityConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(
-            ServerHttpSecurity http) {
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http.authorizeExchange()
-                .anyExchange().authenticated()
+                .pathMatchers("/", "/public/**").permitAll()
+                .pathMatchers("/chat/**").authenticated()
                 .and().formLogin()
                 .and().build();
     }
