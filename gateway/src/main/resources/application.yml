@@ -6,6 +6,10 @@ server:
 spring:
   redis:
     port: 36379
+  sleuth:
+    sampler:
+      probability: 1.0
+      rate: 0
   application:
     name: gateway
   cloud:

@@ -55,6 +55,9 @@ public class SecurityConfig {
 
         private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z")
                 .withZone(ZoneId.systemDefault());
+        private static final String X_AUTH_USERNAME = "X-Auth-Username";
+        private static final String X_AUTH_SUBJECT = "X-Auth-Subject";
+        private static final String X_AUTH_EXPIRESIN = "X-Auth-Expiresin";
 
         @Override
         public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -68,12 +71,18 @@ public class SecurityConfig {
                 Instant creationTime = session.getCreationTime();
                 Duration maxIdleTime = session.getMaxIdleTime();
                 Instant expiresIn = creationTime.plus(maxIdleTime);
+                String expiresInString = DATE_TIME_FORMATTER.format(expiresIn);
 
                 ServerWebExchange modifiedExchange = exchange.mutate().request(builder -> {
-                    builder.header("X-Auth-Username", principal.getName());
-                    builder.header("X-Auth-Subject", principal.getName());
-                    builder.header("X-Auth-Expiresin", DATE_TIME_FORMATTER.format(expiresIn));
+                    builder.header(X_AUTH_USERNAME, principal.getName());
+                    builder.header(X_AUTH_SUBJECT, principal.getName());
+                    builder.header(X_AUTH_EXPIRESIN, expiresInString);
                 }).build();
+                LOGGER.info("Inserting Security headers {}='{}', {}='{}', {}='{}'",
+                        X_AUTH_USERNAME, principal.getName(),
+                        X_AUTH_SUBJECT, principal.getName(),
+                        X_AUTH_EXPIRESIN, expiresInString
+                );
                 return chain.filter(modifiedExchange);
             })
             // prevent leak when there aren't either session or principal - we always should invoke chain.filter(exchange) for close netty buffers
