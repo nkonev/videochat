@@ -55,9 +55,9 @@ public class SecurityConfig {
 
         private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z")
                 .withZone(ZoneId.systemDefault());
-        private static final String X_AUTH_USERNAME = "X-Auth-Username";
-        private static final String X_AUTH_SUBJECT = "X-Auth-Subject";
-        private static final String X_AUTH_EXPIRESIN = "X-Auth-Expiresin";
+        public static final String X_AUTH_USERNAME = "X-Auth-Username";
+        public static final String X_AUTH_SUBJECT = "X-Auth-Subject";
+        public static final String X_AUTH_EXPIRESIN = "X-Auth-Expiresin";
 
         @Override
         public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
