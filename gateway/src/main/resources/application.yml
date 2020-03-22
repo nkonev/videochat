@@ -1,4 +1,4 @@
-#logging.level.org.springframework.cloud.gateway.filter: trace
+logging.level.org.springframework.cloud.gateway.filter: trace
 
 server:
   port: 8282
@@ -36,9 +36,6 @@ spring:
             - name: Retry
               args:
                 methods: GET
-        - predicates:
-            - Path=/,/public/**
-          uri: http://localhost:8081
 # https://qua.name/antolius/spring-cloud-gateway-connection-header
 #          filters:
 #            - name: SetRequestHeader

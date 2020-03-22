@@ -42,13 +42,13 @@ function App() {
             <div className="wrapper">
                 <div className="row">
                     <div className="logo">
-                        <img src="https://png.pngtree.com/element_origin_min_pic/16/09/11/1057d4c846189bf.jpg"
+                        <img src="/public/assets/pandas.jpg"
                              alt="Logo" className="logo__pic"/>
                     </div>
                     <nav className="menu">
                         <Link className="menu__item" to="/">Главная</Link>
-                        <Link className="menu__item" to="/public/about">About</Link>
-                        <Link className="menu__item" to="/public/chat">Chats</Link>
+                        <Link className="menu__item" to="/about">About</Link>
+                        <Link className="menu__item" to="/chat">Chats</Link>
                     </nav>
                     <div className="login">
                         <button className="login__btn">Войти</button>
@@ -60,10 +60,10 @@ function App() {
         {/* A <Switch> looks through its children <Route>s and
         renders the first one that matches the current URL. */}
         <Switch>
-            <Route path="/public/about">
+            <Route path="/about">
                 <About />
             </Route>
-            <Route path="/public/chat">
+            <Route path="/chat">
                 <Chat />
             </Route>
             <Route path="/">

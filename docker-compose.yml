@@ -9,6 +9,13 @@ services:
     restart: unless-stopped
     ports:
       - 8081:80
+    extra_hosts:
+      # hosts to go outside from docker network to host-deployed chat app
+      # When you apply firewalld rule these requests will go to you IDE-launched chat app
+      # see also network definition in bottom
+      - "api.site.local:172.28.0.1"
+    networks:
+      backend:
     volumes:
       - ./frontend-nginx:/usr/share/nginx/html:ro
       - ./docker/nginx/frontend.conf:/etc/nginx/conf.d/default.conf:ro

@@ -38,6 +38,7 @@ Final architecture:
 127.0.0.1   auth.site.local
 127.0.0.1   chat.site.local
 127.0.0.1   site.local
+127.0.0.1   api.site.local
 ```
 
 ## Allow container -> host
