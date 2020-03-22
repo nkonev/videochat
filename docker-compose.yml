@@ -33,33 +33,6 @@ services:
       options:
         max-size: "50m"
         max-file: "1"
-  traefik:
-    image: traefik:v2.1.6
-    hostname: traefik
-    restart: unless-stopped
-    # The Static Configuration
-    command: --configFile=/traefik_conf/traefik.yml
-    ports:
-      - 8080:80
-      - 8010:8080
-    extra_hosts:
-      # hosts to go outside from docker network to host-deployed chat app
-      # When you apply firewalld rule these requests will go to you IDE-launched chat app
-      # see also network definition in bottom
-      - "chat.site.local:172.28.0.1"
-      - "site.local:172.28.0.1"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./docker/traefik_conf:/traefik_conf
-    networks:
-      backend:
-        aliases:
-          - api-gateway.site.local
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "1"
 
   redis:
     image: redis:5.0.5
