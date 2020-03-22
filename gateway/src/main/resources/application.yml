@@ -30,7 +30,7 @@ spring:
         response-timeout: 5s
       routes:
         - predicates:
-            - Path=/chat
+            - Path=/api/chat
           uri: http://localhost:1235
           filters:
             - name: Retry

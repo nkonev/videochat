@@ -1,6 +1,6 @@
-body{
+/*body{
     height: 200vh;
-}
+}*/
 
 .header{
     width: 100%;
@@ -54,11 +54,11 @@ body{
     margin-right: 0;
 }
 
-.callback{
+.login{
     align-self: center;
 }
 
-.callback__btn{
+.login__btn{
     padding: 15px 20px;
     line-height: 1;
     font-size: 16px;

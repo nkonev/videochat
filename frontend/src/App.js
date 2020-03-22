@@ -50,8 +50,8 @@ function App() {
                         <Link className="menu__item" to="/public/about">About</Link>
                         <Link className="menu__item" to="/public/chat">Chats</Link>
                     </nav>
-                    <div className="callback">
-                        <button className="callback__btn">Заказать звонок</button>
+                    <div className="login">
+                        <button className="login__btn">Войти</button>
                     </div>
                 </div>
             </div>

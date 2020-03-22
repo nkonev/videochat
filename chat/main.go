@@ -313,8 +313,8 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware authMiddlew
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/chat/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
-	e.GET("/chat", chatHandler)
+	e.GET("/api/chat/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
+	e.GET("/api/chat", chatHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -340,7 +340,42 @@ type ChatDto struct {
 }
 
 func chatHandler(c echo.Context) error {
-	usrs := []ChatDto{ChatDto{Name: "With Terry", Id: 1}, ChatDto{Name: "Friday drunk", Id: 2}}
+	usrs := []ChatDto{
+		ChatDto{Name: "With Terry", Id: 1},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+		ChatDto{Name: "Friday drunk", Id: 2},
+	}
 	return c.JSON(200, usrs)
 }
 

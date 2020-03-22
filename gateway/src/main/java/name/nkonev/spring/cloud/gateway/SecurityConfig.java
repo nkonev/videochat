@@ -33,7 +33,7 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http.authorizeExchange()
                 .pathMatchers("/", "/public/**").permitAll()
-                .pathMatchers("/chat/**").authenticated()
+                .pathMatchers("/api/**").authenticated()
                 .and().formLogin()
                 .and().build();
     }

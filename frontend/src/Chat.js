@@ -117,7 +117,7 @@ function Chat() {
 
     const fetchData = () => {
         console.log("before get");
-        axios.get(`/chat`)
+        axios.get(`/api/chat`)
             .then(message => {
                 const m = message.data;
                 setConnections(m);
@@ -132,7 +132,7 @@ function Chat() {
 
     const onDelete = id => {
         console.log("Deleting", id);
-        axios.delete(`/chat/${id}`)
+        axios.delete(`/api/chat/${id}`)
             .then(() => {
                 fetchData();
             });
@@ -142,7 +142,7 @@ function Chat() {
         checkPopoverSetAnchorEl(event.currentTarget);
         setCheckMessage("Checking...");
 
-        (c.id ? axios.put(`/chat`, c) : axios.post(`/chat`, c))
+        (c.id ? axios.put(`/api/chat`, c) : axios.post(`/api/chat`, c))
             .then(() => {
                 fetchData();
                 handleCloseEditModal();
