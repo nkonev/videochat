@@ -5,9 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.rpc.TraceRpcAutoConfiguration;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 import reactor.tools.agent.ReactorDebugAgent;
 
 @SpringBootApplication(exclude = {TraceMessagingAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class, TraceRpcAutoConfiguration.class})
@@ -20,13 +18,4 @@ public class GatewayApplication {
         SpringApplication.run(GatewayApplication.class, args);
     }
 
-    @GetMapping("/public/hello")
-    public Mono<String> hello() {
-        return Mono.just("Hello, Spring!");
-    }
-
-    @GetMapping("/self/hello")
-    public Mono<String> selfHello() {
-        return Mono.just("Hello, Spring!");
-    }
 }

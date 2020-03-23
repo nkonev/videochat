@@ -37,35 +37,6 @@ public class GatewayTest {
     private static final String JLONG = "jlong";
     private static final String TRUE = "true";
 
-    @Test
-    public void testHello() {
-        webTestClient
-                // Create a GET request to test an endpoint
-                .get().uri("/public/hello")
-                .accept(MediaType.TEXT_PLAIN)
-                .exchange()
-                // and use the dedicated DSL to test assertions against the response
-                .expectStatus().isOk()
-                .expectBody(String.class).isEqualTo("Hello, Spring!");
-    }
-
-    @WithMockUser(username = JLONG)
-    @Test
-    public void testSelfHello() {
-        webTestClient
-                // Create a GET request to test an endpoint
-                .get().uri("/self/hello")
-                .accept(MediaType.TEXT_PLAIN)
-                .exchange()
-                // and use the dedicated DSL to test assertions against the response
-                .expectStatus().isOk()
-                .expectBody(String.class).isEqualTo("Hello, Spring!");
-    }
-
-
-
-
-
     private static final String X_FROM_DOWNSTREAM = "X-From-Downstream";
 
     protected static final int DOWNSTREAM_PORT = 9988;
