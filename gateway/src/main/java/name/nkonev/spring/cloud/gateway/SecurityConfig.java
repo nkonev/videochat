@@ -6,17 +6,30 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
+import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
+import org.springframework.security.web.server.savedrequest.ServerRequestCache;
+import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache;
+import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter;
+import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter;
 import org.springframework.session.data.redis.config.annotation.web.server.EnableRedisWebSession;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
+import java.net.URI;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,11 +44,30 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+        LoginPageGeneratingWebFilter loginPageGeneratingWebFilter = new LoginPageGeneratingWebFilter();
+        loginPageGeneratingWebFilter.setFormLoginEnabled(true);
         return http.authorizeExchange()
-                .pathMatchers("/", "/public/**").permitAll()
+                .pathMatchers("/", "/public/**"/*, "/login", "/logout"*/).permitAll()
                 .pathMatchers("/api/**", "/self/**").authenticated()
-                .and().formLogin()
-                .and().build();
+                .and()
+                .formLogin()
+                .loginPage("/login")
+                .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
+//                .authenticationSuccessHandler(new RedirectServerAuthenticationSuccessHandler("/"))
+                .and()
+                .logout()
+                .logoutUrl("/logout")
+//                .logoutSuccessHandler(logoutSuccessHandler("/bye"))
+                .and()
+                // restore default pages
+                .addFilterAt(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
+                .addFilterAt(new LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
+                .build();
+    }
+    public ServerLogoutSuccessHandler logoutSuccessHandler(String uri) {
+        RedirectServerLogoutSuccessHandler successHandler = new RedirectServerLogoutSuccessHandler();
+        successHandler.setLogoutSuccessUrl(URI.create(uri));
+        return successHandler;
     }
 
     @Bean
