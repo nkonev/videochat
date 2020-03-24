@@ -71,6 +71,10 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-tools</artifactId>
+        </dependency>
 
 
         <dependency>
@@ -92,7 +96,18 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>${spring.boot.version}</version>
-			</plugin>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>name.nkonev.users.UsersApplication</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+
+            </plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
