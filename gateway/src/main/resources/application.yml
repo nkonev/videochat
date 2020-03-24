@@ -50,3 +50,6 @@ spring:
 #            - proxy-authorization
 #            - proxy-authenticate
 #            - x-application-context
+grpc:
+  host: localhost
+  port: 6565
