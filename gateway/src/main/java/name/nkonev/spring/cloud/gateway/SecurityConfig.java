@@ -19,6 +19,8 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.ServerRedirectStrategy;
@@ -131,8 +133,9 @@ public class SecurityConfig {
 
     @Bean
     public MapReactiveUserDetailsService userDetailsService() {
-        var jlong = User.withDefaultPasswordEncoder().username("jlong").password("pw").roles("USER").build();
-        var rwinch = User.withDefaultPasswordEncoder().username("rwinch").password("pw").roles("ADMIN", "USER").build();
+        PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+        var jlong = User.builder().passwordEncoder(encoder::encode).username("jlong").password("pw").roles("USER").build();
+        var rwinch = User.builder().passwordEncoder(encoder::encode).username("rwinch").password("pw").roles("ADMIN", "USER").build();
         return new MapReactiveUserDetailsService(jlong, rwinch);
     }
 
