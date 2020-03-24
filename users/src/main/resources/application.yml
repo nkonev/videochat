@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:4432/chat?connectTimeout=10&socketTimeout=40
+    username: chat
+    password: password
