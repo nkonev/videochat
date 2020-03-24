@@ -35,14 +35,18 @@ public class GrpcClientConfig {
         }
     }
 
-    @Bean
-    public HelloServiceGrpc.HelloServiceBlockingStub conf(GrpcClientProperties properties) {
+    @Bean(destroyMethod = "shutdown")
+    public ManagedChannel grpcClient(GrpcClientProperties properties) {
         // https://codenotfound.com/grpc-java-example.html
         // https://www.baeldung.com/grpc-introduction
         ManagedChannel grpcClient = ManagedChannelBuilder.forAddress(properties.getHost(), properties.getPort())
-//                .intercept(grpcTracing.newClientInterceptor())
                 .usePlaintext()
                 .build();
+        return grpcClient;
+    }
+
+    @Bean
+    public HelloServiceGrpc.HelloServiceBlockingStub helloService(ManagedChannel grpcClient) {
         HelloServiceGrpc.HelloServiceBlockingStub helloServiceStub = HelloServiceGrpc.newBlockingStub(grpcClient);
         return helloServiceStub;
     }
