@@ -1,9 +1,8 @@
 package name.nkonev.spring.cloud.gateway;
 
-import brave.Tracing;
-import com.codenotfound.grpc.helloworld.HelloServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import name.nkonev.users.UserServiceGrpc;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -46,8 +45,7 @@ public class GrpcClientConfig {
     }
 
     @Bean
-    public HelloServiceGrpc.HelloServiceBlockingStub helloService(ManagedChannel grpcClient) {
-        HelloServiceGrpc.HelloServiceBlockingStub helloServiceStub = HelloServiceGrpc.newBlockingStub(grpcClient);
-        return helloServiceStub;
+    public UserServiceGrpc.UserServiceBlockingStub userService(ManagedChannel grpcClient) {
+        return UserServiceGrpc.newBlockingStub(grpcClient);
     }
 }

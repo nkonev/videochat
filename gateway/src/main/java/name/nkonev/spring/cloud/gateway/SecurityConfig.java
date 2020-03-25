@@ -130,15 +130,6 @@ public class SecurityConfig {
         }
     }
 
-
-    @Bean
-    public MapReactiveUserDetailsService userDetailsService() {
-        PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
-        var jlong = User.builder().passwordEncoder(encoder::encode).username("jlong").password("pw").roles("USER").build();
-        var rwinch = User.builder().passwordEncoder(encoder::encode).username("rwinch").password("pw").roles("ADMIN", "USER").build();
-        return new MapReactiveUserDetailsService(jlong, rwinch);
-    }
-
     @Bean
     public InsertAuthHeadersFilter headerInserter() {
         return new InsertAuthHeadersFilter();
