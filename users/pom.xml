@@ -19,7 +19,7 @@
         <os.maven.plugin.version>1.5.0.Final</os.maven.plugin.version>
         <protobuf.maven.plugin.version>0.5.1</protobuf.maven.plugin.version>
         <protoc.version>3.7.1</protoc.version>
-
+        <spring-cloud.version>Hoxton.SR3</spring-cloud.version>
     </properties>
 
     <dependencyManagement>
@@ -31,6 +31,14 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -76,6 +84,44 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
             <version>${grpc.java.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-sleuth</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.zipkin.brave</groupId>
+                    <artifactId>brave-instrumentation-messaging</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.zipkin.brave</groupId>
+                    <artifactId>brave-instrumentation-rpc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.zipkin.brave</groupId>
+                    <artifactId>brave-instrumentation-spring-rabbit</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.zipkin.brave</groupId>
+                    <artifactId>brave-instrumentation-kafka-clients</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.zipkin.brave</groupId>
+                    <artifactId>brave-instrumentation-kafka-streams</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.zipkin.brave</groupId>
+                    <artifactId>brave-instrumentation-httpclient</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.zipkin.brave</groupId>
+                    <artifactId>brave-instrumentation-httpasyncclient</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.zipkin.brave</groupId>
+                    <artifactId>brave-instrumentation-jms</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 
