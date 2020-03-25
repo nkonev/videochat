@@ -76,6 +76,16 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring.boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>name.nkonev.spring.cloud.gateway.GatewayApplication</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -84,10 +94,6 @@
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-                    <includes>
-                        <include>${project.build.directory}/generated-sources/protobuf/grpc-java/**/*.java</include>
-                        <include>${project.build.directory}/generated-sources/protobuf/java/**/*.java</include>
-                    </includes>
                 </configuration>
             </plugin>
 

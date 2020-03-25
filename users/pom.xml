@@ -15,6 +15,11 @@
         <logback.version>1.2.3</logback.version>
         <spring.boot.version>2.2.5.RELEASE</spring.boot.version>
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
+        <grpc.java.version>1.28.0</grpc.java.version>
+        <os.maven.plugin.version>1.5.0.Final</os.maven.plugin.version>
+        <protobuf.maven.plugin.version>0.5.1</protobuf.maven.plugin.version>
+        <protoc.version>3.7.1</protoc.version>
+
     </properties>
 
     <dependencyManagement>
@@ -91,8 +96,36 @@
     </dependencies>
 
 	<build>
-		<plugins>
-			<plugin>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>${os.maven.plugin.version}</version>
+            </extension>
+        </extensions>
+
+        <plugins>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>${protobuf.maven.plugin.version}</version>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
+                    <pluginId>grpc-java</pluginId>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.java.version}:exe:${os.detected.classifier}</pluginArtifact>
+                    <protoSourceRoot>${basedir}/../protobuf</protoSourceRoot>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compile-custom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>${spring.boot.version}</version>
@@ -115,7 +148,7 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
-				</configuration>
+                </configuration>
 			</plugin>
 
 			<plugin>
