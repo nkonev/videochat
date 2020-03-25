@@ -32,6 +32,7 @@ public class GrpcUserDetailsService implements ReactiveUserDetailsService {
             UserDetailsResponse byUsername = userServiceStub.findByUsername(build);
             ProtocolStringList rolesList = byUsername.getRolesList();
             String[] roles = rolesList.toArray(new String[0]);
+            // TODO move encoding to user service
             UserDetails user = User.builder().passwordEncoder(encoder::encode)
                     .username(byUsername.getUsername()).password(byUsername.getPassword()).roles(roles).build();
             return Mono.just(user);
