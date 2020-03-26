@@ -49,16 +49,6 @@ function getModalStyle() {
     };
 }
 
-const GreenButton = withStyles(theme => ({
-    root: {
-        color: common[500],
-        backgroundColor: green[500],
-        '&:hover': {
-            backgroundColor: green[700],
-        },
-    },
-}))(Button);
-
 function Chat() {
     // state
     const [chats, setChats] = useState([]);
