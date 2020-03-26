@@ -4,7 +4,6 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -20,7 +19,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
                 .setPassword("pw")
                 .addAllRoles(List.of("ADMIN", "USER"))
                 .build();
-        LOGGER.info("Requesting {}", request.getUsername());
+        LOGGER.info("Responding UserDetails for '{}'", request.getUsername());
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();

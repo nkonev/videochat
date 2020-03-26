@@ -4,11 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.rpc.TraceRpcAutoConfiguration;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.tools.agent.ReactorDebugAgent;
 
-@SpringBootApplication(exclude = {TraceMessagingAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class, TraceRpcAutoConfiguration.class})
+@SpringBootApplication(exclude = {TraceMessagingAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class})
 @RestController
 public class GatewayApplication {
 
