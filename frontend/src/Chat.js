@@ -31,7 +31,7 @@ const useStyles = makeStyles(theme => ({
         backgroundColor: theme.palette.background.paper,
     },
     fabAddButton: {
-        position: 'absolute',
+        position: 'fixed',
         zIndex: 1,
         bottom: 30,
         right: 30,
@@ -132,11 +132,12 @@ function Chat() {
                     </Link>
                 </Breadcrumbs>
 
-                {space}
-
                 <Fab color="primary" aria-label="add" className={classes.fabAddButton}>
                     <AddIcon className="fab-add"/>
                 </Fab>
+
+                {space}
+
             </div>
 
     );
