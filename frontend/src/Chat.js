@@ -9,7 +9,7 @@ import Grid from '@material-ui/core/Grid';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import Box from '@material-ui/core/Box';
-import { green, common } from '@material-ui/core/colors';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import Link from '@material-ui/core/Link';
 
@@ -27,6 +27,7 @@ const useStyles = makeStyles(theme => ({
     },
     root: {
         width: '100%',
+        height: '100%',
         backgroundColor: theme.palette.background.paper,
     },
     fabAddButton: {
@@ -35,6 +36,11 @@ const useStyles = makeStyles(theme => ({
         bottom: 30,
         right: 30,
         margin: '0 auto',
+    },
+    scroller: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: "center",
     },
 }));
 
@@ -67,8 +73,52 @@ function Chat() {
 
     const classes = useStyles();
 
+    let space;
+    if (Array.isArray(chats) && chats.length) {
+        space = (
+            <List className="list-db-connections">
+                {chats.map((value, index) => {
+                    return (
+                        <ListItem key={value.id} button>
+
+                            <Grid container spacing={1} direction="row">
+                                <Grid container item xs alignItems="center" spacing={1} className="downloadable-clickable">
+                                    <ListItemText>
+                                        <Box fontFamily="Monospace" className="list-element">
+                                            {value.name}
+                                        </Box>
+                                    </ListItemText>
+                                </Grid>
+
+                                <Grid container item xs={2} direction="row"
+                                      justify="flex-end"
+                                      alignItems="center" spacing={1}>
+                                    <Grid item>
+                                        <Button variant="contained" color="primary">
+                                            Share
+                                        </Button>
+                                    </Grid>
+                                    <Grid item>
+                                        <Button variant="contained" color="secondary">
+                                            Delete
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </ListItem>
+                    )
+                })}
+            </List>
+        );
+    } else {
+        space = (
+        <div className={classes.scroller}>
+            <CircularProgress size={72} thickness={8} variant={'indeterminate'} disableShrink={true}/>
+        </div>
+        );
+    }
+
     return (
-        <div className="App">
             <div className={classes.root}>
                 <header className={classes.appHeader}>
                     <div className="header-text">Videochat</div>
@@ -81,46 +131,14 @@ function Chat() {
                         Current chat
                     </Link>
                 </Breadcrumbs>
-                <List className="list-db-connections">
-                    {chats.map((value, index) => {
-                        return (
-                            <ListItem key={value.id} button>
 
-                                <Grid container spacing={1} direction="row">
-                                    <Grid container item xs alignItems="center" spacing={1} className="downloadable-clickable">
-                                        <ListItemText>
-                                            <Box fontFamily="Monospace" className="list-element">
-                                                {value.name}
-                                            </Box>
-                                        </ListItemText>
-                                    </Grid>
-
-                                    <Grid container item xs={2} direction="row"
-                                          justify="flex-end"
-                                          alignItems="center" spacing={1}>
-                                        <Grid item>
-                                            <Button variant="contained" color="primary">
-                                                Share
-                                            </Button>
-                                        </Grid>
-                                        <Grid item>
-                                            <Button variant="contained" color="secondary">
-                                                Delete
-                                            </Button>
-                                        </Grid>
-                                    </Grid>
-                                </Grid>
-                            </ListItem>
-                        )
-                    })}
-                </List>
+                {space}
 
                 <Fab color="primary" aria-label="add" className={classes.fabAddButton}>
                     <AddIcon className="fab-add"/>
                 </Fab>
             </div>
 
-        </div>
     );
 }
 
