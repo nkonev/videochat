@@ -13,7 +13,6 @@ import { green, common } from '@material-ui/core/colors';
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import Link from '@material-ui/core/Link';
 
-const circleCheckRadius = 34;
 const useStyles = makeStyles(theme => ({
     appHeader: {
         'background-color': '#282c34',
@@ -36,39 +35,6 @@ const useStyles = makeStyles(theme => ({
         bottom: 30,
         right: 30,
         margin: '0 auto',
-    },
-    fabRestoreButton: {
-        position: 'absolute',
-        zIndex: 1,
-        bottom: 30,
-        left: 30,
-        margin: '0 auto',
-    },
-    paper: {
-        position: 'absolute',
-        width: 400,
-        backgroundColor: theme.palette.background.paper,
-        border: '2px solid #000',
-        boxShadow: theme.shadows[5],
-        padding: theme.spacing(2),
-    },
-    confirm: {
-        position: 'absolute',
-        backgroundColor: theme.palette.background.paper,
-        border: '2px solid #000',
-        boxShadow: theme.shadows[5],
-        padding: theme.spacing(2),
-    },
-    typography: {
-        padding: theme.spacing(2),
-    },
-    buttonProgress: {
-        color: green[500],
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        marginTop: -circleCheckRadius,
-        marginLeft: -circleCheckRadius,
     },
 }));
 
