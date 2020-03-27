@@ -1,4 +1,4 @@
-package name.nkonev.spring.cloud.gateway;
+package name.nkonev.gateway;
 
 import brave.Tracing;
 import brave.grpc.GrpcTracing;

@@ -82,7 +82,7 @@
                             <goal>repackage</goal>
                         </goals>
                         <configuration>
-                            <mainClass>name.nkonev.spring.cloud.gateway.GatewayApplication</mainClass>
+                            <mainClass>name.nkonev.gateway.GatewayApplication</mainClass>
                         </configuration>
                     </execution>
                 </executions>

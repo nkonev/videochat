@@ -1,4 +1,4 @@
-package name.nkonev.spring.cloud.gateway;
+package name.nkonev.gateway;
 
 import com.google.protobuf.ProtocolStringList;
 import name.nkonev.users.UserDetailsRequest;
