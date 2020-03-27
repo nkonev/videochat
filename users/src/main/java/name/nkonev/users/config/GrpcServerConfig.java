@@ -1,4 +1,4 @@
-package name.nkonev.users;
+package name.nkonev.users.config;
 
 import brave.Tracing;
 import brave.grpc.GrpcTracing;

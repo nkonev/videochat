@@ -1,6 +1,9 @@
-package name.nkonev.users;
+package name.nkonev.users.service.api;
 
 import io.grpc.stub.StreamObserver;
+import name.nkonev.users.UserDetailsRequest;
+import name.nkonev.users.UserDetailsResponse;
+import name.nkonev.users.UserServiceGrpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
