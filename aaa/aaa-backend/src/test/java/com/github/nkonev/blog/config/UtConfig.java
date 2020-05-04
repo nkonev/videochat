@@ -9,6 +9,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisServerCommands;
 import javax.annotation.PostConstruct;
 
+// TODO move
 @Configuration
 public class UtConfig {
 

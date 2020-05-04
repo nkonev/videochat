@@ -9,10 +9,8 @@ import com.github.nkonev.blog.converter.UserAccountConverter;
 import com.github.nkonev.blog.dto.EditUserDTO;
 import com.github.nkonev.blog.dto.LockDTO;
 import com.github.nkonev.blog.entity.jdbc.CreationType;
-import com.github.nkonev.blog.entity.jdbc.Post;
 import com.github.nkonev.blog.entity.jdbc.UserAccount;
 import com.github.nkonev.blog.dto.UserRole;
-import com.github.nkonev.blog.repository.jdbc.PostRepository;
 import com.github.nkonev.blog.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.blog.security.BlogUserDetailsService;
 import org.hamcrest.CoreMatchers;
@@ -45,9 +43,6 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private PostRepository postRepository;
 
     @Autowired
     private BlogUserDetailsService blogUserDetailsService;
@@ -459,10 +454,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 login, null, null, false, false, true,
                 UserRole.ROLE_USER, login+"@example.com", null);
         userAccount = userAccountRepository.save(userAccount);
-        Post post = new Post(null, "title_"+login, "text", "");
-        post.setOwnerId(userAccount.getId());
-        post.setCreateDateTime(getNowUTC());
-        post = postRepository.save(post);
+
         return userAccount.getId();
     }
 

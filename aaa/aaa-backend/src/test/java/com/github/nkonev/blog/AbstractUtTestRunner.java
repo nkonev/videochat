@@ -6,7 +6,6 @@ package com.github.nkonev.blog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nkonev.blog.config.UtConfig;
-import com.github.nkonev.blog.dto.PostDTO;
 import com.github.nkonev.blog.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.blog.security.SecurityConfig;
 import com.github.nkonev.blog.util.ContextPathHelper;
@@ -40,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-        classes = {BlogApplication.class, SwaggerConfig.class, UtConfig.class},
+        classes = {AaaApplication.class, UtConfig.class},
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
 )
 @AutoConfigureMockMvc(printOnlyOnFailure = false, print = MockMvcPrint.LOG_DEBUG)
@@ -50,12 +49,6 @@ public abstract class AbstractUtTestRunner {
 
     @Autowired
     protected MockMvc mockMvc;
-
-//    @Value("${server.port}")
-//    protected int serverPort;
-//
-//    @Value("${server.contextPath}")
-//    protected String contextPath;
 
     @Autowired
     protected UserConfirmationTokenRepository userConfirmationTokenRepository;
@@ -86,18 +79,6 @@ public abstract class AbstractUtTestRunner {
     protected ObjectMapper objectMapper;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractUtTestRunner.class);
-
-    public PostDTO getPost(long postId) throws Exception {
-        MvcResult getPostRequest = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.POST+"/"+postId)
-        )
-                .andExpect(status().isOk())
-                .andReturn();
-        String getStr = getPostRequest.getResponse().getContentAsString();
-        LOGGER.debug(getStr);
-        return objectMapper.readValue(getStr, PostDTO.class);
-    }
-
 
     protected String buildCookieHeader(HttpCookie... cookies) {
         return String.join("; ", Arrays.stream(cookies).map(httpCookie -> httpCookie.toString()).collect(Collectors.toList()));
