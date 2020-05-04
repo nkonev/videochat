@@ -27,7 +27,7 @@
         <maven.surefire.report.plugin.version>2.22.2</maven.surefire.report.plugin.version>
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
         <maven.jxr.report.plugin.version>3.0.0</maven.jxr.report.plugin.version>
-        <java.version>13</java.version>
+        <java.version>11</java.version>
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
         <maven.install.plugin.version>2.5.2</maven.install.plugin.version>

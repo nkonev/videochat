@@ -34,33 +34,6 @@ CREATE TABLE persistent_logins (
 SET search_path = public, pg_catalog;
 
 
-CREATE TABLE posts.post (
-  id BIGSERIAL PRIMARY KEY,
-  title CHARACTER VARYING(256) NOT NULL,
-  text TEXT NOT NULL,
-	text_no_tags TEXT NOT NULL,
-  title_img TEXT NOT NULL,
-  owner_id BIGINT NOT NULL REFERENCES auth.users(id),
-  create_date_time timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
-  UNIQUE (title)
-);
-
-CREATE TABLE posts.comment (
-  id BIGSERIAL PRIMARY KEY,
-  text TEXT NOT NULL,
-  post_id BIGINT NOT NULL REFERENCES posts.post(id),
-  owner_id BIGINT NOT NULL REFERENCES auth.users(id),
-  create_date_time timestamp NOT NULL DEFAULT (now() at time zone 'utc')
-);
-
-
-CREATE TABLE images.post_title_image (
-	id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-	img BYTEA,
-	content_type VARCHAR(64),
-	create_date_time timestamp NOT NULL DEFAULT (now() at time zone 'utc')
-);
-
 CREATE TABLE images.user_avatar_image (
 	id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 	img BYTEA,
@@ -68,14 +41,6 @@ CREATE TABLE images.user_avatar_image (
 	create_date_time timestamp NOT NULL DEFAULT (now() at time zone 'utc')
 );
 
-CREATE TABLE images.post_content_image (
-	id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-	img BYTEA,
-	content_type VARCHAR(64),
-	create_date_time timestamp NOT NULL DEFAULT (now() at time zone 'utc')
-);
 
-
-CREATE INDEX title_text_idx ON posts.post USING gin (to_tsvector('russian', title || ' ' || text_no_tags));
 
 UPDATE auth.users SET role = 'ROLE_ADMIN' WHERE id = (SELECT id FROM auth.users WHERE username = 'admin');

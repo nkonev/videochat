@@ -23,15 +23,6 @@ spring.mail:
     mail.smtp.timeout: 3000
     mail.smtp.writetimeout: 5000
 
-custom.stomp.broker:
-  host: "172.22.0.4"
-  port: 61613
-  virtual-host: /
-  client-login: blog
-  client-password: blogPazZw0rd
-  system-login: blog
-  system-password: blogPazZw0rd
-
 # Postgres image store configuration
 custom.image:
   max-bytes: 4194304 # 4 Mb. Must be < than tomcat file upload limit. see also spring.servlet.multipart.*
@@ -41,8 +32,7 @@ custom.image:
    - image/jpeg
   # value in seconds, passed in Cache-Control header
   max-age: 31536000
-# If post title image is empty - it set first image from content to title automatically
-custom.set.first.image.as.title: true
+
 spring.session.timeout: 2d
 
 
@@ -63,24 +53,6 @@ custom:
       text-template: "Link __PASSWORD_RESET_LINK_PLACEHOLDER__ for reset your password for account __LOGIN__. If you didn't issue password reset -- you can ignore this mail."
     token:
       ttl-minutes: 5
-  tasks:
-    enable: false
-    poolSize: 10
-    defaultLockAtMostForSec: 20
-    defaultLockAtLeastForSec: 20
-    images.clean:
-      cron: "0 * * * * *"
-    rendertron.cache.refresh:
-      cron: "0 */30 * * * *"
-    elasticsearch.refresh:
-      cron: "0 0 */2 * * *"
-  rendertron:
-    serviceUrl: http://rendertron.example.com:3000/
-  xss:
-    iframe:
-      allow:
-        src:
-          pattern: '^(https://www\.youtube\.com.*)|(https://coub\.com/.*)|(https://player\.vimeo\.com.*)|(https://asciinema\.org.*)$'
 
 
 server.port: 9080
@@ -96,12 +68,12 @@ custom.it.password: admin
 
 
 spring.datasource:
-    name: blog_ds
+    name: aaa_ds
     type: org.apache.tomcat.jdbc.pool.DataSource
     # https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters
-    url: jdbc:postgresql://172.22.0.2:5432/blog?connectTimeout=10&socketTimeout=40
-    username: blog
-    password: "blogPazZw0rd"
+    url: jdbc:postgresql://127.0.0.1:35432/aaa?connectTimeout=10&socketTimeout=40
+    username: aaa
+    password: "aaaPazZw0rd"
     driverClassName: org.postgresql.Driver
     # https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#boot-features-connect-to-production-database
     # https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html#Common_Attributes
@@ -127,16 +99,8 @@ spring.flyway:
   schemas: migrations, auth, posts, images, settings
   out-of-order: true
 
-spring.redis.url: redis://172.22.0.3:6379/0
+spring.redis.url: redis://127.0.0.1:36379/0
 spring.data.redis.repositories.enabled: false
-
-spring:
-  elasticsearch:
-    rest:
-      uris: 172.22.0.5:9200
-      read-timeout: 30s
-      connection-timeout: 5s
-spring.data.elasticsearch.repositories.enabled: false
 
 
 management.endpoints.web.exposure.include: '*'
@@ -148,8 +112,6 @@ management:
       enabled: false
     add-application-context-header: false
 
-custom.rendertron.enable: true
-custom.rendertron.enable.async.cache.refresh: false
 
 spring.security:
     oauth2:

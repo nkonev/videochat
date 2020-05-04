@@ -27,12 +27,13 @@ services:
   postgres:
     image: postgres:12.2
     restart: unless-stopped
+    ports:
+      - 35432:5432
     volumes:
+      - ./docker/postgresql_dev/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: chat
-      POSTGRES_USER: chat
-      POSTGRES_PASSWORD: password
+      - POSTGRES_PASSWORD=postgresqlPassword
     networks:
       backend:
     logging:

@@ -1,1 +1,0 @@
-ALTER TABLE posts.post DROP COLUMN text_no_tags;
