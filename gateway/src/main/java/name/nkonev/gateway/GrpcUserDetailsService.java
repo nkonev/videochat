@@ -1,4 +1,4 @@
-package name.nkonev.gateway;
+/*package name.nkonev.gateway;
 
 import com.google.protobuf.ProtocolStringList;
 import name.nkonev.users.UserDetailsRequest;
@@ -33,7 +33,7 @@ public class GrpcUserDetailsService implements ReactiveUserDetailsService {
             LOGGER.debug("In deferred requesting '{}'", username);
             UserDetailsResponse byUsername = userServiceStub.findByUsername(build);
             ProtocolStringList rolesList = byUsername.getRolesList();
-            String[] roles = rolesList.toArray(new String[0]);
+            String[] ro*les = rolesList.toArray(new String[0]);
             // TODO move encoding to user service
             UserDetails user = User.builder().passwordEncoder(encoder::encode)
                     .username(byUsername.getUsername()).password(byUsername.getPassword()).roles(roles).build();
@@ -41,3 +41,4 @@ public class GrpcUserDetailsService implements ReactiveUserDetailsService {
         });
     }
 }
+*/

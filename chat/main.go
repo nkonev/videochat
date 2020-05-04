@@ -219,7 +219,7 @@ func extractAuth(request *http.Request) (*authResult, error) {
 		return nil, err
 	}
 	return &authResult{
-		UserId:    request.Header.Get("X-Auth-Subject"),
+		UserId:    request.Header.Get("X-Auth-UserId"),
 		UserLogin: request.Header.Get("X-Auth-Username"),
 		ExpiresAt: t.Unix(),
 	}, nil

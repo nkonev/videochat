@@ -1,11 +1,18 @@
 package name.nkonev.gateway;
 
+import java.util.Optional;
+import name.nkonev.users.UserServiceGrpc;
+import name.nkonev.users.UserServiceGrpc.UserServiceBlockingStub;
+import name.nkonev.users.UserSessionRequest;
+import name.nkonev.users.UserSessionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -26,23 +33,22 @@ import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter;
 import org.springframework.security.web.server.util.matcher.*;
 import org.springframework.session.data.redis.config.annotation.web.server.EnableRedisWebSession;
 import org.springframework.util.Assert;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 import java.net.URI;
-import java.security.Principal;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-@EnableRedisWebSession
+//@EnableRedisWebSession
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
+
+    @Autowired
+    private UserServiceGrpc.UserServiceBlockingStub userServiceStub;
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -122,47 +128,61 @@ public class SecurityConfig {
 
     @Bean
     public InsertAuthHeadersFilter headerInserter() {
-        return new InsertAuthHeadersFilter();
+        return new InsertAuthHeadersFilter(userServiceStub);
     }
 
     // inserted before NettyRoutingFilter which containing http client
     public static class InsertAuthHeadersFilter implements GlobalFilter, Ordered {
 
+        private final UserServiceGrpc.UserServiceBlockingStub userServiceStub;
+
         private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z")
                 .withZone(ZoneId.systemDefault());
         public static final String X_AUTH_USERNAME = "X-Auth-Username";
-        public static final String X_AUTH_SUBJECT = "X-Auth-Subject";
+        public static final String X_AUTH_SUBJECT = "X-Auth-UserId";
         public static final String X_AUTH_EXPIRESIN = "X-Auth-Expiresin";
+
+        public InsertAuthHeadersFilter(
+            UserServiceBlockingStub userServiceStub) {
+            this.userServiceStub = userServiceStub;
+        }
 
         @Override
         public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-            Mono<Principal> principalMono = exchange.getPrincipal();
-            Mono<WebSession> webSessionMono = exchange.getSession();
-            Mono<Tuple2<Principal, WebSession>> tuple2Mono = principalMono.zipWith(webSessionMono);
+            Optional<String> sessionCookie = getSessionCookie(exchange.getRequest().getCookies());
 
-            return tuple2Mono.flatMap(tuple2 -> {
-                Principal principal = tuple2.getT1();
-                WebSession session = tuple2.getT2();
-                Instant creationTime = session.getCreationTime();
-                Duration maxIdleTime = session.getMaxIdleTime();
-                Instant expiresIn = creationTime.plus(maxIdleTime);
-                String expiresInString = DATE_TIME_FORMATTER.format(expiresIn);
+            if (sessionCookie.isPresent()) {
+                UserSessionRequest sessionRequest = UserSessionRequest.newBuilder()
+                    .setSession(sessionCookie.get()).build();
+                UserSessionResponse sessionResponse = userServiceStub.findBySession(sessionRequest);
 
+                String username = sessionResponse.getUserName();
+                long userid = sessionResponse.getUserId();
+                long expiresIn = sessionResponse.getExpiresIn();
+                
                 ServerWebExchange modifiedExchange = exchange.mutate().request(builder -> {
-                    builder.header(X_AUTH_USERNAME, principal.getName());
-                    builder.header(X_AUTH_SUBJECT, principal.getName());
-                    builder.header(X_AUTH_EXPIRESIN, expiresInString);
+                    builder.header(X_AUTH_USERNAME, username);
+                    builder.header(X_AUTH_SUBJECT, "" + userid);
+                    builder.header(X_AUTH_EXPIRESIN, ""+expiresIn);
                 }).build();
                 LOGGER.info("{} '{}' inserting {}='{}', {}='{}', {}='{}'",
-                        modifiedExchange.getRequest().getMethod(), modifiedExchange.getRequest().getURI(),
-                        X_AUTH_USERNAME, principal.getName(),
-                        X_AUTH_SUBJECT, principal.getName(),
-                        X_AUTH_EXPIRESIN, expiresInString
+                    modifiedExchange.getRequest().getMethod(),
+                    modifiedExchange.getRequest().getURI(),
+                    X_AUTH_USERNAME, username,
+                    X_AUTH_SUBJECT, userid,
+                    X_AUTH_EXPIRESIN, expiresIn
                 );
                 return chain.filter(modifiedExchange);
-            })
-            // prevent leak when there aren't either session or principal - we always should invoke chain.filter(exchange) for close netty buffers
-            .switchIfEmpty(chain.filter(exchange));
+            } else {
+                return chain.filter(exchange);
+            }
+
+        }
+
+        private Optional<String> getSessionCookie(MultiValueMap<String, HttpCookie> cookies) {
+            HttpCookie session = cookies.getFirst("SESSION");
+            if (session == null) {return Optional.empty();}
+            return Optional.ofNullable(session.getValue());
         }
 
         @Override
