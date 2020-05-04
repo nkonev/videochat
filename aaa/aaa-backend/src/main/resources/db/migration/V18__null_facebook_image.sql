@@ -1,0 +1,1 @@
+UPDATE auth.users SET avatar = NULL WHERE facebook_id IS NOT NULL AND id != 5;

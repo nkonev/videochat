@@ -1,0 +1,1 @@
+insert into auth.users(id, username, enabled, expired, locked) values (-1, 'deleted', false, true, true);

@@ -1,0 +1,13 @@
+<configuration>
+    <!-- always a good activate OnConsoleStatusListener -->
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- https://logback.qos.ch/manual/layouts.html#AccessPatternLayout -->
+            <pattern>------------------------------------------------------------------------%n%t{yyyy-MM-dd HH:mm:ss.SSS} [%D ms] %fullRequest%n%fullResponse</pattern>
+        </encoder>
+    </appender>
+
+    <appender-ref ref="STDOUT" />
+</configuration>
