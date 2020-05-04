@@ -32,15 +32,6 @@ spring.mail:
     mail.smtp.timeout: 3000
     mail.smtp.writetimeout: 5000
 
-custom.stomp.broker:
-  host: "172.22.0.4"
-  port: 61613
-  virtual-host: /
-  client-login: blog
-  client-password: blogPazZw0rd
-  system-login: blog
-  system-password: blogPazZw0rd
-
 # Postgres image store configuration
 custom.image:
   max-bytes: 4194304 # 4 Mb. Must be < than tomcat file upload limit. see also spring.servlet.multipart.*
@@ -50,10 +41,8 @@ custom.image:
    - image/jpeg
   # value in seconds, passed in Cache-Control header
   max-age: 31536000
-# If post title image is empty - it set first image from content to title automatically
-custom.set.first.image.as.title: true
-spring.session.timeout: 2d
 
+spring.session.timeout: 2d
 
 custom:
   email:
@@ -72,30 +61,10 @@ custom:
       text-template: "Link __PASSWORD_RESET_LINK_PLACEHOLDER__ for reset your password for account __LOGIN__. If you didn't issue password reset -- you can ignore this mail."
     token:
       ttl-minutes: 5
-  tasks:
-    enable: true
-    poolSize: 10
-    defaultLockAtMostForSec: 20
-    defaultLockAtLeastForSec: 20
-    images.clean:
-      cron: "0 * * * * *"
-    rendertron.cache.refresh:
-      cron: "0 */30 * * * *"
-    elasticsearch.refresh:
-      cron: "0 0 */2 * * *"
-  rendertron:
-    serviceUrl: http://rendertron.example.com:3000/
-  xss:
-    iframe:
-      allow:
-        src:
-          pattern: '^(https://www\.youtube\.com.*)|(https://coub\.com/.*)|(https://player\.vimeo\.com.*)|(https://asciinema\.org.*)$'
-
 
 server.tomcat.accesslog.enabled: false
 server.tomcat.accesslog.pattern: '%t %a "%r" %s (%D ms)'
 server.port: 8080
-server.servlet.session.persistent: true
 
 server.tomcat.basedir: ${java.io.tmpdir}/com.github.nkonev.tomcat
 server.servlet.session.store-dir: ${server.tomcat.basedir}/sessions
@@ -140,20 +109,11 @@ spring.datasource:
 spring.flyway:
   locations: classpath:/db/migration
   drop-first: false
-  schemas: migrations, auth, posts, images, settings
+  schemas: migrations, auth, images
   out-of-order: true
 
 spring.redis.url: redis://172.22.0.3:6379/0
 spring.data.redis.repositories.enabled: false
-
-spring:
-  elasticsearch:
-    rest:
-      uris: 172.22.0.5:9200
-      read-timeout: 30s
-      connection-timeout: 5s
-spring.data.elasticsearch.repositories.enabled: false
-
 
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always

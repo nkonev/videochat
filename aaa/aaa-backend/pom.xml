@@ -215,10 +215,7 @@
             <groupId>net.javacrumbs.shedlock</groupId>
             <artifactId>shedlock-provider-redis-spring</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-freemarker</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-oauth2-client</artifactId>
