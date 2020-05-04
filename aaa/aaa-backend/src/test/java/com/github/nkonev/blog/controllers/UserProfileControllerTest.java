@@ -403,24 +403,6 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     }
 
     @org.junit.jupiter.api.Test
-    public void userPosts() throws Exception {
-        long userId = 2;
-        MvcResult getPostRequest = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.USER + "/" +userId + Constants.Urls.POSTS)
-        )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalCount").value(101))
-                .andExpect(jsonPath("$.data.length()").value(20))
-                .andExpect(jsonPath("$.data[0].commentCount").value(1))
-                .andExpect(jsonPath("$.data[1].commentCount").value(501))
-                .andExpect(jsonPath("$.data[2].commentCount").value(0))
-                .andReturn();
-        String getStr = getPostRequest.getResponse().getContentAsString();
-        LOGGER.info(getStr);
-
-    }
-
-    @org.junit.jupiter.api.Test
     public void userSearchJohnSmithTrim() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
                 get(Constants.Urls.API+ Constants.Urls.USER).param("searchString", " John Smith")
