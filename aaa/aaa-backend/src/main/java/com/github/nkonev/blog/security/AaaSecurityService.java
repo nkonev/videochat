@@ -22,7 +22,7 @@ import java.util.Optional;
  * Central entrypoint for access decisions
  */
 @Service
-public class BlogSecurityService {
+public class AaaSecurityService {
     @Autowired
     private RoleHierarchy roleHierarchy;
 

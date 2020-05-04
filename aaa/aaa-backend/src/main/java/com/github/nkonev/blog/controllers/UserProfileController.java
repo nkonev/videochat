@@ -144,19 +144,19 @@ public class UserProfileController {
         return blogUserDetailsService.getMySessions(userDetails);
     }
 
-    @PreAuthorize("@blogSecurityService.hasSessionManagementPermission(#userAccount)")
+    @PreAuthorize("@aaaSecurityService.hasSessionManagementPermission(#userAccount)")
     @GetMapping(Constants.Urls.SESSIONS)
     public Map<String, Session> sessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
         return blogUserDetailsService.getSessions(userId);
     }
 
-    @PreAuthorize("@blogSecurityService.hasSessionManagementPermission(#userAccount)")
+    @PreAuthorize("@aaaSecurityService.hasSessionManagementPermission(#userAccount)")
     @DeleteMapping(Constants.Urls.SESSIONS)
     public void killSessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
         blogUserDetailsService.killSessions(userId);
     }
 
-    @PreAuthorize("@blogSecurityService.canLock(#userAccountDetailsDTO, #lockDTO)")
+    @PreAuthorize("@aaaSecurityService.canLock(#userAccountDetailsDTO, #lockDTO)")
     @PostMapping(Constants.Urls.USER + Constants.Urls.LOCK)
     public UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody LockDTO lockDTO){
         UserAccount userAccount = blogUserDetailsService.getUserAccount(lockDTO.getUserId());
@@ -169,13 +169,13 @@ public class UserProfileController {
         return userAccountConverter.convertToUserAccountDTOExtended(userAccountDetailsDTO, userAccount);
     }
 
-    @PreAuthorize("@blogSecurityService.canDelete(#userAccountDetailsDTO, #userId)")
+    @PreAuthorize("@aaaSecurityService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.USER)
     public long deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
         return userDeleteService.deleteUser(userId);
     }
 
-    @PreAuthorize("@blogSecurityService.canChangeRole(#userAccountDetailsDTO, #userId)")
+    @PreAuthorize("@aaaSecurityService.canChangeRole(#userAccountDetailsDTO, #userId)")
     @PostMapping(Constants.Urls.USER + Constants.Urls.ROLE)
     public UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam long userId, @RequestParam UserRole role){
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
@@ -184,7 +184,7 @@ public class UserProfileController {
         return userAccountConverter.convertToUserAccountDTOExtended(userAccountDetailsDTO, userAccount);
     }
 
-    @PreAuthorize("@blogSecurityService.canSelfDelete(#userAccountDetailsDTO)")
+    @PreAuthorize("@aaaSecurityService.canSelfDelete(#userAccountDetailsDTO)")
     @DeleteMapping(Constants.Urls.PROFILE)
     public void selfDeleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
         long userId = userAccountDetailsDTO.getId();

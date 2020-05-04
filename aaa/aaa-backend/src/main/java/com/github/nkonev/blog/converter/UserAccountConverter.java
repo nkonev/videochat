@@ -7,7 +7,7 @@ import com.github.nkonev.blog.entity.jdbc.UserAccount;
 import com.github.nkonev.blog.dto.UserRole;
 import com.github.nkonev.blog.exception.BadRequestException;
 import com.github.nkonev.blog.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.blog.security.BlogSecurityService;
+import com.github.nkonev.blog.security.AaaSecurityService;
 import com.github.nkonev.blog.security.FacebookOAuth2UserService;
 import com.github.nkonev.blog.security.VkontakteOAuth2UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class UserAccountConverter {
 
     @Autowired
-    private BlogSecurityService blogSecurityService;
+    private AaaSecurityService aaaSecurityService;
 
     @Autowired
     private UserAccountRepository userAccountRepository;
@@ -117,7 +117,7 @@ public class UserAccountConverter {
     public UserAccountDTOExtended convertToUserAccountDTOExtended(UserAccountDetailsDTO currentUser, UserAccount userAccount) {
         if (userAccount == null) { return null; }
         UserAccountDTOExtended.DataDTO dataDTO;
-        if (blogSecurityService.hasSessionManagementPermission(currentUser)){
+        if (aaaSecurityService.hasSessionManagementPermission(currentUser)){
             dataDTO = new UserAccountDTOExtended.DataDTO(userAccount.isEnabled(), userAccount.isExpired(), userAccount.isLocked(), userAccount.getRole());
         } else {
             dataDTO = null;
@@ -129,9 +129,9 @@ public class UserAccountConverter {
                 dataDTO,
                 userAccount.getLastLoginDateTime(),
                 convertOauth(userAccount.getOauthIdentifiers()),
-                blogSecurityService.canLock(currentUser, userAccount),
-                blogSecurityService.canDelete(currentUser, userAccount),
-                blogSecurityService.canChangeRole(currentUser, userAccount)
+                aaaSecurityService.canLock(currentUser, userAccount),
+                aaaSecurityService.canDelete(currentUser, userAccount),
+                aaaSecurityService.canChangeRole(currentUser, userAccount)
         );
     }
 
