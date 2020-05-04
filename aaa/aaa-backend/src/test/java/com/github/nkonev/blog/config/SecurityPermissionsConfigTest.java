@@ -17,9 +17,8 @@ public class SecurityPermissionsConfigTest {
         Collection<GrantedAuthority> roles = Collections.singletonList(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()));
         java.util.Collection<? extends GrantedAuthority> reachable = securityPermissionsConfig.roleHierarchy().getReachableGrantedAuthorities(roles);
 
-        Assertions.assertEquals(3, reachable.size());
+        Assertions.assertEquals(2, reachable.size());
         Assertions.assertTrue(reachable.contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name())));
-        Assertions.assertTrue(reachable.contains(new SimpleGrantedAuthority(UserRole.ROLE_MODERATOR.name())));
         Assertions.assertTrue(reachable.contains(new SimpleGrantedAuthority(UserRole.ROLE_USER.name())));
     }
 }

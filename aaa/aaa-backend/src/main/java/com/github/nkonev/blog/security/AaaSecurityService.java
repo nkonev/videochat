@@ -33,7 +33,7 @@ public class AaaSecurityService {
         if (userAccount==null){
             return false;
         }
-        return roleHierarchy.getReachableGrantedAuthorities(userAccount.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_MODERATOR.name()));
+        return roleHierarchy.getReachableGrantedAuthorities(userAccount.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()));
     }
 
     public boolean canLock(UserAccountDetailsDTO userAccount, LockDTO lockDTO) {
@@ -43,7 +43,7 @@ public class AaaSecurityService {
         if (lockDTO!=null && userAccount.getId().equals(lockDTO.getUserId())){
             return false;
         }
-        if (roleHierarchy.getReachableGrantedAuthorities(userAccount.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_MODERATOR.name()))){
+        if (roleHierarchy.getReachableGrantedAuthorities(userAccount.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()))){
             return true;
         } else {
             return false;

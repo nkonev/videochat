@@ -25,7 +25,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityPermissionsConfig {
 
-    // @Override
     @Bean
     public MethodSecurityExpressionHandler methodSecurityExpressionHandler(){
         DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
@@ -38,8 +37,7 @@ public class SecurityPermissionsConfig {
     public RoleHierarchy roleHierarchy(){
         RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
         roleHierarchy.setHierarchy(
-                UserRole.ROLE_ADMIN.name() + " > " + UserRole.ROLE_MODERATOR.name() + "\n"+
-                UserRole.ROLE_MODERATOR.name() + " > " + UserRole.ROLE_USER.name() + "\n"
+                UserRole.ROLE_ADMIN.name() + " > " + UserRole.ROLE_USER.name() + "\n"
         );
         return roleHierarchy;
     }
