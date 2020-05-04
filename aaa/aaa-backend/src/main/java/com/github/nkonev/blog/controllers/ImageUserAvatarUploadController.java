@@ -1,22 +1,26 @@
 package com.github.nkonev.blog.controllers;
 
+import static com.github.nkonev.blog.Constants.Urls.API;
+import static com.github.nkonev.blog.Constants.Urls.IMAGE;
+
 import com.github.nkonev.blog.dto.UserAccountDetailsDTO;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.UUID;
-
-import static com.github.nkonev.blog.Constants.Urls.API;
-import static com.github.nkonev.blog.Constants.Urls.IMAGE;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotNull;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -64,7 +68,7 @@ public class ImageUserAvatarUploadController extends AbstractImageUploadControll
 
     @GetMapping(GET_TEMPLATE)
     public void getImage(
-            @PathVariable("id")UUID id,
+            @PathVariable("id") UUID id,
             HttpServletResponse response,
             HttpServletRequest request
     ) {

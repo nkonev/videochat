@@ -17,7 +17,7 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 
 @Configuration
-public class BlogConfig {
+public class AaaConfig {
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -25,7 +25,7 @@ public class BlogConfig {
     @Value("classpath:/static/git.json")
     private Resource resource;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlogConfig.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AaaConfig.class);
 
     @PostConstruct
     public void pc() throws Exception {

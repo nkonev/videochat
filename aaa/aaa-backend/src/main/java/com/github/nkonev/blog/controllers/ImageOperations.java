@@ -4,8 +4,8 @@ import java.io.InputStream;
 
 public interface ImageOperations {
     AbstractImageUploadController.ImageResponse insertImage(
-            long contentLength,
-            String contentType,
-            InputStream inputStream
+        long contentLength,
+        String contentType,
+        InputStream inputStream
     );
 }

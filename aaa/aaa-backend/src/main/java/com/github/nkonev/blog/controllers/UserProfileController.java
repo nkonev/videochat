@@ -7,7 +7,6 @@ import com.github.nkonev.blog.entity.jdbc.UserAccount;
 import com.github.nkonev.blog.exception.UserAlreadyPresentException;
 import com.github.nkonev.blog.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.blog.security.BlogUserDetailsService;
-import com.github.nkonev.blog.services.PostService;
 import com.github.nkonev.blog.services.UserDeleteService;
 import com.github.nkonev.blog.utils.PageUtils;
 import org.slf4j.Logger;
@@ -45,9 +44,6 @@ public class UserProfileController {
 
     @Autowired
     private BlogUserDetailsService blogUserDetailsService;
-
-    @Autowired
-    private PostService postService;
 
     @Autowired
     private UserAccountConverter userAccountConverter;
@@ -94,19 +90,6 @@ public class UserProfileController {
                 resultPageCount
         );
     }
-
-    @GetMapping(value = Constants.Urls.USER + Constants.Urls.USER_ID + Constants.Urls.POSTS)
-    public Wrapper<PostDTO> getUserPosts(
-            @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
-            @PathVariable(Constants.PathVariables.USER_ID) Long userId,
-            @RequestParam(value = "page", required=false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required=false, defaultValue = "0") int size
-    ) {
-        PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(page), PageUtils.fixSize(size), Sort.Direction.DESC, "id");
-
-        return postService.findByOwnerId(springDataPage, userId, userAccount);
-    }
-
 
     private Function<UserAccount, UserAccountDTO> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(currentUser, userAccount);
