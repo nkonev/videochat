@@ -1,4 +1,0 @@
-=== BLOG API
-
-There will be full description.
-
