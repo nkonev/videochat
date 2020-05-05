@@ -20,6 +20,7 @@ import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Service;
 
+// TODO consider use protobuf over http https://www.baeldung.com/spring-rest-api-with-protocol-buffers
 @Service
 public class UserSessionGrpcService extends UserServiceGrpc.UserServiceImplBase {
 
