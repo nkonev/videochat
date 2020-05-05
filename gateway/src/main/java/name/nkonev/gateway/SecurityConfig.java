@@ -1,5 +1,7 @@
 package name.nkonev.gateway;
 
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
+
 import java.util.Optional;
 import name.nkonev.users.UserServiceGrpc;
 import name.nkonev.users.UserServiceGrpc.UserServiceBlockingStub;
@@ -79,11 +81,11 @@ public class SecurityConfig {
 
         private boolean isSecuredPath(ServerWebExchange exchange) {
             String url = exchange.getRequest().getPath().value();
-            return url.startsWith("/api");
+            return url.startsWith("/chat");
         }
 
         private boolean isAaa(ServerWebExchange exchange) {
-            Route route = exchange.getAttribute("org.springframework.cloud.gateway.support.ServerWebExchangeUtils.gatewayRoute");
+            Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
             return route !=null && "aaa".equals(route.getId());
         }
 
