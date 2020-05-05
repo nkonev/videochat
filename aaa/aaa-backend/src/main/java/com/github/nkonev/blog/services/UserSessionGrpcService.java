@@ -21,9 +21,9 @@ import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserSessionService extends UserServiceGrpc.UserServiceImplBase {
+public class UserSessionGrpcService extends UserServiceGrpc.UserServiceImplBase {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserSessionService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserSessionGrpcService.class);
 
     @Autowired
     private RedisIndexedSessionRepository redisIndexedSessionRepository;
@@ -37,7 +37,7 @@ public class UserSessionService extends UserServiceGrpc.UserServiceImplBase {
         UserSessionResponse response;
 
         Session session = redisIndexedSessionRepository.findById(request.getSession());
-        if (session != null) {
+        if (session != null && !session.isExpired()) {
             Instant plus = session.getCreationTime().plus(sessionProperties.getTimeout());
             long expiresIn = plus.toEpochMilli();
 
