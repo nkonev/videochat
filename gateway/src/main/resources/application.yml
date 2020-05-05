@@ -31,10 +31,8 @@ spring:
       routes:
         - id: aaa
           predicates:
-            - Path=/api/aaa/**
+            - Path=/api/login,/api/logout
           uri: http://localhost:8060
-          filters:
-            - RewritePath=/api/aaa(?<segment>/?.*), /api$\{segment}
         - id: chat
           predicates:
             - Path=/api/chat/**

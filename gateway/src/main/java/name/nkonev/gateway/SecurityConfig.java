@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.route.Route;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -48,7 +49,7 @@ public class SecurityConfig {
         public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
             Optional<String> sessionCookie = getSessionCookie(exchange.getRequest().getCookies());
 
-            if (isSecuredPath(exchange) && sessionCookie.isPresent()) {
+            if (isSecuredPath(exchange) && !isAaa(exchange) && sessionCookie.isPresent()) {
                 UserSessionRequest sessionRequest = UserSessionRequest.newBuilder()
                     .setSession(sessionCookie.get()).build();
                 UserSessionResponse sessionResponse = userServiceStub.findBySession(sessionRequest);
@@ -78,7 +79,12 @@ public class SecurityConfig {
 
         private boolean isSecuredPath(ServerWebExchange exchange) {
             String url = exchange.getRequest().getPath().value();
-            return url.startsWith("/api") && !url.startsWith("/api/aaa");
+            return url.startsWith("/api");
+        }
+
+        private boolean isAaa(ServerWebExchange exchange) {
+            Route route = exchange.getAttribute("org.springframework.cloud.gateway.support.ServerWebExchangeUtils.gatewayRoute");
+            return route !=null && "aaa".equals(route.getId());
         }
 
         private Optional<String> getSessionCookie(MultiValueMap<String, HttpCookie> cookies) {

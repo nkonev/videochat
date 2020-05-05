@@ -26,7 +26,7 @@ function Login() {
       params.append(key, c[key])
     });
 
-    axios.post(`/api/aaa/login`, params)
+    axios.post(`/api/login`, params)
     .catch((error) => {
       // handle error
       console.log("Handling error on login", error.response);
