@@ -114,8 +114,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(Constants.Urls.API+ Constants.Urls.ADMIN+"/**").hasAuthority(UserRole.ROLE_ADMIN.name());
         http.authorizeRequests().requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll();
 
-        http.csrf().disable(); // TODO enable ?
-                //.csrfTokenRepository(csrfTokenRepository());
+        http.csrf()
+                .csrfTokenRepository(csrfTokenRepository());
         http.exceptionHandling()
                 .authenticationEntryPoint(authenticationEntryPoint);
 
