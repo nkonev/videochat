@@ -108,3 +108,9 @@ https://www.baeldung.com/spring-session-reactive
 ```
 curl -v 'http://localhost:8060/api/login' -H 'Accept: application/json, text/plain, */*' -H 'Content-Type: application/x-www-form-urlencoded' --data 'username=admin&password=admin'
 ```
+
+```
+./mvnw -pl aaa-api install
+./mvnw install -N -DskipTests
+./mvnw -pl aaa-backend protobuf:compile
+```

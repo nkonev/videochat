@@ -4,18 +4,26 @@ package com.github.nkonev.blog;
  * Created by nik on 27.05.17.
  */
 
+import static com.github.nkonev.blog.security.SecurityConfig.PASSWORD_PARAMETER;
+import static com.github.nkonev.blog.security.SecurityConfig.USERNAME_PARAMETER;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nkonev.blog.config.UtConfig;
 import com.github.nkonev.blog.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.blog.security.SecurityConfig;
 import com.github.nkonev.blog.util.ContextPathHelper;
+import java.net.HttpCookie;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,15 +35,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-import java.net.HttpCookie;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import static com.github.nkonev.blog.security.SecurityConfig.PASSWORD_PARAMETER;
-import static com.github.nkonev.blog.security.SecurityConfig.USERNAME_PARAMETER;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
@@ -43,7 +42,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
 )
 @AutoConfigureMockMvc(printOnlyOnFailure = false, print = MockMvcPrint.LOG_DEBUG)
-@AutoConfigureRestDocs(outputDir = TestConstants.RESTDOCS_SNIPPETS_DIR)
 @Transactional
 public abstract class AbstractUtTestRunner {
 
