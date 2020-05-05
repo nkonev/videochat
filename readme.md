@@ -104,3 +104,7 @@ firewall-cmd --get-default-zone
 
 https://www.baeldung.com/spring-session-reactive
 
+# AAA
+```
+curl -v 'http://localhost:8060/api/login' -H 'Accept: application/json, text/plain, */*' -H 'Content-Type: application/x-www-form-urlencoded' --data 'username=admin&password=admin'
+```

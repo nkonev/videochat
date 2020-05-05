@@ -71,7 +71,7 @@ custom:
 
 server.tomcat.accesslog.enabled: false
 server.tomcat.accesslog.pattern: '%t %a "%r" %s (%D ms)'
-server.port: 8080
+server.port: 8060
 
 server.tomcat.basedir: ${java.io.tmpdir}/com.github.nkonev.tomcat
 server.servlet.session.store-dir: ${server.tomcat.basedir}/sessions

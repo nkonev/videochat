@@ -313,8 +313,8 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware authMiddlew
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/api/chat/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
-	e.GET("/api/chat", chatHandler)
+	e.GET("/chat/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
+	e.GET("/chat", chatHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

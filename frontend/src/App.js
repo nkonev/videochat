@@ -7,6 +7,7 @@ import {
     Link
 } from "react-router-dom";
 import Chat from "./Chat";
+import Login from "./Login";
 
 /**
  * Main landing page user starts interaction from
@@ -14,8 +15,8 @@ import Chat from "./Chat";
  * @constructor
  */
 
-
 function App() {
+
     // https://ru.reactjs.org/docs/hooks-effect.html
     useEffect(() => {
         function showHeader() {
@@ -51,7 +52,7 @@ function App() {
                         <Link className="menu__item" to="/chat">Chats</Link>
                     </nav>
                     <div className="login">
-                        <button className="login__btn">Войти</button>
+                        <Link className="menu__item login__btn" to="/login">Войти</Link>
                     </div>
                 </div>
             </div>
@@ -60,6 +61,9 @@ function App() {
         {/* A <Switch> looks through its children <Route>s and
         renders the first one that matches the current URL. */}
         <Switch>
+            <Route path="/login">
+                <Login />
+            </Route>
             <Route path="/about">
                 <About />
             </Route>
@@ -69,6 +73,7 @@ function App() {
             <Route path="/">
                 <Home />
             </Route>
+
         </Switch>
 
         </Router>

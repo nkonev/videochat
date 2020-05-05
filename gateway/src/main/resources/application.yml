@@ -29,27 +29,22 @@ spring:
         connect-timeout: 1000
         response-timeout: 5s
       routes:
-        - predicates:
-            - Path=/api/chat
+        - id: aaa
+          predicates:
+            - Path=/api/aaa/**
+          uri: http://localhost:8060
+          filters:
+            - RewritePath=/api/aaa(?<segment>/?.*), /api$\{segment}
+        - id: chat
+          predicates:
+            - Path=/api/chat/**
           uri: http://localhost:1235
           filters:
+            - StripPrefix=1
             - name: Retry
               args:
                 methods: GET
-# https://qua.name/antolius/spring-cloud-gateway-connection-header
-#          filters:
-#            - name: SetRequestHeader
-#              args:
-#                name: Connection
-#                value: keep-alive
-#      filter:
-#        remove-hop-by-hop:
-#          headers:
-#            - te
-#            - trailer
-#            - proxy-authorization
-#            - proxy-authenticate
-#            - x-application-context
+
 grpc:
   host: localhost
   port: 6565
