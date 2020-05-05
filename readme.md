@@ -112,5 +112,5 @@ curl -v 'http://localhost:8060/api/login' -H 'Accept: application/json, text/pla
 ```
 ./mvnw -pl aaa-api install
 ./mvnw install -N -DskipTests
-./mvnw -pl aaa-backend protobuf:compile
+./mvnw -pl aaa-backend compile
 ```
