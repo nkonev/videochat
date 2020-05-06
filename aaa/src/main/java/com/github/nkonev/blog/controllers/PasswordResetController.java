@@ -1,6 +1,5 @@
 package com.github.nkonev.blog.controllers;
 
-import com.github.nkonev.blog.ApiConstants;
 import com.github.nkonev.blog.Constants;
 import com.github.nkonev.blog.entity.jdbc.UserAccount;
 import com.github.nkonev.blog.entity.redis.PasswordResetToken;
@@ -76,7 +75,7 @@ public class PasswordResetController {
         @NotNull
         private UUID passwordResetToken;
 
-        @Size(min = ApiConstants.MIN_PASSWORD_LENGTH, max = ApiConstants.MAX_PASSWORD_LENGTH)
+        @Size(min = Constants.MIN_PASSWORD_LENGTH, max = Constants.MAX_PASSWORD_LENGTH)
         @NotEmpty
         private String newPassword;
 

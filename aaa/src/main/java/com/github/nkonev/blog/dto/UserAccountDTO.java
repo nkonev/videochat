@@ -1,7 +1,7 @@
 package com.github.nkonev.blog.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.github.nkonev.blog.ApiConstants;
+import com.github.nkonev.blog.Constants;
 
 import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
@@ -21,7 +21,7 @@ public class UserAccountDTO implements Serializable {
 
     private String avatar;
 
-    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern= ApiConstants.DATE_FORMAT)
+    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern= Constants.DATE_FORMAT)
     private LocalDateTime lastLoginDateTime;
 
     private OauthIdentifiersDTO oauthIdentifiers = new OauthIdentifiersDTO();

@@ -1,6 +1,6 @@
 package com.github.nkonev.blog.converter;
 
-import com.github.nkonev.blog.ApiConstants;
+import com.github.nkonev.blog.Constants;
 import com.github.nkonev.blog.dto.*;
 import com.github.nkonev.blog.entity.jdbc.CreationType;
 import com.github.nkonev.blog.entity.jdbc.UserAccount;
@@ -153,7 +153,7 @@ public class UserAccountConverter {
 
     private static void validateUserPassword(String password) {
         Assert.notNull(password, "password must be set");
-        if (password.length() < ApiConstants.MIN_PASSWORD_LENGTH || password.length() > ApiConstants.MAX_PASSWORD_LENGTH) {
+        if (password.length() < Constants.MIN_PASSWORD_LENGTH || password.length() > Constants.MAX_PASSWORD_LENGTH) {
             throw new BadRequestException("password don't match requirements");
         }
     }
