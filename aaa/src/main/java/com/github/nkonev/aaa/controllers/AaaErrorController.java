@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * @see "https://gist.github.com/jonikarppinen/662c38fb57a23de61c8b"
  */
 @Controller
-public class BlogErrorController extends AbstractErrorController {
+public class AaaErrorController extends AbstractErrorController {
 
     @Value("${debugResponse:false}")
     private boolean debug;
@@ -43,9 +43,9 @@ public class BlogErrorController extends AbstractErrorController {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlogErrorController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AaaErrorController.class);
 
-    public BlogErrorController(ErrorAttributes errorAttributes, List<ErrorViewResolver> errorViewResolvers) {
+    public AaaErrorController(ErrorAttributes errorAttributes, List<ErrorViewResolver> errorViewResolvers) {
         super(errorAttributes, errorViewResolvers);
     }
 

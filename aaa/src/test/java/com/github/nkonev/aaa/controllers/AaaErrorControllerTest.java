@@ -21,9 +21,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class BlogErrorControllerTest extends AbstractUtTestRunner {
+public class AaaErrorControllerTest extends AbstractUtTestRunner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlogErrorControllerTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AaaErrorControllerTest.class);
 
     @org.junit.jupiter.api.Test
     public void testAuth() throws Exception {
