@@ -37,8 +37,6 @@ spring.session.timeout: 2d
 
 
 custom:
-  grpc:
-    port: 6666
   email:
     from: testEmailUsername@test.example.com 
   registration:

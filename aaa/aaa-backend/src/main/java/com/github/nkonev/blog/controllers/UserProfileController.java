@@ -9,12 +9,14 @@ import com.github.nkonev.blog.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.blog.security.BlogUserDetailsService;
 import com.github.nkonev.blog.services.UserDeleteService;
 import com.github.nkonev.blog.utils.PageUtils;
+import name.nkonev.aaa.UserSessionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.session.SessionProperties;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,10 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static com.github.nkonev.blog.converter.UserAccountConverter.convertRolesToStringList;
 
 /**
  * Created by nik on 08.06.17.
@@ -56,19 +59,40 @@ public class UserProfileController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
+    private Long getExpiresAt(HttpSession session) {
+        Long expiresAt = null;
+        if (session!=null && sessionProperties.getTimeout()!=null) {
+            expiresAt = session.getCreationTime() + sessionProperties.getTimeout().toMillis() ;
+        }
+        return expiresAt;
+    }
+
     /**
      *
      * @param userAccount
      * @return current logged in profile
      */
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = Constants.Urls.PROFILE)
-    public UserAccountDTO checkAuthenticated(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
-        Long expiresAt = null;
-        if (session!=null && sessionProperties.getTimeout()!=null) {
-            expiresAt = session.getCreationTime() + sessionProperties.getTimeout().toMillis() ;
-        }
+    @GetMapping(value = Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public UserSelfProfileDTO checkAuthenticated(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
+        Long expiresAt = getExpiresAt(session);
         return UserAccountConverter.getUserSelfProfile(userAccount, null, expiresAt);
+    }
+
+    public static final String X_PROTOBUF_CHARSET_UTF_8 = "application/x-protobuf;charset=UTF-8";
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping(value = Constants.Urls.PROFILE, produces = X_PROTOBUF_CHARSET_UTF_8)
+    public UserSessionResponse checkAuthenticatedGrpc(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
+        Long expiresAt = getExpiresAt(session);
+        var dto = checkAuthenticated(userAccount, session);
+        var result = UserSessionResponse.newBuilder()
+                .setUserName(dto.getLogin())
+                .setExpiresIn(expiresAt)
+                .addAllRoles(convertRolesToStringList(userAccount.getRoles()))
+                .setUserId(userAccount.getId())
+                .build();
+        return result;
     }
 
     @GetMapping(value = Constants.Urls.USER)

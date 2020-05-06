@@ -34,6 +34,10 @@ public class UserAccountConverter {
         return UserRole.ROLE_USER;
     }
 
+    public static List<String> convertRolesToStringList(Collection<GrantedAuthority> roles) {
+        return Optional.ofNullable(roles).map(rs -> rs.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList())).orElse(Collections.emptyList());
+    }
+
     private static OauthIdentifiersDTO convertOauth(UserAccount.OauthIdentifiers oauthIdentifiers){
         if (oauthIdentifiers==null) return null;
         return new OauthIdentifiersDTO(oauthIdentifiers.getFacebookId(), oauthIdentifiers.getVkontakteId());

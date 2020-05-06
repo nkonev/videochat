@@ -42,7 +42,3 @@ spring:
             - name: Retry
               args:
                 methods: GET
-
-grpc:
-  host: localhost
-  port: 6565

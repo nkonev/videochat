@@ -45,8 +45,6 @@ custom.image:
 spring.session.timeout: 2d
 
 custom:
-  grpc:
-    port: 6565
   email:
     from: "username@yandex.ru" 
   registration:

@@ -1,19 +1,12 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-package name.nkonev.users;
 
-message UserSessionRequest {
-    string session = 1;
-}
+package name.nkonev.aaa;
 
 message UserSessionResponse {
     string userName = 1;
     int64 userId = 2;
     repeated string roles = 3;
     int64 expiresIn = 4;
-}
-
-service UserService {
-    rpc findBySession(UserSessionRequest) returns (UserSessionResponse);
 }
