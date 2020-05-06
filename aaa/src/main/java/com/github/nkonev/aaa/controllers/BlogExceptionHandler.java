@@ -111,7 +111,7 @@ public class BlogExceptionHandler {
         ) {throw e;} // Spring Security has own exception handling
 
         if (e.getCause() instanceof IOException){
-            LOGGER.info("IOException: ", e.getMessage());
+            LOGGER.info("IOException: {}", e.getMessage());
         } else {
             LOGGER.error("Unexpected exception", e);
         }
