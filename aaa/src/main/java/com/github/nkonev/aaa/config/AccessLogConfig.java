@@ -14,14 +14,13 @@ public class AccessLogConfig {
     public LogbackValve valve(){
         LogbackValve logbackValve = new LogbackValve();
         logbackValve.setFilename("config/logback-access.xml");
-        logbackValve.setAsyncSupported(true);
         return logbackValve;
     }
 
     @Bean
     public FilterRegistrationBean registration() {
         FilterRegistrationBean registration = new FilterRegistrationBean(new TeeFilter());
-        registration.setOrder(-200); // set lesser value to be before SpringSecurityFilterChain for prevent output AccessDeniedException to stderr
+        registration.setOrder(-2147483648); // set lesser value to be before SpringSecurityFilterChain for prevent output AccessDeniedException to stderr
         registration.setEnabled(true);
         return registration;
     }

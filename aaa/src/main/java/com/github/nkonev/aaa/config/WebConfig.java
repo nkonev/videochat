@@ -3,13 +3,10 @@ package com.github.nkonev.aaa.config;
 import org.apache.catalina.Valve;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -23,19 +20,12 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 
 @Configuration
-public class WebConfig implements WebMvcConfigurer, ApplicationContextAware {
-
-    private ApplicationContext applicationContext;
+public class WebConfig implements WebMvcConfigurer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebConfig.class);
 
     @Autowired
     private CustomConfig customConfig;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
 
     @Autowired
     private ServerProperties serverProperties;
