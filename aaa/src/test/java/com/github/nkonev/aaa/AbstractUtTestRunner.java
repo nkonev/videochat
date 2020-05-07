@@ -11,7 +11,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.nkonev.aaa.config.UtConfig;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.aaa.security.SecurityConfig;
 import com.github.nkonev.aaa.util.ContextPathHelper;
@@ -29,6 +28,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.DefaultStringRedisConnection;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,14 +40,33 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
+
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-        classes = {AaaApplication.class, UtConfig.class},
+        classes = {AaaApplication.class, AbstractUtTestRunner.UtConfig.class},
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
 )
 @AutoConfigureMockMvc(printOnlyOnFailure = false, print = MockMvcPrint.LOG_DEBUG)
 @Transactional
 public abstract class AbstractUtTestRunner {
+
+    @Configuration
+    public static class UtConfig {
+
+        @Autowired
+        private RedisServerCommands redisServerCommands;
+
+        @Bean(destroyMethod = "close")
+        public DefaultStringRedisConnection defaultStringRedisConnection(RedisConnectionFactory redisConnectionFactory){
+            return new DefaultStringRedisConnection(redisConnectionFactory.getConnection());
+        }
+
+        @PostConstruct
+        public void dropRedis(){
+            redisServerCommands.flushDb();
+        }
+    }
 
     @Autowired
     protected MockMvc mockMvc;
