@@ -90,25 +90,7 @@ public class AaaErrorController extends AbstractErrorController {
             return null;
 
         } else {
-
             HttpStatus status = getStatus(request);
-            if (status.equals(HttpStatus.NOT_FOUND)) {
-                // this is not found fallback which works when Accept text/html
-                // NotFoundFallback for History API routing, e. g. for url http://127.0.0.1:8080/user/3
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.setContentType(MediaType.TEXT_HTML_VALUE);
-                return new ModelAndView(Constants.Urls.ROOT);
-            } else if (status.equals(HttpStatus.FORBIDDEN)) {
-                response.setStatus(status.value());
-                response.setContentType(MediaType.TEXT_HTML_VALUE);
-                response.sendRedirect("/forbidden");
-                return new ModelAndView(Constants.Urls.ROOT);
-            } else if (status.equals(HttpStatus.UNAUTHORIZED)) {
-                response.setStatus(status.value());
-                response.setContentType(MediaType.TEXT_HTML_VALUE);
-                response.sendRedirect("/unauthorized");
-                return new ModelAndView(Constants.Urls.ROOT);
-            }
 
             Map<String, Object> model = Collections.unmodifiableMap(getErrorAttributes(request, debug));
             response.setStatus(status.value());

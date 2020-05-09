@@ -80,37 +80,6 @@ public class AaaErrorControllerTest extends AbstractUtTestRunner {
     }
 
     @Test
-    public void test404FallbackAccept() throws Exception {
-        RequestEntity<Void> requestEntity = RequestEntity.<Void>get(new URI(urlWithContextPath()+"/not-exists")).accept(MediaType.TEXT_HTML).build();
-
-        ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
-        String str = responseEntity.getBody();
-        Assertions.assertEquals(200, responseEntity.getStatusCodeValue()); // we respond 200 for 404 fallback
-
-        LOGGER.info(str);
-        LOGGER.info("HTML 404 fallback Content-Type: {}", responseEntity.getHeaders().getContentType());
-        Assertions.assertTrue(responseEntity.getHeaders().getContentType().toString().contains(MediaType.TEXT_HTML_VALUE));
-        Assertions.assertTrue(str.contains("<!doctype html>"));
-    }
-
-    @org.junit.jupiter.api.Test
-    public void test404FallbackNoAccept() throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(new ArrayList<>()); // explicitly set zero Accept values
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = testRestTemplate.exchange(new URI(urlWithContextPath()+"/not-exists"), GET, entity, String.class);
-        String str = responseEntity.getBody();
-        Assertions.assertEquals(200, responseEntity.getStatusCodeValue()); // we respond 200 for 404 fallback
-
-        LOGGER.info(str);
-        LOGGER.info("HTML 404 fallback Content-Type: {}", responseEntity.getHeaders().getContentType());
-        Assertions.assertTrue(responseEntity.getHeaders().getContentType().toString().contains(MediaType.TEXT_HTML_VALUE));
-        Assertions.assertTrue(str.contains("<!doctype html>"));
-    }
-
-
-    @Test
     public void testSqlExceptionIsHidden() throws Exception {
         ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.API+ TestConstants.SQL_URL, String.class);
         String str = responseEntity.getBody();
