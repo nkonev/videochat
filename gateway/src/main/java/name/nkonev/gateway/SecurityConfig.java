@@ -45,20 +45,20 @@ public class SecurityConfig {
     // inserted before NettyRoutingFilter which containing http client
     public static class SecurityFilter implements GlobalFilter, Ordered {
 
-        private final WebClient client;
+        private final WebClient aaaClient;
 
         public static final String X_AUTH_USERNAME = "X-Auth-Username";
         public static final String X_AUTH_SUBJECT = "X-Auth-UserId";
         public static final String X_AUTH_EXPIRESIN = "X-Auth-Expiresin";
 
-        public SecurityFilter(WebClient client) {
-            this.client = client;
+        public SecurityFilter(WebClient aaaClient) {
+            this.aaaClient = aaaClient;
         }
 
         @Override
         public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
             if (isSecuredPath(exchange) && !isAaa(exchange)) {
-                return client
+                return aaaClient
                         .get()
                         .uri("/profile")
                         .cookie(SESSION_COOKIE, getSessionCookie(exchange.getRequest().getCookies()).orElse(""))// let aaa respond error
