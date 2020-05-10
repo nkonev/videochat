@@ -99,6 +99,9 @@ public abstract class AbstractTestRunner {
     @Value(CommonTestConstants.PASSWORD)
     protected String password;
 
+    @Value(CommonTestConstants.USER_ID)
+    protected String userId;
+
     @Autowired
     protected ObjectMapper objectMapper;
 
@@ -111,6 +114,14 @@ public abstract class AbstractTestRunner {
     @BeforeEach
     public void before() {
         userConfirmationTokenRepository.deleteAll();
+    }
+
+    @Autowired
+    private RedisServerCommands redisServerCommands;
+
+    @PostConstruct
+    public void dropRedis(){
+        redisServerCommands.flushDb();
     }
 
     public static class SessionHolder {

@@ -1,79 +1,40 @@
-/*
-package com.github.nkonev.aaa.controllers;
+package com.github.nkonev.aaa.it;
 
-import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.Selenide;
-import com.github.nkonev.blog.CommonTestConstants;
-import com.github.nkonev.blog.FailoverUtils;
-import com.github.nkonev.blog.entity.jdbc.UserAccount;
-import com.github.nkonev.blog.integration.AbstractItTestRunner;
-import com.github.nkonev.blog.pages.object.*;
-import com.github.nkonev.blog.util.FileUtils;
-import com.github.nkonev.blog.webdriver.IntegrationTestConstants;
-import com.github.nkonev.blog.webdriver.configuration.SeleniumConfiguration;
-import com.github.nkonev.blog.webdriver.selenium.Browser;
+import com.github.nkonev.aaa.AbstractSeleniumRunner;
+import com.github.nkonev.aaa.config.webdriver.Browser;
+import com.github.nkonev.aaa.config.webdriver.SeleniumProperties;
+import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-
-import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selenide.$;
-import static com.github.nkonev.blog.CommonTestConstants.COMMON_PASSWORD;
-import static com.github.nkonev.blog.pages.object.Buttons.FB;
-import static com.github.nkonev.blog.pages.object.Buttons.VK;
+import static com.codeborne.selenide.Selenide.open;
 
 
-public class UserProfileIT extends AbstractItTestRunner {
-
-    @Value(IntegrationTestConstants.USER_ID)
-    private int userId;
+public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
     @Autowired
-    private SeleniumConfiguration seleniumConfiguration;
+    private SeleniumProperties seleniumConfiguration;
 
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-
     @Test
-    public void testFacebookLogin() throws InterruptedException {
+    public void testFacebookLogin()  {
         Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
-        IndexPage indexPage = new IndexPage(urlPrefix);
-        indexPage.openPage();
+        open(urlPrefix+"/oauth2.html");
 
-        LoginModal loginModal = new LoginModal();
-        loginModal.openLoginModal();
-        loginModal.loginFacebook();
+        $("#a-facebook").click();
 
-        Assertions.assertTrue(UserNav.getAvatarUrl().endsWith(".png"));
-        Assertions.assertEquals(facebookLogin, UserNav.getLogin());
-
-
-        // now we attempt to change email
-        UserProfilePage userPage = new UserProfilePage(urlPrefix, driver);
         UserAccount userAccount = userAccountRepository.findByUsername(facebookLogin).orElseThrow();
-        userPage.openPage(userAccount.getId().intValue());
-        userPage.assertThisIsYou();
-        userPage.edit();
-        userPage.setEmail("new-email-for-facebook-user@gmail.not");
-        userPage.save();
-        userPage.assertEmail("new-email-for-facebook-user@gmail.not");
+        Assertions.assertNotNull(userAccount.getId());
     }
 
-    @Test
+    /*@Test
     public void testVkontakteLoginAndDelete() throws Exception {
         long countInitial = userAccountRepository.count();
         Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
@@ -214,6 +175,5 @@ public class UserProfileIT extends AbstractItTestRunner {
         userPage.assertThisIsYou();
         userPage.assertNotHasFacebook();
 
-    }
+    }*/
 }
-*/
