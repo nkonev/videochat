@@ -1,1 +1,0 @@
-ALTER TYPE auth.user_creation_type ADD VALUE 'VKONTAKTE';

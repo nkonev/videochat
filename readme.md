@@ -114,3 +114,7 @@ curl -v 'http://localhost:8060/api/login' -H 'Accept: application/json, text/pla
 ./mvnw install -N -DskipTests
 ./mvnw -pl aaa-backend compile
 ```
+
+```
+docker exec -t videochat_postgres_1 pg_dump -U aaa -b --create --column-inserts --serializable-deferrable
+```

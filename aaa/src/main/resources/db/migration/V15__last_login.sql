@@ -1,1 +1,0 @@
-ALTER TABLE auth.users ADD COLUMN last_login_date_time timestamp;
