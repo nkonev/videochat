@@ -60,7 +60,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private RESTAuthenticationLogoutSuccessHandler authenticationLogoutSuccessHandler;
 
     @Autowired
-    private BlogUserDetailsService blogUserDetailsService;
+    private AaaUserDetailsService aaaUserDetailsService;
 
     @Autowired
     private BlogPreAuthenticationChecks blogPreAuthenticationChecks;
@@ -168,7 +168,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(blogUserDetailsService);
+        authenticationProvider.setUserDetailsService(aaaUserDetailsService);
         authenticationProvider.setPasswordEncoder(passwordEncoder());
         authenticationProvider.setPreAuthenticationChecks(blogPreAuthenticationChecks);
         authenticationProvider.setPostAuthenticationChecks(blogPostAuthenticationChecks);

@@ -12,7 +12,7 @@ import com.github.nkonev.aaa.entity.jdbc.CreationType;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.security.BlogUserDetailsService;
+import com.github.nkonev.aaa.security.AaaUserDetailsService;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -44,7 +44,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private BlogUserDetailsService blogUserDetailsService;
+    private AaaUserDetailsService aaaUserDetailsService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileControllerTest.class);
 

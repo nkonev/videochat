@@ -23,7 +23,7 @@ import java.util.Map;
  * Provides Spring Security compatible UserAccountDetailsDTO.
  */
 @Component
-public class BlogUserDetailsService implements UserDetailsService {
+public class AaaUserDetailsService implements UserDetailsService {
 
     @Autowired
     private UserAccountRepository userAccountRepository;

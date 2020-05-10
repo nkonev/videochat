@@ -7,7 +7,7 @@ import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.exception.UserAlreadyPresentException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.security.BlogUserDetailsService;
+import com.github.nkonev.aaa.security.AaaUserDetailsService;
 import com.github.nkonev.aaa.services.UserDeleteService;
 import com.github.nkonev.aaa.utils.PageUtils;
 import name.nkonev.aaa.UserSessionResponse;
@@ -47,7 +47,7 @@ public class UserProfileController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private BlogUserDetailsService blogUserDetailsService;
+    private AaaUserDetailsService aaaUserDetailsService;
 
     @Autowired
     private UserAccountConverter userAccountConverter;
@@ -158,7 +158,7 @@ public class UserProfileController {
         UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
 
-        blogUserDetailsService.refreshUserDetails(exists);
+        aaaUserDetailsService.refreshUserDetails(exists);
 
         return UserAccountConverter.convertToEditUserDto(exists);
     }
@@ -166,27 +166,27 @@ public class UserProfileController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping(Constants.Urls.SESSIONS+"/my")
     public Map<String, Session> mySessions(@AuthenticationPrincipal UserAccountDetailsDTO userDetails){
-        return blogUserDetailsService.getMySessions(userDetails);
+        return aaaUserDetailsService.getMySessions(userDetails);
     }
 
     @PreAuthorize("@aaaSecurityService.hasSessionManagementPermission(#userAccount)")
     @GetMapping(Constants.Urls.SESSIONS)
     public Map<String, Session> sessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
-        return blogUserDetailsService.getSessions(userId);
+        return aaaUserDetailsService.getSessions(userId);
     }
 
     @PreAuthorize("@aaaSecurityService.hasSessionManagementPermission(#userAccount)")
     @DeleteMapping(Constants.Urls.SESSIONS)
     public void killSessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
-        blogUserDetailsService.killSessions(userId);
+        aaaUserDetailsService.killSessions(userId);
     }
 
     @PreAuthorize("@aaaSecurityService.canLock(#userAccountDetailsDTO, #lockDTO)")
     @PostMapping(Constants.Urls.USER + Constants.Urls.LOCK)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.LockDTO lockDTO){
-        UserAccount userAccount = blogUserDetailsService.getUserAccount(lockDTO.getUserId());
+        UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.getUserId());
         if (lockDTO.isLock()){
-            blogUserDetailsService.killSessions(lockDTO.getUserId());
+            aaaUserDetailsService.killSessions(lockDTO.getUserId());
         }
         userAccount.setLocked(lockDTO.isLock());
         userAccount = userAccountRepository.save(userAccount);
@@ -223,7 +223,7 @@ public class UserProfileController {
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
         userAccount.getOauthIdentifiers().setFacebookId(null);
         userAccount = userAccountRepository.save(userAccount);
-        blogUserDetailsService.refreshUserDetails(userAccount);
+        aaaUserDetailsService.refreshUserDetails(userAccount);
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -233,7 +233,7 @@ public class UserProfileController {
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
         userAccount.getOauthIdentifiers().setVkontakteId(null);
         userAccount = userAccountRepository.save(userAccount);
-        blogUserDetailsService.refreshUserDetails(userAccount);
+        aaaUserDetailsService.refreshUserDetails(userAccount);
     }
 
 }
