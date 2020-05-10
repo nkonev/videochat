@@ -35,7 +35,7 @@
         <selenide.version>4.14.2</selenide.version>
         <shedlock.version>2.1.0</shedlock.version>
         <greenmail.version>1.5.10</greenmail.version>
-        <mockserver.version>5.6.1</mockserver.version>
+        <mockserver.version>5.10.0</mockserver.version>
 
         <grpc.java.lib.version>3.11.4</grpc.java.lib.version>
         <os.maven.plugin.version>1.5.0.Final</os.maven.plugin.version>
@@ -415,18 +415,6 @@
             <artifactId>mockserver-netty</artifactId>
             <version>${mockserver.version}</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-client-java</artifactId>
-            <version>${mockserver.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -463,6 +451,12 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-oauth2-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>javax.mail</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

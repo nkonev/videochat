@@ -23,6 +23,7 @@ import org.springframework.data.redis.connection.DefaultStringRedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -42,8 +43,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
         classes = {AaaApplication.class, AbstractTestRunner.UtConfig.class},
-        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
+        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+        properties = {"spring.test.context.cache.maxSize=1"}
 )
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractTestRunner {
 
     @Configuration

@@ -1,7 +1,6 @@
-package com.github.nkonev.aaa.controllers;
+package com.github.nkonev.aaa.it;
 
 import com.github.nkonev.aaa.AbstractTestRunner;
-import com.github.nkonev.aaa.AbstractUtTestRunner;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.services.UserDeleteService;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -13,7 +12,6 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Header;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,7 +20,6 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     private static final int MOCK_SERVER_FACEBOOK_PORT = 10080;
     private static final int MOCK_SERVER_VKONTAKTE_PORT = 10081;
@@ -107,13 +104,6 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
         namedParameterJdbcTemplate.update("UPDATE auth.users SET vkontakte_id=NULL, facebook_id=NULL", new HashMap<>());
     }
 
-    @AfterEach
-    public void resetFacebookEmulator(){
-        mockServerFacebook.reset();
-        mockServerVkontakte.reset();
-    }
-
-
     @BeforeEach
     public void configureVkontakteEmulator(){
         mockServerVkontakte
@@ -139,7 +129,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
         mockServerVkontakte
                 .when(request().withPath("/mock/vkontakte/method/users.get"))
                 .respond(response().withHeaders(
-                        new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json")
+                        new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=\"utf-8\"")
                         ).withStatusCode(200).withBody("{\"response\": [{\"id\": 1212, \"first_name\": \"Никита\", \"last_name\": \"Конев\"}]}")
                 );
 
@@ -147,6 +137,12 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
             userAccount.setLocked(false);
             userAccountRepository.save(userAccount);
         });
+    }
+
+
+    @AfterEach
+    public void resetFacebookEmulator(){
+        mockServerFacebook.reset();
     }
 
     @AfterEach

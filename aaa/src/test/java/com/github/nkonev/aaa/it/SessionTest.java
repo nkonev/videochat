@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.controllers;
+package com.github.nkonev.aaa.it;
 
 import com.github.nkonev.aaa.CommonTestConstants;
 import com.github.nkonev.aaa.Constants;
@@ -28,7 +28,7 @@ import static com.github.nkonev.aaa.security.SecurityConfig.*;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
-public class SessionIT extends OAuth2EmulatorTests {
+public class SessionTest extends OAuth2EmulatorTests {
 
 
     @Autowired
@@ -151,55 +151,4 @@ public class SessionIT extends OAuth2EmulatorTests {
         return Optional.ofNullable(getXsrfTokenResponse.getHeaders().get(HEADER_SET_COOKIE)).orElseThrow(()->new RuntimeException("missed header "+ HEADER_SET_COOKIE));
     }
 
-    /*@Test
-    public void testLockFacebookUser() throws Exception {
-        IndexPage indexPage = new IndexPage(urlPrefix);
-        indexPage.openPage();
-
-        LoginModal loginModal = new LoginModal();
-        loginModal.openLoginModal();
-        loginModal.loginFacebook();
-
-
-        UserAccount userAccountForLock = userAccountRepository.findByUsername(facebookLogin).orElseThrow();
-
-        Cookie sessionCookie = driver.manage().getCookies().stream().filter(cookie -> "SESSION".equals(cookie.getName())).findFirst().orElseThrow(()->new RuntimeException("No SESSION cookie found"));
-
-        RequestEntity myPostsRequest3 = RequestEntity
-                .get(new URI(urlWithContextPath()+ API + Constants.Urls.POST + Constants.Urls.MY))
-                .header(COOKIE, sessionCookie.toString())
-                .build();
-        ResponseEntity<String> myPostsResponse3 = testRestTemplate.exchange(myPostsRequest3, String.class);
-        Assertions.assertEquals(200, myPostsResponse3.getStatusCodeValue());
-
-
-        SessionHolder userAdminSession = login(user, password);
-
-        LockDTO lockDTO = new LockDTO(userAccountForLock.getId(), true);
-        RequestEntity lockRequest = RequestEntity
-                .post(new URI(urlWithContextPath()+API+ Constants.Urls.USER+LOCK))
-                .header(HEADER_XSRF_TOKEN, userAdminSession.newXsrf)
-                .header(COOKIE, userAdminSession.getCookiesArray())
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .body(lockDTO);
-        ResponseEntity<String> lockResponseEntity = testRestTemplate.exchange(lockRequest, String.class);
-        String str = lockResponseEntity.getBody();
-        Assertions.assertEquals(200, lockResponseEntity.getStatusCodeValue());
-
-
-        RequestEntity myPostsRequest4 = RequestEntity
-                .get(new URI(urlWithContextPath()+ API + Constants.Urls.POST + Constants.Urls.MY))
-                .header(COOKIE, sessionCookie.toString())
-                .build();
-        ResponseEntity<String> myPostsResponse4 = testRestTemplate.exchange(myPostsRequest4, String.class);
-        Assertions.assertEquals(401, myPostsResponse4.getStatusCodeValue());
-
-        clearBrowserCookies();
-        refresh();
-
-        loginModal.openLoginModal();
-        loginModal.loginFacebook();
-
-        $("#content").shouldHave(Condition.text("401 Unauthorized"));
-    }*/
 }

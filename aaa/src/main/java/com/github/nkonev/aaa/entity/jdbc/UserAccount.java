@@ -9,7 +9,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
-@Table(Constants.Schemas.AUTH+".users")
+@Table("auth.users")
 public class UserAccount {
     @Id
     private Long id;
