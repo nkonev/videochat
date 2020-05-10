@@ -11,12 +11,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
 import java.util.Optional;
+
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.setAlreadyRouted;
 
 @Configuration
 public class SecurityConfig {
@@ -57,33 +61,50 @@ public class SecurityConfig {
 
             if (isSecuredPath(exchange) && !isAaa(exchange)) {
                 String session = maybeSessionCookie.orElse(""); // let aaa respond error
-                Mono<UserSessionResponse> responseMono = client
+                return client
                         .get()
                         .uri("/profile")
                         .cookie(SESSION_COOKIE, session)
                         .exchange()
-                        .flatMap(response -> response.bodyToMono(UserSessionResponse.class));
+                        .flatMap(response -> {
+                            HttpStatus statusCode = response.statusCode();
+                            if (statusCode.value() == 401) {
+                                return response.releaseBody().then(Mono.error(new SetStatusException("AAA Unauthorized", statusCode.value())));
+                            }
 
-                return responseMono.flatMap(sessionResponse -> {
-                    String username = sessionResponse.getUserName();
-                    long userid = sessionResponse.getUserId();
-                    long expiresIn = sessionResponse.getExpiresIn();
+                            Mono<UserSessionResponse> sessionResponseMono = response.bodyToMono(UserSessionResponse.class);
+                            return sessionResponseMono.flatMap(sessionResponse -> {
+                                String username = sessionResponse.getUserName();
+                                long userid = sessionResponse.getUserId();
+                                long expiresIn = sessionResponse.getExpiresIn();
 
-                    ServerWebExchange modifiedExchange = exchange.mutate().request(builder -> {
-                        builder.header(X_AUTH_USERNAME, username);
-                        builder.header(X_AUTH_SUBJECT, "" + userid);
-                        builder.header(X_AUTH_EXPIRESIN, "" + expiresIn);
-                    }).build();
-                    LOGGER.info("{} '{}' inserting {}='{}', {}='{}', {}='{}'",
-                            modifiedExchange.getRequest().getMethod(),
-                            modifiedExchange.getRequest().getURI(),
-                            X_AUTH_USERNAME, username,
-                            X_AUTH_SUBJECT, userid,
-                            X_AUTH_EXPIRESIN, expiresIn
-                    );
-                    return chain.filter(modifiedExchange);
-                })
-                .switchIfEmpty(chain.filter(exchange));
+                                ServerWebExchange modifiedExchange = exchange.mutate().request(builder -> {
+                                    builder.header(X_AUTH_USERNAME, username);
+                                    builder.header(X_AUTH_SUBJECT, "" + userid);
+                                    builder.header(X_AUTH_EXPIRESIN, "" + expiresIn);
+                                }).build();
+                                LOGGER.info("Into {} '{}' inserting {}='{}', {}='{}', {}='{}'",
+                                        modifiedExchange.getRequest().getMethod(),
+                                        modifiedExchange.getRequest().getURI(),
+                                        X_AUTH_USERNAME, username,
+                                        X_AUTH_SUBJECT, userid,
+                                        X_AUTH_EXPIRESIN, expiresIn
+                                );
+                                return chain.filter(modifiedExchange);
+                            });
+                        })
+                        .onErrorResume(throwable -> {
+                            setAlreadyRouted(exchange);
+                            exchange.getResponse().setRawStatusCode(500);
+                            if (throwable instanceof SetStatusException) {
+                                SetStatusException ex = (SetStatusException) throwable;
+                                LOGGER.info("Handling known error {} for {}", exchange.getRequest().getURI(), ex.toString());
+                                exchange.getResponse().setRawStatusCode(ex.getStatus());
+                            } else {
+                                LOGGER.error("Handling unknown error {}", exchange.getRequest().getURI(), throwable);
+                            }
+                            return chain.filter(exchange);
+                        });
             } else {
                 return chain.filter(exchange);
             }
@@ -97,18 +118,20 @@ public class SecurityConfig {
 
         private boolean isAaa(ServerWebExchange exchange) {
             Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
-            return route !=null && "aaa".equals(route.getId());
+            return route != null && "aaa".equals(route.getId());
         }
 
         private Optional<String> getSessionCookie(MultiValueMap<String, HttpCookie> cookies) {
             HttpCookie session = cookies.getFirst(SESSION_COOKIE);
-            if (session == null) {return Optional.empty();}
+            if (session == null) {
+                return Optional.empty();
+            }
             return Optional.ofNullable(session.getValue());
         }
 
         @Override
         public int getOrder() {
-            return Ordered.LOWEST_PRECEDENCE-1;
+            return Ordered.LOWEST_PRECEDENCE - 1;
         }
     }
 
