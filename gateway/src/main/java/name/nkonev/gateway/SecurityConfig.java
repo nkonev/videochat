@@ -57,14 +57,11 @@ public class SecurityConfig {
 
         @Override
         public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-            Optional<String> maybeSessionCookie = getSessionCookie(exchange.getRequest().getCookies());
-
             if (isSecuredPath(exchange) && !isAaa(exchange)) {
-                String session = maybeSessionCookie.orElse(""); // let aaa respond error
                 return client
                         .get()
                         .uri("/profile")
-                        .cookie(SESSION_COOKIE, session)
+                        .cookie(SESSION_COOKIE, getSessionCookie(exchange.getRequest().getCookies()).orElse(""))// let aaa respond error
                         .exchange()
                         .flatMap(response -> {
                             HttpStatus statusCode = response.statusCode();
