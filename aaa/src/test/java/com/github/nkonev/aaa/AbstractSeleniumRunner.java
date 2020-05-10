@@ -12,8 +12,9 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.test.context.TestPropertySource;
 
 import static com.codeborne.selenide.Selenide.clearBrowserCookies;
+import static com.github.nkonev.aaa.config.webdriver.SeleniumFactory.CUSTOM_SELENIUM_ENABLE;
 
-@TestPropertySource(properties = {"custom.selenium.enable=true"})
+@TestPropertySource(properties = {CUSTOM_SELENIUM_ENABLE+"=true"})
 public class AbstractSeleniumRunner extends OAuth2EmulatorTests {
 
     private Logger LOGGER = LoggerFactory.getLogger(AbstractSeleniumRunner.class);

@@ -26,6 +26,7 @@ public class SeleniumFactory implements FactoryBean<WebDriver> {
 
     public static final String FIREFOX_DRIVER_VERSION = "0.21.0"; // https://github.com/mozilla/geckodriver/releases
     public static final String CHROME_DRIVER_VERSION = "2.40"; // https://sites.google.com/a/chromium.org/chromedriver/
+    public static final String CUSTOM_SELENIUM_ENABLE = "custom.selenium.start";
 
     private WebDriver driver;
 
@@ -122,6 +123,6 @@ public class SeleniumFactory implements FactoryBean<WebDriver> {
     }
 
     private boolean seleniumAllowed() {
-        return environment.getProperty("custom.selenium.enable", boolean.class, false);
+        return environment.getProperty(CUSTOM_SELENIUM_ENABLE, boolean.class, false);
     }
 }
