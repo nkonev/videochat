@@ -5,7 +5,7 @@
     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
         <Target>System.out</Target>
         <encoder>
-            <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @backend [%thread] %logger{36}:%line %msg%n</pattern>
+            <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @aaa [%thread] %logger{36}:%line %msg%n</pattern>
         </encoder>
     </appender>
 
