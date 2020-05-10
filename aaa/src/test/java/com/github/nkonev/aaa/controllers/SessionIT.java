@@ -1,17 +1,12 @@
-/*package com.github.nkonev.aaa.controllers;
+package com.github.nkonev.aaa.controllers;
 
-import com.codeborne.selenide.Condition;
-import com.github.nkonev.blog.CommonTestConstants;
-import com.github.nkonev.blog.Constants;
-import com.github.nkonev.blog.dto.LockDTO;
-import com.github.nkonev.blog.dto.SuccessfulLoginDTO;
-import com.github.nkonev.blog.entity.jdbc.UserAccount;
-import com.github.nkonev.blog.pages.object.IndexPage;
-import com.github.nkonev.blog.pages.object.LoginModal;
-import com.github.nkonev.blog.util.ContextPathHelper;
+import com.github.nkonev.aaa.CommonTestConstants;
+import com.github.nkonev.aaa.Constants;
+import com.github.nkonev.aaa.dto.LockDTO;
+import com.github.nkonev.aaa.dto.SuccessfulLoginDTO;
+import com.github.nkonev.aaa.util.ContextPathHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.Cookie;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory;
 import org.springframework.http.MediaType;
@@ -19,7 +14,6 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -27,10 +21,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.codeborne.selenide.Selenide.*;
-import static com.github.nkonev.blog.CommonTestConstants.*;
-import static com.github.nkonev.blog.Constants.Urls.*;
-import static com.github.nkonev.blog.security.SecurityConfig.*;
+import static com.github.nkonev.aaa.CommonTestConstants.*;
+import static com.github.nkonev.aaa.Constants.Urls.API;
+import static com.github.nkonev.aaa.Constants.Urls.LOCK;
+import static com.github.nkonev.aaa.security.SecurityConfig.*;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
@@ -77,26 +71,15 @@ public class SessionIT extends OAuth2EmulatorTests {
         SessionHolder userAliceSession = login(CommonTestConstants.USER_LOCKED, CommonTestConstants.COMMON_PASSWORD);
 
         RequestEntity myPostsRequest1 = RequestEntity
-                .get(new URI(urlWithContextPath()+ API + Constants.Urls.POST + Constants.Urls.MY))
+                .get(new URI(urlWithContextPath()+ API + Constants.Urls.PROFILE))
                 .header(HEADER_XSRF_TOKEN, userAliceSession.newXsrf)
                 .header(COOKIE, userAliceSession.getCookiesArray())
                 .build();
         ResponseEntity<String> myPostsResponse1 = testRestTemplate.exchange(myPostsRequest1, String.class);
         Assertions.assertEquals(200, myPostsResponse1.getStatusCodeValue());
 
-        //userAliceSession.updateXsrf(myPostsResponse1);
 
-        RequestEntity myPostsRequest2 = RequestEntity
-                .get(new URI(urlWithContextPath()+ API + Constants.Urls.POST + Constants.Urls.MY))
-                .header(HEADER_XSRF_TOKEN, userAliceSession.newXsrf)
-                .header(COOKIE, userAliceSession.getCookiesArray())
-                .build();
-        ResponseEntity<String> myPostsResponse2 = testRestTemplate.exchange(myPostsRequest2, String.class);
-        Assertions.assertEquals(200, myPostsResponse2.getStatusCodeValue());
-
-
-
-        SessionHolder userAdminSession = login(user, password);
+        SessionHolder userAdminSession = login(username, password);
         LockDTO lockDTO = new LockDTO(userAliceSession.userId, true);
         RequestEntity lockRequest = RequestEntity
                 .post(new URI(urlWithContextPath()+API+ Constants.Urls.USER+LOCK))
@@ -110,7 +93,7 @@ public class SessionIT extends OAuth2EmulatorTests {
 
 
         RequestEntity myPostsRequest3 = RequestEntity
-                .get(new URI(urlWithContextPath()+ API + Constants.Urls.POST + Constants.Urls.MY))
+                .get(new URI(urlWithContextPath()+ API + Constants.Urls.PROFILE))
                 .header(HEADER_XSRF_TOKEN, userAliceSession.newXsrf)
                 .header(COOKIE, userAliceSession.getCookiesArray())
                 .build();
@@ -168,7 +151,7 @@ public class SessionIT extends OAuth2EmulatorTests {
         return Optional.ofNullable(getXsrfTokenResponse.getHeaders().get(HEADER_SET_COOKIE)).orElseThrow(()->new RuntimeException("missed header "+ HEADER_SET_COOKIE));
     }
 
-    @Test
+    /*@Test
     public void testLockFacebookUser() throws Exception {
         IndexPage indexPage = new IndexPage(urlPrefix);
         indexPage.openPage();
@@ -218,6 +201,5 @@ public class SessionIT extends OAuth2EmulatorTests {
         loginModal.loginFacebook();
 
         $("#content").shouldHave(Condition.text("401 Unauthorized"));
-    }
+    }*/
 }
-*/

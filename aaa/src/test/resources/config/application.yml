@@ -98,6 +98,8 @@ spring.datasource:
       validationQueryTimeout: 4
       logValidationErrors: true
 
+spring.sleuth.enabled: false
+
 # https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#howto-execute-flyway-database-migrations-on-startup
 # https://flywaydb.org/documentation/configfiles
 spring.flyway:
@@ -121,29 +123,29 @@ management:
 
 
 spring.security:
-    oauth2:
-      client:
-        registration:
-          vkontakte:
-            client-id: 6805077
-            client-secret: your-app-client-secret
-            authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
-            client-authentication-method: post
-          facebook:
-            client-name: "facebook" # use in BlogOAuth2UserService
-            client-id: 1684113965162824
-            client-secret: your-app-client-secret
-            redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
-        provider:
-          vkontakte:
-            authorization-uri: http://127.0.0.1:10081/mock/vkontakte/authorize
-            token-uri: http://127.0.0.1:10081/mock/vkontakte/access_token
-            user-info-uri: http://127.0.0.1:10081/mock/vkontakte/method/users.get?v=5.92
-            user-info-authentication-method: form
-            user-name-attribute: response
-          facebook:
-            authorization-uri: http://127.0.0.1:10080/mock/facebook/dialog/oauth
-            token-uri: http://127.0.0.1:10080/mock/facebook/oauth/access_token
-            user-info-uri: http://127.0.0.1:10080/mock/facebook/me?fields=id,name,picture
+  oauth2:
+    client:
+      registration:
+        vkontakte:
+          client-id: 6805077
+          client-secret: your-app-client-secret
+          authorization-grant-type: authorization_code
+          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+          client-authentication-method: post
+        facebook:
+          client-name: "facebook" # use in BlogOAuth2UserService
+          client-id: 1684113965162824
+          client-secret: your-app-client-secret
+          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+      provider:
+        vkontakte:
+          authorization-uri: http://127.0.0.1:10081/mock/vkontakte/authorize
+          token-uri: http://127.0.0.1:10081/mock/vkontakte/access_token
+          user-info-uri: http://127.0.0.1:10081/mock/vkontakte/method/users.get?v=5.92
+          user-info-authentication-method: form
+          user-name-attribute: response
+        facebook:
+          authorization-uri: http://127.0.0.1:10080/mock/facebook/dialog/oauth
+          token-uri: http://127.0.0.1:10080/mock/facebook/oauth/access_token
+          user-info-uri: http://127.0.0.1:10080/mock/facebook/me?fields=id,name,picture
 

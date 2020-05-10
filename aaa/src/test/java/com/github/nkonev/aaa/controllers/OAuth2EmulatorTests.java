@@ -1,8 +1,9 @@
-/*package com.github.nkonev.aaa.controllers;
+package com.github.nkonev.aaa.controllers;
 
-import com.github.nkonev.blog.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.blog.services.UserDeleteService;
-import com.github.nkonev.blog.webdriver.configuration.SeleniumConfiguration;
+import com.github.nkonev.aaa.AbstractTestRunner;
+import com.github.nkonev.aaa.AbstractUtTestRunner;
+import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import com.github.nkonev.aaa.services.UserDeleteService;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -12,6 +13,7 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Header;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,7 +22,8 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
-public abstract class OAuth2EmulatorTests extends AbstractItTestRunner {
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     private static final int MOCK_SERVER_FACEBOOK_PORT = 10080;
     private static final int MOCK_SERVER_VKONTAKTE_PORT = 10081;
 
@@ -29,9 +32,6 @@ public abstract class OAuth2EmulatorTests extends AbstractItTestRunner {
 
     @Autowired
     protected UserAccountRepository userAccountRepository;
-
-    @Autowired
-    protected SeleniumConfiguration seleniumConfiguration;
 
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -100,14 +100,6 @@ public abstract class OAuth2EmulatorTests extends AbstractItTestRunner {
     }
 
     private void clearOauthBindingsInDb() throws InterruptedException {
-        String updatePosts = "UPDATE posts.post SET owner_id=(select id from auth.users WHERE username='deleted') WHERE owner_id = (select id from auth.users WHERE username=:username)";
-        namedParameterJdbcTemplate.update(updatePosts, Collections.singletonMap("username", facebookLogin));
-        namedParameterJdbcTemplate.update(updatePosts, Collections.singletonMap("username", vkontakteLogin));
-
-        String updateComments = "UPDATE posts.comment SET owner_id=(select id from auth.users WHERE username='deleted') WHERE owner_id = (select id from auth.users WHERE username=:username)";
-        namedParameterJdbcTemplate.update(updateComments, Collections.singletonMap("username", facebookLogin));
-        namedParameterJdbcTemplate.update(updateComments, Collections.singletonMap("username", vkontakteLogin));
-
         String deleteUsers = "DELETE FROM auth.users WHERE username = :username";
         namedParameterJdbcTemplate.update(deleteUsers, Collections.singletonMap("username", facebookLogin));
         namedParameterJdbcTemplate.update(deleteUsers, Collections.singletonMap("username", vkontakteLogin));
@@ -163,4 +155,3 @@ public abstract class OAuth2EmulatorTests extends AbstractItTestRunner {
     }
 
 }
-*/
