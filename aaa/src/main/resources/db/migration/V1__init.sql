@@ -61,8 +61,8 @@ CREATE TABLE auth.users (
     expired boolean DEFAULT false NOT NULL,
     locked boolean DEFAULT false NOT NULL,
     email character varying(100) UNIQUE,
-    role auth.user_role DEFAULT 'ROLE_USER'::auth.user_role NOT NULL,
-    creation_type auth.user_creation_type DEFAULT 'REGISTRATION'::auth.user_creation_type NOT NULL,
+    role auth.user_role DEFAULT 'ROLE_USER' NOT NULL,
+    creation_type auth.user_creation_type DEFAULT 'REGISTRATION' NOT NULL,
     facebook_id character varying(64) UNIQUE,
     vkontakte_id character varying(64) UNIQUE,
     last_login_date_time timestamp without time zone
