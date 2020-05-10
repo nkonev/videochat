@@ -23,6 +23,7 @@ import org.springframework.data.redis.connection.DefaultStringRedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,8 +33,12 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.PostConstruct;
 import java.net.HttpCookie;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.github.nkonev.aaa.CommonTestConstants.COOKIE_XSRF;
+import static com.github.nkonev.aaa.CommonTestConstants.HEADER_SET_COOKIE;
 import static com.github.nkonev.aaa.security.SecurityConfig.PASSWORD_PARAMETER;
 import static com.github.nkonev.aaa.security.SecurityConfig.USERNAME_PARAMETER;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -106,5 +111,72 @@ public abstract class AbstractTestRunner {
     @BeforeEach
     public void before() {
         userConfirmationTokenRepository.deleteAll();
+    }
+
+    public static class SessionHolder {
+        public final long userId;
+        final List<String> sessionCookies;
+        public String newXsrf;
+
+        public SessionHolder(long userId, List<String> sessionCookies, String newXsrf) {
+            this.userId = userId;
+            this.sessionCookies = sessionCookies;
+            this.newXsrf = newXsrf;
+        }
+
+        public SessionHolder(long userId, ResponseEntity responseEntity) {
+            this.userId = userId;
+            this.sessionCookies = getSessionCookies(responseEntity);
+            this.newXsrf = getXsrfValue(getXsrfCookieHeaderValue(responseEntity));
+        }
+
+        public String[] getCookiesArray(){
+            return sessionCookies.toArray(new String[sessionCookies.size()]);
+        }
+
+        public void updateXsrf(ResponseEntity responseEntity){
+            this.newXsrf = getXsrfValue(getXsrfCookieHeaderValue(responseEntity));
+        }
+    }
+
+    public static List<String> getSessionCookies(ResponseEntity<String> loginResponseEntity) {
+        return getSetCookieHeaders(loginResponseEntity).stream().dropWhile(s -> s.contains(COOKIE_XSRF+"=;")).collect(Collectors.toList());
+    }
+
+    public static String getXsrfValue(String xsrfCookieHeaderValue) {
+        return HttpCookie.parse(xsrfCookieHeaderValue).stream().findFirst().orElseThrow(()-> new RuntimeException("cannot get cookie value")).getValue();
+    }
+
+    public static String getXsrfCookieHeaderValue(ResponseEntity<String> getXsrfTokenResponse) {
+        return getSetCookieHeaders(getXsrfTokenResponse)
+                .stream().filter(s -> s.matches(COOKIE_XSRF+"=\\w+.*")).findFirst().orElseThrow(()-> new RuntimeException("cookie " + COOKIE_XSRF + " not found"));
+    }
+
+    public static List<String> getSetCookieHeaders(ResponseEntity<String> getXsrfTokenResponse) {
+        return Optional.ofNullable(getXsrfTokenResponse.getHeaders().get(HEADER_SET_COOKIE)).orElseThrow(()->new RuntimeException("missed header "+ HEADER_SET_COOKIE));
+    }
+
+
+    public static class XsrfCookiesHolder {
+        final List<String> sessionCookies;
+        final public String newXsrf;
+
+
+        public XsrfCookiesHolder(List<String> sessionCookies, String newXsrf) {
+            this.sessionCookies = sessionCookies;
+            this.newXsrf = newXsrf;
+        }
+
+        public String[] getCookiesArray(){
+            return sessionCookies.toArray(new String[sessionCookies.size()]);
+        }
+    }
+
+    public XsrfCookiesHolder getXsrf() {
+        ResponseEntity<String> getXsrfTokenResponse = testRestTemplate.getForEntity(urlWithContextPath(), String.class);
+        String xsrfCookieHeaderValue = getXsrfCookieHeaderValue(getXsrfTokenResponse);
+        String xsrf = getXsrfValue(xsrfCookieHeaderValue);
+        List<String> sessionCookies = getSessionCookies(getXsrfTokenResponse);
+        return new XsrfCookiesHolder(sessionCookies, xsrf);
     }
 }

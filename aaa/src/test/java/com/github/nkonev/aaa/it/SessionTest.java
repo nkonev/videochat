@@ -39,32 +39,6 @@ public class SessionTest extends OAuth2EmulatorTests {
     }
 
 
-    private static class SessionHolder {
-        final long userId;
-        final List<String> sessionCookies;
-        String newXsrf;
-
-        public SessionHolder(long userId, List<String> sessionCookies, String newXsrf) {
-            this.userId = userId;
-            this.sessionCookies = sessionCookies;
-            this.newXsrf = newXsrf;
-        }
-
-        public SessionHolder(long userId, ResponseEntity responseEntity) {
-            this.userId = userId;
-            this.sessionCookies = getSessionCookies(responseEntity);
-            this.newXsrf = getXsrfValue(getXsrfCookieHeaderValue(responseEntity));
-        }
-
-        public String[] getCookiesArray(){
-            return sessionCookies.toArray(new String[sessionCookies.size()]);
-        }
-
-        public void updateXsrf(ResponseEntity responseEntity){
-            this.newXsrf = getXsrfValue(getXsrfCookieHeaderValue(responseEntity));
-        }
-    }
-
     // This test won't works if you call .with(csrf()) before.
     @Test
     public void userCannotLoginAfterLock() throws Exception {
@@ -134,21 +108,6 @@ public class SessionTest extends OAuth2EmulatorTests {
         return testRestTemplate.exchange(loginRequest, SuccessfulLoginDTO.class);
     }
 
-    private static List<String> getSessionCookies(ResponseEntity<String> loginResponseEntity) {
-        return getSetCookieHeaders(loginResponseEntity).stream().dropWhile(s -> s.contains(COOKIE_XSRF+"=;")).collect(Collectors.toList());
-    }
 
-    private static String getXsrfValue(String xsrfCookieHeaderValue) {
-        return HttpCookie.parse(xsrfCookieHeaderValue).stream().findFirst().orElseThrow(()-> new RuntimeException("cannot get cookie value")).getValue();
-    }
-
-    private static String getXsrfCookieHeaderValue(ResponseEntity<String> getXsrfTokenResponse) {
-        return getSetCookieHeaders(getXsrfTokenResponse)
-                .stream().filter(s -> s.matches(COOKIE_XSRF+"=\\w+.*")).findFirst().orElseThrow(()-> new RuntimeException("cookie " + COOKIE_XSRF + " not found"));
-    }
-
-    private static List<String> getSetCookieHeaders(ResponseEntity<String> getXsrfTokenResponse) {
-        return Optional.ofNullable(getXsrfTokenResponse.getHeaders().get(HEADER_SET_COOKIE)).orElseThrow(()->new RuntimeException("missed header "+ HEADER_SET_COOKIE));
-    }
 
 }
