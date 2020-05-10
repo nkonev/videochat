@@ -72,26 +72,28 @@ public class SecurityConfig {
                                 return response.releaseBody().then(Mono.error(new SetStatusException("AAA Unauthorized", statusCode.value())));
                             }
 
-                            Mono<UserSessionResponse> sessionResponseMono = response.bodyToMono(UserSessionResponse.class);
-                            return sessionResponseMono.flatMap(sessionResponse -> {
-                                String username = sessionResponse.getUserName();
-                                long userid = sessionResponse.getUserId();
-                                long expiresIn = sessionResponse.getExpiresIn();
+                            return response
+                                    .bodyToMono(UserSessionResponse.class)
+                                    .switchIfEmpty(Mono.error(new RuntimeException("Empty body from AAA")))
+                                    .flatMap(sessionResponse -> {
+                                        String username = sessionResponse.getUserName();
+                                        long userid = sessionResponse.getUserId();
+                                        long expiresIn = sessionResponse.getExpiresIn();
 
-                                ServerWebExchange modifiedExchange = exchange.mutate().request(builder -> {
-                                    builder.header(X_AUTH_USERNAME, username);
-                                    builder.header(X_AUTH_SUBJECT, "" + userid);
-                                    builder.header(X_AUTH_EXPIRESIN, "" + expiresIn);
-                                }).build();
-                                LOGGER.info("Into {} '{}' inserting {}='{}', {}='{}', {}='{}'",
-                                        modifiedExchange.getRequest().getMethod(),
-                                        modifiedExchange.getRequest().getURI(),
-                                        X_AUTH_USERNAME, username,
-                                        X_AUTH_SUBJECT, userid,
-                                        X_AUTH_EXPIRESIN, expiresIn
-                                );
-                                return chain.filter(modifiedExchange);
-                            });
+                                        ServerWebExchange modifiedExchange = exchange.mutate().request(builder -> {
+                                            builder.header(X_AUTH_USERNAME, username);
+                                            builder.header(X_AUTH_SUBJECT, "" + userid);
+                                            builder.header(X_AUTH_EXPIRESIN, "" + expiresIn);
+                                        }).build();
+                                        LOGGER.info("Into {} '{}' inserting {}='{}', {}='{}', {}='{}'",
+                                                modifiedExchange.getRequest().getMethod(),
+                                                modifiedExchange.getRequest().getURI(),
+                                                X_AUTH_USERNAME, username,
+                                                X_AUTH_SUBJECT, userid,
+                                                X_AUTH_EXPIRESIN, expiresIn
+                                        );
+                                        return chain.filter(modifiedExchange);
+                                    });
                         })
                         .onErrorResume(throwable -> {
                             setAlreadyRouted(exchange);
