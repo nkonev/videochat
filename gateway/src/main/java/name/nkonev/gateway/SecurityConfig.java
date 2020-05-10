@@ -93,7 +93,7 @@ public class SecurityConfig {
                                     });
                         })
                         .onErrorResume(throwable -> {
-                            setAlreadyRouted(exchange);
+                            setAlreadyRouted(exchange); // do not invoke downstream in cause fail in NettyRoutingFilter
                             exchange.getResponse().setRawStatusCode(500);
                             if (throwable instanceof SetStatusException) {
                                 SetStatusException ex = (SetStatusException) throwable;
