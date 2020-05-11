@@ -4,10 +4,12 @@ import {
     BrowserRouter as Router,
     Switch,
     Route,
-    Link
+    Link,
+    Redirect
 } from "react-router-dom";
 import Chat from "./Chat";
 import Login from "./Login";
+import { connect } from 'react-redux'
 
 /**
  * Main landing page user starts interaction from
@@ -15,7 +17,7 @@ import Login from "./Login";
  * @constructor
  */
 
-function App() {
+const App = ({ currentState }) => {
 
     // https://ru.reactjs.org/docs/hooks-effect.html
     useEffect(() => {
@@ -37,6 +39,16 @@ function App() {
         };
     });
 
+
+    function redirector() {
+        // https://tylermcginnis.com/react-router-programmatically-navigate/
+        // https://medium.com/@anneeb/redirecting-in-react-4de5e517354a
+        if (currentState.redirectUrl === "/login") {
+            console.log("Performing redirect to", currentState.redirectUrl);
+            return <Redirect to={currentState.redirectUrl} />
+        }
+    }
+
     return (
         <Router>
         <header className="header">
@@ -56,7 +68,10 @@ function App() {
                     </div>
                 </div>
             </div>
+            <h2>{ currentState.redirectUrl }</h2>
         </header>
+
+        { redirector() }
 
         {/* A <Switch> looks through its children <Route>s and
         renders the first one that matches the current URL. */}
@@ -78,7 +93,7 @@ function App() {
 
         </Router>
     );
-}
+};
 
 function Home() {
     return <div>
@@ -93,4 +108,18 @@ function About() {
     </div>;
 }
 
-export default (App);
+const mapStateToProps = state => ({
+    currentState: state
+});
+
+const mapDispatchToProps = dispatch => ({
+    //goTo: url => dispatch(goTo(url))
+});
+
+// https://codesandbox.io/s/github/reduxjs/redux/tree/master/examples/todos?from-embed=&file=/src/containers/VisibleTodoList.js
+// https://react-redux.js.org/using-react-redux/connect-mapstate
+// https://habr.com/ru/company/ruvds/blog/423157/
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(App)

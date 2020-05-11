@@ -27,10 +27,13 @@ function Login() {
     });
 
     axios.post(`/api/login`, params)
-    .catch((error) => {
-      // handle error
-      console.log("Handling error on login", error.response);
-    });
+        .then(() => {
+
+        })
+        .catch((error) => {
+          // handle error
+          console.log("Handling error on login", error.response);
+        });
   };
 
   const handleChangeUsername = event => {
