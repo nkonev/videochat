@@ -13,7 +13,11 @@ function storeFunction(state = "", action) {
         case 'go':
             return {...state, redirectUrl: action.redirectUrl};
         case 'savePrevious':
-            return {...state, previousUrl: action.previousUrl};
+            if (!state.previousUrl) {
+                return {...state, previousUrl: action.previousUrl};
+            } else {
+                return state;
+            }
         case 'restorePrevious':
             const pr = state.previousUrl;
             return {...state, previousUrl: null, redirectUrl: pr};
