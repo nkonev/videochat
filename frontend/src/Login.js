@@ -35,7 +35,6 @@ function Login() {
 
     axios.post(`/api/login`, params)
         .then(() => {
-            console.log("Store state", store.getState());
             store.dispatch(restorePreviousUrl());
         })
         .catch((error) => {

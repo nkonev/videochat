@@ -9,7 +9,8 @@ import {
 } from "react-router-dom";
 import Chat from "./Chat";
 import Login from "./Login";
-import { connect } from 'react-redux'
+import {connect, useStore} from 'react-redux'
+import { clearRedirect } from "./actions";
 
 /**
  * Main landing page user starts interaction from
@@ -39,13 +40,16 @@ const App = ({ currentState }) => {
         };
     });
 
+    const store = useStore();
 
     function redirector() {
         // https://tylermcginnis.com/react-router-programmatically-navigate/
         // https://medium.com/@anneeb/redirecting-in-react-4de5e517354a
-        if (currentState.redirectUrl) {
-            console.log("Performing redirect to", currentState.redirectUrl);
-            return <Redirect to={currentState.redirectUrl} />
+        const re = currentState.redirectUrl;
+        if (re) {
+            console.log("Performing redirect to", re);
+            store.dispatch(clearRedirect());
+            return <Redirect to={re} />
         }
     }
 

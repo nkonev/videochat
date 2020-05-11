@@ -11,3 +11,7 @@ export const savePreviousUrl = (url) => ({
     type: 'savePrevious',
     previousUrl: url
 });
+
+export const clearRedirect = () => ({
+    type: 'clearRedirect'
+});

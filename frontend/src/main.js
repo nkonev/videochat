@@ -17,6 +17,8 @@ function storeFunction(state = "", action) {
         case 'restorePrevious':
             const pr = state.previousUrl;
             return {...state, previousUrl: null, redirectUrl: pr};
+        case 'clearRedirect':
+            return {...state, redirectUrl: null};
         default:
             return state
     }
