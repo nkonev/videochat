@@ -18,6 +18,7 @@ const useStyles = makeStyles((theme) => ({
 function Login() {
   const classes = useStyles();
 
+  // https://react-redux.js.org/api/hooks#usestore
   // EXAMPLE ONLY! Do not do this in a real app.
   // The component will not automatically update if the store state changes
   const store = useStore();
