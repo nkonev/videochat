@@ -43,7 +43,7 @@ const App = ({ currentState }) => {
     function redirector() {
         // https://tylermcginnis.com/react-router-programmatically-navigate/
         // https://medium.com/@anneeb/redirecting-in-react-4de5e517354a
-        if (currentState.redirectUrl === "/login") {
+        if (currentState.redirectUrl) {
             console.log("Performing redirect to", currentState.redirectUrl);
             return <Redirect to={currentState.redirectUrl} />
         }
@@ -68,7 +68,6 @@ const App = ({ currentState }) => {
                     </div>
                 </div>
             </div>
-            <h2>{ currentState.redirectUrl }</h2>
         </header>
 
         { redirector() }

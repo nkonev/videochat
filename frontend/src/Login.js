@@ -3,6 +3,8 @@ import TextField from '@material-ui/core/TextField';
 import { makeStyles } from '@material-ui/core/styles';
 import Button from "@material-ui/core/Button";
 import axios from 'axios'
+import { useStore } from 'react-redux'
+import { restorePreviousUrl } from "./actions";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -16,6 +18,10 @@ const useStyles = makeStyles((theme) => ({
 function Login() {
   const classes = useStyles();
 
+  // EXAMPLE ONLY! Do not do this in a real app.
+  // The component will not automatically update if the store state changes
+  const store = useStore();
+
   const [loginDto, setLoginDto] = React.useState({username: "admin", password: "admin"});
 
   const onLogin = (c) => {
@@ -28,7 +34,8 @@ function Login() {
 
     axios.post(`/api/login`, params)
         .then(() => {
-
+            console.log("Store state", store.getState());
+            store.dispatch(restorePreviousUrl());
         })
         .catch((error) => {
           // handle error

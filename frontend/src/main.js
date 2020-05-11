@@ -14,6 +14,9 @@ function storeFunction(state = "", action) {
             return {...state, redirectUrl: action.redirectUrl};
         case 'savePrevious':
             return {...state, previousUrl: action.previousUrl};
+        case 'restorePrevious':
+            const pr = state.previousUrl;
+            return {...state, previousUrl: null, redirectUrl: pr};
         default:
             return state
     }
@@ -28,7 +31,7 @@ axios.interceptors.response.use((response) => {
     // https://github.com/axios/axios/issues/932#issuecomment-307390761
     console.log("Catch error", error.request);
     if (error && error.response && error.response.status == 401) {
-        console.log("Error Save error url", window.location.pathname);
+        console.log("Catch 401 Unauthorized, saving url", window.location.pathname);
         store.dispatch(savePreviousUrl(window.location.pathname));
         store.dispatch(goLogin());
         return Promise.reject(error)

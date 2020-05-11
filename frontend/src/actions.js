@@ -1,3 +1,7 @@
+export const restorePreviousUrl = () => ({
+    type: 'restorePrevious'
+});
+
 export const goLogin = () => ({
     type: 'go',
     redirectUrl: "/login"
