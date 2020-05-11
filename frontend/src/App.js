@@ -48,7 +48,7 @@ const App = ({ currentState, dispatch }) => {
         const re = currentState.redirectUrl;
         if (re) {
             console.log("Performing redirect to", re);
-            dispatch(clearRedirect());
+            setTimeout(()=>dispatch(clearRedirect()), 0);
             return <Redirect to={re} />
         }
     }
