@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 import Chat from "./Chat";
 import Login from "./Login";
-import {connect, useStore} from 'react-redux'
+import {connect} from 'react-redux'
 import { clearRedirect } from "./actions";
 
 /**
@@ -18,7 +18,7 @@ import { clearRedirect } from "./actions";
  * @constructor
  */
 
-const App = ({ currentState }) => {
+const App = ({ currentState, dispatch }) => {
 
     // https://ru.reactjs.org/docs/hooks-effect.html
     useEffect(() => {
@@ -40,7 +40,7 @@ const App = ({ currentState }) => {
         };
     });
 
-    const store = useStore();
+    //const store = useStore();
 
     function redirector() {
         // https://tylermcginnis.com/react-router-programmatically-navigate/
@@ -48,7 +48,7 @@ const App = ({ currentState }) => {
         const re = currentState.redirectUrl;
         if (re) {
             console.log("Performing redirect to", re);
-            store.dispatch(clearRedirect());
+            dispatch(clearRedirect());
             return <Redirect to={re} />
         }
     }
@@ -115,14 +115,14 @@ const mapStateToProps = state => ({
     currentState: state
 });
 
-const mapDispatchToProps = dispatch => ({
-    //goTo: url => dispatch(goTo(url))
-});
+// const mapDispatchToProps = dispatch => ({
+//     //goTo: url => dispatch(goTo(url))
+// });
 
 // https://codesandbox.io/s/github/reduxjs/redux/tree/master/examples/todos?from-embed=&file=/src/containers/VisibleTodoList.js
 // https://react-redux.js.org/using-react-redux/connect-mapstate
 // https://habr.com/ru/company/ruvds/blog/423157/
 export default connect(
     mapStateToProps,
-    mapDispatchToProps
+    //mapDispatchToProps
 )(App)
