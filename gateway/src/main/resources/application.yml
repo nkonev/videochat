@@ -16,6 +16,10 @@ spring:
     sampler:
       probability: 1.0
       rate: 0
+    integration:
+      enabled: false
+    messaging:
+      enabled: false
   application:
     name: gateway
   cloud:
