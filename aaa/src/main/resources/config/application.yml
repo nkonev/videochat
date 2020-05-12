@@ -46,6 +46,8 @@ custom.image:
 spring.session.timeout: 2d
 
 spring:
+  application:
+    name: aaa
   sleuth:
     sampler:
       probability: 1.0
