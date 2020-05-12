@@ -2,8 +2,6 @@ package com.github.nkonev.aaa;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
@@ -11,8 +9,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @EnableAsync
 @SpringBootApplication(
-        scanBasePackages = {"com.github.nkonev.aaa"},
-        exclude = {TraceMessagingAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class}
+        scanBasePackages = {"com.github.nkonev.aaa"}
 )
 public class AaaApplication {
 

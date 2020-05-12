@@ -45,6 +45,16 @@ custom.image:
 
 spring.session.timeout: 2d
 
+spring:
+  sleuth:
+    sampler:
+      probability: 1.0
+      rate: 0
+    integration:
+      enabled: false
+    messaging:
+      enabled: false
+
 custom:
   email:
     from: "username@yandex.ru" 
