@@ -10,7 +10,8 @@ import {
 import Chat from "./Chat";
 import Login from "./Login";
 import {connect} from 'react-redux'
-import { clearRedirect } from "./actions";
+import {clearRedirect, setProfile, unsetProfile} from "./actions";
+import axios from 'axios'
 
 /**
  * Main landing page user starts interaction from
@@ -40,8 +41,6 @@ const App = ({ currentState, dispatch }) => {
         };
     });
 
-    //const store = useStore();
-
     function redirector() {
         // https://tylermcginnis.com/react-router-programmatically-navigate/
         // https://medium.com/@anneeb/redirecting-in-react-4de5e517354a
@@ -52,6 +51,13 @@ const App = ({ currentState, dispatch }) => {
             setTimeout(()=>dispatch(clearRedirect()), 0);
             return <Redirect to={re} />
         }
+    }
+
+    function logout() {
+        axios.post(`/api/logout`)
+            .then(value1 => {
+                return dispatch(unsetProfile())
+            })
     }
 
     return (
@@ -68,9 +74,17 @@ const App = ({ currentState, dispatch }) => {
                         <Link className="menu__item" to="/about">About</Link>
                         <Link className="menu__item" to="/chat">Chats</Link>
                     </nav>
-                    <div className="login">
-                        <Link className="menu__item login__btn" to="/login">Войти</Link>
-                    </div>
+                    { currentState.profile ?
+                        (<div>
+                            <div>{ currentState.profile.login} </div>
+                            <div className="logout">
+                                <a className="menu__item login__btn" onClick={() => logout()}>Выйти</a>
+                            </div>
+                        </div>) :
+                        (<div className="login">
+                            <Link className="menu__item login__btn" to="/login">Войти</Link>
+                        </div>)
+                    }
                 </div>
             </div>
         </header>
@@ -116,14 +130,9 @@ const mapStateToProps = state => ({
     currentState: state
 });
 
-// const mapDispatchToProps = dispatch => ({
-//     //goTo: url => dispatch(goTo(url))
-// });
-
 // https://codesandbox.io/s/github/reduxjs/redux/tree/master/examples/todos?from-embed=&file=/src/containers/VisibleTodoList.js
 // https://react-redux.js.org/using-react-redux/connect-mapstate
 // https://habr.com/ru/company/ruvds/blog/423157/
 export default connect(
-    mapStateToProps,
-    //mapDispatchToProps
+    mapStateToProps
 )(App)

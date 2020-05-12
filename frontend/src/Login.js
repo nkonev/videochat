@@ -4,7 +4,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import Button from "@material-ui/core/Button";
 import axios from 'axios'
 import { useStore } from 'react-redux'
-import { restorePreviousUrl } from "./actions";
+import {restorePreviousUrl, setProfile} from "./actions";
+import {getProfile} from "./utils";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -34,8 +35,11 @@ function Login() {
     });
 
     axios.post(`/api/login`, params)
-        .then(() => {
+        .then((value) => {
             store.dispatch(restorePreviousUrl());
+        })
+        .then(value => {
+            return getProfile(store.dispatch);
         })
         .catch((error) => {
           // handle error

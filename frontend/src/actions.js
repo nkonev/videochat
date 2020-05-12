@@ -15,3 +15,12 @@ export const savePreviousUrl = (url) => ({
 export const clearRedirect = () => ({
     type: 'clearRedirect'
 });
+
+export const setProfile = (pr) => ({
+    type: 'setProfile',
+    profile: pr
+});
+
+export const unsetProfile = () => ({
+    type: 'unsetProfile'
+});
