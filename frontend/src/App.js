@@ -48,6 +48,7 @@ const App = ({ currentState, dispatch }) => {
         const re = currentState.redirectUrl;
         if (re) {
             console.log("Performing redirect to", re);
+            // workaround https://github.com/facebook/react/issues/18178#issuecomment-595846312
             setTimeout(()=>dispatch(clearRedirect()), 0);
             return <Redirect to={re} />
         }
