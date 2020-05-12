@@ -32,7 +32,7 @@ public class SecurityConfig {
     public WebClient webClient() {
         return WebClient
                 .builder()
-                .baseUrl("http://localhost:8060/api")
+                .baseUrl("http://localhost:8060/internal")
                 .defaultHeader(HttpHeaders.ACCEPT, "application/x-protobuf;charset=UTF-8")
                 .build();
     }
