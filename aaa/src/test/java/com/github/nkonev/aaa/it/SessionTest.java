@@ -79,35 +79,4 @@ public class SessionTest extends OAuth2EmulatorTests {
         Assertions.assertEquals(401, newAliceLogin.getStatusCodeValue());
     }
 
-    private SessionHolder login(String login, String password) throws URISyntaxException {
-        ResponseEntity<SuccessfulLoginDTO> loginResponseEntity = rawLogin(login, password);
-
-        Assertions.assertEquals(200, loginResponseEntity.getStatusCodeValue());
-
-        return new SessionHolder(loginResponseEntity.getBody().getId(), loginResponseEntity);
-    }
-
-    private ResponseEntity<SuccessfulLoginDTO> rawLogin(String login, String password) throws URISyntaxException {
-        ResponseEntity<String> getXsrfTokenResponse = testRestTemplate.getForEntity(urlWithContextPath(), String.class);
-        String xsrfCookieHeaderValue = getXsrfCookieHeaderValue(getXsrfTokenResponse);
-        String xsrf = getXsrfValue(xsrfCookieHeaderValue);
-
-
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add(USERNAME_PARAMETER, login);
-        params.add(PASSWORD_PARAMETER, password);
-
-        RequestEntity loginRequest = RequestEntity
-                .post(new URI(urlWithContextPath()+API_LOGIN_URL))
-                .header(HEADER_XSRF_TOKEN, xsrf)
-                .header(COOKIE, xsrfCookieHeaderValue)
-                .header(ACCEPT, MediaType.APPLICATION_JSON_UTF8_VALUE)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(params);
-
-        return testRestTemplate.exchange(loginRequest, SuccessfulLoginDTO.class);
-    }
-
-
-
 }

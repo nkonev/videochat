@@ -5,9 +5,11 @@ package com.github.nkonev.aaa;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.nkonev.aaa.dto.SuccessfulLoginDTO;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.aaa.security.SecurityConfig;
 import com.github.nkonev.aaa.util.ContextPathHelper;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -23,24 +25,29 @@ import org.springframework.data.redis.connection.DefaultStringRedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.net.HttpCookie;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.github.nkonev.aaa.CommonTestConstants.COOKIE_XSRF;
-import static com.github.nkonev.aaa.CommonTestConstants.HEADER_SET_COOKIE;
-import static com.github.nkonev.aaa.security.SecurityConfig.PASSWORD_PARAMETER;
-import static com.github.nkonev.aaa.security.SecurityConfig.USERNAME_PARAMETER;
+import static com.github.nkonev.aaa.CommonTestConstants.*;
+import static com.github.nkonev.aaa.security.SecurityConfig.*;
+import static org.springframework.http.HttpHeaders.ACCEPT;
+import static org.springframework.http.HttpHeaders.COOKIE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -190,4 +197,35 @@ public abstract class AbstractTestRunner {
         List<String> sessionCookies = getSessionCookies(getXsrfTokenResponse);
         return new XsrfCookiesHolder(sessionCookies, xsrf);
     }
+
+    protected SessionHolder login(String login, String password) throws URISyntaxException {
+        ResponseEntity<SuccessfulLoginDTO> loginResponseEntity = rawLogin(login, password);
+
+        Assertions.assertEquals(200, loginResponseEntity.getStatusCodeValue());
+
+        return new SessionHolder(loginResponseEntity.getBody().getId(), loginResponseEntity);
+    }
+
+    protected ResponseEntity<SuccessfulLoginDTO> rawLogin(String login, String password) throws URISyntaxException {
+        ResponseEntity<String> getXsrfTokenResponse = testRestTemplate.getForEntity(urlWithContextPath(), String.class);
+        String xsrfCookieHeaderValue = getXsrfCookieHeaderValue(getXsrfTokenResponse);
+        String xsrf = getXsrfValue(xsrfCookieHeaderValue);
+
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(USERNAME_PARAMETER, login);
+        params.add(PASSWORD_PARAMETER, password);
+
+        RequestEntity loginRequest = RequestEntity
+                .post(new URI(urlWithContextPath()+API_LOGIN_URL))
+                .header(HEADER_XSRF_TOKEN, xsrf)
+                .header(COOKIE, xsrfCookieHeaderValue)
+                .header(ACCEPT, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(params);
+
+        return testRestTemplate.exchange(loginRequest, SuccessfulLoginDTO.class);
+    }
+
+
 }

@@ -1,6 +1,9 @@
 package com.github.nkonev.aaa.it;
 
 import com.github.nkonev.aaa.AbstractSeleniumRunner;
+import com.github.nkonev.aaa.CommonTestConstants;
+import com.github.nkonev.aaa.Constants;
+import com.github.nkonev.aaa.FailoverUtils;
 import com.github.nkonev.aaa.config.webdriver.Browser;
 import com.github.nkonev.aaa.config.webdriver.SeleniumProperties;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
@@ -8,10 +11,19 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.net.URI;
+import java.time.LocalDateTime;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
+import static com.github.nkonev.aaa.CommonTestConstants.HEADER_XSRF_TOKEN;
+import static com.github.nkonev.aaa.Constants.Urls.API;
+import static org.springframework.http.HttpHeaders.COOKIE;
 
 
 public class UserProfileOauth2Test extends AbstractSeleniumRunner {
@@ -22,69 +34,73 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private void openOauth2TestPage() {
+        open(urlPrefix+"/oauth2.html");
+    }
+
     @Test
     public void testFacebookLogin()  {
         Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
-        open(urlPrefix+"/oauth2.html");
+        openOauth2TestPage();
 
         $("#a-facebook").click();
 
-        UserAccount userAccount = userAccountRepository.findByUsername(facebookLogin).orElseThrow();
+        UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
         Assertions.assertNotNull(userAccount.getId());
         Assertions.assertNotNull(userAccount.getAvatar());
         Assertions.assertTrue(userAccount.getAvatar().startsWith("/"));
         Assertions.assertEquals("Nikita K", userAccount.getUsername());
     }
 
-    /*@Test
+    @Test
     public void testVkontakteLoginAndDelete() throws Exception {
+        final String VKONTAKTE_LOGIN = "Никита Конев";
+        final String VKONTAKTE_PASSWORD = "dummy password";
+
         long countInitial = userAccountRepository.count();
         Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
-        IndexPage indexPage = new IndexPage(urlPrefix);
-        indexPage.openPage();
+        openOauth2TestPage();
 
-        LoginModal loginModal = new LoginModal();
-        loginModal.openLoginModal();
-        loginModal.loginVkontakte();
+        $("#a-vkontakte").click();
 
-        Assertions.assertEquals(vkontakteLogin, UserNav.getLogin());
+        long countBeforeDelete = FailoverUtils.retry(10, () -> {
+            long c = userAccountRepository.count();
+            if (countInitial+1 != c) {
+                throw new RuntimeException("User still not created");
+            }
+            return c;
+        });
 
-        long countBefore = userAccountRepository.count();
-        Assertions.assertEquals(countInitial+1, countBefore);
-
-        // now we attempt to change email
-        UserProfilePage userPage = new UserProfilePage(urlPrefix, driver);
         UserAccount userAccount = userAccountRepository.findByUsername(vkontakteLogin).orElseThrow();
-        userPage.openPage(userAccount.getId().intValue());
-        LocalDateTime lastLoginFirst = userAccount.getLastLoginDateTime();
-        userPage.assertThisIsYou();
-        userPage.edit();
-        userPage.setEmail("new-email-for-vkontakte-user@gmail.not");
-        userPage.save();
-        userPage.assertEmail("new-email-for-vkontakte-user@gmail.not");
 
-        loginModal.logout();
+        Assertions.assertNotNull(userAccount.getId());
+        Assertions.assertNull(userAccount.getAvatar());
+        Assertions.assertEquals(VKONTAKTE_LOGIN, userAccount.getUsername());
 
-        loginModal.openLoginModal();
-        loginModal.loginVkontakte();
+        userAccount.setPassword(passwordEncoder.encode(VKONTAKTE_PASSWORD));
+        userAccountRepository.save(userAccount);
 
-        UserAccount userAccountUpdated = userAccountRepository.findByUsername(vkontakteLogin).orElseThrow();
-        LocalDateTime lastLoginSecond = userAccountUpdated.getLastLoginDateTime();
-        Assertions.assertNotEquals(lastLoginSecond, lastLoginFirst);
-        userPage.assertLastLoginPresent();
 
-        userPage.edit();
-        userPage.delete();
-        userPage.confirmDelete();
+        SessionHolder userNikitaSession = login(VKONTAKTE_LOGIN, VKONTAKTE_PASSWORD);
+        RequestEntity selfDeleteRequest1 = RequestEntity
+                .delete(new URI(urlWithContextPath()+ API + Constants.Urls.PROFILE))
+                .header(HEADER_XSRF_TOKEN, userNikitaSession.newXsrf)
+                .header(COOKIE, userNikitaSession.getCookiesArray())
+                .build();
+        ResponseEntity<String> selfDeleteResponse1 = testRestTemplate.exchange(selfDeleteRequest1, String.class);
+        Assertions.assertEquals(200, selfDeleteResponse1.getStatusCodeValue());
 
         FailoverUtils.retry(10, () -> {
             long countAfter = userAccountRepository.count();
-            Assertions.assertEquals(countBefore-1, countAfter);
+            Assertions.assertEquals(countBeforeDelete-1, countAfter);
             return null;
         });
-    }*/
+    }
 
     /*@Test
     public void testBindIdToAccountAndConflict() throws Exception {
