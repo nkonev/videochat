@@ -32,6 +32,9 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
         UserAccount userAccount = userAccountRepository.findByUsername(facebookLogin).orElseThrow();
         Assertions.assertNotNull(userAccount.getId());
+        Assertions.assertNotNull(userAccount.getAvatar());
+        Assertions.assertTrue(userAccount.getAvatar().startsWith("/"));
+        Assertions.assertEquals("Nikita K", userAccount.getUsername());
     }
 
     /*@Test
@@ -81,9 +84,9 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
             Assertions.assertEquals(countBefore-1, countAfter);
             return null;
         });
-    }
+    }*/
 
-    @Test
+    /*@Test
     public void testBindIdToAccountAndConflict() throws Exception {
 
         IndexPage indexPage = new IndexPage(urlPrefix);

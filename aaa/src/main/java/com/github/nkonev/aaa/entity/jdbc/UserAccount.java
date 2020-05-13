@@ -15,7 +15,7 @@ public class UserAccount {
     private Long id;
     private String username;
     private String password; // hash
-    private String avatar;
+    private String avatar; // avatar url
     private boolean expired;
     private boolean locked;
     private boolean enabled; // synonym to "confirmed"
