@@ -41,7 +41,7 @@ public class SessionTest extends OAuth2EmulatorTests {
 
     // This test won't works if you call .with(csrf()) before.
     @Test
-    public void userCannotLoginAfterLock() throws Exception {
+    public void userCannotRequestProfileAfterLock() throws Exception {
         SessionHolder userAliceSession = login(CommonTestConstants.USER_LOCKED, CommonTestConstants.COMMON_PASSWORD);
 
         RequestEntity myPostsRequest1 = RequestEntity
