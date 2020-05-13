@@ -53,13 +53,12 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Assertions.assertNotNull(userAccount.getId());
         Assertions.assertNotNull(userAccount.getAvatar());
         Assertions.assertTrue(userAccount.getAvatar().startsWith("/"));
-        Assertions.assertEquals("Nikita K", userAccount.getUsername());
+        Assertions.assertEquals(facebookLogin, userAccount.getUsername());
     }
 
     @Test
     public void testVkontakteLoginAndDelete() throws Exception {
-        final String VKONTAKTE_LOGIN = "Никита Конев";
-        final String VKONTAKTE_PASSWORD = "dummy password";
+        final String vkontaktePassword = "dummy password";
 
         long countInitial = userAccountRepository.count();
         Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
@@ -80,13 +79,13 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
         Assertions.assertNotNull(userAccount.getId());
         Assertions.assertNull(userAccount.getAvatar());
-        Assertions.assertEquals(VKONTAKTE_LOGIN, userAccount.getUsername());
+        Assertions.assertEquals(vkontakteLogin, userAccount.getUsername());
 
-        userAccount.setPassword(passwordEncoder.encode(VKONTAKTE_PASSWORD));
+        userAccount.setPassword(passwordEncoder.encode(vkontaktePassword));
         userAccountRepository.save(userAccount);
 
 
-        SessionHolder userNikitaSession = login(VKONTAKTE_LOGIN, VKONTAKTE_PASSWORD);
+        SessionHolder userNikitaSession = login(vkontakteLogin, vkontaktePassword);
         RequestEntity selfDeleteRequest1 = RequestEntity
                 .delete(new URI(urlWithContextPath()+ API + Constants.Urls.PROFILE))
                 .header(HEADER_XSRF_TOKEN, userNikitaSession.newXsrf)
