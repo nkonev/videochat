@@ -10,8 +10,6 @@ spring:
 #        no-cache: false
 #        max-age: 40s
 #    static-locations: file:/home/nkonev/go_1_11/videochat/frontend-nginx/
-  redis:
-    port: 36379
   sleuth:
     sampler:
       probability: 1.0
