@@ -118,3 +118,6 @@ curl -v 'http://localhost:8060/api/login' -H 'Accept: application/json, text/pla
 ```
 docker exec -t videochat_postgres_1 pg_dump -U aaa -b --create --column-inserts --serializable-deferrable
 ```
+
+# Videochat
+http://localhost:8081/public/index_old.html
