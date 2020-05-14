@@ -215,7 +215,7 @@ type authResult struct {
 func extractAuth(request *http.Request) (*authResult, error) {
 	expiresInString := request.Header.Get("X-Auth-ExpiresIn")
 	t, err := dateparse.ParseLocal(expiresInString)
-	GetLogEntry(request).Infof("Extracted expiration time: %v", t)
+	GetLogEntry(request).Infof("Extracted session expiration time: %v", t)
 
 	if err != nil {
 		return nil, err
