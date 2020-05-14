@@ -103,10 +103,19 @@ func configureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 		// initiated by client. Here you can theoretically return an error or
 		// disconnect client from server if needed. But now we just accept
 		// all subscriptions.
+		var credso, ok = centrifuge.GetCredentials(ctx)
+		Logger.Infof("Connected websocket centrifuge client hasCredentials %v, credentials %v", ok, credso)
 
 		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
-			// TODO make same duration as session
-			presenceDuration, _ := time.ParseDuration("24h")
+			expiresInString := fmt.Sprintf("%v000", credso.ExpireAt) // to milliseconds for put into dateparse.ParseLocal
+			t, err0 := dateparse.ParseLocal(expiresInString)
+			if err0 != nil {
+				Logger.Errorf("Error during ParseLocal %v", err0)
+			}
+
+			presenceDuration := t.Sub(time.Now())
+			Logger.Infof("Calculated session duration %v for credentials %v", presenceDuration, credso)
+
 			clientInfo := &protocol.ClientInfo{
 				User:   client.ID(),
 				Client: client.UserID(),
@@ -135,7 +144,7 @@ func configureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 					data, _ := json.Marshal(AuxChannelRequest{"joined"})
 					Logger.Infof("Publishing joined to channel %v", e.Channel)
 					// send to existing subscribers
-					err := node.Publish(e.Channel, data)
+					_, err := node.Publish(e.Channel, data)
 					if err != nil {
 						Logger.Errorf("Error during publishing joined %v", err)
 					}
@@ -207,13 +216,13 @@ func runCentrifuge(node *centrifuge.Node) {
 }
 
 type authResult struct {
-	UserId    string `json:"id"`
-	UserLogin string `json:"login"`
-	ExpiresAt int64  `json:"expiresAt"` // in GMT. in seconds
+	UserId    string
+	UserLogin string
+	ExpiresAt int64 // in GMT. in seconds for centrifuge
 }
 
 func extractAuth(request *http.Request) (*authResult, error) {
-	expiresInString := request.Header.Get("X-Auth-ExpiresIn")
+	expiresInString := request.Header.Get("X-Auth-ExpiresIn") // in GMT. in milliseconds from java
 	t, err := dateparse.ParseLocal(expiresInString)
 	GetLogEntry(request).Infof("Extracted session expiration time: %v", t)
 
