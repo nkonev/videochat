@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// X-Auth-Expiresin
+// X-Auth-ExpiresIn
 // 2020-03-17 08:36:04 +0000 UTC
 
 // X-Auth-Username
@@ -33,7 +33,7 @@ func setup() {}
 func TestExtractAuth(t *testing.T) {
 	req := test.NewRequest("GET", "/should-be-secured", nil)
 	Header := map[string][]string{
-		"X-Auth-Expiresin": {"2020-03-17 08:36:04 +0000 UTC"},
+		"X-Auth-ExpiresIn": {"2020-03-17 08:36:04 +0000 UTC"},
 		"X-Auth-Username":  {"tester"},
 		"X-Auth-UserId":    {"b01fb567-3f78-463b-8102-6da43b474705"},
 	}

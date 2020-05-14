@@ -49,7 +49,7 @@ public class SecurityConfig {
 
         public static final String X_AUTH_USERNAME = "X-Auth-Username";
         public static final String X_AUTH_SUBJECT = "X-Auth-UserId";
-        public static final String X_AUTH_EXPIRESIN = "X-Auth-Expiresin";
+        public static final String X_AUTH_EXPIRESIN = "X-Auth-ExpiresIn";
 
         public SecurityFilter(WebClient aaaClient) {
             this.aaaClient = aaaClient;
