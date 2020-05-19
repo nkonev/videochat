@@ -3,6 +3,7 @@ package name.nkonev.gateway;
 import name.nkonev.aaa.UserSessionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.route.Route;
@@ -29,10 +30,10 @@ public class SecurityConfig {
     public static final String SESSION_COOKIE = "SESSION";
 
     @Bean
-    public WebClient webClient() {
+    public WebClient webClient(@Value("${aaa.base-url}") String aaaBaseUrl) {
         return WebClient
                 .builder()
-                .baseUrl("http://localhost:8060/internal")
+                .baseUrl(aaaBaseUrl)
                 .defaultHeader(HttpHeaders.ACCEPT, "application/x-protobuf;charset=UTF-8")
                 .build();
     }

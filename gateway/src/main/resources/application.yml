@@ -44,3 +44,5 @@ spring:
             - name: Retry
               args:
                 methods: GET
+
+aaa.base-url: "http://localhost:8060/internal"
