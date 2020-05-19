@@ -23,23 +23,29 @@ const postgresString = "postgres"
 
 // Open returns a DB reference for a data source.
 func Open(conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) (*DB, error) {
-	db, err := sql.Open(postgresString, conninfo)
-	if err != nil {
+	if db, err := sql.Open(postgresString, conninfo); err != nil {
 		return nil, err
+	} else {
+		db.SetConnMaxLifetime(maxLifetime)
+		db.SetMaxIdleConns(maxIdle)
+		db.SetMaxOpenConns(maxOpen)
+		return &DB{db}, nil
 	}
-	db.SetConnMaxLifetime(maxLifetime)
-	db.SetMaxIdleConns(maxIdle)
-	db.SetMaxOpenConns(maxOpen)
-	return &DB{db}, nil
 }
 
 // Begin starts an returns a new transaction.
 func (db *DB) Begin() (*Tx, error) {
-	tx, err := db.DB.Begin()
-	if err != nil {
+	if tx, err := db.DB.Begin(); err != nil {
 		return nil, err
+	} else {
+		return &Tx{tx}, nil
 	}
-	return &Tx{tx}, nil
+}
+
+func (tx *Tx) SafeRollback() {
+	if err0 := tx.Rollback(); err0 != nil {
+		Logger.Errorf("Error during rollback tx %v", err0)
+	}
 }
 
 func migrateInternal(db *sql.DB) {

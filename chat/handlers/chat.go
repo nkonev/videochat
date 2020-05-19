@@ -14,26 +14,27 @@ type ChatDto struct {
 
 func GetChats(db db.DB) func(c echo.Context) error {
 	return func(c echo.Context) error {
-		tx, err := db.Begin()
-		if err != nil {
-			Logger.Errorf("Error during open transaction %v", err)
+		if tx, err := db.Begin(); err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during open transaction %v", err)
 			return err
+		} else {
+			if chats, err := tx.GetChats(40, 0); err != nil {
+				GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
+				tx.SafeRollback()
+				return err
+			} else {
+				chatDtos := make([]ChatDto, 0)
+				for _, c := range chats {
+					chatDtos = append(chatDtos, convert(c))
+				}
+				if err := tx.Commit(); err != nil {
+					GetLogEntry(c.Request()).Errorf("Error during commit transaction %v", err)
+					return err
+				}
+				GetLogEntry(c.Request()).Infof("Successfully returning %v chats", len(chatDtos))
+				return c.JSON(200, chatDtos)
+			}
 		}
-		chats, err := tx.GetChats(40, 0)
-		if err != nil {
-			Logger.Errorf("Error get chats from db %v", err)
-			return err
-		}
-		usrs := make([]ChatDto, 0)
-		for _, c := range chats {
-			usrs = append(usrs, convert(c))
-		}
-		err = tx.Commit()
-		if err != nil {
-			Logger.Errorf("Error during commit transaction %v", err)
-			return err
-		}
-		return c.JSON(200, usrs)
 	}
 }
 

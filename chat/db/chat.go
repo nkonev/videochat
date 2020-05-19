@@ -22,18 +22,18 @@ func (tx *Tx) CreateChat(u *models.Chat) error {
 }
 
 func (tx *Tx) GetChats(limit int, offset int) ([]models.Chat, error) {
-	if rows, err := tx.Query(`SELECT * FROM chat LIMIT $1 OFFSET $2`, limit, offset); err != nil {
+	if rows, err := tx.Query(`SELECT * FROM chat ORDER BY id LIMIT $1 OFFSET $2`, limit, offset); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
 		list := make([]models.Chat, 0)
 		for rows.Next() {
-			ch := models.Chat{}
-			err := rows.Scan(&ch.Id, &ch.Title, &ch.OwnerId)
-			if err != nil {
-				Logger.Error(err)
+			chat := models.Chat{}
+			if err := rows.Scan(&chat.Id, &chat.Title, &chat.OwnerId); err != nil {
+				Logger.Errorf("Error during scan chat rows", err)
+				return nil, err
 			} else {
-				list = append(list, ch)
+				list = append(list, chat)
 			}
 		}
 		return list, nil
