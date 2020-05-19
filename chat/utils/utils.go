@@ -52,3 +52,26 @@ func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
 	}
 	return false
 }
+
+const maxSize = 100
+const defaultSize = 20
+
+func FixPage(page int) int {
+	if page < 0 {
+		return 0
+	} else {
+		return page
+	}
+}
+
+func FixSize(size int) int {
+	if size > maxSize || size < 1 {
+		return defaultSize
+	} else {
+		return size
+	}
+}
+
+func GetOffset(page int, size int) int {
+	return page * size
+}

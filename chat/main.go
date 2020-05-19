@@ -11,6 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/nkonev/videochat/client"
+	"github.com/nkonev/videochat/db"
+	"github.com/nkonev/videochat/handlers"
 	. "github.com/nkonev/videochat/logger"
 	"github.com/nkonev/videochat/utils"
 	"github.com/spf13/viper"
@@ -35,8 +37,13 @@ func main() {
 			configureEcho,
 			configureStaticMiddleware,
 			configureAuthMiddleware,
+			configureDb,
 		),
-		fx.Invoke(runCentrifuge, runEcho),
+		fx.Invoke(
+			runMigrations,
+			runCentrifuge,
+			runEcho,
+		),
 	)
 	app.Run()
 
@@ -305,7 +312,7 @@ func centrifugeAuthMiddleware(h http.Handler) http.Handler {
 	})
 }
 
-func configureEcho(staticMiddleware staticMiddleware, authMiddleware authMiddleware, lc fx.Lifecycle, node *centrifuge.Node) *echo.Echo {
+func configureEcho(staticMiddleware staticMiddleware, authMiddleware authMiddleware, lc fx.Lifecycle, node *centrifuge.Node, db db.DB) *echo.Echo {
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
@@ -325,7 +332,7 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware authMiddlew
 	e.Use(middleware.BodyLimit(bodyLimit))
 
 	e.GET("/chat/websocket", convert(centrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
-	e.GET("/chat", chatHandler)
+	e.GET("/chat", handlers.GetChats(db))
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -345,55 +352,6 @@ func convert(h http.Handler) echo.HandlerFunc {
 	}
 }
 
-type ChatDto struct {
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
-func chatHandler(c echo.Context) error {
-	usrs := []ChatDto{
-		ChatDto{Name: "With Terry", Id: 1},
-		ChatDto{Name: "Friday drunk", Id: 2},
-		ChatDto{Name: "Lorem", Id: 3},
-		ChatDto{Name: "Impsum", Id: 4},
-		ChatDto{Name: "Dolor", Id: 5},
-		ChatDto{Name: "With collegues", Id: 6},
-		ChatDto{Name: "Lorem", Id: 7},
-		ChatDto{Name: "Impsum", Id: 8},
-		ChatDto{Name: "Dolor", Id: 9},
-		ChatDto{Name: "With collegues", Id: 10},
-		ChatDto{Name: "Lorem", Id: 11},
-		ChatDto{Name: "Impsum", Id: 12},
-		ChatDto{Name: "Dolor", Id: 13},
-		ChatDto{Name: "With collegues", Id: 14},
-		ChatDto{Name: "Lorem", Id: 15},
-		ChatDto{Name: "Impsum", Id: 16},
-		ChatDto{Name: "Dolor", Id: 17},
-		ChatDto{Name: "With collegues", Id: 18},
-		ChatDto{Name: "Lorem", Id: 19},
-		ChatDto{Name: "Impsum", Id: 20},
-		ChatDto{Name: "Dolor", Id: 21},
-		ChatDto{Name: "With collegues", Id: 22},
-		ChatDto{Name: "Lorem", Id: 23},
-		ChatDto{Name: "Impsum", Id: 24},
-		ChatDto{Name: "Dolor", Id: 25},
-		ChatDto{Name: "With collegues", Id: 26},
-		ChatDto{Name: "Lorem", Id: 27},
-		ChatDto{Name: "Impsum", Id: 28},
-		ChatDto{Name: "Dolor", Id: 29},
-		ChatDto{Name: "With collegues", Id: 30},
-		ChatDto{Name: "Lorem", Id: 31},
-		ChatDto{Name: "Impsum", Id: 32},
-		ChatDto{Name: "Dolor", Id: 33},
-		ChatDto{Name: "With collegues", Id: 34},
-		ChatDto{Name: "Lorem", Id: 35},
-		ChatDto{Name: "Impsum", Id: 36},
-		ChatDto{Name: "Dolor", Id: 37},
-		ChatDto{Name: "With collegues", Id: 38},
-	}
-	return c.JSON(200, usrs)
-}
-
 func configureStaticMiddleware() staticMiddleware {
 	box := rice.MustFindBox("static").HTTPBox()
 
@@ -409,6 +367,27 @@ func configureStaticMiddleware() staticMiddleware {
 			}
 		}
 	}
+}
+
+func configureDb(lc fx.Lifecycle) (db.DB, error) {
+	dbConnectionString := viper.GetString("postgresql.url")
+	maxOpen := viper.GetInt("postgresql.maxOpenConnections")
+	maxIdle := viper.GetInt("postgresql.maxIdleConnections")
+	maxLifeTime := viper.GetDuration("postgresql.maxLifetime")
+	dbInstance, err := db.Open(dbConnectionString, maxOpen, maxIdle, maxLifeTime)
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			Logger.Infof("Stopping db connection")
+			return dbInstance.Close()
+		},
+	})
+
+	return *dbInstance, err
+}
+
+func runMigrations(db db.DB) {
+	db.Migrate()
 }
 
 // rely on viper import and it's configured by

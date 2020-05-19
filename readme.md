@@ -121,3 +121,11 @@ docker exec -t videochat_postgres_1 pg_dump -U aaa -b --create --column-inserts 
 
 # Videochat
 http://localhost:8081/public/index_old.html
+
+Push down dummy go packages
+```
+go list -m -json all
+```
+
+"host=172.24.0.2 user=postgres password=postgresqlPassword dbname=postgres connect_timeout=2 statement_timeout=2000 sslmode=disable"
+"postgres://postgres:postgres@localhost:5432/example?sslmode=disable"

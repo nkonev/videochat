@@ -1,0 +1,5 @@
+CREATE TABLE chat(
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(1024) NOT NULL,
+    owner_id BIGINT NOT NULL
+)
