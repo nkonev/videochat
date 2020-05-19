@@ -30,7 +30,7 @@
         <maven.install.plugin.version>2.5.2</maven.install.plugin.version>
         <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
 
-        <spring.boot.version>2.3.0.M3</spring.boot.version>
+        <spring.boot.version>2.3.0.RELEASE</spring.boot.version>
         <selenide.version>5.11.1</selenide.version>
         <shedlock.version>2.1.0</shedlock.version>
         <greenmail.version>1.5.10</greenmail.version>
