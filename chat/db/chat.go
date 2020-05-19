@@ -7,9 +7,9 @@ import (
 
 // db model
 type Chat struct {
-	Id      int64  `json:"id"`
-	Title   string `json:"title"`
-	OwnerId int64  `json:"ownerId"`
+	Id      int64
+	Title   string
+	OwnerId int64
 }
 
 // CreateUser creates a new user.
