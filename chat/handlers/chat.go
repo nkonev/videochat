@@ -21,6 +21,7 @@ func GetChats(db db.DB) func(c echo.Context) error {
 		} else {
 			var userPrincipalDto = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 
+			// TODO use real pagination
 			if chats, err := tx.GetChats(userPrincipalDto.UserId, 40, 0); err != nil {
 				GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 				tx.SafeRollback()
