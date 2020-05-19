@@ -127,5 +127,8 @@ Push down dummy go packages
 go list -m -json all
 ```
 
-"host=172.24.0.2 user=postgres password=postgresqlPassword dbname=postgres connect_timeout=2 statement_timeout=2000 sslmode=disable"
-"postgres://postgres:postgres@localhost:5432/example?sslmode=disable"
+# Update Go modules
+https://github.com/golang/go/wiki/Modules
+```bash
+go get -u -t ./...
+```
