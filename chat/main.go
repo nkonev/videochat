@@ -10,6 +10,7 @@ import (
 	"github.com/centrifugal/protocol"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/nkonev/videochat/auth"
 	"github.com/nkonev/videochat/client"
 	"github.com/nkonev/videochat/db"
 	"github.com/nkonev/videochat/handlers"
@@ -18,6 +19,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -222,13 +224,7 @@ func runCentrifuge(node *centrifuge.Node) {
 	Logger.Info("Centrifuge started.")
 }
 
-type authResult struct {
-	UserId    string
-	UserLogin string
-	ExpiresAt int64 // in GMT. in seconds for centrifuge
-}
-
-func extractAuth(request *http.Request) (*authResult, error) {
+func extractAuth(request *http.Request) (*auth.AuthResult, error) {
 	expiresInString := request.Header.Get("X-Auth-ExpiresIn") // in GMT. in milliseconds from java
 	t, err := dateparse.ParseLocal(expiresInString)
 	GetLogEntry(request).Infof("Extracted session expiration time: %v", t)
@@ -236,8 +232,15 @@ func extractAuth(request *http.Request) (*authResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &authResult{
-		UserId:    request.Header.Get("X-Auth-UserId"),
+
+	userIdString := request.Header.Get("X-Auth-UserId")
+	i, err := strconv.ParseInt(userIdString, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	return &auth.AuthResult{
+		UserId:    i,
 		UserLogin: request.Header.Get("X-Auth-Username"),
 		ExpiresAt: t.Unix(),
 	}, nil
@@ -253,10 +256,10 @@ func extractAuth(request *http.Request) (*authResult, error) {
 //
 // Returns:
 //
-//  - *authResult pointer or nil
+//  - *AuthResult pointer or nil
 //  - is whitelisted
 //  - error
-func authorize(request *http.Request) (*authResult, bool, error) {
+func authorize(request *http.Request) (*auth.AuthResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
 	if utils.CheckUrlInWhitelist(whitelist, request.RequestURI) {
@@ -264,10 +267,10 @@ func authorize(request *http.Request) (*authResult, bool, error) {
 	}
 	auth, err := extractAuth(request)
 	if err != nil {
-		GetLogEntry(request).Infof("Error during extract authResult: %v", err)
+		GetLogEntry(request).Infof("Error during extract AuthResult: %v", err)
 		return nil, false, nil
 	}
-	GetLogEntry(request).Infof("Success authResult: %v", *auth)
+	GetLogEntry(request).Infof("Success AuthResult: %v", *auth)
 	return auth, false, nil
 }
 
@@ -302,7 +305,7 @@ func centrifugeAuthMiddleware(h http.Handler) http.Handler {
 		} else {
 			ctx := r.Context()
 			newCtx := centrifuge.SetCredentials(ctx, &centrifuge.Credentials{
-				UserID:   authResult.UserId,
+				UserID:   fmt.Sprintf("%v", authResult.UserId),
 				ExpireAt: authResult.ExpiresAt,
 				Info:     []byte(fmt.Sprintf("{\"login\": \"%v\"}", authResult.UserLogin)),
 			})

@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/nkonev/videochat/auth"
 	"github.com/nkonev/videochat/db"
 	. "github.com/nkonev/videochat/logger"
-	"github.com/nkonev/videochat/models"
+	"github.com/nkonev/videochat/utils"
 )
 
 type ChatDto struct {
@@ -18,7 +19,9 @@ func GetChats(db db.DB) func(c echo.Context) error {
 			GetLogEntry(c.Request()).Errorf("Error during open transaction %v", err)
 			return err
 		} else {
-			if chats, err := tx.GetChats(40, 0); err != nil {
+			var userPrincipalDto = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+
+			if chats, err := tx.GetChats(userPrincipalDto.UserId, 40, 0); err != nil {
 				GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 				tx.SafeRollback()
 				return err
@@ -38,7 +41,7 @@ func GetChats(db db.DB) func(c echo.Context) error {
 	}
 }
 
-func convert(c models.Chat) ChatDto {
+func convert(c db.Chat) ChatDto {
 	return ChatDto{
 		Id:   c.Id,
 		Name: c.Title,
