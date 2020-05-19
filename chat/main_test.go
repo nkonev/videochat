@@ -32,16 +32,16 @@ func setup() {}
 
 func TestExtractAuth(t *testing.T) {
 	req := test.NewRequest("GET", "/should-be-secured", nil)
-	Header := map[string][]string{
-		"X-Auth-ExpiresIn": {"2020-03-17 08:36:04 +0000 UTC"},
+	headers := map[string][]string{
+		"X-Auth-Expiresin": {"1590022342295000"},
 		"X-Auth-Username":  {"tester"},
-		"X-Auth-UserId":    {"b01fb567-3f78-463b-8102-6da43b474705"},
+		"X-Auth-Userid":    {"1"},
 	}
-	req.Header = Header
+	req.Header = headers
 
 	auth, err := extractAuth(req)
 	assert.Nil(t, err)
-	assert.Equal(t, "b01fb567-3f78-463b-8102-6da43b474705", auth.UserId)
+	assert.Equal(t, int64(1), auth.UserId)
 	assert.Equal(t, "tester", auth.UserLogin)
-	assert.Equal(t, int64(1584434164), auth.ExpiresAt)
+	assert.Equal(t, int64(1590022342), auth.ExpiresAt)
 }
