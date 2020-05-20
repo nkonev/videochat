@@ -8,6 +8,7 @@ import (
 	"net/http"
 	test "net/http/httptest"
 	"nkonev.name/chat/client"
+	"nkonev.name/chat/handlers"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
 	"os"
@@ -46,7 +47,7 @@ func TestExtractAuth(t *testing.T) {
 	}
 	req.Header = headers
 
-	auth, err := extractAuth(req)
+	auth, err := handlers.ExtractAuth(req)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), auth.UserId)
 	assert.Equal(t, "tester", auth.UserLogin)
@@ -89,10 +90,10 @@ func runTest(test func(e *echo.Echo)) *fx.App {
 		fx.Logger(Logger),
 		fx.Provide(
 			client.NewRestClient,
-			configureCentrifuge,
+			handlers.ConfigureCentrifuge,
 			configureEcho,
 			configureStaticMiddleware,
-			configureAuthMiddleware,
+			handlers.ConfigureAuthMiddleware,
 			configureDb,
 		),
 		fx.Invoke(
