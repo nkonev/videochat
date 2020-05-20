@@ -17,5 +17,5 @@ auth:
 postgresql:
   url: "postgres://chat:chatPazZw0rd@localhost:35432/chat?sslmode=disable"
   maxOpenConnections: 16
-  maxIdleConnections: 2
-  maxLifetime: 15m
+  maxIdleConnections: 4
+  maxLifetime: 30s
