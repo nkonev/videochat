@@ -15,18 +15,6 @@ import (
 	"testing"
 )
 
-// X-Auth-ExpiresIn
-// 2020-03-17 08:36:04 +0000 UTC
-
-// X-Auth-Username
-// tester
-
-// X-Auth-Userid
-// tester
-
-// X-Auth-UserId
-// b01fb567-3f78-463b-8102-6da43b474705
-
 func TestMain(m *testing.M) {
 	setup()
 	retCode := m.Run()
