@@ -4,7 +4,7 @@
 *.iml
 node_modules
 rice-box.go
-/chat/videochat
+/chat/chat
 vendor
 .vendor-new
 grpc

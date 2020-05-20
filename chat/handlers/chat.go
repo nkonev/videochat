@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/nkonev/videochat/auth"
-	"github.com/nkonev/videochat/db"
-	. "github.com/nkonev/videochat/logger"
-	"github.com/nkonev/videochat/utils"
+	"nkonev.name/chat/auth"
+	"nkonev.name/chat/db"
+	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/utils"
 )
 
 type ChatDto struct {

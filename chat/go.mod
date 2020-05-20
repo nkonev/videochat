@@ -1,4 +1,4 @@
-module github.com/nkonev/videochat
+module nkonev.name/chat
 
 require (
 	github.com/GeertJohan/go.rice v1.0.0

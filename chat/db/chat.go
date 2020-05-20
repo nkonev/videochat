@@ -2,7 +2,7 @@ package db
 
 import (
 	"errors"
-	. "github.com/nkonev/videochat/logger"
+	. "nkonev.name/chat/logger"
 )
 
 // db model
