@@ -97,7 +97,6 @@ public class GatewayTest {
             Header header2 = new Header(X_FROM_DOWNSTREAM, TRUE);
             Headers headers = new Headers(header0, header1, header2);
             return response().withBody(CHAT_RESPONSE).withStatusCode(200).withHeaders(headers);
-
         });
     }
 
