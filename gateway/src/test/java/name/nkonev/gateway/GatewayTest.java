@@ -32,7 +32,6 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
-// https://howtodoinjava.com/spring-webflux/webfluxtest-with-webtestclient/
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {GatewayApplication.class, GatewayTest.TestGatewayRoutesConfig.class}, properties = {
         "aaa.base-url=http://localhost:9088/internal"
