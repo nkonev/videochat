@@ -40,7 +40,6 @@ import static org.mockserver.model.HttpResponse.response;
 @AutoConfigureWebTestClient
 public class GatewayTest {
 
-    private static final String CHAT_RESPONSE = "your chats and echoed headers";
     @Autowired
     private WebTestClient webTestClient;
 
@@ -49,6 +48,7 @@ public class GatewayTest {
     private static final String JLONG = "jlong";
     private static final String TRUE = "true";
     private static final String FAKE_SESSION = "fake-session-id-value";
+    private static final String CHAT_RESPONSE = "your chats and echoed headers";
 
     private static final String X_FROM_DOWNSTREAM = "X-From-Downstream";
 
