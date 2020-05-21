@@ -40,6 +40,7 @@ import static org.mockserver.model.HttpResponse.response;
 @AutoConfigureWebTestClient
 public class GatewayTest {
 
+    private static final String CHAT_RESPONSE = "your chats and echoed headers";
     @Autowired
     private WebTestClient webTestClient;
 
@@ -95,7 +96,7 @@ public class GatewayTest {
             Header header1 = new Header(X_AUTH_USER_ID, httpRequest.getHeader(X_AUTH_USER_ID).get(0));
             Header header2 = new Header(X_FROM_DOWNSTREAM, TRUE);
             Headers headers = new Headers(header0, header1, header2);
-            return response().withBody("your chats and echoed headers").withStatusCode(200).withHeaders(headers);
+            return response().withBody(CHAT_RESPONSE).withStatusCode(200).withHeaders(headers);
 
         });
     }
@@ -120,7 +121,7 @@ public class GatewayTest {
                 .expectHeader().valueEquals(X_AUTH_USERNAME, JLONG)
                 .expectHeader().valueEquals(X_AUTH_USER_ID, USER_ID_STRING)
                 .expectHeader().valueEquals(X_FROM_DOWNSTREAM, TRUE)
-                .expectBody(String.class).isEqualTo("your chats and echoed headers");
+                .expectBody(String.class).isEqualTo(CHAT_RESPONSE);
     }
 
     public static final String DOWNSTREAM_SERVICE_ID = "chatservice";
