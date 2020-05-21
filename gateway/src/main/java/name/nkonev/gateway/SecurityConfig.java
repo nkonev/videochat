@@ -28,13 +28,14 @@ public class SecurityConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
     public static final String SESSION_COOKIE = "SESSION";
+    public static final String APPLICATION_X_PROTOBUF_CHARSET_UTF_8 = "application/x-protobuf;charset=UTF-8";
 
     @Bean
     public WebClient webClient(@Value("${aaa.base-url}") String aaaBaseUrl) {
         return WebClient
                 .builder()
                 .baseUrl(aaaBaseUrl)
-                .defaultHeader(HttpHeaders.ACCEPT, "application/x-protobuf;charset=UTF-8")
+                .defaultHeader(HttpHeaders.ACCEPT, APPLICATION_X_PROTOBUF_CHARSET_UTF_8)
                 .build();
     }
 
@@ -49,7 +50,7 @@ public class SecurityConfig {
         private final WebClient aaaClient;
 
         public static final String X_AUTH_USERNAME = "X-Auth-Username";
-        public static final String X_AUTH_SUBJECT = "X-Auth-UserId";
+        public static final String X_AUTH_USER_ID = "X-Auth-UserId";
         public static final String X_AUTH_EXPIRESIN = "X-Auth-ExpiresIn";
 
         public SecurityFilter(WebClient aaaClient) {
@@ -80,14 +81,14 @@ public class SecurityConfig {
 
                                         ServerWebExchange modifiedExchange = exchange.mutate().request(builder -> {
                                             builder.header(X_AUTH_USERNAME, username);
-                                            builder.header(X_AUTH_SUBJECT, "" + userid);
+                                            builder.header(X_AUTH_USER_ID, "" + userid);
                                             builder.header(X_AUTH_EXPIRESIN, "" + expiresIn);
                                         }).build();
                                         LOGGER.info("Into {} '{}' inserting {}='{}', {}='{}', {}='{}'",
                                                 modifiedExchange.getRequest().getMethod(),
                                                 modifiedExchange.getRequest().getURI(),
                                                 X_AUTH_USERNAME, username,
-                                                X_AUTH_SUBJECT, userid,
+                                                X_AUTH_USER_ID, userid,
                                                 X_AUTH_EXPIRESIN, expiresIn
                                         );
                                         return chain.filter(modifiedExchange);
