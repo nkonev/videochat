@@ -51,18 +51,8 @@
 
     <repositories>
         <repository>
-            <id>repository.spring.release</id>
-            <name>Spring GA Repository</name>
-            <url>https://repo.spring.io/release</url>
-        </repository>
-        <repository>
-            <id>repository.spring.milestone</id>
-            <name>Spring GA Repository</name>
-            <url>https://repo.spring.io/milestone</url>
-        </repository>
-        <repository>
             <id>jcenter</id>
-            <name>jcenter bintray</name>
+            <name>jcenter repository</name>
             <url>https://jcenter.bintray.com</url>
             <snapshots>
                 <enabled>false</enabled>
@@ -72,17 +62,8 @@
 
     <pluginRepositories>
         <pluginRepository>
-            <id>repository.spring.milestone</id>
-            <url>https://repo.spring.io/milestone</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>repository.spring.release</id>
-            <name>Spring GA Repository</name>
-            <url>https://repo.spring.io/plugins-release</url>
-        </pluginRepository>
-        <pluginRepository>
             <id>jcenter</id>
-            <name>jcenter</name>
+            <name>jcenter plugins repository</name>
             <url>https://jcenter.bintray.com</url>
             <snapshots>
                 <enabled>false</enabled>
