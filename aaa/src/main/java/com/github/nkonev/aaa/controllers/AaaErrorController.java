@@ -64,11 +64,11 @@ public class AaaErrorController extends AbstractErrorController {
                         .map(s -> s.trim())
                         .collect(Collectors.toList());
 
+        Map<String, Object> errorAttributes = getCustomErrorAttributes(request, debug);
         if (acceptValues.contains(MediaType.APPLICATION_JSON_UTF8_VALUE) || acceptValues.contains(MediaType.APPLICATION_JSON_VALUE)) {
             response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
             try {
                 if (debug) {
-                    Map<String, Object> errorAttributes = getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE, ErrorAttributeOptions.Include.EXCEPTION, ErrorAttributeOptions.Include.STACK_TRACE));
                     objectMapper.writeValue(response.getWriter(), new BlogErrorWithDebug(
                             response.getStatus(),
                             (String) errorAttributes.get("error"),
@@ -78,7 +78,6 @@ public class AaaErrorController extends AbstractErrorController {
                             (String) errorAttributes.get("trace"))
                     );
                 } else {
-                    Map<String, Object> errorAttributes = getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE));
                     objectMapper.writeValue(response.getWriter(), new BlogError(
                             response.getStatus(),
                             (String) errorAttributes.get("error"),
@@ -94,11 +93,18 @@ public class AaaErrorController extends AbstractErrorController {
         } else {
             HttpStatus status = getStatus(request);
 
-            Map<String, Object> model = Collections.unmodifiableMap(getErrorAttributes(request, debug));
+            Map<String, Object> model = Collections.unmodifiableMap(errorAttributes);
             response.setStatus(status.value());
             ModelAndView modelAndView = resolveErrorView(request, response, status, model);
             return (modelAndView == null ? new ModelAndView("error", model) : modelAndView);
         }
     }
 
+    private Map<String, Object> getCustomErrorAttributes(HttpServletRequest request, boolean debug) {
+        if (debug) {
+            return getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE, ErrorAttributeOptions.Include.EXCEPTION, ErrorAttributeOptions.Include.STACK_TRACE));
+        } else {
+            return getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE));
+        }
+    }
 }
