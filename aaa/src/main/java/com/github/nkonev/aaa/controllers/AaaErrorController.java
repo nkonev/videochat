@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.servlet.error.AbstractErrorController;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
+import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -65,9 +66,9 @@ public class AaaErrorController extends AbstractErrorController {
 
         if (acceptValues.contains(MediaType.APPLICATION_JSON_UTF8_VALUE) || acceptValues.contains(MediaType.APPLICATION_JSON_VALUE)) {
             response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
-            Map<String, Object> errorAttributes = getErrorAttributes(request, debug);
             try {
                 if (debug) {
+                    Map<String, Object> errorAttributes = getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE, ErrorAttributeOptions.Include.EXCEPTION, ErrorAttributeOptions.Include.STACK_TRACE));
                     objectMapper.writeValue(response.getWriter(), new BlogErrorWithDebug(
                             response.getStatus(),
                             (String) errorAttributes.get("error"),
@@ -77,6 +78,7 @@ public class AaaErrorController extends AbstractErrorController {
                             (String) errorAttributes.get("trace"))
                     );
                 } else {
+                    Map<String, Object> errorAttributes = getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE));
                     objectMapper.writeValue(response.getWriter(), new BlogError(
                             response.getStatus(),
                             (String) errorAttributes.get("error"),
