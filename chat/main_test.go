@@ -67,7 +67,7 @@ func runTest(test func(e *echo.Echo)) *fx.App {
 		fx.Logger(Logger),
 		fx.Provide(
 			client.NewRestClient,
-			handlers.ConfigureCentrifuge,
+			//handlers.ConfigureCentrifuge,
 			configureEcho,
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
