@@ -61,7 +61,7 @@ func request(method, path string, body io.Reader, e *echo.Echo) (int, string, ht
 	req.Header = Header
 	rec := test.NewRecorder()
 	e.ServeHTTP(rec, req) // most wanted
-	return rec.Code, rec.Body.String(), rec.HeaderMap
+	return rec.Code, rec.Body.String(), rec.Result().Header
 }
 
 func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
