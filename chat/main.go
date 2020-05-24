@@ -76,6 +76,7 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.Au
 
 	e.GET("/chat/websocket", handlers.Convert(handlers.CentrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
 	e.GET("/chat", handlers.GetChats(db))
+	e.POST("/chat", handlers.CreateChat(db))
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

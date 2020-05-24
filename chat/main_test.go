@@ -14,6 +14,7 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -113,6 +114,12 @@ func TestGetChatsPaginated(t *testing.T) {
 		assert.Equal(t, "sit", typedTes[0])
 		assert.Equal(t, "amet", typedTes[1])
 		assert.Equal(t, "With collegues", typedTes[2])
+	})
+}
 
+func TestCreateChat(t *testing.T) {
+	runTest(func(e *echo.Echo) {
+		c, _, _ := request("POST", "/chat", strings.NewReader(`{"name": "Ultra new chat"}`), e)
+		assert.Equal(t, http.StatusOK, c)
 	})
 }
