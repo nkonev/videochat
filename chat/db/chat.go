@@ -46,3 +46,14 @@ func (tx *Tx) GetChats(owner int64, limit int, offset int) ([]*Chat, error) {
 		return list, nil
 	}
 }
+
+func (db *DB) CountChats() (int64, error) {
+	var count int64
+	row := db.QueryRow("SELECT count(*) FROM chat")
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	} else {
+		return count, nil
+	}
+}

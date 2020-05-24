@@ -6,10 +6,12 @@ import (
 	"github.com/oliveagle/jsonpath"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/fx"
+	"go.uber.org/fx/fxtest"
 	"io"
 	"net/http"
 	test "net/http/httptest"
 	"nkonev.name/chat/client"
+	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
@@ -62,12 +64,15 @@ func request(method, path string, body io.Reader, e *echo.Echo) (int, string, ht
 	return rec.Code, rec.Body.String(), rec.HeaderMap
 }
 
-func runTest(test func(e *echo.Echo)) *fx.App {
-	app := fx.New(
+func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
+	var s fx.Shutdowner
+	app := fxtest.New(
+		t,
 		fx.Logger(Logger),
+		fx.Populate(&s),
 		fx.Provide(
 			client.NewRestClient,
-			//handlers.ConfigureCentrifuge,
+			handlers.ConfigureCentrifuge,
 			configureEcho,
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
@@ -76,18 +81,17 @@ func runTest(test func(e *echo.Echo)) *fx.App {
 		fx.Invoke(
 			runMigrations,
 			//runCentrifuge,
-			func(e *echo.Echo) {
-				defer e.Close()
-				test(e)
-			},
+			//runEcho,
+			testFunc,
 		),
 	)
-
+	defer app.RequireStart().RequireStop()
+	assert.NoError(t, s.Shutdown(), "error in app shutdown")
 	return app
 }
 
 func TestGetChats(t *testing.T) {
-	runTest(func(e *echo.Echo) {
+	runTest(t, func(e *echo.Echo) {
 		c, b, _ := request("GET", "/chat", nil, e)
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, b)
@@ -95,7 +99,7 @@ func TestGetChats(t *testing.T) {
 }
 
 func TestGetChatsPaginated(t *testing.T) {
-	runTest(func(e *echo.Echo) {
+	runTest(t, func(e *echo.Echo) {
 		c, b, _ := request("GET", "/chat?page=2&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, b)
@@ -118,8 +122,12 @@ func TestGetChatsPaginated(t *testing.T) {
 }
 
 func TestCreateChat(t *testing.T) {
-	runTest(func(e *echo.Echo) {
+	runTest(t, func(e *echo.Echo, db db.DB) {
+		chatsBefore, _ := db.CountChats()
 		c, _, _ := request("POST", "/chat", strings.NewReader(`{"name": "Ultra new chat"}`), e)
 		assert.Equal(t, http.StatusOK, c)
+
+		chatsAfter, _ := db.CountChats()
+		assert.Equal(t, chatsBefore+1, chatsAfter)
 	})
 }

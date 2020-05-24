@@ -81,7 +81,7 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.Au
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			// do some work on application stop (like closing connections and files)
-			Logger.Infof("Stopping server")
+			Logger.Infof("Stopping http server")
 			return e.Shutdown(ctx)
 		},
 	})
