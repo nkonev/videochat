@@ -8,6 +8,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/lib/pq v1.5.2
+	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.5.1

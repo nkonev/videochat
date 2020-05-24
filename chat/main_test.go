@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/labstack/echo/v4"
+	"github.com/oliveagle/jsonpath"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/fx"
 	"io"
@@ -24,7 +26,10 @@ func TestMain(m *testing.M) {
 
 func shutdown() {}
 
-func setup() {}
+func setup() {
+	configFile := utils.InitFlags("./config-dev/config.yml")
+	utils.InitViper(configFile, "")
+}
 
 func TestExtractAuth(t *testing.T) {
 	req := test.NewRequest("GET", "/should-be-secured", nil)
@@ -56,24 +61,7 @@ func request(method, path string, body io.Reader, e *echo.Echo) (int, string, ht
 	return rec.Code, rec.Body.String(), rec.HeaderMap
 }
 
-/*func runTest(container *fx.App, test func (e *echo.Echo)){
-	//if migrationErr := container.Invoke(runMigration); migrationErr != nil {
-	//	Logger.Panicf("Error during invoke migration: %v", migrationErr)
-	//}
-
-	if err := container.Invoke(func (e *echo.Echo){
-		defer e.Close()
-
-		test(e)
-	}); err != nil {
-		panic(err)
-	}
-}*/
-
 func runTest(test func(e *echo.Echo)) *fx.App {
-	configFile := utils.InitFlags("./config-dev/config.yml")
-	utils.InitViper(configFile, "VIDEOCHAT")
-
 	app := fx.New(
 		fx.Logger(Logger),
 		fx.Provide(
@@ -93,17 +81,38 @@ func runTest(test func(e *echo.Echo)) *fx.App {
 			},
 		),
 	)
-	//app.Run()
 
 	return app
 }
 
 func TestGetChats(t *testing.T) {
-	//container := setUpContainerForIntegrationTests()
-
 	runTest(func(e *echo.Echo) {
 		c, b, _ := request("GET", "/chat", nil, e)
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, b)
+	})
+}
+
+func TestGetChatsPaginated(t *testing.T) {
+	runTest(func(e *echo.Echo) {
+		c, b, _ := request("GET", "/chat?page=2&size=3", nil, e)
+		assert.Equal(t, http.StatusOK, c)
+		assert.NotEmpty(t, b)
+
+		var jsonData interface{}
+		assert.Nil(t, json.Unmarshal([]byte(b), &jsonData))
+
+		res, err := jsonpath.JsonPathLookup(jsonData, "$.name")
+		assert.Nil(t, err)
+		assert.NotEmpty(t, res)
+
+		typedTes := res.([]interface{})
+
+		assert.Equal(t, 3, len(typedTes))
+
+		assert.Equal(t, "sit", typedTes[0])
+		assert.Equal(t, "amet", typedTes[1])
+		assert.Equal(t, "With collegues", typedTes[2])
+
 	})
 }

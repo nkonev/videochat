@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"regexp"
+	"strconv"
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
@@ -55,12 +56,22 @@ func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
 
 const maxSize = 100
 const defaultSize = 20
+const defaultPage = 0
 
 func FixPage(page int) int {
 	if page < 0 {
-		return 0
+		return defaultPage
 	} else {
 		return page
+	}
+}
+
+func FixPageString(page string) int {
+	atoi, err := strconv.Atoi(page)
+	if err != nil {
+		return defaultPage
+	} else {
+		return FixPage(atoi)
 	}
 }
 
@@ -70,6 +81,16 @@ func FixSize(size int) int {
 	} else {
 		return size
 	}
+}
+
+func FixSizeString(size string) int {
+	atoi, err := strconv.Atoi(size)
+	if err != nil {
+		return defaultSize
+	} else {
+		return FixSize(atoi)
+	}
+
 }
 
 func GetOffset(page int, size int) int {
