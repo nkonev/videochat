@@ -29,6 +29,7 @@ func (tx *Tx) CreateChat(u *Chat) error {
 
 func (tx *Tx) GetChats(owner int64, limit int, offset int) ([]Chat, error) {
 	if rows, err := tx.Query(`SELECT * FROM chat WHERE owner_id = $1 ORDER BY id LIMIT $2 OFFSET $3`, owner, limit, offset); err != nil {
+		Logger.Errorf("Error during get chat rows", err)
 		return nil, err
 	} else {
 		defer rows.Close()
