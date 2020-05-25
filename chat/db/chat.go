@@ -14,17 +14,22 @@ type Chat struct {
 
 // CreateChat creates a new chat.
 // Returns an error if user is invalid or the tx fails.
-func (tx *Tx) CreateChat(u *Chat) error {
+func (tx *Tx) CreateChat(u *Chat) (int64, error) {
 	// Validate the input.
 	if u == nil {
-		return errors.New("chat required")
+		return 0, errors.New("chat required")
 	} else if u.Title == "" {
-		return errors.New("title required")
+		return 0, errors.New("title required")
 	}
 
 	// Perform the actual insert and return any errors.
-	_, e := tx.Exec(`INSERT INTO chat (title, owner_id) VALUES ($1, $2)`, u.Title, u.OwnerId)
-	return e
+	res := tx.QueryRow(`INSERT INTO chat (title, owner_id) VALUES ($1, $2) RETURNING id`, u.Title, u.OwnerId)
+	var id int64
+	if err := res.Scan(&id); err != nil {
+		Logger.Errorf("Error during getting chat id")
+		return 0, err
+	}
+	return id, nil
 }
 
 func (tx *Tx) GetChats(owner int64, limit int, offset int) ([]*Chat, error) {
@@ -55,5 +60,14 @@ func (db *DB) CountChats() (int64, error) {
 		return 0, err
 	} else {
 		return count, nil
+	}
+}
+
+func (db *DB) DeleteChat(id int64) error {
+	if _, err := db.Exec("DELETE FROM chat WHERE id = $1", id); err != nil {
+		Logger.Errorf("Error during delete chat %v", id, err)
+		return err
+	} else {
+		return nil
 	}
 }

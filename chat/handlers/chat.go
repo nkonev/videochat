@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/labstack/echo/v4"
+	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/db"
 	. "nkonev.name/chat/logger"
@@ -79,7 +80,7 @@ func CreateChat(db db.DB) func(c echo.Context) error {
 				return err
 			}
 
-			if err := tx.CreateChat(convertToCreatableChat(bindTo, userPrincipalDto)); err != nil {
+			if id, err := tx.CreateChat(convertToCreatableChat(bindTo, userPrincipalDto)); err != nil {
 				GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 				tx.SafeRollback()
 				return err
@@ -89,7 +90,7 @@ func CreateChat(db db.DB) func(c echo.Context) error {
 					return err
 				}
 				GetLogEntry(c.Request()).Infof("Successfully created chat %v", bindTo)
-				return c.NoContent(200)
+				return c.JSON(http.StatusCreated, &utils.H{"id": id})
 			}
 		}
 	}
@@ -99,5 +100,16 @@ func convertToCreatableChat(d *CreateChatDto, a *auth.AuthResult) *db.Chat {
 	return &db.Chat{
 		Title:   d.Name,
 		OwnerId: a.UserId,
+	}
+}
+
+func DeleteChat(db db.DB) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		chatIdString := c.Param("id")
+		i, err := utils.ParseInt64(chatIdString)
+		if err != nil {
+			return err
+		}
+		return db.DeleteChat(i)
 	}
 }

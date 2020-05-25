@@ -10,7 +10,6 @@ import (
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
-	"strconv"
 )
 
 type AuthMiddleware echo.MiddlewareFunc
@@ -25,7 +24,7 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 	}
 
 	userIdString := request.Header.Get("X-Auth-UserId")
-	i, err := strconv.ParseInt(userIdString, 10, 64)
+	i, err := utils.ParseInt64(userIdString)
 	if err != nil {
 		return nil, err
 	}

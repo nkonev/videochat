@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/oliveagle/jsonpath"
 	"github.com/stretchr/testify/assert"
@@ -98,20 +99,22 @@ func TestGetChats(t *testing.T) {
 	})
 }
 
+func getJsonPathResult(t *testing.T, body string, jsonpath0 string) interface{} {
+	var jsonData interface{}
+	assert.Nil(t, json.Unmarshal([]byte(body), &jsonData))
+	res, err := jsonpath.JsonPathLookup(jsonData, jsonpath0)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, res)
+	return res
+}
+
 func TestGetChatsPaginated(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		c, b, _ := request("GET", "/chat?page=2&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, b)
 
-		var jsonData interface{}
-		assert.Nil(t, json.Unmarshal([]byte(b), &jsonData))
-
-		res, err := jsonpath.JsonPathLookup(jsonData, "$.name")
-		assert.Nil(t, err)
-		assert.NotEmpty(t, res)
-
-		typedTes := res.([]interface{})
+		typedTes := getJsonPathResult(t, b, "$.name").([]interface{})
 
 		assert.Equal(t, 3, len(typedTes))
 
@@ -121,13 +124,23 @@ func TestGetChatsPaginated(t *testing.T) {
 	})
 }
 
-func TestCreateChat(t *testing.T) {
+func TestChatCrud(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db db.DB) {
 		chatsBefore, _ := db.CountChats()
-		c, _, _ := request("POST", "/chat", strings.NewReader(`{"name": "Ultra new chat"}`), e)
-		assert.Equal(t, http.StatusOK, c)
+		c, b, _ := request("POST", "/chat", strings.NewReader(`{"name": "Ultra new chat"}`), e)
+		assert.Equal(t, http.StatusCreated, c)
 
-		chatsAfter, _ := db.CountChats()
-		assert.Equal(t, chatsBefore+1, chatsAfter)
+		chatsAfterCreate, _ := db.CountChats()
+		assert.Equal(t, chatsBefore+1, chatsAfterCreate)
+
+		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
+		idString := fmt.Sprintf("%v", idInterface)
+		id, _ := utils.ParseInt64(idString)
+		assert.True(t, id > 0)
+
+		c1, _, _ := request("DELETE", "/chat/"+idString, nil, e)
+		assert.Equal(t, http.StatusOK, c1)
+		chatsAfterDelete, _ := db.CountChats()
+		assert.Equal(t, chatsBefore, chatsAfterDelete)
 	})
 }

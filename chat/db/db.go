@@ -6,6 +6,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	. "nkonev.name/chat/logger"
 	"time"
 )
@@ -19,11 +20,11 @@ type Tx struct {
 	*sql.Tx
 }
 
-const postgresString = "postgres"
+const postgresDriverString = "pgx"
 
 // Open returns a DB reference for a data source.
 func Open(conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) (*DB, error) {
-	if db, err := sql.Open(postgresString, conninfo); err != nil {
+	if db, err := sql.Open(postgresDriverString, conninfo); err != nil {
 		return nil, err
 	} else {
 		db.SetConnMaxLifetime(maxLifetime)
@@ -62,14 +63,14 @@ func migrateInternal(db *sql.DB) {
 	}
 
 	pgInstance, err := postgres.WithInstance(db, &postgres.Config{
-		MigrationsTable:  "migrations",
+		MigrationsTable:  "go_migrate",
 		StatementTimeout: d,
 	})
 	if err != nil {
 		Logger.Fatal(err)
 	}
 
-	m, err := migrate.NewWithInstance("httpfs", src, postgresString, pgInstance)
+	m, err := migrate.NewWithInstance("httpfs", src, "", pgInstance)
 	if err != nil {
 		Logger.Fatal(err)
 	}
@@ -80,5 +81,7 @@ func migrateInternal(db *sql.DB) {
 }
 
 func (db *DB) Migrate() {
+	Logger.Infof("Starting migration")
 	migrateInternal(db.DB)
+	Logger.Infof("Migration successful completed")
 }

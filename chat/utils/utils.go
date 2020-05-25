@@ -96,3 +96,11 @@ func FixSizeString(size string) int {
 func GetOffset(page int, size int) int {
 	return page * size
 }
+
+func ParseInt64(s string) (int64, error) {
+	if i, err := strconv.ParseInt(s, 10, 64); err != nil {
+		return 0, err
+	} else {
+		return i, nil
+	}
+}
