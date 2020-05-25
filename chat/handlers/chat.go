@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"nkonev.name/chat/auth"
@@ -63,6 +64,12 @@ func convertToDto(c *db.Chat) *ChatDto {
 
 func CreateChat(db db.DB) func(c echo.Context) error {
 	return func(c echo.Context) error {
+		var bindTo = new(CreateChatDto)
+		if err := c.Bind(bindTo); err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
+			return err
+		}
+
 		if tx, err := db.Begin(); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error during open transaction %v", err)
 			return err
@@ -71,13 +78,7 @@ func CreateChat(db db.DB) func(c echo.Context) error {
 			if !ok {
 				GetLogEntry(c.Request()).Errorf("Error during getting auth context")
 				tx.SafeRollback()
-			}
-
-			var bindTo = new(CreateChatDto)
-			if err := c.Bind(bindTo); err != nil {
-				GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
-				tx.SafeRollback()
-				return err
+				return errors.New("Error during getting auth context")
 			}
 
 			if id, err := tx.CreateChat(convertToCreatableChat(bindTo, userPrincipalDto)); err != nil {
@@ -111,5 +112,40 @@ func DeleteChat(db db.DB) func(c echo.Context) error {
 			return err
 		}
 		return db.DeleteChat(i)
+	}
+}
+
+func EditChat(db db.DB) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		var bindTo = new(ChatDto)
+		if err := c.Bind(bindTo); err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
+			return err
+		}
+
+		if tx, err := db.Begin(); err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during open transaction %v", err)
+			return err
+		} else {
+			var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+			if !ok {
+				GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+				tx.SafeRollback()
+				return errors.New("Error during getting auth context")
+			}
+
+			if err := tx.EditChat(bindTo.Id, userPrincipalDto.UserId, bindTo.Name); err != nil {
+				GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
+				tx.SafeRollback()
+				return err
+			} else {
+				if err := tx.Commit(); err != nil {
+					GetLogEntry(c.Request()).Errorf("Error during commit transaction %v", err)
+					return err
+				}
+				GetLogEntry(c.Request()).Infof("Successfully updated chat %v", bindTo)
+				return c.NoContent(http.StatusOK)
+			}
+		}
 	}
 }

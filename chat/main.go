@@ -78,6 +78,7 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.Au
 	e.GET("/chat", handlers.GetChats(db))
 	e.POST("/chat", handlers.CreateChat(db))
 	e.DELETE("/chat/:id", handlers.DeleteChat(db))
+	e.PUT("/chat", handlers.EditChat(db))
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

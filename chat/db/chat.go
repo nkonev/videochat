@@ -71,3 +71,12 @@ func (db *DB) DeleteChat(id int64) error {
 		return nil
 	}
 }
+
+func (tx *Tx) EditChat(id int64, ownerId int64, newTitle string) error {
+	if _, err := tx.Exec("UPDATE chat SET title = $3 WHERE id = $1 AND owner_id = $2", id, ownerId, newTitle); err != nil {
+		Logger.Errorf("Error during update chat %v", id, err)
+		return err
+	} else {
+		return nil
+	}
+}
