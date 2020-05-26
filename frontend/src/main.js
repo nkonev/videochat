@@ -42,7 +42,7 @@ axios.interceptors.response.use((response) => {
     return response
 }, (error) => {
     // https://github.com/axios/axios/issues/932#issuecomment-307390761
-    console.log("Catch error", error, error.request, error.response, error.config);
+    // console.log("Catch error", error, error.request, error.response, error.config);
     if (error && error.response && error.response.status == 401 && error.config.url != '/api/profile') {
         console.log("Catch 401 Unauthorized, saving url", window.location.pathname);
         store.dispatch(unsetProfile());

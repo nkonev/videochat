@@ -7,7 +7,7 @@ import {
     Link,
     Redirect
 } from "react-router-dom";
-import Chat from "./Chat";
+import Chat from "./ChatList";
 import Login from "./Login";
 import {connect} from 'react-redux'
 import {clearRedirect, setProfile, unsetProfile} from "./actions";

@@ -55,7 +55,7 @@ function getModalStyle() {
     };
 }
 
-function Chat() {
+function ChatList() {
     // state
     const [chats, setChats] = useState([]);
     const [modalStyle] = React.useState(getModalStyle);
@@ -143,4 +143,4 @@ function Chat() {
     );
 }
 
-export default (Chat);
+export default (ChatList);
