@@ -75,6 +75,7 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.Au
 	e.Use(middleware.BodyLimit(bodyLimit))
 
 	e.GET("/chat/websocket", handlers.Convert(handlers.CentrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
+
 	e.GET("/chat", handlers.GetChats(db))
 	e.POST("/chat", handlers.CreateChat(db))
 	e.DELETE("/chat/:id", handlers.DeleteChat(db))

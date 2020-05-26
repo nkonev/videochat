@@ -21,36 +21,25 @@ type CreateChatDto struct {
 
 func GetChats(db db.DB) func(c echo.Context) error {
 	return func(c echo.Context) error {
-		if tx, err := db.Begin(); err != nil {
-			GetLogEntry(c.Request()).Errorf("Error during open transaction %v", err)
+		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+		if !ok {
+			GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		}
+
+		page := utils.FixPageString(c.QueryParam("page"))
+		size := utils.FixSizeString(c.QueryParam("size"))
+		offset := utils.GetOffset(page, size)
+
+		if chats, err := db.GetChats(userPrincipalDto.UserId, size, offset); err != nil {
+			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 			return err
 		} else {
-			var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-			if !ok {
-				GetLogEntry(c.Request()).Errorf("Error during getting auth context")
-				tx.SafeRollback()
+			chatDtos := make([]*ChatDto, 0)
+			for _, c := range chats {
+				chatDtos = append(chatDtos, convertToDto(c))
 			}
-
-			page := utils.FixPageString(c.QueryParam("page"))
-			size := utils.FixSizeString(c.QueryParam("size"))
-			offset := utils.GetOffset(page, size)
-
-			if chats, err := tx.GetChats(userPrincipalDto.UserId, size, offset); err != nil {
-				GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
-				tx.SafeRollback()
-				return err
-			} else {
-				chatDtos := make([]*ChatDto, 0)
-				for _, c := range chats {
-					chatDtos = append(chatDtos, convertToDto(c))
-				}
-				if err := tx.Commit(); err != nil {
-					GetLogEntry(c.Request()).Errorf("Error during commit transaction %v", err)
-					return err
-				}
-				GetLogEntry(c.Request()).Infof("Successfully returning %v chats", len(chatDtos))
-				return c.JSON(200, chatDtos)
-			}
+			GetLogEntry(c.Request()).Infof("Successfully returning %v chats", len(chatDtos))
+			return c.JSON(200, chatDtos)
 		}
 	}
 }
