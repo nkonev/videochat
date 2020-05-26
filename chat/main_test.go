@@ -138,6 +138,12 @@ func TestChatCrud(t *testing.T) {
 		id, _ := utils.ParseInt64(idString)
 		assert.True(t, id > 0)
 
+		c3, b3, _ := request("GET", "/chat/"+idString, nil, e)
+		assert.Equal(t, http.StatusOK, c3)
+		nameInterface := getJsonPathResult(t, b3, "$.name").(interface{})
+		nameString := fmt.Sprintf("%v", nameInterface)
+		assert.Equal(t, "Ultra new chat", nameString)
+
 		c2, _, _ := request("PUT", "/chat", strings.NewReader(`{ "id": `+idString+`, "name": "Mega ultra new chat"}`), e)
 		assert.Equal(t, http.StatusOK, c2)
 		row := db.QueryRow("SELECT title FROM chat WHERE id = $1", id)

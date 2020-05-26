@@ -24,6 +24,7 @@ func GetChats(db db.DB) func(c echo.Context) error {
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 		if !ok {
 			GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+			return errors.New("Error during getting auth context")
 		}
 
 		page := utils.FixPageString(c.QueryParam("page"))
@@ -40,6 +41,31 @@ func GetChats(db db.DB) func(c echo.Context) error {
 			}
 			GetLogEntry(c.Request()).Infof("Successfully returning %v chats", len(chatDtos))
 			return c.JSON(200, chatDtos)
+		}
+	}
+}
+
+func GetChat(db db.DB) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+		if !ok {
+			GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+			return errors.New("Error during getting auth context")
+		}
+
+		chatIdString := c.Param("id")
+		i, err := utils.ParseInt64(chatIdString)
+		if err != nil {
+			return err
+		}
+
+		if chat, err := db.GetChat(userPrincipalDto.UserId, i); err != nil {
+			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
+			return err
+		} else {
+			chatDto := convertToDto(chat)
+			GetLogEntry(c.Request()).Infof("Successfully returning %v chat", chatDto)
+			return c.JSON(200, chatDto)
 		}
 	}
 }

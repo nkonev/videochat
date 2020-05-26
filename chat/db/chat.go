@@ -80,3 +80,15 @@ func (tx *Tx) EditChat(id int64, ownerId int64, newTitle string) error {
 		return nil
 	}
 }
+
+func (db *DB) GetChat(userId int64, chatId int64) (*Chat, error) {
+	row := db.QueryRow(`SELECT * FROM chat WHERE owner_id = $1 AND id = $2`, userId, chatId)
+	chat := Chat{}
+	err := row.Scan(&chat.Id, &chat.Title, &chat.OwnerId)
+	if err != nil {
+		Logger.Errorf("Error during get chat row", err)
+		return nil, err
+	} else {
+		return &chat, nil
+	}
+}
