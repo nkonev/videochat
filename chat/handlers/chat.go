@@ -126,7 +126,14 @@ func DeleteChat(db db.DB) func(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		return db.DeleteChat(i)
+
+		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+		if !ok {
+			GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+			return errors.New("Error during getting auth context")
+		}
+
+		return db.DeleteChat(userPrincipalDto.UserId, i)
 	}
 }
 

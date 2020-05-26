@@ -63,8 +63,8 @@ func (db *DB) CountChats() (int64, error) {
 	}
 }
 
-func (db *DB) DeleteChat(id int64) error {
-	if _, err := db.Exec("DELETE FROM chat WHERE id = $1", id); err != nil {
+func (db *DB) DeleteChat(userId int64, id int64) error {
+	if _, err := db.Exec("DELETE FROM chat WHERE id = $1 AND owner_id = $2", id, userId); err != nil {
 		Logger.Errorf("Error during delete chat %v", id, err)
 		return err
 	} else {
