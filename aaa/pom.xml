@@ -40,7 +40,7 @@
         <os.maven.plugin.version>1.5.0.Final</os.maven.plugin.version>
         <protobuf.maven.plugin.version>0.5.1</protobuf.maven.plugin.version>
         <protoc.version>3.7.1</protoc.version>
-        <spring-cloud.version>Hoxton.SR3</spring-cloud.version>
+        <spring-cloud.version>Hoxton.SR5</spring-cloud.version>
 
         <skipTests>false</skipTests>
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
