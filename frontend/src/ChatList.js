@@ -12,6 +12,7 @@ import Box from '@material-ui/core/Box';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import Link from '@material-ui/core/Link';
+import Modal from '@material-ui/core/Modal';
 
 const useStyles = makeStyles(theme => ({
     appHeader: {
@@ -42,6 +43,13 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         justifyContent: "center",
     },
+    confirm: {
+        position: 'absolute',
+        backgroundColor: theme.palette.background.paper,
+        border: '2px solid #000',
+        boxShadow: theme.shadows[5],
+        padding: theme.spacing(2),
+    },
 }));
 
 function getModalStyle() {
@@ -58,13 +66,39 @@ function getModalStyle() {
 function ChatList() {
     // state
     const [chats, setChats] = useState([]);
-    const [modalStyle] = React.useState(getModalStyle);
+    const [modalStyle] = useState(getModalStyle);
+    const [openConfirmModal, setOpenConfirmModal] = useState(false);
+    const [chatToDelete, setChatToDelete] = useState({});
 
     const fetchData = () => {
-        axios.get(`/api/chat`)
+        axios
+            .get(`/api/chat`)
             .then(message => {
                 setChats(message.data);
             });
+    };
+
+    const openDeleteModal = (dto) => {
+        setChatToDelete(dto);
+        setOpenConfirmModal(true);
+    };
+
+    const handleCloseConfirmModal = () => {
+        setOpenConfirmModal(false);
+    };
+
+    const onDelete = id => {
+        console.log("Deleting", id);
+        axios
+            .delete(`/api/chat/${id}`)
+            .then(() => {
+                fetchData();
+            });
+    };
+
+    const handleDelete = (id) => {
+        onDelete(id);
+        handleCloseConfirmModal();
     };
 
     useEffect(() => {
@@ -73,10 +107,10 @@ function ChatList() {
 
     const classes = useStyles();
 
-    let space;
+    let chatContent;
     if (Array.isArray(chats) && chats.length) {
-        space = (
-            <List className="list-db-connections">
+        chatContent = (
+            <List className="chat-list">
                 {chats.map((value, index) => {
                     return (
                         <ListItem key={value.id} button>
@@ -99,7 +133,7 @@ function ChatList() {
                                         </Button>
                                     </Grid>
                                     <Grid item>
-                                        <Button variant="contained" color="secondary">
+                                        <Button variant="contained" color="secondary" onClick={() => openDeleteModal(value)}>
                                             Delete
                                         </Button>
                                     </Grid>
@@ -111,7 +145,7 @@ function ChatList() {
             </List>
         );
     } else {
-        space = (
+        chatContent = (
         <div className={classes.scroller}>
             <CircularProgress size={72} thickness={8} variant={'indeterminate'} disableShrink={true}/>
         </div>
@@ -136,8 +170,43 @@ function ChatList() {
                     <AddIcon className="fab-add"/>
                 </Fab>
 
-                {space}
+                {chatContent}
 
+
+                <Modal
+                    aria-labelledby="simple-modal-title"
+                    aria-describedby="simple-modal-description"
+                    open={openConfirmModal}
+                    onClose={handleCloseConfirmModal}
+                >
+                    <div style={modalStyle} className={classes.confirm}>
+
+                        <Grid container
+                              direction="column"
+                              justify="center"
+                              alignItems="stretch"
+                              spacing={2}>
+                            <Grid item>
+                                Confirm delete {chatToDelete.name}?
+                            </Grid>
+
+                            <Grid item container spacing={1}>
+                                <Grid item>
+                                    <Button variant="contained" color="primary"
+                                            onClick={() => handleDelete(chatToDelete.id)}>
+                                        Yes
+                                    </Button>
+                                </Grid>
+                                <Grid item>
+
+                                    <Button variant="contained" color="secondary" onClick={handleCloseConfirmModal}>
+                                        Cancel
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </div>
+                </Modal>
             </div>
 
     );
