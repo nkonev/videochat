@@ -12,8 +12,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>11</java.version>
         <logback.version>1.2.3</logback.version>
-        <spring.boot.version>2.2.5.RELEASE</spring.boot.version>
-        <spring-cloud.version>Hoxton.SR3</spring-cloud.version>
+        <spring.boot.version>2.3.0.RELEASE</spring.boot.version>
+        <spring-cloud.version>Hoxton.SR5</spring-cloud.version>
         <mockserver.version>5.9.0</mockserver.version>
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
         <grpc.java.lib.version>3.11.4</grpc.java.lib.version>
