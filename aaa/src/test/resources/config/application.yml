@@ -9,7 +9,7 @@ custom.base-url: "http://localhost:${server.port}"
 # https://stackoverflow.com/questions/411331/using-javamail-with-tls
 spring.mail:
   testConnection: false
-  host: 127.0.0.1 
+  host: 127.0.0.1
   port: 3025
   username: testEmailUsername 
   password: testEmailPassword 
@@ -131,7 +131,7 @@ management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
 management:
   server:
-    port: 3011
+    port: 3006
     ssl:
       enabled: false
     add-application-context-header: false

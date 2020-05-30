@@ -135,7 +135,7 @@ management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
 management:
   server:
-    port: 3010
+    port: 3005
     ssl:
       enabled: false
     add-application-context-header: false
