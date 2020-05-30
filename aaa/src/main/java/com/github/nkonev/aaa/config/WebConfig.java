@@ -40,15 +40,7 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
-        configurer
-                // we disable file extension type resolving
-                // because if it will be enabled so whenBlogExceptionHandler will return 404 and json error
-                // and http://127.0.0.1:8080/api/user/avatar/3/avatar.png was requested
-                // so spring won't negotiates between image/png and application/json
-                // so 500 will be returned
-                .favorPathExtension(false)
-                .defaultContentType(MediaType.APPLICATION_JSON)
-        ;
+        configurer.defaultContentType(MediaType.APPLICATION_JSON);
     }
 
     @PostConstruct
