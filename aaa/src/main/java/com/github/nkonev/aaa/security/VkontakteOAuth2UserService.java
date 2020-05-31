@@ -97,7 +97,7 @@ public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implem
 
     @Override
     protected String getOauthName() {
-        return "vkontate";
+        return "vkontakte";
     }
 
     @Override

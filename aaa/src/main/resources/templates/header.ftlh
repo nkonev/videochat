@@ -5,6 +5,6 @@
     Logged as <b> <@sec.authentication property="principal.username"/> </b>
 
     <@form.form action="/api/logout" method="post">
-        <input type="submit" value="Logout"/>
+        <input id="btn-logout" type="submit" value="Logout"/>
     </@form.form>
 </@sec.authorize>

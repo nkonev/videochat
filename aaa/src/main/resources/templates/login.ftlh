@@ -16,7 +16,7 @@
     <@form.form action="/api/login" method="post">
         <input id="username" name="username" type="text" placeholder="Username"/>
         <input id="password" name="password" type="password" placeholder="Password"/>
-        <input type="submit" value="Login"/>
+        <input id="btn-login" type="submit" value="Login"/>
     </@form.form>
 
 </div>

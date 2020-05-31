@@ -1,5 +1,7 @@
 package com.github.nkonev.aaa.it;
 
+import com.codeborne.selenide.Condition;
+import com.codeborne.selenide.Selenide;
 import com.github.nkonev.aaa.AbstractSeleniumRunner;
 import com.github.nkonev.aaa.CommonTestConstants;
 import com.github.nkonev.aaa.Constants;
@@ -21,6 +23,7 @@ import java.time.LocalDateTime;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
+import static com.github.nkonev.aaa.CommonTestConstants.COMMON_PASSWORD;
 import static com.github.nkonev.aaa.CommonTestConstants.HEADER_XSRF_TOKEN;
 import static com.github.nkonev.aaa.Constants.Urls.API;
 import static org.springframework.http.HttpHeaders.COOKIE;
@@ -41,13 +44,29 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         open(urlPrefix+"/oauth2.html");
     }
 
+    private void clickFacebook() {
+        $("#a-facebook").click();
+    }
+
+    private void clickVkontakte() {
+        $("#a-vkontakte").click();
+    }
+
+    private void clickLogout() {
+        $("#btn-logout").click();
+    }
+
+    private void openLoginPage() {
+        open(urlPrefix+"/login.html");
+    }
+
     @Test
     public void testFacebookLogin()  {
         Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
         openOauth2TestPage();
 
-        $("#a-facebook").click();
+        clickFacebook();
 
         UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
         Assertions.assertNotNull(userAccount.getId());
@@ -55,6 +74,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Assertions.assertTrue(userAccount.getAvatar().startsWith("/"));
         Assertions.assertEquals(facebookLogin, userAccount.getUsername());
     }
+
 
     @Test
     public void testVkontakteLoginAndDelete() throws Exception {
@@ -65,7 +85,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
         openOauth2TestPage();
 
-        $("#a-vkontakte").click();
+        clickVkontakte();
 
         long countBeforeDelete = FailoverUtils.retry(10, () -> {
             long c = userAccountRepository.count();
@@ -105,51 +125,48 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
     public void testBindIdToAccountAndConflict() throws Exception {
         long countInitial = userAccountRepository.count();
 
-        // логинюсь пользаком
-        UserProfilePage userPage = new UserProfilePage(urlPrefix, driver);
+        // login as regular user 600
+        openLoginPage();
         final String login600 = "generated_user_600";
-        LoginModal loginModal600 = new LoginModal(login600, COMMON_PASSWORD);
-        loginModal600.openLoginModal();
-        loginModal600.login();
+        $("input#username").setValue(login600);
+        $("input#password").setValue(COMMON_PASSWORD);
+        $("#btn-login").click();
         UserAccount userAccount = userAccountRepository.findByUsername(login600).orElseThrow();
-        userPage.openPage(userAccount.getId().intValue());
-        userPage.assertThisIsYou();
+        Assertions.assertEquals(countInitial, userAccountRepository.count());
 
-        // привязываю ему фейсбук
-        userPage.edit();
-        userPage.bindFacebook();
-        long countAfter = userAccountRepository.count();
-        userPage.openPage(userAccount.getId().intValue());
-        userPage.assertHasFacebook();
+        // bind facebook to him
+        openOauth2TestPage();
+        clickFacebook();
+        Assertions.assertEquals(countInitial, userAccountRepository.count());
 
-        // выхожу
-        Assertions.assertEquals(countInitial, countAfter);
-        loginModal600.logout();
+        // logout
+        clickLogout();
 
         // check that binding is preserved
         Selenide.refresh();
-        userPage.openPage(userAccount.getId().intValue());
-        // убеждаюсь что есть у него фейсбук после выхода - переделать на проверку базы
-        userPage.assertHasFacebook();
+        // assert that he has facebook id
+        UserAccount userAccountAfterBind = userAccountRepository.findByUsername(login600).orElseThrow();
+        Assertions.assertNotNull(userAccountAfterBind.getOauthIdentifiers().getFacebookId());
 
-        // логинюсь вконтакте - в базе пользователей сохраняется vk id #1
+        // login as another user to vo - vk id #1 save to database
         {
-            LoginModal loginModalVk = new LoginModal();
-            loginModalVk.openLoginModal();
-            loginModalVk.loginVkontakte();
+            openOauth2TestPage();
+            clickVkontakte();
 
-            Assertions.assertEquals(vkontakteLogin, UserNav.getLogin());
-            // выхожу
-            loginModalVk.logout();
+            Assertions.assertEquals(countInitial+1, userAccountRepository.count());
+            // logout another user
+            clickLogout();
         }
 
-        // логинюсь прежним пользаком(у которого привязан фейсбук) снова
-        loginModal600.openLoginModal();
-        loginModal600.login();
-        userPage.edit();
-        // пытаюсь привязать ему вк, но эмулятор отдаёт тот же vk id #1 - и бэкенд должен заругаться что в базе пользователей уже есть vk id #1
-        userPage.bindVkontakte();
-        $("body").has(Condition.text("Somebody already taken this vkontakte id"));
+        // login facebook-bound user 600 again
+        openLoginPage();
+        $("input#username").setValue(login600);
+        $("input#password").setValue(COMMON_PASSWORD);
+        $("#btn-login").click();
+        // try to bind him vk, but emulator returns previous vk id #1 - here backend must argue that we already have vk id #1 in our database on another user
+        openOauth2TestPage();
+        clickVkontakte();
+        Assertions.assertTrue($("body").has(Condition.text("Somebody already taken this vkontakte id")));
     }
 
     /*@Test
