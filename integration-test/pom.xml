@@ -7,8 +7,6 @@
     <groupId>com.example.integration-test</groupId>
     <artifactId>integration-test</artifactId>
     <version>0.0.0</version>
-    <name>Integration Test Maven Project</name>
-    <url>https://github.com/nkonev</url>
 
     <properties>
         <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
