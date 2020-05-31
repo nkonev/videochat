@@ -101,57 +101,58 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         });
     }
 
-    /*@Test
+    @Test
     public void testBindIdToAccountAndConflict() throws Exception {
-
-        IndexPage indexPage = new IndexPage(urlPrefix);
-        indexPage.openPage();
-
         long countInitial = userAccountRepository.count();
-        //Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
+        // логинюсь пользаком
         UserProfilePage userPage = new UserProfilePage(urlPrefix, driver);
         final String login600 = "generated_user_600";
-
         LoginModal loginModal600 = new LoginModal(login600, COMMON_PASSWORD);
         loginModal600.openLoginModal();
         loginModal600.login();
         UserAccount userAccount = userAccountRepository.findByUsername(login600).orElseThrow();
         userPage.openPage(userAccount.getId().intValue());
         userPage.assertThisIsYou();
-        userPage.edit();
 
+        // привязываю ему фейсбук
+        userPage.edit();
         userPage.bindFacebook();
         long countAfter = userAccountRepository.count();
         userPage.openPage(userAccount.getId().intValue());
         userPage.assertHasFacebook();
 
+        // выхожу
         Assertions.assertEquals(countInitial, countAfter);
         loginModal600.logout();
 
         // check that binding is preserved
         Selenide.refresh();
         userPage.openPage(userAccount.getId().intValue());
+        // убеждаюсь что есть у него фейсбук после выхода - переделать на проверку базы
         userPage.assertHasFacebook();
 
+        // логинюсь вконтакте - в базе пользователей сохраняется vk id #1
         {
             LoginModal loginModalVk = new LoginModal();
             loginModalVk.openLoginModal();
             loginModalVk.loginVkontakte();
 
             Assertions.assertEquals(vkontakteLogin, UserNav.getLogin());
-
+            // выхожу
             loginModalVk.logout();
         }
 
+        // логинюсь прежним пользаком(у которого привязан фейсбук) снова
         loginModal600.openLoginModal();
         loginModal600.login();
         userPage.edit();
+        // пытаюсь привязать ему вк, но эмулятор отдаёт тот же vk id #1 - и бэкенд должен заругаться что в базе пользователей уже есть vk id #1
         userPage.bindVkontakte();
         $("body").has(Condition.text("Somebody already taken this vkontakte id"));
     }
 
-    @Test
+    /*@Test
     public void checkUnbindFacebook() throws Exception {
         IndexPage indexPage = new IndexPage(urlPrefix);
         indexPage.openPage();
