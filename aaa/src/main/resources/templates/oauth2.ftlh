@@ -5,14 +5,16 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Aaa</title>
+    <title>Aaa OAuth2</title>
 
 </head>
 <body>
-<h1>OAuth2 login test</h1>
+<div id="app-container">
+    <#include "header.ftlh">
+    <h1>OAuth2 login test</h1>
 
-<a href="/api/login/oauth2/facebook" id="a-facebook">Facebook</a>
-<a href="/api/login/oauth2/vkontakte" id="a-vkontakte">Vkontakte</a>
-
+    <a href="/api/login/oauth2/facebook" id="a-facebook">Facebook</a>
+    <a href="/api/login/oauth2/vkontakte" id="a-vkontakte">Vkontakte</a>
+</div>
 </body>
 </html>

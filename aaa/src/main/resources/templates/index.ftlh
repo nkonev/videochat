@@ -10,8 +10,12 @@
 
 <body>
     <div id="app-container">
+        <#include "header.ftlh">
         <h1>Welcome to AAA</h1>
+
         <a href="/oauth2.html">OAuth2 test page</a>
+        <a href="/login.html">Login page</a>
+
     </div>
 </body>
 </html>
