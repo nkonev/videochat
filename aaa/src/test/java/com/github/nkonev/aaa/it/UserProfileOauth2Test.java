@@ -3,7 +3,6 @@ package com.github.nkonev.aaa.it;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selenide;
 import com.github.nkonev.aaa.AbstractSeleniumRunner;
-import com.github.nkonev.aaa.CommonTestConstants;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.FailoverUtils;
 import com.github.nkonev.aaa.config.webdriver.Browser;
@@ -15,11 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.net.URI;
-import java.time.LocalDateTime;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
@@ -33,9 +30,6 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
     @Autowired
     private SeleniumProperties seleniumConfiguration;
-
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -56,8 +50,24 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         $("#btn-logout").click();
     }
 
-    private void openLoginPage() {
-        open(urlPrefix+"/login.html");
+    private class LoginPage {
+        public LoginPage(String login, String password) {
+            this.login = login;
+            this.password = password;
+        }
+
+        private void openLoginPage() {
+            open(urlPrefix+"/login.html");
+        }
+
+        private String login;
+        private String password;
+
+        private void login() {
+            $("input#username").setValue(this.login);
+            $("input#password").setValue(this.password);
+            $("#btn-login").click();
+        }
     }
 
     @Test
@@ -126,11 +136,10 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         long countInitial = userAccountRepository.count();
 
         // login as regular user 600
-        openLoginPage();
         final String login600 = "generated_user_600";
-        $("input#username").setValue(login600);
-        $("input#password").setValue(COMMON_PASSWORD);
-        $("#btn-login").click();
+        LoginPage loginPage = new LoginPage(login600, COMMON_PASSWORD);
+        loginPage.openLoginPage();
+        loginPage.login();
         UserAccount userAccount = userAccountRepository.findByUsername(login600).orElseThrow();
         Assertions.assertEquals(countInitial, userAccountRepository.count());
 
@@ -159,10 +168,8 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         }
 
         // login facebook-bound user 600 again
-        openLoginPage();
-        $("input#username").setValue(login600);
-        $("input#password").setValue(COMMON_PASSWORD);
-        $("#btn-login").click();
+        loginPage.openLoginPage();
+        loginPage.login();
         // try to bind him vk, but emulator returns previous vk id #1 - here backend must argue that we already have vk id #1 in our database on another user
         openOauth2TestPage();
         clickVkontakte();
@@ -171,12 +178,9 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
     /*@Test
     public void checkUnbindFacebook() throws Exception {
-        IndexPage indexPage = new IndexPage(urlPrefix);
-        indexPage.openPage();
-
+        // login as 550
         UserProfilePage userPage = new UserProfilePage(urlPrefix, driver);
         final String login600 = "generated_user_550";
-
         LoginModal loginModal600 = new LoginModal(login600, COMMON_PASSWORD);
         loginModal600.openLoginModal();
         loginModal600.login();
@@ -185,24 +189,31 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         userPage.assertThisIsYou();
         userPage.edit();
 
+        // bind facebook
         userPage.bindFacebook();
         userPage.openPage(userAccount.getId().intValue());
         userPage.assertHasFacebook();
+
+        // assert facebook is bound - check database
         Selenide.refresh();
         userPage.assertHasFacebook();
 
+        // logout
         loginModal600.logout();
 
+        // login
         loginModal600.openLoginModal();
         loginModal600.login();
 
+        // unbind facebook
         userPage.openPage(userAccount.getId().intValue());
         userPage.assertThisIsYou();
         userPage.edit();
-
         userPage.unBindFacebook();
         userPage.assertNotHasFacebook();
         Selenide.refresh();
+
+        // assert facebook is unbound - check database
         loginModal600.logout();
         Selenide.refresh();
         loginModal600.openLoginModal();
