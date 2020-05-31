@@ -15,6 +15,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
+
+import static com.github.nkonev.aaa.Constants.Urls.ROOT;
+import static com.github.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
 
 /**
  * Created by nik on 09.07.17.
@@ -48,7 +52,12 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
         UserAccountDetailsDTO userDetails = (UserAccountDetailsDTO)authentication.getPrincipal();
         LOGGER.info("User '{}' logged out", userDetails.getUsername());
 
-        response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
-        objectMapper.writeValue(response.getWriter(), Collections.singletonMap("message", "you successfully logged out"));
+        final List<String> acceptValues = getAcceptHeaderValues(request);
+        if (acceptValues.contains(MediaType.TEXT_HTML_VALUE)) {
+            response.sendRedirect(ROOT);
+        } else {
+            response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+            objectMapper.writeValue(response.getWriter(), Collections.singletonMap("message", "you successfully logged out"));
+        }
     }
 }

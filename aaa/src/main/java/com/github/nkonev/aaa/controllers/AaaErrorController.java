@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.github.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
+
 /**
  * @see org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController, it describes how to use both REST And ModelAndView handling depends on Accept header
  * @see "https://gist.github.com/jonikarppinen/662c38fb57a23de61c8b"
@@ -58,11 +60,7 @@ public class AaaErrorController extends AbstractErrorController {
     @RequestMapping(value = PATH)
     public ModelAndView error(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        final List<String> acceptValues = Collections.list(request.getHeaders(HttpHeaders.ACCEPT))
-                        .stream()
-                        .flatMap(s -> Arrays.stream(s.split(",")))
-                        .map(s -> s.trim())
-                        .collect(Collectors.toList());
+        final List<String> acceptValues = getAcceptHeaderValues(request);
 
         Map<String, Object> errorAttributes = getCustomErrorAttributes(request, debug);
         if (acceptValues.contains(MediaType.APPLICATION_JSON_UTF8_VALUE) || acceptValues.contains(MediaType.APPLICATION_JSON_VALUE)) {

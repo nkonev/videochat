@@ -12,9 +12,9 @@ import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BlogPostAuthenticationChecks implements UserDetailsChecker, MessageSourceAware {
+public class AaaPostAuthenticationChecks implements UserDetailsChecker, MessageSourceAware {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlogPostAuthenticationChecks.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AaaPostAuthenticationChecks.class);
 
     protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
 

@@ -14,11 +14,11 @@ import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BlogPreAuthenticationChecks implements UserDetailsChecker, MessageSourceAware {
+public class AaaPreAuthenticationChecks implements UserDetailsChecker, MessageSourceAware {
 
     protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlogPreAuthenticationChecks.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AaaPreAuthenticationChecks.class);
 
     @Override
     public void setMessageSource(MessageSource messageSource) {

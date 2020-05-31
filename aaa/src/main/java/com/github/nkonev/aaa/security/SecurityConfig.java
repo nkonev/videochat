@@ -2,8 +2,8 @@ package com.github.nkonev.aaa.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.security.checks.BlogPostAuthenticationChecks;
-import com.github.nkonev.aaa.security.checks.BlogPreAuthenticationChecks;
+import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
+import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import com.github.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
 import com.github.nkonev.aaa.dto.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,10 +63,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private AaaUserDetailsService aaaUserDetailsService;
 
     @Autowired
-    private BlogPreAuthenticationChecks blogPreAuthenticationChecks;
+    private AaaPreAuthenticationChecks aaaPreAuthenticationChecks;
 
     @Autowired
-    private BlogPostAuthenticationChecks blogPostAuthenticationChecks;
+    private AaaPostAuthenticationChecks aaaPostAuthenticationChecks;
 
     @Autowired
     private BlogOAuth2UserService blogOAuth2UserService;
@@ -170,8 +170,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
         authenticationProvider.setUserDetailsService(aaaUserDetailsService);
         authenticationProvider.setPasswordEncoder(passwordEncoder());
-        authenticationProvider.setPreAuthenticationChecks(blogPreAuthenticationChecks);
-        authenticationProvider.setPostAuthenticationChecks(blogPostAuthenticationChecks);
+        authenticationProvider.setPreAuthenticationChecks(aaaPreAuthenticationChecks);
+        authenticationProvider.setPostAuthenticationChecks(aaaPostAuthenticationChecks);
         return authenticationProvider;
     }
 

@@ -5,8 +5,8 @@ import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.security.checks.BlogPostAuthenticationChecks;
-import com.github.nkonev.aaa.security.checks.BlogPreAuthenticationChecks;
+import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
+import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,10 +33,10 @@ public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implem
     private UserAccountRepository userAccountRepository;
 
     @Autowired
-    private BlogPreAuthenticationChecks blogPreAuthenticationChecks;
+    private AaaPreAuthenticationChecks aaaPreAuthenticationChecks;
 
     @Autowired
-    private BlogPostAuthenticationChecks blogPostAuthenticationChecks;
+    private AaaPostAuthenticationChecks aaaPostAuthenticationChecks;
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VkontakteOAuth2UserService.class);
@@ -62,8 +62,8 @@ public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implem
             resultPrincipal = createOrGetExistsUser(vkontakteId, login, map);
         }
 
-        blogPreAuthenticationChecks.check(resultPrincipal);
-        blogPostAuthenticationChecks.check(resultPrincipal);
+        aaaPreAuthenticationChecks.check(resultPrincipal);
+        aaaPostAuthenticationChecks.check(resultPrincipal);
         return resultPrincipal;
 
     }
