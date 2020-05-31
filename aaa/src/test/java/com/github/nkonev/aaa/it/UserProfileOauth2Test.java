@@ -3,6 +3,7 @@ package com.github.nkonev.aaa.it;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selenide;
 import com.github.nkonev.aaa.AbstractSeleniumRunner;
+import com.github.nkonev.aaa.CommonTestConstants;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.FailoverUtils;
 import com.github.nkonev.aaa.config.webdriver.Browser;
@@ -176,51 +177,39 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Assertions.assertTrue($("body").has(Condition.text("Somebody already taken this vkontakte id")));
     }
 
-    /*@Test
+    @Test
     public void checkUnbindFacebook() throws Exception {
         // login as 550
-        UserProfilePage userPage = new UserProfilePage(urlPrefix, driver);
         final String login600 = "generated_user_550";
-        LoginModal loginModal600 = new LoginModal(login600, COMMON_PASSWORD);
-        loginModal600.openLoginModal();
+        LoginPage loginModal600 = new LoginPage(login600, COMMON_PASSWORD);
+        loginModal600.openLoginPage();
         loginModal600.login();
-        UserAccount userAccount = userAccountRepository.findByUsername(login600).orElseThrow();
-        userPage.openPage(userAccount.getId().intValue());
-        userPage.assertThisIsYou();
-        userPage.edit();
+        UserAccount userAccount = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
 
         // bind facebook
-        userPage.bindFacebook();
-        userPage.openPage(userAccount.getId().intValue());
-        userPage.assertHasFacebook();
-
+        openOauth2TestPage();
+        clickFacebook();
+        UserAccount userAccountAfterBindFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
         // assert facebook is bound - check database
-        Selenide.refresh();
-        userPage.assertHasFacebook();
+        Assertions.assertNotNull(userAccountAfterBindFacebook.getOauthIdentifiers().getFacebookId());
 
         // logout
-        loginModal600.logout();
+        clickLogout();
 
-        // login
-        loginModal600.openLoginModal();
-        loginModal600.login();
+        // login again
+        SessionHolder userAliceSession = login(loginModal600.login, loginModal600.password);
 
         // unbind facebook
-        userPage.openPage(userAccount.getId().intValue());
-        userPage.assertThisIsYou();
-        userPage.edit();
-        userPage.unBindFacebook();
-        userPage.assertNotHasFacebook();
-        Selenide.refresh();
+        RequestEntity myPostsRequest1 = RequestEntity
+                .delete(new URI(urlWithContextPath()+ Constants.Urls.API+Constants.Urls.PROFILE+Constants.Urls.FACEBOOK))
+                .header(HEADER_XSRF_TOKEN, userAliceSession.newXsrf)
+                .header(COOKIE, userAliceSession.getCookiesArray())
+                .build();
+        ResponseEntity<String> myPostsResponse1 = testRestTemplate.exchange(myPostsRequest1, String.class);
+        Assertions.assertEquals(200, myPostsResponse1.getStatusCodeValue());
 
         // assert facebook is unbound - check database
-        loginModal600.logout();
-        Selenide.refresh();
-        loginModal600.openLoginModal();
-        loginModal600.login();
-        userPage.openPage(userAccount.getId().intValue());
-        userPage.assertThisIsYou();
-        userPage.assertNotHasFacebook();
-
-    }*/
+        UserAccount userAccountAfterDeleteFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
+        Assertions.assertNull(userAccountAfterDeleteFacebook.getOauthIdentifiers().getFacebookId());
+    }
 }
