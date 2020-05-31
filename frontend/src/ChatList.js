@@ -13,6 +13,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import Link from '@material-ui/core/Link';
 import Modal from '@material-ui/core/Modal';
+import TextField from '@material-ui/core/TextField';
 
 const useStyles = makeStyles(theme => ({
     appHeader: {
@@ -43,6 +44,14 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         justifyContent: "center",
     },
+    paper: {
+        position: 'absolute',
+        width: 400,
+        backgroundColor: theme.palette.background.paper,
+        border: '2px solid #000',
+        boxShadow: theme.shadows[5],
+        padding: theme.spacing(2),
+    },
     confirm: {
         position: 'absolute',
         backgroundColor: theme.palette.background.paper,
@@ -69,6 +78,9 @@ function ChatList() {
     const [modalStyle] = useState(getModalStyle);
     const [openConfirmModal, setOpenConfirmModal] = useState(false);
     const [chatToDelete, setChatToDelete] = useState({});
+    const [openEditModal, setOpenEditModal] = useState(false);
+    const [editDto, setEditDto] = useState({});
+    const [valid, setValid] = useState(true);
 
     const fetchData = () => {
         axios
@@ -87,6 +99,37 @@ function ChatList() {
         setOpenConfirmModal(false);
     };
 
+    const handleCloseEditModal = () => {
+        setOpenEditModal(false);
+    };
+
+    const validString = s => {
+        if (s) {
+            return true
+        } else {
+            return false
+        }
+    };
+
+    const validate = (dto) => {
+        let v = validString(dto.name) && validString(dto.name);
+        console.log("Valid? " + JSON.stringify(dto) + " : " + v);
+        setValid(v)
+    };
+
+    const handleChangeName = event => {
+        const dto = {...editDto, name: event.target.value};
+        setEditDto(dto);
+        validate(dto);
+    };
+
+    const handleEditModalOpen = (dto) => {
+        console.log("Editing modal", dto.id);
+        setEditDto(dto);
+        validate(dto);
+        setOpenEditModal(true);
+    };
+
     const onDelete = id => {
         console.log("Deleting", id);
         axios
@@ -100,6 +143,21 @@ function ChatList() {
         onDelete(id);
         handleCloseConfirmModal();
     };
+
+    const onSave = (dto, event) => {
+        (dto.id ? axios.put(`/api/chat`, dto) : axios.post(`/api/chat`, dto))
+            .then(() => {
+                fetchData();
+            })
+            .then(() => {
+                handleCloseEditModal();
+            })
+            .catch((error) => {
+                // handle error
+                console.log("Handling error on save", error.response);
+            });
+    };
+
 
     useEffect(() => {
         fetchData();
@@ -128,8 +186,8 @@ function ChatList() {
                                       justify="flex-end"
                                       alignItems="center" spacing={1}>
                                     <Grid item>
-                                        <Button variant="contained" color="primary">
-                                            Share
+                                        <Button variant="contained" color="primary" onClick={() => handleEditModalOpen(value)}>
+                                            Rename
                                         </Button>
                                     </Grid>
                                     <Grid item>
@@ -166,13 +224,58 @@ function ChatList() {
                     </Link>
                 </Breadcrumbs>
 
-                <Fab color="primary" aria-label="add" className={classes.fabAddButton}>
+                <Fab color="primary" aria-label="add" className={classes.fabAddButton}
+                     onClick={() => handleEditModalOpen({name: ''})}>
                     <AddIcon className="fab-add"/>
                 </Fab>
 
                 {chatContent}
 
 
+                { /* Edit / create modal */ }
+                <Modal
+                    aria-labelledby="simple-modal-title"
+                    aria-describedby="simple-modal-description"
+                    open={openEditModal}
+                    onClose={handleCloseEditModal}
+                >
+                    <div style={modalStyle} className={classes.paper}>
+
+                        <Grid container
+                              direction="column"
+                              justify="center"
+                              alignItems="stretch"
+                              spacing={2} className="edit-modal">
+
+                            <Grid item>
+                                <span>{editDto.id ? 'Rename chat' : 'Create chat'}</span>
+                            </Grid>
+                            <Grid item container spacing={1} direction="column" justify="center"
+                                  alignItems="stretch">
+                                <Grid item>
+                                    <TextField id="outlined-basic" label="Name" variant="outlined" fullWidth className="edit-modal-name"
+                                               error={!valid} value={editDto.name} onChange={handleChangeName}/>
+                                </Grid>
+
+                            </Grid>
+                            <Grid item container spacing={1}>
+                                <Grid item>
+                                    <Button variant="contained" color="primary" disabled={!valid} className="edit-modal-save"
+                                            onClick={(e) => onSave(editDto, e)}>
+                                        Save
+                                    </Button>
+                                </Grid>
+                                <Grid item>
+                                    <Button variant="contained" color="secondary" onClick={handleCloseEditModal} className="edit-modal-cancel">
+                                        Cancel
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </div>
+                </Modal>
+
+                { /* Delete modal */ }
                 <Modal
                     aria-labelledby="simple-modal-title"
                     aria-describedby="simple-modal-description"
