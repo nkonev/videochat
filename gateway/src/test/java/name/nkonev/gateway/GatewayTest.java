@@ -122,13 +122,13 @@ public class GatewayTest {
                 .expectBody(String.class).isEqualTo(CHAT_RESPONSE);
     }
 
-    public static final String DOWNSTREAM_SERVICE_ID = "chatservice";
+    public static final String UPSTREAM_SERVICE_ID = "chatservice";
 
     @Configuration
-    @LoadBalancerClient(name = DOWNSTREAM_SERVICE_ID, configuration = TestGatewayLoadBalancerConfig.class)
+    @LoadBalancerClient(name = UPSTREAM_SERVICE_ID, configuration = TestGatewayLoadBalancerConfig.class)
     public static class TestGatewayRoutesConfig {
 
-        private final static String uri = "lb://"+ DOWNSTREAM_SERVICE_ID;
+        private final static String uri = "lb://"+ UPSTREAM_SERVICE_ID;
 
         @Bean
         public RouteLocator routeLocator(RouteLocatorBuilder builder) {
@@ -141,7 +141,7 @@ public class GatewayTest {
     public static class TestGatewayLoadBalancerConfig {
         @Bean
         public ServiceInstanceListSupplier staticServiceInstanceListSupplier(Environment env) {
-            return ServiceInstanceListSupplier.fixed(env).instance(DOWNSTREAM_PORT, DOWNSTREAM_SERVICE_ID).build();
+            return ServiceInstanceListSupplier.fixed(env).instance(DOWNSTREAM_PORT, UPSTREAM_SERVICE_ID).build();
         }
     }
 
