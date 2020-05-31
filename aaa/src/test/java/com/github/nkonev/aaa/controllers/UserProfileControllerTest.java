@@ -299,7 +299,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     }
 
     @org.junit.jupiter.api.Test
-    public void moderatorCanManageSessions() throws Exception {
+    public void adminCanManageSessions() throws Exception {
         String xsrf = "xsrf";
         String session = getSession(xsrf, username, password);
 
@@ -334,7 +334,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @WithUserDetails(TestConstants.USER_ADMIN)
     @org.junit.jupiter.api.Test
-    public void moderatorCanManageSessionsView() throws Exception {
+    public void adminCanManageSessionsView() throws Exception {
 
         MvcResult mvcResult = mockMvc.perform(
                 get(Constants.Urls.API+ Constants.Urls.USER)
@@ -352,7 +352,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @WithUserDetails(TestConstants.USER_ADMIN)
     @org.junit.jupiter.api.Test
-    public void moderatorCanLock() throws Exception {
+    public void adminCanLock() throws Exception {
         final long userId = 10;
 
         // lock user 10
