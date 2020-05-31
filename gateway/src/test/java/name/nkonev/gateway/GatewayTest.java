@@ -49,7 +49,7 @@ public class GatewayTest {
     private static final String FAKE_SESSION = "fake-session-id-value";
     private static final String CHAT_RESPONSE = "your chats and echoed headers";
 
-    private static final String X_FROM_DOWNSTREAM = "X-From-Downstream";
+    private static final String X_FROM_UPSTREAM = "X-From-Upstream";
 
     protected static final int DOWNSTREAM_PORT = 9988;
     protected static final int AAA_PORT = 9088;
@@ -93,7 +93,7 @@ public class GatewayTest {
         chatEmulator.when(request().withPath("/chat")).respond(httpRequest -> {
             Header header0 = new Header(X_AUTH_USERNAME, httpRequest.getHeader(X_AUTH_USERNAME).get(0));
             Header header1 = new Header(X_AUTH_USER_ID, httpRequest.getHeader(X_AUTH_USER_ID).get(0));
-            Header header2 = new Header(X_FROM_DOWNSTREAM, TRUE);
+            Header header2 = new Header(X_FROM_UPSTREAM, TRUE);
             Headers headers = new Headers(header0, header1, header2);
             return response().withBody(CHAT_RESPONSE).withStatusCode(200).withHeaders(headers);
         });
@@ -118,7 +118,7 @@ public class GatewayTest {
                 .expectStatus().isOk()
                 .expectHeader().valueEquals(X_AUTH_USERNAME, JLONG)
                 .expectHeader().valueEquals(X_AUTH_USER_ID, USER_ID_STRING)
-                .expectHeader().valueEquals(X_FROM_DOWNSTREAM, TRUE)
+                .expectHeader().valueEquals(X_FROM_UPSTREAM, TRUE)
                 .expectBody(String.class).isEqualTo(CHAT_RESPONSE);
     }
 
