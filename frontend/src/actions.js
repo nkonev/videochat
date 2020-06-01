@@ -24,3 +24,13 @@ export const setProfile = (pr) => ({
 export const unsetProfile = () => ({
     type: 'unsetProfile'
 });
+
+export const openEditModal = () => ({
+    type: 'openEditModal',
+    editModal: true
+});
+
+export const closeEditModal = () => ({
+    type: 'openEditModal',
+    editModal: false
+});

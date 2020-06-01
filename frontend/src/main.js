@@ -9,6 +9,7 @@ import { Provider } from 'react-redux'
 import {goLogin, savePreviousUrl, unsetProfile} from "./actions"
 import {getProfile} from "./utils";
 
+// reducer https://css-tricks.com/understanding-how-reducers-are-used-in-redux/
 function storeFunction(state = "", action) {
     switch (action.type) {
         case 'go':
@@ -29,6 +30,9 @@ function storeFunction(state = "", action) {
         }
         case 'setProfile': {
             return {...state, profile: action.profile};
+        }
+        case 'openEditModal': {
+            return {...state, editModal: action.editModal};
         }
         default:
             return state
