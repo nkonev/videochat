@@ -8,9 +8,9 @@ const contentBase = path.join(contentStaticDest, "/public/build");
 
 module.exports = (env, argv) => {
     const pluginsArray = [
-        new CopyPlugin([
+        new CopyPlugin({patterns: [
             { from: './static', to: contentStaticDest },
-        ]),
+        ]}),
         new CssExtractPlugin({
             // Options similar to the same options in webpackOptions.output
             // all options are optional
