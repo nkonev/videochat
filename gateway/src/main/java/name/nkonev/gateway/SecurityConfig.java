@@ -93,19 +93,19 @@ public class SecurityConfig {
                                     });
                         })
                         .switchIfEmpty(Mono.error(new RuntimeException("Empty body from AAA")))
-                        .flatMap(chain::filter)
                         .onErrorResume(throwable -> {
                             setAlreadyRouted(exchange); // do not invoke downstream in cause fail in NettyRoutingFilter
                             exchange.getResponse().setRawStatusCode(500);
                             if (throwable instanceof SetStatusException) {
                                 SetStatusException ex = (SetStatusException) throwable;
-                                LOGGER.info("Handling known error {} for {}", exchange.getRequest().getURI(), ex.toString());
+                                LOGGER.info("Handling known error {} for {}", ex.toString(), exchange.getRequest().getURI());
                                 exchange.getResponse().setRawStatusCode(ex.getStatus());
                             } else {
                                 LOGGER.error("Handling unknown error {}", exchange.getRequest().getURI(), throwable);
                             }
-                            return chain.filter(exchange);
-                        });
+                            return Mono.just(exchange);
+                        })
+                        .flatMap(chain::filter);
             } else {
                 return chain.filter(exchange);
             }
