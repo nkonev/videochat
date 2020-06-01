@@ -70,11 +70,9 @@ public class SecurityConfig {
                             if (statusCode.value() == 401) {
                                 return response.releaseBody().then(Mono.error(new SetStatusException("AAA Unauthorized", statusCode.value())));
                             }
-
                             return response
                                     .bodyToMono(UserSessionResponse.class)
-                                    .switchIfEmpty(Mono.error(new RuntimeException("Empty body from AAA")))
-                                    .flatMap(sessionResponse -> {
+                                    .map(sessionResponse -> {
                                         String username = sessionResponse.getUserName();
                                         long userid = sessionResponse.getUserId();
                                         long expiresIn = sessionResponse.getExpiresIn();
@@ -91,9 +89,11 @@ public class SecurityConfig {
                                                 X_AUTH_USER_ID, userid,
                                                 X_AUTH_EXPIRESIN, expiresIn
                                         );
-                                        return chain.filter(modifiedExchange);
+                                        return modifiedExchange;
                                     });
                         })
+                        .switchIfEmpty(Mono.error(new RuntimeException("Empty body from AAA")))
+                        .flatMap(chain::filter)
                         .onErrorResume(throwable -> {
                             setAlreadyRouted(exchange); // do not invoke downstream in cause fail in NettyRoutingFilter
                             exchange.getResponse().setRawStatusCode(500);
