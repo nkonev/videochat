@@ -112,8 +112,8 @@ function ChatList() {
     };
 
     const validate = (dto) => {
-        let v = validString(dto.name) && validString(dto.name);
-        console.log("Valid? " + JSON.stringify(dto) + " : " + v);
+        let v = validString(dto.name);
+        //console.log("Valid? " + JSON.stringify(dto) + " : " + v);
         setValid(v)
     };
 
