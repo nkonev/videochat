@@ -33,6 +33,23 @@ func shutdown() {}
 func setup() {
 	configFile := utils.InitFlags("./config-dev/config.yml")
 	utils.InitViper(configFile, "")
+
+	d, err := configureDb(nil)
+	defer d.Close()
+	if err != nil {
+		Logger.Panicf("Error during getting db connection for test: %v", err)
+	} else {
+		_, err := d.Exec(`
+	DROP SCHEMA IF EXISTS public CASCADE;
+	CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO chat;
+    GRANT ALL ON SCHEMA public TO public;
+    COMMENT ON SCHEMA public IS 'standard public schema';
+`)
+		if err != nil {
+			Logger.Panicf("Error during dropping db: %v", err)
+		}
+	}
 }
 
 func TestExtractAuth(t *testing.T) {

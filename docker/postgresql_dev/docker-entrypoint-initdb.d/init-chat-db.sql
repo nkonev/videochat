@@ -34,6 +34,8 @@ ALTER SYSTEM set auto_explain.log_nested_statements=true;
 
 
 create user chat with password 'chatPazZw0rd';
+-- superuser only for test!
+alter role chat superuser;
 create database chat with owner chat;
 \connect chat;
 create extension if not exists "uuid-ossp" schema pg_catalog;
