@@ -29,6 +29,8 @@
         <spring.boot.version>2.3.0.RELEASE</spring.boot.version>
         <selenide.version>5.11.1</selenide.version>
         <shedlock.version>2.1.0</shedlock.version>
+        <logback.access.version>1.2.3</logback.access.version>
+        <guava.version>29.0-jre</guava.version>
         <greenmail.version>1.5.10</greenmail.version>
         <mockserver.version>5.10.0</mockserver.version>
 
@@ -239,7 +241,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>29.0-jre</version>
+                <version>${guava.version}</version>
             </dependency>
             <!-- https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#using-boot-maven-without-a-parent -->
             <dependency>
@@ -368,7 +370,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-access</artifactId>
-            <version>1.2.3</version>
+            <version>${logback.access.version}</version>
         </dependency>
 
         <dependency>
