@@ -144,13 +144,13 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 		// channel. But in our simple chat app we allow everyone to publish into
 		// any channel.
 		client.On().Publish(func(e centrifuge.PublishEvent) centrifuge.PublishReply {
-			Logger.Printf("client publishes into channel %s: %s", e.Channel, string(e.Data))
+			Logger.Printf("client %v publishes into channel %s: %s", credso.UserID, e.Channel, string(e.Data))
 			return centrifuge.PublishReply{}
 		})
 
 		// Set Disconnect Handler to react on client disconnect events.
 		client.On().Disconnect(func(e centrifuge.DisconnectEvent) centrifuge.DisconnectReply {
-			Logger.Printf("client disconnected")
+			Logger.Printf("client %v disconnected", credso.UserID)
 			return centrifuge.DisconnectReply{}
 		})
 
@@ -159,7 +159,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 		// In our example clients connect with JSON protocol but it can also be Protobuf.
 		transportEncoding := client.Transport().Encoding()
 
-		Logger.Printf("client connected via %s (%s)", transportName, transportEncoding)
+		Logger.Printf("client %v connected via %s (%s)", credso.UserID, transportName, transportEncoding)
 	})
 
 	lc.Append(fx.Hook{

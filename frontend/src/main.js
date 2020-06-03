@@ -58,11 +58,11 @@ axios.interceptors.response.use((response) => {
     }
 });
 
-getProfile(store.dispatch);
-
-ReactDOM.render(
-    <Provider store={store}>
-        <App />
-    </Provider>,
-    document.getElementById('root')
-);
+getProfile(store.dispatch).finally(()=>{
+    ReactDOM.render(
+        <Provider store={store}>
+            <App />
+        </Provider>,
+        document.getElementById('root')
+    );
+});
