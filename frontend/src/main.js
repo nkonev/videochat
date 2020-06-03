@@ -8,38 +8,9 @@ import { createStore } from 'redux'
 import { Provider } from 'react-redux'
 import {goLogin, savePreviousUrl, unsetProfile} from "./actions"
 import {getProfile} from "./utils";
+import reducerFunction from "./reducer"
 
-// reducer https://css-tricks.com/understanding-how-reducers-are-used-in-redux/
-function storeFunction(state = "", action) {
-    switch (action.type) {
-        case 'go':
-            return {...state, redirectUrl: action.redirectUrl};
-        case 'savePrevious':
-            if (!state.previousUrl) {
-                return {...state, previousUrl: action.previousUrl};
-            } else {
-                return state;
-            }
-        case 'restorePrevious':
-            const pr = state.previousUrl ? state.previousUrl : "/";
-            return {...state, previousUrl: null, redirectUrl: pr};
-        case 'clearRedirect':
-            return {...state, redirectUrl: null};
-        case 'unsetProfile': {
-            return {...state, profile: null};
-        }
-        case 'setProfile': {
-            return {...state, profile: action.profile};
-        }
-        case 'openEditModal': {
-            return {...state, editModal: action.editModal};
-        }
-        default:
-            return state
-    }
-}
-
-const store = createStore(storeFunction);
+const store = createStore(reducerFunction);
 store.subscribe(() => console.log("state changed", store.getState()));
 
 axios.interceptors.response.use((response) => {
