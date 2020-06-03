@@ -16,6 +16,7 @@ import Modal from '@material-ui/core/Modal';
 import ChatEdit from './ChatEdit';
 import {openEditModal, closeEditModal} from "./actions";
 import {connect} from "react-redux";
+import { Link as RouteLink } from "react-router-dom";
 
 const useStyles = makeStyles(theme => ({
     appHeader: {
@@ -80,7 +81,6 @@ function ChatList({ currentState, dispatch }) {
     const [modalStyle] = useState(getModalStyle);
     const [openConfirmModal, setOpenConfirmModal] = useState(false);
     const [chatToDelete, setChatToDelete] = useState({});
-
     const [editDto, setEditDto] = useState({});
 
     const fetchData = () => {
@@ -136,11 +136,13 @@ function ChatList({ currentState, dispatch }) {
 
                             <Grid container spacing={1} direction="row">
                                 <Grid container item xs alignItems="center" spacing={1} className="downloadable-clickable">
-                                    <ListItemText>
-                                        <Box fontFamily="Monospace" className="list-element">
-                                            {value.name}
-                                        </Box>
-                                    </ListItemText>
+                                    <RouteLink to={"/chat/"+value.id}>
+                                        <ListItemText>
+                                            <Box fontFamily="Monospace" className="list-element">
+                                                {value.name}
+                                            </Box>
+                                        </ListItemText>
+                                    </RouteLink>
                                 </Grid>
 
                                 <Grid container item xs={2} direction="row"

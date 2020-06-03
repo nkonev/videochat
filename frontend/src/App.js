@@ -7,11 +7,12 @@ import {
     Link,
     Redirect
 } from "react-router-dom";
-import Chat from "./ChatList";
+import ChatList from "./ChatList";
 import Login from "./Login";
 import {connect} from 'react-redux'
 import {clearRedirect, setProfile, unsetProfile} from "./actions";
 import axios from 'axios'
+import Chat from './Chat'
 
 /**
  * Main landing page user starts interaction from
@@ -100,7 +101,10 @@ const App = ({ currentState, dispatch }) => {
             <Route path="/about">
                 <About />
             </Route>
-            <Route path="/chat">
+            <Route exact path="/chat">
+                <ChatList />
+            </Route>
+            <Route path="/chat/:id">
                 <Chat />
             </Route>
             <Route path="/">
