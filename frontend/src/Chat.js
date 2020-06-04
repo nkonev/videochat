@@ -68,14 +68,14 @@ function Chat() {
 
 
 
-
-
-
-
-
-
-
-
+        /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
+         * WebRTC applications need to do several things:
+            Get streaming audio, video or other data.
+            Get network information such as IP addresses and ports, and exchange this with other WebRTC clients (known as peers) to enable connection, even through NATs and firewalls.
+            Coordinate signaling communication to report errors and initiate or close sessions.
+            Exchange information about media and client capability, such as resolution and codecs.
+            Communicate streaming audio, video or data.
+         */
 
         var pcConfig = {
             // TODO backend should respond this
