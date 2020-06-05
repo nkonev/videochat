@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/araddon/dateparse"
 	"github.com/centrifugal/centrifuge"
@@ -92,38 +91,6 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 			err := engine.AddPresence(e.Channel, client.UserID(), clientInfo, presenceDuration)
 			if err != nil {
 				Logger.Errorf("Error during AddPresence %v", err)
-			}
-
-			if e.Channel == "aux" {
-				stats := getChanPresenceStats(engine, client, e)
-
-				type AuxChannelRequest struct {
-					MessageType string `json:"type"`
-				}
-
-				if stats.NumUsers == 1 {
-					data, _ := json.Marshal(AuxChannelRequest{"created"})
-					Logger.Infof("Publishing created to channel %v", e.Channel)
-					//err := node.Publish(e.Channel, data)
-					err := client.Send(data)
-					if err != nil {
-						Logger.Errorf("Error during publishing created %v", err)
-					}
-				} else if stats.NumUsers > 1 {
-					data, _ := json.Marshal(AuxChannelRequest{"joined"})
-					Logger.Infof("Publishing joined to channel %v", e.Channel)
-					// send to existing subscribers
-					_, err := node.Publish(e.Channel, data)
-					if err != nil {
-						Logger.Errorf("Error during publishing joined %v", err)
-					}
-					// send to just subscribing client
-					err2 := client.Send(data)
-					if err2 != nil {
-						Logger.Errorf("Error during publishing joined %v", err2)
-					}
-
-				}
 			}
 
 			return centrifuge.SubscribeReply{}
