@@ -58,6 +58,9 @@ function Chat() {
          */
 
         return function cleanup() {
+            console.log("Cleaning up");
+            sub.unsubscribe();
+            centrifuge.disconnect();
         };
     });
 
