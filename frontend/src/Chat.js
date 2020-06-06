@@ -34,9 +34,13 @@ function Chat() {
             drawText('Disconnected: ' + ctx.reason);
         });
 
+        function getProperData(message) {
+            return message.data
+        }
+
         var sub = centrifuge.subscribe("chat", function(message) {
             // we can rely only on data
-            drawText(JSON.stringify(message.data));
+            drawText(JSON.stringify(getProperData(message)));
         });
         var input = document.getElementById("input");
         input.addEventListener('keyup', function(e) {
