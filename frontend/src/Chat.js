@@ -38,22 +38,29 @@ function Chat() {
             return message.data
         }
 
-        var sub = centrifuge.subscribe("chat", function(message) {
+        var chatSubscription = centrifuge.subscribe("chat1", function(message) {
             // we can rely only on data
             drawText(JSON.stringify(getProperData(message)));
         });
         var input = document.getElementById("input");
         input.addEventListener('keyup', function(e) {
             if (e.keyCode == 13) { // ENTER key pressed
-                sub.publish({payload: {value: this.value}});
+                chatSubscription.publish({payload: {value: this.value}});
                 input.value = '';
             }
         });
         // After setting event handlers – initiate actual connection with server.
         centrifuge.connect();
 
+        var signalingSubscription = centrifuge.subscribe("signaling1", function(message) {
+            // here we will process signaling messages
+        });
 
-        /* TODO https://www.html5rocks.com/en/tutorials/webrtc/basics/
+
+
+
+        /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
+         * https://codelabs.developers.google.com/codelabs/webrtc-web/#4
          * WebRTC applications need to do several things:
             Get streaming audio, video or other data.
             Get network information such as IP addresses and ports, and exchange this with other WebRTC clients (known as peers) to enable connection, even through NATs and firewalls.
@@ -62,9 +69,12 @@ function Chat() {
             Communicate streaming audio, video or data.
          */
 
+
+        // cleanup
         return function cleanup() {
             console.log("Cleaning up");
-            sub.unsubscribe();
+            chatSubscription.unsubscribe();
+            signalingSubscription.unsubscribe();
             centrifuge.disconnect();
         };
     });
@@ -74,6 +84,15 @@ function Chat() {
         <div>
             <div>Viewing chat # {id}</div>
             <input type="text" id="input" />
+
+
+            <video id="localVideo" autoPlay playsInline></video>
+            <video id="remoteVideo" autoPlay playsInline></video>
+            <div>
+                <button id="startButton">Start</button>
+                <button id="callButton">Call</button>
+                <button id="hangupButton">Hang Up</button>
+            </div>
         </div>
     )
 }
