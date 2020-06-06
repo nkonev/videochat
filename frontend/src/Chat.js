@@ -68,9 +68,6 @@ function Chat() {
     return (
         <div>
             <div>Viewing chat # {id}</div>
-
-            <video id="localVideo" autoPlay playsInline></video>
-            <video id="remoteVideo" autoPlay playsInline></video>
             <input type="text" id="input" />
         </div>
     )
