@@ -57,16 +57,16 @@ func createPresence(credso *centrifuge.Credentials, client *centrifuge.Client) (
 }
 
 type PassData struct {
-	Payload    utils.H `json:"payload"`
-	ServerInfo utils.H `json:"serverInfo"`
+	Payload  utils.H `json:"payload"`
+	Metadata utils.H `json:"metadata"`
 }
 
-func modifyMessage(msg []byte) ([]byte, error) {
+func modifyMessage(msg []byte, originatorUserId string) ([]byte, error) {
 	var v = &PassData{}
 	if err := json.Unmarshal(msg, v); err != nil {
 		return nil, err
 	}
-	v.ServerInfo = utils.H{"server": "patches"}
+	v.Metadata = utils.H{"originatorUserId": originatorUserId}
 	return json.Marshal(v)
 }
 
@@ -145,7 +145,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 		// any channel.
 		client.On().Publish(func(e centrifuge.PublishEvent) centrifuge.PublishReply {
 			Logger.Printf("client %v publishes into channel %s: %s", credso.UserID, e.Channel, string(e.Data))
-			message, err := modifyMessage(e.Data)
+			message, err := modifyMessage(e.Data, e.Info.GetUser())
 			if err != nil {
 				Logger.Errorf("Error during modifyMessage %v", err)
 				return centrifuge.PublishReply{Error: centrifuge.ErrorInternal}
