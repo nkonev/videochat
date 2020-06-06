@@ -32,8 +32,26 @@ func getChanPresenceStats(engine centrifuge.Engine, client *centrifuge.Client, e
 	if err != nil {
 		Logger.Errorf("Error during get stats %v", err)
 	}
-	Logger.Printf("client id=%v, userId=%v subscribes on channel %s, channelStats.NumUsers %v", client.ID(), client.UserID(), channel, stats.NumUsers)
+	Logger.Printf("client id=%v, userId=%v acting with channel %s, channelStats.NumUsers %v", client.ID(), client.UserID(), channel, stats.NumUsers)
 	return &stats
+}
+
+func createPresence(credso *centrifuge.Credentials, client *centrifuge.Client) (*protocol.ClientInfo, time.Duration, error) {
+	expiresInString := fmt.Sprintf("%v000", credso.ExpireAt) // to milliseconds for put into dateparse.ParseLocal
+	t, err0 := dateparse.ParseLocal(expiresInString)
+	if err0 != nil {
+		return nil, 0, err0
+	}
+
+	presenceDuration := t.Sub(time.Now())
+	Logger.Debugf("Calculated session duration %v for credentials %v", presenceDuration, credso)
+
+	clientInfo := &protocol.ClientInfo{
+		User:   client.ID(),
+		Client: client.UserID(),
+	}
+	Logger.Infof("Created ClientInfo(Client: %v, UserId: %v)", client.ID(), client.UserID())
+	return clientInfo, presenceDuration, nil
 }
 
 func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
@@ -67,31 +85,29 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 	// pass here will be called every time new connection established with server.
 	// Inside this callback function you can set various event handlers for connection.
 	node.On().ClientConnected(func(ctx context.Context, client *centrifuge.Client) {
-		// Set Subscribe Handler to react on every channel subscribtion attempt
+		// Set Subscribe Handler to react on every channel subscription attempt
 		// initiated by client. Here you can theoretically return an error or
 		// disconnect client from server if needed. But now we just accept
 		// all subscriptions.
 		var credso, ok = centrifuge.GetCredentials(ctx)
+		if !ok {
+			Logger.Infof("Cannot extract credentials")
+			return
+		}
 		Logger.Infof("Connected websocket centrifuge client hasCredentials %v, credentials %v", ok, credso)
 
 		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
-			expiresInString := fmt.Sprintf("%v000", credso.ExpireAt) // to milliseconds for put into dateparse.ParseLocal
-			t, err0 := dateparse.ParseLocal(expiresInString)
-			if err0 != nil {
-				Logger.Errorf("Error during ParseLocal %v", err0)
+			clientInfo, presenceDuration, err := createPresence(credso, client)
+			if err != nil {
+				Logger.Errorf("Error during creating presence %v", err)
+				return centrifuge.SubscribeReply{Error: centrifuge.ErrorInternal}
 			}
-
-			presenceDuration := t.Sub(time.Now())
-			Logger.Infof("Calculated session duration %v for credentials %v", presenceDuration, credso)
-
-			clientInfo := &protocol.ClientInfo{
-				User:   client.ID(),
-				Client: client.UserID(),
-			}
-			err := engine.AddPresence(e.Channel, client.UserID(), clientInfo, presenceDuration)
+			err = engine.AddPresence(e.Channel, client.UserID(), clientInfo, presenceDuration)
 			if err != nil {
 				Logger.Errorf("Error during AddPresence %v", err)
 			}
+			Logger.Infof("Added presence for userId %v", client.UserID())
+			getChanPresenceStats(engine, client, e)
 
 			return centrifuge.SubscribeReply{}
 		})
@@ -101,6 +117,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 			if err != nil {
 				Logger.Errorf("Error during RemovePresence %v", err)
 			}
+			Logger.Infof("Removed presence for userId %v", client.UserID())
 			getChanPresenceStats(engine, client, e)
 
 			return centrifuge.UnsubscribeReply{}
@@ -125,7 +142,6 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 		transportName := client.Transport().Name()
 		// In our example clients connect with JSON protocol but it can also be Protobuf.
 		transportEncoding := client.Transport().Encoding()
-
 		Logger.Printf("client %v connected via %s (%s)", credso.UserID, transportName, transportEncoding)
 	})
 
