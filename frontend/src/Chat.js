@@ -35,7 +35,8 @@ function Chat() {
         });
 
         var sub = centrifuge.subscribe("chat", function(message) {
-            drawText(JSON.stringify(message));
+            // we can rely only on data
+            drawText(JSON.stringify(message.data));
         });
         var input = document.getElementById("input");
         input.addEventListener('keyup', function(e) {
