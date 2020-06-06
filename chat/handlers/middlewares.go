@@ -10,13 +10,14 @@ import (
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
+	"time"
 )
 
 type AuthMiddleware echo.MiddlewareFunc
 
 func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 	expiresInString := request.Header.Get("X-Auth-ExpiresIn") // in GMT. in milliseconds from java
-	t, err := dateparse.ParseLocal(expiresInString)
+	t, err := dateparse.ParseIn(expiresInString, time.UTC)
 	GetLogEntry(request).Infof("Extracted session expiration time: %v", t)
 
 	if err != nil {

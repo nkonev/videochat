@@ -61,8 +61,8 @@ public class UserProfileController {
 
     private Long getExpiresAt(HttpSession session) {
         Long expiresAt = null;
-        if (session!=null && sessionProperties.getTimeout()!=null) {
-            expiresAt = session.getCreationTime() + sessionProperties.getTimeout().toMillis() ;
+        if (session!=null) {
+            expiresAt = session.getLastAccessedTime() + session.getMaxInactiveInterval()*1000;
         }
         return expiresAt;
     }
