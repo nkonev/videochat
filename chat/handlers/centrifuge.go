@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/araddon/dateparse"
 	"github.com/centrifugal/centrifuge"
 	"github.com/centrifugal/protocol"
 	"go.uber.org/fx"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/utils"
 	"time"
 )
 
@@ -52,6 +54,20 @@ func createPresence(credso *centrifuge.Credentials, client *centrifuge.Client) (
 	}
 	Logger.Infof("Created ClientInfo(Client: %v, UserId: %v)", client.ID(), client.UserID())
 	return clientInfo, presenceDuration, nil
+}
+
+type PassData struct {
+	Payload    utils.H `json:"payload"`
+	ServerInfo utils.H `json:"serverInfo"`
+}
+
+func modifyMessage(msg []byte) ([]byte, error) {
+	var v = &PassData{}
+	if err := json.Unmarshal(msg, v); err != nil {
+		return nil, err
+	}
+	v.ServerInfo = utils.H{"server": "patches"}
+	return json.Marshal(v)
 }
 
 func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
@@ -129,7 +145,12 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 		// any channel.
 		client.On().Publish(func(e centrifuge.PublishEvent) centrifuge.PublishReply {
 			Logger.Printf("client %v publishes into channel %s: %s", credso.UserID, e.Channel, string(e.Data))
-			return centrifuge.PublishReply{}
+			message, err := modifyMessage(e.Data)
+			if err != nil {
+				Logger.Errorf("Error during modifyMessage %v", err)
+				return centrifuge.PublishReply{Error: centrifuge.ErrorInternal}
+			}
+			return centrifuge.PublishReply{Data: message}
 		})
 
 		// Set Disconnect Handler to react on client disconnect events.

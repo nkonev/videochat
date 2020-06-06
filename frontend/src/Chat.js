@@ -40,7 +40,7 @@ function Chat() {
         var input = document.getElementById("input");
         input.addEventListener('keyup', function(e) {
             if (e.keyCode == 13) { // ENTER key pressed
-                sub.publish(this.value);
+                sub.publish({payload: {value: this.value}});
                 input.value = '';
             }
         });
