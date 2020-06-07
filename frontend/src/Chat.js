@@ -35,6 +35,12 @@ function Chat() {
             return message.data
         }
 
+        function setProperData(message) {
+            return {
+                payload: message
+            }
+        }
+
         var chatSubscription = centrifuge.subscribe("chat1", function(message) {
             // we can rely only on data
             drawText(JSON.stringify(getProperData(message)));
@@ -42,15 +48,36 @@ function Chat() {
         var input = document.getElementById("input");
         input.addEventListener('keyup', function(e) {
             if (e.keyCode == 13) { // ENTER key pressed
-                chatSubscription.publish({payload: {value: this.value}});
+                chatSubscription.publish(setProperData({value: this.value}));
                 input.value = '';
             }
         });
         // After setting event handlers – initiate actual connection with server.
         centrifuge.connect();
 
-        var signalingSubscription = centrifuge.subscribe("signaling1", function(message) {
+        const EVENT_CANDIDATE = 'candidate';
+
+        function isMyMessage(message) {
+            return message.metadata && clientId == message.metadata.originatorClientId
+        }
+
+        var signalingSubscription = centrifuge.subscribe("signaling1", function(rawMessage) {
+            console.debug("Received raw message", rawMessage);
             // here we will process signaling messages
+            const message = getProperData(rawMessage);
+            if (isMyMessage(message)) {
+                console.debug("Skipping my message", message);
+                return
+            }
+
+            if (message.type === EVENT_CANDIDATE) {
+                console.log('Reacting on candidate as addIceCandidate');
+                var candidate = new RTCIceCandidate({
+                    sdpMLineIndex: message.label,
+                    candidate: message.candidate
+                });
+                //pc.addIceCandidate(candidate);
+            }
         });
 
 
@@ -130,7 +157,7 @@ function Chat() {
             const iceCandidate = event.candidate;
 
             if (iceCandidate) {
-                const newIceCandidate = new RTCIceCandidate(iceCandidate);
+                /*const newIceCandidate = new RTCIceCandidate(iceCandidate);
                 const otherPeer = getOtherPeer(peerConnection);
 
                 otherPeer.addIceCandidate(newIceCandidate)
@@ -138,6 +165,12 @@ function Chat() {
                         handleConnectionSuccess(peerConnection);
                     }).catch((error) => {
                     handleConnectionFailure(peerConnection, error);
+                });*/
+                sendMessage({
+                    type: EVENT_CANDIDATE,
+                    label: event.candidate.sdpMLineIndex,
+                    id: event.candidate.sdpMid,
+                    candidate: event.candidate.candidate
                 });
 
                 console.debug(`${getPeerName(peerConnection)} ICE candidate:\n` +
@@ -238,6 +271,10 @@ function Chat() {
                 }).catch(setSessionDescriptionError);
         }
 
+        function sendMessage(message) {
+            console.log('Client sending message: ', message);
+            signalingSubscription.publish(setProperData(message));
+        }
 
 
         // cleanup
