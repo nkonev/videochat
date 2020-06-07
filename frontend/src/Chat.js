@@ -181,7 +181,7 @@ function Chat() {
                 isStarted = true;
                 console.log('isInitiator', isInitiator);
                 if (isInitiator) {
-                    doCall();
+                    doOffer();
                 }
             }
         }
@@ -221,8 +221,8 @@ function Chat() {
             console.log('createOffer() error: ', event);
         }
 
-        // todo rename to create offer
-        function doCall() {
+        // ex doCall
+        function doOffer() {
             console.log('Sending offer to peer');
             pc.createOffer(setLocalAndSendMessage, handleCreateOfferError);
         }
