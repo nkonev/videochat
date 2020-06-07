@@ -221,6 +221,7 @@ function Chat() {
             console.log('createOffer() error: ', event);
         }
 
+        // todo rename to create offer
         function doCall() {
             console.log('Sending offer to peer');
             pc.createOffer(setLocalAndSendMessage, handleCreateOfferError);
