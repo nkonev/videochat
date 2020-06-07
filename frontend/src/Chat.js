@@ -125,6 +125,7 @@ function Chat() {
 
         // Connects with new peer candidate.
         function handleConnection(event) {
+            console.debug("Handle connection", event);
             const peerConnection = event.target;
             const iceCandidate = event.candidate;
 
