@@ -57,6 +57,13 @@ function Login() {
     setLoginDto(dto);
   };
 
+  const onKeyPress = (ev) => {
+      if (ev.key === 'Enter') {
+          console.log("Enter was pressed");
+          ev.preventDefault();
+          onLogin(loginDto);
+      }
+  };
 
   return (
       <form className={classes.root} noValidate autoComplete="off">
@@ -66,6 +73,7 @@ function Login() {
               label="Login"
               value={loginDto.username}
               onChange={handleChangeUsername}
+              onKeyPress={onKeyPress}
           />
         </div>
         <div>
@@ -74,6 +82,7 @@ function Login() {
               label="Password"
               value={loginDto.password}
               onChange={handleChangePassword}
+              onKeyPress={onKeyPress}
           />
         </div>
         <Button variant="contained" color="primary"
