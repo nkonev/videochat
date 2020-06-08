@@ -107,19 +107,20 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 		// initiated by client. Here you can theoretically return an error or
 		// disconnect client from server if needed. But now we just accept
 		// all subscriptions.
-		var credso, ok = centrifuge.GetCredentials(ctx)
+		var creds, ok = centrifuge.GetCredentials(ctx)
 		if !ok {
 			Logger.Infof("Cannot extract credentials")
 			return
 		}
-		Logger.Infof("Connected websocket centrifuge client hasCredentials %v, credentials %v", ok, credso)
+		Logger.Infof("Connected websocket centrifuge client hasCredentials %v, credentials %v", ok, creds)
 
 		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
-			clientInfo, presenceDuration, err := createPresence(credso, client)
+			clientInfo, presenceDuration, err := createPresence(creds, client)
 			if err != nil {
 				Logger.Errorf("Error during creating presence %v", err)
 				return centrifuge.SubscribeReply{Error: centrifuge.ErrorInternal}
 			}
+			// todo think about potentially infinite session in aaa
 			err = engine.AddPresence(e.Channel, client.UserID(), clientInfo, presenceDuration)
 			if err != nil {
 				Logger.Errorf("Error during AddPresence %v", err)
@@ -146,7 +147,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 		// channel. But in our simple chat app we allow everyone to publish into
 		// any channel.
 		client.On().Publish(func(e centrifuge.PublishEvent) centrifuge.PublishReply {
-			Logger.Printf("client %v publishes into channel %s: %s", credso.UserID, e.Channel, string(e.Data))
+			Logger.Printf("client %v publishes into channel %s: %s", creds.UserID, e.Channel, string(e.Data))
 			message, err := modifyMessage(e.Data, e.Info.GetUser(), e.Info.GetClient())
 			if err != nil {
 				Logger.Errorf("Error during modifyMessage %v", err)
@@ -157,7 +158,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 
 		// Set Disconnect Handler to react on client disconnect events.
 		client.On().Disconnect(func(e centrifuge.DisconnectEvent) centrifuge.DisconnectReply {
-			Logger.Printf("client %v disconnected", credso.UserID)
+			Logger.Printf("client %v disconnected", creds.UserID)
 			return centrifuge.DisconnectReply{}
 		})
 
@@ -165,7 +166,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 		transportName := client.Transport().Name()
 		// In our example clients connect with JSON protocol but it can also be Protobuf.
 		transportEncoding := client.Transport().Encoding()
-		Logger.Printf("client %v connected via %s (%s)", credso.UserID, transportName, transportEncoding)
+		Logger.Printf("client %v connected via %s (%s)", creds.UserID, transportName, transportEncoding)
 	})
 
 	lc.Append(fx.Hook{
