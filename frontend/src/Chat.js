@@ -80,8 +80,6 @@ function Chat() {
         const EVENT_BYE = 'bye';
         const EVENT_OFFER = 'offer';
         const EVENT_ANSWER = 'answer';
-        const EVENT_RESET = 'reset';
-
 
         var signalingSubscription = centrifuge.subscribe("signaling1", function(rawMessage) {
             console.debug("Received raw message", rawMessage);
@@ -97,13 +95,13 @@ function Chat() {
                 maybeStart();
             }
             else if (message.type === EVENT_OFFER) {
-                if (!remoteDescriptionSet) {
+                if (!remoteDescriptionSet && pc) { // checking pc - prevent NPE
                     pc.setRemoteDescription(new RTCSessionDescription(message.value));
                     remoteDescriptionSet = true;
                 }
                 doAnswer();
             } else if (message.type === EVENT_ANSWER && isStarted) {
-                if (!remoteDescriptionSet) {
+                if (!remoteDescriptionSet && pc) { // checking pc - prevent NPE
                     pc.setRemoteDescription(new RTCSessionDescription(message.value));
                     remoteDescriptionSet = true;
                 }
@@ -145,14 +143,18 @@ function Chat() {
         var localVideo = document.querySelector('#localVideo');
         var remoteVideo = document.querySelector('#remoteVideo');
 
-        navigator.mediaDevices.getUserMedia({
-            audio: false,
-            video: true
-        })
-            .then(gotStream)
-            .catch(function(e) {
-                alert('getUserMedia() error: ' + e.name);
-            });
+        function initDevices() {
+            navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: true
+            })
+                .then(gotStream)
+                .catch(function(e) {
+                    alert('getUserMedia() error: ' + e.name);
+                });
+        }
+
+        initDevices();
 
         function gotStream(stream) {
             console.log('Adding local stream.');
@@ -177,7 +179,7 @@ function Chat() {
 
         function maybeStart() {
             console.log('>>>>>>> maybeStart() ', isStarted, localStream);
-            if (!isStarted && typeof localStream !== 'undefined') {
+            if (!isStarted && localStream) {
                 console.log('>>>>>> creating peer connection');
                 createPeerConnection();
                 pc.addStream(localStream);
@@ -267,9 +269,13 @@ function Chat() {
             console.log("Resetting state on error");
             isStarted = false;
             remoteDescriptionSet = false;
+            localStream = null;
+            pc = null;
+            remoteStream = null;
+            turnReady = false;
 
-            console.log("Sending EVENT_RESET");
-            sendMessage({type: EVENT_RESET});
+            console.log("Initializing devices again");
+            initDevices();
         }
 
         function requestTurn(turnURL) {
