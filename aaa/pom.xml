@@ -8,10 +8,6 @@
     <groupId>name.nkonev.aaa</groupId>
     <version>${revision}</version>
 
-    <prerequisites>
-        <maven>3.6.0</maven>
-    </prerequisites>
-
     <properties>
         <!-- use with conjunction flatten-maven-plugin and overrides with -Drevision= in .travis.yml - see https://maven.apache.org/maven-ci-friendly.html-->
         <revision>0.0.0</revision>
