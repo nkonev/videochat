@@ -80,6 +80,8 @@ function Chat() {
         const EVENT_BYE = 'bye';
         const EVENT_OFFER = 'offer';
         const EVENT_ANSWER = 'answer';
+        const EVENT_RESET = 'reset';
+
 
         var signalingSubscription = centrifuge.subscribe("signaling1", function(rawMessage) {
             console.debug("Received raw message", rawMessage);
@@ -95,13 +97,16 @@ function Chat() {
                 maybeStart();
             }
             else if (message.type === EVENT_OFFER) {
-                if (!isInitiator && !isStarted) {
-                    maybeStart();
+                if (!remoteDescriptionSet) {
+                    pc.setRemoteDescription(new RTCSessionDescription(message.value));
+                    remoteDescriptionSet = true;
                 }
-                pc.setRemoteDescription(new RTCSessionDescription(message.value));
                 doAnswer();
             } else if (message.type === EVENT_ANSWER && isStarted) {
-                pc.setRemoteDescription(new RTCSessionDescription(message.value));
+                if (!remoteDescriptionSet) {
+                    pc.setRemoteDescription(new RTCSessionDescription(message.value));
+                    remoteDescriptionSet = true;
+                }
             }
             else if (message.type === EVENT_CANDIDATE && isStarted) {
                 var candidate = new RTCIceCandidate({
@@ -115,13 +120,12 @@ function Chat() {
         });
 
 
-        var isChannelReady = true; // скорее всего можно удалить
-        var isInitiator = true; // видимо какое-то дурное состояние
         var isStarted = false; // реально нужен
         var localStream;
         var pc;
         var remoteStream;
         var turnReady;
+        let remoteDescriptionSet = false;
 
         var pcConfig = {
             'iceServers': [{
@@ -155,9 +159,8 @@ function Chat() {
             localStream = stream;
             localVideo.srcObject = stream;
             sendMessage({type: EVENT_GOT_USER_MEDIA});
-            if (isInitiator) {
-                maybeStart();
-            }
+
+            maybeStart();
         }
 
         var constraints = {
@@ -173,16 +176,13 @@ function Chat() {
         }
 
         function maybeStart() {
-            console.log('>>>>>>> maybeStart() ', isStarted, localStream, isChannelReady);
-            if (!isStarted && typeof localStream !== 'undefined' && isChannelReady) {
+            console.log('>>>>>>> maybeStart() ', isStarted, localStream);
+            if (!isStarted && typeof localStream !== 'undefined') {
                 console.log('>>>>>> creating peer connection');
                 createPeerConnection();
                 pc.addStream(localStream);
                 isStarted = true;
-                console.log('isInitiator', isInitiator);
-                if (isInitiator) {
-                    doOffer();
-                }
+                doOffer();
             }
         }
 
@@ -219,6 +219,7 @@ function Chat() {
 
         function handleCreateOfferError(event) {
             console.log('createOffer() error: ', event);
+            onUnknownErrorReset();
         }
 
         // ex doCall
@@ -258,7 +259,17 @@ function Chat() {
         }
 
         function onCreateSessionDescriptionError(error) {
-            trace('Failed to create session description: ' + error.toString());
+            console.error('Failed to create session description: ' + error.toString());
+            onUnknownErrorReset();
+        }
+
+        function onUnknownErrorReset() {
+            console.log("Resetting state on error");
+            isStarted = false;
+            remoteDescriptionSet = false;
+
+            console.log("Sending EVENT_RESET");
+            sendMessage({type: EVENT_RESET});
         }
 
         function requestTurn(turnURL) {
@@ -308,8 +319,8 @@ function Chat() {
 
         function handleRemoteHangup() {
             console.log('Session terminated.');
+            remoteDescriptionSet = false;
             stop();
-            isInitiator = false;
         }
 
         function stop() {
