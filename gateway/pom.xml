@@ -20,6 +20,7 @@
         <os.maven.plugin.version>1.5.0.Final</os.maven.plugin.version>
         <protobuf.maven.plugin.version>0.5.1</protobuf.maven.plugin.version>
         <protoc.version>3.7.1</protoc.version>
+        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -88,6 +89,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
