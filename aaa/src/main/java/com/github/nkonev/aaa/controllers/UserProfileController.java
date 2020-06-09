@@ -5,6 +5,7 @@ import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
+import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.exception.UserAlreadyPresentException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
@@ -30,6 +31,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.github.nkonev.aaa.Constants.MAX_USERS_RESPONSE_LENGTH;
 import static com.github.nkonev.aaa.converter.UserAccountConverter.convertRolesToStringList;
 
 /**
@@ -119,17 +121,29 @@ public class UserProfileController {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(currentUser, userAccount);
     }
 
-    @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+ Constants.Urls.USER_ID)
-    public com.github.nkonev.aaa.dto.UserAccountDTO getUser(
-            @PathVariable(Constants.PathVariables.USER_ID) Long userId,
+    @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.LIST)
+    public List<com.github.nkonev.aaa.dto.UserAccountDTO> getUser(
+            @RequestParam(value = "userId") Long []userIds,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount
         ) {
-        UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new RuntimeException("user with id="+ userId + " not found"));
-        if (userAccount!=null && userAccount.getId().equals(userAccountEntity.getId())){
-            return UserAccountConverter.getUserSelfProfile(userAccount, userAccountEntity.getLastLoginDateTime(), null);
-        } else {
-            return userAccountConverter.convertToUserAccountDTO(userAccountEntity);
+        if (userIds == null) {
+            throw new BadRequestException("Cannot be null");
         }
+        if (userIds.length > MAX_USERS_RESPONSE_LENGTH) {
+            throw new BadRequestException("Cannot be greater than " + MAX_USERS_RESPONSE_LENGTH);
+        }
+        List<com.github.nkonev.aaa.dto.UserAccountDTO> result = new ArrayList<>();
+        for (Long userId: userIds) {
+            UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new RuntimeException("user with id=" + userId + " not found"));
+            com.github.nkonev.aaa.dto.UserAccountDTO u;
+            if (userAccount != null && userAccount.getId().equals(userAccountEntity.getId())) {
+                u = UserAccountConverter.getUserSelfProfile(userAccount, userAccountEntity.getLastLoginDateTime(), null);
+            } else {
+                u = userAccountConverter.convertToUserAccountDTO(userAccountEntity);
+            }
+            result.add(u);
+        }
+        return result;
     }
 
     @PostMapping(Constants.Urls.API+Constants.Urls.PROFILE)

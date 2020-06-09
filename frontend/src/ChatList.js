@@ -150,7 +150,7 @@ function ChatList({ currentState, dispatch }) {
                                       alignItems="center" spacing={1}>
                                     <Grid item>
                                         <Button variant="contained" color="primary" onClick={() => handleEditModalOpen(value)}>
-                                            Rename
+                                            Edit
                                         </Button>
                                     </Grid>
                                     <Grid item>

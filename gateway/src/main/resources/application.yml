@@ -33,7 +33,7 @@ spring:
       routes:
         - id: aaa
           predicates:
-            - Path=/api/login,/api/logout,/api/profile
+            - Path=/api/login,/api/logout,/api/profile,/api/user/**
           uri: http://localhost:8060
         - id: chat
           predicates:

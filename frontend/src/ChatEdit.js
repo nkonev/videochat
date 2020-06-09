@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useMemo, useEffect} from 'react';
 import axios from 'axios'
 import {makeStyles, withStyles} from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
@@ -7,6 +7,8 @@ import Modal from '@material-ui/core/Modal';
 import TextField from '@material-ui/core/TextField';
 import {openEditModal, closeEditModal} from "./actions";
 import {connect} from "react-redux";
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import debounce from "lodash/debounce";
 
 const useStyles = makeStyles(theme => ({
     appHeader: {
@@ -96,8 +98,29 @@ function ChatEdit({ currentState, dispatch, passEditDto, fetchData }) {
         validate(dto);
     };
 
-    const onSave = (dto, event) => {
-        (dto.id ? axios.put(`/api/chat`, dto) : axios.post(`/api/chat`, dto))
+    // options
+    const [usersOptions, setUsersOptions] = useState([]);
+
+    // selected users
+    const [selectedUserValue, setSelectedUserValue] = useState([]);
+
+    const f = (searchStringOuter) => {
+        axios.get(`/api/user?searchString=${searchStringOuter}`)
+            .then((response) => {
+                // call on parent
+                console.log("Fetched users", response);
+                setUsersOptions(response.data.data);
+            })
+            .catch((error) => {
+                // handle error
+                console.log("Handling error on save", error.response);
+            })
+    };
+    const fetchUsers = useMemo(() => debounce(f, 600), []);
+
+    const onSave = (editChatDto, selectedUsers, event) => {
+        const dtoToPost = {...editChatDto, participantIds: selectedUsers.map((e)=>e.id)};
+        (editChatDto.id ? axios.put(`/api/chat`, dtoToPost) : axios.post(`/api/chat`, dtoToPost))
             .then(() => {
                 // call on parent
                 fetchData();
@@ -111,7 +134,20 @@ function ChatEdit({ currentState, dispatch, passEditDto, fetchData }) {
             });
     };
 
+    useEffect(() => {
+        // here we transform participantIds to users
+        if (passEditDto.participantIds) {
+            axios.get('/api/user/list', {
+                params: {userId: [...passEditDto.participantIds] + ''}
+            }).then((response) => {
+                setSelectedUserValue(response.data);
+            })
+        }
+    }, []);
+
     const classes = useStyles();
+
+    // https://github.com/mui-org/material-ui/issues/18514#issuecomment-636096386
 
     return (
         <Modal
@@ -129,7 +165,7 @@ function ChatEdit({ currentState, dispatch, passEditDto, fetchData }) {
                       spacing={2} className="edit-modal">
 
                     <Grid item>
-                        <span>{editDto.id ? 'Rename chat' : 'Create chat'}</span>
+                        <span>{editDto.id ? 'Edit chat' : 'Create chat'}</span>
                     </Grid>
                     <Grid item container spacing={1} direction="column" justify="center"
                           alignItems="stretch">
@@ -140,9 +176,36 @@ function ChatEdit({ currentState, dispatch, passEditDto, fetchData }) {
 
                     </Grid>
                     <Grid item container spacing={1}>
+                        <Grid item container spacing={1} direction="column" justify="center"
+                              alignItems="stretch">
+                            <Autocomplete
+                                multiple
+                                id="tags-outlined"
+                                filterSelectedOptions
+                                options={[...selectedUserValue, ...usersOptions]}
+                                value={selectedUserValue}
+                                getOptionLabel={(option) => option.login}
+                                onInputChange={(event, newValue) => {
+                                    console.log("On input change requesting the server");
+                                    fetchUsers(newValue);
+                                }}
+                                onChange={(event, newValue) => {
+                                    setSelectedUserValue(newValue);
+                                    console.log("Setting value and options are", newValue, usersOptions)
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        variant="outlined"
+                                        label="Add users to chat with them"
+                                        placeholder="Users"
+                                    />
+                                )}
+                            />
+                        </Grid>
                         <Grid item>
                             <Button variant="contained" color="primary" disabled={!valid} className="edit-modal-save"
-                                    onClick={(e) => onSave(editDto, e)}>
+                                    onClick={(e) => onSave(editDto, selectedUserValue, e)}>
                                 Save
                             </Button>
                         </Grid>

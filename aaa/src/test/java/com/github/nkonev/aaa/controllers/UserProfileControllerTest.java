@@ -260,11 +260,11 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String bobEmail = bob.getEmail();
 
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.USER+"/"+bob.getId())
+                get(Constants.Urls.API+ Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.getId())
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").doesNotExist())
-                .andExpect(jsonPath("$.login").value(TestConstants.USER_BOB))
+                .andExpect(jsonPath("$[0].email").doesNotExist())
+                .andExpect(jsonPath("$[0].login").value(TestConstants.USER_BOB))
                 .andExpect(content().string(CoreMatchers.not(CoreMatchers.containsString(bobEmail))))
                 .andReturn();
 

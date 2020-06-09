@@ -21,6 +21,7 @@ public class Constants {
         public static final String RESEND_CONFIRMATION_EMAIL = "/resend-confirmation-email";
         public static final String PASSWORD_RESET = "/password-reset"; // html for handle link from email
         public static final String USER = "/user";
+        public static final String LIST = "/list";
         public static final String LOCK = "/lock";
         public static final String USER_ID = "/{"+PathVariables.USER_ID+"}";
         public static final String REQUEST_PASSWORD_RESET = "/request-password-reset";
@@ -31,13 +32,14 @@ public class Constants {
     }
 
     public static class PathVariables {
-        public static final String USER_ID = "postId";
+        public static final String USER_ID = "userId";
     }
 
     public static final String DELETED = "deleted";
 
     public static final int MIN_PASSWORD_LENGTH = 6;
     public static final int MAX_PASSWORD_LENGTH = 30;
+    public static final int MAX_USERS_RESPONSE_LENGTH = 100;
 
     public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
