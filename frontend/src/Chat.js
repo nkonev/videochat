@@ -81,7 +81,7 @@ function Chat() {
         const EVENT_OFFER = 'offer';
         const EVENT_ANSWER = 'answer';
 
-        var signalingSubscription = centrifuge.subscribe("signaling1", function(rawMessage) {
+        var signalingSubscription = centrifuge.subscribe("signaling"+id, function(rawMessage) {
             console.debug("Received raw message", rawMessage);
             // here we will process signaling messages
             if (isMyMessage(getData(rawMessage))) {

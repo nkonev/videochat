@@ -3,13 +3,16 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/araddon/dateparse"
 	"github.com/centrifugal/centrifuge"
 	"github.com/centrifugal/protocol"
 	"go.uber.org/fx"
+	"nkonev.name/chat/db"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
+	"strings"
 	"time"
 )
 
@@ -72,7 +75,10 @@ func modifyMessage(msg []byte, originatorUserId string, originatorClientId strin
 	return json.Marshal(v)
 }
 
-func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
+const CHANNEL_PREFIX_SIGINALING = "signaling"
+const CHANNEL_PREFIX_CHAT = "chat"
+
+func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 	// We use default config here as starting point. Default config contains
 	// reasonable values for available options.
 	cfg := centrifuge.DefaultConfig
@@ -120,7 +126,20 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 				Logger.Errorf("Error during creating presence %v", err)
 				return centrifuge.SubscribeReply{Error: centrifuge.ErrorInternal}
 			}
-			// todo think about potentially infinite session in aaa
+			channelId, channelName, err := getChannelId(e.Channel)
+			if err != nil {
+				Logger.Errorf("Error getting channel id %v", err)
+				return centrifuge.SubscribeReply{Error: centrifuge.ErrorInternal}
+			}
+			Logger.Infof("Get channel id %v, channel name %v", channelId, channelName)
+
+			err = checkPermissions(dbs, creds.UserID, channelId, channelName)
+			if err != nil {
+				Logger.Errorf("Error during checking permissions userId %v, channelId %v, channelName %v,", creds.UserID, channelId, channelName)
+				return centrifuge.SubscribeReply{Error: centrifuge.ErrorPermissionDenied}
+			}
+
+			// TODO think about potentially infinite session in aaa
 			err = engine.AddPresence(e.Channel, client.UserID(), clientInfo, presenceDuration)
 			if err != nil {
 				Logger.Errorf("Error during AddPresence %v", err)
@@ -178,4 +197,42 @@ func ConfigureCentrifuge(lc fx.Lifecycle) *centrifuge.Node {
 	})
 
 	return node
+}
+
+func checkPermissions(dbs db.DB, userId string, channelId int64, channelName string) error {
+	if CHANNEL_PREFIX_SIGINALING == channelName {
+		if ids, err := dbs.GetParticipantIds(channelId); err != nil {
+			return err
+		} else {
+			for _, uid := range ids {
+				if fmt.Sprintf("%v", uid) == userId {
+					Logger.Infof("User %v found among participants of chat %v", userId, channelId)
+					return nil
+				}
+			}
+			return errors.New(fmt.Sprintf("User %v not found among participants", userId))
+		}
+	}
+	// TODO permissions for chat
+	return nil
+}
+
+func getChannelId(channel string) (int64, string, error) {
+	if strings.HasPrefix(channel, CHANNEL_PREFIX_SIGINALING) {
+		s := channel[len(CHANNEL_PREFIX_SIGINALING):]
+		if parseInt64, err := utils.ParseInt64(s); err != nil {
+			return 0, "", err
+		} else {
+			return parseInt64, CHANNEL_PREFIX_SIGINALING, nil
+		}
+	} else if strings.HasPrefix(channel, CHANNEL_PREFIX_CHAT) {
+		s := channel[len(CHANNEL_PREFIX_CHAT):]
+		if parseInt64, err := utils.ParseInt64(s); err != nil {
+			return 0, "", err
+		} else {
+			return parseInt64, CHANNEL_PREFIX_CHAT, nil
+		}
+	} else {
+		return 0, "", errors.New("Subscription to unexpected channel: '" + channel + "'")
+	}
 }
