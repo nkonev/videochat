@@ -16,10 +16,11 @@ before_install:
   - "nvm use 12.16.3"
   - "docker version"
   - "docker-compose up -d"
-install:
   - "node --version"
   - "go version"
   - "java -version"
+install:
+  - "/bin/true"
 script:
   - "pwd"
   - (cd frontend; npm install && npm run build)
