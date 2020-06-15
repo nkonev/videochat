@@ -30,7 +30,7 @@ func (db *DB) GetParticipantIds(chatId int64) ([]int64, error) {
 		for rows.Next() {
 			var participantId int64
 			if err := rows.Scan(&participantId); err != nil {
-				Logger.Errorf("Error during scan chat rows", err)
+				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
 				list = append(list, participantId)
