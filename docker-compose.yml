@@ -13,6 +13,7 @@ services:
       # hosts to go outside from docker network to host-deployed chat app
       # When you apply firewalld rule these requests will go to you IDE-launched chat app
       # see also network definition in bottom
+      # TODO consider use host network
       - "api.site.local:172.28.0.1"
     networks:
       backend:
