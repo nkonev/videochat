@@ -209,7 +209,7 @@ func EditChat(dbR db.DB) func(c echo.Context) error {
 			if err := tx.EditChat(bindTo.Id, bindTo.Name); err != nil {
 				return 0, err
 			}
-			// TODO re-think in case when non-admin is trying to edit
+			// TODO re-think about case when non-admin is trying to edit
 			if err := tx.DeleteParticipantsExcept(userPrincipalDto.UserId, bindTo.Id); err != nil {
 				return 0, err
 			}
