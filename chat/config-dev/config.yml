@@ -19,3 +19,13 @@ postgresql:
   maxOpenConnections: 16
   maxIdleConnections: 4
   maxLifetime: 30s
+
+redis:
+  host: localhost
+  port: 36379
+  password: ""
+  db: 1
+  connectTimeout: 5s
+  readTimeout: 30s
+  writeTimeout: 30s
+  idleTimeout: 60s

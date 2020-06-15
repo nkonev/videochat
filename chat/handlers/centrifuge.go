@@ -8,6 +8,7 @@ import (
 	"github.com/araddon/dateparse"
 	"github.com/centrifugal/centrifuge"
 	"github.com/centrifugal/protocol"
+	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"nkonev.name/chat/db"
 	. "nkonev.name/chat/logger"
@@ -101,7 +102,33 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 	// things. Here we initialize new Node instance and pass config to it.
 	node, _ := centrifuge.New(cfg)
 
-	engine, _ := centrifuge.NewMemoryEngine(node, centrifuge.MemoryEngineConfig{})
+	redisHost := viper.GetString("redis.host")
+	redisPort := viper.GetInt("redis.port")
+	redisPassword := viper.GetString("redis.password")
+	redisDB := viper.GetInt("redis.db")
+	readTimeout := viper.GetDuration("redis.readTimeout")
+	writeTimeout := viper.GetDuration("redis.writeTimeout")
+	connectTimeout := viper.GetDuration("redis.connectTimeout")
+	idleTimeout := viper.GetDuration("redis.idleTimeout")
+
+	redisConf := centrifuge.RedisShardConfig{
+		Host:           redisHost,
+		Port:           redisPort,
+		DB:             redisDB,
+		Password:       redisPassword,
+		Prefix:         "centrifuge",
+		ReadTimeout:    readTimeout,
+		WriteTimeout:   writeTimeout,
+		ConnectTimeout: connectTimeout,
+		IdleTimeout:    idleTimeout,
+	}
+	rec := centrifuge.RedisEngineConfig{
+		UseStreams:          false,
+		PublishOnHistoryAdd: true,
+		HistoryMetaTTL:      300 * time.Second,
+		Shards:              []centrifuge.RedisShardConfig{redisConf},
+	}
+	engine, _ := centrifuge.NewRedisEngine(node, rec)
 	node.SetEngine(engine)
 
 	// ClientConnected node event handler is a point where you generally create a
