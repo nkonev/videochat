@@ -14,6 +14,7 @@ cache:
 before_install:
   - "nvm install 12.16.3"
   - "nvm use 12.16.3"
+  - "docker version"
   - "docker-compose up -d"
 install:
   - "node --version"
@@ -21,7 +22,7 @@ install:
   - "java -version"
 script:
   - "pwd"
-  - (cd frontend; npm run build)
+  - (cd frontend; npm install && npm run build)
   - (cd gateway; ./mvnw clean package)
   - (cd aaa; ./mvnw clean package)
   - (cd chat; go test ./... -count=1)
