@@ -76,8 +76,14 @@ func GetChat(dbR db.DB) func(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-
-		if chat, err := dbR.GetChat(userPrincipalDto.UserId, i); err != nil {
+		participant, err := dbR.IsParticipant(userPrincipalDto.UserId, i)
+		if err != nil {
+			return err
+		}
+		if !participant {
+			return errors.New(fmt.Sprintf("User %v is not participant of %v", userPrincipalDto.UserId, i))
+		}
+		if chat, err := dbR.GetChat(i); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 			return err
 		} else {
