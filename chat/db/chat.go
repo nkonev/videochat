@@ -2,9 +2,7 @@ package db
 
 import (
 	"errors"
-	"fmt"
 	. "nkonev.name/chat/logger"
-	"strings"
 )
 
 // db model
@@ -32,15 +30,8 @@ func (tx *Tx) CreateChat(u *Chat) (int64, error) {
 	return id, nil
 }
 
-func (db *DB) GetChats(chatIds []int64) ([]*Chat, error) {
-	chatIdsStrings := make([]string, len(chatIds))
-	for i, id := range chatIds {
-		chatIdsStrings[i] = fmt.Sprintf("%v", id)
-	}
-	ids := strings.Join(chatIdsStrings, ", ")
-	stmt := fmt.Sprintf(`SELECT * FROM chat WHERE id IN ( %s ) ORDER BY id`, ids)
-
-	if rows, err := db.Query(stmt); err != nil {
+func (db *DB) GetChats(participantId int64, limit int, offset int) ([]*Chat, error) {
+	if rows, err := db.Query(`SELECT * FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY id LIMIT $2 OFFSET $3`, participantId, limit, offset); err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
 	} else {

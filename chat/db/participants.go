@@ -40,25 +40,6 @@ func (db *DB) GetParticipantIds(chatId int64) ([]int64, error) {
 	}
 }
 
-func (db *DB) GetChatIds(userId int64, limit int, offset int) ([]int64, error) {
-	if rows, err := db.Query("SELECT chat_id FROM chat_participant WHERE user_id = $1 ORDER BY id LIMIT $2 OFFSET $3", userId, limit, offset); err != nil {
-		return nil, err
-	} else {
-		defer rows.Close()
-		list := make([]int64, 0)
-		for rows.Next() {
-			var chatId int64
-			if err := rows.Scan(&chatId); err != nil {
-				Logger.Errorf("Error during scan chat rows", err)
-				return nil, err
-			} else {
-				list = append(list, chatId)
-			}
-		}
-		return list, nil
-	}
-}
-
 func (tx *Tx) IsAdmin(userId int64, chatId int64) (bool, error) {
 	var admin bool = false
 	row := tx.QueryRow(`SELECT admin FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1`, userId, chatId)

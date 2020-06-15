@@ -40,12 +40,7 @@ func GetChats(db db.DB) func(c echo.Context) error {
 		size := utils.FixSizeString(c.QueryParam("size"))
 		offset := utils.GetOffset(page, size)
 
-		chatIds, err := db.GetChatIds(userPrincipalDto.UserId, size, offset)
-		if err != nil {
-			GetLogEntry(c.Request()).Errorf("Error get chats ids from db %v", err)
-			return err
-		}
-		if chats, err := db.GetChats(chatIds); err != nil {
+		if chats, err := db.GetChats(userPrincipalDto.UserId, size, offset); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 			return err
 		} else {
