@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"nkonev.name/chat/auth"
@@ -39,7 +40,12 @@ func GetChats(db db.DB) func(c echo.Context) error {
 		size := utils.FixSizeString(c.QueryParam("size"))
 		offset := utils.GetOffset(page, size)
 
-		if chats, err := db.GetChats(userPrincipalDto.UserId, size, offset); err != nil {
+		chatIds, err := db.GetChatIds(userPrincipalDto.UserId, size, offset)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("Error get chats ids from db %v", err)
+			return err
+		}
+		if chats, err := db.GetChats(chatIds); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 			return err
 		} else {
@@ -136,12 +142,11 @@ func CreateChat(dbR db.DB) func(c echo.Context) error {
 
 func convertToCreatableChat(d *CreateChatDto, a *auth.AuthResult) *db.Chat {
 	return &db.Chat{
-		Title:   d.Name,
-		OwnerId: a.UserId,
+		Title: d.Name,
 	}
 }
 
-func DeleteChat(db db.DB) func(c echo.Context) error {
+func DeleteChat(dbR db.DB) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		chatIdString := c.Param("id")
 		i, err := utils.ParseInt64(chatIdString)
@@ -155,7 +160,23 @@ func DeleteChat(db db.DB) func(c echo.Context) error {
 			return errors.New("Error during getting auth context")
 		}
 
-		return db.DeleteChat(userPrincipalDto.UserId, i)
+		_, errOuter := utils.Transact(dbR, func(tx *db.Tx) (interface{}, error) {
+			if admin, err := tx.IsAdmin(userPrincipalDto.UserId, i); err != nil {
+				return 0, err
+			} else if !admin {
+				return 0, errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, i))
+			}
+			if err := tx.DeleteChat(i); err != nil {
+				return 0, err
+			}
+			return 0, nil
+		})
+		if errOuter != nil {
+			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
+			return errOuter
+		} else {
+			return c.JSON(http.StatusAccepted, &utils.H{"id": i})
+		}
 	}
 }
 
@@ -174,7 +195,12 @@ func EditChat(dbR db.DB) func(c echo.Context) error {
 		}
 
 		result, errOuter := utils.Transact(dbR, func(tx *db.Tx) (interface{}, error) {
-			if err := tx.EditChat(bindTo.Id, userPrincipalDto.UserId, bindTo.Name); err != nil {
+			if admin, err := tx.IsAdmin(userPrincipalDto.UserId, bindTo.Id); err != nil {
+				return 0, err
+			} else if !admin {
+				return 0, errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
+			}
+			if err := tx.EditChat(bindTo.Id, bindTo.Name); err != nil {
 				return 0, err
 			}
 			if err := tx.DeleteParticipantsExcept(userPrincipalDto.UserId, bindTo.Id); err != nil {

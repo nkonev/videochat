@@ -2,14 +2,15 @@ package db
 
 import (
 	"errors"
+	"fmt"
 	. "nkonev.name/chat/logger"
+	"strings"
 )
 
 // db model
 type Chat struct {
-	Id      int64
-	Title   string
-	OwnerId int64
+	Id    int64
+	Title string
 }
 
 // CreateChat creates a new chat.
@@ -22,27 +23,33 @@ func (tx *Tx) CreateChat(u *Chat) (int64, error) {
 		return 0, errors.New("title required")
 	}
 
-	// Perform the actual insert and return any errors.
-	res := tx.QueryRow(`INSERT INTO chat (title, owner_id) VALUES ($1, $2) RETURNING id`, u.Title, u.OwnerId)
+	res := tx.QueryRow(`INSERT INTO chat (title) VALUES ($1) RETURNING id`, u.Title)
 	var id int64
 	if err := res.Scan(&id); err != nil {
-		Logger.Errorf("Error during getting chat id")
+		Logger.Errorf("Error during getting chat id %v", err)
 		return 0, err
 	}
 	return id, nil
 }
 
-func (db *DB) GetChats(owner int64, limit int, offset int) ([]*Chat, error) {
-	if rows, err := db.Query(`SELECT * FROM chat WHERE owner_id = $1 ORDER BY id LIMIT $2 OFFSET $3`, owner, limit, offset); err != nil {
-		Logger.Errorf("Error during get chat rows", err)
+func (db *DB) GetChats(chatIds []int64) ([]*Chat, error) {
+	chatIdsStrings := make([]string, len(chatIds))
+	for i, id := range chatIds {
+		chatIdsStrings[i] = fmt.Sprintf("%v", id)
+	}
+	ids := strings.Join(chatIdsStrings, ", ")
+	stmt := fmt.Sprintf(`SELECT * FROM chat WHERE id IN ( %s ) ORDER BY id`, ids)
+
+	if rows, err := db.Query(stmt); err != nil {
+		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
 	} else {
 		defer rows.Close()
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
-			if err := rows.Scan(&chat.Id, &chat.Title, &chat.OwnerId); err != nil {
-				Logger.Errorf("Error during scan chat rows", err)
+			if err := rows.Scan(&chat.Id, &chat.Title); err != nil {
+				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
 				list = append(list, &chat)
@@ -63,18 +70,18 @@ func (db *DB) CountChats() (int64, error) {
 	}
 }
 
-func (db *DB) DeleteChat(userId int64, id int64) error {
-	if _, err := db.Exec("DELETE FROM chat WHERE id = $1 AND owner_id = $2", id, userId); err != nil {
-		Logger.Errorf("Error during delete chat %v", id, err)
+func (tx *Tx) DeleteChat(id int64) error {
+	if _, err := tx.Exec("DELETE FROM chat WHERE id = $1", id); err != nil {
+		Logger.Errorf("Error during delete chat %v %v", id, err)
 		return err
 	} else {
 		return nil
 	}
 }
 
-func (tx *Tx) EditChat(id int64, ownerId int64, newTitle string) error {
-	if _, err := tx.Exec("UPDATE chat SET title = $3 WHERE id = $1 AND owner_id = $2", id, ownerId, newTitle); err != nil {
-		Logger.Errorf("Error during update chat %v", id, err)
+func (tx *Tx) EditChat(id int64, newTitle string) error {
+	if _, err := tx.Exec("UPDATE chat SET title = $2 WHERE id = $1", id, newTitle); err != nil {
+		Logger.Errorf("Error during update chat %v %v", id, err)
 		return err
 	} else {
 		return nil
@@ -84,9 +91,10 @@ func (tx *Tx) EditChat(id int64, ownerId int64, newTitle string) error {
 func (db *DB) GetChat(userId int64, chatId int64) (*Chat, error) {
 	row := db.QueryRow(`SELECT * FROM chat WHERE owner_id = $1 AND id = $2`, userId, chatId)
 	chat := Chat{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.OwnerId)
+	// TODO FIXME
+	err := row.Scan(&chat.Id, &chat.Title)
 	if err != nil {
-		Logger.Errorf("Error during get chat row", err)
+		Logger.Errorf("Error during get chat row %v", err)
 		return nil, err
 	} else {
 		return &chat, nil
