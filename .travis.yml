@@ -1,30 +1,49 @@
-language: java
 dist: bionic
-jdk:
-  - "openjdk11"
-node_js:
-  - "12.16.3"
-go:
-  - "1.14.3"
-cache:
-  directories:
-    - "/home/travis/build/nkonev/videochat/frontend/node_modules"
-    - "/home/travis/.gradle"
-    - "$GOPATH/pkg"
-before_install:
-  - "nvm install 12.16.3"
-  - "nvm use 12.16.3"
+before_script:
   - "docker version"
-  - "node --version"
-  - "go version"
-  - "java -version"
-  - sudo apt update && sudo apt install -y chromium-browser
-install:
-  - "/bin/true"
-script:
-  - "pwd"
   - "docker-compose up -d"
-  - (cd frontend; npm install && npm run build)
-  - (cd gateway; ./mvnw clean package)
-  - (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
-  - (cd chat; go test ./... -count=1)
+matrix:
+  include:
+    - language: java
+      jdk:
+        - "openjdk11"
+      cache:
+        directories:
+          - "/home/travis/.m2"
+      before_install:
+        - "java -version"
+        - sudo apt update && sudo apt install -y chromium-browser
+      install:
+        - "/bin/true"
+      script:
+        - "pwd"
+        - (cd gateway; ./mvnw clean package)
+        - (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
+
+    - language: javascript
+      node_js:
+        - "12.16.3"
+      cache:
+        directories:
+          - "/home/travis/build/nkonev/videochat/frontend/node_modules"
+      before_install:
+        - "node --version"
+      install:
+        - "/bin/true"
+      script:
+        - "pwd"
+        - (cd frontend; npm install && npm run build)
+
+    - language: go
+      go:
+        - "1.14.3"
+      cache:
+        directories:
+          - "$GOPATH/pkg"
+      before_install:
+        - "go version"
+      install:
+        - "/bin/true"
+      script:
+        - "pwd"
+        - (cd chat; go test ./... -count=1)
