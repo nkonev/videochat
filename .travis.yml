@@ -18,6 +18,7 @@ before_install:
   - "node --version"
   - "go version"
   - "java -version"
+  - sudo apt update && sudo apt install -y chromium-browser
 install:
   - "/bin/true"
 script:
@@ -25,5 +26,5 @@ script:
   - "docker-compose up -d"
   - (cd frontend; npm install && npm run build)
   - (cd gateway; ./mvnw clean package)
-  - (cd aaa; ./mvnw clean package)
+  - (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
   - (cd chat; go test ./... -count=1)
