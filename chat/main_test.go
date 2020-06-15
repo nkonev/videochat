@@ -162,14 +162,14 @@ func TestChatCrud(t *testing.T) {
 		assert.Equal(t, "Ultra new chat", nameString)
 
 		c2, _, _ := request("PUT", "/chat", strings.NewReader(`{ "id": `+idString+`, "name": "Mega ultra new chat"}`), e)
-		assert.Equal(t, http.StatusOK, c2)
+		assert.Equal(t, http.StatusAccepted, c2)
 		row := db.QueryRow("SELECT title FROM chat WHERE id = $1", id)
 		var newTitle string
 		assert.Nil(t, row.Scan(&newTitle))
 		assert.Equal(t, "Mega ultra new chat", newTitle)
 
 		c1, _, _ := request("DELETE", "/chat/"+idString, nil, e)
-		assert.Equal(t, http.StatusOK, c1)
+		assert.Equal(t, http.StatusAccepted, c1)
 		chatsAfterDelete, _ := db.CountChats()
 		assert.Equal(t, chatsBefore, chatsAfterDelete)
 	})
