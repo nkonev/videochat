@@ -104,7 +104,7 @@ function ChatEdit({ currentState, dispatch, passEditDto, fetchData }) {
     // selected users
     const [selectedUserValue, setSelectedUserValue] = useState([]);
 
-    const f = (searchStringOuter) => {
+    const searchFunction = (searchStringOuter) => {
         axios.get(`/api/user?searchString=${searchStringOuter}`)
             .then((response) => {
                 // call on parent
@@ -116,7 +116,7 @@ function ChatEdit({ currentState, dispatch, passEditDto, fetchData }) {
                 console.log("Handling error on save", error.response);
             })
     };
-    const fetchUsers = useMemo(() => debounce(f, 600), []);
+    const fetchUsers = useMemo(() => debounce(searchFunction, 600), []);
 
     const onSave = (editChatDto, selectedUsers, event) => {
         const dtoToPost = {...editChatDto, participantIds: selectedUsers.map((e)=>e.id)};
@@ -185,6 +185,7 @@ function ChatEdit({ currentState, dispatch, passEditDto, fetchData }) {
                                 options={[...selectedUserValue, ...usersOptions]}
                                 value={selectedUserValue}
                                 getOptionLabel={(option) => option.login}
+                                getOptionSelected={(option, value) => {return option.login == value.login}}
                                 onInputChange={(event, newValue) => {
                                     console.log("On input change requesting the server");
                                     fetchUsers(newValue);
