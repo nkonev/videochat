@@ -22,7 +22,7 @@
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
 
-        <spring.boot.version>2.3.0.RELEASE</spring.boot.version>
+        <spring.boot.version>2.3.1.RELEASE</spring.boot.version>
         <selenide.version>5.11.1</selenide.version>
         <shedlock.version>2.1.0</shedlock.version>
         <logback.access.version>1.2.3</logback.access.version>
@@ -30,10 +30,10 @@
         <greenmail.version>1.5.10</greenmail.version>
         <mockserver.version>5.10.0</mockserver.version>
 
-        <grpc.java.lib.version>3.11.4</grpc.java.lib.version>
-        <os.maven.plugin.version>1.5.0.Final</os.maven.plugin.version>
-        <protobuf.maven.plugin.version>0.5.1</protobuf.maven.plugin.version>
-        <protoc.version>3.7.1</protoc.version>
+        <grpc.java.lib.version>3.12.2</grpc.java.lib.version>
+        <os.maven.plugin.version>1.6.2</os.maven.plugin.version>
+        <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>
+        <protoc.version>3.12.2</protoc.version>
         <spring-cloud.version>Hoxton.SR5</spring-cloud.version>
 
         <skipTests>false</skipTests>
