@@ -49,13 +49,3 @@ func (tx *Tx) IsAdmin(userId int64, chatId int64) (bool, error) {
 		return admin, nil
 	}
 }
-
-func (db *DB) IsParticipant(userId int64, chatId int64) (bool, error) {
-	var exists bool = false
-	row := db.QueryRow(`SELECT exists(SELECT 1 FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1)`, userId, chatId)
-	if err := row.Scan(&exists); err != nil {
-		return false, err
-	} else {
-		return exists, nil
-	}
-}

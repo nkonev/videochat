@@ -79,8 +79,8 @@ func (tx *Tx) EditChat(id int64, newTitle string) error {
 	}
 }
 
-func (db *DB) GetChat(chatId int64) (*Chat, error) {
-	row := db.QueryRow(`SELECT * FROM chat WHERE id = $1`, chatId)
+func (db *DB) GetChat(participantId, chatId int64) (*Chat, error) {
+	row := db.QueryRow(`SELECT * FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
 	chat := Chat{}
 	err := row.Scan(&chat.Id, &chat.Title)
 	if err != nil {
