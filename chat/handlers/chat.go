@@ -67,11 +67,11 @@ func GetChat(dbR db.DB) func(c echo.Context) error {
 		}
 
 		chatIdString := c.Param("id")
-		i, err := utils.ParseInt64(chatIdString)
+		chatId, err := utils.ParseInt64(chatIdString)
 		if err != nil {
 			return err
 		}
-		if chat, err := dbR.GetChat(userPrincipalDto.UserId, i); err != nil {
+		if chat, err := dbR.GetChat(userPrincipalDto.UserId, chatId); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 			return err
 		} else {
@@ -143,7 +143,7 @@ func convertToCreatableChat(d *CreateChatDto, a *auth.AuthResult) *db.Chat {
 func DeleteChat(dbR db.DB) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		chatIdString := c.Param("id")
-		i, err := utils.ParseInt64(chatIdString)
+		chatId, err := utils.ParseInt64(chatIdString)
 		if err != nil {
 			return err
 		}
@@ -155,12 +155,12 @@ func DeleteChat(dbR db.DB) func(c echo.Context) error {
 		}
 
 		_, errOuter := utils.Transact(dbR, func(tx *db.Tx) (interface{}, error) {
-			if admin, err := tx.IsAdmin(userPrincipalDto.UserId, i); err != nil {
+			if admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId); err != nil {
 				return 0, err
 			} else if !admin {
-				return 0, errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, i))
+				return 0, errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, chatId))
 			}
-			if err := tx.DeleteChat(i); err != nil {
+			if err := tx.DeleteChat(chatId); err != nil {
 				return 0, err
 			}
 			return 0, nil
@@ -169,7 +169,7 @@ func DeleteChat(dbR db.DB) func(c echo.Context) error {
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
 			return errOuter
 		} else {
-			return c.JSON(http.StatusAccepted, &utils.H{"id": i})
+			return c.JSON(http.StatusAccepted, &utils.H{"id": chatId})
 		}
 	}
 }
