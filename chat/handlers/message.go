@@ -69,7 +69,7 @@ func convertToMessageDto(dbMessage *db.Message) *DisplayMessageDto {
 		ChatId:         dbMessage.ChatId,
 		OwnerId:        dbMessage.OwnerId,
 		CreateDateTime: dbMessage.CreateDateTime,
-		// TODO should handle null with special package
-		EditDateTime:   dbMessage.EditDateTime,
+		// TODO fixme null
+		//EditDateTime:   dbMessage.EditDateTime,
 	}
 }

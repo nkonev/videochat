@@ -174,3 +174,23 @@ func TestChatCrud(t *testing.T) {
 		assert.Equal(t, chatsBefore, chatsAfterDelete)
 	})
 }
+
+func interfaceToString(inter interface{}) string {
+	return fmt.Sprintf("%v", inter)
+}
+
+func TestGetMessagesPaginated(t *testing.T) {
+	runTest(t, func(e *echo.Echo) {
+		c, b, _ := request("GET", "/chat/1/message?page=2&size=3", nil, e)
+		assert.Equal(t, http.StatusOK, c)
+		assert.NotEmpty(t, b)
+
+		typedTes := getJsonPathResult(t, b, "$.text").([]interface{})
+
+		assert.Equal(t, 3, len(typedTes))
+
+		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[0]), "generated_message5"))
+		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[1]), "generated_message6"))
+		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[2]), "generated_message7"))
+	})
+}

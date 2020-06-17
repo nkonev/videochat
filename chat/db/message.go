@@ -1,8 +1,9 @@
 package db
 
 import (
-	 "time"
+	"github.com/guregu/null"
 	. "nkonev.name/chat/logger"
+	"time"
 )
 
 
@@ -12,7 +13,7 @@ type Message struct {
 	ChatId int64
 	OwnerId int64
 	CreateDateTime time.Time
-	EditDateTime time.Time
+	EditDateTime null.Time
 }
 
 func (db *DB) GetMessages(chatId int64, userId int64, limit int, offset int) ([]*Message, error) {
@@ -24,7 +25,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, offset int) ([]
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{}
-			if err := rows.Scan(&message.Id, &message.Text); err != nil {
+			if err := rows.Scan(&message.Id, &message.Text, &message.ChatId, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
