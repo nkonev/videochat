@@ -2,32 +2,33 @@ package handlers
 
 import (
 	"errors"
+	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/db"
-	"nkonev.name/chat/utils"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/utils"
 	"time"
 )
 
 type NewMessageDto struct {
-	Text   string  `json:"text"`
-	ChatId int64   `json:"chatId"`
+	Text   string `json:"text"`
+	ChatId int64  `json:"chatId"`
 }
 
 type EditMessageDto struct {
-	Id     int64   `json:"id"`
-	Text   string  `json:"text"`
-	ChatId int64   `json:"chatId"`
+	Id     int64  `json:"id"`
+	Text   string `json:"text"`
+	ChatId int64  `json:"chatId"`
 }
 
 type DisplayMessageDto struct {
-	Id     int64   `json:"id"`
-	Text   string  `json:"text"`
-	ChatId int64   `json:"chatId"`
-	OwnerId int64  `json:"ownerId"`
+	Id             int64     `json:"id"`
+	Text           string    `json:"text"`
+	ChatId         int64     `json:"chatId"`
+	OwnerId        int64     `json:"ownerId"`
 	CreateDateTime time.Time `json:"createDateTime"`
-	EditDateTime time.Time `json:"editDateTime"`
+	EditDateTime   null.Time `json:"editDateTime"`
 }
 
 func GetMessages(dbR db.DB) func(c echo.Context) error {
@@ -69,7 +70,6 @@ func convertToMessageDto(dbMessage *db.Message) *DisplayMessageDto {
 		ChatId:         dbMessage.ChatId,
 		OwnerId:        dbMessage.OwnerId,
 		CreateDateTime: dbMessage.CreateDateTime,
-		// TODO fixme null
-		//EditDateTime:   dbMessage.EditDateTime,
+		EditDateTime:   dbMessage.EditDateTime,
 	}
 }
