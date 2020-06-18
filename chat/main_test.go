@@ -189,7 +189,7 @@ func TestGetMessagesPaginated(t *testing.T) {
 
 		assert.Equal(t, 3, len(typedTes))
 
-		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[0]), "generated_message5"))
+		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[0]), "generated_mes____sage5"))
 		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[1]), "generated_message6"))
 		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[2]), "generated_message7"))
 	})
