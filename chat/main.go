@@ -21,7 +21,7 @@ type staticMiddleware echo.MiddlewareFunc
 
 func main() {
 	configFile := utils.InitFlags("./chat/config-dev/config.yml")
-	utils.InitViper(configFile, "VIDEOCHAT")
+	utils.InitViper(configFile, "CHAT")
 
 	app := fx.New(
 		fx.Logger(Logger),
