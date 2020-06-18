@@ -49,3 +49,7 @@ https://github.com/golang/go/wiki/Modules
 ```bash
 go get -u -t ./...
 ```
+
+# Sanitizers for Go
+* https://github.com/microcosm-cc/bluemonday
+* https://github.com/kennygrant/sanitize
