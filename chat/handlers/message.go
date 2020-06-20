@@ -133,8 +133,7 @@ func PostMessage(dbR db.DB) func(c echo.Context) error {
 			return errors.New("Error during getting auth context")
 		}
 
-		chatIdString := c.Param("id")
-		chatId, err := utils.ParseInt64(chatIdString)
+		chatId, err := GetPathParamAsInt64(c, "id")
 		if err != nil {
 			return err
 		}

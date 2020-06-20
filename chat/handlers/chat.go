@@ -155,8 +155,7 @@ func convertToCreatableChat(d *CreateChatDto) *db.Chat {
 
 func DeleteChat(dbR db.DB) func(c echo.Context) error {
 	return func(c echo.Context) error {
-		chatIdString := c.Param("id")
-		chatId, err := utils.ParseInt64(chatIdString)
+		chatId, err := GetPathParamAsInt64(c, "id")
 		if err != nil {
 			return err
 		}
