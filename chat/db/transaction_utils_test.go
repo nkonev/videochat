@@ -57,10 +57,10 @@ func TestTransactionPositive(t *testing.T) {
 }
 
 func TestTransactionNegative(t *testing.T) {
-	err := Transact(*dbInstance, func(tx *Tx) error {
-		if _, err := tx.Exec("CREATE TABLE t2(a text UNIQUE)"); err != nil {
-			return err
-		}
+	_, err := dbInstance.Exec("CREATE TABLE t2(a text UNIQUE)")
+	assert.Nil(t, err)
+
+	err = Transact(*dbInstance, func(tx *Tx) error {
 		if _, err := tx.Exec("insert into t2(a) VALUES ('lorem')"); err != nil {
 			return err
 		}
@@ -76,7 +76,7 @@ func TestTransactionNegative(t *testing.T) {
 	err = row.Scan(&a)
 	assert.NotNil(t, err)
 	s := err.Error()
-	assert.Equal(t, `ERROR: relation "t2" does not exist (SQLSTATE 42P01)`, s)
+	assert.Equal(t, `sql: no rows in result set`, s)
 }
 
 func TestTransactionWithResultPositive(t *testing.T) {
@@ -107,10 +107,10 @@ func TestTransactionWithResultPositive(t *testing.T) {
 }
 
 func TestTransactionWithResultNegative(t *testing.T) {
+	_, err := dbInstance.Exec("CREATE TABLE tr2(id BIGSERIAL PRIMARY KEY, a text UNIQUE)")
+	assert.Nil(t, err)
+
 	idRaw, err := TransactWithResult(*dbInstance, func(tx *Tx) (interface{}, error) {
-		if _, err := tx.Exec("CREATE TABLE tr2(id BIGSERIAL PRIMARY KEY, a text UNIQUE)"); err != nil {
-			return 0, err
-		}
 		res := tx.QueryRow(`INSERT INTO tr2(a) VALUES ('lorem') RETURNING id`)
 		var id int64
 		if err := res.Scan(&id); err != nil {
@@ -131,5 +131,5 @@ func TestTransactionWithResultNegative(t *testing.T) {
 	err = row.Scan(&a)
 	assert.NotNil(t, err)
 	s := err.Error()
-	assert.Equal(t, `ERROR: relation "tr2" does not exist (SQLSTATE 42P01)`, s)
+	assert.Equal(t, `sql: no rows in result set`, s)
 }
