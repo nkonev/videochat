@@ -30,7 +30,7 @@ type CreateChatDto struct {
 }
 
 func (a *CreateChatDto) Validate() error {
-	return validation.ValidateStruct(a, validation.Field(&a.Name, validation.Required, validation.Min(1), validation.Max(256)))
+	return validation.ValidateStruct(a, validation.Field(&a.Name, validation.Required, validation.Length(1, 256)))
 }
 
 func GetChats(db db.DB) func(c echo.Context) error {

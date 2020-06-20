@@ -112,7 +112,7 @@ type CreateMessageDto struct {
 }
 
 func (a *CreateMessageDto) Validate() error {
-	return validation.ValidateStruct(a, validation.Field(&a.Text, validation.Required, validation.Min(1), validation.Max(1024*1024)))
+	return validation.ValidateStruct(a, validation.Field(&a.Text, validation.Required, validation.Length(1, 1024*1024)))
 }
 
 func PostMessage(dbR db.DB) func(c echo.Context) error {
