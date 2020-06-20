@@ -144,7 +144,10 @@ func PostMessage(dbR db.DB) func(c echo.Context) error {
 			if err != nil {
 				return 0, err
 			}
-			// TODO add to table means that read
+			err = tx.AddMessageRead(id, userPrincipalDto.UserId)
+			if err != nil {
+				return 0, err
+			}
 			return id, err
 		})
 		if errOuter != nil {

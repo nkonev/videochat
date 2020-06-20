@@ -7,14 +7,13 @@ import (
 	"time"
 )
 
-
 type Message struct {
-	Id    int64
-	Text string
-	ChatId int64
-	OwnerId int64
+	Id             int64
+	Text           string
+	ChatId         int64
+	OwnerId        int64
 	CreateDateTime time.Time
-	EditDateTime null.Time
+	EditDateTime   null.Time
 }
 
 func (db *DB) GetMessages(chatId int64, userId int64, limit int, offset int) ([]*Message, error) {
@@ -74,4 +73,9 @@ func (db *DB) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 	} else {
 		return &message, nil
 	}
+}
+
+func (tx *Tx) AddMessageRead(messageId, userId int64) error {
+	_, err := tx.Exec(`INSERT INTO message_read (message_id, user_id) VALUES ($1, $2)`, messageId, userId)
+	return err
 }
