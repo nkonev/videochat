@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
+	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/db"
 	. "nkonev.name/chat/logger"
@@ -63,6 +64,37 @@ func GetMessages(dbR db.DB) func(c echo.Context) error {
 	}
 }
 
+func GetMessage(dbR db.DB) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+		if !ok {
+			GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+			return errors.New("Error during getting auth context")
+		}
+
+		chatIdString := c.Param("id")
+		chatId, err := utils.ParseInt64(chatIdString)
+		if err != nil {
+			return err
+		}
+
+		messageIdString := c.Param("messageId")
+		messageId, err := utils.ParseInt64(messageIdString)
+		if err != nil {
+			return err
+		}
+
+		if message, err := dbR.GetMessage(chatId, userPrincipalDto.UserId, messageId); err != nil {
+			GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
+			return err
+		} else {
+			messageDto := convertToMessageDto(message)
+			GetLogEntry(c.Request()).Infof("Successfully returning message %v", messageDto)
+			return c.JSON(200, messageDto)
+		}
+	}
+}
+
 func convertToMessageDto(dbMessage *db.Message) *DisplayMessageDto {
 	return &DisplayMessageDto{
 		Id:             dbMessage.Id,
@@ -73,3 +105,53 @@ func convertToMessageDto(dbMessage *db.Message) *DisplayMessageDto {
 		EditDateTime:   dbMessage.EditDateTime,
 	}
 }
+
+type CreateMessageDto struct {
+	Text           string  `json:"text"`
+}
+
+func PostMessage(dbR db.DB) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		var bindTo = new(CreateMessageDto)
+		if err := c.Bind(bindTo); err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
+			return err
+		}
+
+		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+		if !ok {
+			GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+			return errors.New("Error during getting auth context")
+		}
+
+		chatIdString := c.Param("id")
+		chatId, err := utils.ParseInt64(chatIdString)
+		if err != nil {
+			return err
+		}
+
+		result, errOuter := utils.Transact(dbR, func(tx *db.Tx) (interface{}, error) {
+			id, err := tx.CreateMessage(convertToCreatableMessage(bindTo, userPrincipalDto, chatId))
+			if err != nil {
+				return 0, err
+			}
+			// TODO add to table means that read
+			return id, err
+		})
+		if errOuter != nil {
+			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
+			return errOuter
+		} else {
+			return c.JSON(http.StatusCreated, &utils.H{"id": result})
+		}
+	}
+}
+
+func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64) *db.Message {
+	return &db.Message{
+		Text:           dto.Text,
+		ChatId:         chatId,
+		OwnerId:        authPrincipal.UserId,
+	}
+}
+

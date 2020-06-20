@@ -108,7 +108,7 @@ func CreateChat(dbR db.DB) func(c echo.Context) error {
 		}
 
 		result, errOuter := utils.Transact(dbR, func(tx *db.Tx) (interface{}, error) {
-			id, err := tx.CreateChat(convertToCreatableChat(bindTo, userPrincipalDto))
+			id, err := tx.CreateChat(convertToCreatableChat(bindTo))
 			if err != nil {
 				return 0, err
 			}
@@ -134,7 +134,7 @@ func CreateChat(dbR db.DB) func(c echo.Context) error {
 	}
 }
 
-func convertToCreatableChat(d *CreateChatDto, a *auth.AuthResult) *db.Chat {
+func convertToCreatableChat(d *CreateChatDto) *db.Chat {
 	return &db.Chat{
 		Title: d.Name,
 	}

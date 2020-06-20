@@ -151,14 +151,14 @@ func TestChatCrud(t *testing.T) {
 		assert.Equal(t, chatsBefore+1, chatsAfterCreate)
 
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
-		idString := fmt.Sprintf("%v", idInterface)
+		idString := interfaceToString(idInterface)
 		id, _ := utils.ParseInt64(idString)
 		assert.True(t, id > 0)
 
 		c3, b3, _ := request("GET", "/chat/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c3)
 		nameInterface := getJsonPathResult(t, b3, "$.name").(interface{})
-		nameString := fmt.Sprintf("%v", nameInterface)
+		nameString := interfaceToString(nameInterface)
 		assert.Equal(t, "Ultra new chat", nameString)
 
 		c2, _, _ := request("PUT", "/chat", strings.NewReader(`{ "id": `+idString+`, "name": "Mega ultra new chat"}`), e)
@@ -192,5 +192,28 @@ func TestGetMessagesPaginated(t *testing.T) {
 		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[0]), "generated_message5"))
 		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[1]), "generated_message6"))
 		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[2]), "generated_message7"))
+	})
+}
+
+
+func TestMessageCrud(t *testing.T) {
+	runTest(t, func(e *echo.Echo, db db.DB) {
+		messagesBefore, _ := db.CountMessages()
+		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": "Ultra new message"}`), e)
+		assert.Equal(t, http.StatusCreated, c)
+
+		messagesAfterCreate, _ := db.CountMessages()
+		assert.Equal(t, messagesBefore+1, messagesAfterCreate)
+
+		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
+		idString := interfaceToString(idInterface)
+		id, _ := utils.ParseInt64(idString)
+		assert.True(t, id > 0)
+
+		c3, b3, _ := request("GET", "/chat/1/message/"+idString, nil, e)
+		assert.Equal(t, http.StatusOK, c3)
+		textInterface := getJsonPathResult(t, b3, "$.text").(interface{})
+		textString := interfaceToString(textInterface)
+		assert.Equal(t, "Ultra new message", textString)
 	})
 }
