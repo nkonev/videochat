@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"errors"
 	. "nkonev.name/chat/logger"
 )
@@ -84,8 +85,13 @@ func (db *DB) GetChat(participantId, chatId int64) (*Chat, error) {
 	chat := Chat{}
 	err := row.Scan(&chat.Id, &chat.Title)
 	if err != nil {
-		Logger.Errorf("Error during get chat row %v", err)
-		return nil, err
+		if err == sql.ErrNoRows {
+			// there were no rows, but otherwise no error occurred
+			return nil, nil
+		} else {
+			Logger.Errorf("Error during get chat row %v", err)
+			return nil, err
+		}
 	} else {
 		return &chat, nil
 	}

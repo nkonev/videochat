@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"errors"
 	"github.com/guregu/null"
 	. "nkonev.name/chat/logger"
@@ -68,8 +69,13 @@ func (db *DB) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 	message := Message{}
 	err := row.Scan(&message.Id, &message.Text, &message.ChatId, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime)
 	if err != nil {
-		Logger.Errorf("Error during get message row %v", err)
-		return nil, err
+		if err == sql.ErrNoRows {
+			// there were no rows, but otherwise no error occurred
+			return nil, nil
+		} else {
+			Logger.Errorf("Error during get message row %v", err)
+			return nil, err
+		}
 	} else {
 		return &message, nil
 	}

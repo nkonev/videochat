@@ -84,6 +84,9 @@ func GetChat(dbR db.DB) func(c echo.Context) error {
 			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 			return err
 		} else {
+			if chat == nil {
+				return c.NoContent(http.StatusNotFound)
+			}
 			ids, err := dbR.GetParticipantIds(chat.Id)
 			if err != nil {
 				return err

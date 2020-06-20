@@ -89,6 +89,9 @@ func GetMessage(dbR db.DB) func(c echo.Context) error {
 			GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
 			return err
 		} else {
+			if message == nil {
+				return c.NoContent(http.StatusNotFound)
+			}
 			messageDto := convertToMessageDto(message)
 			GetLogEntry(c.Request()).Infof("Successfully returning message %v", messageDto)
 			return c.JSON(200, messageDto)

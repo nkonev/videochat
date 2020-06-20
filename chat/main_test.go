@@ -159,6 +159,10 @@ func TestChatValidation(t *testing.T) {
 
 func TestChatCrud(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db db.DB) {
+		// test not found
+		c30, _, _ := request("GET", "/chat/666/", nil, e)
+		assert.Equal(t, http.StatusNotFound, c30)
+
 		chatsBefore, _ := db.CountChats()
 		c, b, _ := request("POST", "/chat", strings.NewReader(`{"name": "Ultra new chat"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
@@ -266,6 +270,10 @@ func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, c)
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
 		idString := interfaceToString(idInterface)
+
+		// test not found
+		c3, _, _ := requestWithHeader("GET", "/chat/"+idString+"/message/666", h2, nil, e)
+		assert.Equal(t, http.StatusNotFound, c3)
 
 		// first user tries to write to second user's chat
 		c2, b2, _ := requestWithHeader("POST", "/chat/"+idString+"/message", h1, strings.NewReader(`{"text": "Ultra new message to the foreign chat"}`), e)
