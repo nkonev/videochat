@@ -68,18 +68,22 @@ func TestExtractAuth(t *testing.T) {
 	assert.Equal(t, int64(1590022342), auth.ExpiresAt)
 }
 
-func request(method, path string, body io.Reader, e *echo.Echo) (int, string, http.Header) {
+func requestWithHeader(method, path string, h http.Header, body io.Reader, e *echo.Echo) (int, string, http.Header) {
 	req := test.NewRequest(method, path, body)
+	req.Header = h
+	rec := test.NewRecorder()
+	e.ServeHTTP(rec, req) // most wanted
+	return rec.Code, rec.Body.String(), rec.Result().Header
+}
+
+func request(method, path string, body io.Reader, e *echo.Echo) (int, string, http.Header) {
 	Header := map[string][]string{
 		echo.HeaderContentType: {"application/json"},
 		"X-Auth-Expiresin":     {"1590022342295000"},
 		"X-Auth-Username":      {"tester"},
 		"X-Auth-Userid":        {"1"},
 	}
-	req.Header = Header
-	rec := test.NewRecorder()
-	e.ServeHTTP(rec, req) // most wanted
-	return rec.Code, rec.Body.String(), rec.Result().Header
+	return requestWithHeader(method, path, Header, body, e)
 }
 
 func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
@@ -249,5 +253,33 @@ func TestMessageCrud(t *testing.T) {
 		textInterface := getJsonPathResult(t, b3, "$.text").(interface{})
 		textString := interfaceToString(textInterface)
 		assert.Equal(t, "Ultra new message", textString)
+	})
+}
+
+func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
+	h1 := map[string][]string{
+		echo.HeaderContentType: {"application/json"},
+		"X-Auth-Expiresin":     {"1590022342295000"},
+		"X-Auth-Username":      {"tester"},
+		"X-Auth-Userid":        {"1"},
+	}
+	h2 := map[string][]string{
+		echo.HeaderContentType: {"application/json"},
+		"X-Auth-Expiresin":     {"1590022342295000"},
+		"X-Auth-Username":      {"tester2"},
+		"X-Auth-Userid":        {"2"},
+	}
+
+	runTest(t, func(e *echo.Echo, db db.DB) {
+		c, b, _ := requestWithHeader("POST", "/chat", h2, strings.NewReader(`{"name": "Chat of second user"}`), e)
+		assert.Equal(t, http.StatusCreated, c)
+		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
+		idString := interfaceToString(idInterface)
+
+		// first user tries to write to second user's chat
+		c2, b2, _ := requestWithHeader("POST", "/chat/"+idString+"/message", h1, strings.NewReader(`{"text": "Ultra new message to the foreign chat"}`), e)
+		assert.Equal(t, http.StatusBadRequest, c2)
+		messageString := interfaceToString(getJsonPathResult(t, b2, "$.message").(interface{}))
+		assert.Equal(t, "You are not allowed to write to this chat", messageString)
 	})
 }

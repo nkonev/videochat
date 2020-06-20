@@ -120,7 +120,7 @@ func CreateChat(dbR db.DB) func(c echo.Context) error {
 			return errors.New("Error during getting auth context")
 		}
 
-		result, errOuter := utils.Transact(dbR, func(tx *db.Tx) (interface{}, error) {
+		result, errOuter := utils.TransactWithResult(dbR, func(tx *db.Tx) (interface{}, error) {
 			id, err := tx.CreateChat(convertToCreatableChat(bindTo))
 			if err != nil {
 				return 0, err
@@ -167,23 +167,21 @@ func DeleteChat(dbR db.DB) func(c echo.Context) error {
 			return errors.New("Error during getting auth context")
 		}
 
-		_, errOuter := utils.Transact(dbR, func(tx *db.Tx) (interface{}, error) {
+		errOuter := utils.Transact(dbR, func(tx *db.Tx) error {
 			if admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId); err != nil {
-				return 0, err
+				return err
 			} else if !admin {
-				return 0, errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, chatId))
+				return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, chatId))
 			}
 			if err := tx.DeleteChat(chatId); err != nil {
-				return 0, err
+				return err
 			}
-			return 0, nil
+			return c.JSON(http.StatusAccepted, &utils.H{"id": chatId})
 		})
 		if errOuter != nil {
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
-			return errOuter
-		} else {
-			return c.JSON(http.StatusAccepted, &utils.H{"id": chatId})
 		}
+		return errOuter
 	}
 }
 
@@ -205,34 +203,32 @@ func EditChat(dbR db.DB) func(c echo.Context) error {
 			return errors.New("Error during getting auth context")
 		}
 
-		result, errOuter := utils.Transact(dbR, func(tx *db.Tx) (interface{}, error) {
+		errOuter := utils.Transact(dbR, func(tx *db.Tx) error {
 			if admin, err := tx.IsAdmin(userPrincipalDto.UserId, bindTo.Id); err != nil {
-				return 0, err
+				return err
 			} else if !admin {
-				return 0, errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
+				return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
 			}
 			if err := tx.EditChat(bindTo.Id, bindTo.Name); err != nil {
-				return 0, err
+				return err
 			}
 			// TODO re-think about case when non-admin is trying to edit
 			if err := tx.DeleteParticipantsExcept(userPrincipalDto.UserId, bindTo.Id); err != nil {
-				return 0, err
+				return err
 			}
 			for _, participantId := range bindTo.ParticipantIds {
 				if participantId == userPrincipalDto.UserId {
 					continue
 				}
 				if err := tx.AddParticipant(participantId, bindTo.Id, false); err != nil {
-					return 0, err
+					return err
 				}
 			}
-			return bindTo.Id, nil
+			return c.JSON(http.StatusAccepted, &utils.H{"id": bindTo.Id})
 		})
 		if errOuter != nil {
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
-			return errOuter
-		} else {
-			return c.JSON(http.StatusAccepted, &utils.H{"id": result})
 		}
+		return errOuter
 	}
 }

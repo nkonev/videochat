@@ -42,10 +42,20 @@ func (db *DB) GetParticipantIds(chatId int64) ([]int64, error) {
 
 func (tx *Tx) IsAdmin(userId int64, chatId int64) (bool, error) {
 	var admin bool = false
-	row := tx.QueryRow(`SELECT admin FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1`, userId, chatId)
+	row := tx.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 AND admin = true LIMIT 1)`, userId, chatId)
 	if err := row.Scan(&admin); err != nil {
 		return false, err
 	} else {
 		return admin, nil
+	}
+}
+
+func (tx *Tx) IsParticipant(userId int64, chatId int64) (bool, error) {
+	var exists bool = false
+	row := tx.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1)`, userId, chatId)
+	if err := row.Scan(&exists); err != nil {
+		return false, err
+	} else {
+		return exists, nil
 	}
 }

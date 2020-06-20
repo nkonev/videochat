@@ -139,23 +139,26 @@ func PostMessage(dbR db.DB) func(c echo.Context) error {
 			return err
 		}
 
-		result, errOuter := utils.Transact(dbR, func(tx *db.Tx) (interface{}, error) {
+		errOuter := utils.Transact(dbR, func(tx *db.Tx) error {
+			if participant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
+				return err
+			} else if !participant {
+				return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
+			}
 			id, err := tx.CreateMessage(convertToCreatableMessage(bindTo, userPrincipalDto, chatId))
 			if err != nil {
-				return 0, err
+				return err
 			}
 			err = tx.AddMessageRead(id, userPrincipalDto.UserId)
 			if err != nil {
-				return 0, err
+				return err
 			}
-			return id, err
+			return c.JSON(http.StatusCreated, &utils.H{"id": id})
 		})
 		if errOuter != nil {
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
-			return errOuter
-		} else {
-			return c.JSON(http.StatusCreated, &utils.H{"id": result})
 		}
+		return errOuter
 	}
 }
 
