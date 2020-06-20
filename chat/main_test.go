@@ -152,6 +152,13 @@ func TestChatValidation(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, c2)
 		textString2 := interfaceToString(getJsonPathResult(t, b2, "$.name").(interface{}))
 		assert.Equal(t, "cannot be blank", textString2)
+
+		c3, b3, _ := request("PUT", "/chat", strings.NewReader(``), e)
+		assert.Equal(t, http.StatusBadRequest, c3)
+		textString30 := interfaceToString(getJsonPathResult(t, b3, "$.name").(interface{}))
+		assert.Equal(t, "cannot be blank", textString30)
+		textString31 := interfaceToString(getJsonPathResult(t, b3, "$.id").(interface{}))
+		assert.Equal(t, "cannot be blank", textString31)
 	})
 }
 

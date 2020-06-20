@@ -33,6 +33,10 @@ func (a *CreateChatDto) Validate() error {
 	return validation.ValidateStruct(a, validation.Field(&a.Name, validation.Required, validation.Length(1, 256)))
 }
 
+func (a *EditChatDto) Validate() error {
+	return validation.ValidateStruct(a, validation.Field(&a.Name, validation.Required, validation.Length(1, 256)), validation.Field(&a.Id, validation.Required))
+}
+
 func GetChats(db db.DB) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
@@ -188,6 +192,10 @@ func EditChat(dbR db.DB) func(c echo.Context) error {
 		var bindTo = new(EditChatDto)
 		if err := c.Bind(bindTo); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
+			return err
+		}
+
+		if valid, err := ValidateAndRespondError(c, bindTo); err != nil || !valid {
 			return err
 		}
 
