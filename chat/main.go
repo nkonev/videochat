@@ -31,7 +31,7 @@ func main() {
 			configureEcho,
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
-			configureDb,
+			db.ConfigureDb,
 		),
 		fx.Invoke(
 			runMigrations,
@@ -111,25 +111,6 @@ func configureStaticMiddleware() staticMiddleware {
 			}
 		}
 	}
-}
-
-func configureDb(lc fx.Lifecycle) (db.DB, error) {
-	dbConnectionString := viper.GetString("postgresql.url")
-	maxOpen := viper.GetInt("postgresql.maxOpenConnections")
-	maxIdle := viper.GetInt("postgresql.maxIdleConnections")
-	maxLifeTime := viper.GetDuration("postgresql.maxLifetime")
-	dbInstance, err := db.Open(dbConnectionString, maxOpen, maxIdle, maxLifeTime)
-
-	if lc != nil {
-		lc.Append(fx.Hook{
-			OnStop: func(ctx context.Context) error {
-				Logger.Infof("Stopping db connection")
-				return dbInstance.Close()
-			},
-		})
-	}
-
-	return *dbInstance, err
 }
 
 func runMigrations(db db.DB) {

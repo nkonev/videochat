@@ -120,7 +120,7 @@ func CreateChat(dbR db.DB) func(c echo.Context) error {
 			return errors.New("Error during getting auth context")
 		}
 
-		result, errOuter := utils.TransactWithResult(dbR, func(tx *db.Tx) (interface{}, error) {
+		result, errOuter := db.TransactWithResult(dbR, func(tx *db.Tx) (interface{}, error) {
 			id, err := tx.CreateChat(convertToCreatableChat(bindTo))
 			if err != nil {
 				return 0, err
@@ -166,7 +166,7 @@ func DeleteChat(dbR db.DB) func(c echo.Context) error {
 			return errors.New("Error during getting auth context")
 		}
 
-		errOuter := utils.Transact(dbR, func(tx *db.Tx) error {
+		errOuter := db.Transact(dbR, func(tx *db.Tx) error {
 			if admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId); err != nil {
 				return err
 			} else if !admin {
@@ -202,7 +202,7 @@ func EditChat(dbR db.DB) func(c echo.Context) error {
 			return errors.New("Error during getting auth context")
 		}
 
-		errOuter := utils.Transact(dbR, func(tx *db.Tx) error {
+		errOuter := db.Transact(dbR, func(tx *db.Tx) error {
 			if admin, err := tx.IsAdmin(userPrincipalDto.UserId, bindTo.Id); err != nil {
 				return err
 			} else if !admin {

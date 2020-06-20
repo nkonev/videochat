@@ -138,7 +138,7 @@ func PostMessage(dbR db.DB) func(c echo.Context) error {
 			return err
 		}
 
-		errOuter := utils.Transact(dbR, func(tx *db.Tx) error {
+		errOuter := db.Transact(dbR, func(tx *db.Tx) error {
 			if participant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
 				return err
 			} else if !participant {

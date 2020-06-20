@@ -5,7 +5,6 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"nkonev.name/chat/db"
 	"regexp"
 	"strconv"
 )
@@ -104,42 +103,4 @@ func ParseInt64(s string) (int64, error) {
 	} else {
 		return i, nil
 	}
-}
-
-func TransactWithResult(db db.DB, txFunc func(*db.Tx) (interface{}, error)) (ret interface{}, err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer func() {
-		if p := recover(); p != nil {
-			tx.Rollback()
-			panic(p) // re-throw panic after Rollback
-		} else if err != nil {
-			tx.Rollback() // err is non-nil; don't change it
-		} else {
-			err = tx.Commit() // err is nil; if Commit returns error update err
-		}
-	}()
-	ret, err = txFunc(tx)
-	return ret, err
-}
-
-func Transact(db db.DB, txFunc func(*db.Tx) error) (err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer func() {
-		if p := recover(); p != nil {
-			tx.Rollback()
-			panic(p) // re-throw panic after Rollback
-		} else if err != nil {
-			tx.Rollback() // err is non-nil; don't change it
-		} else {
-			err = tx.Commit() // err is nil; if Commit returns error update err
-		}
-	}()
-	err = txFunc(tx)
-	return err
 }

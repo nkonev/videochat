@@ -1,12 +1,15 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/spf13/viper"
+	"go.uber.org/fx"
 	. "nkonev.name/chat/logger"
 	"time"
 )
@@ -84,4 +87,36 @@ func (db *DB) Migrate() {
 	Logger.Infof("Starting migration")
 	migrateInternal(db.DB)
 	Logger.Infof("Migration successful completed")
+}
+
+func ConfigureDb(lc fx.Lifecycle) (DB, error) {
+	dbConnectionString := viper.GetString("postgresql.url")
+	maxOpen := viper.GetInt("postgresql.maxOpenConnections")
+	maxIdle := viper.GetInt("postgresql.maxIdleConnections")
+	maxLifeTime := viper.GetDuration("postgresql.maxLifetime")
+	dbInstance, err := Open(dbConnectionString, maxOpen, maxIdle, maxLifeTime)
+
+	if lc != nil {
+		lc.Append(fx.Hook{
+			OnStop: func(ctx context.Context) error {
+				Logger.Infof("Stopping db connection")
+				return dbInstance.Close()
+			},
+		})
+	}
+
+	return *dbInstance, err
+}
+
+func (db *DB) RecreateDb() {
+	_, err := db.Exec(`
+	DROP SCHEMA IF EXISTS public CASCADE;
+	CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO chat;
+    GRANT ALL ON SCHEMA public TO public;
+    COMMENT ON SCHEMA public IS 'standard public schema';
+`)
+	if err != nil {
+		Logger.Panicf("Error during dropping db: %v", err)
+	}
 }
