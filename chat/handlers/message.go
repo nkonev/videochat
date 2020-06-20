@@ -5,6 +5,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
+	"github.com/microcosm-cc/bluemonday"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/db"
@@ -118,7 +119,7 @@ func (a *CreateMessageDto) Validate() error {
 	return validation.ValidateStruct(a, validation.Field(&a.Text, validation.Required, validation.Length(1, 1024*1024)))
 }
 
-func PostMessage(dbR db.DB) func(c echo.Context) error {
+func PostMessage(dbR db.DB, policy *bluemonday.Policy) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(CreateMessageDto)
 		if err := c.Bind(bindTo); err != nil {
@@ -147,7 +148,7 @@ func PostMessage(dbR db.DB) func(c echo.Context) error {
 			} else if !participant {
 				return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
 			}
-			id, err := tx.CreateMessage(convertToCreatableMessage(bindTo, userPrincipalDto, chatId))
+			id, err := tx.CreateMessage(convertToCreatableMessage(bindTo, userPrincipalDto, chatId, policy))
 			if err != nil {
 				return err
 			}
@@ -164,9 +165,9 @@ func PostMessage(dbR db.DB) func(c echo.Context) error {
 	}
 }
 
-func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64) *db.Message {
+func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *bluemonday.Policy) *db.Message {
 	return &db.Message{
-		Text:    dto.Text,
+		Text:    policy.Sanitize(dto.Text),
 		ChatId:  chatId,
 		OwnerId: authPrincipal.UserId,
 	}

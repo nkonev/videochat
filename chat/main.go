@@ -6,6 +6,7 @@ import (
 	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"net/http"
@@ -28,6 +29,7 @@ func main() {
 		fx.Provide(
 			client.NewRestClient,
 			handlers.ConfigureCentrifuge,
+			handlers.CreateSanitizer,
 			configureEcho,
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
@@ -55,7 +57,7 @@ func runCentrifuge(node *centrifuge.Node) {
 	Logger.Info("Centrifuge started.")
 }
 
-func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.AuthMiddleware, lc fx.Lifecycle, node *centrifuge.Node, db db.DB) *echo.Echo {
+func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.AuthMiddleware, lc fx.Lifecycle, node *centrifuge.Node, db db.DB, policy *bluemonday.Policy) *echo.Echo {
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
@@ -83,7 +85,7 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.Au
 	e.PUT("/chat", handlers.EditChat(db))
 	e.GET("/chat/:id/message", handlers.GetMessages(db))
 	e.GET("/chat/:id/message/:messageId", handlers.GetMessage(db))
-	e.POST("/chat/:id/message", handlers.PostMessage(db))
+	e.POST("/chat/:id/message", handlers.PostMessage(db, policy))
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

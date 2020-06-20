@@ -10,11 +10,13 @@ require (
 	github.com/guregu/null v4.0.0+incompatible
 	github.com/jackc/pgx/v4 v4.6.0
 	github.com/labstack/echo/v4 v4.1.16
+	github.com/microcosm-cc/bluemonday v1.0.3
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.5.1
 	go.uber.org/fx v1.12.0
+	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
 )
 
 go 1.13

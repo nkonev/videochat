@@ -86,6 +86,7 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 		fx.Provide(
 			client.NewRestClient,
 			handlers.ConfigureCentrifuge,
+			handlers.CreateSanitizer,
 			configureEcho,
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
@@ -250,6 +251,23 @@ func TestMessageCrud(t *testing.T) {
 		assert.Equal(t, "Ultra new message", textString)
 	})
 }
+
+func TestMessageIsSanitized(t *testing.T) {
+	runTest(t, func(e *echo.Echo, db db.DB) {
+		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": "<a onblur=\"alert(secret)\" href=\"http://www.google.com\">Google</a>"}`), e)
+		assert.Equal(t, http.StatusCreated, c)
+
+		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
+		idString := interfaceToString(idInterface)
+
+		c3, b3, _ := request("GET", "/chat/1/message/"+idString, nil, e)
+		assert.Equal(t, http.StatusOK, c3)
+		textInterface := getJsonPathResult(t, b3, "$.text").(interface{})
+		textString := interfaceToString(textInterface)
+		assert.Equal(t, `<a href="http://www.google.com" rel="nofollow">Google</a>`, textString)
+	})
+}
+
 
 func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 	h1 := map[string][]string{
