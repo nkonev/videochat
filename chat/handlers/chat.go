@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"nkonev.name/chat/auth"
@@ -26,6 +27,10 @@ type EditChatDto struct {
 type CreateChatDto struct {
 	Name           string  `json:"name"`
 	ParticipantIds []int64 `json:"participantIds"`
+}
+
+func (a *CreateChatDto) Validate() error {
+	return validation.ValidateStruct(a, validation.Field(&a.Name, validation.Required, validation.Min(1), validation.Max(256)))
 }
 
 func GetChats(db db.DB) func(c echo.Context) error {
@@ -101,6 +106,10 @@ func CreateChat(dbR db.DB) func(c echo.Context) error {
 			GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
 			return err
 		}
+		if valid, err := ValidateAndRespondError(c, bindTo); err != nil || !valid {
+			return err
+		}
+
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 		if !ok {
 			GetLogEntry(c.Request()).Errorf("Error during getting auth context")

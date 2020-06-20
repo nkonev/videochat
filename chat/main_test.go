@@ -141,6 +141,20 @@ func TestGetChatsPaginated(t *testing.T) {
 	})
 }
 
+func TestChatValidation(t *testing.T) {
+	runTest(t, func(e *echo.Echo, db db.DB) {
+		c, b, _ := request("POST", "/chat", strings.NewReader(`{"name": ""}`), e)
+		assert.Equal(t, http.StatusBadRequest, c)
+		textString := interfaceToString(getJsonPathResult(t, b, "$.name").(interface{}))
+		assert.Equal(t, "cannot be blank", textString)
+
+		c2, b2, _ := request("POST", "/chat", strings.NewReader(``), e)
+		assert.Equal(t, http.StatusBadRequest, c2)
+		textString2 := interfaceToString(getJsonPathResult(t, b2, "$.name").(interface{}))
+		assert.Equal(t, "cannot be blank", textString2)
+	})
+}
+
 func TestChatCrud(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db db.DB) {
 		chatsBefore, _ := db.CountChats()
@@ -195,6 +209,19 @@ func TestGetMessagesPaginated(t *testing.T) {
 	})
 }
 
+func TestMessageValidation(t *testing.T) {
+	runTest(t, func(e *echo.Echo, db db.DB) {
+		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": ""}`), e)
+		assert.Equal(t, http.StatusBadRequest, c)
+		textString := interfaceToString(getJsonPathResult(t, b, "$.text").(interface{}))
+		assert.Equal(t, "cannot be blank", textString)
+
+		c2, b2, _ := request("POST", "/chat/1/message", strings.NewReader(``), e)
+		assert.Equal(t, http.StatusBadRequest, c2)
+		textString2 := interfaceToString(getJsonPathResult(t, b2, "$.text").(interface{}))
+		assert.Equal(t, "cannot be blank", textString2)
+	})
+}
 
 func TestMessageCrud(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db db.DB) {

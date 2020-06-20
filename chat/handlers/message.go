@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -107,7 +108,11 @@ func convertToMessageDto(dbMessage *db.Message) *DisplayMessageDto {
 }
 
 type CreateMessageDto struct {
-	Text           string  `json:"text"`
+	Text string `json:"text"`
+}
+
+func (a *CreateMessageDto) Validate() error {
+	return validation.ValidateStruct(a, validation.Field(&a.Text, validation.Required, validation.Min(1), validation.Max(1024*1024)))
 }
 
 func PostMessage(dbR db.DB) func(c echo.Context) error {
@@ -115,6 +120,10 @@ func PostMessage(dbR db.DB) func(c echo.Context) error {
 		var bindTo = new(CreateMessageDto)
 		if err := c.Bind(bindTo); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
+			return err
+		}
+
+		if valid, err := ValidateAndRespondError(c, bindTo); err != nil || !valid {
 			return err
 		}
 
@@ -149,9 +158,8 @@ func PostMessage(dbR db.DB) func(c echo.Context) error {
 
 func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64) *db.Message {
 	return &db.Message{
-		Text:           dto.Text,
-		ChatId:         chatId,
-		OwnerId:        authPrincipal.UserId,
+		Text:    dto.Text,
+		ChatId:  chatId,
+		OwnerId: authPrincipal.UserId,
 	}
 }
-
