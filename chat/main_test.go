@@ -258,6 +258,11 @@ func TestMessageCrud(t *testing.T) {
 
 		dateTimeInterface5 := interfaceToString(getJsonPathResult(t, b5, "$.editDateTime").(interface{}))
 		assert.NotEmpty(t, dateTimeInterface5)
+
+		c1, _, _ := request("DELETE", "/chat/1/message/"+idString, nil, e)
+		assert.Equal(t, http.StatusAccepted, c1)
+		messagesAfterDelete, _ := db.CountMessages()
+		assert.Equal(t, messagesBefore, messagesAfterDelete)
 	})
 }
 

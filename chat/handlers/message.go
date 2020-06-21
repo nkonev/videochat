@@ -72,14 +72,12 @@ func GetMessage(dbR db.DB) func(c echo.Context) error {
 			return errors.New("Error during getting auth context")
 		}
 
-		chatIdString := c.Param("id")
-		chatId, err := utils.ParseInt64(chatIdString)
+		chatId, err := GetPathParamAsInt64(c, "id")
 		if err != nil {
 			return err
 		}
 
-		messageIdString := c.Param("messageId")
-		messageId, err := utils.ParseInt64(messageIdString)
+		messageId, err := GetPathParamAsInt64(c, "messageId")
 		if err != nil {
 			return err
 		}
@@ -208,7 +206,6 @@ func EditMessage(dbR db.DB, policy *bluemonday.Policy) func(c echo.Context) erro
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
 		}
 		return errOuter
-
 	}
 }
 
@@ -219,5 +216,31 @@ func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResul
 		ChatId:       chatId,
 		OwnerId:      authPrincipal.UserId,
 		EditDateTime: null.TimeFrom(time.Now()),
+	}
+}
+
+func DeleteMessage(dbR db.DB) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+		if !ok {
+			GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+			return errors.New("Error during getting auth context")
+		}
+
+		chatId, err := GetPathParamAsInt64(c, "id")
+		if err != nil {
+			return err
+		}
+
+		messageId, err := GetPathParamAsInt64(c, "messageId")
+		if err != nil {
+			return err
+		}
+
+		if err := dbR.DeleteMessage(messageId, userPrincipalDto.UserId, chatId); err != nil {
+			return err
+		} else {
+			return c.JSON(http.StatusAccepted, &utils.H{"id": messageId})
+		}
 	}
 }

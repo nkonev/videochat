@@ -96,7 +96,15 @@ func (tx *Tx) EditMessage(m *Message) error {
 	}
 
 	if _, err := tx.Exec(`UPDATE message SET text = $1, edit_date_time = $2 WHERE owner_id = $3 AND id = $4`, m.Text, m.EditDateTime, m.OwnerId, m.Id); err != nil {
-		Logger.Errorf("Error during getting message id %v", err)
+		Logger.Errorf("Error during editing message id %v", err)
+		return err
+	}
+	return nil
+}
+
+func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error {
+	if _, err := db.Exec(`DELETE FROM message WHERE id = $1 AND owner_id = $2 AND chat_id = $3`, messageId, ownerId, chatId); err != nil {
+		Logger.Errorf("Error during deleting message id %v", err)
 		return err
 	}
 	return nil
