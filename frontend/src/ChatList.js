@@ -17,6 +17,7 @@ import ChatEdit from './ChatEdit';
 import {openEditModal, closeEditModal} from "./actions";
 import {connect} from "react-redux";
 import { Link as RouteLink } from "react-router-dom";
+import InfiniteScroll from 'react-infinite-scroller';
 
 const useStyles = makeStyles(theme => ({
     appHeader: {
@@ -82,6 +83,7 @@ function ChatList({ currentState, dispatch }) {
     const [openConfirmModal, setOpenConfirmModal] = useState(false);
     const [chatToDelete, setChatToDelete] = useState({});
     const [editDto, setEditDto] = useState({});
+    const [hasMore, setHasMore] = useState(true);
 
     const fetchData = () => {
         axios
@@ -90,6 +92,17 @@ function ChatList({ currentState, dispatch }) {
                 setChats(message.data);
             });
     };
+
+    const loadMore = (page = 0) => {
+        console.log("Invoking loadMore with page", page);
+        axios
+            .get(`/api/chat?page=${page}`)
+            .then(message => {
+                setChats([...chats, ...message.data]);
+                setHasMore(!!message.data.length);
+            });
+    };
+
 
     const openDeleteModal = (dto) => {
         setChatToDelete(dto);
@@ -129,6 +142,12 @@ function ChatList({ currentState, dispatch }) {
     let chatContent;
     if (Array.isArray(chats) && chats.length) {
         chatContent = (
+        <InfiniteScroll
+                pageStart={0}
+                loadMore={loadMore}
+                hasMore={hasMore}
+                loader={<CircularProgress size={72} thickness={8} variant={'indeterminate'} disableShrink={true} key={0}/>}
+            >
             <List className="chat-list">
                 {chats.map((value, index) => {
                     return (
@@ -164,11 +183,12 @@ function ChatList({ currentState, dispatch }) {
                     )
                 })}
             </List>
+        </InfiniteScroll>
         );
     } else {
         chatContent = (
-        <div className={classes.scroller}>
-            <CircularProgress size={72} thickness={8} variant={'indeterminate'} disableShrink={true}/>
+        <div>
+            No elements
         </div>
         );
     }
