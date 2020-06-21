@@ -14,15 +14,13 @@ import (
 	"time"
 )
 
-type NewMessageDto struct {
-	Text   string `json:"text"`
-	ChatId int64  `json:"chatId"`
+type EditMessageDto struct {
+	Id   int64  `json:"id"`
+	Text string `json:"text"`
 }
 
-type EditMessageDto struct {
-	Id     int64  `json:"id"`
-	Text   string `json:"text"`
-	ChatId int64  `json:"chatId"`
+type CreateMessageDto struct {
+	Text string `json:"text"`
 }
 
 type DisplayMessageDto struct {
@@ -111,12 +109,15 @@ func convertToMessageDto(dbMessage *db.Message) *DisplayMessageDto {
 	}
 }
 
-type CreateMessageDto struct {
-	Text string `json:"text"`
-}
-
 func (a *CreateMessageDto) Validate() error {
 	return validation.ValidateStruct(a, validation.Field(&a.Text, validation.Required, validation.Length(1, 1024*1024)))
+}
+
+func (a *EditMessageDto) Validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.Text, validation.Required, validation.Length(1, 1024*1024)),
+		validation.Field(&a.Id, validation.Required),
+	)
 }
 
 func PostMessage(dbR db.DB, policy *bluemonday.Policy) func(c echo.Context) error {
@@ -170,5 +171,53 @@ func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthRe
 		Text:    policy.Sanitize(dto.Text),
 		ChatId:  chatId,
 		OwnerId: authPrincipal.UserId,
+	}
+}
+
+func EditMessage(dbR db.DB, policy *bluemonday.Policy) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		var bindTo = new(EditMessageDto)
+		if err := c.Bind(bindTo); err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
+			return err
+		}
+
+		if valid, err := ValidateAndRespondError(c, bindTo); err != nil || !valid {
+			return err
+		}
+
+		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+		if !ok {
+			GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+			return errors.New("Error during getting auth context")
+		}
+
+		chatId, err := GetPathParamAsInt64(c, "id")
+		if err != nil {
+			return err
+		}
+
+		errOuter := db.Transact(dbR, func(tx *db.Tx) error {
+			err := tx.EditMessage(convertToEditableMessage(bindTo, userPrincipalDto, chatId, policy))
+			if err != nil {
+				return err
+			}
+			return c.JSON(http.StatusCreated, &utils.H{"id": bindTo.Id})
+		})
+		if errOuter != nil {
+			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
+		}
+		return errOuter
+
+	}
+}
+
+func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *bluemonday.Policy) *db.Message {
+	return &db.Message{
+		Id:           dto.Id,
+		Text:         policy.Sanitize(dto.Text),
+		ChatId:       chatId,
+		OwnerId:      authPrincipal.UserId,
+		EditDateTime: null.TimeFrom(time.Now()),
 	}
 }

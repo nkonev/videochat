@@ -85,3 +85,19 @@ func (tx *Tx) AddMessageRead(messageId, userId int64) error {
 	_, err := tx.Exec(`INSERT INTO message_read (message_id, user_id) VALUES ($1, $2)`, messageId, userId)
 	return err
 }
+
+func (tx *Tx) EditMessage(m *Message) error {
+	if m == nil {
+		return errors.New("message required")
+	} else if m.Text == "" {
+		return errors.New("text required")
+	} else if m.Id == 0 {
+		return errors.New("id required")
+	}
+
+	if _, err := tx.Exec(`UPDATE message SET text = $1, edit_date_time = $2 WHERE owner_id = $3 AND id = $4`, m.Text, m.EditDateTime, m.OwnerId, m.Id); err != nil {
+		Logger.Errorf("Error during getting message id %v", err)
+		return err
+	}
+	return nil
+}

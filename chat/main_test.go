@@ -178,8 +178,7 @@ func TestChatCrud(t *testing.T) {
 
 		c3, b3, _ := request("GET", "/chat/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c3)
-		nameInterface := getJsonPathResult(t, b3, "$.name").(interface{})
-		nameString := interfaceToString(nameInterface)
+		nameString := interfaceToString(getJsonPathResult(t, b3, "$.name").(interface{}))
 		assert.Equal(t, "Ultra new chat", nameString)
 
 		c2, _, _ := request("PUT", "/chat", strings.NewReader(`{ "id": `+idString+`, "name": "Mega ultra new chat"}`), e)
@@ -246,9 +245,19 @@ func TestMessageCrud(t *testing.T) {
 
 		c3, b3, _ := request("GET", "/chat/1/message/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c3)
-		textInterface := getJsonPathResult(t, b3, "$.text").(interface{})
-		textString := interfaceToString(textInterface)
+		textString := interfaceToString(getJsonPathResult(t, b3, "$.text").(interface{}))
 		assert.Equal(t, "Ultra new message", textString)
+
+		c4, _, _ := request("PUT", "/chat/1/message", strings.NewReader(`{"text": "Edited ultra new message", "id": `+idString+`}`), e)
+		assert.Equal(t, http.StatusCreated, c4)
+
+		c5, b5, _ := request("GET", "/chat/1/message/"+idString, nil, e)
+		assert.Equal(t, http.StatusOK, c5)
+		textString5 := interfaceToString(getJsonPathResult(t, b5, "$.text").(interface{}))
+		assert.Equal(t, "Edited ultra new message", textString5)
+
+		dateTimeInterface5 := interfaceToString(getJsonPathResult(t, b5, "$.editDateTime").(interface{}))
+		assert.NotEmpty(t, dateTimeInterface5)
 	})
 }
 
@@ -267,7 +276,6 @@ func TestMessageIsSanitized(t *testing.T) {
 		assert.Equal(t, `<a href="http://www.google.com" rel="nofollow">Google</a>`, textString)
 	})
 }
-
 
 func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 	h1 := map[string][]string{
