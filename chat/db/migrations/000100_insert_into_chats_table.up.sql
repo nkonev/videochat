@@ -11,36 +11,13 @@ VALUES
 ('dolor', 1),
 ('sit', 1),
 ('amet', 1),
-('With collegues', 1),
-('second 2', 1),
-('second 3', 1),
-('second 4', 1),
-('second 5', 1),
-('second 6', 1),
-('second 7', 1),
-('second 8', 1),
-('second 9', 1),
-('second 10', 1),
-('second 11', 1),
-('second 12', 1),
-('second 13', 1),
-('second 14', 1),
-('second 15', 1),
-('second 16', 1),
-('second 17', 1),
-('second 18', 1),
-('second 19', 1),
-('second 20', 1),
-('second 21', 1),
-('second 22', 1),
-('second 23', 1),
-('second 24', 1),
-('second 25', 1),
-('second 26', 1),
-('second 27', 1),
-('second 28', 1),
-('second 29', 1),
-('second 30', 1),
-('second 31', 1),
-('second 32', 1)
-;
+('With collegues', 1);
+
+INSERT INTO chat (
+    title,
+    owner_id
+)
+	SELECT
+		'generated_chat' || i,
+		1
+	FROM generate_series(2, 100) AS i;
