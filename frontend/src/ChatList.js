@@ -186,6 +186,7 @@ function ChatList({ currentState, dispatch }) {
                     next={loadMore}
                     hasMore={hasMore}
                     loader={<h4>Loading...</h4>}
+                    style={{overflow: "inherit"}}
                 >
                     <List className="chat-list">
                         {chats.map((value, index) => {
