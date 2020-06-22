@@ -84,6 +84,7 @@ function ChatList({ currentState, dispatch }) {
     const [chatToDelete, setChatToDelete] = useState({});
     const [editDto, setEditDto] = useState({});
     const [hasMore, setHasMore] = useState(true);
+    const [page, setPage]  = useState(0);
 
     const isEmpty = (arr) => {
         if (Array.isArray(arr) && arr.length) {
@@ -93,27 +94,38 @@ function ChatList({ currentState, dispatch }) {
         }
     };
 
-    const fetchData = () => {
-        axios
-            .get(`/api/chat`)
-            .then(message => {
-                setChats(message.data);
-            });
-    };
+    const loadMore = (reset = false) => {
 
-    const loadMore = (page = 0) => {
-        console.log("Invoking loadMore with page", page);
+        let currentPage;
+        let currentChats;
+        if (reset) {
+            setPage(0);
+            setChats([]);
+            currentPage = 0;
+            currentChats = [];
+        } else {
+            currentPage = page;
+            currentChats = chats;
+        }
+
+        console.log("Invoking loadMore with page", currentPage);
         axios
-            .get(`/api/chat?page=${page}`)
+            .get(`/api/chat?page=${currentPage}`)
             .then(message => {
-                const newChats = [...chats, ...message.data];
+                const newChats = [...currentChats, ...message.data];
                 const hasMoreChats = !isEmpty(message.data);
                 //console.log("New chats:", newChats, "returned ", message.data, "hasMore", hasMoreChats);
                 setChats(newChats);
                 setHasMore(hasMoreChats);
+                setPage(currentPage+1);
             });
     };
 
+    // reset and load
+    const fetchData = () => {
+        console.log("Resetting");
+        loadMore(true);
+    };
 
     const openDeleteModal = (dto) => {
         setChatToDelete(dto);
@@ -144,6 +156,10 @@ function ChatList({ currentState, dispatch }) {
         handleCloseConfirmModal();
     };
 
+    useEffect(() => {
+        loadMore();
+    }, []);
+
     const classes = useStyles();
 
     return (
@@ -169,7 +185,7 @@ function ChatList({ currentState, dispatch }) {
                     dataLength={chats.length}
                     next={loadMore}
                     hasMore={hasMore}
-                    loader={<CircularProgress size={72} thickness={8} variant={'indeterminate'} disableShrink={true} key={0}/>}
+                    loader={<h4>Loading...</h4>}
                 >
                     <List className="chat-list">
                         {chats.map((value, index) => {
