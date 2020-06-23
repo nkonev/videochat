@@ -53,8 +53,8 @@ func createPresence(credso *centrifuge.Credentials, client *centrifuge.Client) (
 	Logger.Debugf("Calculated session duration %v for credentials %v", presenceDuration, credso)
 
 	clientInfo := &protocol.ClientInfo{
-		User:   client.ID(),
-		Client: client.UserID(),
+		User:   client.UserID(),
+		Client: client.ID(),
 	}
 	Logger.Infof("Created ClientInfo(Client: %v, UserId: %v)", client.ID(), client.UserID())
 	return clientInfo, presenceDuration, nil
