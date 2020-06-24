@@ -6,25 +6,6 @@ function Chat() {
     let { id } = useParams();
 
     useEffect(() => {
-        console.log("Invoked centrifuge effect");
-
-        // Create Centrifuge object with Websocket endpoint address set in main.go
-        var url = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/api/chat/websocket";
-        var clientId;
-        var centrifuge = new Centrifuge(url, {
-            onRefresh: function(ctx){
-                console.debug("Dummy refresh");
-            }
-        });
-        centrifuge.on('connect', function(ctx){
-            console.log("Connected response", ctx);
-            clientId = ctx.client;
-            console.log('My clientId :', clientId);
-        });
-        centrifuge.on('disconnect', function(ctx){
-            console.log("Disconnected response", ctx);
-        });
-        centrifuge.connect();
 
 
 
@@ -47,12 +28,6 @@ function Chat() {
                 payload: message
             }
         }
-
-        centrifuge.on('publish', function(ctx) {
-            const text = 'Server-side publication from channel ' + ctx.channel + ": " + JSON.stringify(ctx.data);
-            //drawText(text);
-            console.log(text)
-        });
 
 
         var chatSubscription = centrifuge.subscribe("chat1", function(message) {
@@ -350,7 +325,6 @@ function Chat() {
             hangup();
             chatSubscription.unsubscribe();
             signalingSubscription.unsubscribe();
-            centrifuge.disconnect();
         };
     });
 

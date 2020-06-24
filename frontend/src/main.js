@@ -7,7 +7,7 @@ import axios from 'axios'
 import { createStore } from 'redux'
 import { Provider } from 'react-redux'
 import {goLogin, savePreviousUrl, unsetProfile} from "./actions"
-import {getProfile} from "./utils";
+import {getProfile, setupCentrifuge} from "./utils";
 import reducerFunction from "./reducer"
 
 const store = createStore(reducerFunction);
@@ -29,11 +29,17 @@ axios.interceptors.response.use((response) => {
     }
 });
 
+const centrifuge = setupCentrifuge();
+
 getProfile(store.dispatch).finally(()=>{
     ReactDOM.render(
         <Provider store={store}>
-            <App />
+            <App centrifuge={centrifuge} />
         </Provider>,
         document.getElementById('root')
     );
 });
+
+window.onunload = () => {
+    centrifuge.disconnect();
+};
