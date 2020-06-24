@@ -3,7 +3,7 @@
         <v-main>
             <v-container>
                 <v-card
-                        max-width="500"
+                        max-width="1000"
                         class="mx-auto"
                 >
                     <v-toolbar
@@ -12,56 +12,65 @@
                     >
                         <v-app-bar-nav-icon></v-app-bar-nav-icon>
 
-                        <v-toolbar-title>Inbox</v-toolbar-title>
+                        <v-btn icon @click="openModal">
+                            <v-icon>mdi-plus-circle-outline</v-icon>
+                        </v-btn>
 
+                        <v-spacer></v-spacer>
+                        <v-toolbar-title>Chats</v-toolbar-title>
                         <v-spacer></v-spacer>
 
                         <v-btn icon>
                             <v-icon>mdi-magnify</v-icon>
                         </v-btn>
 
-                        <v-btn icon>
-                            <v-icon>mdi-dots-vertical</v-icon>
-                        </v-btn>
                     </v-toolbar>
+
+                    <EditChat v-model="openEditModal"/>
+
                     <v-list>
-                        <v-list-item
-                                v-for="item in items"
-                                :key="item.title"
-                                @click=""
-                        >
-                            <v-list-item-icon>
-                                <v-icon v-if="item.icon" color="pink">mdi-star</v-icon>
-                            </v-list-item-icon>
-
-                            <v-list-item-content>
-                                <v-list-item-title v-text="item.title"></v-list-item-title>
-                            </v-list-item-content>
-
-                            <v-list-item-avatar>
-                                <v-img :src="item.avatar"></v-img>
-                            </v-list-item-avatar>
-                        </v-list-item>
+                            <v-list-item
+                                    v-for="(item, index) in items"
+                                    :key="item.id"
+                                    @click=""
+                            >
+                                <v-list-item-content>
+                                    <v-list-item-title v-html="item.name"></v-list-item-title>
+                                    <v-list-item-subtitle v-html="item.participantIds"></v-list-item-subtitle>
+                                </v-list-item-content>
+                            </v-list-item>
                     </v-list>
                 </v-card>
-
             </v-container>
         </v-main>
     </v-app>
 </template>
 
 <script>
-    import Vue from 'vue'
+    import axios from 'axios';
+    import EditChat from "./EditChat";
 
     export default {
         data () {
             return {
                 items: [
-                    {icon: true, title: 'Jason Oner', avatar: 'https://cdn.vuetifyjs.com/images/lists/1.jpg'},
-                    {title: 'Travis Howard', avatar: 'https://cdn.vuetifyjs.com/images/lists/2.jpg'},
-                    {title: 'Ali Connors', avatar: 'https://cdn.vuetifyjs.com/images/lists/3.jpg'},
-                    {title: 'Cindy Baker', avatar: 'https://cdn.vuetifyjs.com/images/lists/4.jpg'},
                 ],
+                openEditModal: false
+            }
+        },
+        mounted(){
+            axios
+                .get(`/api/chat`)
+                .then(message => {
+                    this.$data.items = message.data;
+                });
+        },
+        components:{
+            EditChat
+        },
+        methods:{
+            openModal() {
+                this.$data.openEditModal = true;
             }
         }
     }

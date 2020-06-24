@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
+    "axios": "^0.19.2",
     "vue": "^2.6.11",
     "vuetify": "^2.3.2"
   },
