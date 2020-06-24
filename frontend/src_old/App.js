@@ -1,4 +1,4 @@
-import React, {  useEffect } from "react";
+import React, {useEffect, useState} from "react";
 import "./header.css"
 import {
     BrowserRouter as Router,
@@ -20,7 +20,7 @@ import Chat from './Chat'
  * @constructor
  */
 
-const App = ({ currentState, dispatch }) => {
+const App = ({ currentState, dispatch, centrifuge }) => {
 
     // https://ru.reactjs.org/docs/hooks-effect.html
     useEffect(() => {
@@ -102,7 +102,7 @@ const App = ({ currentState, dispatch }) => {
                 <About />
             </Route>
             <Route exact path="/chat">
-                <ChatList />
+                <ChatList centrifuge={centrifuge} />
             </Route>
             <Route path="/chat/:id">
                 <Chat />

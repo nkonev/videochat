@@ -1,39 +1,31 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import 'typeface-roboto';
-import axios from 'axios'
-import { createStore } from 'redux'
-import { Provider } from 'react-redux'
-import {goLogin, savePreviousUrl, unsetProfile} from "./actions"
-import {getProfile} from "./utils";
-import reducerFunction from "./reducer"
+import Vue from 'vue'
+import App from './App.vue'
+import vuetify from '@/plugins/vuetify'
+import axios from "axios";
+import bus, {UNAUTHORIZED} from './bus';
+import store, {SET_PREVIOUS_URL, UNSET_USER, FETCH_USER_PROFILE} from './store'
 
-const store = createStore(reducerFunction);
-store.subscribe(() => console.log("state changed", store.getState()));
+const vm = new Vue({
+  vuetify,
+  store,
+  // https://ru.vuejs.org/v2/guide/render-function.html
+  render: h => h(App, {ref: 'appRef'})
+}).$mount('#root');
 
 axios.interceptors.response.use((response) => {
-    return response
+  return response
 }, (error) => {
-    // https://github.com/axios/axios/issues/932#issuecomment-307390761
-    // console.log("Catch error", error, error.request, error.response, error.config);
-    if (error && error.response && error.response.status == 401 && error.config.url != '/api/profile') {
-        console.log("Catch 401 Unauthorized, saving url", window.location.pathname);
-        store.dispatch(unsetProfile());
-        store.dispatch(savePreviousUrl(window.location.pathname));
-        store.dispatch(goLogin());
-        return Promise.reject(error)
-    } else {
-        return Promise.reject(error)
-    }
-});
-
-getProfile(store.dispatch).finally(()=>{
-    ReactDOM.render(
-        <Provider store={store}>
-            <App />
-        </Provider>,
-        document.getElementById('root')
-    );
+  // https://github.com/axios/axios/issues/932#issuecomment-307390761
+  // console.log("Catch error", error, error.request, error.response, error.config);
+  if (error && error.response && error.response.status == 401 && error.config.url != '/api/profile') {
+    console.log("Catch 401 Unauthorized, saving url", window.location.pathname);
+    store.commit(UNSET_USER);
+    store.commit(SET_PREVIOUS_URL, window.location.pathname);
+    bus.$emit(UNAUTHORIZED, null);
+    return Promise.reject(error)
+  } else {
+    console.log(error.response);
+    vm.$refs.appRef.onError(error.response);
+    return Promise.reject(error)
+  }
 });

@@ -76,7 +76,7 @@ function getModalStyle() {
     };
 }
 
-function ChatList({ currentState, dispatch }) {
+function ChatList({ currentState, dispatch, centrifuge }) {
     // state
     const [chats, setChats] = useState([]);
     const [modalStyle] = useState(getModalStyle);
@@ -161,6 +161,21 @@ function ChatList({ currentState, dispatch }) {
     }, []);
 
     const classes = useStyles();
+
+    useEffect(()=>{
+        console.log("Subscribing to Server-side subscription");
+        centrifuge.on('publish', function (ctx) {
+            const text = 'Server-side publication from channel ' + ctx.channel + ": " + JSON.stringify(ctx.data);
+            //drawText(text);
+            console.log(text)
+        });
+
+        // cleanup
+        return function cleanup() {
+            console.log("Cleaning up Server-side subscription");
+            centrifuge.on('publish', function (ctx) { });
+        };
+    }, []);
 
     return (
             <div className={classes.root}>

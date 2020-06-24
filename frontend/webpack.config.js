@@ -2,6 +2,8 @@ const path = require("path");
 const CssExtractPlugin = require('mini-css-extract-plugin');
 const LiveReloadPlugin = require('webpack-livereload-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const { VueLoaderPlugin } = require('vue-loader');
+const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin')
 
 const contentStaticDest = path.join(__dirname, "../frontend-nginx");
 const contentBase = path.join(contentStaticDest, "/public/build");
@@ -11,6 +13,8 @@ module.exports = (env, argv) => {
         new CopyPlugin({patterns: [
             { from: './static', to: contentStaticDest },
         ]}),
+        new VueLoaderPlugin(),
+        new VuetifyLoaderPlugin(),
         new CssExtractPlugin({
             // Options similar to the same options in webpackOptions.output
             // all options are optional
@@ -34,6 +38,13 @@ module.exports = (env, argv) => {
         output: {
             path: contentBase,
             filename: "main.js"
+        },
+        resolve: {
+            alias: {
+                'vue$': path.resolve(path.join(__dirname, 'node_modules', 'vue/dist/vue.runtime.esm.js')), // it's important, else you will get "You are using the runtime-only build of Vue where the template compiler is not available. Either pre-compile the templates into render functions, or use the compiler-included build."
+                '@': path.resolve(__dirname, 'src')
+            },
+            extensions: ['.js', '.vue']
         },
         module: {
             rules: [
@@ -69,6 +80,14 @@ module.exports = (env, argv) => {
                     ],
                 },
                 {
+                    test: /\.styl|stylus$/,
+                    use: [
+                        CssExtractPlugin.loader,
+                        "css-loader?sourceMap",
+                        'stylus-loader'
+                    ]
+                },
+                {
                     test: /\.(ttf|eot|woff|woff2)$/,
                     use: [
                         {
@@ -78,6 +97,32 @@ module.exports = (env, argv) => {
                                 limit: '4096'
                             }
                         }
+                    ],
+                },
+                {
+                    test: /\.vue$/,
+                    loader: 'vue-loader',
+                    options: {
+                        extractCSS: true
+                    }
+                },
+                {
+                    test: /\.s(c|a)ss$/,
+                    use: [
+                        'vue-style-loader',
+                        CssExtractPlugin.loader,
+                        'css-loader',
+                        {
+                            loader: 'sass-loader',
+                            // Requires sass-loader@^8.0.0
+                            options: {
+                                implementation: require('sass'),
+                                sassOptions: {
+                                    fiber: require('fibers'),
+                                    indentedSyntax: true // optional
+                                },
+                            },
+                        },
                     ],
                 },
             ]

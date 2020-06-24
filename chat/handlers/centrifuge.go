@@ -98,6 +98,8 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 	cfg.LogLevel = centrifuge.LogLevelDebug
 	cfg.LogHandler = handleLog
 
+	cfg.UserSubscribeToPersonal = true
+
 	// Node is the core object in Centrifuge library responsible for many useful
 	// things. Here we initialize new Node instance and pass config to it.
 	node, _ := centrifuge.New(cfg)
