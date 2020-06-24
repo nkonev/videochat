@@ -1,31 +1,32 @@
 <template>
     <v-app>
+        <!-- https://vuetifyjs.com/en/components/application/ -->
+        <v-app-bar
+                color="indigo"
+                dark
+                app
+        >
+            <v-app-bar-nav-icon></v-app-bar-nav-icon>
+
+            <v-btn icon @click="openModal">
+                <v-icon>mdi-plus-circle-outline</v-icon>
+            </v-btn>
+
+            <v-spacer></v-spacer>
+            <v-toolbar-title>Chats</v-toolbar-title>
+            <v-spacer></v-spacer>
+
+            <v-btn icon>
+                <v-icon>mdi-magnify</v-icon>
+            </v-btn>
+        </v-app-bar>
+
         <v-main>
             <v-container>
                 <v-card
                         max-width="1000"
                         class="mx-auto"
                 >
-                    <v-toolbar
-                            color="indigo"
-                            dark
-                    >
-                        <v-app-bar-nav-icon></v-app-bar-nav-icon>
-
-                        <v-btn icon @click="openModal">
-                            <v-icon>mdi-plus-circle-outline</v-icon>
-                        </v-btn>
-
-                        <v-spacer></v-spacer>
-                        <v-toolbar-title>Chats</v-toolbar-title>
-                        <v-spacer></v-spacer>
-
-                        <v-btn icon>
-                            <v-icon>mdi-magnify</v-icon>
-                        </v-btn>
-
-                    </v-toolbar>
-
                     <EditChat v-model="openEditModal"/>
 
                     <v-list>
