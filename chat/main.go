@@ -80,7 +80,7 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.Au
 
 	e.GET("/chat", handlers.GetChats(db))
 	e.GET("/chat/:id", handlers.GetChat(db))
-	e.POST("/chat", handlers.CreateChat(db))
+	e.POST("/chat", handlers.CreateChat(db, node))
 	e.DELETE("/chat/:id", handlers.DeleteChat(db))
 	e.PUT("/chat", handlers.EditChat(db))
 

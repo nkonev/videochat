@@ -16,20 +16,23 @@ function Chat() {
                 console.debug("Dummy refresh");
             }
         });
-        function drawText(text) {
-            var div = document.createElement('div');
-            div.innerHTML = text + '<br>';
-            document.body.appendChild(div);
-        }
         centrifuge.on('connect', function(ctx){
-            drawText('Connected over ' + ctx.transport);
             console.log("Connected response", ctx);
             clientId = ctx.client;
             console.log('My clientId :', clientId);
         });
         centrifuge.on('disconnect', function(ctx){
-            drawText('Disconnected: ' + ctx.reason);
+            console.log("Disconnected response", ctx);
         });
+        centrifuge.connect();
+
+
+
+        function drawText(text) {
+            var div = document.createElement('div');
+            div.innerHTML = text + '<br>';
+            document.body.appendChild(div);
+        }
 
         function getData(message) {
             return message.data
@@ -45,6 +48,13 @@ function Chat() {
             }
         }
 
+        centrifuge.on('publish', function(ctx) {
+            const text = 'Server-side publication from channel ' + ctx.channel + ": " + JSON.stringify(ctx.data);
+            //drawText(text);
+            console.log(text)
+        });
+
+
         var chatSubscription = centrifuge.subscribe("chat1", function(message) {
             // we can rely only on data
             drawText(JSON.stringify(getData(message)));
@@ -56,8 +66,6 @@ function Chat() {
                 input.value = '';
             }
         });
-        // After setting event handlers – initiate actual connection with server.
-        centrifuge.connect();
 
 
         function isMyMessage(message) {

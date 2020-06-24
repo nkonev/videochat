@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"github.com/centrifugal/centrifuge"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -106,7 +107,7 @@ func convertToDto(c *db.Chat, participantIds []int64) *ChatDto {
 	}
 }
 
-func CreateChat(dbR db.DB) func(c echo.Context) error {
+func CreateChat(dbR db.DB, node *centrifuge.Node) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(CreateChatDto)
 		if err := c.Bind(bindTo); err != nil {
@@ -123,6 +124,7 @@ func CreateChat(dbR db.DB) func(c echo.Context) error {
 			return errors.New("Error during getting auth context")
 		}
 
+		var participantsForNotify []int64
 		result, errOuter := db.TransactWithResult(dbR, func(tx *db.Tx) (interface{}, error) {
 			id, err := tx.CreateChat(convertToCreatableChat(bindTo))
 			if err != nil {
@@ -131,6 +133,7 @@ func CreateChat(dbR db.DB) func(c echo.Context) error {
 			if err := tx.AddParticipant(userPrincipalDto.UserId, id, true); err != nil {
 				return 0, err
 			}
+			participantsForNotify = append(participantsForNotify, userPrincipalDto.UserId)
 			for _, participantId := range bindTo.ParticipantIds {
 				if participantId == userPrincipalDto.UserId {
 					continue
@@ -138,6 +141,7 @@ func CreateChat(dbR db.DB) func(c echo.Context) error {
 				if err := tx.AddParticipant(participantId, id, false); err != nil {
 					return 0, err
 				}
+				participantsForNotify = append(participantsForNotify, participantId)
 			}
 			return id, err
 		})
@@ -145,6 +149,18 @@ func CreateChat(dbR db.DB) func(c echo.Context) error {
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
 			return errOuter
 		} else {
+
+			// send start
+			for _, participantId := range participantsForNotify {
+				participantChannel := node.PersonalChannel(utils.Int64ToString(participantId))
+				GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
+				_, err := node.Publish(participantChannel, []byte(`{"messageChatId": `+utils.InterfaceToString(result)+`, "type": "chat_created"}`))
+				if err != nil {
+					GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
+				}
+			}
+			// send end
+
 			return c.JSON(http.StatusCreated, &utils.H{"id": result})
 		}
 	}
