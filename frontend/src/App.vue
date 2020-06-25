@@ -41,6 +41,8 @@
                                 </v-list-item-content>
                             </v-list-item>
                     </v-list>
+                    <infinite-loading @infinite="infiniteHandler"></infinite-loading>
+
                 </v-card>
             </v-container>
         </v-main>
@@ -50,29 +52,39 @@
 <script>
     import axios from 'axios';
     import EditChat from "./EditChat";
+    import InfiniteLoading from 'vue-infinite-loading';
 
     export default {
         data () {
             return {
-                items: [
-                ],
+                page: 0,
+                items: [],
                 openEditModal: false
             }
         },
-        mounted(){
-            axios
-                .get(`/api/chat`)
-                .then(message => {
-                    this.$data.items = message.data;
-                });
-        },
         components:{
-            EditChat
+            EditChat,
+            InfiniteLoading
         },
         methods:{
             openModal() {
                 this.$data.openEditModal = true;
-            }
+            },
+            infiniteHandler($state) {
+                axios.get(`/api/chat`, {
+                    params: {
+                        page: this.page,
+                    },
+                }).then(({ data }) => {
+                    if (data.length) {
+                        this.page += 1;
+                        this.items.push(...data);
+                        $state.loaded();
+                    } else {
+                        $state.complete();
+                    }
+                });
+            },
         }
     }
 </script>
