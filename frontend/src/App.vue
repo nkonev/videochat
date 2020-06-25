@@ -69,6 +69,7 @@
                         class="mx-auto"
                 >
                     <EditChat v-model="openEditModal"/>
+                    <LoginModal/>
 
                     <v-list>
                             <v-list-item
@@ -94,6 +95,7 @@
     import axios from 'axios';
     import EditChat from "./EditChat";
     import InfiniteLoading from 'vue-infinite-loading';
+    import LoginModal from "./LoginModal";
 
     export default {
         data () {
@@ -111,7 +113,8 @@
         },
         components:{
             EditChat,
-            InfiniteLoading
+            InfiniteLoading,
+            LoginModal
         },
         methods:{
             openModal() {

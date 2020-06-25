@@ -3,21 +3,35 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex);
 
-export const GET_UNAUTHENTICATED = 'getUnauthenticated';
-export const SET_UNAUTHENTICATED = 'setUnauthenticated';
+export const GET_USER = 'getUser';
+export const SET_USER = 'setUser';
+export const UNSET_USER = 'unsetUser';
+export const GET_PREVIOUS_URL = "getPreviousUrl";
+export const SET_PREVIOUS_URL = "setPreviousUrl";
+export const UNSET_PREVIOUS_URL = "unsetPreviousUrl";
 
 const store = new Vuex.Store({
     state: {
-        unauthenticated: false,
+        currentUser: null,
+        previousUrl: ""
     },
     mutations: {
-        [SET_UNAUTHENTICATED](state, payload) {
-            state.unauthenticated = payload;
+        [UNSET_USER](state) {
+            state.currentUser = null;
         },
+        [SET_PREVIOUS_URL](state, payload) {
+            state.previousUrl = payload;
+        },
+        [UNSET_PREVIOUS_URL](state) {
+            state.previousUrl = "";
+        }
     },
     getters: {
-        [GET_UNAUTHENTICATED](state) {
-            return state.unauthenticated;
+        [GET_USER](state) {
+            return state.currentUser;
+        },
+        [GET_PREVIOUS_URL](state) {
+            return state.previousUrl;
         },
     },
     actions: {
