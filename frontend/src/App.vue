@@ -1,10 +1,50 @@
 <template>
     <v-app>
         <!-- https://vuetifyjs.com/en/components/application/ -->
+        <v-navigation-drawer
+                left
+                permanent
+                app
+                :clipped="true"
+        >
+            <template v-slot:prepend>
+                <v-list-item two-line>
+                    <v-list-item-avatar>
+                        <img src="https://randomuser.me/api/portraits/women/81.jpg">
+                    </v-list-item-avatar>
+
+                    <v-list-item-content>
+                        <v-list-item-title>Jane Smith</v-list-item-title>
+                        <v-list-item-subtitle>Logged In</v-list-item-subtitle>
+                    </v-list-item-content>
+                </v-list-item>
+            </template>
+
+            <v-divider></v-divider>
+
+            <v-list dense>
+                <v-list-item
+                        v-for="item in appBarItems"
+                        :key="item.title"
+                        @click=""
+                >
+                    <v-list-item-icon>
+                        <v-icon>{{ item.icon }}</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                        <v-list-item-title>{{ item.title }}</v-list-item-title>
+                    </v-list-item-content>
+                </v-list-item>
+            </v-list>
+        </v-navigation-drawer>
+
+
         <v-app-bar
                 color="indigo"
                 dark
                 app
+                :clipped-left="true"
         >
             <v-app-bar-nav-icon></v-app-bar-nav-icon>
 
@@ -20,6 +60,7 @@
                 <v-icon>mdi-magnify</v-icon>
             </v-btn>
         </v-app-bar>
+
 
         <v-main>
             <v-container>
@@ -59,7 +100,13 @@
             return {
                 page: 0,
                 items: [],
-                openEditModal: false
+                openEditModal: false,
+                appBarItems: [
+                    { title: 'Home', icon: 'mdi-home-city' },
+                    { title: 'My Account', icon: 'mdi-account' },
+                    { title: 'Users', icon: 'mdi-account-group-outline' },
+                ],
+                drawer: false,
             }
         },
         components:{
