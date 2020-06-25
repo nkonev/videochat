@@ -3,9 +3,9 @@
         <!-- https://vuetifyjs.com/en/components/application/ -->
         <v-navigation-drawer
                 left
-                permanent
                 app
                 :clipped="true"
+                v-model="drawer"
         >
             <template v-slot:prepend>
                 <v-list-item two-line>
@@ -46,7 +46,7 @@
                 app
                 :clipped-left="true"
         >
-            <v-app-bar-nav-icon></v-app-bar-nav-icon>
+            <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
 
             <v-btn icon @click="openModal">
                 <v-icon>mdi-plus-circle-outline</v-icon>
@@ -106,7 +106,7 @@
                     { title: 'My Account', icon: 'mdi-account' },
                     { title: 'Users', icon: 'mdi-account-group-outline' },
                 ],
-                drawer: false,
+                drawer: true,
             }
         },
         components:{
@@ -132,6 +132,9 @@
                     }
                 });
             },
+            toggleLeftNavigation() {
+                this.$data.drawer = !this.$data.drawer;
+            }
         }
     }
 </script>
