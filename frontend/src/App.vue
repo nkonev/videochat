@@ -72,7 +72,7 @@
 
                     <v-list>
                             <v-list-item
-                                    v-for="(item, index) in items"
+                                    v-for="(item, index) in chats"
                                     :key="item.id"
                                     @click=""
                             >
@@ -99,7 +99,7 @@
         data () {
             return {
                 page: 0,
-                items: [],
+                chats: [],
                 openEditModal: false,
                 appBarItems: [
                     { title: 'Home', icon: 'mdi-home-city' },
@@ -125,7 +125,7 @@
                 }).then(({ data }) => {
                     if (data.length) {
                         this.page += 1;
-                        this.items.push(...data);
+                        this.chats.push(...data);
                         $state.loaded();
                     } else {
                         $state.complete();
