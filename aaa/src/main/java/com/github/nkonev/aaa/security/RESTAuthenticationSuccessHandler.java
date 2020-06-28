@@ -36,12 +36,7 @@ public class RESTAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuc
 
         Long id = ((UserAccountDetailsDTO)authentication.getPrincipal()).getId();
 
-        final List<String> acceptValues = getAcceptHeaderValues(request);
-        if (acceptValues.contains(MediaType.TEXT_HTML_VALUE)) {
-            response.sendRedirect(ROOT);
-        } else {
-            SuccessfulLoginDTO successfulLoginDTO = new SuccessfulLoginDTO(id, "you successfully logged in");
-            objectMapper.writeValue(response.getOutputStream(), successfulLoginDTO);
-        }
+        SuccessfulLoginDTO successfulLoginDTO = new SuccessfulLoginDTO(id, "you successfully logged in");
+        objectMapper.writeValue(response.getOutputStream(), successfulLoginDTO);
     }
 }
