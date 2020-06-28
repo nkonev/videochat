@@ -3,10 +3,11 @@ import App from './App.vue'
 import vuetify from '@/plugins/vuetify'
 import axios from "axios";
 import bus, {UNAUTHORIZED} from './bus';
-import store, {SET_PREVIOUS_URL, UNSET_USER} from './store'
+import store, {SET_PREVIOUS_URL, UNSET_USER, FETCH_USER_PROFILE} from './store'
 
 new Vue({
   vuetify,
+  store,
   render: h => h(App)
 }).$mount('#root');
 

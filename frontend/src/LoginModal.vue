@@ -49,6 +49,7 @@
 <script>
     import bus, {UNAUTHORIZED} from "./bus";
     import axios from "axios";
+    import {FETCH_USER_PROFILE} from "./store";
 
     export default {
         data() {
@@ -108,6 +109,7 @@
                             // store.dispatch(replayPreviousUrl());
                             console.log("You successfully logged in");
                             this.hideLoginModal();
+                            this.$store.dispatch(FETCH_USER_PROFILE);
                         })
                         .catch((error) => {
                             // handle error

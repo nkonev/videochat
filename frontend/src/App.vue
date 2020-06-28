@@ -8,13 +8,13 @@
                 v-model="drawer"
         >
             <template v-slot:prepend>
-                <v-list-item two-line>
+                <v-list-item two-line v-if="currentUser">
                     <v-list-item-avatar>
-                        <img src="https://randomuser.me/api/portraits/women/81.jpg">
+                        <img :src="currentUser.avatar">
                     </v-list-item-avatar>
 
                     <v-list-item-content>
-                        <v-list-item-title>Jane Smith</v-list-item-title>
+                        <v-list-item-title>{{currentUser.login}}</v-list-item-title>
                         <v-list-item-subtitle>Logged In</v-list-item-subtitle>
                     </v-list-item-content>
                 </v-list-item>
@@ -96,6 +96,8 @@
     import EditChat from "./EditChat";
     import InfiniteLoading from 'vue-infinite-loading';
     import LoginModal from "./LoginModal";
+    import {mapGetters} from 'vuex'
+    import {FETCH_USER_PROFILE, GET_USER} from "./store";
 
     export default {
         data () {
@@ -106,7 +108,7 @@
                 appBarItems: [
                     { title: 'Home', icon: 'mdi-home-city' },
                     { title: 'My Account', icon: 'mdi-account' },
-                    { title: 'Users', icon: 'mdi-account-group-outline' },
+                    { title: 'Logout', icon: 'mdi-account-group-outline' },
                 ],
                 drawer: true,
             }
@@ -138,6 +140,12 @@
             toggleLeftNavigation() {
                 this.$data.drawer = !this.$data.drawer;
             }
+        },
+        computed: {
+            ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
+        },
+        mounted() {
+            this.$store.dispatch(FETCH_USER_PROFILE);
         }
     }
 </script>
