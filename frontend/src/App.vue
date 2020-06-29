@@ -150,8 +150,6 @@
                 });
             },
             reloadChats() {
-                // this.$data.page = 0;
-                // this.$data.chats = [];
                 this.$nextTick(() => {
                     this.infiniteId += 1;
                     console.log("Resetting infinite loader");
