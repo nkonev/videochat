@@ -94,7 +94,7 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 		),
 		fx.Invoke(
 			runMigrations,
-			//runCentrifuge,
+			runCentrifuge,
 			//runEcho,
 			testFunc,
 		),
