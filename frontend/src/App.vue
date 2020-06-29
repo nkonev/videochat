@@ -26,7 +26,7 @@
                 <v-list-item
                         v-for="item in appBarItems"
                         :key="item.title"
-                        @click=""
+                        @click="item.clickFunction"
                 >
                     <v-list-item-icon>
                         <v-icon>{{ item.icon }}</v-icon>
@@ -83,7 +83,7 @@
                                 </v-list-item-content>
                             </v-list-item>
                     </v-list>
-                    <infinite-loading @infinite="infiniteHandler"></infinite-loading>
+                    <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId"></infinite-loading>
 
                 </v-card>
             </v-container>
@@ -97,7 +97,8 @@
     import InfiniteLoading from 'vue-infinite-loading';
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
-    import {FETCH_USER_PROFILE, GET_USER} from "./store";
+    import {FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
+    import bus, {LOGGED_IN, LOGGED_OUT, UNAUTHORIZED} from "./bus";
 
     export default {
         data () {
@@ -106,11 +107,12 @@
                 chats: [],
                 openEditModal: false,
                 appBarItems: [
-                    { title: 'Home', icon: 'mdi-home-city' },
-                    { title: 'My Account', icon: 'mdi-account' },
-                    { title: 'Logout', icon: 'mdi-account-group-outline' },
+                    { title: 'Home', icon: 'mdi-home-city', clickFunction: ()=>{} },
+                    { title: 'My Account', icon: 'mdi-account', clickFunction: ()=>{} },
+                    { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout },
                 ],
                 drawer: true,
+                infiniteId: new Date(),
             }
         },
         components:{
@@ -139,6 +141,21 @@
             },
             toggleLeftNavigation() {
                 this.$data.drawer = !this.$data.drawer;
+            },
+            logout(){
+                console.log("Logout");
+                axios.post(`/api/logout`).then(({ data }) => {
+                    this.$store.commit(UNSET_USER);
+                    bus.$emit(LOGGED_OUT, null);
+                });
+            },
+            reloadChats() {
+                // this.$data.page = 0;
+                // this.$data.chats = [];
+                this.$nextTick(() => {
+                    this.infiniteId += 1;
+                    console.log("Resetting infinite loader");
+                })
             }
         },
         computed: {
@@ -146,7 +163,15 @@
         },
         mounted() {
             this.$store.dispatch(FETCH_USER_PROFILE);
-        }
+        },
+        created() {
+            bus.$on(LOGGED_IN, this.reloadChats);
+            bus.$on(LOGGED_OUT, this.reloadChats);
+        },
+        destroyed() {
+            bus.$off(LOGGED_IN, this.reloadChats);
+            bus.$off(LOGGED_OUT, this.reloadChats);
+        },
     }
 </script>
 

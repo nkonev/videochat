@@ -20,7 +20,7 @@ const store = new Vuex.Store({
     },
     mutations: {
         [SET_USER](state, payload) {
-            console.log("setting user =", payload);
+            console.debug("setting user =", payload);
             state.currentUser = payload;
         },
         [UNSET_USER](state) {
@@ -35,7 +35,7 @@ const store = new Vuex.Store({
     },
     getters: {
         [GET_USER](state) {
-            console.log("getting user =", state.currentUser);
+            console.debug("getting user =", state.currentUser);
             return state.currentUser;
         },
         [GET_PREVIOUS_URL](state) {
@@ -45,7 +45,7 @@ const store = new Vuex.Store({
     actions: {
         [FETCH_USER_PROFILE](context) {
             axios.get(`/api/profile`).then(( {data} ) => {
-                console.log("fetched profile =", data);
+                console.debug("fetched profile =", data);
                 context.commit(SET_USER, data);
             });
         },
