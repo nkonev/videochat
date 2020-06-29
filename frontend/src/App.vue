@@ -81,6 +81,9 @@
                                     <v-list-item-title v-html="item.name"></v-list-item-title>
                                     <v-list-item-subtitle v-html="item.participantIds"></v-list-item-subtitle>
                                 </v-list-item-content>
+                                <v-list-item-action>
+                                    <v-btn color="primary" fab dark small @click="addParticipants(item.id)"><v-icon dark>mdi-plus</v-icon></v-btn>
+                                </v-list-item-action>
                             </v-list-item>
                     </v-list>
                     <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId"></infinite-loading>
@@ -154,6 +157,10 @@
                     this.infiniteId += 1;
                     console.log("Resetting infinite loader");
                 })
+            },
+            addParticipants(chatId) {
+                console.log("Will add participants to chat", chatId);
+                this.$data.openEditModal = true;
             }
         },
         computed: {
