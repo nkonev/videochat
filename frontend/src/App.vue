@@ -79,7 +79,7 @@
                         max-width="1000"
                         class="mx-auto"
                 >
-                    <EditChat v-model="openEditModal" :editChatId="editChatId" :editParticipantIds="editParticipantIds"/>
+                    <EditChat v-model="openEditModal" :editChatId="editChatId"/>
                     <LoginModal/>
 
                     <v-list>
@@ -121,7 +121,6 @@
                 chats: [],
                 openEditModal: false,
                 editChatId: null,
-                editParticipantIds: [],
                 appBarItems: [
                     { title: 'Home', icon: 'mdi-home-city', clickFunction: ()=>{} },
                     { title: 'My Account', icon: 'mdi-account', clickFunction: ()=>{} },
@@ -142,14 +141,12 @@
             createChat() {
                 this.$data.editChatId = null;
                 this.$data.openEditModal = true;
-                this.$data.editParticipantIds = [];
             },
             editChat(chat) {
                 const chatId = chat.id;
                 console.log("Will add participants to chat", chatId);
                 this.$data.editChatId = chatId;
                 this.$data.openEditModal = true;
-                this.$data.editParticipantIds = chat.participantIds;
             },
             infiniteHandler($state) {
                 axios.get(`/api/chat`, {

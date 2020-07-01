@@ -6,9 +6,9 @@
                 <v-card-title v-else>Create chat</v-card-title>
 
                 <v-container fluid>
-                    <v-text-field label="Chat name"></v-text-field>
+                    <v-text-field label="Chat name" v-model="dto.name"></v-text-field>
                 <v-autocomplete
-                        v-model="participantIds"
+                        v-model="dto.participantIds"
                         :disabled="isLoading"
                         :items="people"
                         filled
@@ -64,11 +64,18 @@
     import debounce from "lodash/debounce";
     import bus, {CHAT_SAVED} from "./bus";
 
+    const dtoFactory = ()=>{
+        return {
+            id: null,
+            name: "",
+            participantIds: [ ],
+        }
+    };
+
     export default {
         props: {
             value: Boolean,
             editChatId: Number,
-            editParticipantIds: Array
         },
         computed: {
             show: {
@@ -83,9 +90,9 @@
         data () {
             return {
                 search: null,
-                participantIds: [ ],
+                dto: dtoFactory(),
                 isLoading: false,
-                people: [  ],
+                people: [  ], // available person to chat with
             }
         },
 
@@ -95,42 +102,29 @@
             },
             editChatId(val) {
                 if (val) {
-                    console.log("Getting info about chat id", val)
-                }
-            },
-            editParticipantIds(val) {
-                console.log("on editParticipantIds", val);
-                if (val.length) {
-                    axios.get('/api/user/list', {
-                        params: {userId: [...val] + ''}
-                    }).then((response) => {
-                        this.people = response.data;
-                        this.participantIds = this.people.map(e => e.id);
-                    })
-                }
-            },
-            /*'editParticipantIds': {
-                handler: function (val, oldVal) {
-                    console.log("on editParticipantIds", val);
-                    if (val.length) {
-                        axios.get('/api/user/list', {
-                            params: {userId: [...val] + ''}
-                        }).then((response) => {
-                            this.people = response.data;
-                            this.participantIds = this.people.map(e => e.id);
+                    console.log("Getting info about chat id", val);
+                    axios.get('/api/chat/'+val)
+                        .then((response) => {
+                            this.dto = response.data;
+                        }).then(()=>{
+                            axios.get('/api/user/list', {
+                                params: {userId: [...this.dto.participantIds] + ''}
+                            }).then((response) => {
+                                this.people = response.data;
+                            })
                         })
-                    }
-                },
-                deep: true
-            }*/
+                } else {
+                    this.dto = dtoFactory();
+                }
+            },
 
         },
 
         methods: {
             removeSelected (item) {
-                console.debug("Removing", item, this.participantIds);
-                const index = this.participantIds.indexOf(item.id);
-                if (index >= 0) this.participantIds.splice(index, 1)
+                console.debug("Removing", item, this.dto.participantIds);
+                const index = this.dto.participantIds.indexOf(item.id);
+                if (index >= 0) this.dto.participantIds.splice(index, 1)
             },
             doSearch(searchString) {
                 if (this.isLoading) return;
@@ -156,7 +150,7 @@
                 }
             },
             saveChat() {
-                const dtoToPost = {id: this.editChatId, participantIds: this.participantIds};
+                const dtoToPost = this.dto;
                 (dtoToPost.id ? axios.put(`/api/chat`, dtoToPost) : axios.post(`/api/chat`, dtoToPost))
                     .then(() => {
                         bus.$emit(CHAT_SAVED, null);
