@@ -5,10 +5,11 @@ import axios from "axios";
 import bus, {UNAUTHORIZED} from './bus';
 import store, {SET_PREVIOUS_URL, UNSET_USER, FETCH_USER_PROFILE} from './store'
 
-new Vue({
+const vm = new Vue({
   vuetify,
   store,
-  render: h => h(App)
+  // https://ru.vuejs.org/v2/guide/render-function.html
+  render: h => h(App, {ref: 'appRef'})
 }).$mount('#root');
 
 axios.interceptors.response.use((response) => {
@@ -23,6 +24,8 @@ axios.interceptors.response.use((response) => {
     bus.$emit(UNAUTHORIZED, null);
     return Promise.reject(error)
   } else {
+    console.log(error.response);
+    vm.$refs.appRef.onError(error.response);
     return Promise.reject(error)
   }
 });

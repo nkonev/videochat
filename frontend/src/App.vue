@@ -64,6 +64,17 @@
 
         <v-main>
             <v-container>
+                <v-alert
+                        dismissible
+                        v-model="showAlert"
+                        prominent
+                        type="error"
+                >
+                    <v-row align="center">
+                        <v-col class="grow">{{lastError}}</v-col>
+                    </v-row>
+                </v-alert>
+
                 <v-card
                         max-width="1000"
                         class="mx-auto"
@@ -116,6 +127,8 @@
                 ],
                 drawer: true,
                 infiniteId: new Date(),
+                lastError: "",
+                showAlert: false,
             }
         },
         components:{
@@ -161,6 +174,10 @@
             addParticipants(chatId) {
                 console.log("Will add participants to chat", chatId);
                 this.$data.openEditModal = true;
+            },
+            onError(errText){
+                this.showAlert = true;
+                this.lastError = errText;
             }
         },
         computed: {
