@@ -1,22 +1,23 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="800" persistent>
+        <v-dialog v-model="show" max-width="640" persistent>
             <v-card>
                 <v-card-title>Create chat</v-card-title>
 
                 <v-container fluid>
                 <v-autocomplete
-                        v-model="friends"
-                        :disabled="isUpdating"
+                        v-model="participants"
+                        :disabled="isLoading"
                         :items="people"
                         filled
                         chips
                         color="blue-grey lighten-2"
-                        label="Select"
-                        item-text="name"
+                        label="Select users for add to chat"
+                        item-text="login"
                         item-value="id"
                         multiple
                         :hide-selected="true"
+                        :search-input.sync="search"
                 >
                     <template v-slot:selection="data">
                         <v-chip
@@ -26,18 +27,18 @@
                                 @click="data.select"
                                 @click:close="removeSelected(data.item)"
                         >
-                            <v-avatar left>
+                            <v-avatar left v-if="data.item.avatar">
                                 <v-img :src="data.item.avatar"></v-img>
                             </v-avatar>
-                            {{ data.item.name }}
+                            {{ data.item.login }}
                         </v-chip>
                     </template>
                     <template v-slot:item="data">
-                        <v-list-item-avatar>
+                        <v-list-item-avatar v-if="data.item.avatar">
                             <img :src="data.item.avatar">
                         </v-list-item-avatar>
                         <v-list-item-content>
-                            <v-list-item-title v-html="data.item.name"></v-list-item-title>
+                            <v-list-item-title v-html="data.item.login"></v-list-item-title>
                         </v-list-item-content>
                     </template>
                 </v-autocomplete>
@@ -54,6 +55,9 @@
 </template>
 
 <script>
+    import axios from "axios";
+    import debounce from "lodash/debounce";
+
     export default {
         props: {
             value: Boolean
@@ -78,35 +82,48 @@
             };
 
             return {
-                friends: [1, 3],
-                isUpdating: false,
-                people: [
-                    { id:1, name: 'Sandra Adams', avatar: srcs[1] },
-                    { id:2, name: 'Ali Connors', avatar: srcs[2] },
-                    { id:3, name: 'Trevor Hansen', avatar: srcs[3] },
-                    { id:4, name: 'Tucker Smith', avatar: srcs[2] },
-                    { id:5, name: 'Britta Holt', avatar: srcs[4] },
-                    { id:6, name: 'Jane Smith ', avatar: srcs[5] },
-                    { id:7, name: 'John Smith', avatar: srcs[1] },
-                    { id:8, name: 'Sandra Williams', avatar: srcs[3] },
-                ],
+                search: null,
+                participants: [ ],
+                isLoading: false,
+                people: [  ],
             }
         },
 
 
         watch: {
-            isUpdating (val) {
-                if (val) {
-                    setTimeout(() => (this.isUpdating = false), 3000)
-                }
+            search (searchString) {
+                this.doSearch(searchString);
             },
+
         },
 
         methods: {
             removeSelected (item) {
-                const index = this.friends.indexOf(item.name)
-                if (index >= 0) this.friends.splice(index, 1)
+                console.log("Removing", item, this.participants);
+                const index = this.participants.indexOf(item.id);
+                if (index >= 0) this.participants.splice(index, 1)
             },
+            doSearch(searchString) {
+                if (this.isLoading) return;
+
+                if (!searchString) {
+                    return;
+                }
+
+                this.isLoading = true;
+
+                axios.get(`/api/user?searchString=${searchString}`)
+                    .then((response) => {
+                        console.log("Fetched users", response.data.data);
+                        this.people = [...this.people, ...response.data.data];
+                    })
+                    .finally(() => (this.isLoading = false))
+            }
         },
+        created() {
+            // https://forum-archive.vuejs.org/topic/5174/debounce-replacement-in-vue-2-0
+            this.doSearch = debounce(this.doSearch, 700);
+        },
+
     }
 </script>
