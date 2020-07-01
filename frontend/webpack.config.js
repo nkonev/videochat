@@ -110,6 +110,7 @@ module.exports = (env, argv) => {
                     test: /\.s(c|a)ss$/,
                     use: [
                         'vue-style-loader',
+                        CssExtractPlugin.loader,
                         'css-loader',
                         {
                             loader: 'sass-loader',
