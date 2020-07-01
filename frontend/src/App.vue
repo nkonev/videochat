@@ -181,5 +181,5 @@
 </script>
 
 <style lang="stylus">
-    @import '../node_modules/typeface-roboto/index.css'
+    @import '~typeface-roboto/index.css'
 </style>
