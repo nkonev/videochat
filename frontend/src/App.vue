@@ -174,14 +174,17 @@
                 });
             },
             reloadChats() {
-                this.$nextTick(() => {
-                    this.infiniteId += 1;
-                    console.log("Resetting infinite loader");
-                })
+                this.infiniteId += 1;
+                console.log("Resetting infinite loader", this.infiniteId);
             },
             onError(errText){
                 this.showAlert = true;
                 this.lastError = errText;
+            },
+            resetChats() {
+                this.page = 0;
+                this.chats = [];
+                this.reloadChats();
             }
         },
         computed: {
@@ -192,13 +195,11 @@
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadChats);
-            bus.$on(LOGGED_OUT, this.reloadChats);
-            bus.$on(CHAT_SAVED, this.reloadChats);
+            bus.$on(CHAT_SAVED, this.resetChats);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadChats);
-            bus.$off(LOGGED_OUT, this.reloadChats);
-            bus.$off(CHAT_SAVED, this.reloadChats);
+            bus.$off(CHAT_SAVED, this.resetChats);
         },
     }
 </script>
