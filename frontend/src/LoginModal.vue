@@ -13,6 +13,7 @@
                         ref="form"
                         v-model="valid"
                         lazy-validation
+                        @keyup.native.enter="validateAndSend"
                     >
                         <v-text-field
                                 v-model="username"
