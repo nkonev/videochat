@@ -48,7 +48,7 @@
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
 
-            <v-btn icon @click="openModal">
+            <v-btn icon @click="createChat">
                 <v-icon>mdi-plus-circle-outline</v-icon>
             </v-btn>
 
@@ -79,7 +79,7 @@
                         max-width="1000"
                         class="mx-auto"
                 >
-                    <EditChat v-model="openEditModal"/>
+                    <EditChat v-model="openEditModal" :editChatId="editChatId" :editParticipantIds="editParticipantIds"/>
                     <LoginModal/>
 
                     <v-list>
@@ -93,7 +93,7 @@
                                     <v-list-item-subtitle v-html="item.participantIds"></v-list-item-subtitle>
                                 </v-list-item-content>
                                 <v-list-item-action>
-                                    <v-btn color="primary" fab dark small @click="addParticipants(item.id)"><v-icon dark>mdi-plus</v-icon></v-btn>
+                                    <v-btn color="primary" fab dark small @click="editChat(item)"><v-icon dark>mdi-plus</v-icon></v-btn>
                                 </v-list-item-action>
                             </v-list-item>
                     </v-list>
@@ -112,7 +112,7 @@
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
     import {FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
-    import bus, {LOGGED_IN, LOGGED_OUT, UNAUTHORIZED} from "./bus";
+    import bus, {CHAT_SAVED, LOGGED_IN, LOGGED_OUT} from "./bus";
 
     export default {
         data () {
@@ -120,6 +120,8 @@
                 page: 0,
                 chats: [],
                 openEditModal: false,
+                editChatId: null,
+                editParticipantIds: [],
                 appBarItems: [
                     { title: 'Home', icon: 'mdi-home-city', clickFunction: ()=>{} },
                     { title: 'My Account', icon: 'mdi-account', clickFunction: ()=>{} },
@@ -137,8 +139,17 @@
             LoginModal
         },
         methods:{
-            openModal() {
+            createChat() {
+                this.$data.editChatId = null;
                 this.$data.openEditModal = true;
+                this.$data.editParticipantIds = [];
+            },
+            editChat(chat) {
+                const chatId = chat.id;
+                console.log("Will add participants to chat", chatId);
+                this.$data.editChatId = chatId;
+                this.$data.openEditModal = true;
+                this.$data.editParticipantIds = chat.participantIds;
             },
             infiniteHandler($state) {
                 axios.get(`/api/chat`, {
@@ -171,10 +182,6 @@
                     console.log("Resetting infinite loader");
                 })
             },
-            addParticipants(chatId) {
-                console.log("Will add participants to chat", chatId);
-                this.$data.openEditModal = true;
-            },
             onError(errText){
                 this.showAlert = true;
                 this.lastError = errText;
@@ -189,10 +196,12 @@
         created() {
             bus.$on(LOGGED_IN, this.reloadChats);
             bus.$on(LOGGED_OUT, this.reloadChats);
+            bus.$on(CHAT_SAVED, this.reloadChats);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadChats);
             bus.$off(LOGGED_OUT, this.reloadChats);
+            bus.$off(CHAT_SAVED, this.reloadChats);
         },
     }
 </script>

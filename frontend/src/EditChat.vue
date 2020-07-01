@@ -2,11 +2,13 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" persistent>
             <v-card>
-                <v-card-title>Create chat</v-card-title>
+                <v-card-title v-if="isEdit()">Edit chat #{{editChatId}}</v-card-title>
+                <v-card-title v-else>Create chat</v-card-title>
 
                 <v-container fluid>
+                    <v-text-field label="Chat name"></v-text-field>
                 <v-autocomplete
-                        v-model="participants"
+                        v-model="participantIds"
                         :disabled="isLoading"
                         :items="people"
                         filled
@@ -45,7 +47,10 @@
                 </v-container>
 
                 <v-card-actions class="pa-4">
-                    <v-btn color="primary" class="mr-4" @click="show=false">Create</v-btn>
+                    <template>
+                        <v-btn color="primary" class="mr-4" @click="saveChat" v-if="isEdit()">Edit</v-btn>
+                        <v-btn color="primary" class="mr-4" @click="saveChat" v-else>Create</v-btn>
+                    </template>
                     <v-btn color="error" class="mr-4" @click="show=false">Close</v-btn>
                     <v-spacer/>
                 </v-card-actions>
@@ -57,10 +62,13 @@
 <script>
     import axios from "axios";
     import debounce from "lodash/debounce";
+    import bus, {CHAT_SAVED} from "./bus";
 
     export default {
         props: {
-            value: Boolean
+            value: Boolean,
+            editChatId: Number,
+            editParticipantIds: Array
         },
         computed: {
             show: {
@@ -73,35 +81,56 @@
             }
         },
         data () {
-            const srcs = {
-                1: 'https://cdn.vuetifyjs.com/images/lists/1.jpg',
-                2: 'https://cdn.vuetifyjs.com/images/lists/2.jpg',
-                3: 'https://cdn.vuetifyjs.com/images/lists/3.jpg',
-                4: 'https://cdn.vuetifyjs.com/images/lists/4.jpg',
-                5: 'https://cdn.vuetifyjs.com/images/lists/5.jpg',
-            };
-
             return {
                 search: null,
-                participants: [ ],
+                participantIds: [ ],
                 isLoading: false,
                 people: [  ],
             }
         },
 
-
         watch: {
             search (searchString) {
                 this.doSearch(searchString);
             },
+            editChatId(val) {
+                if (val) {
+                    console.log("Getting info about chat id", val)
+                }
+            },
+            editParticipantIds(val) {
+                console.log("on editParticipantIds", val);
+                if (val.length) {
+                    axios.get('/api/user/list', {
+                        params: {userId: [...val] + ''}
+                    }).then((response) => {
+                        this.people = response.data;
+                        this.participantIds = this.people.map(e => e.id);
+                    })
+                }
+            },
+            /*'editParticipantIds': {
+                handler: function (val, oldVal) {
+                    console.log("on editParticipantIds", val);
+                    if (val.length) {
+                        axios.get('/api/user/list', {
+                            params: {userId: [...val] + ''}
+                        }).then((response) => {
+                            this.people = response.data;
+                            this.participantIds = this.people.map(e => e.id);
+                        })
+                    }
+                },
+                deep: true
+            }*/
 
         },
 
         methods: {
             removeSelected (item) {
-                console.log("Removing", item, this.participants);
-                const index = this.participants.indexOf(item.id);
-                if (index >= 0) this.participants.splice(index, 1)
+                console.debug("Removing", item, this.participantIds);
+                const index = this.participantIds.indexOf(item.id);
+                if (index >= 0) this.participantIds.splice(index, 1)
             },
             doSearch(searchString) {
                 if (this.isLoading) return;
@@ -118,12 +147,28 @@
                         this.people = [...this.people, ...response.data.data];
                     })
                     .finally(() => (this.isLoading = false))
-            }
+            },
+            isEdit() {
+                if (this.editChatId) {
+                    return true
+                } else {
+                    return false
+                }
+            },
+            saveChat() {
+                const dtoToPost = {id: this.editChatId, participantIds: this.participantIds};
+                (dtoToPost.id ? axios.put(`/api/chat`, dtoToPost) : axios.post(`/api/chat`, dtoToPost))
+                    .then(() => {
+                        bus.$emit(CHAT_SAVED, null);
+                    })
+                    .then(() => {
+                        this.show=false;
+                    })
+            },
         },
         created() {
             // https://forum-archive.vuejs.org/topic/5174/debounce-replacement-in-vue-2-0
             this.doSearch = debounce(this.doSearch, 700);
         },
-
     }
 </script>
