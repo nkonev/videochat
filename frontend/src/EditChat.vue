@@ -14,7 +14,7 @@
                         color="blue-grey lighten-2"
                         label="Select"
                         item-text="name"
-                        item-value="name"
+                        item-value="id"
                         multiple
                         :hide-selected="true"
                 >
@@ -43,9 +43,9 @@
                 </v-autocomplete>
                 </v-container>
 
-                <v-card-actions>
-                    <v-btn color="primary" dark @click="show=false">Create</v-btn>
-                    <v-btn color="error" dark @click="show=false">Close</v-btn>
+                <v-card-actions class="pa-4">
+                    <v-btn color="primary" class="mr-4" @click="show=false">Create</v-btn>
+                    <v-btn color="error" class="mr-4" @click="show=false">Close</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>
@@ -75,20 +75,20 @@
                 3: 'https://cdn.vuetifyjs.com/images/lists/3.jpg',
                 4: 'https://cdn.vuetifyjs.com/images/lists/4.jpg',
                 5: 'https://cdn.vuetifyjs.com/images/lists/5.jpg',
-            }
+            };
 
             return {
-                friends: ['Sandra Adams', 'Britta Holt'],
+                friends: [1, 3],
                 isUpdating: false,
                 people: [
-                    { name: 'Sandra Adams', avatar: srcs[1] },
-                    { name: 'Ali Connors', avatar: srcs[2] },
-                    { name: 'Trevor Hansen', avatar: srcs[3] },
-                    { name: 'Tucker Smith', avatar: srcs[2] },
-                    { name: 'Britta Holt', avatar: srcs[4] },
-                    { name: 'Jane Smith ', avatar: srcs[5] },
-                    { name: 'John Smith', avatar: srcs[1] },
-                    { name: 'Sandra Williams', avatar: srcs[3] },
+                    { id:1, name: 'Sandra Adams', avatar: srcs[1] },
+                    { id:2, name: 'Ali Connors', avatar: srcs[2] },
+                    { id:3, name: 'Trevor Hansen', avatar: srcs[3] },
+                    { id:4, name: 'Tucker Smith', avatar: srcs[2] },
+                    { id:5, name: 'Britta Holt', avatar: srcs[4] },
+                    { id:6, name: 'Jane Smith ', avatar: srcs[5] },
+                    { id:7, name: 'John Smith', avatar: srcs[1] },
+                    { id:8, name: 'Sandra Williams', avatar: srcs[3] },
                 ],
             }
         },
