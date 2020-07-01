@@ -180,18 +180,6 @@
     }
 </script>
 
-<style lang="stylus" scoped>
-    .application {
-        font-family: Arial, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-
-
-        #input-usage .v-input__prepend-outer,
-        #input-usage .v-input__append-outer,
-        #input-usage .v-input__slot,
-        #input-usage .v-messages {
-            border: 1px dashed rgba(0,0,0, .4);
-        }
-    }
+<style lang="stylus">
+    @import '../node_modules/typeface-roboto/index.css'
 </style>
