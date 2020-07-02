@@ -114,6 +114,16 @@
     import {FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
     import bus, {CHAT_SAVED, LOGGED_IN, LOGGED_OUT} from "./bus";
 
+    const replaceInArray = (array, element) => {
+        const foundIndex = array.findIndex(value => value.id === element.id);
+        if (foundIndex === -1) {
+            return false;
+        } else {
+            array[foundIndex] = element;
+            return true;
+        }
+    };
+
     export default {
         data () {
             return {
@@ -183,10 +193,40 @@
             },
             rerenderChat(dto) {
                 console.log("Rerendering chat", dto);
-                const chatIndex = this.chats.findIndex(value => value.id === dto.id);
-                console.debug("Found chat", chatIndex);
-                this.chats[chatIndex] = dto;
-            }
+                //const chatIndex = this.chats.findIndex(value => value.id === dto.id);
+                //console.log("Found chat", chatIndex);
+                const replaced = replaceInArray(this.chats, dto);
+                if (!replaced) {
+                    // reload last page
+                    axios.get(`/api/chat`, {
+                        params: {
+                            page: this.page,
+                        },
+                    }).then(({ data }) => {
+                        if (data.length) {
+                            // TODO Array.prototype.splice() and lastPageActualSize
+                            data.forEach((element, index) => {
+                                replaceInArray(this.chats, element)
+                            });
+                        } else {
+                            // if no data on current page load previous
+                            axios.get(`/api/chat`, {
+                                params: {
+                                    page: this.page - 1,
+                                },
+                            }).then(({ data }) => {
+                                if (data.length) {
+                                    // TODO Array.prototype.splice() and lastPageActualSize
+                                    data.forEach((element, index) => {
+                                        replaceInArray(this.chats, element)
+                                    });
+                                }
+                            })
+                        }
+                    });
+                    this.reloadChats();
+                }
+            },
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
