@@ -128,6 +128,7 @@
         data () {
             return {
                 page: 0,
+                lastPageActualSize: 0,
                 chats: [],
                 openEditModal: false,
                 editChatId: null,
@@ -166,7 +167,16 @@
                 }).then(({ data }) => {
                     if (data.length) {
                         this.page += 1;
-                        this.chats.push(...data);
+                        //this.chats.push(...data);
+                        // replace or append
+                        data.forEach((element, index) => {
+                            const replaced = replaceInArray(this.chats, element);
+                            if (!replaced) {
+                                this.chats = [...this.chats, element];
+                            }
+                        });
+
+                        this.lastPageActualSize = data.length;
                         $state.loaded();
                     } else {
                         $state.complete();
@@ -201,37 +211,20 @@
                 }
             },
             reloadLastPage() {
-                // reload last page
-                axios.get(`/api/chat`, {
-                    params: {
-                        page: this.page,
-                    },
-                }).then(({ data }) => {
-                    if (data.length) {
-                        data.forEach((element, index) => {
-                            const replaced = replaceInArray(this.chats, element);
-                            if (!replaced) {
-                                this.chats = [...this.chats, element];
-                            }
-                        });
-                    } else {
-                        // if no data on current page load previous
-                        axios.get(`/api/chat`, {
-                            params: {
-                                page: this.page - 1,
-                            },
-                        }).then(({ data }) => {
-                            if (data.length) {
-                                data.forEach((element, index) => {
-                                    const replaced = replaceInArray(this.chats, element);
-                                    if (!replaced) {
-                                        this.chats = [...this.chats, element];
-                                    }
-                                });
-                            }
-                        })
-                    }
-                });
+                console.log("this.lastPageActualSize", this.lastPageActualSize);
+                if (this.lastPageActualSize > 0) {
+                    this.page--;
+                    // remove lastPageActualSize
+                    this.chats.splice(-1, this.lastPageActualSize);
+                    console.log("removing last", this.lastPageActualSize);
+
+                } else {
+                    this.page--;
+                    // remove 20
+                    this.chats.splice(-1, 20);
+                    console.log("removing last", 20);
+                }
+                this.reloadChats();
             }
         },
         computed: {
