@@ -133,6 +133,8 @@
         });
     };
 
+    const pageSize = 20;
+
     export default {
         data () {
             return {
@@ -172,6 +174,7 @@
                 axios.get(`/api/chat`, {
                     params: {
                         page: this.page,
+                        size: pageSize
                     },
                 }).then(({ data }) => {
                     if (data.length) {
@@ -205,8 +208,6 @@
             },
             rerenderChat(dto) {
                 console.log("Rerendering chat", dto);
-                //const chatIndex = this.chats.findIndex(value => value.id === dto.id);
-                //console.log("Found chat", chatIndex);
                 const replaced = replaceInArray(this.chats, dto);
                 if (!replaced) {
                     this.reloadLastPage();
@@ -219,12 +220,11 @@
                     // remove lastPageActualSize
                     this.chats.splice(-1, this.lastPageActualSize);
                     console.log("removing last", this.lastPageActualSize);
-
                 } else {
                     this.page--;
                     // remove 20
-                    this.chats.splice(-1, 20);
-                    console.log("removing last", 20);
+                    this.chats.splice(-1, pageSize);
+                    console.log("removing last", pageSize);
                 }
                 this.reloadChats();
             }
