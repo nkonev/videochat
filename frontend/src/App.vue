@@ -124,6 +124,15 @@
         }
     };
 
+    const replaceOrAppend = (array, newArray) => {
+        newArray.forEach((element, index) => {
+            const replaced = replaceInArray(array, element);
+            if (!replaced) {
+                array.push(element);
+            }
+        });
+    };
+
     export default {
         data () {
             return {
@@ -168,14 +177,7 @@
                     if (data.length) {
                         this.page += 1;
                         //this.chats.push(...data);
-                        // replace or append
-                        data.forEach((element, index) => {
-                            const replaced = replaceInArray(this.chats, element);
-                            if (!replaced) {
-                                this.chats = [...this.chats, element];
-                            }
-                        });
-
+                        replaceOrAppend(this.chats, data);
                         this.lastPageActualSize = data.length;
                         $state.loaded();
                     } else {
