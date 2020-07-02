@@ -181,10 +181,11 @@
                 this.showAlert = true;
                 this.lastError = errText;
             },
-            resetChats() {
-                this.page = 0;
-                this.chats = [];
-                this.reloadChats();
+            rerenderChat(dto) {
+                console.log("Rerendering chat", dto);
+                const chatIndex = this.chats.findIndex(value => value.id === dto.id);
+                console.debug("Found chat", chatIndex);
+                this.chats[chatIndex] = dto;
             }
         },
         computed: {
@@ -195,11 +196,11 @@
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadChats);
-            bus.$on(CHAT_SAVED, this.resetChats);
+            bus.$on(CHAT_SAVED, this.rerenderChat);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadChats);
-            bus.$off(CHAT_SAVED, this.resetChats);
+            bus.$off(CHAT_SAVED, this.rerenderChat);
         },
     }
 </script>

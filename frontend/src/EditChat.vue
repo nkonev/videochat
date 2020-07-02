@@ -152,8 +152,8 @@
             saveChat() {
                 const dtoToPost = this.dto;
                 (dtoToPost.id ? axios.put(`/api/chat`, dtoToPost) : axios.post(`/api/chat`, dtoToPost))
-                    .then(() => {
-                        bus.$emit(CHAT_SAVED, null);
+                    .then((response) => {
+                        bus.$emit(CHAT_SAVED, response.data);
                     })
                     .then(() => {
                         this.show=false;
