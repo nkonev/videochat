@@ -197,36 +197,42 @@
                 //console.log("Found chat", chatIndex);
                 const replaced = replaceInArray(this.chats, dto);
                 if (!replaced) {
-                    // reload last page
-                    axios.get(`/api/chat`, {
-                        params: {
-                            page: this.page,
-                        },
-                    }).then(({ data }) => {
-                        if (data.length) {
-                            // TODO Array.prototype.splice() and lastPageActualSize
-                            data.forEach((element, index) => {
-                                replaceInArray(this.chats, element)
-                            });
-                        } else {
-                            // if no data on current page load previous
-                            axios.get(`/api/chat`, {
-                                params: {
-                                    page: this.page - 1,
-                                },
-                            }).then(({ data }) => {
-                                if (data.length) {
-                                    // TODO Array.prototype.splice() and lastPageActualSize
-                                    data.forEach((element, index) => {
-                                        replaceInArray(this.chats, element)
-                                    });
-                                }
-                            })
-                        }
-                    });
-                    this.reloadChats();
+                    this.reloadLastPage();
                 }
             },
+            reloadLastPage() {
+                // reload last page
+                axios.get(`/api/chat`, {
+                    params: {
+                        page: this.page,
+                    },
+                }).then(({ data }) => {
+                    if (data.length) {
+                        data.forEach((element, index) => {
+                            const replaced = replaceInArray(this.chats, element);
+                            if (!replaced) {
+                                this.chats = [...this.chats, element];
+                            }
+                        });
+                    } else {
+                        // if no data on current page load previous
+                        axios.get(`/api/chat`, {
+                            params: {
+                                page: this.page - 1,
+                            },
+                        }).then(({ data }) => {
+                            if (data.length) {
+                                data.forEach((element, index) => {
+                                    const replaced = replaceInArray(this.chats, element);
+                                    if (!replaced) {
+                                        this.chats = [...this.chats, element];
+                                    }
+                                });
+                            }
+                        })
+                    }
+                });
+            }
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
