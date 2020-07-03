@@ -21,9 +21,8 @@ func (tx *Tx) DeleteParticipantsExcept(userId int64, chatId int64) error {
 	return err
 }
 
-// TODO merge GetParticipantIdsTx & GetParticipantIds to one
-func (tx *Tx) GetParticipantIdsTx(chatId int64) ([]int64, error) {
-	if rows, err := tx.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1", chatId); err != nil {
+func getParticipantIdsCommon(qq CommonOperations, chatId int64) ([]int64, error) {
+	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1", chatId); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
@@ -41,23 +40,12 @@ func (tx *Tx) GetParticipantIdsTx(chatId int64) ([]int64, error) {
 	}
 }
 
+func (tx *Tx) GetParticipantIdsTx(chatId int64) ([]int64, error) {
+	return getParticipantIdsCommon(tx, chatId)
+}
+
 func (db *DB) GetParticipantIds(chatId int64) ([]int64, error) {
-	if rows, err := db.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1", chatId); err != nil {
-		return nil, err
-	} else {
-		defer rows.Close()
-		list := make([]int64, 0)
-		for rows.Next() {
-			var participantId int64
-			if err := rows.Scan(&participantId); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
-			} else {
-				list = append(list, participantId)
-			}
-		}
-		return list, nil
-	}
+	return getParticipantIdsCommon(db, chatId)
 }
 
 func (tx *Tx) IsAdmin(userId int64, chatId int64) (bool, error) {

@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	dbP "database/sql"
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -21,6 +22,19 @@ type DB struct {
 
 type Tx struct {
 	*sql.Tx
+}
+
+// enumerates common tx and non-tx operations
+type CommonOperations interface {
+	Query(query string, args ...interface{}) (*dbP.Rows, error)
+}
+
+func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {
+	return dbR.DB.Query(query, args...)
+}
+
+func (txR *Tx) Query(query string, args ...interface{}) (*dbP.Rows, error) {
+	return txR.Tx.Query(query, args...)
 }
 
 const postgresDriverString = "pgx"
