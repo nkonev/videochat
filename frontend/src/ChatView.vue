@@ -305,13 +305,16 @@
                 console.log('Client received foreign message:', message);
                 if (message.type === EVENT_GOT_USER_MEDIA) {
                     this.maybeStart();
-                }
-                else if (message.type === EVENT_OFFER) {
-                    if (!this.remoteDescriptionSet && this.pc) { // checking pc - prevent NPE
-                        this.pc.setRemoteDescription(new RTCSessionDescription(message.value));
-                        this.remoteDescriptionSet = true;
+                } else if (message.type === EVENT_OFFER) {
+                    if (this.pc) {
+                        if (!this.remoteDescriptionSet) { // checking pc - prevent NPE
+                            this.pc.setRemoteDescription(new RTCSessionDescription(message.value));
+                            this.remoteDescriptionSet = true;
+                        }
+                        this.doAnswer();
+                    } else {
+                        console.warn("Peer connection still not set so I cannot answer on offer");
                     }
-                    this.doAnswer();
                 } else if (message.type === EVENT_ANSWER && this.isStarted) {
                     if (!this.remoteDescriptionSet && this.pc) { // checking pc - prevent NPE
                         this.pc.setRemoteDescription(new RTCSessionDescription(message.value));
