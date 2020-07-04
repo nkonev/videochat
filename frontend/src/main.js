@@ -3,11 +3,13 @@ import App from './App.vue'
 import vuetify from '@/plugins/vuetify'
 import axios from "axios";
 import bus, {UNAUTHORIZED} from './bus';
-import store, {SET_PREVIOUS_URL, UNSET_USER, FETCH_USER_PROFILE} from './store'
+import store, {UNSET_USER} from './store'
+import router from './router.js'
 
 const vm = new Vue({
   vuetify,
   store,
+  router,
   // https://ru.vuejs.org/v2/guide/render-function.html
   render: h => h(App, {ref: 'appRef'})
 }).$mount('#root');
@@ -20,7 +22,6 @@ axios.interceptors.response.use((response) => {
   if (error && error.response && error.response.status == 401 && error.config.url != '/api/profile') {
     console.log("Catch 401 Unauthorized, saving url", window.location.pathname);
     store.commit(UNSET_USER);
-    store.commit(SET_PREVIOUS_URL, window.location.pathname);
     bus.$emit(UNAUTHORIZED, null);
     return Promise.reject(error)
   } else {

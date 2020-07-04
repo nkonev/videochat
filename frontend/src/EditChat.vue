@@ -62,7 +62,7 @@
 <script>
     import axios from "axios";
     import debounce from "lodash/debounce";
-    import bus, {CHAT_SAVED} from "./bus";
+    import bus, {CHAT_SAVED, OPEN_CHAT_EDIT} from "./bus";
 
     const dtoFactory = ()=>{
         return {
@@ -73,22 +73,10 @@
     };
 
     export default {
-        props: {
-            value: Boolean,
-            editChatId: Number,
-        },
-        computed: {
-            show: {
-                get() {
-                    return this.value
-                },
-                set(value) {
-                    this.$emit('input', value)
-                }
-            }
-        },
         data () {
             return {
+                show: false,
+                editChatId: null,
                 search: null,
                 dto: dtoFactory(),
                 isLoading: false,
@@ -100,27 +88,29 @@
             search (searchString) {
                 this.doSearch(searchString);
             },
-            editChatId(val) {
+        },
+        methods: {
+            showModal(chatId) {
+                this.$data.show = true;
+                const val = chatId;
+                this.editChatId = chatId;
                 if (val) {
                     console.log("Getting info about chat id", val);
                     axios.get('/api/chat/'+val)
                         .then((response) => {
                             this.dto = response.data;
                         }).then(()=>{
-                            axios.get('/api/user/list', {
-                                params: {userId: [...this.dto.participantIds] + ''}
-                            }).then((response) => {
-                                this.people = response.data;
-                            })
+                        axios.get('/api/user/list', {
+                            params: {userId: [...this.dto.participantIds] + ''}
+                        }).then((response) => {
+                            this.people = response.data;
                         })
+                    })
                 } else {
                     this.dto = dtoFactory();
                 }
+
             },
-
-        },
-
-        methods: {
             removeSelected (item) {
                 console.debug("Removing", item, this.dto.participantIds);
                 const index = this.dto.participantIds.indexOf(item.id);
@@ -163,6 +153,10 @@
         created() {
             // https://forum-archive.vuejs.org/topic/5174/debounce-replacement-in-vue-2-0
             this.doSearch = debounce(this.doSearch, 700);
+            bus.$on(OPEN_CHAT_EDIT, this.showModal);
+        },
+        destroyed() {
+            bus.$off(OPEN_CHAT_EDIT, this.showModal);
         },
     }
 </script>
