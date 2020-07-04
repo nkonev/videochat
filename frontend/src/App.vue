@@ -56,9 +56,7 @@
             <v-toolbar-title>Chats</v-toolbar-title>
             <v-spacer></v-spacer>
 
-            <v-btn icon>
-                <v-icon>mdi-magnify</v-icon>
-            </v-btn>
+            <v-text-field hide-details prepend-icon="mdi-magnify" single-line></v-text-field>
         </v-app-bar>
 
 
