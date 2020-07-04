@@ -73,7 +73,7 @@
                     </v-row>
                 </v-alert>
                 <LoginModal/>
-                <EditChat/>
+                <ChatEdit/>
                 <router-view/>
             </v-container>
         </v-main>
@@ -86,7 +86,7 @@
     import {mapGetters} from 'vuex'
     import {FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
     import bus, {LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
-    import EditChat from "./EditChat";
+    import ChatEdit from "./ChatEdit";
 
     export default {
         data () {
@@ -103,7 +103,7 @@
         },
         components:{
             LoginModal,
-            EditChat
+            ChatEdit
         },
         methods:{
             toggleLeftNavigation() {
