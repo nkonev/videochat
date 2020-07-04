@@ -37,7 +37,7 @@ module.exports = (env, argv) => {
         entry: "./src/main.js",
         output: {
             path: contentBase,
-            filename: "main.js"
+            filename: "[name].js",
         },
         resolve: {
             alias: {
