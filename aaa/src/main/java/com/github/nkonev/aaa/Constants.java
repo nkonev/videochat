@@ -28,7 +28,13 @@ public class Constants {
         public static final String PASSWORD_RESET_SET_NEW = "/password-reset-set-new";
         public static final String SESSIONS = "/sessions";
         public static final String ROLE = "/role";
+    }
 
+    public static class Headers {
+        public static final String X_AUTH_USERNAME = "X-Auth-Username";
+        public static final String X_AUTH_USER_ID = "X-Auth-UserId";
+        public static final String X_AUTH_EXPIRESIN = "X-Auth-ExpiresIn";
+        public static final String X_AUTH_ROLE = "X-Auth-Role";
     }
 
     public static class PathVariables {

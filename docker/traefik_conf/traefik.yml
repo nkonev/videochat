@@ -1,0 +1,35 @@
+# https://docs.traefik.io/reference/static-configuration/file/
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+entryPoints:
+  http:
+    address: :80
+  traefik:
+    address: :8080
+providers:
+  providersThrottleDuration: 2s
+  docker:
+    swarmMode: false
+    watch: true
+    exposedByDefault: false
+  file:
+    directory: /traefik_conf/dynamic
+api:
+  insecure: true
+  dashboard: true
+log:
+  level: DEBUG
+accessLog:
+  format: json
+  fields:
+    defaultMode: keep
+    headers:
+      defaultMode: drop
+      names:
+        User-Agent: keep
+        X-B3-Traceid: keep
+tracing:
+  spanNameLimit: 150
+  jaeger:
+    propagation: b3

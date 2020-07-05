@@ -18,7 +18,6 @@ matrix:
       script:
         - "pwd"
         - "rm ~/.m2/settings.xml"
-        - (cd gateway; ./mvnw clean package)
         - (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
 
     - language: javascript
