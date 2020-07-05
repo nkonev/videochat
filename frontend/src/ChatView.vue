@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div>It's a chat #{{id}}</div>
+        <div>It's a chat #{{chatId}}</div>
         <input type="text" id="input" />
 
         <video id="localVideo" autoPlay playsInline></video>
@@ -48,7 +48,7 @@
 
     export default {
         computed: {
-            id() {
+            chatId() {
                 return this.$route.params.id
             }
         },
@@ -293,7 +293,7 @@
               5.  Communicate streaming audio, video or data.
              */
 
-            this.signalingSubscription = this.centrifuge.subscribe("signaling"+this.id, (rawMessage) => {
+            this.signalingSubscription = this.centrifuge.subscribe("signaling"+this.chatId, (rawMessage) => {
                 console.debug("Received raw message", rawMessage);
                 // here we will process signaling messages
                 if (this.isMyMessage(getData(rawMessage))) {
