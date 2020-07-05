@@ -4,9 +4,16 @@ option java_multiple_files = true;
 
 package name.nkonev.aaa;
 
-message UserSessionResponse {
-    string userName = 1;
-    int64 userId = 2;
-    repeated string roles = 3;
-    int64 expiresIn = 4;
+message UserDto {
+    int64 id = 1;
+    string login = 2;
+    string avatar = 3;
+}
+
+message UsersRequest {
+    repeated int64 userIds = 1;
+}
+
+message UsersResponse {
+    repeated UserDto users = 1;
 }

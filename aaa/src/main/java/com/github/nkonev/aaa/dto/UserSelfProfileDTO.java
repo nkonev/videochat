@@ -15,6 +15,7 @@ public class UserSelfProfileDTO extends UserAccountDTO {
 
     private Collection<UserRole> roles;
 
+    // session expires at
     private Long expiresAt;
 
     public UserSelfProfileDTO() { }

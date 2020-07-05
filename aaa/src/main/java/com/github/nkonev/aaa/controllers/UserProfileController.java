@@ -2,6 +2,7 @@ package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.UserAccountDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
@@ -11,6 +12,9 @@ import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
 import com.github.nkonev.aaa.services.UserDeleteService;
 import com.github.nkonev.aaa.utils.PageUtils;
+import name.nkonev.aaa.UserDto;
+import name.nkonev.aaa.UsersRequest;
+import name.nkonev.aaa.UsersResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -58,6 +63,8 @@ public class UserProfileController {
 
     @Autowired
     private UserDeleteService userDeleteService;
+
+    public static final String X_PROTOBUF_CHARSET_UTF_8 = "application/x-protobuf;charset=UTF-8";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
@@ -122,28 +129,46 @@ public class UserProfileController {
     }
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.LIST)
-    public List<com.github.nkonev.aaa.dto.UserAccountDTO> getUser(
-            @RequestParam(value = "userId") Long []userIds,
-            @AuthenticationPrincipal UserAccountDetailsDTO userAccount
+    public List<com.github.nkonev.aaa.dto.UserAccountDTO> getUsers(
+            @RequestParam(value = "userId") List<Long> userIds,
+            @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
         ) {
         if (userIds == null) {
             throw new BadRequestException("Cannot be null");
         }
-        if (userIds.length > MAX_USERS_RESPONSE_LENGTH) {
+        if (userIds.size() > MAX_USERS_RESPONSE_LENGTH) {
             throw new BadRequestException("Cannot be greater than " + MAX_USERS_RESPONSE_LENGTH);
         }
         List<com.github.nkonev.aaa.dto.UserAccountDTO> result = new ArrayList<>();
-        for (Long userId: userIds) {
-            UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new RuntimeException("user with id=" + userId + " not found"));
-            com.github.nkonev.aaa.dto.UserAccountDTO u;
-            if (userAccount != null && userAccount.getId().equals(userAccountEntity.getId())) {
-                u = UserAccountConverter.getUserSelfProfile(userAccount, userAccountEntity.getLastLoginDateTime(), null);
+        for (UserAccount userAccountEntity: userAccountRepository.findByIdInOrderById(userIds)) {
+            if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.getId())) {
+                result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.getLastLoginDateTime(), null));
             } else {
-                u = userAccountConverter.convertToUserAccountDTO(userAccountEntity);
+                result.add(userAccountConverter.convertToUserAccountDTO(userAccountEntity));
             }
-            result.add(u);
         }
         return result;
+    }
+
+    @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST, produces = X_PROTOBUF_CHARSET_UTF_8)
+    public UsersResponse getUserInternal(@RequestBody UsersRequest usersRequest,
+            @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
+    ) {
+        List<UserAccountDTO> users = getUsers(usersRequest.getUserIdsList(), userAccountPrincipal);
+        UsersResponse.Builder responseBuilder = UsersResponse.newBuilder();
+
+        users.forEach(userAccountDTO -> {
+            UserDto.Builder builder = UserDto.newBuilder()
+                    .setId(userAccountDTO.getId())
+                    .setLogin(userAccountDTO.getLogin());
+            if (userAccountDTO.getAvatar() != null) {
+                builder.setAvatar(userAccountDTO.getAvatar());
+            }
+            UserDto user = builder.build();
+            responseBuilder.addUsers(user);
+        });
+
+        return responseBuilder.build();
     }
 
     @PostMapping(Constants.Urls.API+Constants.Urls.PROFILE)

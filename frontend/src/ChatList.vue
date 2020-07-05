@@ -12,7 +12,7 @@
                     <router-link :to="{name: chatRoute, params: { id: item.id} }">
                         <v-list-item-title v-html="item.name"></v-list-item-title>
                     </router-link>
-                    <v-list-item-subtitle v-html="item.participantIds"></v-list-item-subtitle>
+                    <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-action>
                     <v-btn color="primary" fab dark small @click="editChat(item)"><v-icon dark>mdi-plus</v-icon></v-btn>
@@ -122,7 +122,11 @@
                     console.log("removing last", pageSize);
                 }
                 this.reloadChats();
-            }
+            },
+            printParticipants(chat) {
+                const logins = chat.participants.map(p => p.login);
+                return logins.join(", ")
+            },
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadChats);

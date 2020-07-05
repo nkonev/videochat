@@ -20,7 +20,7 @@ require (
 	go.uber.org/fx v1.12.0
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
 	golang.org/x/sys v0.0.0-20200622214017-ed371f2e16b4 // indirect
-	google.golang.org/protobuf v1.24.0 // indirect
+	github.com/golang/protobuf v1.4.2
 )
 
 go 1.13

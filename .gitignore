@@ -5,6 +5,7 @@
 node_modules
 rice-box.go
 /chat/chat
+/chat/proto
 vendor
 .vendor-new
 grpc

@@ -49,3 +49,11 @@ https://github.com/golang/go/wiki/Modules
 ```bash
 go get -u -t ./...
 ```
+
+
+## (Re)generate go protobufs
+```bash
+rm -rf ./chat/proto
+mkdir ./chat/proto || true
+docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto
+```

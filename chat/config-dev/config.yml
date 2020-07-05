@@ -29,3 +29,8 @@ redis:
   readTimeout: 30s
   writeTimeout: 30s
   idleTimeout: 60s
+
+aaa:
+  url:
+    base: "http://api.site.local:8060"
+    getUsers: "/internal/user/list"

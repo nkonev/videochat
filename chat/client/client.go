@@ -1,16 +1,18 @@
 package client
 
 import (
+	"bytes"
+	"github.com/golang/protobuf/proto"
 	"github.com/spf13/viper"
+	"io/ioutil"
 	"net/http"
+	"net/url"
+	. "nkonev.name/chat/logger"
+	name_nkonev_aaa "nkonev.name/chat/proto"
 )
 
-type RestClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
-type restClientImpl struct {
-	delegate *http.Client
+type RestClient struct {
+	*http.Client
 }
 
 func NewRestClient() RestClient {
@@ -20,9 +22,62 @@ func NewRestClient() RestClient {
 		DisableCompression: viper.GetBool("http.disableCompression"),
 	}
 	client := &http.Client{Transport: tr}
-	return &restClientImpl{client}
+	return RestClient{client}
 }
 
-func (rc *restClientImpl) Do(req *http.Request) (*http.Response, error) {
-	return rc.delegate.Do(req)
+// https://developers.google.com/protocol-buffers/docs/gotutorial
+func (rc RestClient) GetUsers(userIds []int64) ([]*name_nkonev_aaa.UserDto, error) {
+	contentType := "application/x-protobuf;charset=UTF-8"
+	url0 := viper.GetString("aaa.url.base")
+	url1 := viper.GetString("aaa.url.getUsers")
+	fullUrl := url0 + url1
+	userReq := &name_nkonev_aaa.UsersRequest{UserIds: userIds}
+	out, err := proto.Marshal(userReq)
+	if err != nil {
+		Logger.Errorln("Failed to encode get users request:", err)
+		return nil, err
+	}
+
+	reader := bytes.NewReader(out)
+
+	headers := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		Logger.Errorln("Failed during parse aaa url:", err)
+		return nil, err
+	}
+	byteReadCloser := ioutil.NopCloser(reader)
+	request := http.Request{
+		Method: "GET",
+		Header: headers,
+		Body:   byteReadCloser,
+		URL:    parsedUrl,
+	}
+	resp, err := rc.Do(&request)
+	if err != nil {
+		Logger.Errorln("Failed to request get users response:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		Logger.Errorf("Users response responded non-200 code: %v", code)
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		Logger.Errorln("Failed to decode get users response:", err)
+		return nil, err
+	}
+	users := &name_nkonev_aaa.UsersResponse{}
+	if err := proto.Unmarshal(body, users); err != nil {
+		Logger.Errorln("Failed to parse users:", err)
+		return nil, err
+	}
+	return users.Users, nil
 }

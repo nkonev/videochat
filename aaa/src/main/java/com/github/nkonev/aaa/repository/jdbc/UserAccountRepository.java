@@ -37,4 +37,5 @@ public interface UserAccountRepository extends CrudRepository<UserAccount, Long>
     @Query("update auth.users set last_login_date_time = :newLastLoginDateTime where username = :userName")
     void updateLastLogin(@Param("userName") String username, @Param("newLastLoginDateTime") LocalDateTime localDateTime);
 
+    List<UserAccount> findByIdInOrderById(List<Long> userIds);
 }

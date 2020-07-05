@@ -5,18 +5,28 @@ import (
 	"fmt"
 	"github.com/centrifugal/centrifuge"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"nkonev.name/chat/auth"
+	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	. "nkonev.name/chat/logger"
+	name_nkonev_aaa "nkonev.name/chat/proto"
 	"nkonev.name/chat/utils"
 )
 
+type Participant struct {
+	Id     int64       `json:"id"`
+	Login  string      `json:"login"`
+	Avatar null.String `json:"avatar"`
+}
+
 type ChatDto struct {
-	Id             int64   `json:"id"`
-	Name           string  `json:"name"`
-	ParticipantIds []int64 `json:"participantIds"`
+	Id             int64         `json:"id"`
+	Name           string        `json:"name"`
+	ParticipantIds []int64       `json:"participantIds"`
+	Participants   []Participant `json:"participants"`
 }
 
 type EditChatDto struct {
@@ -38,7 +48,7 @@ func (a *EditChatDto) Validate() error {
 	return validation.ValidateStruct(a, validation.Field(&a.Name, validation.Required, validation.Length(1, 256)), validation.Field(&a.Id, validation.Required))
 }
 
-func GetChats(db db.DB) func(c echo.Context) error {
+func GetChats(db db.DB, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 		if !ok {
@@ -55,11 +65,16 @@ func GetChats(db db.DB) func(c echo.Context) error {
 			return err
 		} else {
 			chatDtos := make([]*ChatDto, 0)
-			for _, c := range chats {
-				if ids, err := db.GetParticipantIds(c.Id); err != nil {
+			for _, cc := range chats {
+				if ids, err := db.GetParticipantIds(cc.Id); err != nil {
 					return err
 				} else {
-					chatDtos = append(chatDtos, convertToDto(c, ids))
+					if users, err := restClient.GetUsers(ids); err != nil {
+						GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", cc.Id, err)
+						chatDtos = append(chatDtos, convertToDto(cc, ids, nil))
+					} else {
+						chatDtos = append(chatDtos, convertToDto(cc, ids, users))
+					}
 				}
 			}
 			GetLogEntry(c.Request()).Infof("Successfully returning %v chats", len(chatDtos))
@@ -68,7 +83,7 @@ func GetChats(db db.DB) func(c echo.Context) error {
 	}
 }
 
-func GetChat(dbR db.DB) func(c echo.Context) error {
+func GetChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 		if !ok {
@@ -88,26 +103,50 @@ func GetChat(dbR db.DB) func(c echo.Context) error {
 			if chat == nil {
 				return c.NoContent(http.StatusNotFound)
 			}
-			ids, err := dbR.GetParticipantIds(chat.Id)
-			if err != nil {
+			var chatDto *ChatDto
+			if ids, err := dbR.GetParticipantIds(chatId); err != nil {
 				return err
+			} else {
+				if users, err := restClient.GetUsers(ids); err != nil {
+					GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", chatId, err)
+					chatDto = convertToDto(chat, ids, nil)
+				} else {
+					chatDto = convertToDto(chat, ids, users)
+				}
 			}
-			chatDto := convertToDto(chat, ids)
+
 			GetLogEntry(c.Request()).Infof("Successfully returning %v chat", chatDto)
 			return c.JSON(200, chatDto)
 		}
 	}
 }
 
-func convertToDto(c *db.Chat, participantIds []int64) *ChatDto {
+func convertToParticipant(user *name_nkonev_aaa.UserDto) Participant {
+	var nullableAvatar = null.NewString(user.Avatar, user.Avatar != "")
+	return Participant{
+		Id:     user.Id,
+		Login:  user.Login,
+		Avatar: nullableAvatar,
+	}
+}
+
+func convertToDto(c *db.Chat, participantIds []int64, users []*name_nkonev_aaa.UserDto) *ChatDto {
+	var participants []Participant
+
+	for _, u := range users {
+		participant := convertToParticipant(u)
+		participants = append(participants, participant)
+	}
+
 	return &ChatDto{
 		Id:             c.Id,
 		Name:           c.Title,
 		ParticipantIds: participantIds,
+		Participants:   participants,
 	}
 }
 
-func CreateChat(dbR db.DB, node *centrifuge.Node) func(c echo.Context) error {
+func CreateChat(dbR db.DB, node *centrifuge.Node, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(CreateChatDto)
 		if err := c.Bind(bindTo); err != nil {
@@ -147,10 +186,31 @@ func CreateChat(dbR db.DB, node *centrifuge.Node) func(c echo.Context) error {
 			if err != nil {
 				return nil, err
 			}
-			responseDto := ChatDto{
-				Id:             id,
-				Name:           bindTo.Name,
-				ParticipantIds: ids,
+			//responseDto := ChatDto{
+			//	Id:             id,
+			//	Name:           bindTo.Name,
+			//	ParticipantIds: ids,
+			//}
+			var responseDto ChatDto
+			if users, err := restClient.GetUsers(ids); err != nil {
+				GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", id, err)
+				responseDto = ChatDto{
+					Id:             id,
+					Name:           bindTo.Name,
+					ParticipantIds: ids,
+				}
+			} else {
+				var participants []Participant
+				for _, u := range users {
+					participant := convertToParticipant(u)
+					participants = append(participants, participant)
+				}
+				responseDto = ChatDto{
+					Id:             id,
+					Name:           bindTo.Name,
+					ParticipantIds: ids,
+					Participants:   participants,
+				}
 			}
 
 			return responseDto, err
@@ -212,7 +272,7 @@ func DeleteChat(dbR db.DB) func(c echo.Context) error {
 	}
 }
 
-func EditChat(dbR db.DB) func(c echo.Context) error {
+func EditChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(EditChatDto)
 		if err := c.Bind(bindTo); err != nil {
@@ -253,13 +313,29 @@ func EditChat(dbR db.DB) func(c echo.Context) error {
 			}
 
 			ids, err := tx.GetParticipantIdsTx(bindTo.Id)
-			responseDto := ChatDto{
-				Id:             bindTo.Id,
-				Name:           bindTo.Name,
-				ParticipantIds: ids,
-			}
 			if err != nil {
 				return err
+			}
+			var responseDto ChatDto
+			if users, err := restClient.GetUsers(ids); err != nil {
+				GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", bindTo.Id, err)
+				responseDto = ChatDto{
+					Id:             bindTo.Id,
+					Name:           bindTo.Name,
+					ParticipantIds: ids,
+				}
+			} else {
+				var participants []Participant
+				for _, u := range users {
+					participant := convertToParticipant(u)
+					participants = append(participants, participant)
+				}
+				responseDto = ChatDto{
+					Id:             bindTo.Id,
+					Name:           bindTo.Name,
+					ParticipantIds: ids,
+					Participants:   participants,
+				}
 			}
 
 			return c.JSON(http.StatusAccepted, responseDto)

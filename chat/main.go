@@ -57,7 +57,7 @@ func runCentrifuge(node *centrifuge.Node) {
 	Logger.Info("Centrifuge started.")
 }
 
-func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.AuthMiddleware, lc fx.Lifecycle, node *centrifuge.Node, db db.DB, policy *bluemonday.Policy) *echo.Echo {
+func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.AuthMiddleware, lc fx.Lifecycle, node *centrifuge.Node, db db.DB, policy *bluemonday.Policy, restClient client.RestClient) *echo.Echo {
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
@@ -78,11 +78,11 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.Au
 
 	e.GET("/chat/websocket", handlers.Convert(handlers.CentrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
 
-	e.GET("/chat", handlers.GetChats(db))
-	e.GET("/chat/:id", handlers.GetChat(db))
-	e.POST("/chat", handlers.CreateChat(db, node))
+	e.GET("/chat", handlers.GetChats(db, restClient))
+	e.GET("/chat/:id", handlers.GetChat(db, restClient))
+	e.POST("/chat", handlers.CreateChat(db, node, restClient))
 	e.DELETE("/chat/:id", handlers.DeleteChat(db))
-	e.PUT("/chat", handlers.EditChat(db))
+	e.PUT("/chat", handlers.EditChat(db, restClient))
 
 	e.GET("/chat/:id/message", handlers.GetMessages(db))
 	e.GET("/chat/:id/message/:messageId", handlers.GetMessage(db))

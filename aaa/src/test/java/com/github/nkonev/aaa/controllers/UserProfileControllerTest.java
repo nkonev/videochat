@@ -270,6 +270,25 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     }
 
+    @WithUserDetails(TestConstants.USER_ALICE)
+    @org.junit.jupiter.api.Test
+    public void testGetManyUsers() throws Exception {
+        UserAccount bob = getUserFromBd(TestConstants.USER_BOB);
+        UserAccount alice = getUserFromBd(TestConstants.USER_ALICE);
+
+        String bobEmail = bob.getEmail();
+
+        MvcResult mvcResult = mockMvc.perform(
+                get(Constants.Urls.API+ Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.getId()+"&userId="+alice.getId())
+        )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].login").value(TestConstants.USER_ALICE))
+                .andExpect(jsonPath("$[1].login").value(TestConstants.USER_BOB))
+                .andReturn();
+
+    }
+
+
     @org.junit.jupiter.api.Test
     @Disabled
     public void userCanSeeOnlyOwnProfileEmail() {

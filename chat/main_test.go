@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"github.com/labstack/echo/v4"
 	"github.com/oliveagle/jsonpath"
 	"github.com/stretchr/testify/assert"
@@ -15,9 +16,11 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers"
 	. "nkonev.name/chat/logger"
+	name_nkonev_aaa "nkonev.name/chat/proto"
 	"nkonev.name/chat/utils"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -28,7 +31,9 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
-func shutdown() {}
+func shutdown() {
+
+}
 
 func setup() {
 	configFile := utils.InitFlags("./config-dev/config.yml")
@@ -65,6 +70,48 @@ func requestWithHeader(method, path string, h http.Header, body io.Reader, e *ec
 	rec := test.NewRecorder()
 	e.ServeHTTP(rec, req) // most wanted
 	return rec.Code, rec.Body.String(), rec.Result().Header
+}
+
+type ProtobufAaaEmu struct{}
+
+func (receiver ProtobufAaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	resp.WriteHeader(200)
+
+	userResp := &name_nkonev_aaa.UsersResponse{}
+	u1 := &name_nkonev_aaa.UserDto{
+		Id:     16161,
+		Login:  "testor_protobuf",
+		Avatar: "http://image.jpg",
+	}
+	u2 := &name_nkonev_aaa.UserDto{
+		Id:    16162,
+		Login: "testor_protobuf2",
+	}
+	var users = []*name_nkonev_aaa.UserDto{u1, u2}
+	userResp.Users = users
+	out, err := proto.Marshal(userResp)
+	if err != nil {
+		Logger.Errorln("Failed to encode get users request:", err)
+		return
+	}
+
+	resp.Write(out)
+}
+
+func startAaaEmu() *http.Server {
+	s := &http.Server{
+		Addr:    ":8060",
+		Handler: ProtobufAaaEmu{},
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		wg.Done()
+		Logger.Info(s.ListenAndServe())
+	}()
+	wg.Wait()
+	return s
 }
 
 func request(method, path string, body io.Reader, e *echo.Echo) (int, string, http.Header) {
@@ -122,10 +169,14 @@ func getJsonPathResult(t *testing.T, body string, jsonpath0 string) interface{} 
 }
 
 func TestGetChatsPaginated(t *testing.T) {
+	emu := startAaaEmu()
+	defer emu.Close()
 	runTest(t, func(e *echo.Echo) {
 		c, b, _ := request("GET", "/chat?page=2&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, b)
+
+		Logger.Infof("Body: %v", b)
 
 		typedTes := getJsonPathResult(t, b, "$.name").([]interface{})
 
@@ -134,6 +185,15 @@ func TestGetChatsPaginated(t *testing.T) {
 		assert.Equal(t, "sit", typedTes[0])
 		assert.Equal(t, "amet", typedTes[1])
 		assert.Equal(t, "With collegues", typedTes[2])
+
+		// also check get additional info froma aaa emu
+		firstChatParticipantLogins := getJsonPathResult(t, b, "$[0].participants.login").([]interface{})
+		assert.Equal(t, "testor_protobuf", firstChatParticipantLogins[0])
+		assert.Equal(t, "testor_protobuf2", firstChatParticipantLogins[1])
+
+		firstChatParticipantAvatars := getJsonPathResult(t, b, "$[0].participants.avatar").([]interface{})
+		assert.Equal(t, "http://image.jpg", firstChatParticipantAvatars[0])
+		assert.Equal(t, nil, firstChatParticipantAvatars[1])
 	})
 }
 
