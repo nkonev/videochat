@@ -20,8 +20,8 @@ import (
 	"nkonev.name/chat/utils"
 	"os"
 	"strings"
-	"sync"
 	"testing"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -104,13 +104,24 @@ func startAaaEmu() *http.Server {
 		Handler: ProtobufAaaEmu{},
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
 	go func() {
-		wg.Done()
 		Logger.Info(s.ListenAndServe())
 	}()
-	wg.Wait()
+
+	restClient := client.NewRestClient()
+
+	for i := 1; i <= 30; i++ {
+		_, err := restClient.GetUsers([]int64{0})
+		if err != nil {
+			Logger.Infof("Awaiting while emulator have been started")
+			time.Sleep(time.Second * 1)
+			continue
+		} else {
+			break
+		}
+	}
+	restClient.CloseIdleConnections()
+
 	return s
 }
 
