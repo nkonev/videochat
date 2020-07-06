@@ -1,11 +1,26 @@
 <template>
-    <div>
-        <div>It's a chat #{{chatId}}</div>
-        <input type="text" id="input" />
+    <v-card>
+        <v-card-title>It's a chat #{{chatId}}</v-card-title>
+        <div>
+            <video id="localVideo" autoPlay playsInline></video>
+            <video id="remoteVideo" autoPlay playsInline></video>
+        </div>
 
-        <video id="localVideo" autoPlay playsInline></video>
-        <video id="remoteVideo" autoPlay playsInline></video>
-    </div>
+        <v-card-text>
+            <v-text-field label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="chatMessageText"></v-text-field>
+            <v-list>
+                <v-list-item
+                        v-for="(item, index) in chatMessages"
+                        :key="index"
+                >
+                    <v-list-item-content>
+                        {{item}}
+                    </v-list-item-content>
+                </v-list-item>
+            </v-list>
+        </v-card-text>
+
+    </v-card>
 </template>
 
 <script>
@@ -69,9 +84,19 @@
 
                 localVideo: null,
                 remoteVideo: null,
+
+                chatMessageText: "",
+                chatMessages: [],
             }
         },
         methods: {
+            sendMessageToChat() {
+                if (this.chatMessageText && this.chatMessageText !== "") {
+                    console.log("Sending", this.chatMessageText);
+                    this.chatSubscription.publish(setProperData({value: this.chatMessageText}));
+                    this.chatMessageText = "";
+                }
+            },
             setupCentrifuge () {
                 // Create Centrifuge object with Websocket endpoint address set in main.go
                 var url = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/api/chat/websocket";
@@ -270,18 +295,8 @@
 
             this.chatSubscription = this.centrifuge.subscribe("chat1", (message) => {
                 // we can rely only on data
-                drawText(JSON.stringify(getData(message)));
+                this.chatMessages = [...this.chatMessages, JSON.stringify(getData(message))];
             });
-            var input = document.getElementById("input");
-            input.addEventListener('keyup', (e) => {
-                if (e.keyCode == 13) { // ENTER key pressed
-                    this.chatSubscription.publish(setProperData({value: this.value}));
-                    input.value = '';
-                }
-            });
-
-
-
 
             /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
              * https://codelabs.developers.google.com/codelabs/webrtc-web/#4
