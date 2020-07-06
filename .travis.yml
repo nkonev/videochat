@@ -35,6 +35,7 @@ matrix:
         - (cd frontend; npm install && npm run build)
 
     - language: go
+      sudo: required
       go:
         - "1.14.3"
       cache:
@@ -46,7 +47,7 @@ matrix:
         - "/bin/true"
       script:
         - "pwd"
-        - "echo '127.0.0.1   api.site.local' >> /etc/hosts"
+        - sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
         - "rm -rf ./chat/proto"
         - "mkdir ./chat/proto || true"
         - "docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto"
