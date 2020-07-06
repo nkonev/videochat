@@ -11,6 +11,8 @@ import (
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
 
+const X_B3_TRACE_ID = "X-B3-TraceId"
+
 type H map[string]interface{}
 
 func StringsToRegexpArray(strings []string) []regexp.Regexp {

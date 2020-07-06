@@ -3,12 +3,14 @@ package client
 import (
 	"bytes"
 	"github.com/golang/protobuf/proto"
+	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	. "nkonev.name/chat/logger"
 	name_nkonev_aaa "nkonev.name/chat/proto"
+	"nkonev.name/chat/utils"
 )
 
 type RestClient struct {
@@ -26,24 +28,27 @@ func NewRestClient() RestClient {
 }
 
 // https://developers.google.com/protocol-buffers/docs/gotutorial
-func (rc RestClient) GetUsers(userIds []int64) ([]*name_nkonev_aaa.UserDto, error) {
+func (rc RestClient) GetUsers(userIds []int64, c echo.Context) ([]*name_nkonev_aaa.UserDto, error) {
 	contentType := "application/x-protobuf;charset=UTF-8"
 	url0 := viper.GetString("aaa.url.base")
 	url1 := viper.GetString("aaa.url.getUsers")
 	fullUrl := url0 + url1
 	userReq := &name_nkonev_aaa.UsersRequest{UserIds: userIds}
-	out, err := proto.Marshal(userReq)
+	useRequestBytes, err := proto.Marshal(userReq)
 	if err != nil {
 		Logger.Errorln("Failed to encode get users request:", err)
 		return nil, err
 	}
 
-	reader := bytes.NewReader(out)
+	userRequestReader := bytes.NewReader(useRequestBytes)
+
+	trace := c.Request().Header.Get(utils.X_B3_TRACE_ID)
 
 	headers := map[string][]string{
-		"Accept-Encoding": {"gzip, deflate"},
-		"Accept":          {contentType},
-		"Content-Type":    {contentType},
+		"Accept-Encoding":   {"gzip, deflate"},
+		"Accept":            {contentType},
+		"Content-Type":      {contentType},
+		utils.X_B3_TRACE_ID: {trace},
 	}
 
 	parsedUrl, err := url.Parse(fullUrl)
@@ -51,11 +56,11 @@ func (rc RestClient) GetUsers(userIds []int64) ([]*name_nkonev_aaa.UserDto, erro
 		Logger.Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
-	byteReadCloser := ioutil.NopCloser(reader)
+	userRequestReadCloser := ioutil.NopCloser(userRequestReader)
 	request := http.Request{
 		Method: "GET",
 		Header: headers,
-		Body:   byteReadCloser,
+		Body:   userRequestReadCloser,
 		URL:    parsedUrl,
 	}
 	resp, err := rc.Do(&request)

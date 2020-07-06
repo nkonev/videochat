@@ -70,7 +70,7 @@ func GetChats(db db.DB, restClient client.RestClient) func(c echo.Context) error
 				if ids, err := db.GetParticipantIds(cc.Id); err != nil {
 					return err
 				} else {
-					if users, err := restClient.GetUsers(ids); err != nil {
+					if users, err := restClient.GetUsers(ids, c); err != nil {
 						GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", cc.Id, err)
 						chatDtos = append(chatDtos, convertToDto(cc, ids, nil))
 					} else {
@@ -108,7 +108,7 @@ func GetChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) error
 			if ids, err := dbR.GetParticipantIds(chatId); err != nil {
 				return err
 			} else {
-				if users, err := restClient.GetUsers(ids); err != nil {
+				if users, err := restClient.GetUsers(ids, c); err != nil {
 					GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", chatId, err)
 					chatDto = convertToDto(chat, ids, nil)
 				} else {
@@ -193,7 +193,7 @@ func CreateChat(dbR db.DB, node *centrifuge.Node, restClient client.RestClient) 
 			//	ParticipantIds: ids,
 			//}
 			var responseDto ChatDto
-			if users, err := restClient.GetUsers(ids); err != nil {
+			if users, err := restClient.GetUsers(ids, c); err != nil {
 				GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", id, err)
 				responseDto = ChatDto{
 					Id:             id,
@@ -318,7 +318,7 @@ func EditChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) erro
 				return err
 			}
 			var responseDto ChatDto
-			if users, err := restClient.GetUsers(ids); err != nil {
+			if users, err := restClient.GetUsers(ids, c); err != nil {
 				GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", bindTo.Id, err)
 				responseDto = ChatDto{
 					Id:             bindTo.Id,
