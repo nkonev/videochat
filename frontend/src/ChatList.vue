@@ -15,7 +15,7 @@
                     <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-action>
-                    <v-btn color="primary" fab dark small @click="editChat(item)"><v-icon dark>mdi-plus</v-icon></v-btn>
+                    <v-btn color="primary" fab dark small @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
                 </v-list-item-action>
             </v-list-item>
         </v-list>
