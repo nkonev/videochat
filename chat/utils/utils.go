@@ -11,7 +11,8 @@ import (
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
 
-const X_B3_TRACE_ID = "X-B3-TraceId"
+const X_B3_TRACE_ID = "x-b3-traceid"
+const X_B3_SPAN_ID = "x-b3-spanid"
 
 type H map[string]interface{}
 

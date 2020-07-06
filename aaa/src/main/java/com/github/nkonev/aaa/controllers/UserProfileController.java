@@ -91,6 +91,7 @@ public class UserProfileController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE)
     public HttpHeaders checkAuthenticatedInternal(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
+        LOGGER.info("Requesting internal user profile");
         Long expiresAt = getExpiresAt(session);
         var dto = checkAuthenticated(userAccount, session);
         HttpHeaders headers = new HttpHeaders();
@@ -154,6 +155,7 @@ public class UserProfileController {
     public UsersResponse getUserInternal(@RequestBody UsersRequest usersRequest,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
+        LOGGER.info("Requesting internal users {}", usersRequest);
         List<UserAccountDTO> users = getUsers(usersRequest.getUserIdsList(), userAccountPrincipal);
         UsersResponse.Builder responseBuilder = UsersResponse.newBuilder();
 

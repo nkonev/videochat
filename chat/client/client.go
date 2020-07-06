@@ -52,6 +52,7 @@ func (rc RestClient) GetUsers(userIds []int64, c echo.Context) ([]*name_nkonev_a
 		"Accept":            {contentType},
 		"Content-Type":      {contentType},
 		utils.X_B3_TRACE_ID: {trace},
+		utils.X_B3_SPAN_ID:  {trace},
 	}
 
 	parsedUrl, err := url.Parse(fullUrl)
