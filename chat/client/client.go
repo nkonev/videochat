@@ -42,9 +42,12 @@ func (rc RestClient) GetUsers(userIds []int64, c echo.Context) ([]*name_nkonev_a
 
 	userRequestReader := bytes.NewReader(useRequestBytes)
 
-	trace := c.Request().Header.Get(utils.X_B3_TRACE_ID)
+	var trace string
+	if c != nil {
+		trace = c.Request().Header.Get(utils.X_B3_TRACE_ID)
+	}
 
-	headers := map[string][]string{
+	requestHeaders := map[string][]string{
 		"Accept-Encoding":   {"gzip, deflate"},
 		"Accept":            {contentType},
 		"Content-Type":      {contentType},
@@ -59,7 +62,7 @@ func (rc RestClient) GetUsers(userIds []int64, c echo.Context) ([]*name_nkonev_a
 	userRequestReadCloser := ioutil.NopCloser(userRequestReader)
 	request := http.Request{
 		Method: "GET",
-		Header: headers,
+		Header: requestHeaders,
 		Body:   userRequestReadCloser,
 		URL:    parsedUrl,
 	}

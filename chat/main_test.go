@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/labstack/echo/v4"
 	"github.com/oliveagle/jsonpath"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxtest"
@@ -35,9 +36,13 @@ func shutdown() {
 
 }
 
+const aaaEmuPort = "8061"
+
 func setup() {
 	configFile := utils.InitFlags("./config-dev/config.yml")
 	utils.InitViper(configFile, "")
+
+	viper.Set("aaa.url.base", "http://api.site.local:"+aaaEmuPort)
 
 	d, err := db.ConfigureDb(nil)
 	defer d.Close()
@@ -100,7 +105,7 @@ func (receiver ProtobufAaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Req
 
 func startAaaEmu() *http.Server {
 	s := &http.Server{
-		Addr:    ":8060",
+		Addr:    ":" + aaaEmuPort,
 		Handler: ProtobufAaaEmu{},
 	}
 
@@ -111,7 +116,7 @@ func startAaaEmu() *http.Server {
 	restClient := client.NewRestClient()
 
 	for i := 1; i <= 30; i++ {
-		_, err := restClient.GetUsers([]int64{0})
+		_, err := restClient.GetUsers([]int64{0}, nil)
 		if err != nil {
 			Logger.Infof("Awaiting while emulator have been started")
 			time.Sleep(time.Second * 1)
