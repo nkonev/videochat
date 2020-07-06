@@ -56,7 +56,9 @@
             <v-toolbar-title>Chats</v-toolbar-title>
             <v-spacer></v-spacer>
 
-            <v-text-field hide-details prepend-icon="mdi-magnify" single-line></v-text-field>
+            <v-card light>
+                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchChatString"></v-text-field>
+            </v-card>
         </v-app-bar>
 
 
@@ -85,8 +87,9 @@
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
     import {FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
-    import bus, {LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
+    import bus, {CHAT_SEARCH_CHANGED, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
     import ChatEdit from "./ChatEdit";
+    import debounce from "lodash/debounce";
 
     export default {
         data () {
@@ -99,6 +102,7 @@
                 drawer: true,
                 lastError: "",
                 showAlert: false,
+                searchChatString: ""
             }
         },
         components:{
@@ -122,7 +126,16 @@
             },
             createChat() {
                 bus.$emit(OPEN_CHAT_EDIT, null);
-            }
+            },
+            doSearch(searchString) {
+                if (!searchString || searchString === "") {
+                    bus.$emit(CHAT_SEARCH_CHANGED, "");
+                    return;
+                }
+
+                bus.$emit(CHAT_SEARCH_CHANGED, searchString);
+            },
+
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
@@ -130,6 +143,15 @@
         mounted() {
             this.$store.dispatch(FETCH_USER_PROFILE);
         },
+        created() {
+            this.doSearch = debounce(this.doSearch, 700);
+        },
+        watch: {
+            searchChatString (searchString) {
+                this.doSearch(searchString);
+            },
+        },
+
     }
 </script>
 

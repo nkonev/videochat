@@ -5,3 +5,4 @@ export const LOGGED_OUT = "loggedOut";
 export const LOGGED_IN = "loggedIn";
 export const CHAT_SAVED = "chatSaved";
 export const OPEN_CHAT_EDIT = "openChatEdit";
+export const CHAT_SEARCH_CHANGED = "chatSearchChanged";

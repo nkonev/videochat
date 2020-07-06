@@ -28,7 +28,7 @@
 <script>
     import axios from 'axios';
     import InfiniteLoading from 'vue-infinite-loading';
-    import bus, {CHAT_SAVED, LOGGED_IN, OPEN_CHAT_EDIT} from "./bus";
+    import bus, {CHAT_SAVED, CHAT_SEARCH_CHANGED, LOGGED_IN, OPEN_CHAT_EDIT} from "./bus";
     import {chat_name} from "./routes";
 
     const replaceInArray = (array, element) => {
@@ -61,6 +61,7 @@
                 openEditModal: false,
                 editChatId: null,
                 infiniteId: new Date(),
+                searchString: ""
             }
         },
         components:{
@@ -81,7 +82,8 @@
                 axios.get(`/api/chat`, {
                     params: {
                         page: this.page,
-                        size: pageSize
+                        size: pageSize,
+                        searchString: this.searchString
                     },
                 }).then(({ data }) => {
                     if (data.length) {
@@ -127,14 +129,22 @@
                 const logins = chat.participants.map(p => p.login);
                 return logins.join(", ")
             },
+            setSearchString(searchString) {
+                this.searchString = searchString;
+                this.chats = [];
+                this.page = 0;
+                this.reloadChats();
+            },
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadChats);
             bus.$on(CHAT_SAVED, this.rerenderChat);
+            bus.$on(CHAT_SEARCH_CHANGED, this.setSearchString);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadChats);
             bus.$off(CHAT_SAVED, this.rerenderChat);
+            bus.$off(CHAT_SEARCH_CHANGED, this.setSearchString);
         },
     }
 </script>

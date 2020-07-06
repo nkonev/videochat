@@ -59,8 +59,9 @@ func GetChats(db db.DB, restClient client.RestClient) func(c echo.Context) error
 		page := utils.FixPageString(c.QueryParam("page"))
 		size := utils.FixSizeString(c.QueryParam("size"))
 		offset := utils.GetOffset(page, size)
+		searchString := c.QueryParam("searchString")
 
-		if chats, err := db.GetChats(userPrincipalDto.UserId, size, offset); err != nil {
+		if chats, err := db.GetChats(userPrincipalDto.UserId, size, offset, searchString); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 			return err
 		} else {
