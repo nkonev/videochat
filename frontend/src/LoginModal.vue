@@ -4,7 +4,7 @@
     https://vuetifyjs.com/en/components/forms/
     -->
     <v-row justify="center">
-        <v-dialog persistent v-model="show" max-width="300">
+        <v-dialog persistent v-model="show" max-width="400">
             <v-card>
                 <v-card-title class="headline">Login</v-card-title>
 
@@ -20,6 +20,7 @@
                                 :rules="usernameRules"
                                 label="Login"
                                 required
+                                @input="hideAlert()"
                         ></v-text-field>
 
                         <v-text-field
@@ -28,7 +29,18 @@
                                 label="Password"
                                 required
                                 type="password"
+                                @input="hideAlert()"
                         ></v-text-field>
+
+                        <v-alert
+                                dismissible
+                                v-model="showAlert"
+                                type="error"
+                        >
+                            <v-row align="center">
+                                <v-col class="grow">{{loginError}}</v-col>
+                            </v-row>
+                        </v-alert>
 
                         <v-btn
                                 :disabled="!valid"
@@ -56,6 +68,8 @@
         data() {
             return {
                 show: false,
+                showAlert: false,
+                loginError: "",
 
                 valid: true,
                 username: '',
@@ -116,8 +130,18 @@
                         .catch((error) => {
                             // handle error
                             console.log("Handling error on login", error.response);
+                            this.$data.showAlert = true;
+                            if (error.response.status === 401) {
+                                this.$data.loginError = "Wrong login or password";
+                            } else {
+                                this.$data.loginError = "Unknown error " + error.response.status;
+                            }
                         });
                 }
+            },
+            hideAlert() {
+                this.$data.showAlert = false;
+                this.$data.loginError = "";
             }
         }
     }
