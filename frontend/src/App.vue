@@ -90,12 +90,13 @@
     import bus, {CHAT_SEARCH_CHANGED, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
+    import {root_name} from "./routes";
 
     export default {
         data () {
             return {
                 appBarItems: [
-                    { title: 'Home', icon: 'mdi-home-city', clickFunction: ()=>{} },
+                    { title: 'Home', icon: 'mdi-home-city', clickFunction: this.goHome },
                     { title: 'My Account', icon: 'mdi-account', clickFunction: ()=>{} },
                     { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout },
                 ],
@@ -119,6 +120,9 @@
                     this.$store.commit(UNSET_USER);
                     bus.$emit(LOGGED_OUT, null);
                 });
+            },
+            goHome() {
+                this.$router.push(({ name: root_name}))
             },
             onError(errText){
                 this.showAlert = true;
