@@ -24,7 +24,7 @@
 
             <v-list dense>
                 <v-list-item
-                        v-for="item in appBarItems"
+                        v-for="item in getAppBarItems()"
                         :key="item.title"
                         @click="item.clickFunction"
                 >
@@ -96,9 +96,9 @@
         data () {
             return {
                 appBarItems: [
-                    { title: 'Home', icon: 'mdi-home-city', clickFunction: this.goHome },
-                    { title: 'My Account', icon: 'mdi-account', clickFunction: ()=>{} },
-                    { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout },
+                    { title: 'Home', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
+                    { title: 'My Account', icon: 'mdi-account', clickFunction: ()=>{}, requireAuthenticated: true },
+                    { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
                 ],
                 drawer: true,
                 lastError: "",
@@ -139,7 +139,15 @@
 
                 bus.$emit(CHAT_SEARCH_CHANGED, searchString);
             },
-
+            getAppBarItems(){
+                return this.appBarItems.filter((value, index) => {
+                    if (value.requireAuthenticated) {
+                        return this.currentUser
+                    } else {
+                        return true
+                    }
+                })
+            },
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
