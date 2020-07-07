@@ -6,44 +6,44 @@
                 <v-card-title v-else>Create chat</v-card-title>
 
                 <v-container fluid>
-                    <v-text-field label="Chat name" v-model="dto.name"></v-text-field>
-                <v-autocomplete
-                        v-model="dto.participantIds"
-                        :disabled="isLoading"
-                        :items="people"
-                        filled
-                        chips
-                        color="blue-grey lighten-2"
-                        label="Select users for add to chat"
-                        item-text="login"
-                        item-value="id"
-                        multiple
-                        :hide-selected="true"
-                        :search-input.sync="search"
-                >
-                    <template v-slot:selection="data">
-                        <v-chip
-                                v-bind="data.attrs"
-                                :input-value="data.selected"
-                                close
-                                @click="data.select"
-                                @click:close="removeSelected(data.item)"
-                        >
-                            <v-avatar left v-if="data.item.avatar">
-                                <v-img :src="data.item.avatar"></v-img>
-                            </v-avatar>
-                            {{ data.item.login }}
-                        </v-chip>
-                    </template>
-                    <template v-slot:item="data">
-                        <v-list-item-avatar v-if="data.item.avatar">
-                            <img :src="data.item.avatar">
-                        </v-list-item-avatar>
-                        <v-list-item-content>
-                            <v-list-item-title v-html="data.item.login"></v-list-item-title>
-                        </v-list-item-content>
-                    </template>
-                </v-autocomplete>
+                    <v-text-field label="Chat name" v-model="dto.name" @keyup.native.enter="saveChat"></v-text-field>
+                    <v-autocomplete
+                            v-model="dto.participantIds"
+                            :disabled="isLoading"
+                            :items="people"
+                            filled
+                            chips
+                            color="blue-grey lighten-2"
+                            label="Select users for add to chat"
+                            item-text="login"
+                            item-value="id"
+                            multiple
+                            :hide-selected="true"
+                            :search-input.sync="search"
+                    >
+                        <template v-slot:selection="data">
+                            <v-chip
+                                    v-bind="data.attrs"
+                                    :input-value="data.selected"
+                                    close
+                                    @click="data.select"
+                                    @click:close="removeSelected(data.item)"
+                            >
+                                <v-avatar left v-if="data.item.avatar">
+                                    <v-img :src="data.item.avatar"></v-img>
+                                </v-avatar>
+                                {{ data.item.login }}
+                            </v-chip>
+                        </template>
+                        <template v-slot:item="data">
+                            <v-list-item-avatar v-if="data.item.avatar">
+                                <img :src="data.item.avatar">
+                            </v-list-item-avatar>
+                            <v-list-item-content>
+                                <v-list-item-title v-html="data.item.login"></v-list-item-title>
+                            </v-list-item-content>
+                        </template>
+                    </v-autocomplete>
                 </v-container>
 
                 <v-card-actions class="pa-4">
