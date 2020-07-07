@@ -30,9 +30,8 @@ type ChatDto struct {
 }
 
 type EditChatDto struct {
-	Id             int64   `json:"id"`
-	Name           string  `json:"name"`
-	ParticipantIds []int64 `json:"participantIds"`
+	Id int64 `json:"id"`
+	CreateChatDto
 }
 
 type CreateChatDto struct {
@@ -67,21 +66,62 @@ func GetChats(db db.DB, restClient client.RestClient) func(c echo.Context) error
 		} else {
 			chatDtos := make([]*ChatDto, 0)
 			for _, cc := range chats {
-				if ids, err := db.GetParticipantIds(cc.Id); err != nil {
+				if chatDto, err := getChatDtoWithUsers(c, db, restClient, cc); err != nil {
 					return err
 				} else {
-					if users, err := restClient.GetUsers(ids, c); err != nil {
-						GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", cc.Id, err)
-						chatDtos = append(chatDtos, convertToDto(cc, ids, nil))
-					} else {
-						chatDtos = append(chatDtos, convertToDto(cc, ids, users))
-					}
+					chatDtos = append(chatDtos, chatDto)
 				}
 			}
+
 			GetLogEntry(c.Request()).Infof("Successfully returning %v chats", len(chatDtos))
 			return c.JSON(200, chatDtos)
 		}
 	}
+}
+
+func getChatDtoWithUsers(c echo.Context, dbR db.DB, restClient client.RestClient, chat *db.Chat) (*ChatDto, error) {
+	var chatDto *ChatDto
+
+	if ids, err := dbR.GetParticipantIds(chat.Id); err != nil {
+		return nil, err
+	} else {
+		if users, err := restClient.GetUsers(ids, c); err != nil {
+			GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", chat.Id, err)
+			chatDto = convertToDto(chat, ids, nil)
+		} else {
+			chatDto = convertToDto(chat, ids, users)
+		}
+	}
+	return chatDto, nil
+}
+
+func getChatDtoOnPutTx(c echo.Context, tx *db.Tx, restClient client.RestClient, chatName string, chatId int64) (*ChatDto, error) {
+	ids, err := tx.GetParticipantIdsTx(chatId)
+	if err != nil {
+		return nil, err
+	}
+	var responseDto ChatDto
+	if users, err := restClient.GetUsers(ids, c); err != nil {
+		GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", chatId, err)
+		responseDto = ChatDto{
+			Id:             chatId,
+			Name:           chatName,
+			ParticipantIds: ids,
+		}
+	} else {
+		var participants []Participant
+		for _, u := range users {
+			participant := convertToParticipant(u)
+			participants = append(participants, participant)
+		}
+		responseDto = ChatDto{
+			Id:             chatId,
+			Name:           chatName,
+			ParticipantIds: ids,
+			Participants:   participants,
+		}
+	}
+	return &responseDto, nil
 }
 
 func GetChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) error {
@@ -105,15 +145,8 @@ func GetChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) error
 				return c.NoContent(http.StatusNotFound)
 			}
 			var chatDto *ChatDto
-			if ids, err := dbR.GetParticipantIds(chatId); err != nil {
+			if chatDto, err = getChatDtoWithUsers(c, dbR, restClient, chat); err != nil {
 				return err
-			} else {
-				if users, err := restClient.GetUsers(ids, c); err != nil {
-					GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", chatId, err)
-					chatDto = convertToDto(chat, ids, nil)
-				} else {
-					chatDto = convertToDto(chat, ids, users)
-				}
 			}
 
 			GetLogEntry(c.Request()).Infof("Successfully returning %v chat", chatDto)
@@ -147,6 +180,17 @@ func convertToDto(c *db.Chat, participantIds []int64, users []*name_nkonev_aaa.U
 	}
 }
 
+func getParticipantsForNotify(principal *auth.AuthResult, participantIds []int64) (participantsForNotify []int64) {
+	participantsForNotify = append(participantsForNotify, principal.UserId)
+	for _, participantId := range participantIds {
+		if participantId == principal.UserId {
+			continue
+		}
+		participantsForNotify = append(participantsForNotify, participantId)
+	}
+	return
+}
+
 func CreateChat(dbR db.DB, node *centrifuge.Node, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(CreateChatDto)
@@ -165,15 +209,16 @@ func CreateChat(dbR db.DB, node *centrifuge.Node, restClient client.RestClient) 
 		}
 
 		var participantsForNotify []int64
-		result, errOuter := db.TransactWithResult(dbR, func(tx *db.Tx) (interface{}, error) {
+		idObject, errOuter := db.TransactWithResult(dbR, func(tx *db.Tx) (interface{}, error) {
 			id, err := tx.CreateChat(convertToCreatableChat(bindTo))
 			if err != nil {
 				return 0, err
 			}
+			// add admin
 			if err := tx.AddParticipant(userPrincipalDto.UserId, id, true); err != nil {
 				return 0, err
 			}
-			participantsForNotify = append(participantsForNotify, userPrincipalDto.UserId)
+			// add other participants except admin
 			for _, participantId := range bindTo.ParticipantIds {
 				if participantId == userPrincipalDto.UserId {
 					continue
@@ -181,58 +226,29 @@ func CreateChat(dbR db.DB, node *centrifuge.Node, restClient client.RestClient) 
 				if err := tx.AddParticipant(participantId, id, false); err != nil {
 					return 0, err
 				}
-				participantsForNotify = append(participantsForNotify, participantId)
 			}
-			ids, err := tx.GetParticipantIdsTx(id)
+			responseDto, err := getChatDtoOnPutTx(c, tx, restClient, bindTo.Name, id)
 			if err != nil {
-				return nil, err
+				return 0, err
 			}
-			//responseDto := ChatDto{
-			//	Id:             id,
-			//	Name:           bindTo.Name,
-			//	ParticipantIds: ids,
-			//}
-			var responseDto ChatDto
-			if users, err := restClient.GetUsers(ids, c); err != nil {
-				GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", id, err)
-				responseDto = ChatDto{
-					Id:             id,
-					Name:           bindTo.Name,
-					ParticipantIds: ids,
-				}
-			} else {
-				var participants []Participant
-				for _, u := range users {
-					participant := convertToParticipant(u)
-					participants = append(participants, participant)
-				}
-				responseDto = ChatDto{
-					Id:             id,
-					Name:           bindTo.Name,
-					ParticipantIds: ids,
-					Participants:   participants,
-				}
-			}
+			participantsForNotify = getParticipantsForNotify(userPrincipalDto, responseDto.ParticipantIds)
 
-			return responseDto, err
+			return id, c.JSON(http.StatusCreated, responseDto)
 		})
 		if errOuter != nil {
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
-			return errOuter
 		} else {
-			typedResult := result.(ChatDto)
-			// send start
+			// send notifications
 			for _, participantId := range participantsForNotify {
 				participantChannel := node.PersonalChannel(utils.Int64ToString(participantId))
 				GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
-				_, err := node.Publish(participantChannel, []byte(`{"messageChatId": `+utils.InterfaceToString(typedResult.Id)+`, "type": "chat_created"}`))
+				_, err := node.Publish(participantChannel, []byte(`{"messageChatId": `+utils.InterfaceToString(idObject)+`, "type": "chat_created"}`))
 				if err != nil {
 					GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
 				}
 			}
-			// send end
-			return c.JSON(http.StatusCreated, typedResult)
 		}
+		return errOuter
 	}
 }
 
@@ -313,33 +329,11 @@ func EditChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) erro
 				}
 			}
 
-			ids, err := tx.GetParticipantIdsTx(bindTo.Id)
-			if err != nil {
+			if responseDto, err := getChatDtoOnPutTx(c, tx, restClient, bindTo.Name, bindTo.Id); err != nil {
 				return err
-			}
-			var responseDto ChatDto
-			if users, err := restClient.GetUsers(ids, c); err != nil {
-				GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", bindTo.Id, err)
-				responseDto = ChatDto{
-					Id:             bindTo.Id,
-					Name:           bindTo.Name,
-					ParticipantIds: ids,
-				}
 			} else {
-				var participants []Participant
-				for _, u := range users {
-					participant := convertToParticipant(u)
-					participants = append(participants, participant)
-				}
-				responseDto = ChatDto{
-					Id:             bindTo.Id,
-					Name:           bindTo.Name,
-					ParticipantIds: ids,
-					Participants:   participants,
-				}
+				return c.JSON(http.StatusAccepted, responseDto)
 			}
-
-			return c.JSON(http.StatusAccepted, responseDto)
 		})
 		if errOuter != nil {
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
