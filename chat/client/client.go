@@ -2,15 +2,16 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"github.com/golang/protobuf/proto"
-	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/trace"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	. "nkonev.name/chat/logger"
 	name_nkonev_aaa "nkonev.name/chat/proto"
-	"nkonev.name/chat/utils"
 )
 
 type RestClient struct {
@@ -23,12 +24,15 @@ func NewRestClient() RestClient {
 		IdleConnTimeout:    viper.GetDuration("http.idle.connTimeout"),
 		DisableCompression: viper.GetBool("http.disableCompression"),
 	}
-	client := &http.Client{Transport: tr}
+	trR := &ochttp.Transport{
+		Base: tr,
+	}
+	client := &http.Client{Transport: trR}
 	return RestClient{client}
 }
 
 // https://developers.google.com/protocol-buffers/docs/gotutorial
-func (rc RestClient) GetUsers(userIds []int64, c echo.Context) ([]*name_nkonev_aaa.UserDto, error) {
+func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*name_nkonev_aaa.UserDto, error) {
 	contentType := "application/x-protobuf;charset=UTF-8"
 	url0 := viper.GetString("aaa.url.base")
 	url1 := viper.GetString("aaa.url.getUsers")
@@ -42,17 +46,14 @@ func (rc RestClient) GetUsers(userIds []int64, c echo.Context) ([]*name_nkonev_a
 
 	userRequestReader := bytes.NewReader(useRequestBytes)
 
-	var trace string
-	if c != nil {
-		trace = c.Request().Header.Get(utils.X_B3_TRACE_ID)
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
 	}
 
-	requestHeaders := map[string][]string{
-		"Accept-Encoding":   {"gzip, deflate"},
-		"Accept":            {contentType},
-		"Content-Type":      {contentType},
-		utils.X_B3_TRACE_ID: {trace},
-		utils.X_B3_SPAN_ID:  {trace},
+	if err != nil {
+		Logger.Infof("Error during inserting tracing")
 	}
 
 	parsedUrl, err := url.Parse(fullUrl)
@@ -61,13 +62,17 @@ func (rc RestClient) GetUsers(userIds []int64, c echo.Context) ([]*name_nkonev_a
 		return nil, err
 	}
 	userRequestReadCloser := ioutil.NopCloser(userRequestReader)
-	request := http.Request{
+	request := &http.Request{
 		Method: "GET",
 		Header: requestHeaders,
 		Body:   userRequestReadCloser,
 		URL:    parsedUrl,
 	}
-	resp, err := rc.Do(&request)
+
+	ctx, span := trace.StartSpan(c, "users.Get")
+	defer span.End()
+	request = request.WithContext(ctx)
+	resp, err := rc.Do(request)
 	if err != nil {
 		Logger.Errorln("Failed to request get users response:", err)
 		return nil, err

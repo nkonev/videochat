@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"
@@ -116,7 +117,7 @@ func startAaaEmu() *http.Server {
 	restClient := client.NewRestClient()
 
 	for i := 1; i <= 30; i++ {
-		_, err := restClient.GetUsers([]int64{0}, nil)
+		_, err := restClient.GetUsers([]int64{0}, context.Background())
 		if err != nil {
 			Logger.Infof("Awaiting while emulator have been started")
 			time.Sleep(time.Second * 1)
@@ -159,6 +160,7 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			runMigrations,
 			runCentrifuge,
 			//runEcho,
+			initJaeger,
 			testFunc,
 		),
 	)

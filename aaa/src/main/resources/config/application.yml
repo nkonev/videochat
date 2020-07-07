@@ -1,5 +1,5 @@
 logging.level.root: INFO
-#logging.pattern.console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-50.50(%logger{49}:%line)){cyan} %clr(:){faint} %m%n%wEx'
+logging.pattern.console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} traceId=%X{traceId} spanId=%X{spanId} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-50.50(%logger{49}:%line)){cyan} %clr(:){faint} %m%n%wEx'
 #logging.level.org.springframework.boot.web.servlet: TRACE
 #logging.level.org.springframework.security: TRACE
 #logging.level.org.springframework.security.oauth2: DEBUG
@@ -45,14 +45,17 @@ spring.session.timeout: 2d
 spring:
   application:
     name: aaa
-  sleuth:
-    sampler:
-      probability: 1.0
-      rate: 0
-    integration:
-      enabled: false
-    messaging:
-      enabled: false
+
+opentracing:
+  jaeger:
+    udp-sender:
+      host: localhost
+      port: 6831
+    enable-b3-propagation: true
+    enable128-bit-traces: true
+    probabilistic-sampler:
+      sampling-rate: 1.0
+    log-spans: false
 
 custom:
   email:

@@ -85,7 +85,7 @@ func getChatDtoWithUsers(c echo.Context, dbR db.DB, restClient client.RestClient
 	if ids, err := dbR.GetParticipantIds(chat.Id); err != nil {
 		return nil, err
 	} else {
-		if users, err := restClient.GetUsers(ids, c); err != nil {
+		if users, err := restClient.GetUsers(ids, c.Request().Context()); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", chat.Id, err)
 			chatDto = convertToDto(chat, ids, nil)
 		} else {
@@ -101,7 +101,7 @@ func getChatDtoOnPutTx(c echo.Context, tx *db.Tx, restClient client.RestClient, 
 		return nil, err
 	}
 	var responseDto ChatDto
-	if users, err := restClient.GetUsers(ids, c); err != nil {
+	if users, err := restClient.GetUsers(ids, c.Request().Context()); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", chatId, err)
 		responseDto = ChatDto{
 			Id:             chatId,

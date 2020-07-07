@@ -77,6 +77,22 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.18.1
+    hostname: jaeger
+    restart: unless-stopped
+    ports:
+      - 16686:16686 # web ui
+      - 6831:6831/udp
+      - 9411:9411
+    networks:
+      backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+    command: ["--collector.zipkin.http-port=9411"]
 volumes:
   postgres_data:
   redis_data_dir:

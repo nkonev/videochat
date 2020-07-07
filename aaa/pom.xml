@@ -376,38 +376,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-sleuth</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.zipkin.brave</groupId>
-                    <artifactId>brave-instrumentation-messaging</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.zipkin.brave</groupId>
-                    <artifactId>brave-instrumentation-spring-rabbit</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.zipkin.brave</groupId>
-                    <artifactId>brave-instrumentation-kafka-clients</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.zipkin.brave</groupId>
-                    <artifactId>brave-instrumentation-kafka-streams</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.zipkin.brave</groupId>
-                    <artifactId>brave-instrumentation-httpclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.zipkin.brave</groupId>
-                    <artifactId>brave-instrumentation-httpasyncclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.zipkin.brave</groupId>
-                    <artifactId>brave-instrumentation-jms</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>io.opentracing.contrib</groupId>
+            <artifactId>opentracing-spring-jaeger-web-starter</artifactId>
+            <version>3.1.2</version>
         </dependency>
 
         <dependency>
