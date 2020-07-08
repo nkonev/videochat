@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"contrib.go.opencensus.io/exporter/jaeger"
-	uber "contrib.go.opencensus.io/exporter/jaeger/propagation"
 	"github.com/GeertJohan/go.rice"
 	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/microcosm-cc/bluemonday"
+	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
@@ -73,7 +73,7 @@ func configureOpencensusMiddleware() echo.MiddlewareFunc {
 						err = next(ctx)
 					},
 				),
-				Propagation: &uber.HTTPFormat{},
+				Propagation: &uberCompat.HTTPFormat{},
 			}
 			handler.ServeHTTP(ctx.Response(), ctx.Request())
 			return
