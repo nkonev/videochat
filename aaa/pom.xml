@@ -38,6 +38,7 @@
 
         <skipTests>false</skipTests>
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
+        <opentracing-spring-jaeger-web-starter.version>3.1.2</opentracing-spring-jaeger-web-starter.version>
 
     </properties>
 
@@ -378,7 +379,7 @@
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-spring-jaeger-web-starter</artifactId>
-            <version>3.1.2</version>
+            <version>${opentracing-spring-jaeger-web-starter.version}</version>
         </dependency>
 
         <dependency>
