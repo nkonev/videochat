@@ -145,12 +145,9 @@ func configureStaticMiddleware() staticMiddleware {
 
 func initJaeger(lc fx.Lifecycle) error {
 	exporter, err := jaeger.NewExporter(jaeger.Options{
-		AgentEndpoint: "localhost:6831",
+		AgentEndpoint: viper.GetString("jaeger.endpoint"),
 		Process: jaeger.Process{
 			ServiceName: "chat",
-			Tags: []jaeger.Tag{
-				jaeger.StringTag("hostname", "localhost"),
-			},
 		},
 	})
 	if err != nil {
@@ -160,7 +157,14 @@ func initJaeger(lc fx.Lifecycle) error {
 	trace.ApplyConfig(trace.Config{
 		DefaultSampler: trace.AlwaysSample(),
 	})
-
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			Logger.Infof("Stopping tracer")
+			exporter.Flush()
+			trace.UnregisterExporter(exporter)
+			return nil
+		},
+	})
 	return nil
 }
 

@@ -34,3 +34,6 @@ aaa:
   url:
     base: "http://api.site.local:8060"
     getUsers: "/internal/user/list"
+
+jaeger:
+  endpoint: "localhost:6831"
