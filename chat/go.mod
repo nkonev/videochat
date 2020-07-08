@@ -6,7 +6,6 @@ require (
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/centrifugal/centrifuge v0.9.0
 	github.com/centrifugal/protocol v0.3.3
-	github.com/faabiosr/echo-middleware v0.3.2
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/protobuf v1.4.2

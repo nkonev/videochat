@@ -3,6 +3,8 @@ package client
 import (
 	"bytes"
 	"context"
+	uber "contrib.go.opencensus.io/exporter/jaeger/propagation"
+	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
@@ -12,10 +14,24 @@ import (
 	"net/url"
 	. "nkonev.name/chat/logger"
 	name_nkonev_aaa "nkonev.name/chat/proto"
+	"strings"
 )
 
 type RestClient struct {
 	*http.Client
+}
+
+type ParentedHTTPFormat struct {
+	uber.HTTPFormat
+}
+
+func (*ParentedHTTPFormat) SpanContextToRequest(sc trace.SpanContext, req *http.Request) {
+	header := fmt.Sprintf("%s:%s:%s:%d",
+		strings.Replace(sc.TraceID.String(), "0000000000000000", "", 1), //Replacing 0 if string is 8bit
+		sc.SpanID.String(),
+		sc.SpanID.String(), //Parent span deprecated and will therefore be ignored.
+		int64(sc.TraceOptions))
+	req.Header.Set(`uber-trace-id`, header)
 }
 
 func NewRestClient() RestClient {
@@ -25,7 +41,8 @@ func NewRestClient() RestClient {
 		DisableCompression: viper.GetBool("http.disableCompression"),
 	}
 	trR := &ochttp.Transport{
-		Base: tr,
+		Base:        tr,
+		Propagation: &ParentedHTTPFormat{},
 	}
 	client := &http.Client{Transport: trR}
 	return RestClient{client}

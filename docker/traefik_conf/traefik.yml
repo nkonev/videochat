@@ -31,6 +31,6 @@ accessLog:
         X-B3-Traceid: keep
 tracing:
   spanNameLimit: 150
-  zipkin:
-    id128Bit: true
-    httpEndpoint: http://api.site.local:9411/api/v2/spans
+  jaeger:
+    gen128Bit: true
+    localAgentHostPort: api.site.local:6831

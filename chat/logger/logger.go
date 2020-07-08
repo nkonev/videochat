@@ -15,7 +15,7 @@ func init() {
 }
 
 func GetLogEntry(request *http.Request) *log.Entry {
-	traceId := request.Header.Get("X-B3-Traceid")
+	traceId := request.Header.Get("Uber-Trace-Id")
 	return Logger.WithFields(
 		log.Fields{
 			"traceId": traceId,

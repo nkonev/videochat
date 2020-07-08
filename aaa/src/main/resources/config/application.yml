@@ -51,7 +51,6 @@ opentracing:
     udp-sender:
       host: localhost
       port: 6831
-    enable-b3-propagation: true
     enable128-bit-traces: true
     probabilistic-sampler:
       sampling-rate: 1.0

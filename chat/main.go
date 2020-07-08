@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"contrib.go.opencensus.io/exporter/jaeger"
+	uber "contrib.go.opencensus.io/exporter/jaeger/propagation"
 	"github.com/GeertJohan/go.rice"
 	"github.com/centrifugal/centrifuge"
-	censusMiddleware "github.com/faabiosr/echo-middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/spf13/viper"
+	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
 	"go.uber.org/fx"
 	"net/http"
@@ -61,6 +62,25 @@ func runCentrifuge(node *centrifuge.Node) {
 	Logger.Info("Centrifuge started.")
 }
 
+func configureOpencensusMiddleware() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) (err error) {
+			handler := &ochttp.Handler{
+				Handler: http.HandlerFunc(
+					func(w http.ResponseWriter, r *http.Request) {
+						ctx.SetRequest(r)
+						ctx.SetResponse(echo.NewResponse(w, ctx.Echo()))
+						err = next(ctx)
+					},
+				),
+				Propagation: &uber.HTTPFormat{},
+			}
+			handler.ServeHTTP(ctx.Response(), ctx.Request())
+			return
+		}
+	}
+}
+
 func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.AuthMiddleware, lc fx.Lifecycle, node *centrifuge.Node, db db.DB, policy *bluemonday.Policy, restClient client.RestClient) *echo.Echo {
 	bodyLimit := viper.GetString("server.body.limit")
 
@@ -68,7 +88,7 @@ func configureEcho(staticMiddleware staticMiddleware, authMiddleware handlers.Au
 	e.Logger.SetOutput(Logger.Writer())
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
-	e.Use(censusMiddleware.OpenCensusWithConfig(censusMiddleware.OpenCensusConfig{}))
+	e.Use(configureOpencensusMiddleware())
 	e.Use(echo.MiddlewareFunc(authMiddleware))
 	accessLoggerConfig := middleware.LoggerConfig{
 		Output: Logger.Writer(),

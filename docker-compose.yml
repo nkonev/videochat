@@ -84,7 +84,6 @@ services:
     ports:
       - 16686:16686 # web ui
       - 6831:6831/udp
-      - 9411:9411
     networks:
       backend:
     logging:
@@ -92,7 +91,7 @@ services:
       options:
         max-size: "50m"
         max-file: "1"
-    command: ["--collector.zipkin.http-port=9411"]
+
 volumes:
   postgres_data:
   redis_data_dir:
