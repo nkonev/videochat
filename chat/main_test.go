@@ -18,6 +18,7 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/notifications"
 	name_nkonev_aaa "nkonev.name/chat/proto"
 	"nkonev.name/chat/utils"
 	"os"
@@ -155,6 +156,7 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			db.ConfigureDb,
+			notifications.NewNotifications,
 		),
 		fx.Invoke(
 			runMigrations,

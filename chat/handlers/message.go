@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/db"
+	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
 	"time"
 )
@@ -23,14 +25,7 @@ type CreateMessageDto struct {
 	Text string `json:"text"`
 }
 
-type DisplayMessageDto struct {
-	Id             int64     `json:"id"`
-	Text           string    `json:"text"`
-	ChatId         int64     `json:"chatId"`
-	OwnerId        int64     `json:"ownerId"`
-	CreateDateTime time.Time `json:"createDateTime"`
-	EditDateTime   null.Time `json:"editDateTime"`
-}
+type DisplayMessageDto = dto.DisplayMessageDto
 
 func GetMessages(dbR db.DB) func(c echo.Context) error {
 	return func(c echo.Context) error {
@@ -118,7 +113,7 @@ func (a *EditMessageDto) Validate() error {
 	)
 }
 
-func PostMessage(dbR db.DB, policy *bluemonday.Policy) func(c echo.Context) error {
+func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications.Notifications) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(CreateMessageDto)
 		if err := c.Bind(bindTo); err != nil {
@@ -147,7 +142,7 @@ func PostMessage(dbR db.DB, policy *bluemonday.Policy) func(c echo.Context) erro
 			} else if !participant {
 				return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
 			}
-			id, err := tx.CreateMessage(convertToCreatableMessage(bindTo, userPrincipalDto, chatId, policy))
+			id, createDatetime, editDatetime, err := tx.CreateMessage(convertToCreatableMessage(bindTo, userPrincipalDto, chatId, policy))
 			if err != nil {
 				return err
 			}
@@ -155,7 +150,18 @@ func PostMessage(dbR db.DB, policy *bluemonday.Policy) func(c echo.Context) erro
 			if err != nil {
 				return err
 			}
-			return c.JSON(http.StatusCreated, &utils.H{"id": id})
+
+			dm := &DisplayMessageDto{
+				Id:             id,
+				Text:           bindTo.Text,
+				ChatId:         chatId,
+				OwnerId:        userPrincipalDto.UserId,
+				CreateDateTime: createDatetime,
+				EditDateTime:   editDatetime,
+			}
+
+			notificator.NotifyAboutNewMessage(c, chatId, dm, userPrincipalDto)
+			return c.JSON(http.StatusCreated, dm)
 		})
 		if errOuter != nil {
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)

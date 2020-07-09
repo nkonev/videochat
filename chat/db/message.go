@@ -37,20 +37,19 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, offset int) ([]
 	}
 }
 
-func (tx *Tx) CreateMessage(m *Message) (int64, error) {
+func (tx *Tx) CreateMessage(m *Message) (id int64, createDatetime time.Time, editDatetime null.Time, err error) {
 	if m == nil {
-		return 0, errors.New("message required")
+		return id, createDatetime, editDatetime, errors.New("message required")
 	} else if m.Text == "" {
-		return 0, errors.New("text required")
+		return id, createDatetime, editDatetime, errors.New("text required")
 	}
 
-	res := tx.QueryRow(`INSERT INTO message (text, chat_id, owner_id) VALUES ($1, $2, $3) RETURNING id`, m.Text, m.ChatId, m.OwnerId)
-	var id int64
-	if err := res.Scan(&id); err != nil {
+	res := tx.QueryRow(`INSERT INTO message (text, chat_id, owner_id) VALUES ($1, $2, $3) RETURNING id, create_date_time, edit_date_time`, m.Text, m.ChatId, m.OwnerId)
+	if err := res.Scan(&id, &createDatetime, &editDatetime); err != nil {
 		Logger.Errorf("Error during getting message id %v", err)
-		return 0, err
+		return id, createDatetime, editDatetime, err
 	}
-	return id, nil
+	return id, createDatetime, editDatetime,nil
 }
 
 func (db *DB) CountMessages() (int64, error) {

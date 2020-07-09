@@ -5,6 +5,7 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"nkonev.name/chat/auth"
 	"regexp"
 	"strconv"
 )
@@ -112,3 +113,17 @@ func Int64ToString(i int64) string {
 func InterfaceToString(i interface{}) string {
 	return fmt.Sprintf("%v", i)
 }
+
+func GetParticipantsForNotify(principal *auth.AuthResult, participantIds []int64) (participantsForNotify []int64) {
+	participantsForNotify = append(participantsForNotify, principal.UserId)
+	for _, participantId := range participantIds {
+		if participantId == principal.UserId {
+			continue
+		}
+		participantsForNotify = append(participantsForNotify, participantId)
+	}
+	return
+}
+
+const CHANNEL_PREFIX_SIGINALING = "signaling"
+const CHANNEL_PREFIX_CHAT = "chat"

@@ -382,6 +382,8 @@ github.com/neo4j-drivers/gobolt v1.7.4/go.mod h1:O9AUbip4Dgre+CD3p40dnMD4a4r52QB
 github.com/neo4j/neo4j-go-driver v1.7.4/go.mod h1:aPO0vVr+WnhEJne+FgFjfsjzAnssPFLucHgGZ76Zb/U=
 github.com/nkonev/jaeger-uber-propagation-compat v0.0.0-20200708124600-35e96dd0efd1 h1:nVRYbH5ZM84HUSd4SNULLZ+ofmK3hDIYLMuKUJBU75s=
 github.com/nkonev/jaeger-uber-propagation-compat v0.0.0-20200708124600-35e96dd0efd1/go.mod h1:SxSdEwWPkvG3A7mbSVqks9wuzlgmZ/geMbRKRa+maog=
+github.com/nkonev/jaeger-uber-propagation-compat v0.0.0-20200708125206-e763f0a72519 h1:OvLNrOJzwV1mar+H3DsyxIJTQ6jzZHuwQH9OFfsK/g8=
+github.com/nkonev/jaeger-uber-propagation-compat v0.0.0-20200708125206-e763f0a72519/go.mod h1:SxSdEwWPkvG3A7mbSVqks9wuzlgmZ/geMbRKRa+maog=
 github.com/nkovacs/streamquote v0.0.0-20170412213628-49af9bddb229 h1:E2B8qYyeSgv5MXpmzZXRNp8IAQ4vjxIjhpAf5hv/tAg=
 github.com/nkovacs/streamquote v0.0.0-20170412213628-49af9bddb229/go.mod h1:0aYXnNPJ8l7uZxf45rWW1a/uME32OF0rhiYGNQ2oF2E=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=

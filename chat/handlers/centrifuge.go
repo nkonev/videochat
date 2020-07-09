@@ -76,9 +76,6 @@ func modifyMessage(msg []byte, originatorUserId string, originatorClientId strin
 	return json.Marshal(v)
 }
 
-const CHANNEL_PREFIX_SIGINALING = "signaling"
-const CHANNEL_PREFIX_CHAT = "chat"
-
 func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 	// We use default config here as starting point. Default config contains
 	// reasonable values for available options.
@@ -229,7 +226,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 }
 
 func checkPermissions(dbs db.DB, userId string, channelId int64, channelName string) error {
-	if CHANNEL_PREFIX_SIGINALING == channelName {
+	if utils.CHANNEL_PREFIX_SIGINALING == channelName {
 		if ids, err := dbs.GetParticipantIds(channelId); err != nil {
 			return err
 		} else {
@@ -242,24 +239,36 @@ func checkPermissions(dbs db.DB, userId string, channelId int64, channelName str
 			return errors.New(fmt.Sprintf("User %v not found among participants", userId))
 		}
 	}
-	// TODO permissions for chat
-	return nil
+	if utils.CHANNEL_PREFIX_CHAT == channelName {
+		if ids, err := dbs.GetParticipantIds(channelId); err != nil {
+			return err
+		} else {
+			for _, uid := range ids {
+				if fmt.Sprintf("%v", uid) == userId {
+					Logger.Infof("User %v found among participants of chat %v", userId, channelId)
+					return nil
+				}
+			}
+			return errors.New(fmt.Sprintf("User %v not found among participants", userId))
+		}
+	}
+	return errors.New(fmt.Sprintf("User %v not allowed to use unknown channel %v", userId, channelName))
 }
 
 func getChannelId(channel string) (int64, string, error) {
-	if strings.HasPrefix(channel, CHANNEL_PREFIX_SIGINALING) {
-		s := channel[len(CHANNEL_PREFIX_SIGINALING):]
+	if strings.HasPrefix(channel, utils.CHANNEL_PREFIX_SIGINALING) {
+		s := channel[len(utils.CHANNEL_PREFIX_SIGINALING):]
 		if parseInt64, err := utils.ParseInt64(s); err != nil {
 			return 0, "", err
 		} else {
-			return parseInt64, CHANNEL_PREFIX_SIGINALING, nil
+			return parseInt64, utils.CHANNEL_PREFIX_SIGINALING, nil
 		}
-	} else if strings.HasPrefix(channel, CHANNEL_PREFIX_CHAT) {
-		s := channel[len(CHANNEL_PREFIX_CHAT):]
+	} else if strings.HasPrefix(channel, utils.CHANNEL_PREFIX_CHAT) {
+		s := channel[len(utils.CHANNEL_PREFIX_CHAT):]
 		if parseInt64, err := utils.ParseInt64(s); err != nil {
 			return 0, "", err
 		} else {
-			return parseInt64, CHANNEL_PREFIX_CHAT, nil
+			return parseInt64, utils.CHANNEL_PREFIX_CHAT, nil
 		}
 	} else {
 		return 0, "", errors.New("Subscription to unexpected channel: '" + channel + "'")

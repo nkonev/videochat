@@ -25,6 +25,8 @@
 
 <script>
     import Centrifuge from "centrifuge";
+    import axios from "axios";
+    import bus, {CHAT_SAVED} from "./bus";
 
     const drawText = (text) => {
         var div = document.createElement('div');
@@ -93,7 +95,11 @@
             sendMessageToChat() {
                 if (this.chatMessageText && this.chatMessageText !== "") {
                     console.log("Sending", this.chatMessageText);
-                    this.chatSubscription.publish(setProperData({value: this.chatMessageText}));
+                    const t = this.chatMessageText;
+                    const dtoToPost = {
+                        text: t
+                    };
+                    axios.post(`/api/chat/`+this.chatId+'/message', dtoToPost);
                     this.chatMessageText = "";
                 }
             },
@@ -293,7 +299,7 @@
             this.centrifuge = this.setupCentrifuge();
 
 
-            this.chatSubscription = this.centrifuge.subscribe("chat1", (message) => {
+            this.chatSubscription = this.centrifuge.subscribe("chat"+this.chatId, (message) => {
                 // we can rely only on data
                 this.chatMessages = [...this.chatMessages, JSON.stringify(getData(message))];
             });

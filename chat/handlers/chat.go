@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/centrifugal/centrifuge"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
@@ -11,23 +10,15 @@ import (
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
+	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/notifications"
 	name_nkonev_aaa "nkonev.name/chat/proto"
 	"nkonev.name/chat/utils"
 )
 
-type Participant struct {
-	Id     int64       `json:"id"`
-	Login  string      `json:"login"`
-	Avatar null.String `json:"avatar"`
-}
-
-type ChatDto struct {
-	Id             int64         `json:"id"`
-	Name           string        `json:"name"`
-	ParticipantIds []int64       `json:"participantIds"`
-	Participants   []Participant `json:"participants"`
-}
+type ChatDto = dto.ChatDto
+type Participant = dto.Participant
 
 type EditChatDto struct {
 	Id int64 `json:"id"`
@@ -180,18 +171,7 @@ func convertToDto(c *db.Chat, participantIds []int64, users []*name_nkonev_aaa.U
 	}
 }
 
-func getParticipantsForNotify(principal *auth.AuthResult, participantIds []int64) (participantsForNotify []int64) {
-	participantsForNotify = append(participantsForNotify, principal.UserId)
-	for _, participantId := range participantIds {
-		if participantId == principal.UserId {
-			continue
-		}
-		participantsForNotify = append(participantsForNotify, participantId)
-	}
-	return
-}
-
-func CreateChat(dbR db.DB, node *centrifuge.Node, restClient client.RestClient) func(c echo.Context) error {
+func CreateChat(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(CreateChatDto)
 		if err := c.Bind(bindTo); err != nil {
@@ -208,15 +188,14 @@ func CreateChat(dbR db.DB, node *centrifuge.Node, restClient client.RestClient) 
 			return errors.New("Error during getting auth context")
 		}
 
-		var participantsForNotify []int64
-		idObject, errOuter := db.TransactWithResult(dbR, func(tx *db.Tx) (interface{}, error) {
+		errOuter := db.Transact(dbR, func(tx *db.Tx) (error) {
 			id, err := tx.CreateChat(convertToCreatableChat(bindTo))
 			if err != nil {
-				return 0, err
+				return err
 			}
 			// add admin
 			if err := tx.AddParticipant(userPrincipalDto.UserId, id, true); err != nil {
-				return 0, err
+				return err
 			}
 			// add other participants except admin
 			for _, participantId := range bindTo.ParticipantIds {
@@ -224,29 +203,18 @@ func CreateChat(dbR db.DB, node *centrifuge.Node, restClient client.RestClient) 
 					continue
 				}
 				if err := tx.AddParticipant(participantId, id, false); err != nil {
-					return 0, err
+					return err
 				}
 			}
 			responseDto, err := getChatDtoOnPutTx(c, tx, restClient, bindTo.Name, id)
 			if err != nil {
-				return 0, err
+				return err
 			}
-			participantsForNotify = getParticipantsForNotify(userPrincipalDto, responseDto.ParticipantIds)
-
-			return id, c.JSON(http.StatusCreated, responseDto)
+			notificator.NotifyAboutNewChat(c, responseDto, userPrincipalDto)
+			return c.JSON(http.StatusCreated, responseDto)
 		})
 		if errOuter != nil {
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
-		} else {
-			// send notifications
-			for _, participantId := range participantsForNotify {
-				participantChannel := node.PersonalChannel(utils.Int64ToString(participantId))
-				GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
-				_, err := node.Publish(participantChannel, []byte(`{"messageChatId": `+utils.InterfaceToString(idObject)+`, "type": "chat_created"}`))
-				if err != nil {
-					GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
-				}
-			}
 		}
 		return errOuter
 	}
