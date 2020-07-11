@@ -62,7 +62,11 @@ func GetChats(db db.DB, restClient client.RestClient) func(c echo.Context) error
 		} else {
 			chatDtos := make([]*ChatDto, 0)
 			for _, cc := range chats {
-				if chatDto, err := getChatDtoWithUsers(c, db, restClient, cc); err != nil {
+				admin, err := db.IsAdmin(userPrincipalDto.UserId, cc.Id)
+				if err != nil {
+					return err
+				}
+				if chatDto, err := getChatDtoWithUsers(c, db, restClient, cc, admin); err != nil {
 					return err
 				} else {
 					chatDtos = append(chatDtos, chatDto)
@@ -79,7 +83,7 @@ func GetChats(db db.DB, restClient client.RestClient) func(c echo.Context) error
 	}
 }
 
-func getChatDtoWithUsers(c echo.Context, dbR db.DB, restClient client.RestClient, chat *db.Chat) (*ChatDto, error) {
+func getChatDtoWithUsers(c echo.Context, dbR db.DB, restClient client.RestClient, chat *db.Chat, canEdit bool) (*ChatDto, error) {
 	var chatDto *ChatDto
 
 	if ids, err := dbR.GetParticipantIds(chat.Id); err != nil {
@@ -87,16 +91,16 @@ func getChatDtoWithUsers(c echo.Context, dbR db.DB, restClient client.RestClient
 	} else {
 		if users, err := restClient.GetUsers(ids, c.Request().Context()); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", chat.Id, err)
-			chatDto = convertToDto(chat, ids, nil)
+			chatDto = convertToDto(chat, ids, nil, canEdit)
 		} else {
-			chatDto = convertToDto(chat, ids, users)
+			chatDto = convertToDto(chat, ids, users, canEdit)
 		}
 	}
 	return chatDto, nil
 }
 
 func getChatDtoOnPutTx(c echo.Context, tx *db.Tx, restClient client.RestClient, chatName string, chatId int64) (*ChatDto, error) {
-	ids, err := tx.GetParticipantIdsTx(chatId)
+	ids, err := tx.GetParticipantIds(chatId)
 	if err != nil {
 		return nil, err
 	}
@@ -144,8 +148,12 @@ func GetChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) error
 			if chat == nil {
 				return c.NoContent(http.StatusNotFound)
 			}
+			admin, err := dbR.IsAdmin(userPrincipalDto.UserId, chat.Id)
+			if err != nil {
+				return err
+			}
 			var chatDto *ChatDto
-			if chatDto, err = getChatDtoWithUsers(c, dbR, restClient, chat); err != nil {
+			if chatDto, err = getChatDtoWithUsers(c, dbR, restClient, chat, admin); err != nil {
 				return err
 			}
 
@@ -164,7 +172,7 @@ func convertToParticipant(user *name_nkonev_aaa.UserDto) Participant {
 	}
 }
 
-func convertToDto(c *db.Chat, participantIds []int64, users []*name_nkonev_aaa.UserDto) *ChatDto {
+func convertToDto(c *db.Chat, participantIds []int64, users []*name_nkonev_aaa.UserDto, canEdit bool) *ChatDto {
 	var participants []Participant
 
 	for _, u := range users {
@@ -177,6 +185,7 @@ func convertToDto(c *db.Chat, participantIds []int64, users []*name_nkonev_aaa.U
 		Name:           c.Title,
 		ParticipantIds: participantIds,
 		Participants:   participants,
+		CanEdit:        null.BoolFrom(canEdit),
 	}
 }
 
@@ -219,7 +228,7 @@ func CreateChat(dbR db.DB, notificator notifications.Notifications, restClient c
 			if err != nil {
 				return err
 			}
-			notificator.NotifyAboutNewChat(c, responseDto, responseDto.ParticipantIds)
+			notificator.NotifyAboutNewChat(c, responseDto, responseDto.ParticipantIds, tx)
 			return c.JSON(http.StatusCreated, responseDto)
 		})
 		if errOuter != nil {
@@ -310,7 +319,7 @@ func EditChat(dbR db.DB, notificator notifications.Notifications, restClient cli
 				return err
 			}
 
-			existsChatParticipantIdsFromDatabase, err := tx.GetParticipantIdsTx(bindTo.Id)
+			existsChatParticipantIdsFromDatabase, err := tx.GetParticipantIds(bindTo.Id)
 			if err != nil {
 				return err
 			}
@@ -340,9 +349,9 @@ func EditChat(dbR db.DB, notificator notifications.Notifications, restClient cli
 			if responseDto, err := getChatDtoOnPutTx(c, tx, restClient, bindTo.Name, bindTo.Id); err != nil {
 				return err
 			} else {
-				notificator.NotifyAboutNewChat(c, responseDto, userIdsToNotifyAboutChatCreated)
-				notificator.NotifyAboutDeleteChat(c, responseDto, userIdsToNotifyAboutChatDeleted)
-				notificator.NotifyAboutChangeChat(c, responseDto, userIdsToNotifyAboutChatChanged)
+				notificator.NotifyAboutNewChat(c, responseDto, userIdsToNotifyAboutChatCreated, tx)
+				notificator.NotifyAboutDeleteChat(c, responseDto, userIdsToNotifyAboutChatDeleted, tx)
+				notificator.NotifyAboutChangeChat(c, responseDto, userIdsToNotifyAboutChatChanged, tx)
 				return c.JSON(http.StatusAccepted, responseDto)
 			}
 		})

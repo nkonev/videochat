@@ -45,7 +45,7 @@ func getParticipantIdsCommon(qq CommonOperations, chatId int64) ([]int64, error)
 	}
 }
 
-func (tx *Tx) GetParticipantIdsTx(chatId int64) ([]int64, error) {
+func (tx *Tx) GetParticipantIds(chatId int64) ([]int64, error) {
 	return getParticipantIdsCommon(tx, chatId)
 }
 
@@ -53,14 +53,22 @@ func (db *DB) GetParticipantIds(chatId int64) ([]int64, error) {
 	return getParticipantIdsCommon(db, chatId)
 }
 
-func (tx *Tx) IsAdmin(userId int64, chatId int64) (bool, error) {
+func getIsAdminCommon(qq CommonOperations, userId int64, chatId int64) (bool, error) {
 	var admin bool = false
-	row := tx.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 AND admin = true LIMIT 1)`, userId, chatId)
+	row := qq.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 AND admin = true LIMIT 1)`, userId, chatId)
 	if err := row.Scan(&admin); err != nil {
 		return false, err
 	} else {
 		return admin, nil
 	}
+}
+
+func (tx *Tx) IsAdmin(userId int64, chatId int64) (bool, error) {
+	return getIsAdminCommon(tx, userId, chatId)
+}
+
+func (db *DB) IsAdmin(userId int64, chatId int64) (bool, error) {
+	return getIsAdminCommon(db, userId, chatId)
 }
 
 func (tx *Tx) IsParticipant(userId int64, chatId int64) (bool, error) {

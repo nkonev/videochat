@@ -27,6 +27,7 @@ type Tx struct {
 // enumerates common tx and non-tx operations
 type CommonOperations interface {
 	Query(query string, args ...interface{}) (*dbP.Rows, error)
+	QueryRow(query string, args ...interface{}) *dbP.Row
 }
 
 func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {
@@ -35,6 +36,14 @@ func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {
 
 func (txR *Tx) Query(query string, args ...interface{}) (*dbP.Rows, error) {
 	return txR.Tx.Query(query, args...)
+}
+
+func (dbR *DB) QueryRow(query string, args ...interface{}) *dbP.Row {
+	return dbR.DB.QueryRow(query, args...)
+}
+
+func (txR *Tx) QueryRow(query string, args ...interface{}) *dbP.Row {
+	return txR.Tx.QueryRow(query, args...)
 }
 
 const postgresDriverString = "pgx"

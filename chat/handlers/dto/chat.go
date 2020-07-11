@@ -7,6 +7,7 @@ type ChatDto struct {
 	Name           string        `json:"name"`
 	ParticipantIds []int64       `json:"participantIds"`
 	Participants   []Participant `json:"participants"`
+	CanEdit        null.Bool     `json:"canEdit"`
 }
 
 type Participant struct {
@@ -14,4 +15,3 @@ type Participant struct {
 	Login  string      `json:"login"`
 	Avatar null.String `json:"avatar"`
 }
-
