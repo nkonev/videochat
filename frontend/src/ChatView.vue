@@ -76,7 +76,6 @@
             if (list.length) {
                 infinityThis.page += 1;
                 infinityThis.items = [...infinityThis.items, ...list];
-                //replaceOrAppend(this.items, list);
                 $state.loaded();
             } else {
                 $state.complete();

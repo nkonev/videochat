@@ -81,5 +81,11 @@
             bus.$off(CHAT_DELETED, this.removeItem);
             bus.$off(CHAT_SEARCH_CHANGED, this.setSearchString);
         },
+        mounted() {
+            this.centrifuge.on('$private', (ctx)=>{
+                console.log("Got personal message", ctx);
+            });
+
+        }
     }
 </script>

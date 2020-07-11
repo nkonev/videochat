@@ -11,13 +11,13 @@ const vm = new Vue({
   vuetify,
   store,
   router,
-  mounted(){
+  created(){
     const setCetrifugeSession = (cs) => {
       Vue.prototype.centrifugeSessionId = cs;
     };
     Vue.prototype.centrifuge = setupCentrifuge(setCetrifugeSession);
   },
-  beforeDestroy() {
+  destroyed() {
     Vue.prototype.centrifuge.disconnect();
   },
   // https://ru.vuejs.org/v2/guide/render-function.html
