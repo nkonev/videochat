@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import vuetify from '@/plugins/vuetify'
+import {setupCentrifuge} from "@/centrifugeConnection"
 import axios from "axios";
 import bus, {UNAUTHORIZED} from './bus';
 import store, {UNSET_USER} from './store'
@@ -10,6 +11,15 @@ const vm = new Vue({
   vuetify,
   store,
   router,
+  mounted(){
+    const setCetrifugeSession = (cs) => {
+      Vue.prototype.centrifugeSessionId = cs;
+    };
+    Vue.prototype.centrifuge = setupCentrifuge(setCetrifugeSession);
+  },
+  beforeDestroy() {
+    Vue.prototype.centrifuge.disconnect();
+  },
   // https://ru.vuejs.org/v2/guide/render-function.html
   render: h => h(App, {ref: 'appRef'})
 }).$mount('#root');

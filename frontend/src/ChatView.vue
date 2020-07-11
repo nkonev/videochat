@@ -30,6 +30,7 @@
     import Centrifuge from "centrifuge";
     import axios from "axios";
     import infinityListMixin from "./InfinityListMixin";
+    import {GET_CENTRIFUGE_SESSION} from "./store";
 
     const drawText = (text) => {
         var div = document.createElement('div');
@@ -81,9 +82,6 @@
         },
         data() {
             return {
-                centrifuge: null,
-                clientId: null, // centrifuge session id
-
                 chatSubscription: null,
                 signalingSubscription: null,
 
@@ -115,27 +113,8 @@
                     this.chatMessageText = "";
                 }
             },
-            setupCentrifuge () {
-                // Create Centrifuge object with Websocket endpoint address set in main.go
-                var url = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/api/chat/websocket";
-                var centrifuge = new Centrifuge(url, {
-                    onRefresh: (ctx)=>{
-                        console.debug("Dummy refresh");
-                    }
-                });
-                centrifuge.on('connect', (ctx)=>{
-                    console.log("Connected response", ctx);
-                    this.clientId = ctx.client;
-                    console.log('My clientId :', this.clientId);
-                });
-                centrifuge.on('disconnect', (ctx)=>{
-                    console.log("Disconnected response", ctx);
-                });
-                centrifuge.connect();
-                return centrifuge;
-            },
             isMyMessage (message) {
-                return message.metadata && this.clientId == message.metadata.originatorClientId
+                return message.metadata && this.centrifugeSessionId == message.metadata.originatorClientId
             },
             maybeStart(){
                 console.log('>>>>>>> maybeStart() ', this.isStarted, this.localStream);
@@ -308,9 +287,6 @@
             this.localVideo = document.querySelector('#localVideo');
             this.remoteVideo = document.querySelector('#remoteVideo');
 
-            this.centrifuge = this.setupCentrifuge();
-
-
             this.chatSubscription = this.centrifuge.subscribe("chat"+this.chatId, (message) => {
                 // we can rely only on data
                 // this.items = [...this.items, JSON.stringify(getData(message))];
@@ -387,8 +363,6 @@
             this.hangup();
             this.chatSubscription.unsubscribe();
             this.signalingSubscription.unsubscribe();
-
-            this.centrifuge.disconnect();
         }
     }
 </script>
