@@ -12,8 +12,10 @@ import (
 )
 
 type Notifications interface {
-	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userPrincipalDto *auth.AuthResult)
+	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userIds []int64)
 	NotifyAboutNewMessage(c echo.Context, chatId int64, message *dto.DisplayMessageDto, userPrincipalDto *auth.AuthResult)
+	NotifyAboutDeleteChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64)
+	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64)
 }
 
 type notifictionsImpl struct {
@@ -32,15 +34,26 @@ type CentrifugeNotification struct {
 	EventType string      `json:"type"`
 }
 
-func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userPrincipalDto *auth.AuthResult) {
-	participantsForNotify := newChatDto.ParticipantIds
-	for _, participantId := range participantsForNotify {
+func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userIds []int64) {
+	notifyCommon(userIds, not, c, newChatDto, "chat_created")
+}
+
+func (not *notifictionsImpl) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64) {
+	notifyCommon(userIds, not, c, chatDto, "chat_edited")
+}
+
+func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64) {
+	notifyCommon(userIds, not, c, chatDto, "chat_deleted")
+}
+
+func notifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDto, eventType string) {
+	for _, participantId := range userIds {
 		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
 		GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
 
 		notification := CentrifugeNotification{
 			Payload:   *newChatDto,
-			EventType: "chat_created",
+			EventType: eventType,
 		}
 		if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
 			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err2)

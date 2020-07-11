@@ -219,7 +219,7 @@ func CreateChat(dbR db.DB, notificator notifications.Notifications, restClient c
 			if err != nil {
 				return err
 			}
-			notificator.NotifyAboutNewChat(c, responseDto, userPrincipalDto)
+			notificator.NotifyAboutNewChat(c, responseDto, responseDto.ParticipantIds)
 			return c.JSON(http.StatusCreated, responseDto)
 		})
 		if errOuter != nil {
@@ -266,7 +266,20 @@ func DeleteChat(dbR db.DB) func(c echo.Context) error {
 	}
 }
 
-func EditChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) error {
+func getIndexOf(ids []int64, elem int64) int {
+	for i := 0; i < len(ids); i++ {
+		if ids[i] == elem {
+			return i
+		}
+	}
+	return -1
+}
+
+func contains(ids []int64, elem int64) bool {
+	return getIndexOf(ids, elem) != -1
+}
+
+func EditChat(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(EditChatDto)
 		if err := c.Bind(bindTo); err != nil {
@@ -284,6 +297,9 @@ func EditChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) erro
 			return errors.New("Error during getting auth context")
 		}
 
+		var userIdsToNotifyAboutChatCreated []int64
+		var userIdsToNotifyAboutChatDeleted []int64
+		var userIdsToNotifyAboutChatChanged []int64
 		errOuter := db.Transact(dbR, func(tx *db.Tx) error {
 			if admin, err := tx.IsAdmin(userPrincipalDto.UserId, bindTo.Id); err != nil {
 				return err
@@ -293,22 +309,40 @@ func EditChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) erro
 			if err := tx.EditChat(bindTo.Id, bindTo.Name); err != nil {
 				return err
 			}
-			// TODO re-think about case when non-admin is trying to edit
-			if err := tx.DeleteParticipantsExcept(userPrincipalDto.UserId, bindTo.Id); err != nil {
+
+			existsChatParticipantIdsFromDatabase, err := tx.GetParticipantIdsTx(bindTo.Id)
+			if err != nil {
 				return err
 			}
-			for _, participantId := range bindTo.ParticipantIds {
-				if participantId == userPrincipalDto.UserId {
-					continue
+
+			for _, participantIdFromRequest := range bindTo.ParticipantIds {
+				// not exists in database
+				if !contains(existsChatParticipantIdsFromDatabase, participantIdFromRequest) {
+					if err := tx.AddParticipant(participantIdFromRequest, bindTo.Id, false); err != nil {
+						return err
+					}
+					userIdsToNotifyAboutChatCreated = append(userIdsToNotifyAboutChatCreated, participantIdFromRequest)
+				} else { // exists in database
+					userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, participantIdFromRequest)
 				}
-				if err := tx.AddParticipant(participantId, bindTo.Id, false); err != nil {
-					return err
+			}
+
+			for _, participantIdFromDatabase := range existsChatParticipantIdsFromDatabase {
+				// not present in request array and not myself
+				if !contains(bindTo.ParticipantIds, participantIdFromDatabase) && participantIdFromDatabase != userPrincipalDto.UserId {
+					if err := tx.DeleteParticipant(participantIdFromDatabase, bindTo.Id); err != nil {
+						return err
+					}
+					userIdsToNotifyAboutChatDeleted = append(userIdsToNotifyAboutChatDeleted, participantIdFromDatabase)
 				}
 			}
 
 			if responseDto, err := getChatDtoOnPutTx(c, tx, restClient, bindTo.Name, bindTo.Id); err != nil {
 				return err
 			} else {
+				notificator.NotifyAboutNewChat(c, responseDto, userIdsToNotifyAboutChatCreated)
+				notificator.NotifyAboutDeleteChat(c, responseDto, userIdsToNotifyAboutChatDeleted)
+				notificator.NotifyAboutChangeChat(c, responseDto, userIdsToNotifyAboutChatChanged)
 				return c.JSON(http.StatusAccepted, responseDto)
 			}
 		})

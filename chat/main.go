@@ -84,15 +84,15 @@ func configureOpencensusMiddleware() echo.MiddlewareFunc {
 }
 
 func configureEcho(
-		staticMiddleware staticMiddleware,
-		authMiddleware handlers.AuthMiddleware,
-		lc fx.Lifecycle,
-		notificator notifications.Notifications,
-		node *centrifuge.Node,
-		db db.DB,
-		policy *bluemonday.Policy,
-		restClient client.RestClient,
-	) *echo.Echo {
+	staticMiddleware staticMiddleware,
+	authMiddleware handlers.AuthMiddleware,
+	lc fx.Lifecycle,
+	notificator notifications.Notifications,
+	node *centrifuge.Node,
+	db db.DB,
+	policy *bluemonday.Policy,
+	restClient client.RestClient,
+) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")
 
@@ -119,7 +119,7 @@ func configureEcho(
 	e.GET("/chat/:id", handlers.GetChat(db, restClient))
 	e.POST("/chat", handlers.CreateChat(db, notificator, restClient))
 	e.DELETE("/chat/:id", handlers.DeleteChat(db))
-	e.PUT("/chat", handlers.EditChat(db, restClient))
+	e.PUT("/chat", handlers.EditChat(db, notificator, restClient))
 
 	e.GET("/chat/:id/message", handlers.GetMessages(db))
 	e.GET("/chat/:id/message/:messageId", handlers.GetMessage(db))

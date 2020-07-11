@@ -16,6 +16,11 @@ func (tx *Tx) AddParticipant(userId int64, chatId int64, admin bool) error {
 	return err
 }
 
+func (tx *Tx) DeleteParticipant(userId int64, chatId int64) error {
+	_, err := tx.Exec(`DELETE FROM chat_participant WHERE chat_id = $1 AND user_id = $2`, chatId, userId)
+	return err
+}
+
 func (tx *Tx) DeleteParticipantsExcept(userId int64, chatId int64) error {
 	_, err := tx.Exec(`DELETE FROM chat_participant WHERE chat_id = $1 AND user_id != $2`, chatId, userId)
 	return err
