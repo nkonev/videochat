@@ -75,6 +75,9 @@
             chatId() {
                 return this.$route.params.id
             },
+            pageHeight () {
+                return document.body.scrollHeight
+            },
         },
         data() {
             return {
@@ -314,6 +317,7 @@
                 // TODO edit and delete
 
                 this.addItem(getData(message).payload);
+                this.$vuetify.goTo(this.pageHeight);
             });
 
             /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
