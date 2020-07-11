@@ -198,7 +198,7 @@ func TestGetChatsPaginated(t *testing.T) {
 
 		Logger.Infof("Body: %v", b)
 
-		typedTes := getJsonPathResult(t, b, "$.name").([]interface{})
+		typedTes := getJsonPathResult(t, b, "$.data.name").([]interface{})
 
 		assert.Equal(t, 3, len(typedTes))
 
@@ -207,11 +207,11 @@ func TestGetChatsPaginated(t *testing.T) {
 		assert.Equal(t, "With collegues", typedTes[2])
 
 		// also check get additional info froma aaa emu
-		firstChatParticipantLogins := getJsonPathResult(t, b, "$[0].participants.login").([]interface{})
+		firstChatParticipantLogins := getJsonPathResult(t, b, "$.data[0].participants.login").([]interface{})
 		assert.Equal(t, "testor_protobuf", firstChatParticipantLogins[0])
 		assert.Equal(t, "testor_protobuf2", firstChatParticipantLogins[1])
 
-		firstChatParticipantAvatars := getJsonPathResult(t, b, "$[0].participants.avatar").([]interface{})
+		firstChatParticipantAvatars := getJsonPathResult(t, b, "$.data[0].participants.avatar").([]interface{})
 		assert.Equal(t, "http://image.jpg", firstChatParticipantAvatars[0])
 		assert.Equal(t, nil, firstChatParticipantAvatars[1])
 	})
