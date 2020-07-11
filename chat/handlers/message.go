@@ -27,6 +27,11 @@ type CreateMessageDto struct {
 
 type DisplayMessageDto = dto.DisplayMessageDto
 
+type MessageWrapper struct {
+	Data  []*DisplayMessageDto `json:"data"`
+	Count int64                `json:"totalCount"` // total chat number for this user
+}
+
 func GetMessages(dbR db.DB) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
@@ -53,8 +58,14 @@ func GetMessages(dbR db.DB) func(c echo.Context) error {
 			for _, c := range messages {
 				messageDtos = append(messageDtos, convertToMessageDto(c))
 			}
+
+			chatMessageCount, err := dbR.CountMessagesPerChat(chatId)
+			if err != nil {
+				return errors.New("Error during getting user chat count")
+			}
+
 			GetLogEntry(c.Request()).Infof("Successfully returning %v messages", len(messageDtos))
-			return c.JSON(200, messageDtos)
+			return c.JSON(200, MessageWrapper{Data: messageDtos, Count: chatMessageCount})
 		}
 	}
 }

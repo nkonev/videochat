@@ -26,12 +26,19 @@
 </template>
 
 <script>
-    import bus, {CHAT_SAVED, CHAT_SEARCH_CHANGED, LOGGED_IN, OPEN_CHAT_EDIT} from "./bus";
+    import bus, {CHAT_ADD, CHAT_EDITED, CHAT_DELETED, CHAT_SEARCH_CHANGED, LOGGED_IN, OPEN_CHAT_EDIT} from "./bus";
     import {chat_name} from "./routes";
-    import infinityListMixin from "./InfinityListMixin";
+    import infinityListMixin, {findIndex, ACTION_CREATE} from "./InfinityListMixin";
 
     export default {
-        mixins: [infinityListMixin(()=>'/api/chat')],
+        mixins: [infinityListMixin(()=>'/api/chat', (data, item, action, isLastPage)=>{
+            console.log("isLastPage", isLastPage, "action", action);
+            if (isLastPage && action === ACTION_CREATE) {
+                return true;
+            }
+            let idxOf = findIndex(data.items, item);
+            return idxOf !== -1;
+        })],
         computed: {
             chatRoute() {
                 return chat_name;
@@ -50,12 +57,16 @@
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadItems);
-            bus.$on(CHAT_SAVED, this.rerenderItem);
+            bus.$on(CHAT_ADD, this.addItem);
+            bus.$on(CHAT_EDITED, this.changeItem);
+            bus.$on(CHAT_DELETED, this.removeItem);
             bus.$on(CHAT_SEARCH_CHANGED, this.setSearchString);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadItems);
-            bus.$off(CHAT_SAVED, this.rerenderItem);
+            bus.$off(CHAT_ADD, this.addItem);
+            bus.$off(CHAT_EDITED, this.changeItem);
+            bus.$off(CHAT_DELETED, this.removeItem);
             bus.$off(CHAT_SEARCH_CHANGED, this.setSearchString);
         },
     }

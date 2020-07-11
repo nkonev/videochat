@@ -1,8 +1,12 @@
 import axios from 'axios';
 import InfiniteLoading from 'vue-infinite-loading';
 
+export const findIndex = (array, element) => {
+    return array.findIndex(value => value.id === element.id);
+};
+
 const replaceInArray = (array, element) => {
-    const foundIndex = array.findIndex(value => value.id === element.id);
+    const foundIndex = findIndex(array, element);
     if (foundIndex === -1) {
         return false;
     } else {
@@ -22,13 +26,24 @@ const replaceOrAppend = (array, newArray) => {
 
 const pageSize = 20;
 
-export default (urlFunction) => {
+const ACTION_CREATE = 'actionCreate';
+const ACTION_EDIT = 'actionEdit';
+const ACTION_DELETE = 'actionDelete';
+
+export  {
+    ACTION_CREATE,
+    ACTION_EDIT,
+    ACTION_DELETE,
+}
+
+
+export default (urlFunction, shouldChangeFunction) => {
     return  {
         data () {
             return {
                 page: 0,
-                lastPageActualSize: 0,
                 items: [],
+                itemsTotal: 0,
                 infiniteId: new Date(),
                 searchString: ""
             }
@@ -45,48 +60,59 @@ export default (urlFunction) => {
                         searchString: this.searchString
                     },
                 }).then(({ data }) => {
-                    if (data.length) {
+                    const list = data.data;
+                    this.itemsTotal = data.totalCount;
+                    if (list.length) {
                         this.page += 1;
-                        //this.chats.push(...data);
-                        replaceOrAppend(this.items, data);
-                        this.lastPageActualSize = data.length;
+                        this.items = [...this.items, ...list];
+                        //replaceOrAppend(this.items, list);
                         $state.loaded();
                     } else {
                         $state.complete();
                     }
                 });
             },
+            // not working until you will change this.items list
             reloadItems() {
                 this.infiniteId += 1;
                 console.log("Resetting infinite loader", this.infiniteId);
             },
-            /**
-             * Appends on replaces entity
-             * @param dto
-             */
-            rerenderItem(dto) {
-                console.log("Rerendering chat", dto);
-                const replaced = replaceInArray(this.items, dto);
-                console.debug("Replaced:", replaced);
-                if (!replaced) {
-                    this.reloadLastPage();
-                }
-                this.$forceUpdate();
+            // does should change items list (new item added to visible part or not for example)
+            shouldChange(dto, action) {
+                return shouldChangeFunction(this.$data, dto, action, this.isLastPage())
             },
-            reloadLastPage() {
-                console.log("this.lastPageActualSize", this.lastPageActualSize);
-                if (this.lastPageActualSize > 0) {
-                    this.page--;
-                    // remove lastPageActualSize
-                    this.items.splice(-1, this.lastPageActualSize);
-                    console.log("removing last", this.lastPageActualSize);
+            isLastPage() {
+                const pagesTotal = Math.ceil(this.itemsTotal / pageSize);
+                console.log("isLastPage pagesTotal=", pagesTotal, "this.page=", this.page, "this.itemsTotal=", this.itemsTotal);
+                return this.page === pagesTotal;
+            },
+            addItem(dto) {
+                if (this.shouldChange(dto, ACTION_CREATE)) {
+                    console.log("Adding item", dto);
+                    this.items.push(dto);
+                    this.$forceUpdate();
                 } else {
-                    this.page--;
-                    // remove 20
-                    this.items.splice(-1, pageSize);
-                    console.log("removing last", pageSize);
+                    console.log("Item was not be added", dto);
                 }
-                this.reloadItems();
+            },
+            changeItem(dto) {
+                if (this.shouldChange(dto, ACTION_EDIT)) {
+                    console.log("Replacing item", dto);
+                    replaceInArray(this.items, dto);
+                    this.$forceUpdate();
+                } else {
+                    console.log("Item was not be replaced", dto);
+                }
+            },
+            removeItem(dto) {
+                if (this.shouldChange(dto, ACTION_DELETE)) {
+                    console.log("Removing item", dto);
+                    const idxToRemove = findIndex(this.items, dto);
+                    this.items.splice(idxToRemove, 1);
+                    this.$forceUpdate();
+                } else {
+                    console.log("Item was not be removed", dto);
+                }
             },
             setSearchString(searchString) {
                 this.searchString = searchString;

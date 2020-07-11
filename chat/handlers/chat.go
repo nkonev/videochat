@@ -20,6 +20,11 @@ import (
 type ChatDto = dto.ChatDto
 type Participant = dto.Participant
 
+type ChatWrapper struct {
+	Data  []*ChatDto `json:"data"`
+	Count int64      `json:"totalCount"` // total chat number for this user
+}
+
 type EditChatDto struct {
 	Id int64 `json:"id"`
 	CreateChatDto
@@ -64,8 +69,12 @@ func GetChats(db db.DB, restClient client.RestClient) func(c echo.Context) error
 				}
 			}
 
+			userChatCount, err := db.CountChatsPerUser(userPrincipalDto.UserId)
+			if err != nil {
+				return errors.New("Error during getting user chat count")
+			}
 			GetLogEntry(c.Request()).Infof("Successfully returning %v chats", len(chatDtos))
-			return c.JSON(200, chatDtos)
+			return c.JSON(200, ChatWrapper{Data: chatDtos, Count: userChatCount})
 		}
 	}
 }
@@ -188,7 +197,7 @@ func CreateChat(dbR db.DB, notificator notifications.Notifications, restClient c
 			return errors.New("Error during getting auth context")
 		}
 
-		errOuter := db.Transact(dbR, func(tx *db.Tx) (error) {
+		errOuter := db.Transact(dbR, func(tx *db.Tx) error {
 			id, err := tx.CreateChat(convertToCreatableChat(bindTo))
 			if err != nil {
 				return err

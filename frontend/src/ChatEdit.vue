@@ -62,7 +62,7 @@
 <script>
     import axios from "axios";
     import debounce from "lodash/debounce";
-    import bus, {CHAT_SAVED, OPEN_CHAT_EDIT} from "./bus";
+    import bus, {CHAT_ADD, CHAT_EDITED, OPEN_CHAT_EDIT} from "./bus";
 
     const dtoFactory = ()=>{
         return {
@@ -143,7 +143,7 @@
                 const dtoToPost = this.dto;
                 (dtoToPost.id ? axios.put(`/api/chat`, dtoToPost) : axios.post(`/api/chat`, dtoToPost))
                     .then((response) => {
-                        bus.$emit(CHAT_SAVED, response.data);
+                        bus.$emit(dtoToPost.id ? CHAT_EDITED : CHAT_ADD, response.data);
                     })
                     .then(() => {
                         this.show=false;

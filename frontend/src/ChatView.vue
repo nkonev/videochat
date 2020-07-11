@@ -70,7 +70,7 @@
         return chatUrl
     };
     export default {
-        mixins:[infinityListMixin(chatUrlFunction)],
+        mixins:[infinityListMixin(chatUrlFunction, ()=>true)],
         computed: {
             chatId() {
                 return this.$route.params.id
@@ -311,7 +311,9 @@
             this.chatSubscription = this.centrifuge.subscribe("chat"+this.chatId, (message) => {
                 // we can rely only on data
                 // this.items = [...this.items, JSON.stringify(getData(message))];
-                this.rerenderItem(getData(message));
+                // TODO edit and delete
+
+                this.addItem(getData(message).payload);
             });
 
             /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
