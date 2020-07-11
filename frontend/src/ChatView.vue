@@ -7,17 +7,20 @@
         </div>
 
         <v-card-text>
-            <v-text-field label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="chatMessageText"></v-text-field>
             <v-list>
                 <v-list-item
-                        v-for="(item, index) in chatMessages"
-                        :key="index"
+                        v-for="(item, index) in items"
+                        :key="item.id"
                 >
                     <v-list-item-content>
-                        {{item}}
+                        <v-list-item-title v-html="item.text"></v-list-item-title>
+                        <v-list-item-subtitle v-html="item.createDateTime"></v-list-item-subtitle>
                     </v-list-item-content>
                 </v-list-item>
             </v-list>
+            <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId"></infinite-loading>
+
+            <v-text-field label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="chatMessageText"></v-text-field>
         </v-card-text>
 
     </v-card>
@@ -26,7 +29,7 @@
 <script>
     import Centrifuge from "centrifuge";
     import axios from "axios";
-    import bus, {CHAT_SAVED} from "./bus";
+    import infinityListMixin from "./InfinityListMixin";
 
     const drawText = (text) => {
         var div = document.createElement('div');
@@ -62,12 +65,16 @@
         }]
     };
 
-
+    let chatUrl;
+    const chatUrlFunction = () => {
+        return chatUrl
+    };
     export default {
+        mixins:[infinityListMixin(chatUrlFunction)],
         computed: {
             chatId() {
                 return this.$route.params.id
-            }
+            },
         },
         data() {
             return {
@@ -88,10 +95,12 @@
                 remoteVideo: null,
 
                 chatMessageText: "",
-                chatMessages: [],
             }
         },
         methods: {
+            setChatUrl() {
+                chatUrl = `/api/chat/`+this.chatId +'/message';
+            },
             sendMessageToChat() {
                 if (this.chatMessageText && this.chatMessageText !== "") {
                     console.log("Sending", this.chatMessageText);
@@ -301,7 +310,8 @@
 
             this.chatSubscription = this.centrifuge.subscribe("chat"+this.chatId, (message) => {
                 // we can rely only on data
-                this.chatMessages = [...this.chatMessages, JSON.stringify(getData(message))];
+                // this.items = [...this.items, JSON.stringify(getData(message))];
+                this.rerenderItem(getData(message));
             });
 
             /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
@@ -362,7 +372,7 @@
             }
 
 
-
+            this.setChatUrl();
 /////////////////////////////////////////////////////////
 
         },
