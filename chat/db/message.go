@@ -108,14 +108,3 @@ func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error 
 	}
 	return nil
 }
-
-func (db *DB) CountMessagesPerChat(chatId int64) (int64, error) {
-	var count int64
-	row := db.QueryRow("SELECT count(*) FROM message WHERE chat_id = $1", chatId)
-	err := row.Scan(&count)
-	if err != nil {
-		return 0, err
-	} else {
-		return count, nil
-	}
-}

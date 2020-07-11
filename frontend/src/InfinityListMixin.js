@@ -37,7 +37,7 @@ export  {
 }
 
 
-export default (urlFunction, shouldChangeFunction) => {
+export default (urlFunction, shouldChangeFunction, extractFunction) => {
     return  {
         data () {
             return {
@@ -60,16 +60,7 @@ export default (urlFunction, shouldChangeFunction) => {
                         searchString: this.searchString
                     },
                 }).then(({ data }) => {
-                    const list = data.data;
-                    this.itemsTotal = data.totalCount;
-                    if (list.length) {
-                        this.page += 1;
-                        this.items = [...this.items, ...list];
-                        //replaceOrAppend(this.items, list);
-                        $state.loaded();
-                    } else {
-                        $state.complete();
-                    }
+                    extractFunction(this, data, $state);
                 });
             },
             // not working until you will change this.items list
