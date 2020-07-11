@@ -60,6 +60,10 @@ export default (urlFunction) => {
                 this.infiniteId += 1;
                 console.log("Resetting infinite loader", this.infiniteId);
             },
+            /**
+             * Appends on replaces entity
+             * @param dto
+             */
             rerenderItem(dto) {
                 console.log("Rerendering chat", dto);
                 const replaced = replaceInArray(this.items, dto);
