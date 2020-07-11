@@ -27,24 +27,9 @@
 </template>
 
 <script>
-    import Centrifuge from "centrifuge";
     import axios from "axios";
     import infinityListMixin from "./InfinityListMixin";
-    import {GET_CENTRIFUGE_SESSION} from "./store";
-
-    const drawText = (text) => {
-        var div = document.createElement('div');
-        div.innerHTML = text + '<br>';
-        document.body.appendChild(div);
-    };
-
-    const getData = (message) => {
-        return message.data
-    };
-
-    const getProperData = (message) => {
-        return message.data.payload
-    };
+    import {getData, getProperData} from './centrifugeConnection'
 
     const setProperData = (message) => {
         return {

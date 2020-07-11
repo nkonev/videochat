@@ -12,7 +12,7 @@ import (
 )
 
 type Notifications interface {
-	NotifyAboutNewChat (c echo.Context, newChatDto *dto.ChatDto, userPrincipalDto *auth.AuthResult)
+	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userPrincipalDto *auth.AuthResult)
 	NotifyAboutNewMessage(c echo.Context, chatId int64, message *dto.DisplayMessageDto, userPrincipalDto *auth.AuthResult)
 }
 
@@ -27,20 +27,20 @@ func NewNotifications(node *centrifuge.Node) Notifications {
 }
 
 // created or modified
-type ChatSavedNotification struct {
-	Payload interface{}  `json:"payload"`
-	EventType string `json:"event_type"`
+type CentrifugeNotification struct {
+	Payload   interface{} `json:"payload"`
+	EventType string      `json:"type"`
 }
 
 func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userPrincipalDto *auth.AuthResult) {
-	participantsForNotify := utils.GetParticipantsForNotify(userPrincipalDto, newChatDto.ParticipantIds)
+	participantsForNotify := newChatDto.ParticipantIds
 	for _, participantId := range participantsForNotify {
 		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
 		GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
 
-		notification := ChatSavedNotification{
+		notification := CentrifugeNotification{
 			Payload:   *newChatDto,
-			EventType: "chat_saved",
+			EventType: "chat_created",
 		}
 		if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
 			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err2)
@@ -55,9 +55,9 @@ func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.
 
 func (not *notifictionsImpl) NotifyAboutNewMessage(c echo.Context, chatId int64, message *dto.DisplayMessageDto, userPrincipalDto *auth.AuthResult) {
 	chatChannel := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT, chatId)
-	notification := ChatSavedNotification{
+	notification := CentrifugeNotification{
 		Payload:   *message,
-		EventType: "message_saved",
+		EventType: "message_created",
 	}
 	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
 		GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err2)

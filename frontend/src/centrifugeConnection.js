@@ -20,3 +20,11 @@ export const setupCentrifuge = (centrifugeSessionFunction) => {
     centrifuge.connect();
     return centrifuge;
 };
+
+export const getData = (message) => {
+    return message.data
+};
+
+export const getProperData = (message) => {
+    return message.data.payload
+};
