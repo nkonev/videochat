@@ -62,7 +62,7 @@ func notifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newCha
 
 		admin, err := tx.IsAdmin(participantId, newChatDto.Id)
 		if err != nil {
-			GetLogEntry(c.Request()).Errorf("error during performing deep copy: %s", err)
+			GetLogEntry(c.Request()).Errorf("error during checking is admin for userId=%v: %s", participantId, err)
 			continue
 		}
 
