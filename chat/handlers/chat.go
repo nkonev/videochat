@@ -54,20 +54,38 @@ func GetChats(db db.DB, restClient client.RestClient) func(c echo.Context) error
 		offset := utils.GetOffset(page, size)
 		searchString := c.QueryParam("searchString")
 
-		if chats, err := db.GetChats(userPrincipalDto.UserId, size, offset, searchString); err != nil {
+		if dbChats, err := db.GetChats(userPrincipalDto.UserId, size, offset, searchString); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 			return err
 		} else {
 			chatDtos := make([]*ChatDto, 0)
-			for _, cc := range chats {
+			for _, cc := range dbChats {
 				admin, err := db.IsAdmin(userPrincipalDto.UserId, cc.Id)
 				if err != nil {
 					return err
 				}
-				if chatDto, err := getChatDtoWithUsers(c, db, restClient, cc, admin); err != nil {
+				if ids, err := db.GetParticipantIds(cc.Id); err != nil {
 					return err
 				} else {
-					chatDtos = append(chatDtos, chatDto)
+					chatDtos = append(chatDtos, convertToDto(cc, ids, nil, admin))
+				}
+			}
+
+			var participantIdSet = map[int64]bool{}
+			for _, chatDto := range chatDtos {
+				for _, participantId := range chatDto.ParticipantIds {
+					participantIdSet[participantId] = true
+				}
+			}
+			var owners = map[int64]*dto.User{}
+			if maybeOwners, err := getOwners(participantIdSet, restClient, c); err != nil {
+				GetLogEntry(c.Request()).Errorf("Error during getting owners")
+			} else {
+				owners = maybeOwners
+			}
+			for _, chatDto := range chatDtos {
+				for _, participantId := range chatDto.ParticipantIds {
+					chatDto.Participants = append(chatDto.Participants, owners[participantId])
 				}
 			}
 

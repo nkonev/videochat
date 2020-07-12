@@ -28,22 +28,6 @@ type CreateMessageDto struct {
 
 type DisplayMessageDto = dto.DisplayMessageDto
 
-func getOwners(owners map[int64]bool, restClient client.RestClient, c echo.Context) (map[int64]*dto.User, error) {
-	var ownerIds []int64
-	for k, _ := range owners {
-		ownerIds = append(ownerIds, k)
-	}
-	users, err := restClient.GetUsers(ownerIds, c.Request().Context())
-	if err != nil {
-		return nil, err
-	}
-	var ownersObjects = map[int64]*dto.User{}
-	for _, u := range users {
-		ownersObjects[u.Id] = u
-	}
-	return ownersObjects, nil
-}
-
 func GetMessages(dbR db.DB, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
