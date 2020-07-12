@@ -8,16 +8,22 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.*;
+import javax.servlet.http.HttpFilter;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Order(-2147483648)
 @Component
-public class TracerLoggingFilter implements Filter {
+public class TracerLoggingFilter extends HttpFilter {
+
+    private static final String EXTERNAL_TRACE_ID_HEADER = "trace-id";
+
     @Autowired
     private Tracer tracer;
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    protected void doFilter(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         Span span = tracer.activeSpan();
         final String traceIdName = "traceId";
         final String spanIdName = "spanId";
@@ -26,6 +32,7 @@ public class TracerLoggingFilter implements Filter {
             String spanId = leadingZeros(span.context().toSpanId(), 16);
             MDC.put(traceIdName, traceId);
             MDC.put(spanIdName, spanId);
+            servletResponse.setHeader(EXTERNAL_TRACE_ID_HEADER, traceId);
         }
         try {
             filterChain.doFilter(servletRequest, servletResponse);

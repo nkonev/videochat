@@ -23,6 +23,8 @@ import (
 	"strings"
 )
 
+const EXTERNAL_TRACE_ID_HEADER = "trace-id"
+
 type staticMiddleware echo.MiddlewareFunc
 
 func main() {
@@ -72,6 +74,10 @@ func configureOpencensusMiddleware() echo.MiddlewareFunc {
 					func(w http.ResponseWriter, r *http.Request) {
 						ctx.SetRequest(r)
 						ctx.SetResponse(echo.NewResponse(w, ctx.Echo()))
+						existsSpan := trace.FromContext(ctx.Request().Context())
+						if existsSpan != nil {
+							w.Header().Set(EXTERNAL_TRACE_ID_HEADER, existsSpan.SpanContext().TraceID.String())
+						}
 						err = next(ctx)
 					},
 				),
