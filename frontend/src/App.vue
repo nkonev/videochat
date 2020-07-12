@@ -53,7 +53,7 @@
             </v-btn>
 
             <v-spacer></v-spacer>
-            <v-toolbar-title>Chats</v-toolbar-title>
+            <v-toolbar-title>{{title}}</v-toolbar-title>
             <v-spacer></v-spacer>
 
             <v-card light>
@@ -87,7 +87,7 @@
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
     import {FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
-    import bus, {CHAT_SEARCH_CHANGED, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
+    import bus, {CHANGE_TITLE, CHAT_ADD, CHAT_SEARCH_CHANGED, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
     import {root_name} from "./routes";
@@ -95,6 +95,7 @@
     export default {
         data () {
             return {
+                title: "",
                 appBarItems: [
                     { title: 'Home', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
                     { title: 'My Account', icon: 'mdi-account', clickFunction: ()=>{}, requireAuthenticated: true },
@@ -148,6 +149,9 @@
                     }
                 })
             },
+            changeTitle(newtitle) {
+                this.title = newtitle;
+            },
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
@@ -157,6 +161,7 @@
         },
         created() {
             this.doSearch = debounce(this.doSearch, 700);
+            bus.$on(CHANGE_TITLE, this.changeTitle);
         },
         watch: {
             searchChatString (searchString) {

@@ -1,41 +1,44 @@
 <template>
     <v-card>
-        <v-card-title>It's a chat #{{chatId}}</v-card-title>
-        <div>
-            <video id="localVideo" autoPlay playsInline></video>
-            <video id="remoteVideo" autoPlay playsInline></video>
-        </div>
-
-        <v-card-text>
-            <v-list>
-                <template v-for="(item, index) in items">
-                <v-list-item
-                        :key="item.id"
-                >
-                    <v-list-item-avatar v-if="item.owner && item.owner.avatar">
-                        <v-img :src="item.owner.avatar"></v-img>
-                    </v-list-item-avatar>
-                    <v-list-item-content>
-                        <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
-                        {{item.text}}
-                    </v-list-item-content>
-                </v-list-item>
-                <v-divider></v-divider>
-                </template>
-            </v-list>
-            <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top">
-                <div slot="no-more"></div>
-            </infinite-loading>
-
-            <v-container>
-                <v-row no-gutters>
-                    <v-col cols="12">
-                        <v-text-field label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="chatMessageText" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat"></v-text-field>
-                    </v-col>
-                </v-row>
-            </v-container>
-        </v-card-text>
-
+        <v-row dense>
+            <v-col cols="12">
+                <video id="localVideo" autoPlay playsInline style="height: 220px"></video>
+                <video id="remoteVideo" autoPlay playsInline style="height: 220px"></video>
+            </v-col>
+            <v-col cols="12">
+                <div id="messagesScroller" :style="scrollerHeight()">
+                    <v-card-text>
+                        <v-list>
+                            <template v-for="(item, index) in items">
+                            <v-list-item
+                                    :key="item.id"
+                                    dense
+                            >
+                                <v-list-item-avatar v-if="item.owner && item.owner.avatar">
+                                    <v-img :src="item.owner.avatar"></v-img>
+                                </v-list-item-avatar>
+                                <v-list-item-content>
+                                    <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
+                                    {{item.text}}
+                                </v-list-item-content>
+                            </v-list-item>
+                            <v-divider></v-divider>
+                            </template>
+                        </v-list>
+                        <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top">
+                            <div slot="no-more"></div>
+                        </infinite-loading>
+                    </v-card-text>
+                    </div>
+            </v-col>
+        </v-row>
+        <v-container id="sendButtonContainer">
+            <v-row no-gutters dense>
+                <v-col cols="12">
+                    <v-text-field dense label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="chatMessageText" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat"></v-text-field>
+                </v-col>
+            </v-row>
+        </v-container>
     </v-card>
 </template>
 
@@ -43,6 +46,8 @@
     import axios from "axios";
     import infinityListMixin, {pageSize} from "./InfinityListMixin";
     import {getData, getProperData} from './centrifugeConnection'
+    import Vue from 'vue'
+    import bus, {CHANGE_TITLE} from "./bus";
 
     const setProperData = (message) => {
         return {
@@ -93,6 +98,21 @@
             }
         },
         methods: {
+            scrollerHeight() {
+                const maybeScroller = document.getElementById("messagesScroller");
+                const maybeSendButton = document.getElementById("sendButtonContainer");
+
+                if (maybeScroller && maybeSendButton) {
+                    const topOfScroller = maybeScroller.getBoundingClientRect().top;
+                    const sendButtonContainerHeight = maybeSendButton.getBoundingClientRect().height;
+                    const availableHeight = window.innerHeight;
+                    const newHeight = availableHeight - topOfScroller - sendButtonContainerHeight - 16;
+                    if (newHeight > 0) {
+                        return `overflow-y: auto; height: ${newHeight}px`
+                    }
+                }
+                return 'overflow-y: auto; height: 240px'
+            },
             infiniteHandler($state) {
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
@@ -307,7 +327,12 @@
                 // TODO edit and delete
 
                 this.addItem(getData(message).payload);
-                this.$vuetify.goTo(this.pageHeight);
+
+                Vue.nextTick(()=>{
+                    var myDiv = document.getElementById("messagesScroller");
+                    console.log("myDiv.scrollTop", myDiv.scrollTop, "myDiv.scrollHeight", myDiv.scrollHeight);
+                    myDiv.scrollTop = myDiv.scrollHeight;
+                });
             });
 
             /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
@@ -367,9 +392,8 @@
                 this.requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
             }
 
-
+            bus.$emit(CHANGE_TITLE, `Chat #${this.chatId}`);
 /////////////////////////////////////////////////////////
-
         },
         beforeDestroy() {
             console.log("Cleaning up");

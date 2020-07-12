@@ -26,7 +26,15 @@
 </template>
 
 <script>
-    import bus, {CHAT_ADD, CHAT_EDITED, CHAT_DELETED, CHAT_SEARCH_CHANGED, LOGGED_IN, OPEN_CHAT_EDIT} from "./bus";
+    import bus, {
+        CHAT_ADD,
+        CHAT_EDITED,
+        CHAT_DELETED,
+        CHAT_SEARCH_CHANGED,
+        LOGGED_IN,
+        OPEN_CHAT_EDIT,
+        CHANGE_TITLE
+    } from "./bus";
     import {chat_name} from "./routes";
     import infinityListMixin, {findIndex, ACTION_CREATE, pageSize} from "./InfinityListMixin";
     import axios from "axios";
@@ -90,5 +98,8 @@
             bus.$off(CHAT_DELETED, this.removeItem);
             bus.$off(CHAT_SEARCH_CHANGED, this.setSearchString);
         },
+        mounted() {
+            bus.$emit(CHANGE_TITLE, "Chats");
+        }
     }
 </script>
