@@ -8,18 +8,23 @@
 
         <v-card-text>
             <v-list>
+                <template v-for="(item, index) in items">
                 <v-list-item
-                        v-for="(item, index) in items"
                         :key="item.id"
                 >
                     <v-list-item-avatar v-if="item.owner && item.owner.avatar">
                         <v-img :src="item.owner.avatar"></v-img>
                     </v-list-item-avatar>
                     <v-list-item-content>
-                        <v-list-item-title v-html="item.text"></v-list-item-title>
                         <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
+                        {{item.text}}
                     </v-list-item-content>
                 </v-list-item>
+                <v-divider
+                        v-if="index + 1 < items.length"
+                        :key="index"
+                ></v-divider>
+                </template>
             </v-list>
             <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
                 <div slot="no-more"></div>
