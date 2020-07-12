@@ -86,12 +86,12 @@ func (receiver ProtobufAaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Req
 
 	userResp := &name_nkonev_aaa.UsersResponse{}
 	u1 := &name_nkonev_aaa.UserDto{
-		Id:     16161,
+		Id:     1,
 		Login:  "testor_protobuf",
 		Avatar: "http://image.jpg",
 	}
 	u2 := &name_nkonev_aaa.UserDto{
-		Id:    16162,
+		Id:    2,
 		Login: "testor_protobuf2",
 	}
 	var users = []*name_nkonev_aaa.UserDto{u1, u2}
@@ -116,8 +116,8 @@ func startAaaEmu() *http.Server {
 	}()
 
 	restClient := client.NewRestClient()
-
-	for i := 1; i <= 30; i++ {
+	i := 0
+	for ; i <= 30; i++ {
 		_, err := restClient.GetUsers([]int64{0}, context.Background())
 		if err != nil {
 			Logger.Infof("Awaiting while emulator have been started")
@@ -127,6 +127,10 @@ func startAaaEmu() *http.Server {
 			break
 		}
 	}
+	if i == 30 {
+		Logger.Panicf("Cannot await for aaa emu will be started")
+	}
+	Logger.Infof("Aaa emu have started")
 	restClient.CloseIdleConnections()
 
 	return s
@@ -209,11 +213,9 @@ func TestGetChatsPaginated(t *testing.T) {
 		// also check get additional info froma aaa emu
 		firstChatParticipantLogins := getJsonPathResult(t, b, "$.data[0].participants.login").([]interface{})
 		assert.Equal(t, "testor_protobuf", firstChatParticipantLogins[0])
-		assert.Equal(t, "testor_protobuf2", firstChatParticipantLogins[1])
 
 		firstChatParticipantAvatars := getJsonPathResult(t, b, "$.data[0].participants.avatar").([]interface{})
 		assert.Equal(t, "http://image.jpg", firstChatParticipantAvatars[0])
-		assert.Equal(t, nil, firstChatParticipantAvatars[1])
 	})
 }
 

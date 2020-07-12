@@ -85,7 +85,10 @@ func GetChats(db db.DB, restClient client.RestClient) func(c echo.Context) error
 			}
 			for _, chatDto := range chatDtos {
 				for _, participantId := range chatDto.ParticipantIds {
-					chatDto.Participants = append(chatDto.Participants, owners[participantId])
+					user := owners[participantId]
+					if user != nil {
+						chatDto.Participants = append(chatDto.Participants, user)
+					}
 				}
 			}
 
