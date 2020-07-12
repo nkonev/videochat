@@ -27,7 +27,13 @@
                 <div slot="no-more"></div>
             </infinite-loading>
 
-            <v-text-field label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="chatMessageText"></v-text-field>
+            <v-container>
+                <v-row no-gutters>
+                    <v-col cols="12">
+                        <v-text-field label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="chatMessageText" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat"></v-text-field>
+                    </v-col>
+                </v-row>
+            </v-container>
         </v-card-text>
 
     </v-card>
