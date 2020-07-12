@@ -23,7 +23,7 @@
                 <v-divider></v-divider>
                 </template>
             </v-list>
-            <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
+            <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top">
                 <div slot="no-more"></div>
             </infinite-loading>
 
@@ -35,7 +35,7 @@
 
 <script>
     import axios from "axios";
-    import infinityListMixin from "./InfinityListMixin";
+    import infinityListMixin, {pageSize} from "./InfinityListMixin";
     import {getData, getProperData} from './centrifugeConnection'
 
     const setProperData = (message) => {
@@ -58,22 +58,8 @@
         }]
     };
 
-    let chatUrl;
-    const chatUrlFunction = () => {
-        return chatUrl
-    };
     export default {
-        mixins:[infinityListMixin(chatUrlFunction, ()=>true, (infinityThis, data, $state)=>{
-            const list = data;
-            if (list.length) {
-                infinityThis.page += 1;
-                infinityThis.items = [...infinityThis.items, ...list];
-                $state.loaded();
-            } else {
-                $state.complete();
-            }
-
-        })],
+        mixins:[infinityListMixin(()=>true)],
         computed: {
             chatId() {
                 return this.$route.params.id
@@ -101,12 +87,29 @@
             }
         },
         methods: {
+            infiniteHandler($state) {
+                axios.get(`/api/chat/${this.chatId}/message`, {
+                    params: {
+                        page: this.page,
+                        size: pageSize,
+                        reverse: true
+                    },
+                }).then(({ data }) => {
+                    const list = data;
+                    if (list.length) {
+                        this.page += 1;
+                        // this.items = [...this.items, ...list];
+                        this.items.unshift(...list.reverse());
+                        $state.loaded();
+                    } else {
+                        $state.complete();
+                    }
+                });
+            },
             getSubtitle(item) {
                 return `${item.owner.login} at ${item.createDateTime}`
             },
-            setChatUrl() {
-                chatUrl = `/api/chat/`+this.chatId +'/message';
-            },
+
             sendMessageToChat() {
                 if (this.chatMessageText && this.chatMessageText !== "") {
                     console.log("Sending", this.chatMessageText);
@@ -359,7 +362,6 @@
             }
 
 
-            this.setChatUrl();
 /////////////////////////////////////////////////////////
 
         },

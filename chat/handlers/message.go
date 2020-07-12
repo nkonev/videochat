@@ -54,6 +54,7 @@ func GetMessages(dbR db.DB, restClient client.RestClient) func(c echo.Context) e
 
 		page := utils.FixPageString(c.QueryParam("page"))
 		size := utils.FixSizeString(c.QueryParam("size"))
+		reverse := utils.GetBoolean(c.QueryParam("reverse"))
 		offset := utils.GetOffset(page, size)
 
 		chatIdString := c.Param("id")
@@ -62,7 +63,7 @@ func GetMessages(dbR db.DB, restClient client.RestClient) func(c echo.Context) e
 			return err
 		}
 
-		if messages, err := dbR.GetMessages(chatId, userPrincipalDto.UserId, size, offset); err != nil {
+		if messages, err := dbR.GetMessages(chatId, userPrincipalDto.UserId, size, offset, reverse); err != nil {
 			GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
 			return err
 		} else {

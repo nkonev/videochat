@@ -98,6 +98,14 @@ func GetOffset(page int, size int) int {
 	return page * size
 }
 
+func GetBoolean(s string) bool {
+	if parseBool, err := strconv.ParseBool(s); err != nil {
+		return false
+	} else {
+		return parseBool
+	}
+}
+
 func ParseInt64(s string) (int64, error) {
 	if i, err := strconv.ParseInt(s, 10, 64); err != nil {
 		return 0, err

@@ -28,28 +28,17 @@
 <script>
     import bus, {CHAT_ADD, CHAT_EDITED, CHAT_DELETED, CHAT_SEARCH_CHANGED, LOGGED_IN, OPEN_CHAT_EDIT} from "./bus";
     import {chat_name} from "./routes";
-    import infinityListMixin, {findIndex, ACTION_CREATE} from "./InfinityListMixin";
+    import infinityListMixin, {findIndex, ACTION_CREATE, pageSize} from "./InfinityListMixin";
+    import axios from "axios";
 
     export default {
-        mixins: [infinityListMixin(()=>'/api/chat', (data, item, action, isLastPage)=>{
+        mixins: [infinityListMixin((data, item, action, isLastPage)=>{
             console.log("isLastPage", isLastPage, "action", action);
             if (isLastPage && action === ACTION_CREATE) {
                 return true;
             }
             let idxOf = findIndex(data.items, item);
             return idxOf !== -1;
-        }, (infinityThis, data, $state)=>{
-            const list = data.data;
-            infinityThis.itemsTotal = data.totalCount;
-            if (list.length) {
-                infinityThis.page += 1;
-                infinityThis.items = [...infinityThis.items, ...list];
-                //replaceOrAppend(this.items, list);
-                $state.loaded();
-            } else {
-                $state.complete();
-            }
-
         })],
         computed: {
             chatRoute() {
@@ -57,6 +46,26 @@
             }
         },
         methods:{
+            infiniteHandler($state) {
+                axios.get('/api/chat', {
+                    params: {
+                        page: this.page,
+                        size: pageSize,
+                        searchString: this.searchString
+                    },
+                }).then(({ data }) => {
+                    const list = data.data;
+                    this.itemsTotal = data.totalCount;
+                    if (list.length) {
+                        this.page += 1;
+                        this.items = [...this.items, ...list];
+                        //replaceOrAppend(this.items, list);
+                        $state.loaded();
+                    } else {
+                        $state.complete();
+                    }
+                });
+            },
             editChat(chat) {
                 const chatId = chat.id;
                 console.log("Will add participants to chat", chatId);

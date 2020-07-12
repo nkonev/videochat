@@ -24,7 +24,7 @@ const replaceOrAppend = (array, newArray) => {
     });
 };
 
-const pageSize = 20;
+export const pageSize = 20;
 
 const ACTION_CREATE = 'actionCreate';
 const ACTION_EDIT = 'actionEdit';
@@ -37,7 +37,7 @@ export  {
 }
 
 
-export default (urlFunction, shouldChangeFunction, extractFunction) => {
+export default (shouldChangeFunction) => {
     return  {
         data () {
             return {
@@ -52,17 +52,6 @@ export default (urlFunction, shouldChangeFunction, extractFunction) => {
             InfiniteLoading,
         },
         methods:{
-            infiniteHandler($state) {
-                axios.get(urlFunction(), {
-                    params: {
-                        page: this.page,
-                        size: pageSize,
-                        searchString: this.searchString
-                    },
-                }).then(({ data }) => {
-                    extractFunction(this, data, $state);
-                });
-            },
             // not working until you will change this.items list
             reloadItems() {
                 this.infiniteId += 1;
