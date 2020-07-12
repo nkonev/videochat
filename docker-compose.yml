@@ -4,7 +4,7 @@ version: '3.7'
 
 services:
   traefik:
-    image: traefik:v2.2.1
+    image: traefik:v2.2.4
     hostname: traefik
     restart: unless-stopped
     # The Static Configuration
