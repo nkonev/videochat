@@ -21,7 +21,9 @@
                     </v-list-item-content>
                 </v-list-item>
             </v-list>
-            <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId"></infinite-loading>
+            <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
+                <div slot="no-more"></div>
+            </infinite-loading>
 
             <v-text-field label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="chatMessageText"></v-text-field>
         </v-card-text>
