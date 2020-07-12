@@ -20,10 +20,7 @@
                         {{item.text}}
                     </v-list-item-content>
                 </v-list-item>
-                <v-divider
-                        v-if="index + 1 < items.length"
-                        :key="index"
-                ></v-divider>
+                <v-divider></v-divider>
                 </template>
             </v-list>
             <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
