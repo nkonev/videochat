@@ -393,6 +393,11 @@
             }
 
             bus.$emit(CHANGE_TITLE, `Chat #${this.chatId}`);
+
+            axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
+                console.log("Got info about chat", data);
+                bus.$emit(CHANGE_TITLE, data.name);
+            });
 /////////////////////////////////////////////////////////
         },
         beforeDestroy() {
