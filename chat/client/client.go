@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/golang/protobuf/proto"
+	"github.com/guregu/null"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
@@ -11,6 +12,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
 	name_nkonev_aaa "nkonev.name/chat/proto"
 )
@@ -34,7 +36,7 @@ func NewRestClient() RestClient {
 }
 
 // https://developers.google.com/protocol-buffers/docs/gotutorial
-func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*name_nkonev_aaa.UserDto, error) {
+func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, error) {
 	contentType := "application/x-protobuf;charset=UTF-8"
 	url0 := viper.GetString("aaa.url.base")
 	url1 := viper.GetString("aaa.url.getUsers")
@@ -95,5 +97,20 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*name_nkone
 		Logger.Errorln("Failed to parse users:", err)
 		return nil, err
 	}
-	return users.Users, nil
+
+	var arr []*dto.User
+	for _, nu := range users.Users {
+		participant := convertToParticipant(nu)
+		arr = append(arr, &participant)
+	}
+	return arr, nil
+}
+
+func convertToParticipant(user *name_nkonev_aaa.UserDto) dto.User {
+	var nullableAvatar = null.NewString(user.Avatar, user.Avatar != "")
+	return dto.User{
+		Id:     user.Id,
+		Login:  user.Login,
+		Avatar: nullableAvatar,
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"net/http"
 	"nkonev.name/chat/auth"
+	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
@@ -27,7 +28,23 @@ type CreateMessageDto struct {
 
 type DisplayMessageDto = dto.DisplayMessageDto
 
-func GetMessages(dbR db.DB) func(c echo.Context) error {
+func getOwners(owners map[int64]bool, restClient client.RestClient, c echo.Context) (map[int64]*dto.User, error) {
+	var ownerIds []int64
+	for k, _ := range owners {
+		ownerIds = append(ownerIds, k)
+	}
+	users, err := restClient.GetUsers(ownerIds, c.Request().Context())
+	if err != nil {
+		return nil, err
+	}
+	var ownersObjects = map[int64]*dto.User{}
+	for _, u := range users {
+		ownersObjects[u.Id] = u
+	}
+	return ownersObjects, nil
+}
+
+func GetMessages(dbR db.DB, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 		if !ok {
@@ -49,9 +66,20 @@ func GetMessages(dbR db.DB) func(c echo.Context) error {
 			GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
 			return err
 		} else {
+			var owners = map[int64]*dto.User{}
+			var ownersSet map[int64]bool = map[int64]bool{}
+			for _, c := range messages {
+				ownersSet[c.OwnerId] = true
+			}
+			if maybeOwners, err := getOwners(ownersSet, restClient, c); err != nil {
+				GetLogEntry(c.Request()).Errorf("Error during getting owners")
+			} else {
+				owners = maybeOwners
+			}
+
 			messageDtos := make([]*DisplayMessageDto, 0)
 			for _, c := range messages {
-				messageDtos = append(messageDtos, convertToMessageDto(c))
+				messageDtos = append(messageDtos, convertToMessageDto(c, owners))
 			}
 
 			GetLogEntry(c.Request()).Infof("Successfully returning %v messages", len(messageDtos))
@@ -85,14 +113,15 @@ func GetMessage(dbR db.DB) func(c echo.Context) error {
 			if message == nil {
 				return c.NoContent(http.StatusNotFound)
 			}
-			messageDto := convertToMessageDto(message)
+			messageDto := convertToMessageDto(message, map[int64]*dto.User{})
 			GetLogEntry(c.Request()).Infof("Successfully returning message %v", messageDto)
 			return c.JSON(200, messageDto)
 		}
 	}
 }
 
-func convertToMessageDto(dbMessage *db.Message) *DisplayMessageDto {
+func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User) *DisplayMessageDto {
+	user := owners[dbMessage.OwnerId]
 	return &DisplayMessageDto{
 		Id:             dbMessage.Id,
 		Text:           dbMessage.Text,
@@ -100,6 +129,7 @@ func convertToMessageDto(dbMessage *db.Message) *DisplayMessageDto {
 		OwnerId:        dbMessage.OwnerId,
 		CreateDateTime: dbMessage.CreateDateTime,
 		EditDateTime:   dbMessage.EditDateTime,
+		Owner:          user,
 	}
 }
 
@@ -114,7 +144,7 @@ func (a *EditMessageDto) Validate() error {
 	)
 }
 
-func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications.Notifications) func(c echo.Context) error {
+func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications.Notifications, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(CreateMessageDto)
 		if err := c.Bind(bindTo); err != nil {
@@ -152,6 +182,17 @@ func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications
 				return err
 			}
 
+			var ownerIds []int64
+			ownerIds = append(ownerIds, userPrincipalDto.UserId)
+			users, err := restClient.GetUsers(ownerIds, c.Request().Context())
+			if err != nil {
+				GetLogEntry(c.Request()).Errorf("Unable to get user %v", err)
+			}
+			var maybeUser *dto.User = nil
+			if len(users) != 0 {
+				maybeUser = users[0]
+			}
+
 			dm := &DisplayMessageDto{
 				Id:             id,
 				Text:           bindTo.Text,
@@ -159,6 +200,7 @@ func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications
 				OwnerId:        userPrincipalDto.UserId,
 				CreateDateTime: createDatetime,
 				EditDateTime:   editDatetime,
+				Owner:          maybeUser,
 			}
 
 			notificator.NotifyAboutNewMessage(c, chatId, dm, userPrincipalDto)

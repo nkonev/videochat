@@ -13,12 +13,10 @@ import (
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
-	name_nkonev_aaa "nkonev.name/chat/proto"
 	"nkonev.name/chat/utils"
 )
 
 type ChatDto = dto.ChatDto
-type Participant = dto.Participant
 
 type ChatWrapper struct {
 	Data  []*ChatDto `json:"data"`
@@ -113,16 +111,11 @@ func getChatDtoOnPutTx(c echo.Context, tx *db.Tx, restClient client.RestClient, 
 			ParticipantIds: ids,
 		}
 	} else {
-		var participants []Participant
-		for _, u := range users {
-			participant := convertToParticipant(u)
-			participants = append(participants, participant)
-		}
 		responseDto = ChatDto{
 			Id:             chatId,
 			Name:           chatName,
 			ParticipantIds: ids,
-			Participants:   participants,
+			Participants:   users,
 		}
 	}
 	return &responseDto, nil
@@ -163,28 +156,12 @@ func GetChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) error
 	}
 }
 
-func convertToParticipant(user *name_nkonev_aaa.UserDto) Participant {
-	var nullableAvatar = null.NewString(user.Avatar, user.Avatar != "")
-	return Participant{
-		Id:     user.Id,
-		Login:  user.Login,
-		Avatar: nullableAvatar,
-	}
-}
-
-func convertToDto(c *db.Chat, participantIds []int64, users []*name_nkonev_aaa.UserDto, canEdit bool) *ChatDto {
-	var participants []Participant
-
-	for _, u := range users {
-		participant := convertToParticipant(u)
-		participants = append(participants, participant)
-	}
-
+func convertToDto(c *db.Chat, participantIds []int64, users []*dto.User, canEdit bool) *ChatDto {
 	return &ChatDto{
 		Id:             c.Id,
 		Name:           c.Title,
 		ParticipantIds: participantIds,
-		Participants:   participants,
+		Participants:   users,
 		CanEdit:        null.BoolFrom(canEdit),
 	}
 }

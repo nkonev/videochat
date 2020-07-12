@@ -12,9 +12,12 @@
                         v-for="(item, index) in items"
                         :key="item.id"
                 >
+                    <v-list-item-avatar v-if="item.owner && item.owner.avatar">
+                        <v-img :src="item.owner.avatar"></v-img>
+                    </v-list-item-avatar>
                     <v-list-item-content>
                         <v-list-item-title v-html="item.text"></v-list-item-title>
-                        <v-list-item-subtitle v-html="item.createDateTime"></v-list-item-subtitle>
+                        <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
                     </v-list-item-content>
                 </v-list-item>
             </v-list>
@@ -94,6 +97,9 @@
             }
         },
         methods: {
+            getSubtitle(item) {
+                return `${item.owner.login} at ${item.createDateTime}`
+            },
             setChatUrl() {
                 chatUrl = `/api/chat/`+this.chatId +'/message';
             },

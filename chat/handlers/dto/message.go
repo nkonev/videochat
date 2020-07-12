@@ -12,4 +12,5 @@ type DisplayMessageDto struct {
 	OwnerId        int64     `json:"ownerId"`
 	CreateDateTime time.Time `json:"createDateTime"`
 	EditDateTime   null.Time `json:"editDateTime"`
+	Owner          *User     `json:"owner"`
 }
