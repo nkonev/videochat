@@ -8,8 +8,8 @@ CREATE TABLE message (
 );
 
 CREATE TABLE message_read (
-    id bigserial primary key,
     message_id bigint NOT NULL REFERENCES message(id) ON DELETE CASCADE,
     create_date_time TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-    user_id bigint NOT NULL -- who have read the message
+    user_id bigint NOT NULL, -- who have read the message
+    primary key (message_id, user_id)
 );
