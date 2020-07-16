@@ -1,23 +1,15 @@
-INSERT INTO chat(
-    title,
-    owner_id
-)
+INSERT INTO chat(title)
 VALUES
-('first', 1),
-('second', 1),
-('Тест кириллицы', 1),
-('lorem', 1),
-('ipsum', 1),
-('dolor', 1),
-('sit', 1),
-('amet', 1),
-('With collegues', 1);
+('first'),
+('second'),
+('Тест кириллицы'),
+('lorem'),
+('ipsum'),
+('dolor'),
+('sit'),
+('amet'),
+('With collegues');
 
-INSERT INTO chat (
-    title,
-    owner_id
-)
-	SELECT
-		'generated_chat' || i,
-		1
+INSERT INTO chat (title)
+	SELECT 'generated_chat' || i
 	FROM generate_series(2, 100) AS i;
