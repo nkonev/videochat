@@ -1,4 +1,0 @@
-CREATE TABLE chat(
-    id BIGSERIAL PRIMARY KEY,
-    title VARCHAR(1024) NOT NULL
-)

@@ -4,36 +4,39 @@ import (
 	"database/sql"
 	"errors"
 	. "nkonev.name/chat/logger"
+	"time"
 )
 
 // db model
 type Chat struct {
-	Id    int64
-	Title string
+	Id                 int64
+	Title              string
+	LastUpdateDateTime time.Time
 }
 
 // CreateChat creates a new chat.
 // Returns an error if user is invalid or the tx fails.
-func (tx *Tx) CreateChat(u *Chat) (int64, error) {
+func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	// Validate the input.
 	if u == nil {
-		return 0, errors.New("chat required")
+		return 0, nil, errors.New("chat required")
 	} else if u.Title == "" {
-		return 0, errors.New("title required")
+		return 0, nil, errors.New("title required")
 	}
 
-	res := tx.QueryRow(`INSERT INTO chat (title) VALUES ($1) RETURNING id`, u.Title)
+	var lastUpdateDateTime time.Time
+	res := tx.QueryRow(`INSERT INTO chat (title) VALUES ($1) RETURNING id, last_update_date_time`, u.Title)
 	var id int64
-	if err := res.Scan(&id); err != nil {
+	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
 		Logger.Errorf("Error during getting chat id %v", err)
-		return 0, err
+		return 0, nil, err
 	}
-	return id, nil
+	return id, &lastUpdateDateTime, nil
 }
 
 func (db *DB) GetChats(participantId int64, limit int, offset int, searchString string) ([]*Chat, error) {
 	strForSearch := "%" + searchString + "%"
-	if rows, err := db.Query(`SELECT * FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND chat.title ILIKE $4 ORDER BY id LIMIT $2 OFFSET $3`, participantId, limit, offset, strForSearch); err != nil {
+	if rows, err := db.Query(`SELECT id, title, last_update_date_time FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND chat.title ILIKE $4 ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset, strForSearch); err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
 	} else {
@@ -41,7 +44,7 @@ func (db *DB) GetChats(participantId int64, limit int, offset int, searchString 
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
-			if err := rows.Scan(&chat.Id, &chat.Title); err != nil {
+			if err := rows.Scan(&chat.Id, &chat.Title, &chat.LastUpdateDateTime); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -83,19 +86,20 @@ func (tx *Tx) DeleteChat(id int64) error {
 	}
 }
 
-func (tx *Tx) EditChat(id int64, newTitle string) error {
-	if _, err := tx.Exec("UPDATE chat SET title = $2 WHERE id = $1", id, newTitle); err != nil {
-		Logger.Errorf("Error during update chat %v %v", id, err)
-		return err
-	} else {
-		return nil
+func (tx *Tx) EditChat(id int64, newTitle string) (*time.Time, error) {
+	var lastUpdateDateTime time.Time
+	res := tx.QueryRow(`UPDATE chat SET title = $2, last_update_date_time = utc_now() WHERE id = $1 RETURNING last_update_date_time`, id, newTitle)
+	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
+		Logger.Errorf("Error during getting chat id %v", err)
+		return nil, err
 	}
+	return &lastUpdateDateTime, nil
 }
 
 func (db *DB) GetChat(participantId, chatId int64) (*Chat, error) {
-	row := db.QueryRow(`SELECT * FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
+	row := db.QueryRow(`SELECT id, title, last_update_date_time FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
 	chat := Chat{}
-	err := row.Scan(&chat.Id, &chat.Title)
+	err := row.Scan(&chat.Id, &chat.Title, &chat.LastUpdateDateTime)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// there were no rows, but otherwise no error occurred
@@ -106,5 +110,14 @@ func (db *DB) GetChat(participantId, chatId int64) (*Chat, error) {
 		}
 	} else {
 		return &chat, nil
+	}
+}
+
+func (tx *Tx) UpdateLastDatetimeChat(id int64) error {
+	if _, err := tx.Exec("UPDATE chat SET last_update_date_time = utc_now() WHERE id = $1", id); err != nil {
+		Logger.Errorf("Error during update chat %v %v", id, err)
+		return err
+	} else {
+		return nil
 	}
 }

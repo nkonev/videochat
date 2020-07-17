@@ -14,6 +14,7 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
+	"time"
 )
 
 type ChatDto = dto.ChatDto
@@ -118,7 +119,7 @@ func getChatDtoWithUsers(c echo.Context, dbR db.DB, restClient client.RestClient
 	return chatDto, nil
 }
 
-func getChatDtoOnPutTx(c echo.Context, tx *db.Tx, restClient client.RestClient, chatName string, chatId int64) (*ChatDto, error) {
+func getChatDtoOnPutTx(c echo.Context, tx *db.Tx, restClient client.RestClient, chatName string, chatId int64, lastUpdateDateTime *time.Time) (*ChatDto, error) {
 	ids, err := tx.GetParticipantIds(chatId)
 	if err != nil {
 		return nil, err
@@ -127,16 +128,18 @@ func getChatDtoOnPutTx(c echo.Context, tx *db.Tx, restClient client.RestClient, 
 	if users, err := restClient.GetUsers(ids, c.Request().Context()); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error get participants for chat id=%v %v", chatId, err)
 		responseDto = ChatDto{
-			Id:             chatId,
-			Name:           chatName,
-			ParticipantIds: ids,
+			Id:                 chatId,
+			Name:               chatName,
+			ParticipantIds:     ids,
+			LastUpdateDateTime: *lastUpdateDateTime,
 		}
 	} else {
 		responseDto = ChatDto{
-			Id:             chatId,
-			Name:           chatName,
-			ParticipantIds: ids,
-			Participants:   users,
+			Id:                 chatId,
+			Name:               chatName,
+			ParticipantIds:     ids,
+			Participants:       users,
+			LastUpdateDateTime: *lastUpdateDateTime,
 		}
 	}
 	return &responseDto, nil
@@ -179,11 +182,12 @@ func GetChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) error
 
 func convertToDto(c *db.Chat, participantIds []int64, users []*dto.User, canEdit bool) *ChatDto {
 	return &ChatDto{
-		Id:             c.Id,
-		Name:           c.Title,
-		ParticipantIds: participantIds,
-		Participants:   users,
-		CanEdit:        null.BoolFrom(canEdit),
+		Id:                 c.Id,
+		Name:               c.Title,
+		ParticipantIds:     participantIds,
+		Participants:       users,
+		CanEdit:            null.BoolFrom(canEdit),
+		LastUpdateDateTime: c.LastUpdateDateTime,
 	}
 }
 
@@ -205,7 +209,7 @@ func CreateChat(dbR db.DB, notificator notifications.Notifications, restClient c
 		}
 
 		errOuter := db.Transact(dbR, func(tx *db.Tx) error {
-			id, err := tx.CreateChat(convertToCreatableChat(bindTo))
+			id, lastUpdateDateTime, err := tx.CreateChat(convertToCreatableChat(bindTo))
 			if err != nil {
 				return err
 			}
@@ -222,7 +226,7 @@ func CreateChat(dbR db.DB, notificator notifications.Notifications, restClient c
 					return err
 				}
 			}
-			responseDto, err := getChatDtoOnPutTx(c, tx, restClient, bindTo.Name, id)
+			responseDto, err := getChatDtoOnPutTx(c, tx, restClient, bindTo.Name, id, lastUpdateDateTime)
 			if err != nil {
 				return err
 			}
@@ -313,7 +317,8 @@ func EditChat(dbR db.DB, notificator notifications.Notifications, restClient cli
 			} else if !admin {
 				return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
 			}
-			if err := tx.EditChat(bindTo.Id, bindTo.Name); err != nil {
+			lastUpdate, err := tx.EditChat(bindTo.Id, bindTo.Name)
+			if err != nil {
 				return err
 			}
 
@@ -344,7 +349,7 @@ func EditChat(dbR db.DB, notificator notifications.Notifications, restClient cli
 				}
 			}
 
-			if responseDto, err := getChatDtoOnPutTx(c, tx, restClient, bindTo.Name, bindTo.Id); err != nil {
+			if responseDto, err := getChatDtoOnPutTx(c, tx, restClient, bindTo.Name, bindTo.Id, lastUpdate); err != nil {
 				return err
 			} else {
 				notificator.NotifyAboutNewChat(c, responseDto, userIdsToNotifyAboutChatCreated, tx)

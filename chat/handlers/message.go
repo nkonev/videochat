@@ -162,8 +162,10 @@ func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications
 			if err != nil {
 				return err
 			}
-			err = tx.AddMessageRead(id, userPrincipalDto.UserId)
-			if err != nil {
+			if tx.AddMessageRead(id, userPrincipalDto.UserId) != nil {
+				return err
+			}
+			if tx.UpdateLastDatetimeChat(chatId) != nil {
 				return err
 			}
 

@@ -99,7 +99,7 @@ func (tx *Tx) EditMessage(m *Message) error {
 		return errors.New("id required")
 	}
 
-	if _, err := tx.Exec(`UPDATE message SET text = $1, edit_date_time = $2 WHERE owner_id = $3 AND id = $4`, m.Text, m.EditDateTime, m.OwnerId, m.Id); err != nil {
+	if _, err := tx.Exec(`UPDATE message SET text = $1, edit_date_time = utc_now() WHERE owner_id = $2 AND id = $3`, m.Text, m.OwnerId, m.Id); err != nil {
 		Logger.Errorf("Error during editing message id %v", err)
 		return err
 	}
