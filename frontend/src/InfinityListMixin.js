@@ -24,18 +24,15 @@ export const replaceOrAppend = (array, newArray) => {
     });
 };
 
-export const pageSize = 20;
-
-const ACTION_CREATE = 'actionCreate';
-const ACTION_EDIT = 'actionEdit';
-const ACTION_DELETE = 'actionDelete';
-
-export  {
-    ACTION_CREATE,
-    ACTION_EDIT,
-    ACTION_DELETE,
+export const moveToFirstPosition = (array, element) => {
+    const idx = findIndex(array, element);
+    if (idx > 0) {
+        array.splice(idx, 1);
+        array.unshift(element);
+    }
 }
 
+export const pageSize = 20;
 
 export default () => {
     return  {

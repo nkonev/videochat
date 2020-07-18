@@ -46,9 +46,6 @@
 <script>
     import axios from "axios";
     import infinityListMixin, {
-        ACTION_CREATE,
-        ACTION_DELETE,
-        ACTION_EDIT,
         findIndex,
         pageSize, replaceInArray
     } from "./InfinityListMixin";
@@ -106,38 +103,21 @@
         },
         methods: {
             addItem(dto) {
-                if (this.shouldChange(dto, ACTION_CREATE)) {
-                    console.log("Adding item", dto);
-                    this.items.push(dto);
-                    this.$forceUpdate();
-                } else {
-                    console.log("Item was not be added", dto);
-                }
+                console.log("Adding item", dto);
+                this.items.push(dto);
+                this.$forceUpdate();
             },
             changeItem(dto) {
-                if (this.shouldChange(dto, ACTION_EDIT)) {
-                    console.log("Replacing item", dto);
-                    replaceInArray(this.items, dto);
-                    this.$forceUpdate();
-                } else {
-                    console.log("Item was not be replaced", dto);
-                }
+                console.log("Replacing item", dto);
+                replaceInArray(this.items, dto);
+                this.$forceUpdate();
             },
             removeItem(dto) {
-                if (this.shouldChange(dto, ACTION_DELETE)) {
-                    console.log("Removing item", dto);
-                    const idxToRemove = findIndex(this.items, dto);
-                    this.items.splice(idxToRemove, 1);
-                    this.$forceUpdate();
-                } else {
-                    console.log("Item was not be removed", dto);
-                }
+                console.log("Removing item", dto);
+                const idxToRemove = findIndex(this.items, dto);
+                this.items.splice(idxToRemove, 1);
+                this.$forceUpdate();
             },
-            // does should change items list (new item added to visible part or not for example)
-            shouldChange(dto, action) {
-                return true;
-            },
-
 
             scrollerHeight() {
                 const maybeScroller = document.getElementById("messagesScroller");

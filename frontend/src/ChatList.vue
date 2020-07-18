@@ -38,10 +38,10 @@
     import {chat_name} from "./routes";
     import infinityListMixin, {
         findIndex,
-        ACTION_CREATE,
         pageSize,
         replaceOrAppend,
-        ACTION_EDIT, replaceInArray, ACTION_DELETE
+        replaceInArray,
+        moveToFirstPosition
     } from "./InfinityListMixin";
     import axios from "axios";
 
@@ -62,7 +62,7 @@
                 console.log("Replacing item", dto);
                 if (this.hasItem(dto)) {
                     replaceInArray(this.items, dto);
-                    // TODO move to first position
+                    moveToFirstPosition(this.items, dto)
                 } else {
                     this.items.unshift(dto);
                 }
