@@ -240,7 +240,9 @@
             },
             stop () {
                 this.isStarted = false;
-                this.pc.close();
+                if (this.pc) {
+                    this.pc.close();
+                }
                 this.pc = null;
             },
             hangup() {
@@ -253,6 +255,10 @@
                 this.signalingSubscription.publish(setProperData(message));
             },
             initDevices() {
+                if (!navigator.mediaDevices) {
+                    console.log('There are no media devices');
+                    return
+                }
                 navigator.mediaDevices.getUserMedia({
                     audio: false,
                     video: true
