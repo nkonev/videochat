@@ -86,6 +86,38 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Assertions.assertEquals(facebookLogin, userAccount.getUsername());
     }
 
+    @Test
+    public void testFacebookLoginAndMergeVkontakte()  {
+        Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
+
+        openOauth2TestPage();
+
+        clickFacebook();
+
+        UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
+        Long facebookLoggedId = userAccount.getId();
+        Assertions.assertNotNull(facebookLoggedId);
+        Assertions.assertNotNull(userAccount.getAvatar());
+        Assertions.assertTrue(userAccount.getAvatar().startsWith("/"));
+        Assertions.assertEquals(facebookLogin, userAccount.getUsername());
+        String facebookId = userAccount.getOauthIdentifiers().getFacebookId();
+        Assertions.assertNotNull(facebookId);
+        Assertions.assertNull(userAccount.getOauthIdentifiers().getVkontakteId());
+        long count = userAccountRepository.count();
+
+        clickVkontakte();
+        UserAccount userAccountFbAndVk = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
+        String userAccountFbAndVkFacebookId = userAccountFbAndVk.getOauthIdentifiers().getFacebookId();
+        Assertions.assertNotNull(userAccountFbAndVkFacebookId);
+        Assertions.assertNotNull(userAccountFbAndVk.getOauthIdentifiers().getVkontakteId());
+        long countAfterVk = userAccountRepository.count();
+
+
+        Assertions.assertEquals(facebookId, userAccountFbAndVkFacebookId);
+        Assertions.assertEquals(count, countAfterVk);
+        Assertions.assertEquals(userAccount.getUsername(), userAccountFbAndVk.getUsername());
+    }
+
 
     @Test
     public void testVkontakteLoginAndDelete() throws Exception {
