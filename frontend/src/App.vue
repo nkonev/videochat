@@ -97,7 +97,7 @@
             return {
                 title: "",
                 appBarItems: [
-                    { title: 'Home', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
+                    { title: 'Chats', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
                     { title: 'My Account', icon: 'mdi-account', clickFunction: ()=>{}, requireAuthenticated: true },
                     { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
                 ],
