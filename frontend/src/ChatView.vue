@@ -26,7 +26,8 @@
                             </template>
                         </v-list>
                         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top">
-                            <div slot="no-more"></div>
+                            <template slot="no-more"></template>
+                            <template slot="no-results"></template>
                         </infinite-loading>
                     </v-card-text>
                     </div>
