@@ -158,7 +158,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         UserAccount userAccountAfterBind = userAccountRepository.findByUsername(login600).orElseThrow();
         Assertions.assertNotNull(userAccountAfterBind.getOauthIdentifiers().getFacebookId());
 
-        // login as another user to vo - vk id #1 save to database
+        // login as another user to vk - vk id #1 save to database
         {
             openOauth2TestPage();
             clickVkontakte();

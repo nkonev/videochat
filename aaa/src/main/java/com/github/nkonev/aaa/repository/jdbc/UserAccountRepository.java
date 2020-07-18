@@ -14,11 +14,9 @@ import java.util.Optional;
 @Repository
 public interface UserAccountRepository extends CrudRepository<UserAccount, Long> {
 
-    @Query("select * from auth.users u where u.username = :userName")
-    Optional<UserAccount> findByUsername(@Param("userName") String username);
+    Optional<UserAccount> findByUsername(String username);
 
-    @Query("select * from auth.users u where u.email = :email")
-    Optional<UserAccount> findByEmail(@Param("email")String email);
+    Optional<UserAccount> findByEmail(String email);
 
     // https://jira.spring.io/projects/DATAJDBC/issues/DATAJDBC-101?filter=allopenissues
     @Query("select * from auth.users u where u.username ilike :userName order by id limit :limit offset :offset")
@@ -27,11 +25,9 @@ public interface UserAccountRepository extends CrudRepository<UserAccount, Long>
     @Query("select count(id) from auth.users u where u.username ilike :userName")
     long findByUsernameContainsIgnoreCaseCount(@Param("limit")long limit, @Param("offset")long offset, @Param("userName")String searchString);
 
-    @Query("select * from auth.users u where u.facebook_id = :i")
-    Optional<UserAccount> findByOauthIdentifiersFacebookId(@Param("i")String facebookId);
+    Optional<UserAccount> findByOauthIdentifiersFacebookId(String facebookId);
 
-    @Query("select * from auth.users u where u.vkontakte_id = :i")
-    Optional<UserAccount> findByOauthIdentifiersVkontakteId(@Param("i")String vkontakteId);
+    Optional<UserAccount> findByOauthIdentifiersVkontakteId(String vkontakteId);
 
     @Modifying
     @Query("update auth.users set last_login_date_time = :newLastLoginDateTime where username = :userName")
