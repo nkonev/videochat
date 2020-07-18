@@ -42,7 +42,6 @@ export default () => {
                 items: [],
                 itemsTotal: 0,
                 infiniteId: new Date(),
-                searchString: ""
             }
         },
         components:{
@@ -61,8 +60,7 @@ export default () => {
                 return this.page === pagesTotal;
             },
 
-            setSearchString(searchString) {
-                this.searchString = searchString;
+            searchStringChanged() {
                 this.items = [];
                 this.page = 0;
                 this.reloadItems();

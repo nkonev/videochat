@@ -419,11 +419,11 @@
                 this.requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
             }
 
-            bus.$emit(CHANGE_TITLE, `Chat #${this.chatId}`);
+            bus.$emit(CHANGE_TITLE, `Chat #${this.chatId}`, false);
 
             axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
                 console.log("Got info about chat", data);
-                bus.$emit(CHANGE_TITLE, data.name);
+                bus.$emit(CHANGE_TITLE, data.name, false);
             });
 /////////////////////////////////////////////////////////
         },

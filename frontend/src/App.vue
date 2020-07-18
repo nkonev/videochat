@@ -56,7 +56,7 @@
             <v-toolbar-title>{{title}}</v-toolbar-title>
             <v-spacer></v-spacer>
 
-            <v-card light>
+            <v-card light v-if="showSearch">
                 <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchChatString"></v-text-field>
             </v-card>
         </v-app-bar>
@@ -86,7 +86,7 @@
     import axios from 'axios';
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
-    import {FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
+    import {CHANGE_SEARCH_STRING, FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
     import bus, {CHANGE_TITLE, CHAT_ADD, CHAT_SEARCH_CHANGED, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -104,7 +104,8 @@
                 drawer: true,
                 lastError: "",
                 showAlert: false,
-                searchChatString: ""
+                searchChatString: "",
+                showSearch: false,
             }
         },
         components:{
@@ -133,12 +134,7 @@
                 bus.$emit(OPEN_CHAT_EDIT, null);
             },
             doSearch(searchString) {
-                if (!searchString || searchString === "") {
-                    bus.$emit(CHAT_SEARCH_CHANGED, "");
-                    return;
-                }
-
-                bus.$emit(CHAT_SEARCH_CHANGED, searchString);
+                this.$store.dispatch(CHANGE_SEARCH_STRING, searchString);
             },
             getAppBarItems(){
                 return this.appBarItems.filter((value, index) => {
@@ -149,8 +145,9 @@
                     }
                 })
             },
-            changeTitle(newtitle) {
+            changeTitle(newtitle, isShowSearch) {
                 this.title = newtitle;
+                this.showSearch = isShowSearch;
             },
         },
         computed: {

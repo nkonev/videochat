@@ -41,13 +41,16 @@
         moveToFirstPosition
     } from "./InfinityListMixin";
     import axios from "axios";
+    import {mapGetters} from 'vuex'
+    import {GET_SEARCH_STRING} from "./store";
 
     export default {
         mixins: [infinityListMixin()],
         computed: {
             chatRoute() {
                 return chat_name;
-            }
+            },
+            ...mapGetters({storedSearchString: GET_SEARCH_STRING})
         },
         data() {
             return {
@@ -95,7 +98,7 @@
                     params: {
                         page: this.page,
                         size: pageSize,
-                        searchString: this.searchString
+                        searchString: this.storedSearchString
                     },
                 }).then(({ data }) => {
                     const list = data.data;
@@ -125,17 +128,17 @@
             bus.$on(CHAT_ADD, this.addItem);
             bus.$on(CHAT_EDITED, this.changeItem);
             bus.$on(CHAT_DELETED, this.removeItem);
-            bus.$on(CHAT_SEARCH_CHANGED, this.setSearchString);
+            bus.$on(CHAT_SEARCH_CHANGED, this.searchStringChanged);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadItems);
             bus.$off(CHAT_ADD, this.addItem);
             bus.$off(CHAT_EDITED, this.changeItem);
             bus.$off(CHAT_DELETED, this.removeItem);
-            bus.$off(CHAT_SEARCH_CHANGED, this.setSearchString);
+            bus.$off(CHAT_SEARCH_CHANGED, this.searchStringChanged);
         },
         mounted() {
-            bus.$emit(CHANGE_TITLE, "Chats");
+            bus.$emit(CHANGE_TITLE, "Chats", true);
         }
     }
 </script>
