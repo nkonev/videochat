@@ -5,7 +5,7 @@ export const findIndex = (array, element) => {
     return array.findIndex(value => value.id === element.id);
 };
 
-const replaceInArray = (array, element) => {
+export const replaceInArray = (array, element) => {
     const foundIndex = findIndex(array, element);
     if (foundIndex === -1) {
         return false;
@@ -15,7 +15,7 @@ const replaceInArray = (array, element) => {
     }
 };
 
-const replaceOrAppend = (array, newArray) => {
+export const replaceOrAppend = (array, newArray) => {
     newArray.forEach((element, index) => {
         const replaced = replaceInArray(array, element);
         if (!replaced) {
@@ -37,7 +37,7 @@ export  {
 }
 
 
-export default (shouldChangeFunction) => {
+export default () => {
     return  {
         data () {
             return {
@@ -57,43 +57,13 @@ export default (shouldChangeFunction) => {
                 this.infiniteId += 1;
                 console.log("Resetting infinite loader", this.infiniteId);
             },
-            // does should change items list (new item added to visible part or not for example)
-            shouldChange(dto, action) {
-                return shouldChangeFunction(this.$data, dto, action, this.isLastPage())
-            },
+
             isLastPage() {
                 const pagesTotal = Math.ceil(this.itemsTotal / pageSize);
                 console.log("isLastPage pagesTotal=", pagesTotal, "this.page=", this.page, "this.itemsTotal=", this.itemsTotal);
                 return this.page === pagesTotal;
             },
-            addItem(dto) {
-                if (this.shouldChange(dto, ACTION_CREATE)) {
-                    console.log("Adding item", dto);
-                    this.items.push(dto);
-                    this.$forceUpdate();
-                } else {
-                    console.log("Item was not be added", dto);
-                }
-            },
-            changeItem(dto) {
-                if (this.shouldChange(dto, ACTION_EDIT)) {
-                    console.log("Replacing item", dto);
-                    replaceInArray(this.items, dto);
-                    this.$forceUpdate();
-                } else {
-                    console.log("Item was not be replaced", dto);
-                }
-            },
-            removeItem(dto) {
-                if (this.shouldChange(dto, ACTION_DELETE)) {
-                    console.log("Removing item", dto);
-                    const idxToRemove = findIndex(this.items, dto);
-                    this.items.splice(idxToRemove, 1);
-                    this.$forceUpdate();
-                } else {
-                    console.log("Item was not be removed", dto);
-                }
-            },
+
             setSearchString(searchString) {
                 this.searchString = searchString;
                 this.items = [];

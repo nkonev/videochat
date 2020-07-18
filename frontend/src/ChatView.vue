@@ -44,7 +44,13 @@
 
 <script>
     import axios from "axios";
-    import infinityListMixin, {pageSize} from "./InfinityListMixin";
+    import infinityListMixin, {
+        ACTION_CREATE,
+        ACTION_DELETE,
+        ACTION_EDIT,
+        findIndex,
+        pageSize, replaceInArray
+    } from "./InfinityListMixin";
     import {getData, getProperData} from './centrifugeConnection'
     import Vue from 'vue'
     import bus, {CHANGE_TITLE} from "./bus";
@@ -70,7 +76,7 @@
     };
 
     export default {
-        mixins:[infinityListMixin(()=>true)],
+        mixins:[infinityListMixin()],
         computed: {
             chatId() {
                 return this.$route.params.id
@@ -98,6 +104,40 @@
             }
         },
         methods: {
+            addItem(dto) {
+                if (this.shouldChange(dto, ACTION_CREATE)) {
+                    console.log("Adding item", dto);
+                    this.items.push(dto);
+                    this.$forceUpdate();
+                } else {
+                    console.log("Item was not be added", dto);
+                }
+            },
+            changeItem(dto) {
+                if (this.shouldChange(dto, ACTION_EDIT)) {
+                    console.log("Replacing item", dto);
+                    replaceInArray(this.items, dto);
+                    this.$forceUpdate();
+                } else {
+                    console.log("Item was not be replaced", dto);
+                }
+            },
+            removeItem(dto) {
+                if (this.shouldChange(dto, ACTION_DELETE)) {
+                    console.log("Removing item", dto);
+                    const idxToRemove = findIndex(this.items, dto);
+                    this.items.splice(idxToRemove, 1);
+                    this.$forceUpdate();
+                } else {
+                    console.log("Item was not be removed", dto);
+                }
+            },
+            // does should change items list (new item added to visible part or not for example)
+            shouldChange(dto, action) {
+                return true;
+            },
+
+
             scrollerHeight() {
                 const maybeScroller = document.getElementById("messagesScroller");
                 const maybeSendButton = document.getElementById("sendButtonContainer");

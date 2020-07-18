@@ -36,24 +36,54 @@
         CHANGE_TITLE
     } from "./bus";
     import {chat_name} from "./routes";
-    import infinityListMixin, {findIndex, ACTION_CREATE, pageSize} from "./InfinityListMixin";
+    import infinityListMixin, {
+        findIndex,
+        ACTION_CREATE,
+        pageSize,
+        replaceOrAppend,
+        ACTION_EDIT, replaceInArray, ACTION_DELETE
+    } from "./InfinityListMixin";
     import axios from "axios";
 
     export default {
-        mixins: [infinityListMixin((data, item, action, isLastPage)=>{
-            console.log("isLastPage", isLastPage, "action", action);
-            if (isLastPage && action === ACTION_CREATE) {
-                return true;
-            }
-            let idxOf = findIndex(data.items, item);
-            return idxOf !== -1;
-        })],
+        mixins: [infinityListMixin()],
         computed: {
             chatRoute() {
                 return chat_name;
             }
         },
         methods:{
+            addItem(dto) {
+                console.log("Adding item", dto);
+                this.items.unshift(dto);
+                this.$forceUpdate();
+            },
+            changeItem(dto) {
+                console.log("Replacing item", dto);
+                if (this.hasItem(dto)) {
+                    replaceInArray(this.items, dto);
+                    // TODO move to first position
+                } else {
+                    this.items.unshift(dto);
+                }
+                this.$forceUpdate();
+            },
+            removeItem(dto) {
+                if (this.hasItem(dto)) {
+                    console.log("Removing item", dto);
+                    const idxToRemove = findIndex(this.items, dto);
+                    this.items.splice(idxToRemove, 1);
+                    this.$forceUpdate();
+                } else {
+                    console.log("Item was not be removed", dto);
+                }
+            },
+            // does should change items list (new item added to visible part or not for example)
+            hasItem(item) {
+                let idxOf = findIndex(data.items, item);
+                return idxOf !== -1;
+            },
+
             infiniteHandler($state) {
                 axios.get('/api/chat', {
                     params: {
@@ -66,8 +96,8 @@
                     this.itemsTotal = data.totalCount;
                     if (list.length) {
                         this.page += 1;
-                        this.items = [...this.items, ...list];
-                        //replaceOrAppend(this.items, list);
+                        //this.items = [...this.items, ...list];
+                        replaceOrAppend(this.items, list);
                         $state.loaded();
                     } else {
                         $state.complete();
