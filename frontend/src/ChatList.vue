@@ -1,23 +1,20 @@
 <template>
-    <v-card
-            max-width="1000"
-            class="mx-auto"
-    >
+    <v-card>
         <v-list>
+            <v-list-item-group v-model="group" color="primary">
             <v-list-item
                     v-for="(item, index) in items"
                     :key="item.id"
             >
-                <v-list-item-content>
-                    <router-link :to="{name: chatRoute, params: { id: item.id} }">
+                <v-list-item-content @click="openChat(item)">
                         <v-list-item-title v-html="item.name"></v-list-item-title>
-                    </router-link>
                     <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-action v-if="item.canEdit">
-                    <v-btn color="primary" fab dark small @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
+                    <v-btn text color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
                 </v-list-item-action>
             </v-list-item>
+            </v-list-item-group>
         </v-list>
         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId"></infinite-loading>
 
@@ -35,7 +32,7 @@
         OPEN_CHAT_EDIT,
         CHANGE_TITLE
     } from "./bus";
-    import {chat_name} from "./routes";
+    import {chat_name, root_name} from "./routes";
     import infinityListMixin, {
         findIndex,
         pageSize,
@@ -50,6 +47,11 @@
         computed: {
             chatRoute() {
                 return chat_name;
+            }
+        },
+        data() {
+            return {
+                group: -1
             }
         },
         methods:{
@@ -82,6 +84,10 @@
             hasItem(item) {
                 let idxOf = findIndex(this.items, item);
                 return idxOf !== -1;
+            },
+
+            openChat(item){
+                this.$router.push(({ name: chat_name, params: { id: item.id}}));
             },
 
             infiniteHandler($state) {
