@@ -80,7 +80,7 @@
             },
             // does should change items list (new item added to visible part or not for example)
             hasItem(item) {
-                let idxOf = findIndex(data.items, item);
+                let idxOf = findIndex(this.items, item);
                 return idxOf !== -1;
             },
 

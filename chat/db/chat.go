@@ -88,7 +88,7 @@ func (tx *Tx) DeleteChat(id int64) error {
 
 func (tx *Tx) EditChat(id int64, newTitle string) (*time.Time, error) {
 	var lastUpdateDateTime time.Time
-	res := tx.QueryRow(`UPDATE chat SET title = $2, last_update_date_time = utc_now() WHERE id = $1 RETURNING last_update_date_time`, id, newTitle)
+	res := tx.QueryRow(`UPDATE chat SET title = $2, last_update_date_time = utc_now() WHERE id = $1 RETURNING id, last_update_date_time`, id, newTitle)
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
 		Logger.Errorf("Error during getting chat id %v", err)
 		return nil, err
