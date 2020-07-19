@@ -7,11 +7,14 @@
                     :key="item.id"
             >
                 <v-list-item-content @click="openChat(item)">
-                        <v-list-item-title v-html="item.name"></v-list-item-title>
+                    <v-list-item-title v-html="item.name"></v-list-item-title>
                     <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-action v-if="item.canEdit">
-                    <v-btn text color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
+                    <v-container>
+                        <v-btn text color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
+                        <v-btn text @click="deleteChat(item)"><v-icon dark>mdi-delete</v-icon></v-btn>
+                    </v-container>
                 </v-list-item-action>
             </v-list-item>
             </v-list-item-group>
@@ -30,7 +33,7 @@
         CHAT_SEARCH_CHANGED,
         LOGGED_IN,
         OPEN_CHAT_EDIT,
-        CHANGE_TITLE
+        CHANGE_TITLE, OPEN_CHAT_DELETE
     } from "./bus";
     import {chat_name, root_name} from "./routes";
     import infinityListMixin, {
@@ -122,6 +125,9 @@
                 const logins = chat.participants.map(p => p.login);
                 return logins.join(", ")
             },
+            deleteChat(chat) {
+                bus.$emit(OPEN_CHAT_DELETE, chat);
+            }
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadItems);

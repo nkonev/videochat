@@ -246,7 +246,7 @@ func convertToCreatableChat(d *CreateChatDto) *db.Chat {
 	}
 }
 
-func DeleteChat(dbR db.DB) func(c echo.Context) error {
+func DeleteChat(dbR db.DB, notificator notifications.Notifications) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		chatId, err := GetPathParamAsInt64(c, "id")
 		if err != nil {
@@ -265,9 +265,17 @@ func DeleteChat(dbR db.DB) func(c echo.Context) error {
 			} else if !admin {
 				return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, chatId))
 			}
+			ids, err := tx.GetParticipantIds(chatId)
+			if err != nil {
+				return err
+			}
 			if err := tx.DeleteChat(chatId); err != nil {
 				return err
 			}
+			cd := &ChatDto{
+				Id: chatId,
+			}
+			notificator.NotifyAboutDeleteChat(c, cd, ids, tx)
 			return c.JSON(http.StatusAccepted, &utils.H{"id": chatId})
 		})
 		if errOuter != nil {

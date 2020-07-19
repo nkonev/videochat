@@ -7,5 +7,6 @@ export const CHAT_ADD = "chatAdd";
 export const CHAT_EDITED = "chatEdited";
 export const CHAT_DELETED = "chatDeleted";
 export const OPEN_CHAT_EDIT = "openChatEdit";
+export const OPEN_CHAT_DELETE = "openChatDelete";
 export const CHAT_SEARCH_CHANGED = "chatSearchChanged";
 export const CHANGE_TITLE = "changeTitle";

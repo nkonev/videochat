@@ -76,6 +76,7 @@
                 </v-alert>
                 <LoginModal/>
                 <ChatEdit/>
+                <ChatDelete/>
                 <router-view/>
             </v-container>
         </v-main>
@@ -87,10 +88,11 @@
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
     import {CHANGE_SEARCH_STRING, FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
-    import bus, {CHANGE_TITLE, CHAT_ADD, CHAT_SEARCH_CHANGED, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
+    import bus, {CHANGE_TITLE, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
     import {root_name} from "./routes";
+    import ChatDelete from "./ChatDelete";
 
     export default {
         data () {
@@ -110,7 +112,8 @@
         },
         components:{
             LoginModal,
-            ChatEdit
+            ChatEdit,
+            ChatDelete
         },
         methods:{
             toggleLeftNavigation() {
