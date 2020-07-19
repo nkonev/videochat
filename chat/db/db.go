@@ -11,6 +11,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
+	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"time"
 )
@@ -28,6 +29,10 @@ type Tx struct {
 type CommonOperations interface {
 	Query(query string, args ...interface{}) (*dbP.Rows, error)
 	QueryRow(query string, args ...interface{}) *dbP.Row
+    GetParticipantIds(chatId int64) ([]int64, error)
+	IsAdmin(userId int64, chatId int64) (bool, error)
+	GetChat(participantId, chatId int64) (*Chat, error)
+	GetChatWithParticipants(participantId, chatId int64, userPrincipalDto *auth.AuthResult) (*ChatWithParticipants, error)
 }
 
 func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {

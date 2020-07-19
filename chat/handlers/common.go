@@ -8,14 +8,14 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-func getOwners(owners map[int64]bool, restClient client.RestClient, c echo.Context) (map[int64]*dto.User, error) {
-	var ownerIds = utils.SetToArray(owners)
-	length := len(ownerIds)
+func getUsersRemotely(userIdSet map[int64]bool, restClient client.RestClient, c echo.Context) (map[int64]*dto.User, error) {
+	var userIds = utils.SetToArray(userIdSet)
+	length := len(userIds)
 	Logger.Infof("Requested user length is %v", length)
 	if length == 0 {
 		return map[int64]*dto.User{}, nil
 	}
-	users, err := restClient.GetUsers(ownerIds, c.Request().Context())
+	users, err := restClient.GetUsers(userIds, c.Request().Context())
 	if err != nil {
 		return nil, err
 	}
@@ -24,4 +24,13 @@ func getOwners(owners map[int64]bool, restClient client.RestClient, c echo.Conte
 		ownersObjects[u.Id] = u
 	}
 	return ownersObjects, nil
+}
+
+func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient client.RestClient, c echo.Context) (map[int64]*dto.User) {
+	if remoteUsers, err := getUsersRemotely(userIdSet, restClient, c); err != nil {
+		GetLogEntry(c.Request()).Warn("Error during getting users from aaa")
+		return map[int64]*dto.User{}
+	} else {
+		return remoteUsers
+	}
 }

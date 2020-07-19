@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"time"
 )
@@ -12,6 +13,12 @@ type Chat struct {
 	Id                 int64
 	Title              string
 	LastUpdateDateTime time.Time
+}
+
+type ChatWithParticipants struct {
+	Chat
+	ParticipantsIds []int64
+	IsAdmin			bool
 }
 
 // CreateChat creates a new chat.
@@ -52,6 +59,58 @@ func (db *DB) GetChats(participantId int64, limit int, offset int, searchString 
 			}
 		}
 		return list, nil
+	}
+}
+
+func convertToWithParticipants(db CommonOperations, chat *Chat, userPrincipalDto *auth.AuthResult) (*ChatWithParticipants, error) {
+	if ids, err := db.GetParticipantIds(chat.Id); err != nil {
+		return nil, err
+	} else {
+		admin, err := db.IsAdmin(userPrincipalDto.UserId, chat.Id)
+		if err != nil {
+			return nil, err
+		}
+		ccc := &ChatWithParticipants{
+			Chat:            *chat,
+			ParticipantsIds: ids,
+			IsAdmin: admin,
+		}
+		return ccc, nil
+	}
+}
+
+func (db *DB) GetChatsWithParticipants(participantId int64, limit int, offset int, searchString string, userPrincipalDto *auth.AuthResult) ([]*ChatWithParticipants, error) {
+	chats, err := db.GetChats(participantId, limit, offset, searchString)
+	if err != nil {
+		return nil, err
+	} else {
+		list := make([]*ChatWithParticipants, 0)
+		for _, cc := range chats {
+			if ccc, err := convertToWithParticipants(db, cc, userPrincipalDto); err != nil {
+				return nil, err
+			} else {
+				list = append(list, ccc)
+			}
+		}
+		return list, nil
+	}
+}
+
+func (tx *Tx) GetChatWithParticipants(participantId, chatId int64, userPrincipalDto *auth.AuthResult) (*ChatWithParticipants, error) {
+	return getChatWithParticipantsCommon(tx, participantId, chatId, userPrincipalDto)
+}
+
+func (db *DB) GetChatWithParticipants(participantId, chatId int64, userPrincipalDto *auth.AuthResult) (*ChatWithParticipants, error) {
+	return getChatWithParticipantsCommon(db, participantId, chatId, userPrincipalDto)
+}
+
+func getChatWithParticipantsCommon(commonOps CommonOperations, participantId, chatId int64, userPrincipalDto *auth.AuthResult) (*ChatWithParticipants, error) {
+	if chat, err := commonOps.GetChat(participantId, chatId); err != nil {
+		return nil, err
+	} else if chat == nil {
+		return nil, nil
+	} else {
+		return convertToWithParticipants(commonOps, chat, userPrincipalDto)
 	}
 }
 
@@ -96,8 +155,8 @@ func (tx *Tx) EditChat(id int64, newTitle string) (*time.Time, error) {
 	return &lastUpdateDateTime, nil
 }
 
-func (db *DB) GetChat(participantId, chatId int64) (*Chat, error) {
-	row := db.QueryRow(`SELECT id, title, last_update_date_time FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
+func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, error) {
+	row := co.QueryRow(`SELECT id, title, last_update_date_time FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
 	chat := Chat{}
 	err := row.Scan(&chat.Id, &chat.Title, &chat.LastUpdateDateTime)
 	if err != nil {
@@ -111,6 +170,14 @@ func (db *DB) GetChat(participantId, chatId int64) (*Chat, error) {
 	} else {
 		return &chat, nil
 	}
+}
+
+func (db *DB) GetChat(participantId, chatId int64) (*Chat, error) {
+	return getChatCommon(db, participantId, chatId)
+}
+
+func (tx *Tx) GetChat(participantId, chatId int64) (*Chat, error) {
+	return getChatCommon(tx, participantId, chatId)
 }
 
 func (tx *Tx) UpdateLastDatetimeChat(id int64) error {

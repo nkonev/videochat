@@ -51,16 +51,11 @@ func GetMessages(dbR db.DB, restClient client.RestClient) func(c echo.Context) e
 			GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
 			return err
 		} else {
-			var owners = map[int64]*dto.User{}
-			var ownersSet map[int64]bool = map[int64]bool{}
+			var ownersSet = map[int64]bool{}
 			for _, c := range messages {
 				ownersSet[c.OwnerId] = true
 			}
-			if maybeOwners, err := getOwners(ownersSet, restClient, c); err != nil {
-				GetLogEntry(c.Request()).Errorf("Error during getting owners")
-			} else {
-				owners = maybeOwners
-			}
+			var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
 
 			messageDtos := make([]*DisplayMessageDto, 0)
 			for _, c := range messages {
