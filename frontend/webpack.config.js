@@ -79,10 +79,8 @@ module.exports = (env, argv) => {
                 {
                     test: /\.styl|stylus$/,
                     use: [
-                        argv.mode !== 'production'
-                            ? 'vue-style-loader'
-                            : CssExtractPlugin.loader,
-                        "css-loader",
+                        CssExtractPlugin.loader,
+                        "css-loader?sourceMap",
                         'stylus-loader'
                     ]
                 },
