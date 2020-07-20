@@ -66,7 +66,9 @@ func notifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newCha
 			continue
 		}
 
+		// TODO rework or merge
 		copied.CanEdit = null.BoolFrom(admin)
+		copied.CanLeave = null.BoolFrom(!admin)
 
 		notification := CentrifugeNotification{
 			Payload:   copied,

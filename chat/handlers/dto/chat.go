@@ -12,4 +12,5 @@ type ChatDto struct {
 	ParticipantIds     []int64   `json:"participantIds"`
 	Participants       []*User   `json:"participants"`
 	CanEdit            null.Bool `json:"canEdit"`
+	CanLeave           null.Bool `json:"canLeave"`
 }

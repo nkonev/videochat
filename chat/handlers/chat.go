@@ -90,8 +90,8 @@ func GetChats(db db.DB, restClient client.RestClient) func(c echo.Context) error
 	}
 }
 
-func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) (*ChatDto, error) {
-	if cc, err := dbR.GetChatWithParticipants(userPrincipalDto.UserId, chatId, userPrincipalDto); err != nil {
+func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Context, chatId int64, behalfParticipantId int64) (*ChatDto, error) {
+	if cc, err := dbR.GetChatWithParticipants(behalfParticipantId, chatId); err != nil {
 		return nil, err
 	} else {
 		if cc == nil {
@@ -122,7 +122,7 @@ func GetChat(dbR db.DB, restClient client.RestClient) func(c echo.Context) error
 			return err
 		}
 
-		if chat, err := getChat(&dbR, restClient, c, chatId, userPrincipalDto); err != nil {
+		if chat, err := getChat(&dbR, restClient, c, chatId, userPrincipalDto.UserId); err != nil {
 			return err
 		} else {
 			if chat == nil {
@@ -143,6 +143,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User) *ChatDto {
 		Participants:       users,
 		CanEdit:            null.BoolFrom(c.IsAdmin),
 		LastUpdateDateTime: c.LastUpdateDateTime,
+		CanLeave:           null.BoolFrom(!c.IsAdmin),
 	}
 }
 
@@ -182,7 +183,7 @@ func CreateChat(dbR db.DB, notificator notifications.Notifications, restClient c
 				}
 			}
 
-			responseDto, err := getChat(tx, restClient, c, id, userPrincipalDto)
+			responseDto, err := getChat(tx, restClient, c, id, userPrincipalDto.UserId)
 			if err != nil {
 				return err
 			}
@@ -255,6 +256,20 @@ func contains(ids []int64, elem int64) bool {
 	return getIndexOf(ids, elem) != -1
 }
 
+func remove(ids []int64, elem int64) []int64 {
+	if !contains(ids, elem) {
+		return ids
+	} else {
+		var newArr = []int64{}
+		for _, id := range ids {
+			if id != elem {
+				newArr = append(newArr, id)
+			}
+		}
+		return newArr
+	}
+}
+
 func EditChat(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(EditChatDto)
@@ -314,12 +329,49 @@ func EditChat(dbR db.DB, notificator notifications.Notifications, restClient cli
 				}
 			}
 
-			if responseDto, err := getChat(tx, restClient, c, bindTo.Id, userPrincipalDto); err != nil {
+			if responseDto, err := getChat(tx, restClient, c, bindTo.Id, userPrincipalDto.UserId); err != nil {
 				return err
 			} else {
 				notificator.NotifyAboutNewChat(c, responseDto, userIdsToNotifyAboutChatCreated, tx)
 				notificator.NotifyAboutDeleteChat(c, responseDto, userIdsToNotifyAboutChatDeleted, tx)
 				notificator.NotifyAboutChangeChat(c, responseDto, userIdsToNotifyAboutChatChanged, tx)
+				return c.JSON(http.StatusAccepted, responseDto)
+			}
+		})
+		if errOuter != nil {
+			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
+		}
+		return errOuter
+	}
+}
+
+func LeaveChat(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		chatId, err := GetPathParamAsInt64(c, "id")
+		if err != nil {
+			return err
+		}
+
+		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+		if !ok || userPrincipalDto == nil {
+			GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+			return errors.New("Error during getting auth context")
+		}
+
+		errOuter := db.Transact(dbR, func(tx *db.Tx) error {
+			if err := tx.DeleteParticipant(userPrincipalDto.UserId, chatId); err != nil {
+				return err
+			}
+
+			firstUser, err2 := tx.GetFirstParticipant(chatId)
+			if err2 != nil {
+				return err2
+			}
+			if responseDto, err := getChat(tx, restClient, c, chatId, firstUser); err != nil {
+				return err
+			} else {
+				notificator.NotifyAboutChangeChat(c, responseDto, responseDto.ParticipantIds, tx)
+				notificator.NotifyAboutDeleteChat(c, responseDto, []int64{userPrincipalDto.UserId}, tx)
 				return c.JSON(http.StatusAccepted, responseDto)
 			}
 		})

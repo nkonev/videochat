@@ -18,7 +18,7 @@ type Chat struct {
 type ChatWithParticipants struct {
 	Chat
 	ParticipantsIds []int64
-	IsAdmin			bool
+	IsAdmin         bool
 }
 
 // CreateChat creates a new chat.
@@ -62,18 +62,18 @@ func (db *DB) GetChats(participantId int64, limit int, offset int, searchString 
 	}
 }
 
-func convertToWithParticipants(db CommonOperations, chat *Chat, userPrincipalDto *auth.AuthResult) (*ChatWithParticipants, error) {
+func convertToWithParticipants(db CommonOperations, chat *Chat, behalfUserId int64) (*ChatWithParticipants, error) {
 	if ids, err := db.GetParticipantIds(chat.Id); err != nil {
 		return nil, err
 	} else {
-		admin, err := db.IsAdmin(userPrincipalDto.UserId, chat.Id)
+		admin, err := db.IsAdmin(behalfUserId, chat.Id)
 		if err != nil {
 			return nil, err
 		}
 		ccc := &ChatWithParticipants{
 			Chat:            *chat,
 			ParticipantsIds: ids,
-			IsAdmin: admin,
+			IsAdmin:         admin,
 		}
 		return ccc, nil
 	}
@@ -86,7 +86,7 @@ func (db *DB) GetChatsWithParticipants(participantId int64, limit int, offset in
 	} else {
 		list := make([]*ChatWithParticipants, 0)
 		for _, cc := range chats {
-			if ccc, err := convertToWithParticipants(db, cc, userPrincipalDto); err != nil {
+			if ccc, err := convertToWithParticipants(db, cc, userPrincipalDto.UserId); err != nil {
 				return nil, err
 			} else {
 				list = append(list, ccc)
@@ -96,21 +96,21 @@ func (db *DB) GetChatsWithParticipants(participantId int64, limit int, offset in
 	}
 }
 
-func (tx *Tx) GetChatWithParticipants(participantId, chatId int64, userPrincipalDto *auth.AuthResult) (*ChatWithParticipants, error) {
-	return getChatWithParticipantsCommon(tx, participantId, chatId, userPrincipalDto)
+func (tx *Tx) GetChatWithParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
+	return getChatWithParticipantsCommon(tx, behalfParticipantId, chatId)
 }
 
-func (db *DB) GetChatWithParticipants(participantId, chatId int64, userPrincipalDto *auth.AuthResult) (*ChatWithParticipants, error) {
-	return getChatWithParticipantsCommon(db, participantId, chatId, userPrincipalDto)
+func (db *DB) GetChatWithParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
+	return getChatWithParticipantsCommon(db, behalfParticipantId, chatId)
 }
 
-func getChatWithParticipantsCommon(commonOps CommonOperations, participantId, chatId int64, userPrincipalDto *auth.AuthResult) (*ChatWithParticipants, error) {
-	if chat, err := commonOps.GetChat(participantId, chatId); err != nil {
+func getChatWithParticipantsCommon(commonOps CommonOperations, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
+	if chat, err := commonOps.GetChat(behalfParticipantId, chatId); err != nil {
 		return nil, err
 	} else if chat == nil {
 		return nil, nil
 	} else {
-		return convertToWithParticipants(commonOps, chat, userPrincipalDto)
+		return convertToWithParticipants(commonOps, chat, behalfParticipantId)
 	}
 }
 

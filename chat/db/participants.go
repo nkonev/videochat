@@ -21,11 +21,6 @@ func (tx *Tx) DeleteParticipant(userId int64, chatId int64) error {
 	return err
 }
 
-func (tx *Tx) DeleteParticipantsExcept(userId int64, chatId int64) error {
-	_, err := tx.Exec(`DELETE FROM chat_participant WHERE chat_id = $1 AND user_id != $2`, chatId, userId)
-	return err
-}
-
 func getParticipantIdsCommon(qq CommonOperations, chatId int64) ([]int64, error) {
 	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1", chatId); err != nil {
 		return nil, err
@@ -78,5 +73,15 @@ func (tx *Tx) IsParticipant(userId int64, chatId int64) (bool, error) {
 		return false, err
 	} else {
 		return exists, nil
+	}
+}
+
+func (tx *Tx) GetFirstParticipant(chatId int64) (int64, error) {
+	var pid int64
+	row := tx.QueryRow(`SELECT user_id FROM chat_participant WHERE chat_id = $1 LIMIT 1`, chatId)
+	if err := row.Scan(&pid); err != nil {
+		return 0, err
+	} else {
+		return pid, nil
 	}
 }

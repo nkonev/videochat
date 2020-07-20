@@ -10,10 +10,11 @@
                     <v-list-item-title v-html="item.name"></v-list-item-title>
                     <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
-                <v-list-item-action v-if="item.canEdit">
+                <v-list-item-action>
                     <v-container>
-                        <v-btn text color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
-                        <v-btn text @click="deleteChat(item)"><v-icon dark>mdi-delete</v-icon></v-btn>
+                        <v-btn v-if="item.canEdit" text color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
+                        <v-btn v-if="item.canEdit" text @click="deleteChat(item)"><v-icon dark>mdi-delete</v-icon></v-btn>
+                        <v-btn v-if="item.canLeave" text @click="leaveChat(item)"><v-icon dark>mdi-exit-run</v-icon></v-btn>
                     </v-container>
                 </v-list-item-action>
             </v-list-item>
@@ -127,7 +128,10 @@
             },
             deleteChat(chat) {
                 bus.$emit(OPEN_CHAT_DELETE, chat);
-            }
+            },
+            leaveChat(chat) {
+                axios.put(`/api/chat/${chat.id}/leave`)
+            },
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadItems);
