@@ -93,6 +93,13 @@
     import debounce from "lodash/debounce";
     import {root_name} from "./routes";
     import ChatDelete from "./ChatDelete";
+    import Vue from 'vue'
+
+    import { library } from '@fortawesome/fontawesome-svg-core'
+    import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+    import { faFacebook, faVk } from '@fortawesome/free-brands-svg-icons'
+    library.add(faFacebook, faVk);
+    Vue.component('font-awesome-icon', FontAwesomeIcon) // Register component globally
 
     export default {
         data () {
