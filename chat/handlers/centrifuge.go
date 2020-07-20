@@ -239,7 +239,7 @@ func checkPermissions(dbs db.DB, userId string, channelId int64, channelName str
 			return errors.New(fmt.Sprintf("User %v not found among participants", userId))
 		}
 	}
-	if utils.CHANNEL_PREFIX_CHAT == channelName {
+	if utils.CHANNEL_PREFIX_CHAT_MESSAGES == channelName {
 		if ids, err := dbs.GetParticipantIds(channelId); err != nil {
 			return err
 		} else {
@@ -263,12 +263,12 @@ func getChannelId(channel string) (int64, string, error) {
 		} else {
 			return parseInt64, utils.CHANNEL_PREFIX_SIGINALING, nil
 		}
-	} else if strings.HasPrefix(channel, utils.CHANNEL_PREFIX_CHAT) {
-		s := channel[len(utils.CHANNEL_PREFIX_CHAT):]
+	} else if strings.HasPrefix(channel, utils.CHANNEL_PREFIX_CHAT_MESSAGES) {
+		s := channel[len(utils.CHANNEL_PREFIX_CHAT_MESSAGES):]
 		if parseInt64, err := utils.ParseInt64(s); err != nil {
 			return 0, "", err
 		} else {
-			return parseInt64, utils.CHANNEL_PREFIX_CHAT, nil
+			return parseInt64, utils.CHANNEL_PREFIX_CHAT_MESSAGES, nil
 		}
 	} else {
 		return 0, "", errors.New("Subscription to unexpected channel: '" + channel + "'")

@@ -86,7 +86,7 @@ func notifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newCha
 }
 
 func (not *notifictionsImpl) NotifyAboutNewMessage(c echo.Context, chatId int64, message *dto.DisplayMessageDto, userPrincipalDto *auth.AuthResult) {
-	chatChannel := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT, chatId)
+	chatChannel := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
 	notification := CentrifugeNotification{
 		Payload:   *message,
 		EventType: "message_created",

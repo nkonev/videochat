@@ -85,7 +85,7 @@
         },
         data() {
             return {
-                chatSubscription: null,
+                chatMessagesSubscription: null,
                 signalingSubscription: null,
 
                 pc: null, // peer connection
@@ -348,7 +348,7 @@
             this.localVideo = document.querySelector('#localVideo');
             this.remoteVideo = document.querySelector('#remoteVideo');
 
-            this.chatSubscription = this.centrifuge.subscribe("chat"+this.chatId, (message) => {
+            this.chatMessagesSubscription = this.centrifuge.subscribe("chatMessages"+this.chatId, (message) => {
                 // we can rely only on data
                 // this.items = [...this.items, JSON.stringify(getData(message))];
                 // TODO edit and delete
@@ -430,7 +430,7 @@
         beforeDestroy() {
             console.log("Cleaning up");
             this.hangup();
-            this.chatSubscription.unsubscribe();
+            this.chatMessagesSubscription.unsubscribe();
             this.signalingSubscription.unsubscribe();
         }
     }
