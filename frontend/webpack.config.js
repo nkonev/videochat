@@ -57,13 +57,10 @@ module.exports = (env, argv) => {
                 },
                 {
                     test: /\.css$/,
-                    use: [
-                        {
-                            loader: CssExtractPlugin.loader,
-                            options: {
-                                hot: process.env.NODE_ENV === 'development',
-                            },
-                        },
+                    use: [ // https://vue-loader.vuejs.org/ru/guide/extract-css.html#webpack-4
+                        argv.mode !== 'production'
+                            ? 'vue-style-loader'
+                            : CssExtractPlugin.loader,
                         'css-loader',
                     ]
                 },
@@ -82,8 +79,10 @@ module.exports = (env, argv) => {
                 {
                     test: /\.styl|stylus$/,
                     use: [
-                        CssExtractPlugin.loader,
-                        "css-loader?sourceMap",
+                        argv.mode !== 'production'
+                            ? 'vue-style-loader'
+                            : CssExtractPlugin.loader,
+                        "css-loader",
                         'stylus-loader'
                     ]
                 },
@@ -109,8 +108,9 @@ module.exports = (env, argv) => {
                 {
                     test: /\.s(c|a)ss$/,
                     use: [
-                        'vue-style-loader',
-                        CssExtractPlugin.loader,
+                        argv.mode !== 'production'
+                            ? 'vue-style-loader'
+                            : CssExtractPlugin.loader,
                         'css-loader',
                         {
                             loader: 'sass-loader',
