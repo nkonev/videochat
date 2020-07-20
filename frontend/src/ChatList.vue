@@ -12,9 +12,9 @@
                 </v-list-item-content>
                 <v-list-item-action>
                     <v-container>
-                        <v-btn v-if="item.canEdit" text color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
-                        <v-btn v-if="item.canEdit" text @click="deleteChat(item)"><v-icon dark>mdi-delete</v-icon></v-btn>
-                        <v-btn v-if="item.canLeave" text @click="leaveChat(item)"><v-icon dark>mdi-exit-run</v-icon></v-btn>
+                        <v-btn v-if="item.canEdit" text color="primary" @click="editChat(item)"><v-icon dark>{{mdiLeadPencil}}</v-icon></v-btn>
+                        <v-btn v-if="item.canEdit" text @click="deleteChat(item)"><v-icon dark>{{mdiDelete}}</v-icon></v-btn>
+                        <v-btn v-if="item.canLeave" text @click="leaveChat(item)"><v-icon dark>{{mdiExitRun}}</v-icon></v-btn>
                     </v-container>
                 </v-list-item-action>
             </v-list-item>
@@ -47,6 +47,7 @@
     import axios from "axios";
     import {mapGetters} from 'vuex'
     import {GET_SEARCH_STRING} from "./store";
+    import { mdiLeadPencil, mdiDelete, mdiExitRun } from '@mdi/js'
 
     export default {
         mixins: [infinityListMixin()],
@@ -58,7 +59,10 @@
         },
         data() {
             return {
-                group: -1
+                group: -1,
+                mdiLeadPencil,
+                mdiDelete,
+                mdiExitRun
             }
         },
         methods:{

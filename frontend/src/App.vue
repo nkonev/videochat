@@ -49,7 +49,7 @@
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
 
             <v-btn icon @click="createChat">
-                <v-icon>mdi-plus-circle-outline</v-icon>
+                <v-icon>{{mdiPlusCircleOutline}}</v-icon>
             </v-btn>
 
             <v-spacer></v-spacer>
@@ -57,7 +57,7 @@
             <v-spacer></v-spacer>
 
             <v-card light v-if="showSearch">
-                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchChatString"></v-text-field>
+                <v-text-field :prepend-icon="mdiMagnify" hide-details single-line v-model="searchChatString"></v-text-field>
             </v-card>
         </v-app-bar>
 
@@ -93,28 +93,33 @@
     import debounce from "lodash/debounce";
     import {root_name} from "./routes";
     import ChatDelete from "./ChatDelete";
-    import Vue from 'vue'
 
+    import Vue from 'vue'
     import { library } from '@fortawesome/fontawesome-svg-core'
     import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
     import { faFacebook, faVk } from '@fortawesome/free-brands-svg-icons'
     library.add(faFacebook, faVk);
     Vue.component('font-awesome-icon', FontAwesomeIcon) // Register component globally
 
+    import { mdiPlusCircleOutline, mdiHomeCity, mdiAccount, mdiLogout, mdiMagnify } from '@mdi/js'
+
     export default {
         data () {
             return {
                 title: "",
                 appBarItems: [
-                    { title: 'Chats', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
-                    { title: 'My Account', icon: 'mdi-account', clickFunction: ()=>{}, requireAuthenticated: true },
-                    { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
+                    { title: 'Chats', icon: mdiHomeCity, clickFunction: this.goHome, requireAuthenticated: false },
+                    { title: 'My Account', icon: mdiAccount, clickFunction: ()=>{}, requireAuthenticated: true },
+                    { title: 'Logout', icon: mdiLogout, clickFunction: this.logout, requireAuthenticated: true },
                 ],
                 drawer: true,
                 lastError: "",
                 showAlert: false,
                 searchChatString: "",
                 showSearch: false,
+
+                mdiPlusCircleOutline,
+                mdiMagnify,
             }
         },
         components:{
