@@ -58,9 +58,7 @@ module.exports = (env, argv) => {
                 {
                     test: /\.css$/,
                     use: [ // https://vue-loader.vuejs.org/ru/guide/extract-css.html#webpack-4
-                        argv.mode !== 'production'
-                            ? 'vue-style-loader'
-                            : CssExtractPlugin.loader,
+                        CssExtractPlugin.loader,
                         'css-loader',
                     ]
                 },
@@ -79,8 +77,10 @@ module.exports = (env, argv) => {
                 {
                     test: /\.styl|stylus$/,
                     use: [
-                        CssExtractPlugin.loader,
-                        "css-loader?sourceMap",
+                        argv.mode !== 'production'
+                            ? 'vue-style-loader'
+                            : CssExtractPlugin.loader,
+                        "css-loader",
                         'stylus-loader'
                     ]
                 },
@@ -88,10 +88,10 @@ module.exports = (env, argv) => {
                     test: /\.(ttf|eot|woff|woff2)$/,
                     use: [
                         {
-                            loader: 'url-loader',
+                            loader: 'file-loader',
                             options: {
-                                name: '[path][name].[ext]',
-                                limit: '4096'
+                                name: '[name].[ext]',
+                                outputPath: 'fonts/'
                             }
                         }
                     ],

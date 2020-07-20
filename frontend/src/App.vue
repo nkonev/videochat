@@ -84,6 +84,7 @@
 </template>
 
 <script>
+    import 'typeface-roboto'
     import axios from 'axios';
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
@@ -183,7 +184,3 @@
 
     }
 </script>
-
-<style lang="stylus">
-    @import '~typeface-roboto/index.css'
-</style>
