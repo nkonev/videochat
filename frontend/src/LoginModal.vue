@@ -50,8 +50,8 @@
                         >
                             Login
                         </v-btn>
-                        <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk' }"></font-awesome-icon>
-                        <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }"></font-awesome-icon>
+                        <v-btn><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk', size: '100px'}"></font-awesome-icon></v-btn>
+                        <v-btn><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }"></font-awesome-icon></v-btn>
                     </v-form>
                 </v-card-text>
 

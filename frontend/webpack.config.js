@@ -59,33 +59,19 @@ module.exports = (env, argv) => {
                     test: /\.css$/,
                     use: [ // https://vue-loader.vuejs.org/ru/guide/extract-css.html#webpack-4
                         CssExtractPlugin.loader,
-                        'css-loader',
+                        "css-loader?sourceMap",
                     ]
-                },
-                {
-                    test: /\.(svg)$/,
-                    exclude: /fonts/, /* dont want svg fonts from fonts folder to be included */
-                    use: [
-                        {
-                            loader: 'svg-url-loader',
-                            options: {
-                                noquotes: true,
-                            },
-                        },
-                    ],
                 },
                 {
                     test: /\.styl|stylus$/,
                     use: [
-                        argv.mode !== 'production'
-                            ? 'vue-style-loader'
-                            : CssExtractPlugin.loader,
-                        "css-loader",
+                        CssExtractPlugin.loader,
+                        "css-loader?sourceMap",
                         'stylus-loader'
                     ]
                 },
                 {
-                    test: /\.(ttf|eot|woff|woff2)$/,
+                    test: /\.(ttf|eot|woff|woff2|svg)$/,
                     use: [
                         {
                             loader: 'file-loader',
@@ -106,10 +92,8 @@ module.exports = (env, argv) => {
                 {
                     test: /\.s(c|a)ss$/,
                     use: [
-                        argv.mode !== 'production'
-                            ? 'vue-style-loader'
-                            : CssExtractPlugin.loader,
-                        'css-loader',
+                        CssExtractPlugin.loader,
+                        'css-loader?sourceMap',
                         {
                             loader: 'sass-loader',
                             // Requires sass-loader@^8.0.0
