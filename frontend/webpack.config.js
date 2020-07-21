@@ -27,7 +27,6 @@ module.exports = (env, argv) => {
         console.log("Starting LiveReloadPlugin");
         pluginsArray.push(
             new LiveReloadPlugin({
-                appendScriptTag: true,
                 port: 35736
             })
         );
