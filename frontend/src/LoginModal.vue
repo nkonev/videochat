@@ -50,8 +50,8 @@
                         >
                             Login
                         </v-btn>
-                        <v-btn><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-4 c-btn-vk"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-4 c-btn-fb"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
                     </v-form>
                 </v-card-text>
 
@@ -146,3 +146,19 @@
         }
     }
 </script>
+
+<style lang="stylus">
+    $fbColor=#3B5998
+    $vkColor=#45668e
+
+    .c-btn-fb {
+        border-color: $fbColor !important
+        background: $fbColor !important
+        color: white !important
+    }
+    .c-btn-vk {
+        border-color: $vkColor !important
+        background: $vkColor !important
+        color: white !important
+    }
+</style>
