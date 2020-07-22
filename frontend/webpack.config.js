@@ -4,12 +4,14 @@ const LiveReloadPlugin = require('webpack-livereload-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin')
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const contentStaticDest = path.join(__dirname, "../frontend-nginx");
 const contentBase = path.join(contentStaticDest, "/public/build");
 
 module.exports = (env, argv) => {
     const pluginsArray = [
+        // new BundleAnalyzerPlugin({defaultSizes: "parsed"}),
         new CopyPlugin({patterns: [
             { from: './static', to: contentStaticDest },
         ]}),

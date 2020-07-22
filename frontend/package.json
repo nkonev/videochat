@@ -7,7 +7,7 @@
     "@fortawesome/free-brands-svg-icons": "^5.14.0",
     "@fortawesome/free-solid-svg-icons": "^5.14.0",
     "@fortawesome/vue-fontawesome": "^0.1.10",
-    "@mdi/js": "^5.3.45",
+    "@mdi/font": "^5.3.45",
     "axios": "^0.19.2",
     "centrifuge": "^2.6.2",
     "lodash": "^4.17.15",
@@ -55,6 +55,7 @@
     "vue-template-compiler": "^2.6.11",
     "vuetify-loader": "^1.5.0",
     "webpack": "^4.43.0",
+    "webpack-bundle-analyzer": "^3.5.2",
     "webpack-cli": "^3.3.12",
     "webpack-livereload-plugin": "^2.3.0"
   },
