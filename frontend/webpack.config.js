@@ -5,15 +5,22 @@ const CopyPlugin = require('copy-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin')
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 const contentStaticDest = path.join(__dirname, "../frontend-nginx");
-const contentBase = path.join(contentStaticDest, "/public/build");
+const contentBase = path.join(contentStaticDest, "/build");
 
 module.exports = (env, argv) => {
     const pluginsArray = [
         // new BundleAnalyzerPlugin({defaultSizes: "parsed"}),
+        new HtmlWebpackPlugin({
+            livereload: argv.mode === 'development' ? `<script src="http://localhost:35736/livereload.js"></script>` : "",
+            // Load a custom template (lodash by default)
+            template: './src/index.template.html',
+            inject: false
+        }),
         new CopyPlugin({patterns: [
-            { from: './static', to: contentStaticDest },
+            { from: './static', to: contentBase },
         ]}),
         new VueLoaderPlugin(),
         new VuetifyLoaderPlugin(),
