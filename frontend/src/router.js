@@ -1,9 +1,10 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import {root_name, root, chat_name} from "./routes";
+import {root_name, root, chat_name, profile_name} from "./routes";
 import Error404 from "./Error404";
 import ChatList from "./ChatList";
 import ChatView from "./ChatView";
+import UserProfile from "./UserProfile";
 
 // This installs <router-view> and <router-link>,
 // and injects $router and $route to all router-enabled child components
@@ -16,6 +17,7 @@ const router = new Router({
     routes: [
         { name: root_name, path: root, component: ChatList},
         { name: chat_name, path: '/chat/:id', component: ChatView},
+        { name: profile_name, path: '/profile', component: UserProfile},
         { path: '*', component: Error404 },
     ]
 });

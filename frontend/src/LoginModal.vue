@@ -167,17 +167,5 @@
 </script>
 
 <style lang="stylus">
-    $fbColor=#3B5998
-    $vkColor=#45668e
-
-    .c-btn-fb {
-        border-color: $fbColor !important
-        background: $fbColor !important
-        color: white !important
-    }
-    .c-btn-vk {
-        border-color: $vkColor !important
-        background: $vkColor !important
-        color: white !important
-    }
+    @import "OAuth2.styl"
 </style>

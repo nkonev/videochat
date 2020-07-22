@@ -92,7 +92,7 @@
     import bus, {CHANGE_TITLE, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
-    import {root_name} from "./routes";
+    import {profile_name, root_name} from "./routes";
     import ChatDelete from "./ChatDelete";
     import Vue from 'vue'
 
@@ -109,7 +109,7 @@
                 title: "",
                 appBarItems: [
                     { title: 'Chats', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
-                    { title: 'My Account', icon: 'mdi-account', clickFunction: ()=>{}, requireAuthenticated: true },
+                    { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
                     { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
                 ],
                 drawer: true,
@@ -137,6 +137,9 @@
             },
             goHome() {
                 this.$router.push(({ name: root_name}))
+            },
+            goProfile() {
+                this.$router.push(({ name: profile_name}))
             },
             onError(errText){
                 this.showAlert = true;
