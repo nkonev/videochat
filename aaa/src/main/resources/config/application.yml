@@ -102,7 +102,7 @@ spring.datasource:
     name: aaa_ds
     type: org.apache.tomcat.jdbc.pool.DataSource
     # https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters
-    url: jdbc:postgresql://127.0.0.1:35432/aaa?connectTimeout=10&socketTimeout=40
+    url: jdbc:postgresql://127.0.0.1:35432/aaa?connectTimeout=10&socketTimeout=40&ApplicationName=aaa-app
     username: aaa
     password: "aaaPazZw0rd"
     driverClassName: org.postgresql.Driver
@@ -121,6 +121,7 @@ spring.datasource:
       validationQuery: SELECT 1;
       validationQueryTimeout: 4
       logValidationErrors: true
+      # db-properties:
 
 # https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#howto-execute-flyway-database-migrations-on-startup
 # https://flywaydb.org/documentation/configfiles

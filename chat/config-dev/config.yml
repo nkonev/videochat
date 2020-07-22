@@ -15,7 +15,8 @@ auth:
     - "^/public.*"
 
 postgresql:
-  url: "postgres://chat:chatPazZw0rd@localhost:35432/chat?sslmode=disable"
+  # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+  url: "postgres://chat:chatPazZw0rd@localhost:35432/chat?sslmode=disable&application_name=chat-app"
   maxOpenConnections: 16
   maxIdleConnections: 4
   maxLifetime: 30s
