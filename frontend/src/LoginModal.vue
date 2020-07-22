@@ -50,8 +50,8 @@
                         >
                             Login
                         </v-btn>
-                        <v-btn class="mr-4 c-btn-vk"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn class="mr-4 c-btn-fb"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-4 c-btn-vk"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'" @click="loginVk()"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-4 c-btn-fb"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'" @click="loginFb()"></font-awesome-icon></v-btn>
                     </v-form>
                 </v-card-text>
 
@@ -96,6 +96,12 @@
             },
             hideLoginModal() {
                 this.$data.show = false;
+            },
+            loginVk() {
+                window.location.href = '/api/login/oauth2/vkontakte';
+            },
+            loginFb() {
+                window.location.href = '/api/login/oauth2/facebook';
             },
 
             validate () {

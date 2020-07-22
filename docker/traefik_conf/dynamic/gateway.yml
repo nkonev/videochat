@@ -19,7 +19,7 @@ http:
       middlewares:
         - "retry-middleware"
     aaa-router:
-      rule: "Path(`/api/login`) || Path(`/api/logout`) || Path(`/api/profile`) || PathPrefix(`/api/user`) || PathPrefix(`/api/image/user/avatar`)"
+      rule: "PathPrefix(`/api/login`) || Path(`/api/logout`) || Path(`/api/profile`) || PathPrefix(`/api/user`) || PathPrefix(`/api/image/user/avatar`)"
       service: aaa-service
       middlewares:
         - "retry-middleware"
