@@ -45,13 +45,15 @@
                         <v-btn
                                 :disabled="!valid"
                                 color="success"
-                                class="mr-4"
+                                class="mr-2"
                                 @click="validateAndSend"
+                                min-width="80px"
+                                :loading="loadingLogin"
                         >
                             Login
                         </v-btn>
-                        <v-btn class="mr-4 c-btn-vk"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'" @click="loginVk()"></font-awesome-icon></v-btn>
-                        <v-btn class="mr-4 c-btn-fb"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'" @click="loginFb()"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-2 c-btn-vk" :loading="loadingVk" min-width="80px"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'" @click="loginVk()"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-2 c-btn-fb" :loading="loadingFb" min-width="80px"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'" @click="loginFb()"></font-awesome-icon></v-btn>
                     </v-form>
                 </v-card-text>
 
@@ -71,6 +73,10 @@
                 show: false,
                 showAlert: false,
                 loginError: "",
+
+                loadingLogin: false,
+                loadingVk: false,
+                loadingFb: false,
 
                 valid: true,
                 username: '',
@@ -98,9 +104,11 @@
                 this.$data.show = false;
             },
             loginVk() {
+                this.loadingVk = true;
                 window.location.href = '/api/login/oauth2/vkontakte';
             },
             loginFb() {
+                this.loadingFb = true;
                 window.location.href = '/api/login/oauth2/facebook';
             },
 
@@ -114,6 +122,7 @@
                 this.$refs.form.resetValidation()
             },
             validateAndSend() {
+                this.loadingLogin = true;
                 const valid = this.validate();
                 console.log("Valid", valid);
                 if (valid) {
@@ -142,7 +151,11 @@
                             } else {
                                 this.$data.loginError = "Unknown error " + error.response.status;
                             }
+                        }).finally(() => {
+                            this.loadingLogin = false;
                         });
+                } else {
+                    this.loadingLogin = false;
                 }
             },
             hideAlert() {
