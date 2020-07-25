@@ -3,7 +3,7 @@ import App from './App.vue'
 import vuetify from '@/plugins/vuetify'
 import {setupCentrifuge} from "@/centrifugeConnection"
 import axios from "axios";
-import bus, {CHAT_ADD, CHAT_DELETED, CHAT_EDITED, UNAUTHORIZED} from './bus';
+import bus, {CHAT_ADD, CHAT_DELETED, CHAT_EDITED, MESSAGE_ADD, MESSAGE_DELETED, UNAUTHORIZED} from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
 import {getData, getProperData} from "./centrifugeConnection";
@@ -36,6 +36,15 @@ const vm = new Vue({
         const d = getProperData(ctx);
         bus.$emit(CHAT_DELETED, d);
       }
+
+      if (getData(ctx).type === 'message_created') {
+        const d = getProperData(ctx);
+        bus.$emit(MESSAGE_ADD, d);
+      } else if (getData(ctx).type === 'message_deleted') {
+        const d = getProperData(ctx);
+        bus.$emit(MESSAGE_DELETED, d);
+      }
+
     });
   },
   // https://ru.vuejs.org/v2/guide/render-function.html

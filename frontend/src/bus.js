@@ -10,3 +10,5 @@ export const OPEN_CHAT_EDIT = "openChatEdit";
 export const OPEN_CHAT_DELETE = "openChatDelete";
 export const CHAT_SEARCH_CHANGED = "chatSearchChanged";
 export const CHANGE_TITLE = "changeTitle";
+export const MESSAGE_ADD = "messageAdd";
+export const MESSAGE_DELETED = "messageDeleted";

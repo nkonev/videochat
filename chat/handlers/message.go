@@ -163,9 +163,9 @@ func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications
 				return err
 			}
 
-			var ownerIds []int64
-			ownerIds = append(ownerIds, userPrincipalDto.UserId)
-			users, err := restClient.GetUsers(ownerIds, c.Request().Context())
+			var ownerIdArr []int64 // actually contains 1 element
+			ownerIdArr = append(ownerIdArr, userPrincipalDto.UserId)
+			users, err := restClient.GetUsers(ownerIdArr, c.Request().Context())
 			if err != nil {
 				GetLogEntry(c.Request()).Errorf("Unable to get user %v", err)
 			}
@@ -185,7 +185,11 @@ func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications
 				CanEdit:        true,
 			}
 
-			notificator.NotifyAboutNewMessage(c, chatId, dm, userPrincipalDto)
+			ids, err := tx.GetParticipantIds(chatId)
+			if err != nil {
+				return err
+			}
+			notificator.NotifyAboutNewMessage(c, ids, chatId, dm)
 			return c.JSON(http.StatusCreated, dm)
 		})
 		if errOuter != nil {
@@ -277,7 +281,7 @@ func DeleteMessage(dbR db.DB, notificator notifications.Notifications) func(c ec
 			if ids, err := dbR.GetParticipantIds(chatId); err != nil {
 				return err
 			} else {
-				notificator.NotifyAboutDeleteMessage(c, chatId, cd, ids)
+				notificator.NotifyAboutDeleteMessage(c, ids, chatId, cd)
 			}
 			return c.JSON(http.StatusAccepted, &utils.H{"id": messageId})
 		}

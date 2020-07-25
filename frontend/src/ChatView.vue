@@ -54,7 +54,7 @@
     } from "./InfinityListMixin";
     import {getData, getProperData} from './centrifugeConnection'
     import Vue from 'vue'
-    import bus, {CHANGE_TITLE} from "./bus";
+    import bus, {CHANGE_TITLE, MESSAGE_ADD, MESSAGE_DELETED} from "./bus";
 
     const setProperData = (message) => {
         return {
@@ -178,6 +178,31 @@
             isMyMessage (message) {
                 return message.metadata && this.centrifugeSessionId == message.metadata.originatorClientId
             },
+            onNewMessage(dto) {
+                if (dto.chatId == this.chatId) {
+                    this.addItem(dto);
+                    this.scrollDown();
+                } else {
+                    console.log("Skipping", dto)
+                }
+            },
+            onDeleteMessage(dto) {
+                if (dto.chatId == this.chatId) {
+                    this.removeItem(dto);
+                } else {
+                    console.log("Skipping", dto)
+                }
+            },
+            scrollDown() {
+                Vue.nextTick(()=>{
+                    var myDiv = document.getElementById("messagesScroller");
+                    console.log("myDiv.scrollTop", myDiv.scrollTop, "myDiv.scrollHeight", myDiv.scrollHeight);
+                    myDiv.scrollTop = myDiv.scrollHeight;
+                });
+            },
+
+
+
             maybeStart(){
                 console.log('>>>>>>> maybeStart() ', this.isStarted, this.localStream);
                 if (!this.isStarted && this.localStream) {
@@ -356,20 +381,11 @@
             this.remoteVideo = document.querySelector('#remoteVideo');
 
             this.chatMessagesSubscription = this.centrifuge.subscribe("chatMessages"+this.chatId, (message) => {
-                // we can rely only on data
                 // this.items = [...this.items, JSON.stringify(getData(message))];
-                // TODO edit and delete
+
+                // actually it's global notification, so we just log it
                 const data = getData(message);
-                if (data.type === 'message_created') {
-                    this.addItem(getData(message).payload);
-                } else if (data.type === 'message_deleted') {
-                    this.removeItem(getData(message).payload)
-                }
-                Vue.nextTick(()=>{
-                    var myDiv = document.getElementById("messagesScroller");
-                    console.log("myDiv.scrollTop", myDiv.scrollTop, "myDiv.scrollHeight", myDiv.scrollHeight);
-                    myDiv.scrollTop = myDiv.scrollHeight;
-                });
+                console.log("Got global notification", data)
             });
 
             /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
@@ -421,13 +437,12 @@
                 }
             });
 
-
             this.initDevices();
-
 
             if (location.hostname !== 'localhost') {
                 this.requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
             }
+
 
             bus.$emit(CHANGE_TITLE, `Chat #${this.chatId}`, false);
 
@@ -435,13 +450,17 @@
                 console.log("Got info about chat", data);
                 bus.$emit(CHANGE_TITLE, data.name, false);
             });
-/////////////////////////////////////////////////////////
+            bus.$on(MESSAGE_ADD, this.onNewMessage);
+            bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
         },
         beforeDestroy() {
             console.log("Cleaning up");
             this.hangup();
             this.chatMessagesSubscription.unsubscribe();
             this.signalingSubscription.unsubscribe();
+
+            bus.$off(MESSAGE_ADD, this.onNewMessage);
+            bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
         }
     }
 </script>

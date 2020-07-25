@@ -243,33 +243,6 @@ func DeleteChat(dbR db.DB, notificator notifications.Notifications) func(c echo.
 	}
 }
 
-func getIndexOf(ids []int64, elem int64) int {
-	for i := 0; i < len(ids); i++ {
-		if ids[i] == elem {
-			return i
-		}
-	}
-	return -1
-}
-
-func contains(ids []int64, elem int64) bool {
-	return getIndexOf(ids, elem) != -1
-}
-
-func remove(ids []int64, elem int64) []int64 {
-	if !contains(ids, elem) {
-		return ids
-	} else {
-		var newArr = []int64{}
-		for _, id := range ids {
-			if id != elem {
-				newArr = append(newArr, id)
-			}
-		}
-		return newArr
-	}
-}
-
 func EditChat(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(EditChatDto)
@@ -309,7 +282,7 @@ func EditChat(dbR db.DB, notificator notifications.Notifications, restClient cli
 
 			for _, participantIdFromRequest := range bindTo.ParticipantIds {
 				// not exists in database
-				if !contains(existsChatParticipantIdsFromDatabase, participantIdFromRequest) {
+				if !utils.Contains(existsChatParticipantIdsFromDatabase, participantIdFromRequest) {
 					if err := tx.AddParticipant(participantIdFromRequest, bindTo.Id, false); err != nil {
 						return err
 					}
@@ -321,7 +294,7 @@ func EditChat(dbR db.DB, notificator notifications.Notifications, restClient cli
 
 			for _, participantIdFromDatabase := range existsChatParticipantIdsFromDatabase {
 				// not present in request array and not myself
-				if !contains(bindTo.ParticipantIds, participantIdFromDatabase) && participantIdFromDatabase != userPrincipalDto.UserId {
+				if !utils.Contains(bindTo.ParticipantIds, participantIdFromDatabase) && participantIdFromDatabase != userPrincipalDto.UserId {
 					if err := tx.DeleteParticipant(participantIdFromDatabase, bindTo.Id); err != nil {
 						return err
 					}

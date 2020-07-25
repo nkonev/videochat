@@ -131,3 +131,30 @@ func SetToArray(set map[int64]bool) []int64 {
 	}
 	return ownerIds
 }
+
+func GetIndexOf(ids []int64, elem int64) int {
+	for i := 0; i < len(ids); i++ {
+		if ids[i] == elem {
+			return i
+		}
+	}
+	return -1
+}
+
+func Contains(ids []int64, elem int64) bool {
+	return GetIndexOf(ids, elem) != -1
+}
+
+func Remove(ids []int64, elem int64) []int64 {
+	if !Contains(ids, elem) {
+		return ids
+	} else {
+		var newArr = []int64{}
+		for _, id := range ids {
+			if id != elem {
+				newArr = append(newArr, id)
+			}
+		}
+		return newArr
+	}
+}
