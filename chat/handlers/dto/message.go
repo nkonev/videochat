@@ -13,4 +13,5 @@ type DisplayMessageDto struct {
 	CreateDateTime time.Time `json:"createDateTime"`
 	EditDateTime   null.Time `json:"editDateTime"`
 	Owner          *User     `json:"owner"`
+	CanEdit        bool      `json:"canEdit"`
 }

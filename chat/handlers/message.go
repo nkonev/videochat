@@ -26,8 +26,6 @@ type CreateMessageDto struct {
 	Text string `json:"text"`
 }
 
-type DisplayMessageDto = dto.DisplayMessageDto
-
 func GetMessages(dbR db.DB, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
@@ -57,9 +55,9 @@ func GetMessages(dbR db.DB, restClient client.RestClient) func(c echo.Context) e
 			}
 			var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
 
-			messageDtos := make([]*DisplayMessageDto, 0)
+			messageDtos := make([]*dto.DisplayMessageDto, 0)
 			for _, c := range messages {
-				messageDtos = append(messageDtos, convertToMessageDto(c, owners))
+				messageDtos = append(messageDtos, convertToMessageDto(c, owners, userPrincipalDto))
 			}
 
 			GetLogEntry(c.Request()).Infof("Successfully returning %v messages", len(messageDtos))
@@ -93,16 +91,16 @@ func GetMessage(dbR db.DB) func(c echo.Context) error {
 			if message == nil {
 				return c.NoContent(http.StatusNotFound)
 			}
-			messageDto := convertToMessageDto(message, map[int64]*dto.User{})
+			messageDto := convertToMessageDto(message, map[int64]*dto.User{}, userPrincipalDto)
 			GetLogEntry(c.Request()).Infof("Successfully returning message %v", messageDto)
 			return c.JSON(200, messageDto)
 		}
 	}
 }
 
-func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User) *DisplayMessageDto {
+func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, userPrincipalDto *auth.AuthResult) *dto.DisplayMessageDto {
 	user := owners[dbMessage.OwnerId]
-	return &DisplayMessageDto{
+	return &dto.DisplayMessageDto{
 		Id:             dbMessage.Id,
 		Text:           dbMessage.Text,
 		ChatId:         dbMessage.ChatId,
@@ -110,6 +108,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User) *Dis
 		CreateDateTime: dbMessage.CreateDateTime,
 		EditDateTime:   dbMessage.EditDateTime,
 		Owner:          user,
+		CanEdit:        dbMessage.OwnerId == userPrincipalDto.UserId,
 	}
 }
 
@@ -175,7 +174,7 @@ func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications
 				maybeUser = users[0]
 			}
 
-			dm := &DisplayMessageDto{
+			dm := &dto.DisplayMessageDto{
 				Id:             id,
 				Text:           bindTo.Text,
 				ChatId:         chatId,
@@ -183,6 +182,7 @@ func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications
 				CreateDateTime: createDatetime,
 				EditDateTime:   editDatetime,
 				Owner:          maybeUser,
+				CanEdit:        true,
 			}
 
 			notificator.NotifyAboutNewMessage(c, chatId, dm, userPrincipalDto)
@@ -250,7 +250,7 @@ func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResul
 	}
 }
 
-func DeleteMessage(dbR db.DB) func(c echo.Context) error {
+func DeleteMessage(dbR db.DB, notificator notifications.Notifications) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 		if !ok {
@@ -271,6 +271,14 @@ func DeleteMessage(dbR db.DB) func(c echo.Context) error {
 		if err := dbR.DeleteMessage(messageId, userPrincipalDto.UserId, chatId); err != nil {
 			return err
 		} else {
+			cd := &dto.DisplayMessageDto{
+				Id: messageId,
+			}
+			if ids, err := dbR.GetParticipantIds(chatId); err != nil {
+				return err
+			} else {
+				notificator.NotifyAboutDeleteMessage(c, chatId, cd, ids)
+			}
 			return c.JSON(http.StatusAccepted, &utils.H{"id": messageId})
 		}
 	}

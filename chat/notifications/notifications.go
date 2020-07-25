@@ -19,6 +19,7 @@ type Notifications interface {
 	NotifyAboutDeleteChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64, tx *db.Tx)
 	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64, tx *db.Tx)
 	NotifyAboutNewMessage(c echo.Context, chatId int64, message *dto.DisplayMessageDto, userPrincipalDto *auth.AuthResult)
+	NotifyAboutDeleteMessage(c echo.Context, chatId int64, message *dto.DisplayMessageDto, userIds []int64)
 }
 
 type notifictionsImpl struct {
@@ -38,18 +39,18 @@ type CentrifugeNotification struct {
 }
 
 func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userIds []int64, tx *db.Tx) {
-	notifyCommon(userIds, not, c, newChatDto, "chat_created", tx)
+	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", tx)
 }
 
 func (not *notifictionsImpl) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64, tx *db.Tx) {
-	notifyCommon(userIds, not, c, chatDto, "chat_edited", tx)
+	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", tx)
 }
 
 func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64, tx *db.Tx) {
-	notifyCommon(userIds, not, c, chatDto, "chat_deleted", tx)
+	chatNotifyCommon(userIds, not, c, chatDto, "chat_deleted", tx)
 }
 
-func notifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDto, eventType string, tx *db.Tx) {
+func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDto, eventType string, tx *db.Tx) {
 	for _, participantId := range userIds {
 		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
 		GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
@@ -85,11 +86,11 @@ func notifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newCha
 	}
 }
 
-func (not *notifictionsImpl) NotifyAboutNewMessage(c echo.Context, chatId int64, message *dto.DisplayMessageDto, userPrincipalDto *auth.AuthResult) {
+func messageNotifyCommon(c echo.Context, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
 	chatChannel := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
 	notification := CentrifugeNotification{
 		Payload:   *message,
-		EventType: "message_created",
+		EventType: eventType,
 	}
 	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
 		GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err2)
@@ -99,4 +100,11 @@ func (not *notifictionsImpl) NotifyAboutNewMessage(c echo.Context, chatId int64,
 			GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
 		}
 	}
+}
+func (not *notifictionsImpl) NotifyAboutNewMessage(c echo.Context, chatId int64, message *dto.DisplayMessageDto, userPrincipalDto *auth.AuthResult) {
+	messageNotifyCommon(c, chatId, message, not, "message_created")
+}
+
+func (not *notifictionsImpl) NotifyAboutDeleteMessage(c echo.Context, chatId int64, message *dto.DisplayMessageDto, userIds []int64) {
+	messageNotifyCommon(c, chatId, message, not, "message_deleted")
 }

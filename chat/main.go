@@ -132,7 +132,7 @@ func configureEcho(
 	e.GET("/chat/:id/message/:messageId", handlers.GetMessage(db))
 	e.POST("/chat/:id/message", handlers.PostMessage(db, policy, notificator, restClient))
 	e.PUT("/chat/:id/message", handlers.EditMessage(db, policy))
-	e.DELETE("/chat/:id/message/:messageId", handlers.DeleteMessage(db))
+	e.DELETE("/chat/:id/message/:messageId", handlers.DeleteMessage(db, notificator))
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

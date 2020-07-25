@@ -21,6 +21,9 @@
                                     <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
                                     {{item.text}}
                                 </v-list-item-content>
+                                <v-list-item-action>
+                                    <v-btn v-if="item.canEdit" text color="error" @click="deleteMessage(item)"><v-icon dark>mdi-delete</v-icon></v-btn>
+                                </v-list-item-action>
                             </v-list-item>
                             <v-divider></v-divider>
                             </template>
@@ -117,6 +120,10 @@
                 const idxToRemove = findIndex(this.items, dto);
                 this.items.splice(idxToRemove, 1);
                 this.$forceUpdate();
+            },
+
+            deleteMessage(dto){
+                axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
             },
 
             scrollerHeight() {
@@ -352,9 +359,12 @@
                 // we can rely only on data
                 // this.items = [...this.items, JSON.stringify(getData(message))];
                 // TODO edit and delete
-
-                this.addItem(getData(message).payload);
-
+                const data = getData(message);
+                if (data.type === 'message_created') {
+                    this.addItem(getData(message).payload);
+                } else if (data.type === 'message_deleted') {
+                    this.removeItem(getData(message).payload)
+                }
                 Vue.nextTick(()=>{
                     var myDiv = document.getElementById("messagesScroller");
                     console.log("myDiv.scrollTop", myDiv.scrollTop, "myDiv.scrollHeight", myDiv.scrollHeight);

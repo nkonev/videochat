@@ -13,7 +13,7 @@
                 <v-list-item-action>
                     <v-container>
                         <v-btn v-if="item.canEdit" text color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
-                        <v-btn v-if="item.canEdit" text @click="deleteChat(item)"><v-icon dark>mdi-delete</v-icon></v-btn>
+                        <v-btn v-if="item.canEdit" text @click="deleteChat(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
                         <v-btn v-if="item.canLeave" text @click="leaveChat(item)"><v-icon dark>mdi-exit-run</v-icon></v-btn>
                     </v-container>
                 </v-list-item-action>
