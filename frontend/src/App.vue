@@ -51,6 +51,9 @@
             <v-btn icon @click="createChat">
                 <v-icon>mdi-plus-circle-outline</v-icon>
             </v-btn>
+            <v-btn v-if="showChatEditButton" icon @click="editChat">
+                <v-icon>mdi-lead-pencil</v-icon>
+            </v-btn>
 
             <v-spacer></v-spacer>
             <v-toolbar-title>{{title}}</v-toolbar-title>
@@ -117,6 +120,8 @@
                 showAlert: false,
                 searchChatString: "",
                 showSearch: false,
+                showChatEditButton: false,
+                chatEditId: null,
             }
         },
         components:{
@@ -148,6 +153,9 @@
             createChat() {
                 bus.$emit(OPEN_CHAT_EDIT, null);
             },
+            editChat() {
+                bus.$emit(OPEN_CHAT_EDIT, this.chatEditId);
+            },
             doSearch(searchString) {
                 this.$store.dispatch(CHANGE_SEARCH_STRING, searchString);
             },
@@ -160,9 +168,11 @@
                     }
                 })
             },
-            changeTitle(newtitle, isShowSearch) {
-                this.title = newtitle;
+            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId}) {
+                this.title = title;
                 this.showSearch = isShowSearch;
+                this.showChatEditButton = isShowChatEditButton;
+                this.chatEditId = chatEditId;
             },
         },
         computed: {

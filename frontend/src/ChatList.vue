@@ -47,6 +47,7 @@
     import axios from "axios";
     import {mapGetters} from 'vuex'
     import {GET_SEARCH_STRING} from "./store";
+    import {titleFactory} from "./changeTitle";
 
     export default {
         mixins: [infinityListMixin()],
@@ -148,7 +149,7 @@
             bus.$off(CHAT_SEARCH_CHANGED, this.searchStringChanged);
         },
         mounted() {
-            bus.$emit(CHANGE_TITLE, "Chats", true);
+            bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false));
         }
     }
 </script>

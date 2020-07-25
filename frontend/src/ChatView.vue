@@ -54,7 +54,8 @@
     } from "./InfinityListMixin";
     import {getData, getProperData} from './centrifugeConnection'
     import Vue from 'vue'
-    import bus, {CHANGE_TITLE, MESSAGE_ADD, MESSAGE_DELETED} from "./bus";
+    import bus, {CHANGE_TITLE, CHAT_EDITED, MESSAGE_ADD, MESSAGE_DELETED} from "./bus";
+    import {titleFactory} from "./changeTitle";
 
     const setProperData = (message) => {
         return {
@@ -200,7 +201,17 @@
                     myDiv.scrollTop = myDiv.scrollHeight;
                 });
             },
-
+            getInfo() {
+                axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
+                    console.log("Got info about chat", data);
+                    bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null));
+                });
+            },
+            onChatChange(dto) {
+                if (dto.id == this.chatId) {
+                    this.getInfo();
+                }
+            },
 
 
             maybeStart(){
@@ -444,14 +455,12 @@
             }
 
 
-            bus.$emit(CHANGE_TITLE, `Chat #${this.chatId}`, false);
+            bus.$emit(CHANGE_TITLE, titleFactory(`Chat #${this.chatId}`, false, true));
 
-            axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
-                console.log("Got info about chat", data);
-                bus.$emit(CHANGE_TITLE, data.name, false);
-            });
+            this.getInfo();
             bus.$on(MESSAGE_ADD, this.onNewMessage);
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
+            bus.$on(CHAT_EDITED, this.onChatChange);
         },
         beforeDestroy() {
             console.log("Cleaning up");
@@ -461,6 +470,7 @@
 
             bus.$off(MESSAGE_ADD, this.onNewMessage);
             bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
+            bus.$off(CHAT_EDITED, this.onChatChange);
         }
     }
 </script>
