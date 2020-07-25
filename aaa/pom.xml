@@ -22,7 +22,7 @@
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
 
-        <spring.boot.version>2.3.1.RELEASE</spring.boot.version>
+        <spring.boot.version>2.3.2.RELEASE</spring.boot.version>
         <selenide.version>5.11.1</selenide.version>
         <shedlock.version>2.1.0</shedlock.version>
         <logback.access.version>1.2.3</logback.access.version>
