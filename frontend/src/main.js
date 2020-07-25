@@ -3,7 +3,15 @@ import App from './App.vue'
 import vuetify from '@/plugins/vuetify'
 import {setupCentrifuge} from "@/centrifugeConnection"
 import axios from "axios";
-import bus, {CHAT_ADD, CHAT_DELETED, CHAT_EDITED, MESSAGE_ADD, MESSAGE_DELETED, UNAUTHORIZED} from './bus';
+import bus, {
+  CHAT_ADD,
+  CHAT_DELETED,
+  CHAT_EDITED,
+  MESSAGE_ADD,
+  MESSAGE_DELETED,
+  MESSAGE_EDITED,
+  UNAUTHORIZED
+} from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
 import {getData, getProperData} from "./centrifugeConnection";
@@ -27,22 +35,21 @@ const vm = new Vue({
       if (getData(ctx).type === 'chat_created') {
         const d = getProperData(ctx);
         bus.$emit(CHAT_ADD, d);
-      }
-      if (getData(ctx).type === 'chat_edited') {
+      } else if (getData(ctx).type === 'chat_edited') {
         const d = getProperData(ctx);
         bus.$emit(CHAT_EDITED, d);
-      }
-      if (getData(ctx).type === 'chat_deleted') {
+      } else if (getData(ctx).type === 'chat_deleted') {
         const d = getProperData(ctx);
         bus.$emit(CHAT_DELETED, d);
-      }
-
-      if (getData(ctx).type === 'message_created') {
+      } else if (getData(ctx).type === 'message_created') {
         const d = getProperData(ctx);
         bus.$emit(MESSAGE_ADD, d);
       } else if (getData(ctx).type === 'message_deleted') {
         const d = getProperData(ctx);
         bus.$emit(MESSAGE_DELETED, d);
+      } else if (getData(ctx).type === 'message_edited') {
+        const d = getProperData(ctx);
+        bus.$emit(MESSAGE_EDITED, d);
       }
 
     });

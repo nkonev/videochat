@@ -32,6 +32,7 @@ type CommonOperations interface {
 	IsAdmin(userId int64, chatId int64) (bool, error)
 	GetChat(participantId, chatId int64) (*Chat, error)
 	GetChatWithParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error)
+	GetMessage(chatId int64, userId int64, messageId int64) (*Message, error)
 }
 
 func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {

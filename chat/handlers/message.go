@@ -66,7 +66,22 @@ func GetMessages(dbR db.DB, restClient client.RestClient) func(c echo.Context) e
 	}
 }
 
-func GetMessage(dbR db.DB) func(c echo.Context) error {
+func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestClient, chatId int64, messageId int64, userPrincipalDto *auth.AuthResult) (*dto.DisplayMessageDto, error) {
+	if message, err := co.GetMessage(chatId, userPrincipalDto.UserId, messageId); err != nil {
+		GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
+		return nil, err
+	} else {
+		if message == nil {
+			return nil, nil
+		}
+		var ownersSet = map[int64]bool{}
+		ownersSet[userPrincipalDto.UserId] = true
+		var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
+		return convertToMessageDto(message, owners, userPrincipalDto), nil
+	}
+}
+
+func GetMessage(dbR db.DB, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 		if !ok {
@@ -84,17 +99,15 @@ func GetMessage(dbR db.DB) func(c echo.Context) error {
 			return err
 		}
 
-		if message, err := dbR.GetMessage(chatId, userPrincipalDto.UserId, messageId); err != nil {
-			GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
+		message, err := getMessage(c, &dbR, restClient, chatId, messageId, userPrincipalDto)
+		if err != nil {
 			return err
-		} else {
-			if message == nil {
-				return c.NoContent(http.StatusNotFound)
-			}
-			messageDto := convertToMessageDto(message, map[int64]*dto.User{}, userPrincipalDto)
-			GetLogEntry(c.Request()).Infof("Successfully returning message %v", messageDto)
-			return c.JSON(200, messageDto)
 		}
+		if message == nil {
+			return c.NoContent(http.StatusNotFound)
+		}
+		GetLogEntry(c.Request()).Infof("Successfully returning message %v", message)
+		return c.JSON(200, message)
 	}
 }
 
@@ -152,45 +165,27 @@ func PostMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications
 			} else if !participant {
 				return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
 			}
-			id, createDatetime, editDatetime, err := tx.CreateMessage(convertToCreatableMessage(bindTo, userPrincipalDto, chatId, policy))
+			id, _, _, err := tx.CreateMessage(convertToCreatableMessage(bindTo, userPrincipalDto, chatId, policy))
 			if err != nil {
 				return err
 			}
 			if tx.AddMessageRead(id, userPrincipalDto.UserId) != nil {
 				return err
 			}
-			if tx.UpdateLastDatetimeChat(chatId) != nil {
+			if tx.UpdateChatLastDatetimeChat(chatId) != nil {
 				return err
 			}
 
-			var ownerIdArr []int64 // actually contains 1 element
-			ownerIdArr = append(ownerIdArr, userPrincipalDto.UserId)
-			users, err := restClient.GetUsers(ownerIdArr, c.Request().Context())
-			if err != nil {
-				GetLogEntry(c.Request()).Errorf("Unable to get user %v", err)
-			}
-			var maybeUser *dto.User = nil
-			if len(users) != 0 {
-				maybeUser = users[0]
-			}
-
-			dm := &dto.DisplayMessageDto{
-				Id:             id,
-				Text:           bindTo.Text,
-				ChatId:         chatId,
-				OwnerId:        userPrincipalDto.UserId,
-				CreateDateTime: createDatetime,
-				EditDateTime:   editDatetime,
-				Owner:          maybeUser,
-				CanEdit:        true,
-			}
-
-			ids, err := tx.GetParticipantIds(chatId)
+			participantIds, err := tx.GetParticipantIds(chatId)
 			if err != nil {
 				return err
 			}
-			notificator.NotifyAboutNewMessage(c, ids, chatId, dm)
-			return c.JSON(http.StatusCreated, dm)
+			message, err := getMessage(c, tx, restClient, chatId, id, userPrincipalDto)
+			if err != nil {
+				return err
+			}
+			notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
+			return c.JSON(http.StatusCreated, message)
 		})
 		if errOuter != nil {
 			GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
@@ -207,7 +202,7 @@ func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthRe
 	}
 }
 
-func EditMessage(dbR db.DB, policy *bluemonday.Policy) func(c echo.Context) error {
+func EditMessage(dbR db.DB, policy *bluemonday.Policy, notificator notifications.Notifications, restClient client.RestClient) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		var bindTo = new(EditMessageDto)
 		if err := c.Bind(bindTo); err != nil {
@@ -235,6 +230,17 @@ func EditMessage(dbR db.DB, policy *bluemonday.Policy) func(c echo.Context) erro
 			if err != nil {
 				return err
 			}
+			ids, err := tx.GetParticipantIds(chatId)
+			if err != nil {
+				return err
+			}
+
+			message, err := getMessage(c, tx, restClient, chatId, bindTo.Id, userPrincipalDto)
+			if err != nil {
+				return err
+			}
+			notificator.NotifyAboutEditMessage(c, ids, chatId, message)
+
 			return c.JSON(http.StatusCreated, &utils.H{"id": bindTo.Id})
 		})
 		if errOuter != nil {

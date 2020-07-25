@@ -22,7 +22,8 @@
                                     {{item.text}}
                                 </v-list-item-content>
                                 <v-list-item-action>
-                                    <v-btn v-if="item.canEdit" text color="error" @click="deleteMessage(item)"><v-icon dark>mdi-delete</v-icon></v-btn>
+                                    <v-btn v-if="item.canEdit" text color="error" @click="deleteMessage(item)"><v-icon dark small>mdi-delete</v-icon></v-btn>
+                                    <v-btn v-if="item.canEdit" text color="primary" @click="editMessage(item)"><v-icon dark small>mdi-lead-pencil</v-icon></v-btn>
                                 </v-list-item-action>
                             </v-list-item>
                             <v-divider></v-divider>
@@ -39,7 +40,7 @@
         <v-container id="sendButtonContainer">
             <v-row no-gutters dense>
                 <v-col cols="12">
-                    <v-text-field dense label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="chatMessageText" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat"></v-text-field>
+                    <v-text-field dense label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="editMessageDto.text" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat"></v-text-field>
                 </v-col>
             </v-row>
         </v-container>
@@ -54,7 +55,7 @@
     } from "./InfinityListMixin";
     import {getData, getProperData} from './centrifugeConnection'
     import Vue from 'vue'
-    import bus, {CHANGE_TITLE, CHAT_EDITED, MESSAGE_ADD, MESSAGE_DELETED} from "./bus";
+    import bus, {CHANGE_TITLE, CHAT_EDITED, MESSAGE_ADD, MESSAGE_DELETED, MESSAGE_EDITED} from "./bus";
     import {titleFactory} from "./changeTitle";
 
     const setProperData = (message) => {
@@ -76,6 +77,14 @@
             'urls': 'stun:stun.l.google.com:19302'
         }]
     };
+
+    const dtoFactory = ()=>{
+        return {
+            id: null,
+            text: "",
+        }
+    };
+
 
     export default {
         mixins:[infinityListMixin()],
@@ -102,7 +111,7 @@
                 localVideo: null,
                 remoteVideo: null,
 
-                chatMessageText: "",
+                editMessageDto: dtoFactory(),
             }
         },
         methods: {
@@ -125,6 +134,9 @@
 
             deleteMessage(dto){
                 axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
+            },
+            editMessage(dto){
+                this.editMessageDto = {id: dto.id, text: dto.text};
             },
 
             scrollerHeight() {
@@ -166,14 +178,12 @@
             },
 
             sendMessageToChat() {
-                if (this.chatMessageText && this.chatMessageText !== "") {
-                    console.log("Sending", this.chatMessageText);
-                    const t = this.chatMessageText;
-                    const dtoToPost = {
-                        text: t
-                    };
-                    axios.post(`/api/chat/`+this.chatId+'/message', dtoToPost);
-                    this.chatMessageText = "";
+                if (this.editMessageDto.text && this.editMessageDto.text !== "") {
+                    (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto)).then(response => {
+                            console.log("Resetting text input");
+                            this.editMessageDto.text = "";
+                            this.editMessageDto.id = null;
+                        })
                 }
             },
             isMyMessage (message) {
@@ -190,6 +200,13 @@
             onDeleteMessage(dto) {
                 if (dto.chatId == this.chatId) {
                     this.removeItem(dto);
+                } else {
+                    console.log("Skipping", dto)
+                }
+            },
+            onEditMessage(dto) {
+                if (dto.chatId == this.chatId) {
+                    this.changeItem(dto);
                 } else {
                     console.log("Skipping", dto)
                 }
@@ -212,6 +229,7 @@
                     this.getInfo();
                 }
             },
+
 
 
             maybeStart(){
@@ -461,6 +479,7 @@
             bus.$on(MESSAGE_ADD, this.onNewMessage);
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$on(CHAT_EDITED, this.onChatChange);
+            bus.$on(MESSAGE_EDITED, this.onEditMessage);
         },
         beforeDestroy() {
             console.log("Cleaning up");
@@ -471,6 +490,7 @@
             bus.$off(MESSAGE_ADD, this.onNewMessage);
             bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$off(CHAT_EDITED, this.onChatChange);
+            bus.$off(MESSAGE_EDITED, this.onEditMessage);
         }
     }
 </script>

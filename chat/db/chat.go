@@ -180,7 +180,7 @@ func (tx *Tx) GetChat(participantId, chatId int64) (*Chat, error) {
 	return getChatCommon(tx, participantId, chatId)
 }
 
-func (tx *Tx) UpdateLastDatetimeChat(id int64) error {
+func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
 	if _, err := tx.Exec("UPDATE chat SET last_update_date_time = utc_now() WHERE id = $1", id); err != nil {
 		Logger.Errorf("Error during update chat %v %v", id, err)
 		return err

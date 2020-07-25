@@ -129,9 +129,9 @@ func configureEcho(
 	e.PUT("/chat/:id/leave", handlers.LeaveChat(db, notificator, restClient))
 
 	e.GET("/chat/:id/message", handlers.GetMessages(db, restClient))
-	e.GET("/chat/:id/message/:messageId", handlers.GetMessage(db))
+	e.GET("/chat/:id/message/:messageId", handlers.GetMessage(db, restClient))
 	e.POST("/chat/:id/message", handlers.PostMessage(db, policy, notificator, restClient))
-	e.PUT("/chat/:id/message", handlers.EditMessage(db, policy))
+	e.PUT("/chat/:id/message", handlers.EditMessage(db, policy, notificator, restClient))
 	e.DELETE("/chat/:id/message/:messageId", handlers.DeleteMessage(db, notificator))
 
 	lc.Append(fx.Hook{

@@ -19,6 +19,7 @@ type Notifications interface {
 	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64, tx *db.Tx)
 	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
+	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 }
 
 type notifictionsImpl struct {
@@ -151,4 +152,8 @@ func (not *notifictionsImpl) NotifyAboutNewMessage(c echo.Context, userIds []int
 
 func (not *notifictionsImpl) NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
 	messageNotifyCommon(c, userIds, chatId, message, not, "message_deleted")
+}
+
+func (not *notifictionsImpl) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+	messageNotifyCommon(c, userIds, chatId, message, not, "message_edited")
 }

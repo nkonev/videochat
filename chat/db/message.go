@@ -68,8 +68,8 @@ func (db *DB) CountMessages() (int64, error) {
 	}
 }
 
-func (db *DB) GetMessage(chatId int64, userId int64, messageId int64) (*Message, error) {
-	row := db.QueryRow(`SELECT * FROM message m WHERE m.id = $1 AND chat_id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
+func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId int64) (*Message, error) {
+	row := co.QueryRow(`SELECT * FROM message m WHERE m.id = $1 AND chat_id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
 	message := Message{}
 	err := row.Scan(&message.Id, &message.Text, &message.ChatId, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime)
 	if err != nil {
@@ -83,6 +83,14 @@ func (db *DB) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 	} else {
 		return &message, nil
 	}
+}
+
+func (db *DB) GetMessage(chatId int64, userId int64, messageId int64) (*Message, error) {
+	return getMessageCommon(db, chatId, userId, messageId)
+}
+
+func (tx *Tx) GetMessage(chatId int64, userId int64, messageId int64) (*Message, error) {
+	return getMessageCommon(tx, chatId, userId, messageId)
 }
 
 func (tx *Tx) AddMessageRead(messageId, userId int64) error {
