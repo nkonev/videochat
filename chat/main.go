@@ -121,14 +121,15 @@ func configureEcho(
 
 	e.GET("/chat/websocket", handlers.Convert(handlers.CentrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
 
-	e.GET("/chat", handlers.GetChats(db, restClient))
-	e.GET("/chat/:id", handlers.GetChat(db, restClient))
-	e.POST("/chat", handlers.CreateChat(db, notificator, restClient))
-	e.DELETE("/chat/:id", handlers.DeleteChat(db, notificator))
-	e.PUT("/chat", handlers.EditChat(db, notificator, restClient))
-	e.PUT("/chat/:id/leave", handlers.LeaveChat(db, notificator, restClient))
+	ch := handlers.NewChatHandler(db, notificator, restClient)
+	e.GET("/chat", ch.GetChats)
+	e.GET("/chat/:id", ch.GetChat)
+	e.POST("/chat", ch.CreateChat)
+	e.DELETE("/chat/:id", ch.DeleteChat)
+	e.PUT("/chat", ch.EditChat)
+	e.PUT("/chat/:id/leave", ch.LeaveChat)
 
-	mc := handlers.NewMessageController(db, policy, notificator, restClient)
+	mc := handlers.NewMessageHandler(db, policy, notificator, restClient)
 	e.GET("/chat/:id/message", mc.GetMessages)
 	e.GET("/chat/:id/message/:messageId", mc.GetMessage)
 	e.POST("/chat/:id/message", mc.PostMessage)

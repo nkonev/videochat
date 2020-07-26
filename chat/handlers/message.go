@@ -26,20 +26,20 @@ type CreateMessageDto struct {
 	Text string `json:"text"`
 }
 
-type MessageController struct {
+type MessageHandler struct {
 	db          db.DB
 	policy      *bluemonday.Policy
 	notificator notifications.Notifications
 	restClient  client.RestClient
 }
 
-func NewMessageController(dbR db.DB, policy *bluemonday.Policy, notificator notifications.Notifications, restClient client.RestClient) MessageController {
-	return MessageController{
+func NewMessageHandler(dbR db.DB, policy *bluemonday.Policy, notificator notifications.Notifications, restClient client.RestClient) MessageHandler {
+	return MessageHandler{
 		db: dbR, policy: policy, notificator: notificator, restClient: restClient,
 	}
 }
 
-func (mc MessageController) GetMessages(c echo.Context) error {
+func (mc MessageHandler) GetMessages(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -92,7 +92,7 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestCl
 	}
 }
 
-func (mc MessageController) GetMessage(c echo.Context) error {
+func (mc MessageHandler) GetMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -145,7 +145,7 @@ func (a *EditMessageDto) Validate() error {
 	)
 }
 
-func (mc MessageController) PostMessage(c echo.Context) error {
+func (mc MessageHandler) PostMessage(c echo.Context) error {
 	var bindTo = new(CreateMessageDto)
 	if err := c.Bind(bindTo); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
@@ -209,7 +209,7 @@ func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthRe
 	}
 }
 
-func (mc MessageController) EditMessage(c echo.Context) error {
+func (mc MessageHandler) EditMessage(c echo.Context) error {
 	var bindTo = new(EditMessageDto)
 	if err := c.Bind(bindTo); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
@@ -265,7 +265,7 @@ func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResul
 	}
 }
 
-func (mc MessageController) DeleteMessage(c echo.Context) error {
+func (mc MessageHandler) DeleteMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
