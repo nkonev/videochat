@@ -39,13 +39,7 @@
                     </div>
             </v-col>
         </v-row>
-        <v-container id="sendButtonContainer">
-            <v-row no-gutters dense>
-                <v-col cols="12">
-                    <v-text-field dense label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="editMessageDto.text" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat"></v-text-field>
-                </v-col>
-            </v-row>
-        </v-container>
+        <MessageEdit :chatId="chatId"/>
     </v-card>
 </template>
 
@@ -57,8 +51,16 @@
     } from "./InfinityListMixin";
     import {getData, getProperData} from './centrifugeConnection'
     import Vue from 'vue'
-    import bus, {CHANGE_TITLE, CHAT_EDITED, MESSAGE_ADD, MESSAGE_DELETED, MESSAGE_EDITED} from "./bus";
+    import bus, {
+        CHANGE_TITLE,
+        CHAT_EDITED,
+        MESSAGE_ADD,
+        MESSAGE_DELETED,
+        MESSAGE_EDITED,
+        SET_EDIT_MESSAGE
+    } from "./bus";
     import {titleFactory} from "./changeTitle";
+    import MessageEdit from "./MessageEdit";
 
     const setProperData = (message) => {
         return {
@@ -79,14 +81,6 @@
             'urls': 'stun:stun.l.google.com:19302'
         }]
     };
-
-    const dtoFactory = ()=>{
-        return {
-            id: null,
-            text: "",
-        }
-    };
-
 
     export default {
         mixins:[infinityListMixin()],
@@ -112,8 +106,6 @@
 
                 localVideo: null,
                 remoteVideo: null,
-
-                editMessageDto: dtoFactory(),
             }
         },
         methods: {
@@ -137,8 +129,10 @@
             deleteMessage(dto){
                 axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
             },
+
             editMessage(dto){
-                this.editMessageDto = {id: dto.id, text: dto.text};
+                const editMessageDto = {id: dto.id, text: dto.text};
+                bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
             },
 
             scrollerHeight() {
@@ -179,15 +173,6 @@
                 return `${item.owner.login} at ${item.createDateTime}`
             },
 
-            sendMessageToChat() {
-                if (this.editMessageDto.text && this.editMessageDto.text !== "") {
-                    (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto)).then(response => {
-                            console.log("Resetting text input");
-                            this.editMessageDto.text = "";
-                            this.editMessageDto.id = null;
-                        })
-                }
-            },
             isMyMessage (message) {
                 return message.metadata && this.centrifugeSessionId == message.metadata.originatorClientId
             },
@@ -493,6 +478,9 @@
             bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$off(CHAT_EDITED, this.onChatChange);
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
+        },
+        components: {
+            MessageEdit
         }
     }
 </script>
