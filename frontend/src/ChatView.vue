@@ -23,8 +23,18 @@
                                 </v-list-item-content>
                                 <v-list-item-action>
                                     <v-container class="mb-0 mt-0 pb-0 pt-0">
-                                        <v-icon class="mr-4" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
-                                        <v-icon v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
+                                        <v-tooltip left>
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-btn v-bind="attrs" v-on="on" v-if="item.canEdit" icon color="primary" @click="editMessage(item)" small><v-icon dark small>mdi-lead-pencil</v-icon></v-btn>
+                                            </template>
+                                            <span>Edit</span>
+                                        </v-tooltip>
+                                        <v-tooltip top>
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-btn v-bind="attrs" v-on="on" v-if="item.canEdit" icon color="error" @click="deleteMessage(item)" small><v-icon dark small>mdi-delete</v-icon></v-btn>
+                                            </template>
+                                            <span>Delete</span>
+                                        </v-tooltip>
                                     </v-container>
                                 </v-list-item-action>
                             </v-list-item>
