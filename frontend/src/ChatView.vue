@@ -22,8 +22,10 @@
                                     {{item.text}}
                                 </v-list-item-content>
                                 <v-list-item-action>
-                                    <v-btn v-if="item.canEdit" text color="error" @click="deleteMessage(item)"><v-icon dark small>mdi-delete</v-icon></v-btn>
-                                    <v-btn v-if="item.canEdit" text color="primary" @click="editMessage(item)"><v-icon dark small>mdi-lead-pencil</v-icon></v-btn>
+                                    <v-container class="mb-0 mt-0 pb-0 pt-0">
+                                        <v-icon class="mr-4" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
+                                        <v-icon v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
+                                    </v-container>
                                 </v-list-item-action>
                             </v-list-item>
                             <v-divider></v-divider>

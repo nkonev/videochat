@@ -7,7 +7,7 @@
                     :key="item.id"
             >
                 <v-list-item-content @click="openChat(item)">
-                    <v-list-item-title v-html="item.name"></v-list-item-title>
+                    <v-list-item-title>{{item.name}} <v-badge content="666" offset-x="-4" /></v-list-item-title>
                     <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-action>
