@@ -12,9 +12,25 @@
                 </v-list-item-content>
                 <v-list-item-action>
                     <v-container class="mb-0 mt-0 pb-0 pt-0">
-                        <v-btn v-if="item.canEdit" text color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
-                        <v-btn v-if="item.canEdit" text @click="deleteChat(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
-                        <v-btn v-if="item.canLeave" text @click="leaveChat(item)"><v-icon dark>mdi-exit-run</v-icon></v-btn>
+                        <v-tooltip left v-if="item.canEdit">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn v-bind="attrs" v-on="on" icon color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
+                            </template>
+                            <span>Edit</span>
+                        </v-tooltip>
+                        <v-tooltip top v-if="item.canEdit">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn v-bind="attrs" v-on="on" icon @click="deleteChat(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
+                            </template>
+                            <span>Delete</span>
+                        </v-tooltip>
+                        <v-tooltip left v-if="item.canLeave">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn v-bind="attrs" v-on="on" icon @click="leaveChat(item)"><v-icon dark>mdi-exit-run</v-icon></v-btn>
+                            </template>
+                            <span>Leave</span>
+                        </v-tooltip>
+
                     </v-container>
                 </v-list-item-action>
             </v-list-item>
