@@ -128,11 +128,12 @@ func configureEcho(
 	e.PUT("/chat", handlers.EditChat(db, notificator, restClient))
 	e.PUT("/chat/:id/leave", handlers.LeaveChat(db, notificator, restClient))
 
-	e.GET("/chat/:id/message", handlers.GetMessages(db, restClient))
-	e.GET("/chat/:id/message/:messageId", handlers.GetMessage(db, restClient))
-	e.POST("/chat/:id/message", handlers.PostMessage(db, policy, notificator, restClient))
-	e.PUT("/chat/:id/message", handlers.EditMessage(db, policy, notificator, restClient))
-	e.DELETE("/chat/:id/message/:messageId", handlers.DeleteMessage(db, notificator))
+	mc := handlers.NewMessageController(db, policy, notificator, restClient)
+	e.GET("/chat/:id/message", mc.GetMessages)
+	e.GET("/chat/:id/message/:messageId", mc.GetMessage)
+	e.POST("/chat/:id/message", mc.PostMessage)
+	e.PUT("/chat/:id/message", mc.EditMessage)
+	e.DELETE("/chat/:id/message/:messageId", mc.DeleteMessage)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
