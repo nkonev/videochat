@@ -93,8 +93,8 @@ func (tx *Tx) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 	return getMessageCommon(tx, chatId, userId, messageId)
 }
 
-func (tx *Tx) AddMessageRead(messageId, userId int64) error {
-	_, err := tx.Exec(`INSERT INTO message_read (message_id, user_id) VALUES ($1, $2)`, messageId, userId)
+func (tx *Tx) AddMessageRead(messageId, userId int64, chatId int64) error {
+	_, err := tx.Exec(`INSERT INTO message_read (message_id, user_id, chat_id) VALUES ($1, $2, $3)`, messageId, userId, chatId)
 	return err
 }
 
@@ -120,4 +120,23 @@ func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error 
 		return err
 	}
 	return nil
+}
+
+func getUnreadMessagesCommon(co CommonOperations, chatId int64, userId int64) (int64, error) {
+	var count int64
+	row := co.QueryRow("SELECT ((SELECT count(*) FROM message WHERE chat_id = $1)  -  (SELECT count(*) FROM message_read WHERE user_id = $2 AND chat_id = $1))", chatId, userId)
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	} else {
+		return count, nil
+	}
+}
+
+func (db *DB) GetUnreadMessages(chatId int64, userId int64) (int64, error) {
+	return getUnreadMessagesCommon(db, chatId, userId)
+}
+
+func (tx *Tx) GetUnreadMessages(chatId int64, userId int64) (int64, error) {
+	return getUnreadMessagesCommon(tx, chatId, userId)
 }

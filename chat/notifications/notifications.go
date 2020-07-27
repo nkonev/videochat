@@ -20,6 +20,7 @@ type Notifications interface {
 	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
+	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 }
 
 type notifictionsImpl struct {
@@ -72,13 +73,56 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 			continue
 		}
 
+		unreadMessages, err := tx.GetUnreadMessages(newChatDto.Id, participantId)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
+			continue
+		}
+
 		// TODO move to better place
 		copied.CanEdit = null.BoolFrom(admin)
 		copied.CanLeave = null.BoolFrom(!admin)
+		copied.UnreadMessages = unreadMessages
 
 		notification := CentrifugeNotification{
 			Payload:   copied,
 			EventType: eventType,
+		}
+		if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
+			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err2)
+		} else {
+			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
+			if err != nil {
+				GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
+			}
+		}
+	}
+}
+
+type ChatUnreadMessageChanged struct {
+	ChatId         int64 `json:"chatId"`
+	UnreadMessages int64 `json:"unreadMessages"`
+}
+
+func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx) {
+	for _, participantId := range userIds {
+		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
+		GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
+
+		unreadMessages, err := tx.GetUnreadMessages(chatId, participantId)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
+			continue
+		}
+
+		payload := &ChatUnreadMessageChanged{
+			ChatId:         chatId,
+			UnreadMessages: unreadMessages,
+		}
+
+		notification := CentrifugeNotification{
+			Payload:   payload,
+			EventType: "unread_messages_changed",
 		}
 		if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
 			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err2)

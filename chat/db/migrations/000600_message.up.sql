@@ -11,5 +11,6 @@ CREATE TABLE message_read (
     message_id bigint NOT NULL REFERENCES message(id) ON DELETE CASCADE,
     create_date_time TIMESTAMP NOT NULL DEFAULT utc_now(),
     user_id bigint NOT NULL, -- who have read the message
+    chat_id bigint NOT NULL REFERENCES chat(id) ON DELETE CASCADE,
     primary key (message_id, user_id)
 );

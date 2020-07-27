@@ -14,3 +14,4 @@ export const MESSAGE_ADD = "messageAdd";
 export const MESSAGE_DELETED = "messageDeleted";
 export const MESSAGE_EDITED = "messageEdited";
 export const SET_EDIT_MESSAGE = "setEditMessageDto";
+export const UNREAD_MESSAGES_CHANGED = "unreadMessagesChanged";

@@ -7,7 +7,7 @@
                     :key="item.id"
             >
                 <v-list-item-content @click="openChat(item)">
-                    <v-list-item-title>{{item.name}} <v-badge content="666" offset-x="-4" /></v-list-item-title>
+                    <v-list-item-title>{{item.name}} <v-badge v-if="item.unreadMessages" :content="item.unreadMessages" offset-x="-4" /></v-list-item-title>
                     <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-action>
@@ -34,7 +34,7 @@
         CHAT_SEARCH_CHANGED,
         LOGGED_IN,
         OPEN_CHAT_EDIT,
-        CHANGE_TITLE, OPEN_CHAT_DELETE
+        CHANGE_TITLE, OPEN_CHAT_DELETE, UNREAD_MESSAGES_CHANGED
     } from "./bus";
     import {chat_name, root_name} from "./routes";
     import infinityListMixin, {
@@ -133,6 +133,13 @@
             leaveChat(chat) {
                 axios.put(`/api/chat/${chat.id}/leave`)
             },
+            onChangeUnreadMessages(dto) {
+                const chatId = dto.chatId;
+                let idxOf = findIndex(this.items, {id: chatId});
+                if (idxOf != -1) {
+                    this.items[idxOf].unreadMessages = dto.unreadMessages;
+                }
+            }
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadItems);
@@ -140,6 +147,7 @@
             bus.$on(CHAT_EDITED, this.changeItem);
             bus.$on(CHAT_DELETED, this.removeItem);
             bus.$on(CHAT_SEARCH_CHANGED, this.searchStringChanged);
+            bus.$on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadItems);
@@ -147,6 +155,7 @@
             bus.$off(CHAT_EDITED, this.changeItem);
             bus.$off(CHAT_DELETED, this.removeItem);
             bus.$off(CHAT_SEARCH_CHANGED, this.searchStringChanged);
+            bus.$on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
         },
         mounted() {
             bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false));

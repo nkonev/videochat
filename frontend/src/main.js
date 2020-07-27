@@ -10,7 +10,7 @@ import bus, {
   MESSAGE_ADD,
   MESSAGE_DELETED,
   MESSAGE_EDITED,
-  UNAUTHORIZED
+  UNAUTHORIZED, UNREAD_MESSAGES_CHANGED
 } from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
@@ -50,6 +50,9 @@ const vm = new Vue({
       } else if (getData(ctx).type === 'message_edited') {
         const d = getProperData(ctx);
         bus.$emit(MESSAGE_EDITED, d);
+      } else if (getData(ctx).type === 'unread_messages_changed') {
+        const d = getProperData(ctx);
+        bus.$emit(UNREAD_MESSAGES_CHANGED, d);
       }
 
     });

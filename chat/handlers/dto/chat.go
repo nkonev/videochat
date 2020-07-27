@@ -13,4 +13,5 @@ type ChatDto struct {
 	Participants       []*User   `json:"participants"`
 	CanEdit            null.Bool `json:"canEdit"`
 	CanLeave           null.Bool `json:"canLeave"`
+	UnreadMessages     int64     `json:"unreadMessages"`
 }

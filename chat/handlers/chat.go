@@ -69,7 +69,11 @@ func (ch ChatHandler) GetChats(c echo.Context) error {
 	} else {
 		chatDtos := make([]*ChatDto, 0)
 		for _, cc := range dbChats {
-			cd := convertToDto(cc, []*dto.User{})
+			messages, err := ch.db.GetUnreadMessages(cc.Id, userPrincipalDto.UserId)
+			if err != nil {
+				return err
+			}
+			cd := convertToDto(cc, []*dto.User{}, messages)
 			chatDtos = append(chatDtos, cd)
 		}
 
@@ -111,7 +115,11 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 			users = []*dto.User{}
 			GetLogEntry(c.Request()).Warn("Error during getting users from aaa")
 		}
-		chatDto := convertToDto(cc, users)
+		unreadMessages, err := dbR.GetUnreadMessages(cc.Id, behalfParticipantId)
+		if err != nil {
+			return nil, err
+		}
+		chatDto := convertToDto(cc, users, unreadMessages)
 
 		return chatDto, nil
 	}
@@ -141,7 +149,7 @@ func (ch ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
-func convertToDto(c *db.ChatWithParticipants, users []*dto.User) *ChatDto {
+func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64) *ChatDto {
 	return &ChatDto{
 		Id:                 c.Id,
 		Name:               c.Title,
@@ -150,6 +158,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User) *ChatDto {
 		CanEdit:            null.BoolFrom(c.IsAdmin),
 		LastUpdateDateTime: c.LastUpdateDateTime,
 		CanLeave:           null.BoolFrom(!c.IsAdmin),
+		UnreadMessages:     unreadMessages,
 	}
 }
 

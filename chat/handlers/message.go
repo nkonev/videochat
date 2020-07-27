@@ -177,7 +177,7 @@ func (mc MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		if tx.AddMessageRead(id, userPrincipalDto.UserId) != nil {
+		if tx.AddMessageRead(id, userPrincipalDto.UserId, chatId) != nil {
 			return err
 		}
 		if tx.UpdateChatLastDatetimeChat(chatId) != nil {
@@ -193,6 +193,7 @@ func (mc MessageHandler) PostMessage(c echo.Context) error {
 			return err
 		}
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
+		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
 		return c.JSON(http.StatusCreated, message)
 	})
 	if errOuter != nil {
