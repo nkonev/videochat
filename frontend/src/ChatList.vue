@@ -158,7 +158,7 @@
             bus.$off(CHAT_EDITED, this.changeItem);
             bus.$off(CHAT_DELETED, this.removeItem);
             bus.$off(CHAT_SEARCH_CHANGED, this.searchStringChanged);
-            bus.$on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
+            bus.$off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
         },
         mounted() {
             bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false));
