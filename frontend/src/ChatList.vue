@@ -161,7 +161,7 @@
             bus.$off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
         },
         mounted() {
-            bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false));
+            bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false, false));
         }
     }
 </script>

@@ -54,6 +54,9 @@
             <v-btn v-if="showChatEditButton" icon @click="editChat">
                 <v-icon>mdi-lead-pencil</v-icon>
             </v-btn>
+            <v-btn v-if="showPhoneButton" icon @click="createCall">
+                <v-icon>mdi-phone</v-icon>
+            </v-btn>
 
             <v-spacer></v-spacer>
             <v-toolbar-title>{{title}}</v-toolbar-title>
@@ -95,7 +98,7 @@
     import bus, {CHANGE_TITLE, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
-    import {profile_name, root_name} from "./routes";
+    import {profile_name, root_name, videochat_name} from "./routes";
     import ChatDelete from "./ChatDelete";
     import Vue from 'vue'
 
@@ -121,6 +124,7 @@
                 searchChatString: "",
                 showSearch: false,
                 showChatEditButton: false,
+                showPhoneButton: false,
                 chatEditId: null,
             }
         },
@@ -168,12 +172,17 @@
                     }
                 })
             },
-            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId}) {
+            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, showPhoneButton}) {
                 this.title = title;
                 this.showSearch = isShowSearch;
                 this.showChatEditButton = isShowChatEditButton;
                 this.chatEditId = chatEditId;
+                this.showPhoneButton = showPhoneButton;
             },
+            createCall() {
+                console.log("Create phone");
+                this.$router.push(({ name: videochat_name}))
+            }
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
