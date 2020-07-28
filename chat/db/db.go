@@ -28,6 +28,7 @@ type Tx struct {
 type CommonOperations interface {
 	Query(query string, args ...interface{}) (*dbP.Rows, error)
 	QueryRow(query string, args ...interface{}) *dbP.Row
+	Exec(query string, args ...interface{}) (sql.Result, error)
 	GetParticipantIds(chatId int64) ([]int64, error)
 	IsAdmin(userId int64, chatId int64) (bool, error)
 	GetChat(participantId, chatId int64) (*Chat, error)
@@ -50,6 +51,14 @@ func (dbR *DB) QueryRow(query string, args ...interface{}) *dbP.Row {
 
 func (txR *Tx) QueryRow(query string, args ...interface{}) *dbP.Row {
 	return txR.Tx.QueryRow(query, args...)
+}
+
+func (dbR *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return dbR.DB.Exec(query, args...)
+}
+
+func (txR *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return txR.Tx.Exec(query, args...)
 }
 
 const postgresDriverString = "pgx"

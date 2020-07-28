@@ -89,6 +89,10 @@ func configureOpencensusMiddleware() echo.MiddlewareFunc {
 	}
 }
 
+func customHTTPErrorHandler(err error, c echo.Context) {
+	c.Logger().Error(err)
+}
+
 func configureEcho(
 	staticMiddleware staticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
@@ -103,6 +107,7 @@ func configureEcho(
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
+	e.HTTPErrorHandler = customHTTPErrorHandler
 	e.Logger.SetOutput(Logger.Writer())
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
@@ -135,6 +140,7 @@ func configureEcho(
 	e.POST("/chat/:id/message", mc.PostMessage)
 	e.PUT("/chat/:id/message", mc.EditMessage)
 	e.DELETE("/chat/:id/message/:messageId", mc.DeleteMessage)
+	e.PUT("/chat/:id/message/read/:messageId", mc.ReadMessage)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

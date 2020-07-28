@@ -138,6 +138,9 @@
                 let idxOf = findIndex(this.items, {id: chatId});
                 if (idxOf != -1) {
                     this.items[idxOf].unreadMessages = dto.unreadMessages;
+                    this.$forceUpdate();
+                } else {
+                    console.log("Not found to update unread messages", dto)
                 }
             }
         },

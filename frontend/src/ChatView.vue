@@ -17,7 +17,7 @@
                                 <v-list-item-avatar v-if="item.owner && item.owner.avatar">
                                     <v-img :src="item.owner.avatar"></v-img>
                                 </v-list-item-avatar>
-                                <v-list-item-content>
+                                <v-list-item-content @click="onMessageClick(item)">
                                     <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
                                     {{item.text}}
                                 </v-list-item-content>
@@ -215,6 +215,9 @@
                 if (dto.id == this.chatId) {
                     this.getInfo();
                 }
+            },
+            onMessageClick(dto) {
+                axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`);
             },
 
 

@@ -297,3 +297,25 @@ func (mc MessageHandler) DeleteMessage(c echo.Context) error {
 		return c.JSON(http.StatusAccepted, &utils.H{"id": messageId})
 	}
 }
+
+func (mc MessageHandler) ReadMessage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	messageId, err := GetPathParamAsInt64(c, "messageId")
+	if err != nil {
+		return err
+	}
+
+	if err := mc.db.AddMessageRead(messageId, userPrincipalDto.UserId, chatId); err != nil {
+		return err
+	}
+	return c.NoContent(http.StatusAccepted)
+}

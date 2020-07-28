@@ -93,9 +93,17 @@ func (tx *Tx) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 	return getMessageCommon(tx, chatId, userId, messageId)
 }
 
-func (tx *Tx) AddMessageRead(messageId, userId int64, chatId int64) error {
-	_, err := tx.Exec(`INSERT INTO message_read (message_id, user_id, chat_id) VALUES ($1, $2, $3)`, messageId, userId, chatId)
+func addMessageReadCommon(co CommonOperations, messageId, userId int64, chatId int64) error {
+	_, err := co.Exec(`INSERT INTO message_read (last_message_id, user_id, chat_id) VALUES ($1, $2, $3) ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1  WHERE $1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
 	return err
+}
+
+func (db *DB) AddMessageRead(messageId, userId int64, chatId int64) error {
+	return addMessageReadCommon(db, messageId, userId, chatId)
+}
+
+func (tx *Tx) AddMessageRead(messageId, userId int64, chatId int64) error {
+	return addMessageReadCommon(tx, messageId, userId, chatId)
 }
 
 func (tx *Tx) EditMessage(m *Message) error {
@@ -124,7 +132,7 @@ func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error 
 
 func getUnreadMessagesCommon(co CommonOperations, chatId int64, userId int64) (int64, error) {
 	var count int64
-	row := co.QueryRow("SELECT ((SELECT count(*) FROM message WHERE chat_id = $1)  -  (SELECT count(*) FROM message_read WHERE user_id = $2 AND chat_id = $1))", chatId, userId)
+	row := co.QueryRow("SELECT COUNT(*) FROM message WHERE chat_id = $1 AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = $2 AND chat_id = $1), 0)", chatId, userId)
 	err := row.Scan(&count)
 	if err != nil {
 		return 0, err
