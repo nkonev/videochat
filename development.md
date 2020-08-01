@@ -57,3 +57,9 @@ rm -rf ./chat/proto
 mkdir ./chat/proto || true
 docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto
 ```
+
+
+# Firefox enable video on non-localhost
+https://lists.mozilla.org/pipermail/dev-platform/2019-February/023590.html
+about:config
+media.devices.insecure.enabled
