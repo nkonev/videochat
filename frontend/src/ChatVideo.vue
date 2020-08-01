@@ -322,18 +322,18 @@
                     return;
                 }
                 const pc = pcde.peerConnection;
-                if (message.type === EVENT_OFFER) {
-                    if (!pcde.remoteDescriptionSet) { // TODO to array
-                        pc.setRemoteDescription(new RTCSessionDescription(message.value));
-                        pcde.remoteDescriptionSet = true;
-                    }
-                    this.doAnswer(pcde);
-                } else if (message.type === EVENT_ANSWER && this.isStarted) {
+                if (message.type === EVENT_OFFER && pc) {
                     if (!pcde.remoteDescriptionSet) {
                         pc.setRemoteDescription(new RTCSessionDescription(message.value));
                         pcde.remoteDescriptionSet = true;
                     }
-                } else if (message.type === EVENT_CANDIDATE && this.isStarted) {
+                    this.doAnswer(pcde);
+                } else if (message.type === EVENT_ANSWER && this.isStarted && pc) {
+                    if (!pcde.remoteDescriptionSet) {
+                        pc.setRemoteDescription(new RTCSessionDescription(message.value));
+                        pcde.remoteDescriptionSet = true;
+                    }
+                } else if (message.type === EVENT_CANDIDATE && this.isStarted && pc) {
                     var candidate = new RTCIceCandidate({
                         sdpMLineIndex: message.label,
                         candidate: message.candidate
@@ -344,9 +344,9 @@
                 }
             });
 
-            if (location.hostname !== 'localhost') {
+            /*if (location.hostname !== 'localhost') {
                 this.requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
-            }
+            }*/
 
             this.initConnections();
         },
