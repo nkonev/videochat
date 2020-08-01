@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <v-row dense>
-            <ChatVideo v-if="isVideo()" :participantIds="chatDto.participantIds"/>
+            <ChatVideo v-if="isAllowedVideo()" :participantIds="chatDto.participantIds"/>
             <v-col cols="12">
                 <div id="messagesScroller" :style="scrollerHeight()">
                     <v-card-text>
@@ -190,8 +190,8 @@
             onMessageClick(dto) {
                 axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`);
             },
-            isVideo() {
-                return this.$router.currentRoute.name == videochat_name
+            isAllowedVideo() {
+                return this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds.length
             },
 
         },
