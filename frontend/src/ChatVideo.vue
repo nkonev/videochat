@@ -9,6 +9,8 @@
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
+    import bus, { VIDEO_LOCAL_ESTABLISHED } from "./bus";
+
 
     const setProperData = (message) => {
         return {
@@ -96,6 +98,8 @@
                 this.localStream = stream;
                 this.localVideo.srcObject = stream;
                 this.sendMessage({type: EVENT_GOT_USER_MEDIA});
+
+                bus.$emit(VIDEO_LOCAL_ESTABLISHED);
 
                 this.maybeStart();
             },

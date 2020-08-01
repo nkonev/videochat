@@ -53,7 +53,8 @@
         MESSAGE_ADD,
         MESSAGE_DELETED,
         MESSAGE_EDITED,
-        SET_EDIT_MESSAGE
+        SET_EDIT_MESSAGE,
+        VIDEO_LOCAL_ESTABLISHED
     } from "./bus";
     import {titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
@@ -121,6 +122,11 @@
                 }
                 return 'overflow-y: auto; height: 240px'
             },
+            onVideoChangesHeight() {
+                console.log("Adjusting height after video has been shown");
+                this.$forceUpdate();
+            },
+
             infiniteHandler($state) {
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
@@ -208,12 +214,15 @@
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$on(CHAT_EDITED, this.onChatChange);
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
+            bus.$on(VIDEO_LOCAL_ESTABLISHED, this.onVideoChangesHeight);
         },
         beforeDestroy() {
             bus.$off(MESSAGE_ADD, this.onNewMessage);
             bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$off(CHAT_EDITED, this.onChatChange);
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
+            bus.$off(VIDEO_LOCAL_ESTABLISHED, this.onVideoChangesHeight);
+
             this.chatMessagesSubscription.unsubscribe();
         },
         components: {
