@@ -6,11 +6,9 @@
 </template>
 
 <script>
-    import Vue from 'vue'
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    // import bus, {CHANGE_PARTICIPANTS} from "./bus";
 
     const setProperData = (message) => {
         return {
@@ -36,17 +34,10 @@
             return {
                 signalingSubscription: null,
 
-                // pcs: [], // peer connections
                 isStarted: false, // really needed
                 localStream: null,
                 turnReady: null,
-                // remoteDescriptionSet: false,
-
                 localVideo: null,
-                // remoteVideos: [],
-
-
-                //participantIds: [],
 
                 remoteConnectionData: [
                     // userId: number
@@ -64,18 +55,13 @@
             ...mapGetters({currentUser: GET_USER})
         },
         methods: {
-            /*onChangeParticipants(participantIds) {
-                console.log("On change participants");
-                this.participantIds = participantIds;
-                Vue.nextTick(() => {
-                    this.initConnections();
-                })
-            },*/
-
             getRemoteVideoId(participantId) {
                 return 'remoteVideo'+participantId;
             },
             getProperParticipantIds() {
+                if (!this.currentUser) {
+                    return [];
+                }
                 const ppi = this.participantIds.filter(pi => pi != this.currentUser.id);
                 console.log("Participant ids except me:", ppi);
                 return ppi;
@@ -300,9 +286,6 @@
         mounted() {
             this.localVideo = document.querySelector('#localVideo');
 
-            // bus.$on(CHANGE_PARTICIPANTS, this.onChangeParticipants);
-
-
             /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
              * https://codelabs.developers.google.com/codelabs/webrtc-web/#4
              * WebRTC applications need to do several things:
@@ -366,7 +349,6 @@
 
         beforeDestroy() {
             console.log("Cleaning up");
-            // bus.$off(CHANGE_PARTICIPANTS, this.onChangeParticipants);
             this.hangupAll();
             this.signalingSubscription.unsubscribe();
         }

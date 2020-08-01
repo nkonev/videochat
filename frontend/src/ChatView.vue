@@ -48,7 +48,6 @@
     } from "./InfinityListMixin";
     import Vue from 'vue'
     import bus, {
-        // CHANGE_PARTICIPANTS,
         CHANGE_TITLE,
         CHAT_EDITED,
         MESSAGE_ADD,
@@ -178,7 +177,6 @@
                 axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
                     console.log("Got info about chat", data);
                     bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null, true));
-                    // bus.$emit(CHANGE_PARTICIPANTS, data.participantIds);
                     this.chatDto = data;
                 });
             },
