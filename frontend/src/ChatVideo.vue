@@ -1,12 +1,16 @@
 <template>
-    <v-col cols="12">
+    <v-col cols="12" class="video-container">
         <video id="localVideo" autoPlay playsInline style="height: 220px"></video>
-        <video id="remoteVideo" autoPlay playsInline style="height: 220px"></video>
+        <video v-for="(item, index) in getProperParticipantIds()" :key="item" :id="getRemoteVideoId(item)" autoPlay playsInline style="height: 220px"></video>
     </v-col>
 </template>
 
 <script>
+    import Vue from 'vue'
     import {getData, getProperData} from "./centrifugeConnection";
+    import {mapGetters} from "vuex";
+    import {GET_USER} from "./store";
+    // import bus, {CHANGE_PARTICIPANTS} from "./bus";
 
     const setProperData = (message) => {
         return {
@@ -32,89 +36,60 @@
             return {
                 signalingSubscription: null,
 
-                pc: null, // peer connection
+                // pcs: [], // peer connections
                 isStarted: false, // really needed
                 localStream: null,
-                remoteStream: null,
                 turnReady: null,
-                remoteDescriptionSet: false,
+                // remoteDescriptionSet: false,
 
                 localVideo: null,
-                remoteVideo: null,
+                // remoteVideos: [],
+
+
+                //participantIds: [],
+
+                remoteConnectionData: [
+                    // userId: number
+                    // peerConnection: RTCPeerConnection
+                    // remoteDescriptionSet: boolean
+                    // remoteVideo: html element
+                ]
             }
         },
+        props: ['participantIds'],
         computed: {
             chatId() {
                 return this.$route.params.id
             },
+            ...mapGetters({currentUser: GET_USER})
         },
         methods: {
-            isMyMessage (message) {
-                return message.metadata && this.centrifugeSessionId == message.metadata.originatorClientId
+            /*onChangeParticipants(participantIds) {
+                console.log("On change participants");
+                this.participantIds = participantIds;
+                Vue.nextTick(() => {
+                    this.initConnections();
+                })
+            },*/
+
+            getRemoteVideoId(participantId) {
+                return 'remoteVideo'+participantId;
             },
-            maybeStart(){
-                console.log('>>>>>>> maybeStart() ', this.isStarted, this.localStream);
-                if (!this.isStarted && this.localStream) {
-                    console.log('>>>>>> creating peer connection, localstream=', this.localStream);
-                    this.createPeerConnection();
-                    this.pc.addStream(this.localStream);
-                    this.isStarted = true;
-                    this.doOffer();
+            getProperParticipantIds() {
+                const ppi = this.participantIds.filter(pi => pi != this.currentUser.id);
+                console.log("Participant ids except me:", ppi);
+                return ppi;
+            },
+            initConnections() {
+                console.log("Initializing remote videos");
+                for (let pi of this.getProperParticipantIds()) {
+                    this.remoteConnectionData.push({
+                        userId: pi,
+                        remoteVideo: document.querySelector('#'+this.getRemoteVideoId(pi))
+                    });
                 }
-            },
-            doAnswer (){
-                console.log('Sending answer to peer.');
-                this.pc.createAnswer().then(
-                    this.setLocalAndSendMessage,
-                    this.onCreateSessionDescriptionError
-                );
-            },
-            createPeerConnection () {
-                try {
-                    this.pc = new RTCPeerConnection(null);
-                    this.pc.onicecandidate = this.handleIceCandidate;
-                    this.pc.onaddstream = this.handleRemoteStreamAdded;
-                    this.pc.onremovestream = this.handleRemoteStreamRemoved;
-                    console.log('Created RTCPeerConnnection');
-                } catch (e) {
-                    console.log('Failed to create PeerConnection, exception: ' + e.message);
-                    alert('Cannot create RTCPeerConnection object.');
-                    return;
-                }
-            },
-            // ex doCall
-            doOffer() {
-                console.log('Sending offer to peer');
-                this.pc.createOffer(this.setLocalAndSendMessage, this.handleCreateOfferError);
-            },
-            handleRemoteHangup () {
-                console.log('Session terminated.');
-                this.remoteDescriptionSet = false;
-                this.stop();
-            },
-            handleRemoteStreamAdded (event){
-                console.log('Remote stream added.');
-                this.remoteStream = event.stream;
-                this.remoteVideo.srcObject = this.remoteStream;
-            },
-            handleRemoteStreamRemoved (event) {
-                console.log('Remote stream removed. Event: ', event);
-            },
-            stop () {
-                this.isStarted = false;
-                if (this.pc) {
-                    this.pc.close();
-                }
-                this.pc = null;
-            },
-            hangup() {
-                console.log('Hanging up.');
-                this.stop();
-                this.sendMessage({type: EVENT_BYE});
-            },
-            sendMessage(message) {
-                console.log('Client sending message: ', message);
-                this.signalingSubscription.publish(setProperData(message));
+
+                this.initDevices();
             },
             initDevices() {
                 if (!navigator.mediaDevices) {
@@ -122,21 +97,99 @@
                     return
                 }
                 navigator.mediaDevices.getUserMedia({
-                    audio: false,
+                    audio: true,
                     video: true
                 })
-                    .then(this.gotStream)
+                    .then(this.gotLocalStream)
                     .catch((e) => {
                         alert('getUserMedia() error: ' + e.name);
                     });
             },
-            gotStream (stream) {
+            gotLocalStream(stream) {
                 console.log('Adding local stream.');
                 this.localStream = stream;
                 this.localVideo.srcObject = stream;
                 this.sendMessage({type: EVENT_GOT_USER_MEDIA});
 
                 this.maybeStart();
+            },
+
+
+            maybeStart(){
+                console.log('>>>>>>> maybeStart() ', this.isStarted, this.localStream);
+                if (!this.isStarted && this.localStream) {
+                    console.log('>>>>>> creating peer connection, localstream=', this.localStream);
+
+                    // save this pc to array
+                    for (const rcde of this.remoteConnectionData) {
+                        const pc = this.createPeerConnection(rcde.remoteVideo);
+                        pc.addStream(this.localStream);
+                        rcde.peerConnection = pc;
+                        this.doOffer(rcde);
+                    }
+
+                    this.isStarted = true;
+                }
+            },
+            createPeerConnection(remoteVideo) {
+                try {
+                    const pc = new RTCPeerConnection(null);
+                    pc.onicecandidate = this.handleIceCandidate;
+                    pc.onaddstream = this.fhandleRemoteStreamAdded(remoteVideo);
+                    pc.onremovestream = this.handleRemoteStreamRemoved;
+                    console.log('Created RTCPeerConnnection');
+                    return pc;
+                } catch (e) {
+                    console.log('Failed to create PeerConnection, exception: ' + e.message);
+                    alert('Cannot create RTCPeerConnection object.');
+                }
+            },
+
+            doAnswer(pcde){
+                console.log('Sending answer to peer.');
+                const pc = pcde.peerConnection;
+                pc.createAnswer().then(
+                    this.fsetLocalDescriptionAndSendMessage(pc),
+                    this.fonCreateSessionDescriptionError(pcde)
+                );
+            },
+            // ex doCall
+            doOffer(pcde) {
+                console.log('Sending offer to peer');
+                const pc = pcde.peerConnection;
+                pc.createOffer(this.fsetLocalDescriptionAndSendMessage(pc), this.fhandleCreateOfferError(pcde));
+            },
+            handleRemoteHangup (pcde) {
+                console.log('Session terminated.');
+                pcde.remoteDescriptionSet = false;
+                this.stop(pcde);
+            },
+            fhandleRemoteStreamAdded(remoteVideo) {
+                return (event) => {
+                    console.log('Remote stream added.', event);
+                    remoteVideo.srcObject = event.stream;
+                }
+            },
+            handleRemoteStreamRemoved (event) {
+                console.log('Remote stream removed. Event: ', event);
+            },
+            stop(pcde) {
+                this.isStarted = false;
+                if (pcde.peerConnection) {
+                    pcde.peerConnection.close();
+                }
+                pcde.peerConnection = null;
+            },
+            hangupAll() {
+                console.log('Hanging up.');
+                for (const pcde of this.remoteConnectionData) {
+                    this.stop(pcde);
+                }
+                this.sendMessage({type: EVENT_BYE});
+            },
+            sendMessage(message) {
+                console.log('Client sending message: ', message);
+                this.signalingSubscription.publish(setProperData(message));
             },
             requestTurn (turnURL) {
                 var turnExists = false;
@@ -179,55 +232,76 @@
                     console.log('End of candidates.');
                 }
             },
-            handleCreateOfferError (event) {
-                console.log('createOffer() error: ', event);
-                this.onUnknownErrorReset();
-            },
-
-            setLocalAndSendMessage (sessionDescription){
-                console.log('setting setLocalDescription', sessionDescription);
-                this.pc.setLocalDescription(sessionDescription);
-                const type = sessionDescription.type;
-                if (!type) {
-                    console.error("Null type in setLocalAndSendMessage");
-                    return
-                }
-                switch (type) {
-                    case 'offer':
-                        console.log('setLocalAndSendMessage sending message', sessionDescription);
-                        this.sendMessage({type: EVENT_OFFER, value: sessionDescription});
-                        break;
-                    case 'answer':
-                        console.log('setLocalAndSendMessage sending message', sessionDescription);
-                        this.sendMessage({type: EVENT_ANSWER, value: sessionDescription});
-                        break;
-                    default:
-                        console.error("Unknown type '"+type+"' in setLocalAndSendMessage");
+            fhandleCreateOfferError(pcde) {
+                return (event) => {
+                    console.log('createOffer() error: ', event);
+                    this.onUnknownErrorReset(pcde);
                 }
             },
 
-            onCreateSessionDescriptionError (error) {
-                console.error('Failed to create session description: ' + error.toString());
-                this.onUnknownErrorReset();
+            fsetLocalDescriptionAndSendMessage(pc) {
+                return (sessionDescription) => {
+                    console.log('setting setLocalDescription', sessionDescription);
+                    pc.setLocalDescription(sessionDescription);
+                    const type = sessionDescription.type;
+                    if (!type) {
+                        console.error("Null type in setLocalAndSendMessage");
+                        return
+                    }
+                    switch (type) {
+                        case 'offer':
+                            console.log('setLocalAndSendMessage sending message', sessionDescription);
+                            this.sendMessage({type: EVENT_OFFER, value: sessionDescription});
+                            break;
+                        case 'answer':
+                            console.log('setLocalAndSendMessage sending message', sessionDescription);
+                            this.sendMessage({type: EVENT_ANSWER, value: sessionDescription});
+                            break;
+                        default:
+                            console.error("Unknown type '"+type+"' in setLocalAndSendMessage");
+                    }
+                }
             },
 
-            onUnknownErrorReset () {
+            fonCreateSessionDescriptionError(pcde) {
+                return (error) => {
+                    console.error('Failed to create session description: ' + error.toString());
+                    this.onUnknownErrorReset(pcde);
+                }
+            },
+
+            onUnknownErrorReset(pcde) {
                 console.log("Resetting state on error");
                 this.isStarted = false;
-                this.remoteDescriptionSet = false;
-                this.localStream = null;
-                this.pc = null;
-                this.remoteStream = null;
                 this.turnReady = false;
+                this.localStream = null;
+
+                pcde.remoteDescriptionSet = false;
+                pcde.peerConnection = null;
 
                 console.log("Initializing devices again");
-                this.initDevices();
+                this.initConnections();
             },
+
+            isMyMessage (message) {
+                return message.metadata && this.centrifugeSessionId == message.metadata.originatorClientId
+            },
+            lookupPeerConnectionData(message) {
+                const originatorUserId = message.metadata.originatorUserId;
+                for (const pcde of this.remoteConnectionData) {
+                    if (pcde.userId == originatorUserId) {
+                        return pcde;
+                    }
+                }
+                return null;
+            }
         },
 
         mounted() {
             this.localVideo = document.querySelector('#localVideo');
-            this.remoteVideo = document.querySelector('#remoteVideo');
+
+            // bus.$on(CHANGE_PARTICIPANTS, this.onChangeParticipants);
+
 
             /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
              * https://codelabs.developers.google.com/codelabs/webrtc-web/#4
@@ -248,46 +322,52 @@
                 }
                 const message = getProperData(rawMessage);
 
+
                 console.log('Client received foreign message:', message);
                 if (message.type === EVENT_GOT_USER_MEDIA) {
                     this.maybeStart();
-                } else if (message.type === EVENT_OFFER) {
-                    if (this.pc) {
-                        if (!this.remoteDescriptionSet) { // checking pc - prevent NPE
-                            this.pc.setRemoteDescription(new RTCSessionDescription(message.value));
-                            this.remoteDescriptionSet = true;
-                        }
-                        this.doAnswer();
-                    } else {
-                        console.warn("Peer connection still not set so I cannot answer on offer");
-                    }
-                } else if (message.type === EVENT_ANSWER && this.isStarted) {
-                    if (!this.remoteDescriptionSet && this.pc) { // checking pc - prevent NPE
-                        this.pc.setRemoteDescription(new RTCSessionDescription(message.value));
-                        this.remoteDescriptionSet = true;
-                    }
+                    return;
                 }
-                else if (message.type === EVENT_CANDIDATE && this.isStarted) {
+
+                const pcde = this.lookupPeerConnectionData(getData(rawMessage));
+                if (!pcde){
+                    console.warn("Cannot find remot econnection data for ", rawMessage)
+                    return;
+                }
+                const pc = pcde.peerConnection;
+                if (message.type === EVENT_OFFER) {
+                    if (!pcde.remoteDescriptionSet) { // TODO to array
+                        pc.setRemoteDescription(new RTCSessionDescription(message.value));
+                        pcde.remoteDescriptionSet = true;
+                    }
+                    this.doAnswer(pcde);
+                } else if (message.type === EVENT_ANSWER && this.isStarted) {
+                    if (!pcde.remoteDescriptionSet) {
+                        pc.setRemoteDescription(new RTCSessionDescription(message.value));
+                        pcde.remoteDescriptionSet = true;
+                    }
+                } else if (message.type === EVENT_CANDIDATE && this.isStarted) {
                     var candidate = new RTCIceCandidate({
                         sdpMLineIndex: message.label,
                         candidate: message.candidate
                     });
-                    this.pc.addIceCandidate(candidate);
+                    pc.addIceCandidate(candidate);
                 } else if (message.type === EVENT_BYE && this.isStarted) {
-                    this.handleRemoteHangup();
+                    this.handleRemoteHangup(pcde);
                 }
             });
-
-            this.initDevices();
 
             if (location.hostname !== 'localhost') {
                 this.requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
             }
 
+            this.initConnections();
         },
+
         beforeDestroy() {
             console.log("Cleaning up");
-            this.hangup();
+            // bus.$off(CHANGE_PARTICIPANTS, this.onChangeParticipants);
+            this.hangupAll();
             this.signalingSubscription.unsubscribe();
         }
     }

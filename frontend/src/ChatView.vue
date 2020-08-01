@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <v-row dense>
-            <ChatVideo v-if="isVideo()"/>
+            <ChatVideo v-if="isVideo()" :participantIds="chatDto.participantIds"/>
             <v-col cols="12">
                 <div id="messagesScroller" :style="scrollerHeight()">
                     <v-card-text>
@@ -48,6 +48,7 @@
     } from "./InfinityListMixin";
     import Vue from 'vue'
     import bus, {
+        // CHANGE_PARTICIPANTS,
         CHANGE_TITLE,
         CHAT_EDITED,
         MESSAGE_ADD,
@@ -66,6 +67,9 @@
         data() {
             return {
                 chatMessagesSubscription: null,
+                chatDto: {
+                    participantIds:[]
+                }
             }
         },
         computed: {
@@ -174,6 +178,8 @@
                 axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
                     console.log("Got info about chat", data);
                     bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null, true));
+                    // bus.$emit(CHANGE_PARTICIPANTS, data.participantIds);
+                    this.chatDto = data;
                 });
             },
             onChatChange(dto) {
