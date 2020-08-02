@@ -41,7 +41,7 @@ module.exports = (env, argv) => {
         );
     }
 
-    return {
+    const webpackCfg = {
         entry: "./src/main.js",
         output: {
             path: contentBase,
@@ -118,5 +118,12 @@ module.exports = (env, argv) => {
             ]
         },
         plugins: pluginsArray,
+    };
+
+    if (argv.mode === 'development') {
+        // https://github.com/vuejs/vue-loader/issues/620#issuecomment-363931521
+        webpackCfg.devtool = 'cheap-module-eval-sourcemap';
     }
+
+    return webpackCfg;
 };
