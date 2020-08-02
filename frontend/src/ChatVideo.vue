@@ -390,6 +390,7 @@
             console.log("Cleaning up");
             this.hangupAll();
             this.signalingSubscription.unsubscribe();
+            bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true));
         }
     }
 </script>

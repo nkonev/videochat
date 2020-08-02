@@ -204,9 +204,6 @@
             stopCall() {
                 console.log("stopCall");
                 this.$router.push({ name: chat_name});
-
-                this.showCallButton = true;
-                this.showHangButton = false;
             }
         },
         computed: {
