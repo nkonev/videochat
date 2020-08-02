@@ -353,7 +353,11 @@
                         // I save his timestamp
                         // TODO complete
                         // TODO seems I just should restart if I am master
+                    //if (!pc) {
                         this.maybeStart(pcde);
+                    //} else {
+                        //console.log("Prevent restart exists connection for", pcde.userId);
+                    //}
                     // } else {
                     //     console.log("Skipping reaction on Hello because I am younger then him")
                     // }
