@@ -266,6 +266,8 @@
                         pc.setLocalDescription(sessionDescription);
                         pcde.localDescriptionSet = true;
                     // }
+                    const toUserId = pcde.userId;
+
                     const type = sessionDescription.type;
                     if (!type) {
                         console.error("Null type in setLocalAndSendMessage");
@@ -273,10 +275,10 @@
                     }
                     switch (type) {
                         case 'offer':
-                            this.sendMessage({type: EVENT_OFFER, value: sessionDescription});
+                            this.sendMessage({type: EVENT_OFFER, value: sessionDescription, toUserId: toUserId});
                             break;
                         case 'answer':
-                            this.sendMessage({type: EVENT_ANSWER, value: sessionDescription});
+                            this.sendMessage({type: EVENT_ANSWER, value: sessionDescription, toUserId: toUserId});
                             break;
                         default:
                             console.error("Unknown type '"+type+"' in setLocalAndSendMessage");
@@ -339,15 +341,16 @@
                 }
                 const message = getProperData(rawMessage);
 
-
-                console.log('Client received foreign message:', message);
+                console.log('Client received foreign presonal message:', message);
 
                 const pcde = this.lookupPeerConnectionData(getData(rawMessage));
+
                 if (!pcde){
                     console.warn("Cannot find remote connection data for ", rawMessage, " among ", this.remoteConnectionData)
                     return;
                 }
                 const pc = pcde.peerConnection;
+                // handle broadcast messages
                 if (message.type === EVENT_HELLO) {
                     // if (message.timestamp > this.startDate) {
                         // I save his timestamp
@@ -355,13 +358,24 @@
                         // TODO seems I just should restart if I am master
                     //if (!pc) {
                         this.maybeStart(pcde);
+                        return;
                     //} else {
                         //console.log("Prevent restart exists connection for", pcde.userId);
                     //}
                     // } else {
                     //     console.log("Skipping reaction on Hello because I am younger then him")
                     // }
-                } else if (message.type === EVENT_OFFER && pc) {
+                } else if (message.type === EVENT_BYE) {
+                    this.handleRemoteHangup(pcde);
+                }
+
+                // handle personal messages
+                if (message.toUserId != this.currentUser.id) {
+                    console.debug("Skipping message not for me but for", message.toUserId);
+                    return;
+                }
+
+                if (message.type === EVENT_OFFER && pc) {
                     //if (!pcde.remoteDescriptionSet) {
                         pc.setRemoteDescription(new RTCSessionDescription(message.value));
                         //pcde.remoteDescriptionSet = true;
@@ -373,18 +387,12 @@
                     //    pcde.remoteDescriptionSet = true;
                     //}
                 } else if (message.type === EVENT_CANDIDATE && pc) {
-                    if (message.toUserId != this.currentUser.id) {
-                        console.log("Skipping handling remote ICE candidate for", pcde.userId);
-                        return;
-                    }
                     console.log("Handling remote ICE candidate for ", pcde.userId);
                     var candidate = new RTCIceCandidate({
                         sdpMLineIndex: message.label,
                         candidate: message.candidate
                     });
                     pc.addIceCandidate(candidate);
-                } else if (message.type === EVENT_BYE) {
-                    this.handleRemoteHangup(pcde);
                 }
             });
 
