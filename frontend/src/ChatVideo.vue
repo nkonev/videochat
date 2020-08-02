@@ -19,7 +19,7 @@
     };
 
     const EVENT_CANDIDATE = 'candidate';
-    const EVENT_HELLO = 'got_user_media';
+    const EVENT_HELLO = 'hello';
     const EVENT_BYE = 'bye';
     const EVENT_OFFER = 'offer';
     const EVENT_ANSWER = 'answer';
