@@ -140,7 +140,11 @@
                 try {
                     const pc = new RTCPeerConnection(null);
                     pc.onicecandidate = this.fhandleIceCandidate(rcde);
-                    pc.onaddstream = this.fhandleRemoteStreamAdded(remoteVideo);
+                    if ("ontrack" in pc) {
+                        pc.ontrack = this.fhandleRemoteTrackAdded(remoteVideo);
+                    } else {
+                        pc.onaddstream = this.fhandleRemoteStreamAdded(remoteVideo);
+                    }
                     pc.onremovestream = this.handleRemoteStreamRemoved;
                     return pc;
                 } catch (e) {
@@ -171,6 +175,12 @@
                 return (event) => {
                     console.log('Remote stream added.', event);
                     remoteVideo.srcObject = event.stream;
+                }
+            },
+            fhandleRemoteTrackAdded(remoteVideo) {
+                return (event) => {
+                    console.log('Remote stream added.', event);
+                    remoteVideo.srcObject = event.streams[0];
                 }
             },
             handleRemoteStreamRemoved (event) {
