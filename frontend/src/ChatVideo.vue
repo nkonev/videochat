@@ -137,10 +137,9 @@
             },
             createPeerConnection(rcde) {
                 const remoteVideo = rcde.remoteVideo;
-                const toUserId = rcde.userId;
                 try {
                     const pc = new RTCPeerConnection(null);
-                    pc.onicecandidate = this.fhandleIceCandidate(toUserId);
+                    pc.onicecandidate = this.fhandleIceCandidate(rcde);
                     pc.onaddstream = this.fhandleRemoteStreamAdded(remoteVideo);
                     pc.onremovestream = this.handleRemoteStreamRemoved;
                     return pc;
@@ -225,7 +224,8 @@
                     xhr.send();
                 }
             },
-            fhandleIceCandidate(toUserId) {
+            fhandleIceCandidate(pcde) {
+                const toUserId = pcde.userId;
                 return (event) => {
                     console.log('icecandidate event: ', event);
                     if (event.candidate) {
