@@ -63,3 +63,7 @@ docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:c
 https://lists.mozilla.org/pipermail/dev-platform/2019-February/023590.html
 about:config
 media.devices.insecure.enabled
+
+# Mobile firefox enable video on non-localhost
+![](./.markdown/mobile-ff-1.jpg)
+![](./.markdown/mobile-ff-2.jpg)

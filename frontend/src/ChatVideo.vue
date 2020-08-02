@@ -19,7 +19,7 @@
     };
 
     const EVENT_CANDIDATE = 'candidate';
-    const EVENT_GOT_USER_MEDIA = 'got_user_media';
+    const EVENT_HELLO = 'got_user_media';
     const EVENT_BYE = 'bye';
     const EVENT_OFFER = 'offer';
     const EVENT_ANSWER = 'answer';
@@ -30,22 +30,27 @@
         }]
     };
 
+    const getNewTimestamp = () => {
+        return +new Date();
+    }
 
     export default {
         data() {
             return {
                 signalingSubscription: null,
 
-                isStarted: false, // really needed
                 localStream: null,
                 turnReady: null,
                 localVideo: null,
+                
+                startDate: getNewTimestamp(),
 
                 remoteConnectionData: [
                     // userId: number
                     // peerConnection: RTCPeerConnection
                     // remoteDescriptionSet: boolean
                     // remoteVideo: html element
+                    // localDescriptionSet: boolean
                 ]
             }
         },
@@ -68,7 +73,7 @@
                 console.log("Participant ids except me:", ppi);
                 return ppi;
             },
-            initConnections() {
+            initRemoteStructures() {
                 console.log("Initializing remote videos");
                 for (let pi of this.getProperParticipantIds()) {
                     this.remoteConnectionData.push({
@@ -97,28 +102,48 @@
                 console.log('Adding local stream.');
                 this.localStream = stream;
                 this.localVideo.srcObject = stream;
-                this.sendMessage({type: EVENT_GOT_USER_MEDIA});
+                this.sendMessage({type: EVENT_HELLO, timestamp: this.startDate});
 
                 bus.$emit(VIDEO_LOCAL_ESTABLISHED);
 
-                this.maybeStart();
+                this.initConnections();
+            },
+            canChangeDescriptions(pcde) {
+                return !pcde.remoteDescriptionSet && !pcde.localDescriptionSet;
             },
 
-
-            maybeStart(){
-                console.log('>>>>>>> maybeStart() ', this.isStarted, this.localStream);
-                if (!this.isStarted && this.localStream) {
+            initConnections(){
+                console.log('Initializing connections ', this.localStream);
+                if (this.localStream) {
                     console.log('>>>>>> creating peer connection, localstream=', this.localStream);
-
                     // save this pc to array
                     for (const rcde of this.remoteConnectionData) {
                         const pc = this.createPeerConnection(rcde.remoteVideo);
                         pc.addStream(this.localStream);
                         rcde.peerConnection = pc;
-                        this.doOffer(rcde);
                     }
+                } else {
+                    // TODO else retry
+                    console.warn("localStream still not set -> we unable to initialize connections");
+                }
+            },
 
-                    this.isStarted = true;
+            maybeStart(rcde){
+                if (this.localStream) {
+                    console.log('>>>>>> creating peer connection, localstream=', this.localStream);
+
+                    // save this pc to array
+                    // for (const rcde of this.remoteConnectionData) {
+                        // TODO seems here should be if I am master then I restart
+                        const pc = this.createPeerConnection(rcde.remoteVideo);
+                        console.log('Created RTCPeerConnnection me -> '+rcde.userId);
+                        pc.addStream(this.localStream);
+                        rcde.peerConnection = pc;
+                        this.doOffer(rcde);
+                    //}
+                } else {
+                    // TODO else retry
+                    console.warn("localStream still not set  -> we unable to send offer");
                 }
             },
             createPeerConnection(remoteVideo) {
@@ -127,7 +152,6 @@
                     pc.onicecandidate = this.handleIceCandidate;
                     pc.onaddstream = this.fhandleRemoteStreamAdded(remoteVideo);
                     pc.onremovestream = this.handleRemoteStreamRemoved;
-                    console.log('Created RTCPeerConnnection');
                     return pc;
                 } catch (e) {
                     console.log('Failed to create PeerConnection, exception: ' + e.message);
@@ -136,21 +160,21 @@
             },
 
             doAnswer(pcde){
-                console.log('Sending answer to peer.');
+                console.log('Sending answer to peer ' + pcde.userId);
                 const pc = pcde.peerConnection;
                 pc.createAnswer().then(
-                    this.fsetLocalDescriptionAndSendMessage(pc),
+                    this.fsetLocalDescriptionAndSendMessage(pcde),
                     this.fonCreateSessionDescriptionError(pcde)
                 );
             },
             // ex doCall
             doOffer(pcde) {
-                console.log('Sending offer to peer');
+                console.log('Sending offer to peer ' + pcde.userId);
                 const pc = pcde.peerConnection;
-                pc.createOffer(this.fsetLocalDescriptionAndSendMessage(pc), this.fhandleCreateOfferError(pcde));
+                pc.createOffer(this.fsetLocalDescriptionAndSendMessage(pcde), this.fhandleCreateOfferError(pcde));
             },
-            handleRemoteHangup (pcde) {
-                console.log('Session terminated.');
+            handleRemoteHangup(pcde) {
+                console.log('Session terminated for ' + pcde.userId);
                 pcde.remoteDescriptionSet = false;
                 this.stop(pcde);
             },
@@ -164,7 +188,6 @@
                 console.log('Remote stream removed. Event: ', event);
             },
             stop(pcde) {
-                this.isStarted = false;
                 if (pcde.peerConnection) {
                     pcde.peerConnection.close();
                 }
@@ -209,7 +232,7 @@
                     xhr.send();
                 }
             },
-            handleIceCandidate (event) {
+            handleIceCandidate(event) {
                 console.log('icecandidate event: ', event);
                 if (event.candidate) {
                     this.sendMessage({
@@ -229,10 +252,14 @@
                 }
             },
 
-            fsetLocalDescriptionAndSendMessage(pc) {
+            fsetLocalDescriptionAndSendMessage(pcde) {
                 return (sessionDescription) => {
-                    console.log('setting setLocalDescription', sessionDescription);
-                    pc.setLocalDescription(sessionDescription);
+                    console.log('setting setLocalDescription and sending it', sessionDescription);
+                    const pc = pcde.peerConnection;
+                    //if (this.canChangeDescriptions(pcde)) {
+                        pc.setLocalDescription(sessionDescription);
+                        pcde.localDescriptionSet = true;
+                    //}
                     const type = sessionDescription.type;
                     if (!type) {
                         console.error("Null type in setLocalAndSendMessage");
@@ -240,11 +267,9 @@
                     }
                     switch (type) {
                         case 'offer':
-                            console.log('setLocalAndSendMessage sending message', sessionDescription);
                             this.sendMessage({type: EVENT_OFFER, value: sessionDescription});
                             break;
                         case 'answer':
-                            console.log('setLocalAndSendMessage sending message', sessionDescription);
                             this.sendMessage({type: EVENT_ANSWER, value: sessionDescription});
                             break;
                         default:
@@ -262,7 +287,6 @@
 
             onUnknownErrorReset(pcde) {
                 console.log("Resetting state on error");
-                this.isStarted = false;
                 this.turnReady = false;
                 this.localStream = null;
 
@@ -270,7 +294,7 @@
                 pcde.peerConnection = null;
 
                 console.log("Initializing devices again");
-                this.initConnections();
+                this.initRemoteStructures();
             },
 
             isMyMessage (message) {
@@ -311,35 +335,40 @@
 
 
                 console.log('Client received foreign message:', message);
-                if (message.type === EVENT_GOT_USER_MEDIA) {
-                    this.maybeStart();
-                    return;
-                }
 
                 const pcde = this.lookupPeerConnectionData(getData(rawMessage));
                 if (!pcde){
-                    console.warn("Cannot find remot econnection data for ", rawMessage)
+                    console.warn("Cannot find remote connection data for ", rawMessage, " among ", this.remoteConnectionData)
                     return;
                 }
                 const pc = pcde.peerConnection;
-                if (message.type === EVENT_OFFER && pc) {
-                    if (!pcde.remoteDescriptionSet) {
+                if (message.type === EVENT_HELLO) {
+                    if (message.timestamp > this.startDate) {
+                        // I save his timestamp
+                        // TODO complete
+                        // TODO seems I just should restart if I am master
+                        this.maybeStart(pcde);
+                    } else {
+
+                    }
+                } else if (message.type === EVENT_OFFER && pc) {
+                    //if (this.canChangeDescriptions(pcde)) {
                         pc.setRemoteDescription(new RTCSessionDescription(message.value));
                         pcde.remoteDescriptionSet = true;
-                    }
+                    //}
                     this.doAnswer(pcde);
-                } else if (message.type === EVENT_ANSWER && this.isStarted && pc) {
-                    if (!pcde.remoteDescriptionSet) {
+                } else if (message.type === EVENT_ANSWER && pc) {
+                    //if (this.canChangeDescriptions(pcde)) {
                         pc.setRemoteDescription(new RTCSessionDescription(message.value));
                         pcde.remoteDescriptionSet = true;
-                    }
-                } else if (message.type === EVENT_CANDIDATE && this.isStarted && pc) {
+                    //}
+                } else if (message.type === EVENT_CANDIDATE && pc) {
                     var candidate = new RTCIceCandidate({
                         sdpMLineIndex: message.label,
                         candidate: message.candidate
                     });
                     pc.addIceCandidate(candidate);
-                } else if (message.type === EVENT_BYE && this.isStarted) {
+                } else if (message.type === EVENT_BYE) {
                     this.handleRemoteHangup(pcde);
                 }
             });
@@ -348,7 +377,7 @@
                 this.requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
             }*/
 
-            this.initConnections();
+            this.initRemoteStructures();
         },
 
         beforeDestroy() {
