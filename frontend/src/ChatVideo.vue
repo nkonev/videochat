@@ -9,7 +9,8 @@
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import bus, { VIDEO_LOCAL_ESTABLISHED } from "./bus";
+    import bus, {CHANGE_PHONE_BUTTON, VIDEO_LOCAL_ESTABLISHED} from "./bus";
+    import {phoneFactory} from "./changeTitle";
 
 
     const setProperData = (message) => {
@@ -52,7 +53,7 @@
                 ]
             }
         },
-        props: ['participantIds'],
+        props: ['chatDto'],
         computed: {
             chatId() {
                 return this.$route.params.id
@@ -64,7 +65,7 @@
                 return 'remoteVideo'+participantId;
             },
             getProperParticipantIds() {
-                const ppi = this.participantIds.filter(pi => pi != this.currentUser.id);
+                const ppi = this.chatDto.participantIds.filter(pi => pi != this.currentUser.id);
                 console.log("Participant ids except me:", ppi);
                 return ppi;
             },
@@ -99,6 +100,7 @@
                 this.localVideo.srcObject = stream;
 
                 bus.$emit(VIDEO_LOCAL_ESTABLISHED);
+                bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, false))
 
                 this.initConnections();
             },

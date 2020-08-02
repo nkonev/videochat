@@ -54,8 +54,11 @@
             <v-btn v-if="showChatEditButton" icon @click="editChat">
                 <v-icon>mdi-lead-pencil</v-icon>
             </v-btn>
-            <v-btn v-if="showPhoneButton" icon @click="createCall">
-                <v-icon>mdi-phone</v-icon>
+            <v-btn v-if="showCallButton" icon @click="createCall">
+                <v-icon color="green">mdi-phone</v-icon>
+            </v-btn>
+            <v-btn v-if="showHangButton" icon @click="stopCall">
+                <v-icon color="red">mdi-phone</v-icon>
             </v-btn>
 
             <v-spacer></v-spacer>
@@ -95,10 +98,10 @@
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
     import {CHANGE_SEARCH_STRING, FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
-    import bus, {CHANGE_TITLE, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
+    import bus, {CHANGE_PHONE_BUTTON, CHANGE_TITLE, LOGGED_OUT, OPEN_CHAT_EDIT} from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
-    import {profile_name, root_name, videochat_name} from "./routes";
+    import {chat_name, profile_name, root_name, videochat_name} from "./routes";
     import ChatDelete from "./ChatDelete";
     import Vue from 'vue'
 
@@ -124,7 +127,8 @@
                 searchChatString: "",
                 showSearch: false,
                 showChatEditButton: false,
-                showPhoneButton: false,
+                showCallButton: false,
+                showHangButton: false,
                 chatEditId: null,
             }
         },
@@ -172,16 +176,37 @@
                     }
                 })
             },
-            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, showPhoneButton}) {
+            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId}) {
                 this.title = title;
                 this.showSearch = isShowSearch;
                 this.showChatEditButton = isShowChatEditButton;
                 this.chatEditId = chatEditId;
-                this.showPhoneButton = showPhoneButton;
+            },
+            changePhoneButton({show, call}) {
+                console.log("changePhoneButton", show, call);
+                if (!show) {
+                    this.showCallButton = false;
+                    this.showHangButton = false;
+                } else {
+                    if (call) {
+                        this.showCallButton = true;
+                        this.showHangButton = false;
+                    } else {
+                        this.showCallButton = false;
+                        this.showHangButton = true;
+                    }
+                }
             },
             createCall() {
-                console.log("Create phone");
-                this.$router.push(({ name: videochat_name}))
+                console.log("createCall");
+                this.$router.push({ name: videochat_name});
+            },
+            stopCall() {
+                console.log("stopCall");
+                this.$router.push({ name: chat_name});
+
+                this.showCallButton = true;
+                this.showHangButton = false;
             }
         },
         computed: {
@@ -193,6 +218,7 @@
         created() {
             this.doSearch = debounce(this.doSearch, 700);
             bus.$on(CHANGE_TITLE, this.changeTitle);
+            bus.$on(CHANGE_PHONE_BUTTON, this.changePhoneButton);
         },
         watch: {
             searchChatString (searchString) {

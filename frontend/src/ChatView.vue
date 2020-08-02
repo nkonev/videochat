@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <v-row dense>
-            <ChatVideo v-if="isAllowedVideo()" :participantIds="chatDto.participantIds"/>
+            <ChatVideo v-if="isAllowedVideo()" :chatDto="chatDto"/>
             <v-col cols="12">
                 <div id="messagesScroller" :style="scrollerHeight()">
                     <v-card-text>
@@ -48,6 +48,7 @@
     } from "./InfinityListMixin";
     import Vue from 'vue'
     import bus, {
+        CHANGE_PHONE_BUTTON,
         CHANGE_TITLE,
         CHAT_EDITED,
         MESSAGE_ADD,
@@ -56,7 +57,7 @@
         SET_EDIT_MESSAGE,
         VIDEO_LOCAL_ESTABLISHED
     } from "./bus";
-    import {titleFactory} from "./changeTitle";
+    import {phoneFactory, titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
     import {videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
@@ -185,7 +186,8 @@
             getInfo() {
                 axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
                     console.log("Got info about chat", data);
-                    bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null, true));
+                    bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null));
+                    bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true))
                     this.chatDto = data;
                 });
             },
