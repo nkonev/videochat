@@ -198,7 +198,7 @@
                 axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`);
             },
             isAllowedVideo() {
-                return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds.length
+                return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
             },
 
         },
