@@ -61,6 +61,8 @@
     import {videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
     import {getData} from "./centrifugeConnection";
+    import {mapGetters} from "vuex";
+    import {GET_USER} from "./store";
 
     export default {
         mixins:[infinityListMixin()],
@@ -79,6 +81,7 @@
             pageHeight () {
                 return document.body.scrollHeight
             },
+            ...mapGetters({currentUser: GET_USER})
         },
         methods: {
             addItem(dto) {
@@ -195,7 +198,7 @@
                 axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`);
             },
             isAllowedVideo() {
-                return this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds.length
+                return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds.length
             },
 
         },

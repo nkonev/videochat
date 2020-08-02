@@ -66,9 +66,9 @@
                 return 'remoteVideo'+participantId;
             },
             getProperParticipantIds() {
-                if (!this.currentUser) {
-                    return [];
-                }
+                // if (!this.currentUser) {
+                //     return [];
+                // }
                 const ppi = this.participantIds.filter(pi => pi != this.currentUser.id);
                 console.log("Participant ids except me:", ppi);
                 return ppi;
@@ -102,26 +102,23 @@
                 console.log('Adding local stream.');
                 this.localStream = stream;
                 this.localVideo.srcObject = stream;
-                this.sendMessage({type: EVENT_HELLO, timestamp: this.startDate});
 
                 bus.$emit(VIDEO_LOCAL_ESTABLISHED);
 
                 this.initConnections();
             },
-            canChangeDescriptions(pcde) {
-                return !pcde.remoteDescriptionSet && !pcde.localDescriptionSet;
-            },
 
             initConnections(){
-                console.log('Initializing connections ', this.localStream);
+                console.log('Initializing connections from local stream', this.localStream);
                 if (this.localStream) {
-                    console.log('>>>>>> creating peer connection, localstream=', this.localStream);
                     // save this pc to array
                     for (const rcde of this.remoteConnectionData) {
-                        const pc = this.createPeerConnection(rcde.remoteVideo);
+                        console.log('>>>>>> creating peer connection, localstream=', this.localStream, "from me to", rcde.userId);
+                        const pc = this.createPeerConnection(rcde);
                         pc.addStream(this.localStream);
                         rcde.peerConnection = pc;
                     }
+                    this.sendMessage({type: EVENT_HELLO, timestamp: this.startDate});
                 } else {
                     // TODO else retry
                     console.warn("localStream still not set -> we unable to initialize connections");
@@ -130,13 +127,14 @@
 
             maybeStart(rcde){
                 if (this.localStream) {
-                    console.log('>>>>>> creating peer connection, localstream=', this.localStream);
+                    console.log('>>>>>> starting peer connection for', rcde.userId);
 
                     // save this pc to array
                     // for (const rcde of this.remoteConnectionData) {
                         // TODO seems here should be if I am master then I restart
-                        const pc = this.createPeerConnection(rcde.remoteVideo);
-                        console.log('Created RTCPeerConnnection me -> '+rcde.userId);
+                        this.stop(rcde);
+                        const pc = this.createPeerConnection(rcde);
+                        console.log('Created RTCPeerConnnection me -> user '+rcde.userId);
                         pc.addStream(this.localStream);
                         rcde.peerConnection = pc;
                         this.doOffer(rcde);
@@ -146,10 +144,12 @@
                     console.warn("localStream still not set  -> we unable to send offer");
                 }
             },
-            createPeerConnection(remoteVideo) {
+            createPeerConnection(rcde) {
+                const remoteVideo = rcde.remoteVideo;
+                const toUserId = rcde.userId;
                 try {
                     const pc = new RTCPeerConnection(null);
-                    pc.onicecandidate = this.handleIceCandidate;
+                    pc.onicecandidate = this.fhandleIceCandidate(toUserId);
                     pc.onaddstream = this.fhandleRemoteStreamAdded(remoteVideo);
                     pc.onremovestream = this.handleRemoteStreamRemoved;
                     return pc;
@@ -189,7 +189,10 @@
             },
             stop(pcde) {
                 if (pcde.peerConnection) {
+                    console.log("Stopping peer connection to user " + pcde.userId);
                     pcde.peerConnection.close();
+                } else {
+                    console.log("Didn't stopped peer connection to user " + pcde.userId);
                 }
                 pcde.peerConnection = null;
             },
@@ -232,17 +235,20 @@
                     xhr.send();
                 }
             },
-            handleIceCandidate(event) {
-                console.log('icecandidate event: ', event);
-                if (event.candidate) {
-                    this.sendMessage({
-                        type: EVENT_CANDIDATE,
-                        label: event.candidate.sdpMLineIndex,
-                        id: event.candidate.sdpMid,
-                        candidate: event.candidate.candidate
-                    });
-                } else {
-                    console.log('End of candidates.');
+            fhandleIceCandidate(toUserId) {
+                return (event) => {
+                    console.log('icecandidate event: ', event);
+                    if (event.candidate) {
+                        this.sendMessage({
+                            type: EVENT_CANDIDATE,
+                            label: event.candidate.sdpMLineIndex,
+                            id: event.candidate.sdpMid,
+                            candidate: event.candidate.candidate,
+                            toUserId: toUserId
+                        });
+                    } else {
+                        console.log('End of candidates.');
+                    }
                 }
             },
             fhandleCreateOfferError(pcde) {
@@ -256,10 +262,10 @@
                 return (sessionDescription) => {
                     console.log('setting setLocalDescription and sending it', sessionDescription);
                     const pc = pcde.peerConnection;
-                    //if (this.canChangeDescriptions(pcde)) {
+                    // if (!pcde.localDescriptionSet) {
                         pc.setLocalDescription(sessionDescription);
                         pcde.localDescriptionSet = true;
-                    //}
+                    // }
                     const type = sessionDescription.type;
                     if (!type) {
                         console.error("Null type in setLocalAndSendMessage");
@@ -343,26 +349,31 @@
                 }
                 const pc = pcde.peerConnection;
                 if (message.type === EVENT_HELLO) {
-                    if (message.timestamp > this.startDate) {
+                    // if (message.timestamp > this.startDate) {
                         // I save his timestamp
                         // TODO complete
                         // TODO seems I just should restart if I am master
                         this.maybeStart(pcde);
-                    } else {
-
-                    }
+                    // } else {
+                    //     console.log("Skipping reaction on Hello because I am younger then him")
+                    // }
                 } else if (message.type === EVENT_OFFER && pc) {
-                    //if (this.canChangeDescriptions(pcde)) {
+                    //if (!pcde.remoteDescriptionSet) {
                         pc.setRemoteDescription(new RTCSessionDescription(message.value));
-                        pcde.remoteDescriptionSet = true;
+                        //pcde.remoteDescriptionSet = true;
                     //}
                     this.doAnswer(pcde);
                 } else if (message.type === EVENT_ANSWER && pc) {
-                    //if (this.canChangeDescriptions(pcde)) {
+                    //if (!pcde.remoteDescriptionSet) {
                         pc.setRemoteDescription(new RTCSessionDescription(message.value));
-                        pcde.remoteDescriptionSet = true;
+                    //    pcde.remoteDescriptionSet = true;
                     //}
                 } else if (message.type === EVENT_CANDIDATE && pc) {
+                    if (message.toUserId != this.currentUser.id) {
+                        console.log("Skipping handling remote ICE candidate for", pcde.userId);
+                        return;
+                    }
+                    console.log("Handling remote ICE candidate for ", pcde.userId);
                     var candidate = new RTCIceCandidate({
                         sdpMLineIndex: message.label,
                         candidate: message.candidate
