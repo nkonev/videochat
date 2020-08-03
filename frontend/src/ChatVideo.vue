@@ -37,7 +37,6 @@
                 signalingSubscription: null,
 
                 localStream: null,
-                turnReady: null,
                 localVideo: null,
 
                 remoteConnectionData: [
@@ -260,7 +259,6 @@
 
             onUnknownErrorReset(pcde) {
                 console.log("Resetting state on error");
-                this.turnReady = false;
                 this.localStream = null;
 
                 pcde.peerConnection = null;
