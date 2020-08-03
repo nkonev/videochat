@@ -289,7 +289,9 @@
         mounted() {
             this.localVideo = document.querySelector('#localVideo');
 
-            /* https://www.html5rocks.com/en/tutorials/webrtc/basics/
+            /*
+             * https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Connectivity
+             * https://www.html5rocks.com/en/tutorials/webrtc/basics/
              * https://codelabs.developers.google.com/codelabs/webrtc-web/#4
              * WebRTC applications need to do several things:
               1.  Get streaming audio, video or other data.
