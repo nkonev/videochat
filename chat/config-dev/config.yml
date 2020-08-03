@@ -12,7 +12,7 @@ http:
 
 auth:
   exclude:
-    - "^/public.*"
+    - "^/chat/public.*"
 
 postgresql:
   # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
@@ -38,3 +38,6 @@ aaa:
 
 jaeger:
   endpoint: "localhost:6831"
+
+iceServers:
+  - "stun:stun.l.google.com:19302"

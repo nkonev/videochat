@@ -142,6 +142,8 @@ func configureEcho(
 	e.DELETE("/chat/:id/message/:messageId", mc.DeleteMessage)
 	e.PUT("/chat/:id/message/read/:messageId", mc.ReadMessage)
 
+	e.GET("/chat/public/webrtc/config", handlers.GetConfiguration)
+
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			// do some work on application stop (like closing connections and files)

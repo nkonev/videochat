@@ -30,6 +30,12 @@ http:
         - "auth-middleware"
         - "api-strip-prefix-middleware"
         - "retry-middleware"
+    chat-public-router:
+      rule: "PathPrefix(`/api/chat/public`)"
+      service: chat-service
+      middlewares:
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
 
   middlewares:
     api-strip-prefix-middleware:

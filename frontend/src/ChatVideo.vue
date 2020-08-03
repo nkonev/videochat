@@ -11,7 +11,7 @@
     import {GET_USER} from "./store";
     import bus, {CHANGE_PHONE_BUTTON, VIDEO_LOCAL_ESTABLISHED} from "./bus";
     import {phoneFactory} from "./changeTitle";
-
+    import axios from "axios";
 
     const setProperData = (message) => {
         return {
@@ -25,16 +25,12 @@
     const EVENT_OFFER = 'offer';
     const EVENT_ANSWER = 'answer';
 
-    const pcConfig = {
-        'iceServers': [{
-            'urls': 'stun:stun.l.google.com:19302'
-        }]
-    };
-
     export default {
         data() {
             return {
                 signalingSubscription: null,
+
+                pcConfig: null,
 
                 localStream: null,
                 localVideo: null,
@@ -61,6 +57,22 @@
                 const ppi = this.chatDto.participantIds.filter(pi => pi != this.currentUser.id);
                 console.log("Participant ids except me:", ppi);
                 return ppi;
+            },
+            getWebRtcConfiguration() {
+                const localPcConfig = {
+                    iceServers: []
+                };
+                axios.get("/api/chat/public/webrtc/config").then(({data}) => {
+                    for (const srv of data) {
+                        localPcConfig.iceServers.push({
+                            'urls': srv
+                        });
+                        this.pcConfig = localPcConfig;
+                        console.log("Configured WebRTC servers", this.pcConfig);
+                    }
+                    this.initRemoteStructures();
+                })
+
             },
             initRemoteStructures() {
                 console.log("Initializing remote videos");
@@ -133,7 +145,7 @@
             createPeerConnection(rcde) {
                 const remoteVideo = rcde.remoteVideo;
                 try {
-                    const pc = new RTCPeerConnection(pcConfig);
+                    const pc = new RTCPeerConnection(this.pcConfig);
                     pc.onicecandidate = this.fhandleIceCandidate(rcde);
                     if ("ontrack" in pc) {
                         pc.ontrack = this.fhandleRemoteTrackAdded(remoteVideo);
@@ -349,7 +361,7 @@
                 }
             });
 
-            this.initRemoteStructures();
+            this.getWebRtcConfiguration();
         },
 
         beforeDestroy() {
