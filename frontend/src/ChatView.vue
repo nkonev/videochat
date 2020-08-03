@@ -230,6 +230,9 @@
 
             this.chatMessagesSubscription.unsubscribe();
         },
+        destroyed() {
+            bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(false))
+        },
         components: {
             MessageEdit,
             ChatVideo
