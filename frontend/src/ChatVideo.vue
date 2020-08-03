@@ -31,10 +31,6 @@
         }]
     };
 
-    const getNewTimestamp = () => {
-        return +new Date();
-    }
-
     export default {
         data() {
             return {
@@ -43,8 +39,6 @@
                 localStream: null,
                 turnReady: null,
                 localVideo: null,
-                
-                startDate: getNewTimestamp(),
 
                 remoteConnectionData: [
                     // userId: number
@@ -115,7 +109,7 @@
                         pc.addStream(this.localStream);
                         rcde.peerConnection = pc;
                     }
-                    this.sendMessage({type: EVENT_HELLO, timestamp: this.startDate});
+                    this.sendMessage({type: EVENT_HELLO});
                 } else {
                     // TODO maybe retry
                     console.warn("localStream still not set -> we unable to initialize connections");
