@@ -322,6 +322,7 @@
                     return;
                 } else if (message.type === EVENT_BYE) {
                     this.handleRemoteHangup(pcde);
+                    return;
                 }
 
 
