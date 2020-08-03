@@ -272,6 +272,9 @@
             isMyMessage (message) {
                 return message.metadata && this.centrifugeSessionId == message.metadata.originatorClientId
             },
+            shouldSkipNonMineMessage(message) {
+                return message.toUserId != this.currentUser.id;
+            },
             lookupPeerConnectionData(message) {
                 const originatorUserId = message.metadata.originatorUserId;
                 for (const pcde of this.remoteConnectionData) {
@@ -327,7 +330,7 @@
 
 
                 // handle personal messages
-                if (message.toUserId != this.currentUser.id) {
+                if (this.shouldSkipNonMineMessage(message)) {
                     console.debug("Skipping message not for me but for", message.toUserId);
                     return;
                 }
