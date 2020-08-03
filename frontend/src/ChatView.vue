@@ -187,7 +187,6 @@
                 axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
                     console.log("Got info about chat", data);
                     bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null));
-                    bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true))
                     this.chatDto = data;
                 });
             },
@@ -215,6 +214,7 @@
             bus.$emit(CHANGE_TITLE, titleFactory(`Chat #${this.chatId}`, false, true, true));
 
             this.getInfo();
+            bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true))
             bus.$on(MESSAGE_ADD, this.onNewMessage);
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$on(CHAT_EDITED, this.onChatChange);
