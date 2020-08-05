@@ -52,8 +52,8 @@
                         >
                             Login
                         </v-btn>
-                        <v-btn class="mr-2 c-btn-vk" :loading="loadingVk" min-width="80px"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'" @click="loginVk()"></font-awesome-icon></v-btn>
-                        <v-btn class="mr-2 c-btn-fb" :loading="loadingFb" min-width="80px"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'" @click="loginFb()"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-2 c-btn-vk" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-2 c-btn-fb" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
                     </v-form>
                 </v-card-text>
 
