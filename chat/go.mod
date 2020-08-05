@@ -10,6 +10,7 @@ require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/protobuf v1.4.2
+	github.com/gorilla/websocket v1.4.2
 	github.com/guregu/null v4.0.0+incompatible
 	github.com/jackc/pgx/v4 v4.6.0
 	github.com/labstack/echo/v4 v4.1.16

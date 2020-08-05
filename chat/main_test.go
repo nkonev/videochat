@@ -6,7 +6,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/centrifugal/protocol"
 	"github.com/golang/protobuf/proto"
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/oliveagle/jsonpath"
 	"github.com/spf13/viper"
@@ -14,8 +16,10 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxtest"
 	"io"
+	"io/ioutil"
 	"net/http"
 	test "net/http/httptest"
+	"net/url"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers"
@@ -177,6 +181,32 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 	return app
 }
 
+func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
+	var s fx.Shutdowner
+	app := fxtest.New(
+		t,
+		fx.Logger(Logger),
+		fx.Populate(&s),
+		fx.Provide(
+			client.NewRestClient,
+			handlers.ConfigureCentrifuge,
+			handlers.CreateSanitizer,
+			configureEcho,
+			configureStaticMiddleware,
+			handlers.ConfigureAuthMiddleware,
+			db.ConfigureDb,
+			notifications.NewNotifications,
+		),
+		fx.Invoke(
+			runMigrations,
+			runCentrifuge,
+			runEcho,
+			initJaeger,
+		),
+	)
+	return app, s
+}
+
 func TestGetChats(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		c, b, _ := request("GET", "/chat", nil, e)
@@ -186,11 +216,16 @@ func TestGetChats(t *testing.T) {
 }
 
 func getJsonPathResult(t *testing.T, body string, jsonpath0 string) interface{} {
+	res := getJsonPathRaw(t, body, jsonpath0)
+	assert.NotEmpty(t, res)
+	return res
+}
+
+func getJsonPathRaw(t *testing.T, body string, jsonpath0 string) interface{} {
 	var jsonData interface{}
 	assert.Nil(t, json.Unmarshal([]byte(body), &jsonData))
 	res, err := jsonpath.JsonPathLookup(jsonData, jsonpath0)
 	assert.Nil(t, err)
-	assert.NotEmpty(t, res)
 	return res
 }
 
@@ -277,6 +312,107 @@ func TestChatCrud(t *testing.T) {
 		chatsAfterDelete, _ := db.CountChats()
 		assert.Equal(t, chatsBefore, chatsAfterDelete)
 	})
+}
+
+// https://github.com/centrifugal/centrifuge/blob/429f81a611ef8dbb6ba27e7c695e34b9fd83965f/handler_websocket_test.go#L36
+func newRealConnJSON(b testing.TB, channel string, url string, requestHeader http.Header) *websocket.Conn {
+	conn, resp, err := websocket.DefaultDialer.Dial(url+"/chat/websocket", requestHeader)
+	assert.NoError(b, err)
+	defer resp.Body.Close()
+
+	connectRequest := &protocol.ConnectRequest{}
+	params, _ := json.Marshal(connectRequest)
+	cmd := &protocol.Command{
+		ID:     1,
+		Method: protocol.MethodTypeConnect,
+		Params: params,
+	}
+	cmdBytes, _ := json.Marshal(cmd)
+
+	_ = conn.WriteMessage(websocket.TextMessage, cmdBytes)
+	_, _, err = conn.ReadMessage()
+	assert.NoError(b, err)
+
+	subscribeRequest := &protocol.SubscribeRequest{
+		Channel: channel,
+	}
+	params, _ = json.Marshal(subscribeRequest)
+	cmd = &protocol.Command{
+		ID:     2,
+		Method: protocol.MethodTypeSubscribe,
+		Params: params,
+	}
+	cmdBytes, _ = json.Marshal(cmd)
+	_ = conn.WriteMessage(websocket.TextMessage, cmdBytes)
+	_, _, err = conn.ReadMessage()
+	assert.NoError(b, err)
+	return conn
+}
+
+func TestCentrifuge1(t *testing.T) {
+	app, s := startAppFull(t)
+	defer app.RequireStart().RequireStop()
+
+	emu := startAaaEmu()
+	defer emu.Close()
+
+	expirationTime := fmt.Sprintf("%v000", time.Now().Add(2*time.Hour).Unix())
+	contentType := "application/json;charset=UTF-8"
+	requestHeaders := map[string][]string{
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+		"X-Auth-Expiresin": {expirationTime},
+		"X-Auth-Username":  {"tester"},
+		"X-Auth-Userid":    {"1"},
+	}
+
+	websocketConnection := newRealConnJSON(t, "#1", "ws://localhost:1235", requestHeaders)
+	defer websocketConnection.Close()
+
+	r := strings.NewReader(`{"name": "Chat for test the Centrifuge notifications"}`)
+	rc := ioutil.NopCloser(r)
+
+	u, _ := url.Parse("http://localhost:1235/chat")
+	request := &http.Request{
+		Method: "POST",
+		Header: requestHeaders,
+		Body:   rc,
+		URL:    u,
+	}
+
+	cl := client.NewRestClient()
+	resp, err := cl.Do(request)
+	assert.Nil(t, err)
+	assert.Equal(t, 201, resp.StatusCode)
+
+	_, data, err := websocketConnection.ReadMessage()
+	if err != nil {
+		assert.Fail(t, err.Error())
+	}
+
+	strData := string(data)
+	nameString := interfaceToString(getJsonPathResult(t, strData, "$.result.data.data.payload.name").(interface{}))
+	assert.Equal(t, "Chat for test the Centrifuge notifications", nameString)
+
+	canEditBoolean := getJsonPathRaw(t, strData, "$.result.data.data.payload.canEdit").(interface{})
+	assert.Equal(t, true, canEditBoolean)
+
+	canLeaveBoolean := getJsonPathRaw(t, strData, "$.result.data.data.payload.canLeave").(interface{})
+	assert.Equal(t, false, canLeaveBoolean)
+
+	participantIdsArray := getJsonPathRaw(t, strData, "$.result.data.data.payload.participantIds").([]interface{})
+	assert.Equal(t, float64(1), participantIdsArray[0])
+
+	typeString := interfaceToString(getJsonPathResult(t, strData, "$.result.data.data.type").(interface{}))
+	assert.Equal(t, "chat_created", typeString)
+
+	assert.NoError(t, s.Shutdown(), "error in app shutdown")
+}
+
+func TestCentrifuge2(t *testing.T) {
+	app, s := startAppFull(t)
+	defer app.RequireStart().RequireStop()
+	assert.NoError(t, s.Shutdown(), "error in app shutdown")
 }
 
 func interfaceToString(inter interface{}) string {
