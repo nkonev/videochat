@@ -1,5 +1,3 @@
-// +build integration
-
 package main
 
 import (
@@ -349,18 +347,29 @@ func newRealConnJSON(b testing.TB, channel string, url string, requestHeader htt
 	return conn
 }
 
-func TestCentrifuge1(t *testing.T) {
+func stringToUrl(s string) *url.URL {
+	u, _ := url.Parse(s)
+	return u
+}
+
+func stringToReadCloser(s string) io.ReadCloser {
+	r := strings.NewReader(s)
+	rc := ioutil.NopCloser(r)
+	return rc
+}
+
+func TestCentrifugeThatCreationNewChatMakesNotification(t *testing.T) {
 	app, s := startAppFull(t)
 	defer app.RequireStart().RequireStop()
 
 	emu := startAaaEmu()
 	defer emu.Close()
 
-	expirationTime := fmt.Sprintf("%v000", time.Now().Add(2*time.Hour).Unix())
+	expirationTime := utils.SecondsToStringMilliseconds(time.Now().Add(2 * time.Hour).Unix())
 	contentType := "application/json;charset=UTF-8"
 	requestHeaders := map[string][]string{
-		"Accept":          {contentType},
-		"Content-Type":    {contentType},
+		"Accept":           {contentType},
+		"Content-Type":     {contentType},
 		"X-Auth-Expiresin": {expirationTime},
 		"X-Auth-Username":  {"tester"},
 		"X-Auth-Userid":    {"1"},
@@ -369,15 +378,11 @@ func TestCentrifuge1(t *testing.T) {
 	websocketConnection := newRealConnJSON(t, "#1", "ws://localhost:1235", requestHeaders)
 	defer websocketConnection.Close()
 
-	r := strings.NewReader(`{"name": "Chat for test the Centrifuge notifications"}`)
-	rc := ioutil.NopCloser(r)
-
-	u, _ := url.Parse("http://localhost:1235/chat")
 	request := &http.Request{
 		Method: "POST",
 		Header: requestHeaders,
-		Body:   rc,
-		URL:    u,
+		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about new chat"}`),
+		URL:    stringToUrl("http://localhost:1235/chat"),
 	}
 
 	cl := client.NewRestClient()
@@ -385,6 +390,7 @@ func TestCentrifuge1(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 201, resp.StatusCode)
 
+	// check websocket message for admin participant
 	_, data, err := websocketConnection.ReadMessage()
 	if err != nil {
 		assert.Fail(t, err.Error())
@@ -392,7 +398,7 @@ func TestCentrifuge1(t *testing.T) {
 
 	strData := string(data)
 	nameString := interfaceToString(getJsonPathResult(t, strData, "$.result.data.data.payload.name").(interface{}))
-	assert.Equal(t, "Chat for test the Centrifuge notifications", nameString)
+	assert.Equal(t, "Chat for test the Centrifuge notifications about new chat", nameString)
 
 	canEditBoolean := getJsonPathRaw(t, strData, "$.result.data.data.payload.canEdit").(interface{})
 	assert.Equal(t, true, canEditBoolean)
@@ -409,9 +415,156 @@ func TestCentrifuge1(t *testing.T) {
 	assert.NoError(t, s.Shutdown(), "error in app shutdown")
 }
 
-func TestCentrifuge2(t *testing.T) {
+func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 	app, s := startAppFull(t)
 	defer app.RequireStart().RequireStop()
+
+	emu := startAaaEmu()
+	defer emu.Close()
+
+	expirationTime := utils.SecondsToStringMilliseconds(time.Now().Add(2 * time.Hour).Unix())
+	contentType := "application/json;charset=UTF-8"
+	requestHeaders1 := map[string][]string{
+		"Accept":           {contentType},
+		"Content-Type":     {contentType},
+		"X-Auth-Expiresin": {expirationTime},
+		"X-Auth-Username":  {"tester"},
+		"X-Auth-Userid":    {"1"},
+	}
+
+	requestHeaders2 := map[string][]string{
+		"Accept":           {contentType},
+		"Content-Type":     {contentType},
+		"X-Auth-Expiresin": {expirationTime},
+		"X-Auth-Username":  {"tester"},
+		"X-Auth-Userid":    {"2"},
+	}
+
+	websocketConnection := newRealConnJSON(t, "#2", "ws://localhost:1235", requestHeaders2)
+	defer websocketConnection.Close()
+
+	createChatRequest := &http.Request{
+		Method: "POST",
+		Header: requestHeaders1,
+		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about unread messages", "participantIds": [1, 2]}`),
+		URL:    stringToUrl("http://localhost:1235/chat"),
+	}
+
+	cl := client.NewRestClient()
+	createChatResponse, err := cl.Do(createChatRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 201, createChatResponse.StatusCode)
+
+	// check websocket message for second participant
+	_, data, err := websocketConnection.ReadMessage()
+	if err != nil {
+		assert.Fail(t, err.Error())
+	}
+
+	strData := string(data)
+	nameString := interfaceToString(getJsonPathResult(t, strData, "$.result.data.data.payload.name").(interface{}))
+	assert.Equal(t, "Chat for test the Centrifuge notifications about unread messages", nameString)
+
+	chatIdFloat := getJsonPathResult(t, strData, "$.result.data.data.payload.id").(interface{})
+	var chatId int64 = int64(chatIdFloat.(float64))
+	assert.NotZero(t, chatId)
+	var chatIdString = fmt.Sprintf("%v", chatId)
+
+	canEditBoolean := getJsonPathRaw(t, strData, "$.result.data.data.payload.canEdit").(interface{})
+	assert.Equal(t, false, canEditBoolean)
+
+	canLeaveBoolean := getJsonPathRaw(t, strData, "$.result.data.data.payload.canLeave").(interface{})
+	assert.Equal(t, true, canLeaveBoolean)
+
+	participantIdsArray := getJsonPathRaw(t, strData, "$.result.data.data.payload.participantIds").([]interface{})
+	assert.Equal(t, float64(1), participantIdsArray[0])
+	assert.Equal(t, float64(2), participantIdsArray[1])
+
+	typeString := interfaceToString(getJsonPathResult(t, strData, "$.result.data.data.type").(interface{}))
+	assert.Equal(t, "chat_created", typeString)
+
+	// send message to chat
+	messageRequest := &http.Request{
+		Method: "POST",
+		Header: requestHeaders1,
+		Body:   stringToReadCloser(`{"text": "Hello dude"}`),
+		URL:    stringToUrl("http://localhost:1235/chat/" + chatIdString + "/message"),
+	}
+	messageResponse, err := cl.Do(messageRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 201, messageResponse.StatusCode)
+
+	// read notification
+	_, data, err = websocketConnection.ReadMessage()
+	if err != nil {
+		assert.Fail(t, err.Error())
+	}
+	strDataAboutUnreadMessage := string(data)
+
+	typeStringUnreadMessage := interfaceToString(getJsonPathResult(t, strDataAboutUnreadMessage, "$.result.data.data.type").(interface{}))
+	assert.Equal(t, "unread_messages_changed", typeStringUnreadMessage)
+
+	countUnreadMessageFloat := getJsonPathResult(t, strDataAboutUnreadMessage, "$.result.data.data.payload.unreadMessages").(interface{})
+	var countUnreadMessage int64 = int64(countUnreadMessageFloat.(float64))
+	assert.Equal(t, int64(1), countUnreadMessage)
+
+	// send message to chat again
+	messageRequest2 := &http.Request{
+		Method: "POST",
+		Header: requestHeaders1,
+		Body:   stringToReadCloser(`{"text": "Hello dude"}`),
+		URL:    stringToUrl("http://localhost:1235/chat/" + chatIdString + "/message"),
+	}
+	messageResponse2, err := cl.Do(messageRequest2)
+	assert.Nil(t, err)
+	assert.Equal(t, 201, messageResponse2.StatusCode)
+
+	// read notification again
+	_, data, err = websocketConnection.ReadMessage()
+	if err != nil {
+		assert.Fail(t, err.Error())
+	}
+	strDataAboutUnreadMessage2 := string(data)
+
+	typeStringUnreadMessage2 := interfaceToString(getJsonPathResult(t, strDataAboutUnreadMessage2, "$.result.data.data.type").(interface{}))
+	assert.Equal(t, "unread_messages_changed", typeStringUnreadMessage2)
+
+	countUnreadMessageFloat2 := getJsonPathResult(t, strDataAboutUnreadMessage2, "$.result.data.data.payload.unreadMessages").(interface{})
+	var countUnreadMessage2 int64 = int64(countUnreadMessageFloat2.(float64))
+	assert.Equal(t, int64(2), countUnreadMessage2)
+
+	assert.NoError(t, s.Shutdown(), "error in app shutdown")
+}
+
+func TestBadRequestShouldReturn400(t *testing.T) {
+	app, s := startAppFull(t)
+	defer app.RequireStart().RequireStop()
+
+	emu := startAaaEmu()
+	defer emu.Close()
+
+	expirationTime := utils.SecondsToStringMilliseconds(time.Now().Add(2 * time.Hour).Unix())
+	contentType := "application/json;charset=UTF-8"
+	requestHeaders1 := map[string][]string{
+		"Accept":           {contentType},
+		"Content-Type":     {contentType},
+		"X-Auth-Expiresin": {expirationTime},
+		"X-Auth-Username":  {"tester"},
+		"X-Auth-Userid":    {"1"},
+	}
+
+	createChatRequest := &http.Request{
+		Method: "POST",
+		Header: requestHeaders1,
+		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about unread messages", "participantIds": [1, 2]`),
+		URL:    stringToUrl("http://localhost:1235/chat"),
+	}
+
+	cl := client.NewRestClient()
+	createChatResponse, err := cl.Do(createChatRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 400, createChatResponse.StatusCode)
+
 	assert.NoError(t, s.Shutdown(), "error in app shutdown")
 }
 

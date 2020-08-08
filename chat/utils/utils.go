@@ -158,3 +158,7 @@ func Remove(ids []int64, elem int64) []int64 {
 		return newArr
 	}
 }
+
+func SecondsToStringMilliseconds(seconds int64) string {
+	return fmt.Sprintf("%v000", seconds)
+}

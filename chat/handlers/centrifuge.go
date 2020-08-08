@@ -43,7 +43,7 @@ func getChanPresenceStats(engine centrifuge.Engine, client *centrifuge.Client, e
 }
 
 func createPresence(credso *centrifuge.Credentials, client *centrifuge.Client) (*protocol.ClientInfo, time.Duration, error) {
-	expiresInString := fmt.Sprintf("%v000", credso.ExpireAt) // to milliseconds for put into dateparse.ParseLocal
+	expiresInString := utils.SecondsToStringMilliseconds(credso.ExpireAt) // to milliseconds for put into dateparse.ParseLocal
 	t, err0 := dateparse.ParseLocal(expiresInString)
 	if err0 != nil {
 		return nil, 0, err0

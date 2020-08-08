@@ -89,10 +89,6 @@ func configureOpencensusMiddleware() echo.MiddlewareFunc {
 	}
 }
 
-func customHTTPErrorHandler(err error, c echo.Context) {
-	c.Logger().Error(err)
-}
-
 func configureEcho(
 	staticMiddleware staticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
@@ -107,7 +103,6 @@ func configureEcho(
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
-	e.HTTPErrorHandler = customHTTPErrorHandler
 	e.Logger.SetOutput(Logger.Writer())
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
