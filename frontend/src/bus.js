@@ -17,4 +17,3 @@ export const MESSAGE_EDITED = "messageEdited";
 export const SET_EDIT_MESSAGE = "setEditMessageDto";
 export const UNREAD_MESSAGES_CHANGED = "unreadMessagesChanged";
 export const VIDEO_LOCAL_ESTABLISHED = "videoLocalEstablished";
-export const CHAT_PARTICIPANTS_CHANGED = "chatParticipantsChanged";

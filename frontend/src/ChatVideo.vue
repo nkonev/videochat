@@ -9,7 +9,7 @@
     import {getData, getProperData, setProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import bus, {CHANGE_PHONE_BUTTON, CHAT_PARTICIPANTS_CHANGED, VIDEO_LOCAL_ESTABLISHED} from "./bus";
+    import bus, {CHANGE_PHONE_BUTTON, VIDEO_LOCAL_ESTABLISHED} from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
     import Vue from 'vue'
@@ -52,39 +52,6 @@
                 const ppi = this.chatDto.participantIds.filter(pi => pi != this.currentUser.id);
                 console.log("Participant ids except me:", ppi);
                 return ppi;
-            },
-            onChangeParticipants(addedParticipantIds, deletedParticipantIds) {
-                /*console.log("Added participantIds ", addedParticipantIds, " deleted participantIds ", deletedParticipantIds);
-
-                // bypass reactive effect of rerender remote participants
-                Vue.nextTick(()=>{
-                    // template already changed, so we need initialize news
-                    for (const participantId of addedParticipantIds) {
-                        this.createAndAddNewRemoteConnectionElement(participantId);
-                        const rcde = this.lookupPeerConnectionDataByUserId(participantId);
-                        if (!rcde) {
-                            console.warn("Can't lookupPeerConnectionDataByUserId ", participantId);
-                            continue;
-                        }
-                        this.initializeRemoteConnectionElement(rcde);
-                    }
-
-                    // close olds
-                    for (const participantId of deletedParticipantIds) {
-                        const rcde = this.lookupPeerConnectionDataByUserId(participantId);
-                        if (!rcde) {
-                            console.warn("Can't lookupPeerConnectionDataByUserId ", participantId);
-                            continue;
-                        }
-                        this.stop(rcde);
-
-                        // delete from page
-                        const html = this.getRemoteVideoHtml(participantId);
-                        console.log("Got remote video el", html);
-                        html.parentElement.removeChild(html);
-                    }
-                    this.$forceUpdate();
-                });*/
             },
             getWebRtcConfiguration() {
                 const localPcConfig = {
@@ -233,31 +200,12 @@
             stop(pcde) {
                 if (pcde.peerConnection) {
                     console.log("Stopping peer connection to user " + pcde.userId);
-
-                    // if ("ontrack" in pcde.peerConnection) {
-                    //     pcde.peerConnection.ontrack = null;
-                    // } else {
-                    //     pcde.peerConnection.onaddstream = null;
-                    // }
-                    // pcde.peerConnection.onremovestream = null;
-                    // this.stopStreamedVideo(pcde.remoteVideo);
-
                     pcde.peerConnection.close();
                 } else {
                     console.log("Didn't stopped peer connection to user " + pcde.userId);
                 }
                 pcde.peerConnection = null;
             },
-            // stopAndRemove(pcde) {
-            //     this.stop(pcde);
-            //
-            //     const foundIndex = this.chatDto.participantIds.findIndex(value => value === pcde.userId);
-            //     if (foundIndex == -1) {
-            //         console.warn("Can't find index to remove from participantIds", pcde.userId);
-            //         return
-            //     }
-            //     this.chatDto.participantIds.splice(foundIndex, 1);
-            // },
             hangupAll() {
                 console.log('Hanging up.');
                 for (const pcde of this.remoteConnectionData) {
@@ -354,7 +302,7 @@
                 const originatorUserId = message.metadata.originatorUserId;
                 return this.lookupPeerConnectionDataByUserId(originatorUserId);
             },
-            // TODO check in chrome
+
             stopStreamedVideo(videoElem) {
                 if (!videoElem) {
                     console.warn("Didn't stopped html tracks because videoElem is null")
@@ -379,8 +327,6 @@
         },
 
         mounted() {
-            bus.$on(CHAT_PARTICIPANTS_CHANGED, this.onChangeParticipants);
-
             this.localVideo = document.querySelector('#localVideo');
 
             /*
@@ -453,7 +399,6 @@
             this.hangupAll();
             this.signalingSubscription.unsubscribe();
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true));
-            bus.$off(CHAT_PARTICIPANTS_CHANGED, this.onChangeParticipants);
         },
 
         watch: {

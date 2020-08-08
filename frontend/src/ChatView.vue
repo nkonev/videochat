@@ -50,7 +50,7 @@
     import bus, {
         CHANGE_PHONE_BUTTON,
         CHANGE_TITLE,
-        CHAT_EDITED, CHAT_PARTICIPANTS_CHANGED,
+        CHAT_EDITED,
         MESSAGE_ADD,
         MESSAGE_DELETED,
         MESSAGE_EDITED,
@@ -193,12 +193,7 @@
             onChatChange(dto) {
                 const previousParticipants = this.chatDto.participantIds;
                 if (dto.id == this.chatId) {
-                    this.getInfo()/*.then(() => {
-                        const addedParticipantIds = this.chatDto.participantIds.filter(n => !previousParticipants.includes(n));
-                        const deletedParticipantIds = previousParticipants.filter(n => !this.chatDto.participantIds.includes(n))
-                        console.debug("Added participantIds ", addedParticipantIds, " deleted participantIds ", deletedParticipantIds);
-                        bus.$emit(CHAT_PARTICIPANTS_CHANGED, addedParticipantIds, deletedParticipantIds);
-                    })*/
+                    this.getInfo()
                 }
             },
             onMessageClick(dto) {
