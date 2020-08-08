@@ -193,12 +193,12 @@
             onChatChange(dto) {
                 const previousParticipants = this.chatDto.participantIds;
                 if (dto.id == this.chatId) {
-                    this.getInfo().then(() => {
+                    this.getInfo()/*.then(() => {
                         const addedParticipantIds = this.chatDto.participantIds.filter(n => !previousParticipants.includes(n));
                         const deletedParticipantIds = previousParticipants.filter(n => !this.chatDto.participantIds.includes(n))
                         console.debug("Added participantIds ", addedParticipantIds, " deleted participantIds ", deletedParticipantIds);
                         bus.$emit(CHAT_PARTICIPANTS_CHANGED, addedParticipantIds, deletedParticipantIds);
-                    })
+                    })*/
                 }
             },
             onMessageClick(dto) {
