@@ -28,3 +28,9 @@ export const getData = (message) => {
 export const getProperData = (message) => {
     return message.data.payload
 };
+
+export const setProperData = (message) => {
+    return {
+        payload: message
+    }
+};

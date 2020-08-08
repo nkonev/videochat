@@ -6,18 +6,12 @@
 </template>
 
 <script>
-    import {getData, getProperData} from "./centrifugeConnection";
+    import {getData, getProperData, setProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import bus, {CHANGE_PHONE_BUTTON, VIDEO_LOCAL_ESTABLISHED} from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
-
-    const setProperData = (message) => {
-        return {
-            payload: message
-        }
-    };
 
     const EVENT_CANDIDATE = 'candidate';
     const EVENT_HELLO = 'hello';
