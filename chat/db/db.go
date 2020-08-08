@@ -154,6 +154,7 @@ func (db *DB) RecreateDb() {
     GRANT ALL ON SCHEMA public TO public;
     COMMENT ON SCHEMA public IS 'standard public schema';
 `)
+	Logger.Warn("Recreating database")
 	if err != nil {
 		Logger.Panicf("Error during dropping db: %v", err)
 	}
