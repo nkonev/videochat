@@ -50,7 +50,7 @@
     import bus, {
         CHANGE_PHONE_BUTTON,
         CHANGE_TITLE,
-        CHAT_EDITED,
+        CHAT_EDITED, CHAT_PARTICIPANTS_CHANGED,
         MESSAGE_ADD,
         MESSAGE_DELETED,
         MESSAGE_EDITED,
@@ -184,15 +184,21 @@
                 });
             },
             getInfo() {
-                axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
+                return axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
                     console.log("Got info about chat", data);
                     bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null));
                     this.chatDto = data;
                 });
             },
             onChatChange(dto) {
+                const previousParticipants = this.chatDto.participantIds;
                 if (dto.id == this.chatId) {
-                    this.getInfo();
+                    this.getInfo().then(() => {
+                        const addedParticipantIds = this.chatDto.participantIds.filter(n => !previousParticipants.includes(n));
+                        const deletedParticipantIds = previousParticipants.filter(n => !this.chatDto.participantIds.includes(n))
+                        console.debug("Added participantIds ", addedParticipantIds, " deleted participantIds ", deletedParticipantIds);
+                        bus.$emit(CHAT_PARTICIPANTS_CHANGED, addedParticipantIds, deletedParticipantIds);
+                    })
                 }
             },
             onMessageClick(dto) {

@@ -9,9 +9,10 @@
     import {getData, getProperData, setProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import bus, {CHANGE_PHONE_BUTTON, VIDEO_LOCAL_ESTABLISHED} from "./bus";
+    import bus, {CHANGE_PHONE_BUTTON, CHAT_PARTICIPANTS_CHANGED, VIDEO_LOCAL_ESTABLISHED} from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
+    import Vue from 'vue'
 
     const EVENT_CANDIDATE = 'candidate';
     const EVENT_HELLO = 'hello';
@@ -52,6 +53,37 @@
                 console.log("Participant ids except me:", ppi);
                 return ppi;
             },
+            onChangeParticipants(addedParticipantIds, deletedParticipantIds) {
+                console.log("Added participantIds ", addedParticipantIds, " deleted participantIds ", deletedParticipantIds);
+
+                // bypass reactive effect of rerender remote participants
+                Vue.nextTick(()=>{
+                    // template already changed, so we need initialize news
+                    for (const participantId of addedParticipantIds) {
+                        this.createAndAddNewRemoteConnectionElement(participantId);
+                        const rcde = this.lookupPeerConnectionDataByUserId(participantId);
+                        if (!rcde) {
+                            console.warn("Can't lookupPeerConnectionDataByUserId ", participantId);
+                            continue;
+                        }
+                        this.initializeRemoteConnectionElement(rcde);
+                    }
+
+                    // close olds
+                    for (const participantId of deletedParticipantIds) {
+                        const rcde = this.lookupPeerConnectionDataByUserId(participantId);
+                        if (!rcde) {
+                            console.warn("Can't lookupPeerConnectionDataByUserId ", participantId);
+                            continue;
+                        }
+                        this.stop(rcde);
+
+                        // delete from page
+                        this.getRemoteVideoHtml(participantId);
+                    }
+                    this.$forceUpdate();
+                }, 1000);
+            },
             getWebRtcConfiguration() {
                 const localPcConfig = {
                     iceServers: []
@@ -68,13 +100,19 @@
                 })
 
             },
+            getRemoteVideoHtml(participantId) {
+                return document.querySelector('#'+this.getRemoteVideoId(participantId));
+            },
+            createAndAddNewRemoteConnectionElement(participantId) {
+                this.remoteConnectionData.push({
+                    userId: participantId,
+                    remoteVideo: this.getRemoteVideoHtml(participantId)
+                });
+            },
             initRemoteStructures() {
                 console.log("Initializing remote videos");
                 for (let pi of this.getProperParticipantIds()) {
-                    this.remoteConnectionData.push({
-                        userId: pi,
-                        remoteVideo: document.querySelector('#'+this.getRemoteVideoId(pi))
-                    });
+                    this.createAndAddNewRemoteConnectionElement(pi);
                 }
 
                 this.initDevices();
@@ -104,15 +142,18 @@
                 this.initConnections();
             },
 
+            initializeRemoteConnectionElement(rcde) {
+                console.log('>>>>>> creating peer connection, localstream=', this.localStream, "from me to", rcde.userId);
+                const pc = this.createPeerConnection(rcde);
+                pc.addStream(this.localStream);
+                rcde.peerConnection = pc;
+            },
             initConnections(){
                 console.log('Initializing connections from local stream', this.localStream);
                 if (this.localStream) {
                     // save this pc to array
                     for (const rcde of this.remoteConnectionData) {
-                        console.log('>>>>>> creating peer connection, localstream=', this.localStream, "from me to", rcde.userId);
-                        const pc = this.createPeerConnection(rcde);
-                        pc.addStream(this.localStream);
-                        rcde.peerConnection = pc;
+                        this.initializeRemoteConnectionElement(rcde);
                     }
                     this.sendMessage({type: EVENT_HELLO});
                 } else {
@@ -180,7 +221,7 @@
             },
             fhandleRemoteTrackAdded(remoteVideo) {
                 return (event) => {
-                    console.log('Remote stream added.', event);
+                    console.log('Remote track added.', event);
                     remoteVideo.srcObject = event.streams[0];
                 }
             },
@@ -196,10 +237,20 @@
                 }
                 pcde.peerConnection = null;
             },
+            stopAndRemove(pcde) {
+                this.stop(pcde);
+
+                const foundIndex = this.chatDto.participantIds.findIndex(value => value === pcde.userId);
+                if (foundIndex == -1) {
+                    console.warn("Can't find index to remove from participantIds", pcde.userId);
+                    return
+                }
+                this.chatDto.participantIds.splice(foundIndex, 1);
+            },
             hangupAll() {
                 console.log('Hanging up.');
                 for (const pcde of this.remoteConnectionData) {
-                    this.stop(pcde);
+                    this.stopAndRemove(pcde);
                 }
                 this.sendMessage({type: EVENT_BYE});
             },
@@ -279,18 +330,23 @@
             shouldSkipNonMineMessage(message) {
                 return message.toUserId != this.currentUser.id;
             },
-            lookupPeerConnectionData(message) {
-                const originatorUserId = message.metadata.originatorUserId;
+            lookupPeerConnectionDataByUserId(userId) {
                 for (const pcde of this.remoteConnectionData) {
-                    if (pcde.userId == originatorUserId) {
+                    if (pcde.userId == userId) {
                         return pcde;
                     }
                 }
                 return null;
+            },
+            lookupPeerConnectionData(message) {
+                const originatorUserId = message.metadata.originatorUserId;
+                return this.lookupPeerConnectionDataByUserId(originatorUserId);
             }
         },
 
         mounted() {
+            bus.$on(CHAT_PARTICIPANTS_CHANGED, this.onChangeParticipants);
+
             this.localVideo = document.querySelector('#localVideo');
 
             /*
@@ -363,6 +419,7 @@
             this.hangupAll();
             this.signalingSubscription.unsubscribe();
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true));
+            bus.$off(CHAT_PARTICIPANTS_CHANGED, this.onChangeParticipants);
         }
     }
 </script>
