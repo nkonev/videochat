@@ -319,3 +319,24 @@ func (mc MessageHandler) ReadMessage(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusAccepted)
 }
+
+func (mc MessageHandler) TypeMessage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	var ownersSet = map[int64]bool{}
+	ownersSet[userPrincipalDto.UserId] = true
+	var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
+	typingUser := owners[userPrincipalDto.UserId]
+
+	mc.notificator.NotifyAboutMessageTyping(c, chatId, typingUser)
+	return c.NoContent(http.StatusAccepted)
+}

@@ -54,14 +54,14 @@
         MESSAGE_ADD,
         MESSAGE_DELETED,
         MESSAGE_EDITED,
-        SET_EDIT_MESSAGE,
+        SET_EDIT_MESSAGE, USER_TYPING,
         VIDEO_LOCAL_ESTABLISHED
     } from "./bus";
     import {phoneFactory, titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
     import {videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
-    import {getData} from "./centrifugeConnection";
+    import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
 
@@ -209,7 +209,8 @@
                 // actually it's used for tell server about presence of this client.
                 // also will be used as a global notification, so we just log it
                 const data = getData(message);
-                console.log("Got global notification", data)
+                console.log("Got global notification", data);
+                bus.$emit(USER_TYPING, getProperData(message));
             });
 
             bus.$emit(CHANGE_TITLE, titleFactory(`Chat #${this.chatId}`, false, true, true));

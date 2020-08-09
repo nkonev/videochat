@@ -21,6 +21,7 @@ type Notifications interface {
 	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
+	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 }
 
 type notifictionsImpl struct {
@@ -42,6 +43,11 @@ type CentrifugeNotification struct {
 type DisplayMessageDtoNotification struct {
 	dto.DisplayMessageDto
 	ChatId int64 `json:"chatId"`
+}
+
+type UserTypingNotification struct {
+	Login         string `json:"login"`
+	ParticipantId int64  `json:"participantId"`
 }
 
 func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userIds []int64, tx *db.Tx) {
@@ -200,4 +206,33 @@ func (not *notifictionsImpl) NotifyAboutDeleteMessage(c echo.Context, userIds []
 
 func (not *notifictionsImpl) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
 	messageNotifyCommon(c, userIds, chatId, message, not, "message_edited")
+}
+
+func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User) {
+	if user == nil {
+		GetLogEntry(c.Request()).Errorf("user cannot be null")
+		return
+	}
+
+	channelName := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
+
+	ut := UserTypingNotification{
+		Login:         user.Login,
+		ParticipantId: user.Id,
+	}
+
+	notification := CentrifugeNotification{
+		Payload:   ut,
+		EventType: "user_typing",
+	}
+
+	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
+		GetLogEntry(c.Request()).Errorf("error during marshalling chat created UserTypingNotification: %s", err2)
+	} else {
+		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
+		}
+	}
+
 }

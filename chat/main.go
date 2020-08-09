@@ -136,6 +136,7 @@ func configureEcho(
 	e.PUT("/chat/:id/message", mc.EditMessage)
 	e.DELETE("/chat/:id/message/:messageId", mc.DeleteMessage)
 	e.PUT("/chat/:id/message/read/:messageId", mc.ReadMessage)
+	e.PUT("/chat/:id/typing", mc.TypeMessage)
 
 	e.GET("/chat/public/webrtc/config", handlers.GetConfiguration)
 
