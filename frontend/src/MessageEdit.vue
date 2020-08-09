@@ -2,7 +2,11 @@
     <v-container id="sendButtonContainer">
         <v-row no-gutters dense>
             <v-col cols="12">
-                <v-col class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" v-if="writingUsers.length">{{writingUsers.map(v=>v.login).join(', ')}} is writing...</v-col>
+                <v-col class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 1em">
+                    <template v-if="writingUsers.length">
+                        {{writingUsers.map(v=>v.login).join(', ')}} is writing...
+                    </template>
+                </v-col>
                 <v-text-field dense label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="editMessageDto.text" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat"></v-text-field>
             </v-col>
         </v-row>

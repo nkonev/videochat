@@ -209,8 +209,11 @@
                 // actually it's used for tell server about presence of this client.
                 // also will be used as a global notification, so we just log it
                 const data = getData(message);
-                console.log("Got global notification", data);
-                bus.$emit(USER_TYPING, getProperData(message));
+                console.debug("Got global notification", data);
+                const properData = getProperData(message)
+                if (data.type === "user_typing") {
+                    bus.$emit(USER_TYPING, properData);
+                }
             });
 
             bus.$emit(CHANGE_TITLE, titleFactory(`Chat #${this.chatId}`, false, true, true));
