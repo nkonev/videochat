@@ -16,11 +16,9 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-type ChatDto = dto.ChatDto
-
 type ChatWrapper struct {
-	Data  []*ChatDto `json:"data"`
-	Count int64      `json:"totalCount"` // total chat number for this user
+	Data  []*dto.ChatDto `json:"data"`
+	Count int64          `json:"totalCount"` // total chat number for this user
 }
 
 type EditChatDto struct {
@@ -67,7 +65,7 @@ func (ch ChatHandler) GetChats(c echo.Context) error {
 		GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
 		return err
 	} else {
-		chatDtos := make([]*ChatDto, 0)
+		chatDtos := make([]*dto.ChatDto, 0)
 		for _, cc := range dbChats {
 			messages, err := ch.db.GetUnreadMessages(cc.Id, userPrincipalDto.UserId)
 			if err != nil {
@@ -102,7 +100,7 @@ func (ch ChatHandler) GetChats(c echo.Context) error {
 	}
 }
 
-func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Context, chatId int64, behalfParticipantId int64) (*ChatDto, error) {
+func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Context, chatId int64, behalfParticipantId int64) (*dto.ChatDto, error) {
 	if cc, err := dbR.GetChatWithParticipants(behalfParticipantId, chatId); err != nil {
 		return nil, err
 	} else {
@@ -149,8 +147,8 @@ func (ch ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
-func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64) *ChatDto {
-	return &ChatDto{
+func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64) *dto.ChatDto {
+	return &dto.ChatDto{
 		Id:                 c.Id,
 		Name:               c.Title,
 		ParticipantIds:     c.ParticipantsIds,
@@ -242,7 +240,7 @@ func (ch ChatHandler) DeleteChat(c echo.Context) error {
 		if err := tx.DeleteChat(chatId); err != nil {
 			return err
 		}
-		cd := &ChatDto{
+		cd := &dto.ChatDto{
 			Id: chatId,
 		}
 		ch.notificator.NotifyAboutDeleteChat(c, cd, ids, tx)
