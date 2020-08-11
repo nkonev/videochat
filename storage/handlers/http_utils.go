@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/labstack/echo/v4"
-	"nkonev.name/chat/utils"
+	"nkonev.name/storage/utils"
 )
 
 func GetPathParamAsInt64(c echo.Context, name string) (int64, error) {

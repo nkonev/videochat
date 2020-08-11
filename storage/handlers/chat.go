@@ -7,13 +7,13 @@ import (
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"nkonev.name/chat/auth"
-	"nkonev.name/chat/client"
-	"nkonev.name/chat/db"
-	"nkonev.name/chat/handlers/dto"
-	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
-	"nkonev.name/chat/utils"
+	"nkonev.name/storage/auth"
+	"nkonev.name/storage/client"
+	"nkonev.name/storage/db"
+	"nkonev.name/storage/handlers/dto"
+	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/notifications"
+	"nkonev.name/storage/utils"
 )
 
 type ChatDto = dto.ChatDto

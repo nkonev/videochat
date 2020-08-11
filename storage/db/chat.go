@@ -3,8 +3,8 @@ package db
 import (
 	"database/sql"
 	"errors"
-	"nkonev.name/chat/auth"
-	. "nkonev.name/chat/logger"
+	"nkonev.name/storage/auth"
+	. "nkonev.name/storage/logger"
 	"time"
 )
 

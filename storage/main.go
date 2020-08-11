@@ -15,11 +15,11 @@ import (
 	"go.uber.org/fx"
 	"net/http"
 	"nkonev.name/chat/client"
-	"nkonev.name/chat/db"
-	"nkonev.name/chat/handlers"
-	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
-	"nkonev.name/chat/utils"
+	"nkonev.name/storage/db"
+	"nkonev.name/storage/handlers"
+	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/utils"
 	"strings"
 )
 
@@ -34,9 +34,6 @@ func main() {
 	app := fx.New(
 		fx.Logger(Logger),
 		fx.Provide(
-			client.NewRestClient,
-			handlers.ConfigureCentrifuge,
-			handlers.CreateSanitizer,
 			configureEcho,
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,

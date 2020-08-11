@@ -2,8 +2,8 @@ package db
 
 import (
 	"github.com/stretchr/testify/assert"
-	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/utils"
+	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/utils"
 	"os"
 	"testing"
 )

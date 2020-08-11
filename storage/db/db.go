@@ -11,7 +11,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
-	. "nkonev.name/chat/logger"
+	. "nkonev.name/storage/logger"
 	"time"
 )
 
