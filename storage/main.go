@@ -4,18 +4,16 @@ import (
 	"context"
 	"contrib.go.opencensus.io/exporter/jaeger"
 	"github.com/GeertJohan/go.rice"
-	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/microcosm-cc/bluemonday"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
 	"go.uber.org/fx"
 	"net/http"
-	"nkonev.name/chat/client"
-	"nkonev.name/chat/notifications"
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/handlers"
 	. "nkonev.name/storage/logger"
@@ -34,33 +32,21 @@ func main() {
 	app := fx.New(
 		fx.Logger(Logger),
 		fx.Provide(
+			configureMinio,
 			configureEcho,
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			db.ConfigureDb,
-			notifications.NewNotifications,
 		),
 		fx.Invoke(
 			initJaeger,
 			runMigrations,
-			runCentrifuge,
 			runEcho,
 		),
 	)
 	app.Run()
 
 	Logger.Infof("Exit program")
-}
-
-func runCentrifuge(node *centrifuge.Node) {
-	// Run node.
-	Logger.Infof("Starting centrifuge...")
-	go func() {
-		if err := node.Run(); err != nil {
-			Logger.Fatalf("Error on start centrifuge: %v", err)
-		}
-	}()
-	Logger.Info("Centrifuge started.")
 }
 
 func configureOpencensusMiddleware() echo.MiddlewareFunc {
@@ -90,10 +76,8 @@ func configureEcho(
 	staticMiddleware staticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
-	node *centrifuge.Node,
 	db db.DB,
-	policy *bluemonday.Policy,
-	restClient client.RestClient,
+	m *minio.Client,
 ) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")
@@ -115,13 +99,8 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	ch := handlers.NewChatHandler(db, notificator, restClient)
-	e.GET("/chat", ch.GetChats)
-	e.GET("/chat/:id", ch.GetChat)
-	e.POST("/chat", ch.CreateChat)
-	e.DELETE("/chat/:id", ch.DeleteChat)
-	e.PUT("/chat", ch.EditChat)
-	e.PUT("/chat/:id/leave", ch.LeaveChat)
+	ch := handlers.NewFileHandler(db, m)
+	e.PUT("/storage", ch.PutFile)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -132,6 +111,23 @@ func configureEcho(
 	})
 
 	return e
+}
+
+func configureMinio() (*minio.Client, error) {
+	endpoint := viper.GetString("minio.endpoint")
+	accessKeyID := viper.GetString("minio.accessKeyId")
+	secretAccessKey := viper.GetString("minio.secretAccessKey")
+
+	// Initialize minio client object.
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure:       false,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return minioClient, nil
 }
 
 func configureStaticMiddleware() staticMiddleware {

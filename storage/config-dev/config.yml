@@ -41,3 +41,11 @@ jaeger:
 
 iceServers:
   - "stun:stun.l.google.com:19302"
+
+minio:
+  endpoint: 127.0.0.1:9000
+  accessKeyId: AKIAIOSFODNN7EXAMPLE
+  secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  location: "europe-east"
+  avatars:
+    bucket: "avatar"
