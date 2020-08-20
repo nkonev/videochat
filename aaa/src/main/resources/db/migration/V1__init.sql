@@ -7,13 +7,6 @@ CREATE SCHEMA IF NOT EXISTS auth;
 
 
 --
--- Name: images; Type: SCHEMA; Schema: -; Owner: aaa
---
-
-CREATE SCHEMA IF NOT EXISTS images;
-
-
---
 -- Name: user_creation_type; Type: TYPE; Schema: auth; Owner: aaa
 --
 
@@ -67,20 +60,6 @@ CREATE TABLE auth.users (
     vkontakte_id character varying(64) UNIQUE,
     last_login_date_time timestamp without time zone
 );
-
-
-
---
--- Name: user_avatar_image; Type: TABLE; Schema: images; Owner: aaa
---
-
-CREATE TABLE images.user_avatar_image (
-	id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    img bytea,
-    content_type character varying(64),
-    create_date_time timestamp without time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
 
 
 --
