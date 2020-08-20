@@ -81,8 +81,6 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
         UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
         Assertions.assertNotNull(userAccount.getId());
-        Assertions.assertNotNull(userAccount.getAvatar());
-        Assertions.assertTrue(userAccount.getAvatar().startsWith("/"));
         Assertions.assertEquals(facebookLogin, userAccount.getUsername());
     }
 
@@ -97,8 +95,6 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
         Long facebookLoggedId = userAccount.getId();
         Assertions.assertNotNull(facebookLoggedId);
-        Assertions.assertNotNull(userAccount.getAvatar());
-        Assertions.assertTrue(userAccount.getAvatar().startsWith("/"));
         Assertions.assertEquals(facebookLogin, userAccount.getUsername());
         String facebookId = userAccount.getOauthIdentifiers().getFacebookId();
         Assertions.assertNotNull(facebookId);
