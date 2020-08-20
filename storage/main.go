@@ -100,7 +100,7 @@ func configureEcho(
 	e.Use(middleware.BodyLimit(bodyLimit))
 
 	ch := handlers.NewFileHandler(db, m)
-	e.PUT("/storage", ch.PutAvatar)
+	e.PUT("/storage/avatar", ch.PutAvatar)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
