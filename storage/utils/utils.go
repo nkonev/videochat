@@ -121,8 +121,6 @@ func InterfaceToString(i interface{}) string {
 	return fmt.Sprintf("%v", i)
 }
 
-const CHANNEL_PREFIX_SIGINALING = "signaling"
-const CHANNEL_PREFIX_CHAT_MESSAGES = "chatMessages"
 
 func SetToArray(set map[int64]bool) []int64 {
 	var ownerIds []int64

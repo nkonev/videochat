@@ -26,8 +26,8 @@ const EXTERNAL_TRACE_ID_HEADER = "trace-id"
 type staticMiddleware echo.MiddlewareFunc
 
 func main() {
-	configFile := utils.InitFlags("./chat/config-dev/config.yml")
-	utils.InitViper(configFile, "CHAT")
+	configFile := utils.InitFlags("./storage/config-dev/config.yml")
+	utils.InitViper(configFile, "STORAGE")
 
 	app := fx.New(
 		fx.Logger(Logger),
@@ -100,7 +100,7 @@ func configureEcho(
 	e.Use(middleware.BodyLimit(bodyLimit))
 
 	ch := handlers.NewFileHandler(db, m)
-	e.PUT("/storage", ch.PutFile)
+	e.PUT("/storage", ch.PutAvatar)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

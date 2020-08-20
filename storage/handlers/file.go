@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
@@ -11,7 +12,6 @@ import (
 	"nkonev.name/storage/db"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
-	"time"
 )
 
 type FileHandler struct {
@@ -50,20 +50,19 @@ func (h *FileHandler) ensureBucket(bucketName, location string) error {
 }
 
 func (h *FileHandler) ensureAndGetBucket() (string, error) {
-	bucketName := viper.GetString("minio.avatars.bucket")
+	bucketName := viper.GetString("minio.bucket.avatar")
 	bucketLocation := viper.GetString("minio.location")
 	err := h.ensureBucket(bucketName, bucketLocation)
 	return bucketName, err
 }
 
 
-func (fh *FileHandler) PutFile(c echo.Context) error {
+func (fh *FileHandler) PutAvatar(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
-
 
 	file, err := c.FormFile(FormFile)
 	if err != nil {
@@ -87,7 +86,7 @@ func (fh *FileHandler) PutFile(c echo.Context) error {
 	defer src.Close()
 
 	result, err := db.TransactWithResult(fh.db, func(tx *db.Tx) (interface{}, error) {
-		metadata := db.FileMetadata{Name: file.Filename}
+		metadata := db.FileMetadata{FileName: file.Filename, StorageType: db.AVATAR}
 		id, err := tx.CreateFileMetadata(&metadata, userPrincipalDto.UserId)
 		if err != nil {
 			return 0, err
@@ -97,7 +96,7 @@ func (fh *FileHandler) PutFile(c echo.Context) error {
 	})
 	id := result.(int64)
 
-	if _, err := fh.minio.PutObject(context.Background(), bucketName, id, src, file.Size, minio.PutObjectOptions{ContentType: contentType}); err != nil {
+	if _, err := fh.minio.PutObject(context.Background(), bucketName, fmt.Sprintf("%v", id), src, file.Size, minio.PutObjectOptions{ContentType: contentType}); err != nil {
 		Logger.Errorf("Error during upload object: %v", err)
 		return err
 	}

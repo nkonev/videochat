@@ -1,5 +1,5 @@
 server:
-  address: ":1235"
+  address: ":1236"
   shutdown.timeout: "10s"
   body.limit: "100G"
 
@@ -12,24 +12,15 @@ http:
 
 auth:
   exclude:
-    - "^/chat/public.*"
+    - "^/storage/public.*"
 
 postgresql:
   # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
-  url: "postgres://chat:chatPazZw0rd@localhost:35432/chat?sslmode=disable&application_name=chat-app"
+  url: "postgres://storage:storagePazZw0rd@localhost:35432/storage?sslmode=disable&application_name=storage-app"
   maxOpenConnections: 16
   maxIdleConnections: 4
   maxLifetime: 30s
 
-redis:
-  host: localhost
-  port: 36379
-  password: ""
-  db: 1
-  connectTimeout: 5s
-  readTimeout: 30s
-  writeTimeout: 30s
-  idleTimeout: 60s
 
 aaa:
   url:
@@ -39,13 +30,10 @@ aaa:
 jaeger:
   endpoint: "localhost:6831"
 
-iceServers:
-  - "stun:stun.l.google.com:19302"
-
 minio:
   endpoint: 127.0.0.1:9000
   accessKeyId: AKIAIOSFODNN7EXAMPLE
   secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   location: "europe-east"
-  avatars:
-    bucket: "avatar"
+  bucket:
+    avatar: "avatar"
