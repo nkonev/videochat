@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
-	"fmt"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
@@ -26,7 +26,7 @@ func NewFileHandler (db db.DB, minio *minio.Client) FileHandler {
 	}
 }
 
-const FormFile = "file"
+const FormFile = "data"
 
 func (h *FileHandler) ensureBucket(bucketName, location string) error {
 	// Check to see if we already own this bucket (which happens if you run this twice)
@@ -94,9 +94,13 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 			return id, nil
 		}
 	})
-	id := result.(int64)
+	if err != nil {
+		Logger.Errorf("Error during inserting into database: %v", err)
+		return err
+	}
+	id := result.(uuid.UUID)
 
-	if _, err := fh.minio.PutObject(context.Background(), bucketName, fmt.Sprintf("%v", id), src, file.Size, minio.PutObjectOptions{ContentType: contentType}); err != nil {
+	if _, err := fh.minio.PutObject(context.Background(), bucketName, utils.InterfaceToString(id), src, file.Size, minio.PutObjectOptions{ContentType: contentType}); err != nil {
 		Logger.Errorf("Error during upload object: %v", err)
 		return err
 	}

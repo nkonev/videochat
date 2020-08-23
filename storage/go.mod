@@ -7,6 +7,7 @@ require (
 	github.com/centrifugal/centrifuge v0.10.1
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang-migrate/migrate/v4 v4.11.0
+	github.com/google/uuid v1.1.1
 	github.com/guregu/null v4.0.0+incompatible
 	github.com/jackc/pgx/v4 v4.8.1
 	github.com/labstack/echo/v4 v4.1.16
