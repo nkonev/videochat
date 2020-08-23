@@ -29,7 +29,7 @@ class RequestWithoutParts extends HttpServletRequestWrapper {
 
 @Component
 @Order(-2147483000)
-public class AuthorizationNormalizer implements Filter {
+public class AuthorizationNormalizerFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
