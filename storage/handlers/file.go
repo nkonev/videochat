@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
-	"github.com/google/uuid"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
@@ -85,25 +85,20 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 	}
 	defer src.Close()
 
-	result, err := db.TransactWithResult(fh.db, func(tx *db.Tx) (interface{}, error) {
-		metadata := db.FileMetadata{FileName: file.Filename, StorageType: db.AVATAR}
-		id, err := tx.CreateFileMetadata(&metadata, userPrincipalDto.UserId)
-		if err != nil {
-			return 0, err
-		} else {
-			return id, nil
-		}
+	avatarType := db.AVATAR_200x200
+	err = db.Transact(fh.db, func(tx *db.Tx) (error) {
+		return tx.CreateAvatarMetadata(userPrincipalDto.UserId, avatarType)
 	})
 	if err != nil {
 		Logger.Errorf("Error during inserting into database: %v", err)
 		return err
 	}
-	id := result.(uuid.UUID)
 
-	if _, err := fh.minio.PutObject(context.Background(), bucketName, utils.InterfaceToString(id), src, file.Size, minio.PutObjectOptions{ContentType: contentType}); err != nil {
+	filename := fmt.Sprintf("%v_%v", userPrincipalDto.UserId, avatarType)
+	if _, err := fh.minio.PutObject(context.Background(), bucketName, filename, src, file.Size, minio.PutObjectOptions{ContentType: contentType}); err != nil {
 		Logger.Errorf("Error during upload object: %v", err)
 		return err
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "id": id})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "id": filename})
 }
