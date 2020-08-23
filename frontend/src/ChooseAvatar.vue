@@ -5,7 +5,7 @@
                 <v-card-title>Choose avatar</v-card-title>
 
                 <v-container fluid>
-                    <v-file-input accept="image/*" label="File input"></v-file-input>
+                    <v-file-input counter :rules="rules" accept="image/*" label="File input" @change="onFileChange"></v-file-input>
                 </v-container>
 
                 <v-card-actions class="pa-4">
@@ -23,15 +23,33 @@
     import bus, {OPEN_CHOOSE_AVATAR} from "./bus";
 
     export default {
-        data () {
+        data() {
             return {
                 show: false,
+                rules: [
+                    value => !value || value.size < 2000000 || 'Avatar size should be less than 2 MB!',
+                ],
+                formData: null,
             }
         },
 
         methods: {
             saveAvatar() {
-                axios.put(`/api/chat`, {})
+                const config = {
+                    headers: { 'content-type': 'multipart/form-data' }
+                }
+                axios.post(`/api/storage/avatar`, this.formData, config)
+            },
+            getFormData(files){
+                const data = new FormData();
+                [...files].forEach(file => {
+                    data.append('data', file, file.name); // currently only one file at a time
+                });
+                return data;
+            },
+            onFileChange(file) {
+                console.log("On change", file);
+                this.formData = this.getFormData([file]);
             },
             showModal() {
                 console.log("Reseiving open avatar");
