@@ -2,6 +2,7 @@ package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.EditUserDTO;
 import com.github.nkonev.aaa.dto.UserAccountDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.dto.UserRole;
@@ -183,17 +184,13 @@ public class UserProfileController {
             throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
         }
 
-        UserAccount exists = userAccountRepository.findById(userAccount.getId()).orElseThrow(()-> new RuntimeException("Authenticated user account not found in database"));
+        UserAccount exists = findUserAccount(userAccount);
 
         // check email already present
-        if (exists.getEmail()!=null && !exists.getEmail().equals(userAccountDTO.getEmail()) && userAccountRepository.findByEmail(userAccountDTO.getEmail()).isPresent()) {
-            LOGGER.error("editProfile: user with email '{}' already present. exiting...", exists.getEmail());
-            return UserAccountConverter.convertToEditUserDto(exists); // we care for email leak...
-        }
+        if (!checkEmail(userAccountDTO, exists)) return UserAccountConverter.convertToEditUserDto(exists);
+
         // check login already present
-        if (!exists.getUsername().equals(userAccountDTO.getLogin()) && userAccountRepository.findByUsername(userAccountDTO.getLogin()).isPresent()) {
-            throw new UserAlreadyPresentException("User with login '" + userAccountDTO.getLogin() + "' is already present");
-        }
+        checkLogin(userAccountDTO, exists);
 
         UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
@@ -202,6 +199,53 @@ public class UserProfileController {
 
         return UserAccountConverter.convertToEditUserDto(exists);
     }
+
+    private UserAccount findUserAccount(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) {
+        return userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
+    }
+
+    @PatchMapping(Constants.Urls.API+Constants.Urls.PROFILE)
+    @PreAuthorize("isAuthenticated()")
+    public com.github.nkonev.aaa.dto.EditUserDTO editNonEmpty(
+            @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
+            @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO
+    ) {
+        if (userAccount == null) {
+            throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
+        }
+
+        UserAccount exists = findUserAccount(userAccount);
+
+        // check email already present
+        if (!checkEmail(userAccountDTO, exists))
+            return UserAccountConverter.convertToEditUserDto(exists); // we care for email leak...
+
+        // check login already present
+        checkLogin(userAccountDTO, exists);
+
+        UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
+        exists = userAccountRepository.save(exists);
+
+        aaaUserDetailsService.refreshUserDetails(exists);
+
+        return UserAccountConverter.convertToEditUserDto(exists);
+    }
+
+    private void checkLogin(@RequestBody @Valid EditUserDTO userAccountDTO, UserAccount exists) {
+        if (!exists.getUsername().equals(userAccountDTO.getLogin()) && userAccountRepository.findByUsername(userAccountDTO.getLogin()).isPresent()) {
+            throw new UserAlreadyPresentException("User with login '" + userAccountDTO.getLogin() + "' is already present");
+        }
+    }
+
+    private boolean checkEmail(@RequestBody @Valid EditUserDTO userAccountDTO, UserAccount exists) {
+        if (exists.getEmail() != null && !exists.getEmail().equals(userAccountDTO.getEmail()) && userAccountRepository.findByEmail(userAccountDTO.getEmail()).isPresent()) {
+            LOGGER.error("editProfile: user with email '{}' already present. exiting...", exists.getEmail());
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping(Constants.Urls.API+Constants.Urls.SESSIONS+"/my")
