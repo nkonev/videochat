@@ -1,15 +1,13 @@
 package com.github.nkonev.aaa.entity.jdbc;
 
-import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.dto.UserRole;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Embedded;
 import org.springframework.data.relational.core.mapping.Table;
-
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
-@Table("auth.users")
+@Table("users")
 public class UserAccount {
     @Id
     private Long id;

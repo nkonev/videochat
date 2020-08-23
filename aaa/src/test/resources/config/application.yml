@@ -77,7 +77,7 @@ spring.datasource:
     name: aaa_ds
     type: org.apache.tomcat.jdbc.pool.DataSource
     # https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters
-    url: jdbc:postgresql://127.0.0.1:35432/aaa?connectTimeout=10&socketTimeout=40
+    url: jdbc:postgresql://127.0.0.1:35432/aaa?connectTimeout=10&socketTimeout=40&currentSchema=auth
     username: aaa
     password: "aaaPazZw0rd"
     driverClassName: org.postgresql.Driver
