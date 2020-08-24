@@ -11,3 +11,4 @@ vendor
 grpc
 target
 /frontend-nginx
+/storage/storage
