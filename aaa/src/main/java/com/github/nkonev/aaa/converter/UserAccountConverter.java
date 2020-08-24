@@ -275,7 +275,6 @@ public class UserAccountConverter {
     }
 
     public static void updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
-        Assert.hasLength(userAccountDTO.getLogin(), "login should have length");
         if (!StringUtils.isEmpty(userAccountDTO.getLogin())) {
             validateAndTrimLogin(userAccountDTO);
             userAccount.setUsername(userAccountDTO.getLogin());

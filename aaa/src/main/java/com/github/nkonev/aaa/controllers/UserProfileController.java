@@ -11,7 +11,7 @@ import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.exception.UserAlreadyPresentException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
-import com.github.nkonev.aaa.services.UserDeleteService;
+import com.github.nkonev.aaa.services.UserService;
 import com.github.nkonev.aaa.utils.PageUtils;
 import name.nkonev.aaa.UserDto;
 import name.nkonev.aaa.UsersRequest;
@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -63,7 +62,7 @@ public class UserProfileController {
     private UserAccountConverter userAccountConverter;
 
     @Autowired
-    private UserDeleteService userDeleteService;
+    private UserService userService;
 
     public static final String X_PROTOBUF_CHARSET_UTF_8 = "application/x-protobuf;charset=UTF-8";
 
@@ -187,10 +186,12 @@ public class UserProfileController {
         UserAccount exists = findUserAccount(userAccount);
 
         // check email already present
-        if (!checkEmail(userAccountDTO, exists)) return UserAccountConverter.convertToEditUserDto(exists);
+        if (!userService.checkEmailIsFree(userAccountDTO, exists)) return UserAccountConverter.convertToEditUserDto(exists);
+
+        userService.checkLoginIsCorrect(userAccountDTO);
 
         // check login already present
-        checkLogin(userAccountDTO, exists);
+        userService.checkLoginIsFree(userAccountDTO, exists);
 
         UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
@@ -217,11 +218,11 @@ public class UserProfileController {
         UserAccount exists = findUserAccount(userAccount);
 
         // check email already present
-        if (!checkEmail(userAccountDTO, exists))
+        if (!userService.checkEmailIsFree(userAccountDTO, exists))
             return UserAccountConverter.convertToEditUserDto(exists); // we care for email leak...
 
         // check login already present
-        checkLogin(userAccountDTO, exists);
+        userService.checkLoginIsFree(userAccountDTO, exists);
 
         UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
@@ -230,22 +231,6 @@ public class UserProfileController {
 
         return UserAccountConverter.convertToEditUserDto(exists);
     }
-
-    private void checkLogin(@RequestBody @Valid EditUserDTO userAccountDTO, UserAccount exists) {
-        if (!exists.getUsername().equals(userAccountDTO.getLogin()) && userAccountRepository.findByUsername(userAccountDTO.getLogin()).isPresent()) {
-            throw new UserAlreadyPresentException("User with login '" + userAccountDTO.getLogin() + "' is already present");
-        }
-    }
-
-    private boolean checkEmail(@RequestBody @Valid EditUserDTO userAccountDTO, UserAccount exists) {
-        if (exists.getEmail() != null && !exists.getEmail().equals(userAccountDTO.getEmail()) && userAccountRepository.findByEmail(userAccountDTO.getEmail()).isPresent()) {
-            LOGGER.error("editProfile: user with email '{}' already present. exiting...", exists.getEmail());
-            return false;
-        } else {
-            return true;
-        }
-    }
-
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping(Constants.Urls.API+Constants.Urls.SESSIONS+"/my")
@@ -281,7 +266,7 @@ public class UserProfileController {
     @PreAuthorize("@aaaSecurityService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.API+Constants.Urls.USER)
     public long deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
-        return userDeleteService.deleteUser(userId);
+        return userService.deleteUser(userId);
     }
 
     @PreAuthorize("@aaaSecurityService.canChangeRole(#userAccountDetailsDTO, #userId)")
@@ -297,7 +282,7 @@ public class UserProfileController {
     @DeleteMapping(Constants.Urls.API+Constants.Urls.PROFILE)
     public void selfDeleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
         long userId = userAccountDetailsDTO.getId();
-        userDeleteService.deleteUser(userId);
+        userService.deleteUser(userId);
     }
 
     @PreAuthorize("isAuthenticated()")

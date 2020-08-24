@@ -21,6 +21,7 @@
 <script>
     import axios from "axios";
     import bus, {OPEN_CHOOSE_AVATAR} from "./bus";
+    import {FETCH_USER_PROFILE} from "./store";
 
     export default {
         data() {
@@ -38,7 +39,14 @@
                 const config = {
                     headers: { 'content-type': 'multipart/form-data' }
                 }
-                axios.post(`/api/storage/avatar`, this.formData, config)
+                axios
+                    .post(`/api/storage/avatar`, this.formData, config)
+                    .then(value => {
+                        return axios.patch(`/api/profile`, {avatar: 'urlii'})
+                    }).then(value => {
+                        this.$store.dispatch(FETCH_USER_PROFILE);
+                        this.show = false;
+                    })
             },
             getFormData(files){
                 const data = new FormData();

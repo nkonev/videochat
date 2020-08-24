@@ -2,7 +2,7 @@ package com.github.nkonev.aaa.it;
 
 import com.github.nkonev.aaa.AbstractTestRunner;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.services.UserDeleteService;
+import com.github.nkonev.aaa.services.UserService;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -34,7 +34,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Autowired
-    protected UserDeleteService userDeleteService;
+    protected UserService userDeleteService;
 
     @BeforeAll
     public static void setUpClass() {
