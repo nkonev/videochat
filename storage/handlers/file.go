@@ -106,15 +106,15 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 	}
 
 	avatarType := db.AVATAR_200x200
+	filename := fmt.Sprintf("%v_%v.jpg", userPrincipalDto.UserId, avatarType)
 	err = db.Transact(fh.db, func(tx *db.Tx) (error) {
-		return tx.CreateAvatarMetadata(userPrincipalDto.UserId, avatarType)
+		return tx.CreateAvatarMetadata(userPrincipalDto.UserId, avatarType, filename)
 	})
 	if err != nil {
 		Logger.Errorf("Error during inserting into database: %v", err)
 		return err
 	}
 
-	filename := fmt.Sprintf("%v_%v.jpg", userPrincipalDto.UserId, avatarType)
 	if _, err := fh.minio.PutObject(context.Background(), bucketName, filename, byteBuffer, int64(byteBuffer.Len()), minio.PutObjectOptions{ContentType: contentType}); err != nil {
 		Logger.Errorf("Error during upload object: %v", err)
 		return err

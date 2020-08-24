@@ -38,8 +38,8 @@ func (tx *Tx) CreateFileMetadata(u *FileMetadata, userId int64) (uuid.UUID, erro
 	return id, nil
 }
 
-func (tx *Tx) CreateAvatarMetadata(userId int64, avatarType AvatarType) (error) {
-	_, err := tx.Exec(`INSERT INTO avatar_metadata(avatar_type, owner_id) VALUES ($1, $2) ON CONFLICT(owner_id, avatar_type) DO NOTHING`, avatarType, userId)
+func (tx *Tx) CreateAvatarMetadata(userId int64, avatarType AvatarType, filename string) (error) {
+	_, err := tx.Exec(`INSERT INTO avatar_metadata(avatar_type, owner_id, file_name) VALUES ($1, $2, $3) ON CONFLICT(owner_id, avatar_type) DO NOTHING`, avatarType, userId, filename)
 	if err != nil {
 		Logger.Errorf("Error during creating avatar metadata %v", err)
 		return err
