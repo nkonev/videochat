@@ -1,4 +1,3 @@
-import axios from 'axios';
 import InfiniteLoading from 'vue-infinite-loading';
 
 export const findIndex = (array, element) => {

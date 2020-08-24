@@ -2,6 +2,7 @@ package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.EditUserDTO;
 import com.github.nkonev.aaa.dto.UserAccountDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.dto.UserRole;
@@ -10,7 +11,7 @@ import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.exception.UserAlreadyPresentException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
-import com.github.nkonev.aaa.services.UserDeleteService;
+import com.github.nkonev.aaa.services.UserService;
 import com.github.nkonev.aaa.utils.PageUtils;
 import name.nkonev.aaa.UserDto;
 import name.nkonev.aaa.UsersRequest;
@@ -32,7 +33,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -62,7 +62,7 @@ public class UserProfileController {
     private UserAccountConverter userAccountConverter;
 
     @Autowired
-    private UserDeleteService userDeleteService;
+    private UserService userService;
 
     public static final String X_PROTOBUF_CHARSET_UTF_8 = "application/x-protobuf;charset=UTF-8";
 
@@ -183,19 +183,48 @@ public class UserProfileController {
             throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
         }
 
-        UserAccount exists = userAccountRepository.findById(userAccount.getId()).orElseThrow(()-> new RuntimeException("Authenticated user account not found in database"));
+        UserAccount exists = findUserAccount(userAccount);
 
         // check email already present
-        if (exists.getEmail()!=null && !exists.getEmail().equals(userAccountDTO.getEmail()) && userAccountRepository.findByEmail(userAccountDTO.getEmail()).isPresent()) {
-            LOGGER.error("editProfile: user with email '{}' already present. exiting...", exists.getEmail());
-            return UserAccountConverter.convertToEditUserDto(exists); // we care for email leak...
-        }
+        if (!userService.checkEmailIsFree(userAccountDTO, exists)) return UserAccountConverter.convertToEditUserDto(exists);
+
+        userService.checkLoginIsCorrect(userAccountDTO);
+
         // check login already present
-        if (!exists.getUsername().equals(userAccountDTO.getLogin()) && userAccountRepository.findByUsername(userAccountDTO.getLogin()).isPresent()) {
-            throw new UserAlreadyPresentException("User with login '" + userAccountDTO.getLogin() + "' is already present");
-        }
+        userService.checkLoginIsFree(userAccountDTO, exists);
 
         UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
+        exists = userAccountRepository.save(exists);
+
+        aaaUserDetailsService.refreshUserDetails(exists);
+
+        return UserAccountConverter.convertToEditUserDto(exists);
+    }
+
+    private UserAccount findUserAccount(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) {
+        return userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
+    }
+
+    @PatchMapping(Constants.Urls.API+Constants.Urls.PROFILE)
+    @PreAuthorize("isAuthenticated()")
+    public com.github.nkonev.aaa.dto.EditUserDTO editNonEmpty(
+            @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
+            @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO
+    ) {
+        if (userAccount == null) {
+            throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
+        }
+
+        UserAccount exists = findUserAccount(userAccount);
+
+        // check email already present
+        if (!userService.checkEmailIsFree(userAccountDTO, exists))
+            return UserAccountConverter.convertToEditUserDto(exists); // we care for email leak...
+
+        // check login already present
+        userService.checkLoginIsFree(userAccountDTO, exists);
+
+        UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
 
         aaaUserDetailsService.refreshUserDetails(exists);
@@ -237,7 +266,7 @@ public class UserProfileController {
     @PreAuthorize("@aaaSecurityService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.API+Constants.Urls.USER)
     public long deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
-        return userDeleteService.deleteUser(userId);
+        return userService.deleteUser(userId);
     }
 
     @PreAuthorize("@aaaSecurityService.canChangeRole(#userAccountDetailsDTO, #userId)")
@@ -253,7 +282,7 @@ public class UserProfileController {
     @DeleteMapping(Constants.Urls.API+Constants.Urls.PROFILE)
     public void selfDeleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
         long userId = userAccountDetailsDTO.getId();
-        userDeleteService.deleteUser(userId);
+        userService.deleteUser(userId);
     }
 
     @PreAuthorize("isAuthenticated()")

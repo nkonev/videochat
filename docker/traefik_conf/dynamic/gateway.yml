@@ -12,6 +12,11 @@ http:
       loadBalancer:
         servers:
           - url: http://api.site.local:1235
+    storage-service:
+      loadBalancer:
+        servers:
+          - url: http://api.site.local:1236
+
   routers:
     nginx-router:
       rule: "PathPrefix(`/`)"
@@ -19,7 +24,7 @@ http:
       middlewares:
         - "retry-middleware"
     aaa-router:
-      rule: "PathPrefix(`/api/login`) || Path(`/api/logout`) || Path(`/api/profile`) || PathPrefix(`/api/user`) || PathPrefix(`/api/image/user/avatar`)"
+      rule: "PathPrefix(`/api/login`) || Path(`/api/logout`) || Path(`/api/profile`) || PathPrefix(`/api/user`)"
       service: aaa-service
       middlewares:
         - "retry-middleware"
@@ -30,9 +35,22 @@ http:
         - "auth-middleware"
         - "api-strip-prefix-middleware"
         - "retry-middleware"
+    storage-router:
+      rule: "PathPrefix(`/api/storage`)"
+      service: storage-service
+      middlewares:
+        - "auth-middleware"
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
     chat-public-router:
       rule: "PathPrefix(`/api/chat/public`)"
       service: chat-service
+      middlewares:
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
+    storage-public-router:
+      rule: "PathPrefix(`/api/storage/public`)"
+      service: storage-service
       middlewares:
         - "api-strip-prefix-middleware"
         - "retry-middleware"

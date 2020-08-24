@@ -1,13 +1,11 @@
 package com.github.nkonev.aaa.security;
 
-import com.github.nkonev.aaa.controllers.ImageUserAvatarUploadController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
-import com.github.nkonev.aaa.utils.ImageDownloader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,12 +31,6 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
 
     @Autowired
     private UserAccountRepository userAccountRepository;
-
-    @Autowired
-    private ImageUserAvatarUploadController imageUserAvatarUploadController;
-
-    @Autowired
-    private ImageDownloader imageDownloader;
 
     public static final String LOGIN_PREFIX = "facebook_";
 
@@ -73,13 +65,7 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
 
 
     private String getAvatarUrl(Map<String, Object> map){
-        try {
-            String url = (String) ((Map<String, Object>) ((Map<String, Object>) map.get("picture")).get("data")).get("url");
-            return imageDownloader.downloadImageAndSave(url, imageUserAvatarUploadController);
-        } catch (Exception e){
-            LOGGER.info("Cannot get image url from {}, returning null", map);
-            return null;
-        }
+        return null;
     }
 
     private String getLogin(Map<String, Object> map) {

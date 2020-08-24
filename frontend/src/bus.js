@@ -18,3 +18,4 @@ export const SET_EDIT_MESSAGE = "setEditMessageDto";
 export const UNREAD_MESSAGES_CHANGED = "unreadMessagesChanged";
 export const VIDEO_LOCAL_ESTABLISHED = "videoLocalEstablished";
 export const USER_TYPING = "userTyping";
+export const OPEN_CHOOSE_AVATAR = "openChooseAvatar";

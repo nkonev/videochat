@@ -9,6 +9,7 @@ import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import com.github.nkonev.aaa.exception.UserAlreadyPresentException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.services.EmailService;
+import com.github.nkonev.aaa.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,9 @@ public class RegistrationController {
     @Value("${custom.confirmation.registration.token.ttl-minutes}")
     private long userConfirmationTokenTtlMinutes;
 
+    @Autowired
+    private UserService userService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationController.class);
 
     private UserConfirmationToken createUserConfirmationToken(UserAccount userAccount) {
@@ -57,11 +61,9 @@ public class RegistrationController {
     @PostMapping(value = Constants.Urls.API+ Constants.Urls.REGISTER)
     @ResponseBody
     public void register(@RequestBody @Valid EditUserDTO userAccountDTO) {
-        if(userAccountRepository.findByUsername(userAccountDTO.getLogin()).isPresent()){
-            throw new UserAlreadyPresentException("User with login '" + userAccountDTO.getLogin() + "' is already present");
-        }
-        if(userAccountRepository.findByEmail(userAccountDTO.getEmail()).isPresent()){
-            LOGGER.warn("Skipping sent registration email '{}' because this user already present", userAccountDTO.getEmail());
+        userService.checkLoginIsCorrect(userAccountDTO);
+        userService.checkLoginIsFree(userAccountDTO);
+        if(!userService.checkEmailIsFree(userAccountDTO)){
             return; // we care for user email leak
         }
 

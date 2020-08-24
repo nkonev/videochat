@@ -63,7 +63,7 @@
 </template>
 
 <script>
-    import bus, {UNAUTHORIZED} from "./bus";
+    import bus, {LOGGED_IN, UNAUTHORIZED} from "./bus";
     import axios from "axios";
     import {FETCH_USER_PROFILE} from "./store";
 
@@ -141,6 +141,7 @@
                             console.log("You successfully logged in");
                             this.hideLoginModal();
                             this.$store.dispatch(FETCH_USER_PROFILE);
+                            bus.$emit(LOGGED_IN, null);
                         })
                         .catch((error) => {
                             // handle error

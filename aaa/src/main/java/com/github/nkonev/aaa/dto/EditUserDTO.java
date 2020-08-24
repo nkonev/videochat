@@ -5,7 +5,6 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 
 public class EditUserDTO {
-    @NotEmpty
     private String login;
 
     private String avatar;

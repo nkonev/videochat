@@ -24,7 +24,6 @@
 
         <spring.boot.version>2.3.3.RELEASE</spring.boot.version>
         <selenide.version>5.11.1</selenide.version>
-        <shedlock.version>2.1.0</shedlock.version>
         <logback.access.version>1.2.3</logback.access.version>
         <guava.version>29.0-jre</guava.version>
         <greenmail.version>1.5.10</greenmail.version>
@@ -214,16 +213,6 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>net.javacrumbs.shedlock</groupId>
-                <artifactId>shedlock-spring</artifactId>
-                <version>${shedlock.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.javacrumbs.shedlock</groupId>
-                <artifactId>shedlock-provider-redis-spring</artifactId>
-                <version>${shedlock.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-test</artifactId>
                 <version>${spring.boot.version}</version>
@@ -325,15 +314,6 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>net.javacrumbs.shedlock</groupId>
-            <artifactId>shedlock-spring</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.javacrumbs.shedlock</groupId>
-            <artifactId>shedlock-provider-redis-spring</artifactId>
         </dependency>
 
         <dependency>

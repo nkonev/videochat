@@ -19,10 +19,10 @@ public interface UserAccountRepository extends CrudRepository<UserAccount, Long>
     Optional<UserAccount> findByEmail(String email);
 
     // https://jira.spring.io/projects/DATAJDBC/issues/DATAJDBC-101?filter=allopenissues
-    @Query("select * from auth.users u where u.username ilike :userName order by id limit :limit offset :offset")
+    @Query("select * from users u where u.username ilike :userName order by id limit :limit offset :offset")
     List<UserAccount> findByUsernameContainsIgnoreCase(@Param("limit")long limit, @Param("offset")long offset, @Param("userName")String login);
 
-    @Query("select count(id) from auth.users u where u.username ilike :userName")
+    @Query("select count(id) from users u where u.username ilike :userName")
     long findByUsernameContainsIgnoreCaseCount(@Param("limit")long limit, @Param("offset")long offset, @Param("userName")String searchString);
 
     Optional<UserAccount> findByOauthIdentifiersFacebookId(String facebookId);
@@ -30,7 +30,7 @@ public interface UserAccountRepository extends CrudRepository<UserAccount, Long>
     Optional<UserAccount> findByOauthIdentifiersVkontakteId(String vkontakteId);
 
     @Modifying
-    @Query("update auth.users set last_login_date_time = :newLastLoginDateTime where username = :userName")
+    @Query("update users set last_login_date_time = :newLastLoginDateTime where username = :userName")
     void updateLastLogin(@Param("userName") String username, @Param("newLastLoginDateTime") LocalDateTime localDateTime);
 
     List<UserAccount> findByIdInOrderById(List<Long> userIds);

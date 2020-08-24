@@ -2,7 +2,7 @@ package com.github.nkonev.aaa.it;
 
 import com.github.nkonev.aaa.AbstractTestRunner;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.services.UserDeleteService;
+import com.github.nkonev.aaa.services.UserService;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -34,7 +34,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Autowired
-    protected UserDeleteService userDeleteService;
+    protected UserService userDeleteService;
 
     @BeforeAll
     public static void setUpClass() {
@@ -97,11 +97,11 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     }
 
     private void clearOauthBindingsInDb() throws InterruptedException {
-        String deleteUsers = "DELETE FROM auth.users WHERE username = :username";
+        String deleteUsers = "DELETE FROM users WHERE username = :username";
         namedParameterJdbcTemplate.update(deleteUsers, Collections.singletonMap("username", facebookLogin));
         namedParameterJdbcTemplate.update(deleteUsers, Collections.singletonMap("username", vkontakteLogin));
 
-        namedParameterJdbcTemplate.update("UPDATE auth.users SET vkontakte_id=NULL, facebook_id=NULL", new HashMap<>());
+        namedParameterJdbcTemplate.update("UPDATE users SET vkontakte_id=NULL, facebook_id=NULL", new HashMap<>());
     }
 
     @BeforeEach

@@ -274,6 +274,28 @@ public class UserAccountConverter {
         }
     }
 
+    public static void updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
+        if (!StringUtils.isEmpty(userAccountDTO.getLogin())) {
+            validateAndTrimLogin(userAccountDTO);
+            userAccount.setUsername(userAccountDTO.getLogin());
+        }
+        String password = userAccountDTO.getPassword();
+        if (!StringUtils.isEmpty(password)) {
+            validateUserPassword(password);
+            userAccount.setPassword(passwordEncoder.encode(password));
+        }
+        if (Boolean.TRUE.equals(userAccountDTO.getRemoveAvatar())){
+            userAccount.setAvatar(null);
+        } else if (!StringUtils.isEmpty(userAccountDTO.getAvatar())) {
+            userAccount.setAvatar(userAccountDTO.getAvatar());
+        }
+        if (!StringUtils.isEmpty(userAccountDTO.getEmail())) {
+            String email = userAccountDTO.getEmail();
+            email = email.trim();
+            userAccount.setEmail(email);
+        }
+    }
+
     public static com.github.nkonev.aaa.dto.EditUserDTO convertToEditUserDto(UserAccount userAccount) {
         com.github.nkonev.aaa.dto.EditUserDTO e = new com.github.nkonev.aaa.dto.EditUserDTO();
         e.setAvatar(userAccount.getAvatar());
