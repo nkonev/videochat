@@ -48,6 +48,12 @@ http:
       middlewares:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
+    storage-public-router:
+      rule: "PathPrefix(`/api/storage/public`)"
+      service: storage-service
+      middlewares:
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
 
   middlewares:
     api-strip-prefix-middleware:

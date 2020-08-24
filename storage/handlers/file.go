@@ -120,7 +120,7 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 		return err
 	}
 
-	relativeUrl := fmt.Sprintf("%v/storage/avatar/%v", viper.GetString("server.contextPath"), filename)
+	relativeUrl := fmt.Sprintf("%v/storage/public/avatar/%v", viper.GetString("server.contextPath"), filename)
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "filename": filename, "relativeUrl": relativeUrl})
 }
