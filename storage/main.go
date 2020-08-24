@@ -101,6 +101,7 @@ func configureEcho(
 
 	ch := handlers.NewFileHandler(db, m)
 	e.POST("/storage/avatar", ch.PutAvatar)
+	e.GET("/storage/avatar/:filename", ch.Download)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

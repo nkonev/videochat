@@ -10,7 +10,7 @@
             <template v-slot:prepend>
                 <v-list-item two-line v-if="currentUser" @click="openAvatarDialog()">
                     <v-list-item-avatar>
-                        <img :src="currentUser.avatar">
+                        <img :src="currentUserAvatar"/>
                     </v-list-item-avatar>
 
                     <v-list-item-content>
@@ -99,7 +99,13 @@
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
     import {CHANGE_SEARCH_STRING, FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
-    import bus, {CHANGE_PHONE_BUTTON, CHANGE_TITLE, LOGGED_OUT, OPEN_CHAT_EDIT, OPEN_CHOOSE_AVATAR} from "./bus";
+    import bus, {
+        CHANGE_PHONE_BUTTON,
+        CHANGE_TITLE,
+        LOGGED_OUT,
+        OPEN_CHAT_EDIT,
+        OPEN_CHOOSE_AVATAR,
+    } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
     import {chat_name, profile_name, root_name, videochat_name} from "./routes";
@@ -214,6 +220,11 @@
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
+            currentUserAvatar() {
+                console.log("Invoke avatar getter method");
+                const cacheKey = +new Date();
+                return this.currentUser.avatar + "?" + cacheKey;
+            },
         },
         mounted() {
             this.$store.dispatch(FETCH_USER_PROFILE);

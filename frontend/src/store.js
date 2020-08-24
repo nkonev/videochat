@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from "axios";
-import bus, {CHAT_SEARCH_CHANGED, LOGGED_IN} from "./bus";
+import bus, {CHAT_SEARCH_CHANGED} from "./bus";
 
 Vue.use(Vuex);
 
@@ -14,7 +14,6 @@ export const SET_CENTRIFUGE_SESSION = 'setCentrifugeSession';
 export const GET_SEARCH_STRING = 'getSearchString';
 export const SET_SEARCH_STRING = 'setSearchString';
 export const CHANGE_SEARCH_STRING = 'changeSearchString';
-
 
 const store = new Vuex.Store({
     state: {
@@ -53,7 +52,6 @@ const store = new Vuex.Store({
             axios.get(`/api/profile`).then(( {data} ) => {
                 console.debug("fetched profile =", data);
                 context.commit(SET_USER, data);
-                bus.$emit(LOGGED_IN, null);
             });
         },
         [CHANGE_SEARCH_STRING](context, data) {

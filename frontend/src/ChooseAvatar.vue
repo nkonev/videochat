@@ -22,13 +22,14 @@
     import axios from "axios";
     import bus, {OPEN_CHOOSE_AVATAR} from "./bus";
     import {FETCH_USER_PROFILE} from "./store";
+    import Vue from 'vue'
 
     export default {
         data() {
             return {
                 show: false,
                 rules: [
-                    value => !value || value.size < 2000000 || 'Avatar size should be less than 2 MB!',
+                    value => !value || value.size < 10000000 || 'Avatar size should be less than 10 MB!',
                 ],
                 formData: null,
             }
@@ -41,9 +42,10 @@
                 }
                 axios
                     .post(`/api/storage/avatar`, this.formData, config)
-                    .then(value => {
-                        return axios.patch(`/api/profile`, {avatar: 'urlii'})
+                    .then(({ data }) => {
+                        return axios.patch(`/api/profile`, {avatar: data.relativeUrl})
                     }).then(value => {
+                        console.log("PATCH result", value);
                         this.$store.dispatch(FETCH_USER_PROFILE);
                         this.show = false;
                     })
