@@ -97,11 +97,11 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     }
 
     private void clearOauthBindingsInDb() throws InterruptedException {
-        String deleteUsers = "DELETE FROM auth.users WHERE username = :username";
+        String deleteUsers = "DELETE FROM users WHERE username = :username";
         namedParameterJdbcTemplate.update(deleteUsers, Collections.singletonMap("username", facebookLogin));
         namedParameterJdbcTemplate.update(deleteUsers, Collections.singletonMap("username", vkontakteLogin));
 
-        namedParameterJdbcTemplate.update("UPDATE auth.users SET vkontakte_id=NULL, facebook_id=NULL", new HashMap<>());
+        namedParameterJdbcTemplate.update("UPDATE users SET vkontakte_id=NULL, facebook_id=NULL", new HashMap<>());
     }
 
     @BeforeEach

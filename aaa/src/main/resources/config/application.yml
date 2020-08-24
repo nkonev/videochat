@@ -85,7 +85,7 @@ spring.datasource:
     name: aaa_ds
     type: org.apache.tomcat.jdbc.pool.DataSource
     # https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters
-    url: jdbc:postgresql://127.0.0.1:35432/aaa?connectTimeout=10&socketTimeout=40&ApplicationName=aaa-app&currentSchema=auth
+    url: jdbc:postgresql://127.0.0.1:35432/aaa?connectTimeout=10&socketTimeout=40&ApplicationName=aaa-app
     username: aaa
     password: "aaaPazZw0rd"
     driverClassName: org.postgresql.Driver
@@ -111,7 +111,6 @@ spring.datasource:
 spring.flyway:
   locations: classpath:/db/migration
   drop-first: false
-  schemas: migrations, auth
   out-of-order: true
 
 spring.redis.url: redis://127.0.0.1:36379/0
