@@ -1,7 +1,7 @@
 dist: bionic
 before_script:
   - "docker version"
-  - "docker-compose up -d"
+  - "curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${TRAVIS_HOME}/gopath/bin/wait-for-it.sh && chmod +x ${TRAVIS_HOME}/gopath/bin/wait-for-it.sh"
 matrix:
   include:
     - language: java
@@ -16,7 +16,9 @@ matrix:
       install:
         - "/bin/true"
       script:
-        - "pwd"
+        - "docker-compose up -d"
+        - "wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'"
+        - "wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'"
         - "rm ~/.m2/settings.xml"
         - (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
 
@@ -46,7 +48,10 @@ matrix:
       install:
         - "/bin/true"
       script:
-        - "pwd"
+        - "docker-compose up -d"
+        - "wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'"
+        - "wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'"
+        - "wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'"
         - sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
         - "rm -rf ./chat/proto"
         - "mkdir ./chat/proto || true"
