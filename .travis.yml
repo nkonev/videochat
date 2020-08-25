@@ -57,5 +57,5 @@ matrix:
         - "mkdir ./chat/proto || true"
         - "docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto"
         - (cd chat; go test ./... -count=1 -test.v -test.timeout=20s)
-        - docker logs videochat_postgres_1
+        - (cd chat; docker-compose logs postgres)
         - (cd storage; go test ./... -count=1 -test.v -test.timeout=20s)
