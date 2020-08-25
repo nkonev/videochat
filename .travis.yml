@@ -56,6 +56,5 @@ matrix:
         - "rm -rf ./chat/proto"
         - "mkdir ./chat/proto || true"
         - "docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto"
-        - (cd chat; go test ./... -count=1 -test.v -test.timeout=20s)
-        - (cd chat; docker-compose logs postgres)
-        - (cd storage; go test ./... -count=1 -test.v -test.timeout=20s)
+        - (cd chat; go test ./... -count=1 -test.v -test.timeout=20s -p 1)
+        - (cd storage; go test ./... -count=1 -test.v -test.timeout=20s -p 1)
