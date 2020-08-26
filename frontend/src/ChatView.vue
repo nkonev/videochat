@@ -48,18 +48,18 @@
     } from "./InfinityListMixin";
     import Vue from 'vue'
     import bus, {
-        CHANGE_PHONE_BUTTON,
-        CHANGE_TITLE,
-        CHAT_EDITED,
-        MESSAGE_ADD,
-        MESSAGE_DELETED,
-        MESSAGE_EDITED,
-        SET_EDIT_MESSAGE, USER_TYPING,
-        VIDEO_LOCAL_ESTABLISHED
+      CHANGE_PHONE_BUTTON,
+      CHANGE_TITLE, CHAT_DELETED,
+      CHAT_EDITED,
+      MESSAGE_ADD,
+      MESSAGE_DELETED,
+      MESSAGE_EDITED,
+      SET_EDIT_MESSAGE, USER_TYPING,
+      VIDEO_LOCAL_ESTABLISHED
     } from "./bus";
     import {phoneFactory, titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
-    import {videochat_name} from "./routes";
+    import {root_name, videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
@@ -191,10 +191,12 @@
                 });
             },
             onChatChange(dto) {
-                const previousParticipants = this.chatDto.participantIds;
                 if (dto.id == this.chatId) {
                     this.getInfo()
                 }
+            },
+            onChatDelete(dto) {
+                this.$router.push(({ name: root_name}))
             },
             onMessageClick(dto) {
                 axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`);
@@ -223,6 +225,7 @@
             bus.$on(MESSAGE_ADD, this.onNewMessage);
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$on(CHAT_EDITED, this.onChatChange);
+            bus.$on(CHAT_DELETED, this.onChatDelete);
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
             bus.$on(VIDEO_LOCAL_ESTABLISHED, this.onVideoChangesHeight);
         },
@@ -230,6 +233,7 @@
             bus.$off(MESSAGE_ADD, this.onNewMessage);
             bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$off(CHAT_EDITED, this.onChatChange);
+            bus.$off(CHAT_DELETED, this.onChatDelete);
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
             bus.$off(VIDEO_LOCAL_ESTABLISHED, this.onVideoChangesHeight);
 
