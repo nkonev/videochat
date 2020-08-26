@@ -40,6 +40,7 @@ func main() {
 			configureEcho,
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
+			configureMigrations,
 			db.ConfigureDb,
 			notifications.NewNotifications,
 		),
@@ -193,8 +194,12 @@ func initJaeger(lc fx.Lifecycle) error {
 	return nil
 }
 
-func runMigrations(db db.DB) {
-	db.Migrate()
+func configureMigrations() db.MigrationsConfig {
+	return db.MigrationsConfig{}
+}
+
+func runMigrations(db db.DB, migrationsConfig db.MigrationsConfig) {
+	db.Migrate(migrationsConfig)
 }
 
 // rely on viper import and it's configured by

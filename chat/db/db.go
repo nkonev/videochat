@@ -24,6 +24,10 @@ type Tx struct {
 	*sql.Tx
 }
 
+type MigrationsConfig struct {
+	AppendTestData bool
+}
+
 // enumerates common tx and non-tx operations
 type CommonOperations interface {
 	Query(query string, args ...interface{}) (*dbP.Rows, error)
@@ -90,10 +94,10 @@ func (tx *Tx) SafeRollback() {
 	}
 }
 
-func migrateInternal(db *sql.DB) {
+func migrateInternal(db *sql.DB, path string) {
 	const migrations = "migrations"
 	box := rice.MustFindBox(migrations).HTTPBox()
-	src, err := httpfs.New(box, ".")
+	src, err := httpfs.New(box, path)
 	if err != nil {
 		Logger.Fatal(err)
 	}
@@ -121,10 +125,16 @@ func migrateInternal(db *sql.DB) {
 	}
 }
 
-func (db *DB) Migrate() {
-	Logger.Infof("Starting migration")
-	migrateInternal(db.DB)
-	Logger.Infof("Migration successful completed")
+func (db *DB) Migrate(migrationsConfig MigrationsConfig) {
+	Logger.Infof("Starting prod migration")
+	migrateInternal(db.DB, "./prod")
+	Logger.Infof("Migration successful prod completed")
+
+	if migrationsConfig.AppendTestData {
+		Logger.Infof("Starting test migration")
+		migrateInternal(db.DB, "./test")
+		Logger.Infof("Migration successful test completed")
+	}
 }
 
 func ConfigureDb(lc fx.Lifecycle) (DB, error) {

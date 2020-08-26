@@ -150,6 +150,10 @@ func request(method, path string, body io.Reader, e *echo.Echo) (int, string, ht
 	return requestWithHeader(method, path, Header, body, e)
 }
 
+func configureTestMigrations() db.MigrationsConfig {
+	return db.MigrationsConfig{AppendTestData: true}
+}
+
 func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 	var s fx.Shutdowner
 	app := fxtest.New(
@@ -163,6 +167,7 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			configureEcho,
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
+			configureTestMigrations,
 			db.ConfigureDb,
 			notifications.NewNotifications,
 		),
@@ -192,6 +197,7 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 			configureEcho,
 			configureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
+			configureTestMigrations,
 			db.ConfigureDb,
 			notifications.NewNotifications,
 		),
