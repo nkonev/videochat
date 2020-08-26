@@ -94,7 +94,7 @@ func (tx *Tx) SafeRollback() {
 	}
 }
 
-func migrateInternal(db *sql.DB, path string) {
+func migrateInternal(db *sql.DB, path, migrationTable string) {
 	const migrations = "migrations"
 	box := rice.MustFindBox(migrations).HTTPBox()
 	src, err := httpfs.New(box, path)
@@ -108,7 +108,7 @@ func migrateInternal(db *sql.DB, path string) {
 	}
 
 	pgInstance, err := postgres.WithInstance(db, &postgres.Config{
-		MigrationsTable:  "go_migrate",
+		MigrationsTable:  migrationTable,
 		StatementTimeout: d,
 	})
 	if err != nil {
@@ -127,12 +127,12 @@ func migrateInternal(db *sql.DB, path string) {
 
 func (db *DB) Migrate(migrationsConfig MigrationsConfig) {
 	Logger.Infof("Starting prod migration")
-	migrateInternal(db.DB, "./prod")
+	migrateInternal(db.DB, "./prod", "go_migrate")
 	Logger.Infof("Migration successful prod completed")
 
 	if migrationsConfig.AppendTestData {
 		Logger.Infof("Starting test migration")
-		migrateInternal(db.DB, "./test")
+		migrateInternal(db.DB, "./test", "go_migrate_test")
 		Logger.Infof("Migration successful test completed")
 	}
 }
