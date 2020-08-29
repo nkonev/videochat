@@ -1,0 +1,134 @@
+# This file used for both developer and demo purposes.
+# It contains environment
+version: '3.7'
+
+services:
+  traefik:
+    image: traefik:v2.2.4
+    hostname: traefik
+    restart: unless-stopped
+    # The Static Configuration
+    command: --configFile=/traefik_conf/traefik.yml
+    ports:
+      - 8081:80
+#      - 8010:8080
+    extra_hosts:
+      # When you apply firewalld rule these requests will go to you IDE-launched chat app
+      # see also network definition in bottom
+      - "api.site.local:172.28.0.1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker/traefik_conf:/traefik_conf
+    networks:
+      - traefik_backend
+      - backend
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-traefik
+
+  # static server
+  nginx:
+    image: nginx:1.16.0
+    restart: unless-stopped
+#    ports:
+#      - 8082:80
+    networks:
+      backend:
+    volumes:
+      - ./frontend-nginx:/usr/share/nginx/html:ro
+      - ./docker/nginx/frontend.conf:/etc/nginx/conf.d/default.conf:ro
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-nginx
+  postgres:
+    image: postgres:12.2
+    restart: unless-stopped
+#    ports:
+#      - 35432:5432
+    volumes:
+      - ./docker/postgresql_dev/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgresqlPassword
+    networks:
+      backend:
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-postgresql
+
+  redis:
+    image: redis:5.0.5
+    hostname: redis
+    restart: unless-stopped
+#    ports:
+#      - 36379:6379
+    volumes:
+      - redis_data_dir:/data
+    networks:
+      backend:
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-redis
+
+  minio:
+    image: minio/minio:RELEASE.2020-08-18T19-41-00Z
+    hostname: minio
+    restart: unless-stopped
+#    ports:
+#      - 9000:9000
+    environment:
+      - MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+      - MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    volumes:
+      - /mnt/chat-minio/data:/data
+    command: ["server", "/data"]
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-minio
+
+  coturn:
+    image: instrumentisto/coturn:4.5.1.3
+    hostname: coturn
+    restart: unless-stopped
+    ports:
+      - 3478:3478
+      - 49160-49200:49160-49200/udp
+    volumes:
+      - coturn_data:/var/lib/coturn
+    networks:
+      backend:
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-coturn
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.18.1
+    hostname: jaeger
+    restart: unless-stopped
+#    ports:
+#      - 16686:16686 # web ui
+#      - 6831:6831/udp
+    networks:
+      backend:
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-jaeger
+
+volumes:
+  postgres_data:
+  redis_data_dir:
+  coturn_data:
+
+networks:
+  backend:
+    driver: overlay
+  traefik_backend:
+    external: true
+    name: proxy_backend
