@@ -66,7 +66,7 @@ matrix:
       install:
         - "/bin/true"
       script:
-        - "go get github.com/GeertJohan/go.rice/rice@v1.0.0"
+        - "GO111MODULE=auto go get github.com/GeertJohan/go.rice/rice@v1.0.0"
         - "docker-compose up -d"
         - "wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'"
         - "wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'"
