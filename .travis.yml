@@ -21,6 +21,18 @@ matrix:
         - "wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'"
         - "rm ~/.m2/settings.xml"
         - (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
+        - BUILDDIR=./build;
+          WORKDIR=./aaa;
+          IMAGE=nkonev/aaa:latest;
+          if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TEST_RESULT" == "0" && "$TRAVIS_EVENT_TYPE" != "cron" ]]; then (
+            cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp target/*-exec.jar $BUILDDIR &&
+            docker build -t $IMAGE $BUILDDIR
+#            && docker login -u="$DOCKER_LOGIN" -p="$DOCKER_PASSWORD" &&
+#            docker push nkonev/aaa:latest &&
+#            ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q $CONNECT_LINE $UPDATE_COMMAND;
+          ) else (
+            echo "Won't push docker image and deploy";
+          ) fi
 
     - language: javascript
       node_js:
@@ -35,6 +47,18 @@ matrix:
       script:
         - "pwd"
         - (cd frontend; npm install && npm run build)
+        - BUILDDIR=./build;
+          WORKDIR=./frontend;
+          IMAGE=nkonev/frontend:latest;
+          if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TEST_RESULT" == "0" && "$TRAVIS_EVENT_TYPE" != "cron" ]]; then (
+            cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp -r ../frontend-nginx/* $BUILDDIR && cp ../docker/nginx/frontend.conf $BUILDDIR &&
+            docker build -t $IMAGE $BUILDDIR
+            #            && docker login -u="$DOCKER_LOGIN" -p="$DOCKER_PASSWORD" &&
+            #            docker push nkonev/aaa:latest &&
+            #            ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q $CONNECT_LINE $UPDATE_COMMAND;
+          ) else (
+            echo "Won't push docker image and deploy";
+          ) fi
 
     - language: go
       sudo: required
@@ -48,6 +72,7 @@ matrix:
       install:
         - "/bin/true"
       script:
+        - "go get github.com/GeertJohan/go.rice/rice@v1.0.0"
         - "docker-compose up -d"
         - "wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'"
         - "wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'"
@@ -56,5 +81,32 @@ matrix:
         - "rm -rf ./chat/proto"
         - "mkdir ./chat/proto || true"
         - "docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto"
+        # https://medium.com/@diogok/on-golang-static-binaries-cross-compiling-and-plugins-1aed33499671
         - (cd chat; go test ./... -count=1 -test.v -test.timeout=20s -p 1)
+        - (cd chat; rice embed-go && CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"')
         - (cd storage; go test ./... -count=1 -test.v -test.timeout=20s -p 1)
+        - (cd storage; rice embed-go && CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"')
+
+        - function buildAndPushGoDockerImage {
+            if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TEST_RESULT" == "0" && "$TRAVIS_EVENT_TYPE" != "cron" ]]; then (
+              cd $WORKDIR && mkdir -p $BUILDDIR && mv $EXECUTABLE $BUILDDIR && cp ./Dockerfile $BUILDDIR &&
+              docker build --build-arg BINARY=$EXECUTABLE -t $IMAGE $BUILDDIR
+  #            && docker login -u="$DOCKER_LOGIN" -p="$DOCKER_PASSWORD" &&
+  #            docker push $IMAGE &&
+  #            ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q $CONNECT_LINE $UPDATE_COMMAND || exit 1
+            ) else (
+              echo "Won't push docker image and deploy";
+            ) fi
+          }
+
+        - BUILDDIR=./build;
+          WORKDIR=./chat;
+          EXECUTABLE=chat;
+          IMAGE=nkonev/chat:latest;
+          buildAndPushGoDockerImage;
+
+        - BUILDDIR=./build;
+          WORKDIR=./storage;
+          EXECUTABLE=storage;
+          IMAGE=nkonev/storage:latest;
+          buildAndPushGoDockerImage;

@@ -12,3 +12,4 @@ grpc
 target
 /frontend-nginx
 /storage/storage
+build
