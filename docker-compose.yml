@@ -95,6 +95,23 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  coturn:
+    image: instrumentisto/coturn:4.5.1.3
+    hostname: coturn
+    restart: unless-stopped
+    ports:
+      - 3478:3478
+      - 49160-49200:49160-49200/udp
+    volumes:
+      - coturn_data:/var/lib/coturn
+    networks:
+      backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+
   jaeger:
     image: jaegertracing/all-in-one:1.18.1
     hostname: jaeger
@@ -114,6 +131,7 @@ volumes:
   postgres_data:
   redis_data_dir:
   minio_data:
+  coturn_data:
 
 networks:
   backend:
