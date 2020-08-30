@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+  nginx:
+    image: nkonev/aaa:latest
+    restart: unless-stopped
+    networks:
+      backend:
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 120s
+    environment:
+      - _JAVA_OPTIONS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx512m -XX:MetaspaceSize=128M -XX:MaxMetaspaceSize=256M -XX:OnOutOfMemoryError="kill -9 %p" -Dnetworkaddress.cache.ttl=0 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/aaa
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/aaa?connectTimeout=10&socketTimeout=40&ApplicationName=aaa-app
+      - SPRING_REDIS_URL=redis://redis:6379/0
+      - SPRING_MAIL_HOST=smtp.yandex.ru
+      - CUSTOM_EMAIL_FROM=username@yandex.ru
+      - SPRING_MAIL_USERNAME=username
+      - SPRING_MAIL_PASSWORD=password
+      - CUSTOM_BASE-URL=http://api.site.local:8080
+      - MANAGEMENT_HEALTH_MAIL_ENABLED=false
+
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-aaa
+
+networks:
+  backend:
+    driver: overlay

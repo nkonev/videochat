@@ -1,0 +1,21 @@
+version: '3.7'
+
+services:
+  nginx:
+    image: nkonev/frontend:latest
+    restart: unless-stopped
+    networks:
+      backend:
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 20s
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-nginx
+
+networks:
+  backend:
+    driver: overlay

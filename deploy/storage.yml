@@ -1,0 +1,39 @@
+server:
+  address: ":1236"
+  shutdown.timeout: "10s"
+  body.limit: "100G"
+  contextPath: "/api"
+http:
+  idle:
+    conns:
+      max: 2
+    connTimeout: '10s'
+  disableCompression: false
+
+auth:
+  exclude:
+    - "^/storage/public.*"
+
+postgresql:
+  # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+  url: "postgres://storage:storagePazZw0rd@postgresql:5432/storage?sslmode=disable&application_name=storage-app"
+  maxOpenConnections: 16
+  maxIdleConnections: 4
+  maxLifetime: 30s
+
+
+aaa:
+  url:
+    base: "http://api.site.local:8060"
+    getUsers: "/internal/user/list"
+
+jaeger:
+  endpoint: "jaeger:6831"
+
+minio:
+  endpoint: minio:9000
+  accessKeyId: AKIAIOSFODNN7EXAMPLE
+  secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  location: "europe-east"
+  bucket:
+    avatar: "avatar"

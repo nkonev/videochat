@@ -1,0 +1,73 @@
+http:
+  services:
+    nginx-service:
+      loadBalancer:
+        servers:
+          - url: http://nginx:80
+    aaa-service:
+      loadBalancer:
+        servers:
+          - url: http://api.site.local:8060
+    chat-service:
+      loadBalancer:
+        servers:
+          - url: http://api.site.local:1235
+    storage-service:
+      loadBalancer:
+        servers:
+          - url: http://api.site.local:1236
+
+  routers:
+    nginx-router:
+      rule: "PathPrefix(`/`)"
+      service: nginx-service
+      middlewares:
+        - "retry-middleware"
+    aaa-router:
+      rule: "PathPrefix(`/api/login`) || Path(`/api/logout`) || Path(`/api/profile`) || PathPrefix(`/api/user`)"
+      service: aaa-service
+      middlewares:
+        - "retry-middleware"
+    chat-router:
+      rule: "PathPrefix(`/api/chat`)"
+      service: chat-service
+      middlewares:
+        - "auth-middleware"
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
+    storage-router:
+      rule: "PathPrefix(`/api/storage`)"
+      service: storage-service
+      middlewares:
+        - "auth-middleware"
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
+    chat-public-router:
+      rule: "PathPrefix(`/api/chat/public`)"
+      service: chat-service
+      middlewares:
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
+    storage-public-router:
+      rule: "PathPrefix(`/api/storage/public`)"
+      service: storage-service
+      middlewares:
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
+
+  middlewares:
+    api-strip-prefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/api"
+    retry-middleware:
+      retry:
+        attempts: 4
+    auth-middleware:
+      forwardAuth:
+        address: "http://api.site.local:8060/internal/profile"
+        authResponseHeaders:
+          - "X-Auth-Username"
+          - "X-Auth-UserId"
+          - "X-Auth-ExpiresIn"
+          - "X-Auth-Role"

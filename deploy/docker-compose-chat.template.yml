@@ -1,0 +1,24 @@
+version: '3.7'
+
+services:
+  nginx:
+    image: nkonev/chat:latest
+    restart: unless-stopped
+    networks:
+      backend:
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 20s
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-aaa
+    volumes:
+      - ./chat.yml:/etc/chat.yml
+    command: ["-config=/etc/chat.yml"]
+
+networks:
+  backend:
+    driver: overlay
