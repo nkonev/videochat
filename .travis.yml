@@ -78,11 +78,10 @@ matrix:
         - "mkdir ./chat/proto || true"
         - "docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto"
         # https://medium.com/@diogok/on-golang-static-binaries-cross-compiling-and-plugins-1aed33499671
-        - export GO111MODULE=on
         - (cd chat; go test ./... -count=1 -test.v -test.timeout=20s -p 1)
-        - (cd chat; rice embed-go && echo 'completed generating embed' && CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"')
+        - (cd chat; export GO111MODULE=on && rice embed-go && echo 'completed generating embed' && CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"')
         - (cd storage; go test ./... -count=1 -test.v -test.timeout=20s -p 1)
-        - (cd storage; rice embed-go && echo 'completed generating embed' && CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"')
+        - (cd storage; export GO111MODULE=on && rice embed-go && echo 'completed generating embed' && CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"')
 
         - function buildAndPushGoDockerImage {
             if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TEST_RESULT" == "0" && "$TRAVIS_EVENT_TYPE" != "cron" ]]; then (
