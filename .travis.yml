@@ -117,7 +117,7 @@ matrix:
           buildAndPushGoDockerImage;
 
         - BUILDDIR=./build;
-          WORKDIR=./chat-storage;
+          WORKDIR=./storage;
           EXECUTABLE=storage;
-          IMAGE=nkonev/storage:latest;
+          IMAGE=nkonev/chat-storage:latest;
           buildAndPushGoDockerImage;
