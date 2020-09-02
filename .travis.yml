@@ -25,7 +25,7 @@ matrix:
         - (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
         - BUILDDIR=./build;
           WORKDIR=./aaa;
-          IMAGE=nkonev/aaa:latest;
+          IMAGE=nkonev/chat-aaa:latest;
           if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TEST_RESULT" == "0" && "$TRAVIS_EVENT_TYPE" != "cron" ]]; then (
             cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp target/*-exec.jar $BUILDDIR &&
             docker build -t $IMAGE $BUILDDIR &&
@@ -51,7 +51,7 @@ matrix:
         - (cd frontend; npm install && npm run build)
         - BUILDDIR=./build;
           WORKDIR=./frontend;
-          IMAGE=nkonev/frontend:latest;
+          IMAGE=nkonev/chat-frontend:latest;
           if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TEST_RESULT" == "0" && "$TRAVIS_EVENT_TYPE" != "cron" ]]; then (
             cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp -r ../frontend-nginx/* $BUILDDIR && cp ../docker/nginx/frontend.conf $BUILDDIR &&
             docker build -t $IMAGE $BUILDDIR &&
@@ -114,7 +114,7 @@ matrix:
           buildAndPushGoDockerImage;
 
         - BUILDDIR=./build;
-          WORKDIR=./storage;
+          WORKDIR=./chat-storage;
           EXECUTABLE=storage;
           IMAGE=nkonev/storage:latest;
           buildAndPushGoDockerImage;
