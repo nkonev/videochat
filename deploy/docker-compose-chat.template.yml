@@ -1,7 +1,7 @@
 version: '3.7'
 
 services:
-  nginx:
+  chat:
     image: nkonev/chat:latest
     restart: unless-stopped
     networks:
