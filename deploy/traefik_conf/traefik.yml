@@ -10,7 +10,7 @@ entryPoints:
 providers:
   providersThrottleDuration: 2s
   docker:
-    swarmMode: false
+    swarmMode: true
     watch: true
     exposedByDefault: false
   file:
