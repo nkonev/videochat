@@ -21,7 +21,7 @@ services:
       options:
         tag: chat-traefik
 
-  postgres:
+  postgresql:
     image: postgres:12.2
     restart: unless-stopped
     volumes:
