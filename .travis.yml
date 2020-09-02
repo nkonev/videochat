@@ -1,5 +1,7 @@
 dist: bionic
 before_script:
+  - openssl aes-256-cbc -K $encrypted_key -iv $encrypted_iv -in ./.travis/id_rsa.enc -out ~/.ssh/id_rsa -d
+  - chmod 600 ~/.ssh/id_rsa
   - "docker version"
   - "curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${TRAVIS_HOME}/gopath/bin/wait-for-it.sh && chmod +x ${TRAVIS_HOME}/gopath/bin/wait-for-it.sh"
 matrix:
