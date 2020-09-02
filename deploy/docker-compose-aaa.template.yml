@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   nginx:
-    image: nkonev/aaa:latest
+    image: nkonev/chat-aaa:latest
     restart: unless-stopped
     networks:
       backend:
