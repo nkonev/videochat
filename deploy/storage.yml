@@ -24,7 +24,7 @@ postgresql:
 
 aaa:
   url:
-    base: "http://api.site.local:8060"
+    base: "http://aaa:8060"
     getUsers: "/internal/user/list"
 
 jaeger:

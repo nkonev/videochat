@@ -7,15 +7,15 @@ http:
     aaa-service:
       loadBalancer:
         servers:
-          - url: http://api.site.local:8060
+          - url: http://aaa:8060
     chat-service:
       loadBalancer:
         servers:
-          - url: http://api.site.local:1235
+          - url: http://chat:1235
     storage-service:
       loadBalancer:
         servers:
-          - url: http://api.site.local:1236
+          - url: http://storage:1236
 
   routers:
     nginx-router:
@@ -65,7 +65,7 @@ http:
         attempts: 4
     auth-middleware:
       forwardAuth:
-        address: "http://api.site.local:8060/internal/profile"
+        address: "http://aaa:8060/internal/profile"
         authResponseHeaders:
           - "X-Auth-Username"
           - "X-Auth-UserId"
