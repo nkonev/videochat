@@ -29,8 +29,9 @@ matrix:
           if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TEST_RESULT" == "0" && "$TRAVIS_EVENT_TYPE" != "cron" ]]; then (
             cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp target/*-exec.jar $BUILDDIR &&
             docker build -t $IMAGE $BUILDDIR &&
-            echo "Will push docker image" &&
+            echo "Will login to docker" &&
             docker login -u="$DOCKER_LOGIN" -p="$DOCKER_PASSWORD" &&
+            echo "Will push docker image" &&
             docker push $IMAGE
           ) else (
             echo "Won't push docker image and deploy";
@@ -55,8 +56,9 @@ matrix:
           if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TEST_RESULT" == "0" && "$TRAVIS_EVENT_TYPE" != "cron" ]]; then (
             cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp -r ../frontend-nginx/* $BUILDDIR && cp ../docker/nginx/frontend.conf $BUILDDIR &&
             docker build -t $IMAGE $BUILDDIR &&
-            echo "Will push docker image" &&
+            echo "Will login to docker" &&
             docker login -u="$DOCKER_LOGIN" -p="$DOCKER_PASSWORD" &&
+            echo "Will push docker image" &&
             docker push $IMAGE
           ) else (
             echo "Won't push docker image and deploy";
@@ -99,8 +101,9 @@ matrix:
             if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TEST_RESULT" == "0" && "$TRAVIS_EVENT_TYPE" != "cron" ]]; then (
               cd $WORKDIR && mkdir -p $BUILDDIR && mv $EXECUTABLE $BUILDDIR && cp ./Dockerfile $BUILDDIR &&
               docker build --build-arg BINARY=$EXECUTABLE -t $IMAGE $BUILDDIR &&
-              echo "Will push docker image" &&
+              echo "Will login to docker" &&
               docker login -u="$DOCKER_LOGIN" -p="$DOCKER_PASSWORD" &&
+              echo "Will push docker image" &&
               docker push $IMAGE
             ) else (
               echo "Won't push docker image and deploy";
