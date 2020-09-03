@@ -61,7 +61,9 @@ matrix:
             echo "Will login to docker" &&
             docker login -u="$DOCKER_LOGIN" -p="$DOCKER_PASSWORD" &&
             echo "Will push docker image" &&
-            docker push $IMAGE
+            docker push $IMAGE &&
+            echo "Will deploy frontend" &&
+            ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q $CONNECT_LINE $FRONTEND_UPDATE_COMMAND
           ) else (
             echo "Won't push docker image and deploy";
           ) fi
