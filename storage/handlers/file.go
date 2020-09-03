@@ -32,6 +32,7 @@ func NewFileHandler (db db.DB, minio *minio.Client) FileHandler {
 }
 
 const FormFile = "data"
+const UrlStorageGetAvatar = "/storage/public/avatar"
 
 func (h *FileHandler) ensureBucket(bucketName, location string) error {
 	// Check to see if we already own this bucket (which happens if you run this twice)
@@ -122,7 +123,7 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 		return err
 	}
 
-	relativeUrl := fmt.Sprintf("%v/storage/public/avatar/%v", viper.GetString("server.contextPath"), filename)
+	relativeUrl := fmt.Sprintf("%v%v/%v", viper.GetString("server.contextPath"), UrlStorageGetAvatar, filename)
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "filename": filename, "relativeUrl": relativeUrl})
 }

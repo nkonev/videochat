@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"contrib.go.opencensus.io/exporter/jaeger"
+	"fmt"
 	"github.com/rakyll/statik/fs"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -102,7 +103,7 @@ func configureEcho(
 
 	ch := handlers.NewFileHandler(db, m)
 	e.POST("/storage/avatar", ch.PutAvatar)
-	e.GET("/storage/public/avatar/:filename", ch.Download)
+	e.GET(fmt.Sprintf("%v/:filename", handlers.UrlStorageGetAvatar), ch.Download)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
