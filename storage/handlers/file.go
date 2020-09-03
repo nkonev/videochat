@@ -130,6 +130,7 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 func (h *FileHandler) Download(c echo.Context) error {
 	bucketName, err := h.ensureAndGetAvatarBucket()
 	if err != nil {
+		GetLogEntry(c.Request()).Errorf("Error during get bucket: %v", err)
 		return err
 	}
 
