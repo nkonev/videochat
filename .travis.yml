@@ -121,9 +121,11 @@ matrix:
           EXECUTABLE=chat;
           IMAGE=nkonev/chat:latest;
           buildAndPushGoDockerImage;
+        - echo "Will deploy chat" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q $CONNECT_LINE $CHAT_UPDATE_COMMAND
 
         - BUILDDIR=./build;
           WORKDIR=./storage;
           EXECUTABLE=storage;
           IMAGE=nkonev/chat-storage:latest;
           buildAndPushGoDockerImage;
+        - echo "Will deploy storage" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q $CONNECT_LINE $STORAGE_UPDATE_COMMAND
