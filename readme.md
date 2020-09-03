@@ -25,7 +25,19 @@ service firewalld restart
 docker-compose up -d
 ```
 
+## Build static
+Before development, you need to build static (html, sql). Please see `.travis.yml`
+
 # Test in browser
 Open `http://localhost:8081/chat` in Firefox main and an Anonymous window;
 Login as `admin:admin` in main window and as `nikita:password` in the Anonymous window.
 Create chat in main window and add `nikita` there.
+
+
+## Generating monitoring grafana & prometheus password
+```bash
+sudo yum install -y httpd-tools
+
+# generate password
+htpasswd -bnBC 10 "" password | tr -d ':'
+```
