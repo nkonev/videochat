@@ -71,28 +71,30 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 
 	filePart, err := c.FormFile(FormFile)
 	if err != nil {
-		Logger.Errorf("Error during extracting form %v parameter: %v", FormFile, err)
+		GetLogEntry(c.Request()).Errorf("Error during extracting form %v parameter: %v", FormFile, err)
 		return err
 	}
 
 	bucketName, err := fh.ensureAndGetAvatarBucket()
 	if err != nil {
+		GetLogEntry(c.Request()).Errorf("Error during get bucket: %v", err)
 		return err
 	}
 
 	contentType := filePart.Header.Get("Content-Type")
 
-	Logger.Debugf("Determined content type: %v", contentType)
+	GetLogEntry(c.Request()).Debugf("Determined content type: %v", contentType)
 
 	src, err := filePart.Open()
 	if err != nil {
+		GetLogEntry(c.Request()).Errorf("Error during opening multipart file: %v", err)
 		return err
 	}
 	defer src.Close()
 
 	srcImage, _, err := image.Decode(src)
 	if err != nil {
-		Logger.Errorf("Error during decoding image: %v", err)
+		GetLogEntry(c.Request()).Errorf("Error during decoding image: %v", err)
 		return err
 	}
 
@@ -101,7 +103,7 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 	byteBuffer := new(bytes.Buffer)
 	err = jpeg.Encode(byteBuffer, dstImage, nil)
 	if err != nil {
-		Logger.Errorf("Error during encoding image: %v", err)
+		GetLogEntry(c.Request()).Errorf("Error during encoding image: %v", err)
 		return err
 	}
 
@@ -111,12 +113,12 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 		return tx.CreateAvatarMetadata(userPrincipalDto.UserId, avatarType, filename)
 	})
 	if err != nil {
-		Logger.Errorf("Error during inserting into database: %v", err)
+		GetLogEntry(c.Request()).Errorf("Error during inserting into database: %v", err)
 		return err
 	}
 
 	if _, err := fh.minio.PutObject(context.Background(), bucketName, filename, byteBuffer, int64(byteBuffer.Len()), minio.PutObjectOptions{ContentType: contentType}); err != nil {
-		Logger.Errorf("Error during upload object: %v", err)
+		GetLogEntry(c.Request()).Errorf("Error during upload object: %v", err)
 		return err
 	}
 
