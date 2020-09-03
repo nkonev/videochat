@@ -4,12 +4,12 @@ import (
 	"context"
 	"contrib.go.opencensus.io/exporter/jaeger"
 	"fmt"
-	"github.com/rakyll/statik/fs"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
@@ -18,9 +18,9 @@ import (
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/handlers"
 	. "nkonev.name/storage/logger"
+	_ "nkonev.name/storage/statik"
 	"nkonev.name/storage/utils"
 	"strings"
-	_ "nkonev.name/storage/statik"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -74,6 +74,14 @@ func configureOpencensusMiddleware() echo.MiddlewareFunc {
 	}
 }
 
+func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) {
+	originalHandler := e.DefaultHTTPErrorHandler
+	return func(err error, c echo.Context) {
+		GetLogEntry(c.Request()).Errorf("Unhandled error: %v", err)
+		originalHandler(err, c)
+	}
+}
+
 func configureEcho(
 	staticMiddleware staticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
@@ -86,6 +94,8 @@ func configureEcho(
 
 	e := echo.New()
 	e.Logger.SetOutput(Logger.Writer())
+
+	e.HTTPErrorHandler = createCustomHTTPErrorHandler(e)
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
 	e.Use(configureOpencensusMiddleware())
@@ -124,7 +134,7 @@ func configureMinio() (*minio.Client, error) {
 	// Initialize minio client object.
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure:       false,
+		Secure: false,
 	})
 	if err != nil {
 		return nil, err

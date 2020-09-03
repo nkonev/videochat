@@ -91,6 +91,14 @@ func configureOpencensusMiddleware() echo.MiddlewareFunc {
 	}
 }
 
+func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) {
+	originalHandler := e.DefaultHTTPErrorHandler
+	return func(err error, c echo.Context) {
+		GetLogEntry(c.Request()).Errorf("Unhandled error: %v", err)
+		originalHandler(err, c)
+	}
+}
+
 func configureEcho(
 	staticMiddleware staticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
@@ -106,6 +114,8 @@ func configureEcho(
 
 	e := echo.New()
 	e.Logger.SetOutput(Logger.Writer())
+
+	e.HTTPErrorHandler = createCustomHTTPErrorHandler(e)
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
 	e.Use(configureOpencensusMiddleware())
