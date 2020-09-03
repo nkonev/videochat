@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"contrib.go.opencensus.io/exporter/jaeger"
-	"github.com/GeertJohan/go.rice"
 	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/microcosm-cc/bluemonday"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
@@ -19,6 +19,7 @@ import (
 	"nkonev.name/chat/handlers"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
+	_ "nkonev.name/chat/statik"
 	"nkonev.name/chat/utils"
 	"strings"
 )
@@ -153,13 +154,16 @@ func configureEcho(
 }
 
 func configureStaticMiddleware() staticMiddleware {
-	box := rice.MustFindBox("static").HTTPBox()
+	statikFS, err := fs.New()
+	if err != nil {
+		Logger.Fatal(err)
+	}
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			reqUrl := c.Request().RequestURI
 			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") {
-				http.FileServer(box).
+				http.FileServer(statikFS).
 					ServeHTTP(c.Response().Writer, c.Request())
 				return nil
 			} else {

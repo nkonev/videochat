@@ -3,7 +3,7 @@
 .idea
 *.iml
 node_modules
-rice-box.go
+statik
 /chat/chat
 /chat/proto
 vendor

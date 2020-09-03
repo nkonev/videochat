@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"contrib.go.opencensus.io/exporter/jaeger"
-	"github.com/GeertJohan/go.rice"
+	"github.com/rakyll/statik/fs"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/minio/minio-go/v7"
@@ -19,6 +19,7 @@ import (
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
 	"strings"
+	_ "nkonev.name/storage/statik"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -132,13 +133,16 @@ func configureMinio() (*minio.Client, error) {
 }
 
 func configureStaticMiddleware() staticMiddleware {
-	box := rice.MustFindBox("static").HTTPBox()
+	statikFS, err := fs.New()
+	if err != nil {
+		Logger.Fatal(err)
+	}
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			reqUrl := c.Request().RequestURI
 			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") {
-				http.FileServer(box).
+				http.FileServer(statikFS).
 					ServeHTTP(c.Response().Writer, c.Request())
 				return nil
 			} else {

@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 	dbP "database/sql"
-	rice "github.com/GeertJohan/go.rice"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	. "nkonev.name/storage/logger"
@@ -85,9 +85,12 @@ func (tx *Tx) SafeRollback() {
 }
 
 func migrateInternal(db *sql.DB) {
-	const migrations = "migrations"
-	box := rice.MustFindBox(migrations).HTTPBox()
-	src, err := httpfs.New(box, ".")
+	statikFS, err := fs.New()
+	if err != nil {
+		Logger.Fatal(err)
+	}
+
+	src, err := httpfs.New(statikFS, "/")
 	if err != nil {
 		Logger.Fatal(err)
 	}

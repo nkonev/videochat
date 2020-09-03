@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	dbP "database/sql"
-	rice "github.com/GeertJohan/go.rice"
+	//rice "github.com/GeertJohan/go.rice"
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/rakyll/statik/fs"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -95,9 +96,12 @@ func (tx *Tx) SafeRollback() {
 }
 
 func migrateInternal(db *sql.DB, path, migrationTable string) {
-	const migrations = "migrations"
-	box := rice.MustFindBox(migrations).HTTPBox()
-	src, err := httpfs.New(box, path)
+	statikFS, err := fs.New()
+	if err != nil {
+		Logger.Fatal(err)
+	}
+
+	src, err := httpfs.New(statikFS, path)
 	if err != nil {
 		Logger.Fatal(err)
 	}
@@ -127,12 +131,12 @@ func migrateInternal(db *sql.DB, path, migrationTable string) {
 
 func (db *DB) Migrate(migrationsConfig MigrationsConfig) {
 	Logger.Infof("Starting prod migration")
-	migrateInternal(db.DB, "./prod", "go_migrate")
+	migrateInternal(db.DB, "/prod", "go_migrate")
 	Logger.Infof("Migration successful prod completed")
 
 	if migrationsConfig.AppendTestData {
 		Logger.Infof("Starting test migration")
-		migrateInternal(db.DB, "./test", "go_migrate_test")
+		migrateInternal(db.DB, "/test", "go_migrate_test")
 		Logger.Infof("Migration successful test completed")
 	}
 }

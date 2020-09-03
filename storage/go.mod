@@ -2,10 +2,9 @@ module nkonev.name/storage
 
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.0
-	github.com/GeertJohan/go.rice v1.0.0
+	github.com/rakyll/statik v0.1.7
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/golang-migrate/migrate/v4 v4.11.0
-	github.com/google/uuid v1.1.1
 	github.com/jackc/pgx/v4 v4.8.1
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/minio/minio-go/v7 v7.0.4
