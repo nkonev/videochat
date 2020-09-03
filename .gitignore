@@ -3,7 +3,8 @@
 .idea
 *.iml
 node_modules
-statik
+static_assets
+static_migrations
 /chat/chat
 /chat/proto
 vendor
@@ -13,3 +14,5 @@ target
 /frontend-nginx
 /storage/storage
 build
+/chat/static/git.json
+/storage/static/git.json

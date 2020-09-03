@@ -18,7 +18,7 @@ import (
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/handlers"
 	. "nkonev.name/storage/logger"
-	_ "nkonev.name/storage/statik"
+	_ "nkonev.name/storage/static_assets"
 	"nkonev.name/storage/utils"
 	"strings"
 )
@@ -144,7 +144,7 @@ func configureMinio() (*minio.Client, error) {
 }
 
 func configureStaticMiddleware() staticMiddleware {
-	statikFS, err := fs.New()
+	statikFS, err := fs.NewWithNamespace("assets")
 	if err != nil {
 		Logger.Fatal(err)
 	}

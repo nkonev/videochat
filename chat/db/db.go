@@ -6,6 +6,7 @@ import (
 	dbP "database/sql"
 	//rice "github.com/GeertJohan/go.rice"
 	"github.com/golang-migrate/migrate/v4"
+	_ "nkonev.name/chat/db/static_migrations"
 	"github.com/rakyll/statik/fs"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
@@ -96,7 +97,7 @@ func (tx *Tx) SafeRollback() {
 }
 
 func migrateInternal(db *sql.DB, path, migrationTable string) {
-	statikFS, err := fs.New()
+	statikFS, err := fs.NewWithNamespace("migrations")
 	if err != nil {
 		Logger.Fatal(err)
 	}

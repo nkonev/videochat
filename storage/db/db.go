@@ -7,6 +7,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
+	_ "nkonev.name/storage/db/static_migrations"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/viper"
@@ -85,7 +86,7 @@ func (tx *Tx) SafeRollback() {
 }
 
 func migrateInternal(db *sql.DB) {
-	statikFS, err := fs.New()
+	statikFS, err := fs.NewWithNamespace("migrations")
 	if err != nil {
 		Logger.Fatal(err)
 	}

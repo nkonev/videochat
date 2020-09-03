@@ -19,7 +19,7 @@ import (
 	"nkonev.name/chat/handlers"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
-	_ "nkonev.name/chat/statik"
+	_ "nkonev.name/chat/static_assets"
 	"nkonev.name/chat/utils"
 	"strings"
 )
@@ -164,7 +164,7 @@ func configureEcho(
 }
 
 func configureStaticMiddleware() staticMiddleware {
-	statikFS, err := fs.New()
+	statikFS, err := fs.NewWithNamespace("assets")
 	if err != nil {
 		Logger.Fatal(err)
 	}
@@ -172,7 +172,7 @@ func configureStaticMiddleware() staticMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			reqUrl := c.Request().RequestURI
-			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") {
+			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets")  || reqUrl == "/git.json"{
 				http.FileServer(statikFS).
 					ServeHTTP(c.Response().Writer, c.Request())
 				return nil
