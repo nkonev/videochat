@@ -44,7 +44,7 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	userReq := &name_nkonev_aaa.UsersRequest{UserIds: userIds}
 	useRequestBytes, err := proto.Marshal(userReq)
 	if err != nil {
-		Logger.Errorln("Failed to encode get users request:", err)
+		Logger.Warningln("Failed to encode get users request: ", err)
 		return nil, err
 	}
 
@@ -57,7 +57,7 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	}
 
 	if err != nil {
-		Logger.Infof("Error during inserting tracing")
+		Logger.Warningln("Error during inserting tracing")
 	}
 
 	parsedUrl, err := url.Parse(fullUrl)
@@ -78,13 +78,13 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	request = request.WithContext(ctx)
 	resp, err := rc.Do(request)
 	if err != nil {
-		Logger.Errorln("Failed to request get users response:", err)
+		Logger.Warningln("Failed to request get users response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		Logger.Errorf("Users response responded non-200 code: %v", code)
+		Logger.Warningln("Users response responded non-200 code: ", code)
 		return nil, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)

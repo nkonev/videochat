@@ -191,7 +191,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				}
 			}
 		} else {
-			GetLogEntry(c.Request()).Errorf("User %v is not present in chat %v, skipping notification", participantId, chatId)
+			GetLogEntry(c.Request()).Warnf("User %v is not present in chat %v, skipping notification", participantId, chatId)
 		}
 	}
 }

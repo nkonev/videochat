@@ -163,7 +163,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 func (ch ChatHandler) CreateChat(c echo.Context) error {
 	var bindTo = new(CreateChatDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 	if valid, err := ValidateAndRespondError(c, bindTo); err != nil || !valid {
@@ -255,7 +255,7 @@ func (ch ChatHandler) DeleteChat(c echo.Context) error {
 func (ch ChatHandler) EditChat(c echo.Context) error {
 	var bindTo = new(EditChatDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 

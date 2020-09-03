@@ -148,7 +148,7 @@ func (a *EditMessageDto) Validate() error {
 func (mc MessageHandler) PostMessage(c echo.Context) error {
 	var bindTo = new(CreateMessageDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -213,7 +213,7 @@ func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthRe
 func (mc MessageHandler) EditMessage(c echo.Context) error {
 	var bindTo = new(EditMessageDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
