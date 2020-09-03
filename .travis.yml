@@ -94,11 +94,11 @@ matrix:
         - "mkdir ./chat/proto || true"
         - "docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto"
         # https://medium.com/@diogok/on-golang-static-binaries-cross-compiling-and-plugins-1aed33499671
-        - '(cd chat; export GIT_COMMIT=$(git rev-list -1 HEAD); echo "{\"commit\"\: \"$GIT_COMMIT\"}" > ./static/git.json)'
+        - '(cd chat; export GIT_COMMIT=$(git rev-list -1 HEAD); echo "{\"commit\": \"$GIT_COMMIT\"}" > ./static/git.json)'
         - (cd chat; statik -src=./static -p static_assets -ns assets -f && statik -src=./db/migrations -p static_migrations -ns migrations -dest ./db -f && echo 'completed generating embed')
         - (cd chat; go test ./... -count=1 -test.v -test.timeout=20s -p 1)
         - (cd chat; CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"')
-        - '(cd storage; export GIT_COMMIT=$(git rev-list -1 HEAD); echo "{\"commit\"\: \"$GIT_COMMIT\"}" > ./static/git.json)'
+        - '(cd storage; export GIT_COMMIT=$(git rev-list -1 HEAD); echo "{\"commit\": \"$GIT_COMMIT\"}" > ./static/git.json)'
         - (cd storage; statik -src=./static -p static_assets -ns assets -f && statik -src=./db/migrations -p static_migrations -ns migrations -dest ./db -f && echo 'completed generating embed')
         - (cd storage; go test ./... -count=1 -test.v -test.timeout=20s -p 1)
         - (cd storage; CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"')
