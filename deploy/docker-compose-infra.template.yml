@@ -59,6 +59,8 @@ services:
     volumes:
       - /mnt/chat-minio/data:/data
     command: ["server", "/data"]
+    networks:
+      backend:
     logging:
       driver: "journald"
       options:
