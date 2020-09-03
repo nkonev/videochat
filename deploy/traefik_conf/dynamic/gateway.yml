@@ -3,7 +3,7 @@ http:
     nginx-service:
       loadBalancer:
         servers:
-          - url: http://nginx:80
+          - url: http://frontend:80
     aaa-service:
       loadBalancer:
         servers:
