@@ -54,8 +54,32 @@ http:
       middlewares:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
+    aaa-version-router:
+      rule: "PathPrefix(`/aaa/git.json`)"
+      service: aaa-service
+      middlewares:
+        - "microservice-strip-prefix-middleware"
+        - "retry-middleware"
+    chat-version-router:
+      rule: "PathPrefix(`/chat/git.json`)"
+      service: chat-service
+      middlewares:
+        - "microservice-strip-prefix-middleware"
+        - "retry-middleware"
+    storage-version-router:
+      rule: "PathPrefix(`/storage/git.json`)"
+      service: storage-service
+      middlewares:
+        - "microservice-strip-prefix-middleware"
+        - "retry-middleware"
 
   middlewares:
+    microservice-strip-prefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/aaa"
+          - "/chat"
+          - "/storage"
     api-strip-prefix-middleware:
       stripPrefix:
         prefixes:
