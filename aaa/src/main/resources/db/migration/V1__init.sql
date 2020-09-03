@@ -61,6 +61,7 @@ CREATE TABLE users (
 
 INSERT INTO users (id, username, password, avatar, enabled, expired, locked, email, role, creation_type, facebook_id, vkontakte_id, last_login_date_time) VALUES
  (-1, 'deleted', NULL, NULL, false, true, true, NULL, 'ROLE_USER', 'REGISTRATION', NULL, NULL, NULL),
+ -- bcrypt('admin', 10)
  (1, 'admin', '$2a$10$HsyFGy9IO//nJZxYc2xjDeV/kF7koiPrgIDzPOfgmngKVe9cOyOS2', 'https://cdn3.iconfinder.com/data/icons/rcons-user-action/32/boy-512.png', true, false, false, 'admin@example.com', 'ROLE_ADMIN', 'REGISTRATION', NULL, NULL, NULL);
 
 
