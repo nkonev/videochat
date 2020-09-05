@@ -81,12 +81,11 @@ matrix:
         - "/bin/true"
       script:
         - pwd
-        - go env
         - echo moving repository to flat directory struct
         - mv /home/travis/gopath/src/github.com/nkonev/videochat /home/travis/gopath
         - cd /home/travis/gopath/videochat
         - pwd
-        - "docker-compose up -d"
+        - docker-compose up -d
         - "wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'"
         - "wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'"
         - "wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'"
