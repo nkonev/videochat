@@ -15,8 +15,8 @@
                                     <v-img :src="item.owner.avatar"></v-img>
                                 </v-list-item-avatar>
                                 <v-list-item-content @click="onMessageClick(item)">
-                                    <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
-                                    {{item.text}}
+                                  <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
+                                  <v-list-item-content class="pre-formatted pa-0">{{item.text}}</v-list-item-content>
                                 </v-list-item-content>
                                 <v-list-item-action>
                                     <v-container class="mb-0 mt-0 pb-0 pt-0">
@@ -248,3 +248,10 @@
         }
     }
 </script>
+
+<style scoped lang="stylus">
+.pre-formatted {
+  white-space pre-wrap
+}
+
+</style>

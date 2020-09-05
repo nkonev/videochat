@@ -7,7 +7,7 @@
                         {{writingUsers.map(v=>v.login).join(', ')}} is writing...
                     </template>
                 </v-col>
-                <v-text-field dense label="Send a message" @keyup.native.enter="sendMessageToChat" v-model="editMessageDto.text" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat"></v-text-field>
+                <v-textarea solo dense label="Send a message" @keyup.ctrl.enter="sendMessageToChat" @keyup.esc="resetInput" v-model="editMessageDto.text" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat"></v-textarea>
             </v-col>
         </v-row>
     </v-container>
@@ -39,11 +39,14 @@
             sendMessageToChat() {
                 if (this.editMessageDto.text && this.editMessageDto.text !== "") {
                     (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto)).then(response => {
-                        console.log("Resetting text input");
-                        this.editMessageDto.text = "";
-                        this.editMessageDto.id = null;
+                        this.resetInput();
                     })
                 }
+            },
+            resetInput() {
+              console.log("Resetting text input");
+              this.editMessageDto.text = "";
+              this.editMessageDto.id = null;
             },
             onSetMessage(dto) {
                 this.editMessageDto = dto;
