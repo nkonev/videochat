@@ -1,4 +1,4 @@
-.PHONY: download test
+.PHONY: download test push-docker
 
 download: download-statik download-proto-compiler
 
@@ -46,6 +46,6 @@ package: package-go package-docker
 
 push-docker:
 	echo "Will login to docker" && \
-	echo docker login -u="${DOCKER_LOGIN}" -p="${DOCKER_PASSWORD}" && \
+	docker login -u="${DOCKER_LOGIN}" -p="${DOCKER_PASSWORD}" && \
 	echo "Will push docker image" && \
 	docker push $(IMAGE)
