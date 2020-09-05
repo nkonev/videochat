@@ -86,24 +86,13 @@ matrix:
         - mv /home/travis/gopath/src/github.com/nkonev/videochat /home/travis/gopath
         - cd /home/travis/gopath/videochat
         - pwd
-        - "go get github.com/rakyll/statik"
         - "docker-compose up -d"
         - "wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'"
         - "wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'"
         - "wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'"
         - sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
-        - "rm -rf ./chat/proto"
-        - "mkdir ./chat/proto || true"
-        - "docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto"
-        # https://medium.com/@diogok/on-golang-static-binaries-cross-compiling-and-plugins-1aed33499671
-        - '(cd chat; export GIT_COMMIT=$(git rev-list -1 HEAD); echo "{\"commit\": \"$GIT_COMMIT\", \"microservice\": \"chat\"}" > ./static/git.json)'
-        - (cd chat; statik -src=./static -p static_assets -ns assets -f && statik -src=./db/migrations -p static_migrations -ns migrations -dest ./db -f && echo 'completed generating embed')
-        - (cd chat; go test ./... -count=1 -test.v -test.timeout=20s -p 1)
-        - (cd chat; CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"')
-        - '(cd storage; export GIT_COMMIT=$(git rev-list -1 HEAD); echo "{\"commit\": \"$GIT_COMMIT\", \"microservice\": \"storage\"}" > ./static/git.json)'
-        - (cd storage; statik -src=./static -p static_assets -ns assets -f && statik -src=./db/migrations -p static_migrations -ns migrations -dest ./db -f && echo 'completed generating embed')
-        - (cd storage; go test ./... -count=1 -test.v -test.timeout=20s -p 1)
-        - (cd storage; CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"')
+        - (cd chat; make check-env download generate test package)
+        - (cd storage; make check-env download generate test package)
 
         - function buildAndPushGoDockerImage {
             if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TEST_RESULT" == "0" && "$TRAVIS_EVENT_TYPE" != "cron" ]]; then (
