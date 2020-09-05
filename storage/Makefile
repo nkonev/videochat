@@ -26,11 +26,12 @@ package-go:
 
 BUILDDIR := ./build
 EXECUTABLE := storage
-IMAGE = nkonev/storage:latest
+IMAGE = nkonev/chat-storage:latest
 
 package-docker:
 	mkdir -p $(BUILDDIR) && \
 	cp $(EXECUTABLE) $(BUILDDIR) && cp ./Dockerfile $(BUILDDIR) && \
+	echo "Will build docker storage image" && \
  	docker build --build-arg BINARY=$(EXECUTABLE) -t $(IMAGE) $(BUILDDIR)
 
 package: package-go package-docker
@@ -38,5 +39,5 @@ package: package-go package-docker
 push-docker:
 	echo "Will login to docker" && \
 	docker login -u="${DOCKER_LOGIN}" -p="${DOCKER_PASSWORD}" && \
-	echo "Will push docker image" && \
+	echo "Will push docker storage image" && \
 	docker push $(IMAGE)

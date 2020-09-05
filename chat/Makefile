@@ -40,6 +40,7 @@ IMAGE = nkonev/chat:latest
 package-docker:
 	mkdir -p $(BUILDDIR) && \
 	cp $(EXECUTABLE) $(BUILDDIR) && cp ./Dockerfile $(BUILDDIR) && \
+	echo "Will build docker chat image" && \
  	docker build --build-arg BINARY=$(EXECUTABLE) -t $(IMAGE) $(BUILDDIR)
 
 package: package-go package-docker
@@ -47,5 +48,5 @@ package: package-go package-docker
 push-docker:
 	echo "Will login to docker" && \
 	docker login -u="${DOCKER_LOGIN}" -p="${DOCKER_PASSWORD}" && \
-	echo "Will push docker image" && \
+	echo "Will push docker chat image" && \
 	docker push $(IMAGE)
