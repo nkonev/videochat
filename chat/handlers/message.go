@@ -146,6 +146,10 @@ func (a *EditMessageDto) Validate() error {
 	)
 }
 
+func noContent(c echo.Context) error {
+	return c.NoContent(204)
+}
+
 func (mc MessageHandler) PostMessage(c echo.Context) error {
 	var bindTo = new(CreateMessageDto)
 	if err := c.Bind(bindTo); err != nil {
@@ -174,7 +178,12 @@ func (mc MessageHandler) PostMessage(c echo.Context) error {
 		} else if !participant {
 			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
 		}
-		id, _, _, err := tx.CreateMessage(convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy))
+		creatableMessage := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
+		if creatableMessage.Text == "" {
+			GetLogEntry(c.Request()).Infof("Empty message doesn't save")
+			return noContent(c)
+		}
+		id, _, _, err := tx.CreateMessage(creatableMessage)
 		if err != nil {
 			return err
 		}
@@ -234,7 +243,12 @@ func (mc MessageHandler) EditMessage(c echo.Context) error {
 	}
 
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
-		err := tx.EditMessage(convertToEditableMessage(bindTo, userPrincipalDto, chatId, mc.policy))
+		editableMessage := convertToEditableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
+		if editableMessage.Text == "" {
+			GetLogEntry(c.Request()).Infof("Empty message doesn't save")
+			return noContent(c)
+		}
+		err := tx.EditMessage(editableMessage)
 		if err != nil {
 			return err
 		}
