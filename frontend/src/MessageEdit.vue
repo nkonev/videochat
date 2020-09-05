@@ -1,13 +1,13 @@
 <template>
-    <v-container id="sendButtonContainer">
+    <v-container id="sendButtonContainer" class="pt-0">
         <v-row no-gutters dense>
             <v-col cols="12">
-                <v-col class="mb-0 mt-0 pb-0 pt-0 text--disabled caption">
+                <v-col class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 2em">
                     <template v-if="writingUsers.length">
                         {{writingUsers.map(v=>v.login).join(', ')}} is writing...
                     </template>
                 </v-col>
-                <v-textarea solo dense label="Send a message" @keyup.ctrl.enter="sendMessageToChat" @keyup.esc="resetInput" v-model="editMessageDto.text" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat"></v-textarea>
+                <v-textarea solo dense label="Send a message" @keyup.ctrl.enter="sendMessageToChat" @keyup.esc="resetInput" v-model="editMessageDto.text" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat" hide-details></v-textarea>
             </v-col>
         </v-row>
     </v-container>
