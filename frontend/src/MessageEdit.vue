@@ -2,7 +2,7 @@
     <v-container id="sendButtonContainer">
         <v-row no-gutters dense>
             <v-col cols="12">
-                <v-col class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 1em">
+                <v-col class="mb-0 mt-0 pb-0 pt-0 text--disabled caption">
                     <template v-if="writingUsers.length">
                         {{writingUsers.map(v=>v.login).join(', ')}} is writing...
                     </template>
