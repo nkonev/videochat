@@ -111,14 +111,6 @@
     import {chat_name, profile_name, root_name, videochat_name} from "./routes";
     import ChatDelete from "./ChatDelete";
     import ChooseAvatar from "./ChooseAvatar";
-    import Vue from 'vue'
-
-    import { library } from '@fortawesome/fontawesome-svg-core'
-    import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-    import { faFacebook } from '@fortawesome/free-brands-svg-icons/faFacebook'
-    import { faVk } from '@fortawesome/free-brands-svg-icons/faVk'
-    library.add(faFacebook, faVk);
-    Vue.component('font-awesome-icon', FontAwesomeIcon) // Register component globally
 
     export default {
         data () {
@@ -126,7 +118,7 @@
                 title: "",
                 appBarItems: [
                     { title: 'Chats', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
-                    // { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
+                    { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
                     { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
                 ],
                 drawer: true,
