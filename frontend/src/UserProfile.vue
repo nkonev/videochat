@@ -34,42 +34,42 @@
 
       <v-divider class="mx-4"></v-divider>
       <v-card-title class="title pb-0 pt-1">Login</v-card-title>
-      <v-btn class="mx-4 mb-4" color="primary" dark>Change login
+      <v-btn v-if="!showLoginInput" class="mx-4 mb-4" color="primary" dark @click="showLoginInput = !showLoginInput">Change login
         <v-icon dark right>mdi-account</v-icon>
       </v-btn>
-      <v-text-field class="mx-4"
+      <v-text-field v-if="showLoginInput" class="mx-4"
                     label="Login"
                     append-outer-icon="mdi-check-bold"
                     :rules="[rules.required]"
                     @click:append-outer="sendLogin"
-                    v-model="login"></v-text-field>
+                    v-model="currentUser.login"></v-text-field>
 
       <v-divider class="mx-4"></v-divider>
       <v-card-title class="title pb-0 pt-1">Password</v-card-title>
-      <v-btn class="mx-4 mb-4" color="primary" dark>Change password
+      <v-btn v-if="!showPasswordInput" class="mx-4 mb-4" color="primary" dark @click="showPasswordInput = !showPasswordInput">Change password
         <v-icon dark right>mdi-lock</v-icon>
       </v-btn>
-      <v-text-field
+      <v-text-field v-if="showPasswordInput"
           class="mx-4"
           v-model="password"
           append-outer-icon="mdi-check-bold"
           @click:append-outer="sendPassword"
-          :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-          :type="showPassword ? 'text' : 'password'"
+          :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
+          :type="showInputablePassword ? 'text' : 'password'"
           :rules="[rules.required, rules.min]"
           label="Password"
           hint="At least 8 characters"
-          @click:append="showPassword = !showPassword"
+          @click:append="showInputablePassword = !showInputablePassword"
       ></v-text-field>
 
       <v-divider class="mx-4"></v-divider>
       <v-card-title class="title pb-0 pt-1">Email</v-card-title>
-      <v-btn class="mx-4 mb-4" color="primary" dark>Change email
+      <v-btn v-if="!showEmailInput" class="mx-4 mb-4" color="primary" dark @click="showEmailInput = !showEmailInput">Change email
         <v-icon dark right>mdi-email</v-icon>
       </v-btn>
-      <v-text-field
+      <v-text-field v-if="showEmailInput"
           class="mx-4"
-          v-model="email"
+          v-model="currentUser.email"
           append-outer-icon="mdi-check-bold"
           @click:append-outer="sendEmail"
           :rules="[rules.required, rules.email]"
@@ -81,12 +81,13 @@
 
 <script>
     import {mapGetters} from "vuex";
-    import {GET_USER} from "./store";
+    import {FETCH_USER_PROFILE, GET_USER} from "./store";
+    import axios from "axios";
 
     export default {
         data() {
           return {
-            showPassword: false,
+            showInputablePassword: false,
             rules: {
               required: value => !!value || 'Required.',
               min: v => v.length >= 8 || 'Min 8 characters',
@@ -96,9 +97,11 @@
               },
             },
 
-            login: "",
+            showLoginInput: false,
+            showPasswordInput: false,
+            showEmailInput: false,
+
             password: "",
-            email: ""
           }
         },
         computed: {
@@ -106,13 +109,24 @@
         },
         methods: {
           sendLogin() {
-
+            axios.patch('/api/profile', {login: this.currentUser.login})
+                .then((response) => {
+                  this.$store.dispatch(FETCH_USER_PROFILE);
+                  this.showLoginInput = false;
+                })
           },
           sendPassword() {
-
+            axios.patch('/api/profile', {password: this.password})
+                .then((response) => {
+                  this.showPasswordInput = false;
+                })
           },
           sendEmail() {
-
+            axios.patch('/api/profile', {email: this.currentUser.email})
+                .then((response) => {
+                  this.$store.dispatch(FETCH_USER_PROFILE);
+                  this.showEmailInput = false;
+                })
           }
         }
     }
