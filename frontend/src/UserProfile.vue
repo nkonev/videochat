@@ -68,14 +68,26 @@
             Change login
             <v-icon dark right>mdi-account</v-icon>
         </v-btn>
-        <v-text-field v-if="showLoginInput" class="mx-4"
-                      label="Login"
-                      append-outer-icon="mdi-check-bold"
-                      :rules="[rules.required]"
-                      @click:append-outer="sendLogin"
-                      clearable
-                      @click:clear="showLoginInput = false"
-                      v-model="currentUser.login"></v-text-field>
+        <v-row v-if="showLoginInput" no-gutters>
+            <v-col cols="12" >
+                <v-row :align="'center'" no-gutters>
+                    <v-col class="ml-4">
+                        <v-text-field
+                            v-model="currentUser.login"
+                            :rules="[rules.required]"
+                            label="Login"
+                        ></v-text-field>
+                    </v-col>
+                    <v-col md="auto" class="ml-1 mr-4">
+                        <v-row :align="'center'" no-gutters>
+                            <v-icon @click="sendLogin()" color="primary">mdi-check-bold</v-icon>
+                            <v-icon @click="showLoginInput = false">mdi-cancel</v-icon>
+                        </v-row>
+                    </v-col>
+                </v-row>
+            </v-col>
+        </v-row>
+
 
         <v-divider class="mx-4"></v-divider>
         <v-card-title class="title pb-0 pt-1">Password</v-card-title>
@@ -83,20 +95,30 @@
                @click="showPasswordInput = !showPasswordInput">Change password
             <v-icon dark right>mdi-lock</v-icon>
         </v-btn>
-        <v-text-field v-if="showPasswordInput"
-                      class="mx-4"
-                      v-model="password"
-                      append-outer-icon="mdi-check-bold"
-                      @click:append-outer="sendPassword"
-                      :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
-                      :type="showInputablePassword ? 'text' : 'password'"
-                      :rules="[rules.required, rules.min]"
-                      label="Password"
-                      hint="At least 8 characters"
-                      clearable
-                      @click:clear="showPasswordInput = false"
-                      @click:append="showInputablePassword = !showInputablePassword"
-        ></v-text-field>
+        <v-row v-if="showPasswordInput" no-gutters>
+            <v-col cols="12" >
+                <v-row :align="'center'" no-gutters>
+                    <v-col class="ml-4">
+                        <v-text-field
+                            v-model="password"
+                            :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
+                            @click:append="showInputablePassword = !showInputablePassword"
+                            :type="showInputablePassword ? 'text' : 'password'"
+                            :rules="[rules.required, rules.min]"
+                            label="Password"
+                            hint="At least 8 characters"
+                        ></v-text-field>
+                    </v-col>
+                    <v-col md="auto" class="ml-1 mr-4">
+                        <v-row :align="'center'" no-gutters>
+                            <v-icon @click="sendPassword()" color="primary">mdi-check-bold</v-icon>
+                            <v-icon @click="showPasswordInput = false">mdi-cancel</v-icon>
+                        </v-row>
+                    </v-col>
+                </v-row>
+            </v-col>
+        </v-row>
+
 
         <v-divider class="mx-4"></v-divider>
         <v-card-title class="title pb-0 pt-1">Email</v-card-title>
@@ -104,16 +126,25 @@
             Change email
             <v-icon dark right>mdi-email</v-icon>
         </v-btn>
-        <v-text-field v-if="showEmailInput"
-                      class="mx-4"
-                      v-model="currentUser.email"
-                      append-outer-icon="mdi-check-bold"
-                      @click:append-outer="sendEmail"
-                      :rules="[rules.required, rules.email]"
-                      label="E-mail"
-                      clearable
-                      @click:clear="showEmailInput = false"
-        ></v-text-field>
+        <v-row v-if="showEmailInput" no-gutters>
+            <v-col cols="12" >
+                <v-row :align="'center'" no-gutters>
+                    <v-col class="ml-4">
+                        <v-text-field
+                            v-model="currentUser.email"
+                            :rules="[rules.required, rules.email]"
+                            label="E-mail"
+                        ></v-text-field>
+                    </v-col>
+                    <v-col md="auto" class="ml-1 mr-4">
+                        <v-row :align="'center'" no-gutters>
+                            <v-icon @click="sendEmail()" color="primary">mdi-check-bold</v-icon>
+                            <v-icon @click="showEmailInput = false">mdi-cancel</v-icon>
+                        </v-row>
+                    </v-col>
+                </v-row>
+            </v-col>
+        </v-row>
 
     </v-card>
     <v-alert type="warning" v-else>
