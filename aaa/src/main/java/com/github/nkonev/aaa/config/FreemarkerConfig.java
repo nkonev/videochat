@@ -19,5 +19,6 @@ public class FreemarkerConfig {
     @PostConstruct
     public void postConstruct() {
         freeMarkerConfigurer.getTaglibFactory().setClasspathTlds(Arrays.asList("/META-INF/security.tld", "/META-INF/spring-form.tld"));
+        freeMarkerConfigurer.setPreferFileSystemAccess(false);
     }
 }

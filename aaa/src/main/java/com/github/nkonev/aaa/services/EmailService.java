@@ -4,14 +4,19 @@ import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.config.CustomConfig;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 /**
  * Performs sending entity to email
@@ -31,19 +36,15 @@ public class EmailService {
     @Value("${custom.registration.email.subject}")
     private String registrationSubject;
 
-    @Value("${custom.registration.email.text-template}")
-    private String registrationTextTemplate;
-
-
     @Value("${custom.password-reset.email.subject}")
     private String passwordResetSubject;
 
-    @Value("${custom.password-reset.email.text-template}")
-    private String passwordResetTextTemplate;
+    @Autowired
+    private Configuration freemarkerConfiguration;
 
-    private static final String REG_LINK_PLACEHOLDER = "__REGISTRATION_LINK_PLACEHOLDER__";
-    private static final String PASSWORD_RESET_LINK_PLACEHOLDER = "__PASSWORD_RESET_LINK_PLACEHOLDER__";
-    private static final String LOGIN_PLACEHOLDER = "__LOGIN__";
+    private static final String REG_LINK_PLACEHOLDER = "REGISTRATION_LINK_PLACEHOLDER";
+    private static final String PASSWORD_RESET_LINK_PLACEHOLDER = "PASSWORD_RESET_LINK_PLACEHOLDER";
+    private static final String LOGIN_PLACEHOLDER = "LOGIN";
 
     public void sendUserConfirmationToken(String email, UserConfirmationToken userConfirmationToken, String login) {
         // https://yandex.ru/support/mail-new/mail-clients.html
@@ -54,12 +55,11 @@ public class EmailService {
         msg.setSubject(registrationSubject);
         msg.setTo(email);
 
-        String text = registrationTextTemplate
-                .replace(REG_LINK_PLACEHOLDER, customConfig.getBaseUrl() + Constants.Urls.CONFIRM+ "?"+ Constants.Urls.UUID +"=" + userConfirmationToken.getUuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8))
-                .replace(LOGIN_PLACEHOLDER, login)
-                ;
-        msg.setText(text);
+        final var regLink = customConfig.getBaseUrl() + Constants.Urls.CONFIRM+ "?"+ Constants.Urls.UUID +"=" + userConfirmationToken.getUuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
+        final var text = renderTemplate("confirm-registration.ftlh",
+                Map.of(REG_LINK_PLACEHOLDER, regLink, LOGIN_PLACEHOLDER, login));
 
+        msg.setText(text);
         mailSender.send(msg);
     }
 
@@ -69,12 +69,23 @@ public class EmailService {
         msg.setSubject(passwordResetSubject);
         msg.setTo(email);
 
-        String text = passwordResetTextTemplate
-                .replace(PASSWORD_RESET_LINK_PLACEHOLDER, customConfig.getBaseUrl() + Constants.Urls.PASSWORD_RESET+ "?"+ Constants.Urls.UUID +"=" + passwordResetToken.getUuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8))
-                .replace(LOGIN_PLACEHOLDER, login);
+        final var passwordResetLink = customConfig.getBaseUrl() + Constants.Urls.PASSWORD_RESET+ "?"+ Constants.Urls.UUID +"=" + passwordResetToken.getUuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
+        final var text = renderTemplate("password-reset.ftlh",
+                Map.of(PASSWORD_RESET_LINK_PLACEHOLDER, passwordResetLink, LOGIN_PLACEHOLDER, login));
+
         msg.setText(text);
 
         mailSender.send(msg);
     }
 
+    private String renderTemplate(String templateNameWithExtension, Object model) {
+        try {
+            final Template template = freemarkerConfiguration.getTemplate(templateNameWithExtension);
+            final var stringWriter = new StringWriter();
+            template.process(model, stringWriter);
+            return stringWriter.toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

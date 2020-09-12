@@ -39,7 +39,6 @@ custom:
   registration:
     email:  
       subject: "Registration confirmation"
-      text-template: "Please open __REGISTRATION_LINK_PLACEHOLDER__ for complete registration __LOGIN__."
   confirmation:
     registration:
       token:
@@ -47,7 +46,6 @@ custom:
   password-reset:
     email:
       subject: "Password reset"
-      text-template: "Link __PASSWORD_RESET_LINK_PLACEHOLDER__ for reset your password for account __LOGIN__. If you didn't issue password reset -- you can ignore this mail."
     token:
       ttl-minutes: 5
 

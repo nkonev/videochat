@@ -1,0 +1,1 @@
+Please open ${REGISTRATION_LINK_PLACEHOLDER} for complete registration ${LOGIN}.
