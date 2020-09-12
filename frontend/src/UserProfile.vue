@@ -5,7 +5,7 @@
     >
       <v-list-item three-line>
         <v-list-item-content class="d-flex justify-space-around">
-          <div class="overline mb-4">User profile</div>
+          <div class="overline mb-4">User profile  #{{ currentUser.id }}</div>
           <v-img  v-if="currentUser.avatar"
                   :src="currentUser.avatar"
                   :aspect-ratio="16/9"
@@ -21,15 +21,38 @@
       <v-divider class="mx-4"></v-divider>
       <v-card-title class="title pb-0 pt-1">Bound OAuth2 providers</v-card-title>
       <v-card-actions class="mx-2">
-          <v-card v-if="currentUser.oauthIdentifiers.vkontakteId" min-width="80px" class="text-center pa-1 d-flex justify-center mr-2 c-btn-vk"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-card>
-          <v-card v-if="currentUser.oauthIdentifiers.facebookId" min-width="80px" class="text-center pa-1 d-flex justify-center mr-2 c-btn-fb"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook'}" :size="'2x'"></font-awesome-icon></v-card>
+            <v-chip
+                v-if="currentUser.oauthIdentifiers.vkontakteId"
+                min-width="80px"
+                label
+                close
+                class="c-btn-vk py-5"
+                text-color="white"
+                close-icon="mdi-delete"
+                @click:close="removeVk"
+            >
+              <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon>
+            </v-chip>
+
+            <v-chip
+                v-if="currentUser.oauthIdentifiers.facebookId"
+                min-width="80px"
+                label
+                close
+                class="c-btn-fb py-5"
+                text-color="white"
+                close-icon="mdi-delete"
+                @click:close="removeFb"
+            >
+              <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook'}" :size="'2x'"></font-awesome-icon>
+            </v-chip>
       </v-card-actions>
 
       <v-divider class="mx-4"></v-divider>
       <v-card-title class="title pb-0 pt-1">Not bound OAuth2 providers</v-card-title>
       <v-card-actions class="mx-2">
-        <v-btn v-if="!currentUser.oauthIdentifiers.vkontakteId" class="mr-2 c-btn-vk" min-width="80px"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
-        <v-btn v-if="!currentUser.oauthIdentifiers.facebookId" class="mr-2 c-btn-fb" min-width="80px"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
+        <v-btn v-if="!currentUser.oauthIdentifiers.vkontakteId" @click="submitOauthVkontakte" class="mr-2 c-btn-vk" min-width="80px"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
+        <v-btn v-if="!currentUser.oauthIdentifiers.facebookId" @click="submitOauthFacebook" class="mr-2 c-btn-fb" min-width="80px"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
       </v-card-actions>
 
       <v-divider class="mx-4"></v-divider>
@@ -108,6 +131,13 @@
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
         },
         methods: {
+          submitOauthVkontakte() {
+            window.location.href = '/api/login/oauth2/vkontakte';
+          },
+          submitOauthFacebook() {
+            window.location.href = '/api/login/oauth2/facebook';
+          },
+
           sendLogin() {
             axios.patch('/api/profile', {login: this.currentUser.login})
                 .then((response) => {
@@ -126,6 +156,18 @@
                 .then((response) => {
                   this.$store.dispatch(FETCH_USER_PROFILE);
                   this.showEmailInput = false;
+                })
+          },
+          removeVk() {
+            axios.delete('/api/profile/vkontakte')
+                .then((response) => {
+                  this.$store.dispatch(FETCH_USER_PROFILE);
+                })
+          },
+          removeFb() {
+            axios.delete('/api/profile/facebook')
+                .then((response) => {
+                  this.$store.dispatch(FETCH_USER_PROFILE);
                 })
           }
         }
