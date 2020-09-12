@@ -3,24 +3,24 @@
             class="mr-auto"
             max-width="640"
     >
-      <v-list-item three-line>
-        <v-list-item-content class="d-flex justify-space-around">
-          <div class="overline mb-4">User profile  #{{ currentUser.id }}</div>
-          <v-img  v-if="currentUser.avatar"
-                  :src="currentUser.avatar"
-                  :aspect-ratio="16/9"
-                  min-width="200"
-                  min-height="200"
-          >
-          </v-img>
-          <v-list-item-title class="headline mb-1 mt-2">{{ currentUser.login }}</v-list-item-title>
-          <v-list-item-subtitle v-if="currentUser.email">{{currentUser.email}}</v-list-item-subtitle>
-        </v-list-item-content>
-      </v-list-item>
+        <v-list-item three-line>
+            <v-list-item-content class="d-flex justify-space-around">
+                <div class="overline mb-4">User profile #{{ currentUser.id }}</div>
+                <v-img v-if="currentUser.avatar"
+                       :src="currentUser.avatar"
+                       :aspect-ratio="16/9"
+                       min-width="200"
+                       min-height="200"
+                >
+                </v-img>
+                <v-list-item-title class="headline mb-1 mt-2">{{ currentUser.login }}</v-list-item-title>
+                <v-list-item-subtitle v-if="currentUser.email">{{ currentUser.email }}</v-list-item-subtitle>
+            </v-list-item-content>
+        </v-list-item>
 
-      <v-divider class="mx-4"></v-divider>
-      <v-card-title class="title pb-0 pt-1">Bound OAuth2 providers</v-card-title>
-      <v-card-actions class="mx-2">
+        <v-divider class="mx-4"></v-divider>
+        <v-card-title class="title pb-0 pt-1">Bound OAuth2 providers</v-card-title>
+        <v-card-actions class="mx-2">
             <v-chip
                 v-if="currentUser.oauthIdentifiers.vkontakteId"
                 min-width="80px"
@@ -31,7 +31,7 @@
                 close-icon="mdi-delete"
                 @click:close="removeVk"
             >
-              <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon>
+                <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon>
             </v-chip>
 
             <v-chip
@@ -44,60 +44,70 @@
                 close-icon="mdi-delete"
                 @click:close="removeFb"
             >
-              <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook'}" :size="'2x'"></font-awesome-icon>
+                <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook'}" :size="'2x'"></font-awesome-icon>
             </v-chip>
-      </v-card-actions>
+        </v-card-actions>
 
-      <v-divider class="mx-4"></v-divider>
-      <v-card-title class="title pb-0 pt-1">Not bound OAuth2 providers</v-card-title>
-      <v-card-actions class="mx-2">
-        <v-btn v-if="!currentUser.oauthIdentifiers.vkontakteId" @click="submitOauthVkontakte" class="mr-2 c-btn-vk" min-width="80px"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
-        <v-btn v-if="!currentUser.oauthIdentifiers.facebookId" @click="submitOauthFacebook" class="mr-2 c-btn-fb" min-width="80px"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
-      </v-card-actions>
+        <v-divider class="mx-4"></v-divider>
+        <v-card-title class="title pb-0 pt-1">Not bound OAuth2 providers</v-card-title>
+        <v-card-actions class="mx-2">
+            <v-btn v-if="!currentUser.oauthIdentifiers.vkontakteId" @click="submitOauthVkontakte" class="mr-2 c-btn-vk"
+                   min-width="80px">
+                <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon>
+            </v-btn>
+            <v-btn v-if="!currentUser.oauthIdentifiers.facebookId" @click="submitOauthFacebook" class="mr-2 c-btn-fb"
+                   min-width="80px">
+                <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon>
+            </v-btn>
+        </v-card-actions>
 
-      <v-divider class="mx-4"></v-divider>
-      <v-card-title class="title pb-0 pt-1">Login</v-card-title>
-      <v-btn v-if="!showLoginInput" class="mx-4 mb-4" color="primary" dark @click="showLoginInput = !showLoginInput">Change login
-        <v-icon dark right>mdi-account</v-icon>
-      </v-btn>
-      <v-text-field v-if="showLoginInput" class="mx-4"
-                    label="Login"
-                    append-outer-icon="mdi-check-bold"
-                    :rules="[rules.required]"
-                    @click:append-outer="sendLogin"
-                    v-model="currentUser.login"></v-text-field>
 
-      <v-divider class="mx-4"></v-divider>
-      <v-card-title class="title pb-0 pt-1">Password</v-card-title>
-      <v-btn v-if="!showPasswordInput" class="mx-4 mb-4" color="primary" dark @click="showPasswordInput = !showPasswordInput">Change password
-        <v-icon dark right>mdi-lock</v-icon>
-      </v-btn>
-      <v-text-field v-if="showPasswordInput"
-          class="mx-4"
-          v-model="password"
-          append-outer-icon="mdi-check-bold"
-          @click:append-outer="sendPassword"
-          :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
-          :type="showInputablePassword ? 'text' : 'password'"
-          :rules="[rules.required, rules.min]"
-          label="Password"
-          hint="At least 8 characters"
-          @click:append="showInputablePassword = !showInputablePassword"
-      ></v-text-field>
+        <v-divider class="mx-4"></v-divider>
+        <v-card-title class="title pb-0 pt-1">Login</v-card-title>
+        <v-btn v-if="!showLoginInput" class="mx-4 mb-4" color="primary" dark @click="showLoginInput = !showLoginInput">
+            Change login
+            <v-icon dark right>mdi-account</v-icon>
+        </v-btn>
+        <v-text-field v-if="showLoginInput" class="mx-4"
+                      label="Login"
+                      append-outer-icon="mdi-check-bold"
+                      :rules="[rules.required]"
+                      @click:append-outer="sendLogin"
+                      v-model="currentUser.login"></v-text-field>
 
-      <v-divider class="mx-4"></v-divider>
-      <v-card-title class="title pb-0 pt-1">Email</v-card-title>
-      <v-btn v-if="!showEmailInput" class="mx-4 mb-4" color="primary" dark @click="showEmailInput = !showEmailInput">Change email
-        <v-icon dark right>mdi-email</v-icon>
-      </v-btn>
-      <v-text-field v-if="showEmailInput"
-          class="mx-4"
-          v-model="currentUser.email"
-          append-outer-icon="mdi-check-bold"
-          @click:append-outer="sendEmail"
-          :rules="[rules.required, rules.email]"
-          label="E-mail"
-      ></v-text-field>
+        <v-divider class="mx-4"></v-divider>
+        <v-card-title class="title pb-0 pt-1">Password</v-card-title>
+        <v-btn v-if="!showPasswordInput" class="mx-4 mb-4" color="primary" dark
+               @click="showPasswordInput = !showPasswordInput">Change password
+            <v-icon dark right>mdi-lock</v-icon>
+        </v-btn>
+        <v-text-field v-if="showPasswordInput"
+                      class="mx-4"
+                      v-model="password"
+                      append-outer-icon="mdi-check-bold"
+                      @click:append-outer="sendPassword"
+                      :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
+                      :type="showInputablePassword ? 'text' : 'password'"
+                      :rules="[rules.required, rules.min]"
+                      label="Password"
+                      hint="At least 8 characters"
+                      @click:append="showInputablePassword = !showInputablePassword"
+        ></v-text-field>
+
+        <v-divider class="mx-4"></v-divider>
+        <v-card-title class="title pb-0 pt-1">Email</v-card-title>
+        <v-btn v-if="!showEmailInput" class="mx-4 mb-4" color="primary" dark @click="showEmailInput = !showEmailInput">
+            Change email
+            <v-icon dark right>mdi-email</v-icon>
+        </v-btn>
+        <v-text-field v-if="showEmailInput"
+                      class="mx-4"
+                      v-model="currentUser.email"
+                      append-outer-icon="mdi-check-bold"
+                      @click:append-outer="sendEmail"
+                      :rules="[rules.required, rules.email]"
+                      label="E-mail"
+        ></v-text-field>
 
     </v-card>
     <v-alert type="warning" v-else>
@@ -106,21 +116,21 @@
 </template>
 
 <script>
-    import {mapGetters} from "vuex";
-    import {FETCH_USER_PROFILE, GET_USER} from "./store";
-    import axios from "axios";
+import {mapGetters} from "vuex";
+import {FETCH_USER_PROFILE, GET_USER} from "./store";
+import axios from "axios";
 
-    export default {
-        data() {
-          return {
+export default {
+    data() {
+        return {
             showInputablePassword: false,
             rules: {
-              required: value => !!value || 'Required.',
-              min: v => v.length >= 8 || 'Min 8 characters',
-              email: value => {
-                const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-                return pattern.test(value) || 'Invalid e-mail.'
-              },
+                required: value => !!value || 'Required.',
+                min: v => v.length >= 8 || 'Min 8 characters',
+                email: value => {
+                    const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                    return pattern.test(value) || 'Invalid e-mail.'
+                },
             },
 
             showLoginInput: false,
@@ -128,55 +138,55 @@
             showEmailInput: false,
 
             password: "",
-          }
-        },
-        computed: {
-            ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
-        },
-        methods: {
-          submitOauthVkontakte() {
+        }
+    },
+    computed: {
+        ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
+    },
+    methods: {
+        submitOauthVkontakte() {
             window.location.href = '/api/login/oauth2/vkontakte';
-          },
-          submitOauthFacebook() {
+        },
+        submitOauthFacebook() {
             window.location.href = '/api/login/oauth2/facebook';
-          },
+        },
 
-          sendLogin() {
+        sendLogin() {
             axios.patch('/api/profile', {login: this.currentUser.login})
                 .then((response) => {
-                  this.$store.dispatch(FETCH_USER_PROFILE);
-                  this.showLoginInput = false;
+                    this.$store.dispatch(FETCH_USER_PROFILE);
+                    this.showLoginInput = false;
                 })
-          },
-          sendPassword() {
+        },
+        sendPassword() {
             axios.patch('/api/profile', {password: this.password})
                 .then((response) => {
-                  this.showPasswordInput = false;
+                    this.showPasswordInput = false;
                 })
-          },
-          sendEmail() {
+        },
+        sendEmail() {
             axios.patch('/api/profile', {email: this.currentUser.email})
                 .then((response) => {
-                  this.$store.dispatch(FETCH_USER_PROFILE);
-                  this.showEmailInput = false;
+                    this.$store.dispatch(FETCH_USER_PROFILE);
+                    this.showEmailInput = false;
                 })
-          },
-          removeVk() {
+        },
+        removeVk() {
             axios.delete('/api/profile/vkontakte')
                 .then((response) => {
-                  this.$store.dispatch(FETCH_USER_PROFILE);
+                    this.$store.dispatch(FETCH_USER_PROFILE);
                 })
-          },
-          removeFb() {
+        },
+        removeFb() {
             axios.delete('/api/profile/facebook')
                 .then((response) => {
-                  this.$store.dispatch(FETCH_USER_PROFILE);
+                    this.$store.dispatch(FETCH_USER_PROFILE);
                 })
-          }
         }
     }
+}
 </script>
 
 <style lang="stylus">
-    @import "OAuth2.styl"
+@import "OAuth2.styl"
 </style>
