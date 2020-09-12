@@ -64,7 +64,7 @@
 
         <v-divider class="mx-4"></v-divider>
         <v-card-title class="title pb-0 pt-1">Login</v-card-title>
-        <v-btn v-if="!showLoginInput" class="mx-4 mb-4" color="primary" dark @click="showLoginInput = !showLoginInput">
+        <v-btn v-if="!showLoginInput" class="mx-4 mb-4" color="primary" dark @click="showLoginInput = !showLoginInput; loginPrevious = currentUser.login">
             Change login
             <v-icon dark right>mdi-account</v-icon>
         </v-btn>
@@ -81,7 +81,7 @@
                     <v-col md="auto" class="ml-1 mr-4">
                         <v-row :align="'center'" no-gutters>
                             <v-icon @click="sendLogin()" color="primary">mdi-check-bold</v-icon>
-                            <v-icon @click="showLoginInput = false">mdi-cancel</v-icon>
+                            <v-icon @click="showLoginInput = false; currentUser.login = loginPrevious">mdi-cancel</v-icon>
                         </v-row>
                     </v-col>
                 </v-row>
@@ -122,7 +122,7 @@
 
         <v-divider class="mx-4"></v-divider>
         <v-card-title class="title pb-0 pt-1">Email</v-card-title>
-        <v-btn v-if="!showEmailInput" class="mx-4 mb-4" color="primary" dark @click="showEmailInput = !showEmailInput">
+        <v-btn v-if="!showEmailInput" class="mx-4 mb-4" color="primary" dark @click="showEmailInput = !showEmailInput; emailPrevious = currentUser.email">
             Change email
             <v-icon dark right>mdi-email</v-icon>
         </v-btn>
@@ -139,7 +139,7 @@
                     <v-col md="auto" class="ml-1 mr-4">
                         <v-row :align="'center'" no-gutters>
                             <v-icon @click="sendEmail()" color="primary">mdi-check-bold</v-icon>
-                            <v-icon @click="showEmailInput = false">mdi-cancel</v-icon>
+                            <v-icon @click="showEmailInput = false; currentUser.email = emailPrevious">mdi-cancel</v-icon>
                         </v-row>
                     </v-col>
                 </v-row>
@@ -174,7 +174,9 @@ export default {
             showPasswordInput: false,
             showEmailInput: false,
 
+            loginPrevious: "",
             password: "",
+            emailPrevious: ""
         }
     },
     computed: {
