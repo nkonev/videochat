@@ -32,10 +32,23 @@
       </v-card-actions>
 
       <v-divider class="mx-4"></v-divider>
+      <v-card-title class="title pb-0 pt-1">Login</v-card-title>
+      <v-btn class="mx-4 mb-4" color="primary" dark>Change login
+        <v-icon dark right>mdi-lock</v-icon>
+      </v-btn>
+
+      <v-divider class="mx-4"></v-divider>
       <v-card-title class="title pb-0 pt-1">Password</v-card-title>
       <v-btn class="mx-4 mb-4" color="primary" dark>Change password
         <v-icon dark right>mdi-lock</v-icon>
       </v-btn>
+
+      <v-divider class="mx-4"></v-divider>
+      <v-card-title class="title pb-0 pt-1">Email</v-card-title>
+      <v-btn class="mx-4 mb-4" color="primary" dark>Change email
+        <v-icon dark right>mdi-lock</v-icon>
+      </v-btn>
+
     </v-card>
 </template>
 
