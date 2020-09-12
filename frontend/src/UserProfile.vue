@@ -100,6 +100,9 @@
       ></v-text-field>
 
     </v-card>
+    <v-alert type="warning" v-else>
+        You are not logged in
+    </v-alert>
 </template>
 
 <script>
