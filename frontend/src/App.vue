@@ -66,7 +66,7 @@
             <v-spacer></v-spacer>
 
             <v-card light v-if="showSearch">
-                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchChatString"></v-text-field>
+                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchChatString" clearable clear-icon="mdi-close-circle"></v-text-field>
             </v-card>
         </v-app-bar>
 
