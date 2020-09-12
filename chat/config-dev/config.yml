@@ -41,3 +41,6 @@ jaeger:
 
 iceServers:
   - "stun:api.site.local:3478"
+
+#sanitize:
+#  message: false
