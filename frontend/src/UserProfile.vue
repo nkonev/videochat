@@ -73,6 +73,8 @@
                       append-outer-icon="mdi-check-bold"
                       :rules="[rules.required]"
                       @click:append-outer="sendLogin"
+                      clearable
+                      @click:clear="showLoginInput = false"
                       v-model="currentUser.login"></v-text-field>
 
         <v-divider class="mx-4"></v-divider>
@@ -91,6 +93,8 @@
                       :rules="[rules.required, rules.min]"
                       label="Password"
                       hint="At least 8 characters"
+                      clearable
+                      @click:clear="showPasswordInput = false"
                       @click:append="showInputablePassword = !showInputablePassword"
         ></v-text-field>
 
@@ -107,6 +111,8 @@
                       @click:append-outer="sendEmail"
                       :rules="[rules.required, rules.email]"
                       label="E-mail"
+                      clearable
+                      @click:clear="showEmailInput = false"
         ></v-text-field>
 
     </v-card>
