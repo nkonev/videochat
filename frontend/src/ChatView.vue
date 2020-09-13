@@ -218,7 +218,7 @@
                 }
             });
 
-            bus.$emit(CHANGE_TITLE, titleFactory(`Chat #${this.chatId}`, false, true, true));
+            bus.$emit(CHANGE_TITLE, titleFactory(`Chat #${this.chatId}`, false, true, null));
 
             this.getInfo();
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true))

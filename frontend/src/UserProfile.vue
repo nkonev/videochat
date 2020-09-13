@@ -156,6 +156,8 @@
 import {mapGetters} from "vuex";
 import {FETCH_USER_PROFILE, GET_USER} from "./store";
 import axios from "axios";
+import bus, {CHANGE_TITLE} from "./bus";
+import {titleFactory} from "./changeTitle";
 
 export default {
     data() {
@@ -222,7 +224,10 @@ export default {
                     this.$store.dispatch(FETCH_USER_PROFILE);
                 })
         }
-    }
+    },
+    mounted() {
+        bus.$emit(CHANGE_TITLE, titleFactory(`User profile`, false, false, null));
+    },
 }
 </script>
 
