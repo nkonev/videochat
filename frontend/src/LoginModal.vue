@@ -13,13 +13,14 @@
                         ref="form"
                         v-model="valid"
                         lazy-validation
-                        @keyup.native.enter="validateAndSend"
+                        @keyup.native.enter="loginWithUsername"
                     >
                         <v-text-field
                                 v-model="username"
                                 :rules="usernameRules"
                                 label="Login"
                                 required
+                                :disabled="disable"
                                 @input="hideAlert()"
                         ></v-text-field>
 
@@ -29,6 +30,7 @@
                                 label="Password"
                                 required
                                 type="password"
+                                :disabled="disable"
                                 @input="hideAlert()"
                         ></v-text-field>
 
@@ -43,17 +45,17 @@
                         </v-alert>
 
                         <v-btn
-                                :disabled="!valid"
+                                :disabled="!valid || disable"
                                 color="success"
                                 class="mr-2"
-                                @click="validateAndSend"
+                                @click="loginWithUsername"
                                 min-width="80px"
                                 :loading="loadingLogin"
                         >
                             Login
                         </v-btn>
-                        <v-btn class="mr-2 c-btn-vk" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn class="mr-2 c-btn-fb" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
                     </v-form>
                 </v-card-text>
 
@@ -73,6 +75,8 @@
                 show: false,
                 showAlert: false,
                 loginError: "",
+
+                disable: false,
 
                 loadingLogin: false,
                 loadingVk: false,
@@ -103,12 +107,15 @@
             hideLoginModal() {
                 this.$data.show = false;
             },
+
             loginVk() {
                 this.loadingVk = true;
+                this.disable = true;
                 window.location.href = '/api/login/oauth2/vkontakte';
             },
             loginFb() {
                 this.loadingFb = true;
+                this.disable = true;
                 window.location.href = '/api/login/oauth2/facebook';
             },
 
@@ -121,7 +128,8 @@
             resetValidation () {
                 this.$refs.form.resetValidation()
             },
-            validateAndSend() {
+            loginWithUsername() {
+                this.disable = true;
                 this.loadingLogin = true;
                 const valid = this.validate();
                 console.log("Valid", valid);
@@ -154,9 +162,11 @@
                             }
                         }).finally(() => {
                             this.loadingLogin = false;
+                            this.disable = false;
                         });
                 } else {
                     this.loadingLogin = false;
+                    this.disable = false;
                 }
             },
             hideAlert() {
