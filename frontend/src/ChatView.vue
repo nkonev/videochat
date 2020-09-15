@@ -25,7 +25,7 @@
                                     </v-container>
                                 </v-list-item-action>
                             </v-list-item>
-                            <v-divider></v-divider>
+                            <v-divider inset></v-divider>
                             </template>
                         </v-list>
                         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top">
