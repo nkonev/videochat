@@ -11,6 +11,7 @@
                        :aspect-ratio="16/9"
                        min-width="200"
                        min-height="200"
+                       @click="openAvatarDialog"
                 >
                 </v-img>
                 <v-list-item-title class="headline mb-1 mt-2">{{ currentUser.login }}</v-list-item-title>
@@ -156,7 +157,7 @@
 import {mapGetters} from "vuex";
 import {FETCH_USER_PROFILE, GET_USER} from "./store";
 import axios from "axios";
-import bus, {CHANGE_TITLE} from "./bus";
+import bus, {CHANGE_TITLE, OPEN_CHOOSE_AVATAR} from "./bus";
 import {titleFactory} from "./changeTitle";
 
 export default {
@@ -223,7 +224,12 @@ export default {
                 .then((response) => {
                     this.$store.dispatch(FETCH_USER_PROFILE);
                 })
-        }
+        },
+
+
+        openAvatarDialog() {
+            bus.$emit(OPEN_CHOOSE_AVATAR);
+        },
     },
     mounted() {
         bus.$emit(CHANGE_TITLE, titleFactory(`User profile`, false, false, null));
