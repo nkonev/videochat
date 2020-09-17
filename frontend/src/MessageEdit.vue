@@ -1,15 +1,11 @@
 <template>
-    <v-container id="sendButtonContainer" class="pt-0">
-        <v-row no-gutters dense>
-            <v-col cols="12">
-                <v-col class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 2em">
-                    <template v-if="writingUsers.length">
-                        {{writingUsers.map(v=>v.login).join(', ')}} is writing...
-                    </template>
-                </v-col>
-                <v-textarea solo dense label="Send a message" @keyup.ctrl.enter="sendMessageToChat" @keyup.esc="resetInput" v-model="editMessageDto.text" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat" hide-details></v-textarea>
-            </v-col>
-        </v-row>
+    <v-container id="sendButtonContainer" class="pt-0" style="height: 100%">
+        <v-col class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 2em">
+            <template v-if="writingUsers.length">
+                {{writingUsers.map(v=>v.login).join(', ')}} is writing...
+            </template>
+        </v-col>
+        <v-textarea solo dense id="myTextArea" :height="calcTextareaHeight()" no-resize label="Send a message" @keyup.ctrl.enter="sendMessageToChat" @keyup.esc="resetInput" v-model="editMessageDto.text" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat" hide-details></v-textarea>
     </v-container>
 </template>
 
@@ -19,6 +15,7 @@
     import throttle from "lodash/throttle";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
+    import {getHeight} from "./utils"
 
     const dtoFactory = ()=>{
         return {
@@ -69,6 +66,9 @@
                     this.writingUsers.push({timestamp: +new Date(), login: data.login})
                 }
             },
+            calcTextareaHeight() {
+                return getHeight("sendButtonContainer", (v) => v - 40 + "px", '100px')
+            }
         },
         computed: {
             ...mapGetters({currentUser: GET_USER})

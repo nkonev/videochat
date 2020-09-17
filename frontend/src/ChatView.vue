@@ -1,43 +1,45 @@
 <template>
-    <v-card>
-        <v-row dense>
-            <ChatVideo v-if="isAllowedVideo()" :chatDto="chatDto"/>
-            <v-col cols="12">
-                <div id="messagesScroller" :style="scrollerHeight()">
-                    <v-card-text>
-                        <v-list>
-                            <template v-for="(item, index) in items">
-                            <v-list-item
-                                    :key="item.id"
-                                    dense
-                            >
-                                <v-list-item-avatar v-if="item.owner && item.owner.avatar">
-                                    <v-img :src="item.owner.avatar"></v-img>
-                                </v-list-item-avatar>
-                                <v-list-item-content @click="onMessageClick(item)">
-                                  <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
-                                  <v-list-item-content class="pre-formatted pa-0">{{item.text}}</v-list-item-content>
-                                </v-list-item-content>
-                                <v-list-item-action>
-                                    <v-container class="mb-0 mt-0 pb-0 pt-0">
-                                        <v-icon class="mr-4" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
-                                        <v-icon v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
-                                    </v-container>
-                                </v-list-item-action>
-                            </v-list-item>
-                            <v-divider inset></v-divider>
-                            </template>
-                        </v-list>
-                        <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top">
-                            <template slot="no-more"><span/></template>
-                            <template slot="no-results"><span/></template>
-                        </infinite-loading>
-                    </v-card-text>
-                    </div>
-            </v-col>
-        </v-row>
-        <MessageEdit :chatId="chatId"/>
-    </v-card>
+    <v-container class="ma-0 pa-0 fill-height" id="chatViewContainer">
+    <splitpanes class="default-theme" horizontal style="height: 600px">
+        <pane v-if="isAllowedVideo()">
+            <ChatVideo :chatDto="chatDto"/>
+        </pane>
+        <pane max-size="70">
+            <div id="messagesScroller" :style="scrollerStyle()">
+                <v-list>
+                    <template v-for="(item, index) in items">
+                    <v-list-item
+                            :key="item.id"
+                            dense
+                    >
+                        <v-list-item-avatar v-if="item.owner && item.owner.avatar">
+                            <v-img :src="item.owner.avatar"></v-img>
+                        </v-list-item-avatar>
+                        <v-list-item-content @click="onMessageClick(item)">
+                          <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
+                          <v-list-item-content class="pre-formatted pa-0">{{item.text}}</v-list-item-content>
+                        </v-list-item-content>
+                        <v-list-item-action>
+                            <v-container class="mb-0 mt-0 pb-0 pt-0">
+                                <v-icon class="mr-4" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
+                                <v-icon v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
+                            </v-container>
+                        </v-list-item-action>
+                    </v-list-item>
+                    <v-divider inset></v-divider>
+                    </template>
+                </v-list>
+                <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top">
+                    <template slot="no-more"><span/></template>
+                    <template slot="no-results"><span/></template>
+                </infinite-loading>
+            </div>
+        </pane>
+        <pane max-size="70">
+            <MessageEdit :chatId="chatId"/>
+        </pane>
+    </splitpanes>
+    </v-container>
 </template>
 
 <script>
@@ -64,6 +66,10 @@
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
+    import { Splitpanes, Pane } from 'splitpanes'
+    import 'splitpanes/dist/splitpanes.css'
+    import {getHeight} from "./utils"
+
 
     export default {
         mixins:[infinityListMixin()],
@@ -72,7 +78,8 @@
                 chatMessagesSubscription: null,
                 chatDto: {
                     participantIds:[]
-                }
+                },
+                firstLoading: true,
             }
         },
         computed: {
@@ -111,20 +118,15 @@
                 bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
             },
 
-            scrollerHeight() {
-                const maybeScroller = document.getElementById("messagesScroller");
-                const maybeSendButton = document.getElementById("sendButtonContainer");
+            scrollerStyle() {
+                return 'overflow-y: auto; height: 100%'
+            },
+            splitpanesStyle() {
+                const calcHeight = getHeight("chatViewContainer", (v) => v + "px", '600px');
+                console.log("Calc height of container", calcHeight);
 
-                if (maybeScroller && maybeSendButton) {
-                    const topOfScroller = maybeScroller.getBoundingClientRect().top;
-                    const sendButtonContainerHeight = maybeSendButton.getBoundingClientRect().height;
-                    const availableHeight = window.innerHeight;
-                    const newHeight = availableHeight - topOfScroller - sendButtonContainerHeight - 16;
-                    if (newHeight > 0) {
-                        return `overflow-y: auto; height: ${newHeight}px`
-                    }
-                }
-                return 'overflow-y: auto; height: 240px'
+                //return "height: 700px"
+                return calcHeight
             },
             onVideoChangesHeight() {
                 console.log("Adjusting height after video has been shown");
@@ -144,9 +146,14 @@
                         this.page += 1;
                         // this.items = [...this.items, ...list];
                         this.items.unshift(...list.reverse());
-                        $state.loaded();
+                        $state?.loaded();
                     } else {
-                        $state.complete();
+                        $state?.complete();
+                    }
+                }).then(value => {
+                    if (this.firstLoading) {
+                        this.scrollDown();
+                        this.firstLoading = false;
                     }
                 });
             },
@@ -244,14 +251,20 @@
         },
         components: {
             MessageEdit,
-            ChatVideo
+            ChatVideo,
+            Splitpanes, Pane
         }
     }
 </script>
 
 <style scoped lang="stylus">
-.pre-formatted {
-  white-space pre-wrap
-}
+    .pre-formatted {
+      white-space pre-wrap
+    }
+    //
+    //#chatViewContainer {
+    //    display block
+    //    height 700px
+    //}
 
 </style>
