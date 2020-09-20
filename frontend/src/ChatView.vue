@@ -11,6 +11,7 @@
                         <v-list-item
                                 :key="item.id"
                                 dense
+                                class="pr-0 pl-1"
                         >
                             <v-list-item-avatar v-if="item.owner && item.owner.avatar">
                                 <v-img :src="item.owner.avatar"></v-img>
@@ -20,13 +21,13 @@
                               <v-list-item-content class="pre-formatted pa-0">{{item.text}}</v-list-item-content>
                             </v-list-item-content>
                             <v-list-item-action>
-                                <v-container class="mb-0 mt-0 pb-0 pt-0">
-                                    <v-icon class="mr-4" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
+                                <v-container class="mb-0 mt-0 pb-0 pt-0 mx-2 px-1">
+                                    <v-icon class="mr-2" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
                                     <v-icon v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
                                 </v-container>
                             </v-list-item-action>
                         </v-list-item>
-                        <v-divider inset></v-divider>
+                        <v-divider class="ml-15"></v-divider>
                         </template>
                     </v-list>
                     <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top" force-use-infinite-wrapper="#messagesScroller">
@@ -260,6 +261,10 @@
         //position: fixed
         //height: calc(100% - 80px)
         //width: calc(100% - 80px)
+    }
+
+    #messagesScroller {
+        background  white
     }
 
     #sendButtonContainer {
