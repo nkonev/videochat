@@ -2,7 +2,6 @@
     <v-container class="grey lighten-5">
                 <v-row
                     :align="'stretch'"
-                    :justify="'center'"
                     class="grey lighten-5"
                     style="height: 100%; display: flex"
                 >

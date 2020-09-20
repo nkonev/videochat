@@ -1,11 +1,15 @@
 <template>
-    <v-container id="sendButtonContainer" class="pt-0" style="height: 100%">
+    <v-container id="sendButtonContainer" class="pa-0" style="height: 100%">
         <v-col class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 2em">
             <template v-if="writingUsers.length">
                 {{writingUsers.map(v=>v.login).join(', ')}} is writing...
             </template>
         </v-col>
-        <v-textarea solo dense id="myTextArea" :height="calcTextareaHeight()" no-resize label="Send a message" @keyup.ctrl.enter="sendMessageToChat" @keyup.esc="resetInput" v-model="editMessageDto.text" :append-outer-icon="'mdi-send'" @click:append-outer="sendMessageToChat" hide-details></v-textarea>
+        <quill-editor
+            ref="myQuillEditor"
+            v-model="editMessageDto.text"
+            :options="editorOption"
+        />
     </v-container>
 </template>
 
@@ -16,6 +20,11 @@
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import {getHeight} from "./utils"
+    import 'quill/dist/quill.core.css'
+    import 'quill/dist/quill.snow.css'
+    import 'quill/dist/quill.bubble.css'
+
+    import { quillEditor } from 'vue-quill-editor'
 
     const dtoFactory = ()=>{
         return {
@@ -31,7 +40,11 @@
         data() {
             return {
                 editMessageDto: dtoFactory(),
-                writingUsers: []
+                writingUsers: [],
+
+                editorOption: {
+                    // Some Quill options...
+                }
             }
         },
         methods: {
@@ -99,5 +112,17 @@
                 },
             }
         },
+        components: {
+            quillEditor
+        }
     }
 </script>
+
+<style lang="stylus">
+.quill-editor {
+    height calc(100% - 60px)
+}
+.ql-container {
+    height calc(100% - 10px)
+}
+</style>
