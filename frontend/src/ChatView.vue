@@ -263,4 +263,8 @@
         //width: calc(100% - 80px)
     }
 
+    #sendButtonContainer {
+        background  white
+    }
+
 </style>
