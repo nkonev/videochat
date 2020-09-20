@@ -24,6 +24,8 @@
         }
     };
 
+    let timerId;
+
     export default {
         props:['chatId'],
         data() {
@@ -75,13 +77,14 @@
         },
         mounted() {
             bus.$on(SET_EDIT_MESSAGE, this.onSetMessage);
-            setInterval(()=>{
+            timerId = setInterval(()=>{
                 const curr = + new Date();
                 this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
             }, 500);
             bus.$on(USER_TYPING, this.onUserTyping);
         },
         beforeDestroy() {
+            clearInterval(timerId);
             bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.$off(USER_TYPING, this.onUserTyping);
         },
