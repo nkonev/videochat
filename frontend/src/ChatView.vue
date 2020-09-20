@@ -15,7 +15,7 @@
                             <v-list-item-avatar v-if="item.owner && item.owner.avatar">
                                 <v-img :src="item.owner.avatar"></v-img>
                             </v-list-item-avatar>
-                            <v-list-item-content @click="onMessageClick(item)">
+                            <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
                               <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
                               <v-list-item-content class="pre-formatted pa-0">{{item.text}}</v-list-item-content>
                             </v-list-item-content>
@@ -68,8 +68,7 @@
     import {GET_USER} from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
     import 'splitpanes/dist/splitpanes.css'
-    import {getHeight} from "./utils"
-
+    import debounce from "lodash/debounce";
 
     export default {
         mixins:[infinityListMixin()],
@@ -117,16 +116,6 @@
                 bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
             },
 
-            scrollerStyle() {
-                return 'overflow-y: auto; height: 100%'
-            },
-            splitpanesStyle() {
-                const calcHeight = getHeight("chatViewContainer", (v) => v + "px", '600px');
-                console.log("Calc height of container", calcHeight);
-
-                //return "height: 700px"
-                return calcHeight
-            },
             onVideoChangesHeight() {
                 console.log("Adjusting height after video has been shown");
                 this.$forceUpdate();
@@ -206,6 +195,9 @@
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
             },
 
+            onMessageMouseMove(item) {
+                this.onMessageClick(item);
+            },
         },
         mounted() {
             this.chatMessagesSubscription = this.centrifuge.subscribe("chatMessages"+this.chatId, (message) => {
@@ -242,6 +234,9 @@
         },
         destroyed() {
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(false))
+        },
+        created() {
+            this.onMessageMouseMove = debounce(this.onMessageMouseMove, 1000, {leading:true, trailing:false});
         },
         components: {
             MessageEdit,

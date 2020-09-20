@@ -12,7 +12,7 @@
 <script>
     import axios from "axios";
     import bus, {SET_EDIT_MESSAGE, USER_TYPING} from "./bus";
-    import throttle from "lodash/throttle";
+    import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import {getHeight} from "./utils"
@@ -86,7 +86,7 @@
             bus.$off(USER_TYPING, this.onUserTyping);
         },
         created(){
-            this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);
+            this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});
         },
         watch: {
             'editMessageDto.text': {
