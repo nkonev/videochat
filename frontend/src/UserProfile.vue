@@ -27,7 +27,7 @@
                 min-width="80px"
                 label
                 close
-                class="c-btn-vk py-5"
+                class="c-btn-vk py-5 mr-2"
                 text-color="white"
                 close-icon="mdi-delete"
                 @click:close="removeVk"
@@ -40,7 +40,7 @@
                 min-width="80px"
                 label
                 close
-                class="c-btn-fb py-5"
+                class="c-btn-fb py-5 mr-2"
                 text-color="white"
                 close-icon="mdi-delete"
                 @click:close="removeFb"
@@ -52,11 +52,11 @@
         <v-divider class="mx-4"></v-divider>
         <v-card-title class="title pb-0 pt-1">Not bound OAuth2 providers</v-card-title>
         <v-card-actions class="mx-2">
-            <v-btn v-if="!currentUser.oauthIdentifiers.vkontakteId" @click="submitOauthVkontakte" class="mr-2 c-btn-vk"
+            <v-btn v-if="!currentUser.oauthIdentifiers.vkontakteId" @click="submitOauthVkontakte" class="c-btn-vk"
                    min-width="80px">
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon>
             </v-btn>
-            <v-btn v-if="!currentUser.oauthIdentifiers.facebookId" @click="submitOauthFacebook" class="mr-2 c-btn-fb"
+            <v-btn v-if="!currentUser.oauthIdentifiers.facebookId" @click="submitOauthFacebook" class="c-btn-fb"
                    min-width="80px">
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon>
             </v-btn>
