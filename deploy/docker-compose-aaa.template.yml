@@ -3,7 +3,6 @@ version: '3.7'
 services:
   aaa:
     image: nkonev/chat-aaa:latest
-    restart: unless-stopped
     networks:
       backend:
     deploy:

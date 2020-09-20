@@ -3,7 +3,6 @@ version: '3.7'
 services:
   chat:
     image: nkonev/chat:latest
-    restart: unless-stopped
     networks:
       backend:
     deploy:
