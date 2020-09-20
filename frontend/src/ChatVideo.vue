@@ -1,7 +1,7 @@
 <template>
-    <v-col cols="12" class="video-container">
-        <video id="localVideo" autoPlay playsInline style="height: 220px"></video>
-        <video v-for="(item, index) in getProperParticipantIds()" :key="item" :id="getRemoteVideoId(item)" autoPlay playsInline style="height: 220px"></video>
+    <v-col cols="12" class="video-container ma-0 pa-0">
+        <video id="localVideo" autoPlay playsInline :style="videoContainerStyle"></video>
+        <video v-for="(item, index) in getProperParticipantIds()" :key="item" :id="getRemoteVideoId(item)" autoPlay playsInline :style="videoContainerStyle"></video>
     </v-col>
 </template>
 
@@ -9,10 +9,11 @@
     import {getData, getProperData, setProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import bus, {CHANGE_PHONE_BUTTON, VIDEO_LOCAL_ESTABLISHED} from "./bus";
+    import bus, {CHANGE_PHONE_BUTTON, VIDEO_LOCAL_ESTABLISHED, VIDEO_CHAT_PANES_RESIZED, MESSAGE_DELETED} from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
     import Vue from 'vue'
+    import {getHeight} from "./utils";
 
     const EVENT_CANDIDATE = 'candidate';
     const EVENT_HELLO = 'hello';
@@ -23,6 +24,9 @@
     export default {
         data() {
             return {
+                videoContainerStyle: 'height: 220px',
+                prevVideoPaneSize: null,
+
                 signalingSubscription: null,
 
                 pcConfig: null,
@@ -106,6 +110,7 @@
                 this.localVideo.srcObject = stream;
 
                 bus.$emit(VIDEO_LOCAL_ESTABLISHED);
+                this.videoContainerStyle = this.calcVideoHeight();
                 bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, false))
 
                 this.initConnections();
@@ -323,6 +328,20 @@
                 });
 
                 videoElem.srcObject = null;
+            },
+
+            calcVideoHeight(){
+                // const containerHeight = document.getElementById("videoBlock").clientHeight;
+                // return `height: 100px`;
+                const calcedHeight = getHeight("videoBlock", (v) => v + "px", '220px');
+                console.log("Calced height", calcedHeight);
+                return "height: "+ calcedHeight;
+            },
+            onPanesResized(obj) {
+                if (obj[0].size != this.prevVideoPaneSize) {
+                    this.prevVideoPaneSize = obj[0].size;
+                    this.videoContainerStyle = this.calcVideoHeight();
+                }
             }
         },
 
@@ -392,6 +411,7 @@
             });
 
             this.getWebRtcConfiguration();
+            bus.$on(VIDEO_CHAT_PANES_RESIZED, this.onPanesResized);
         },
 
         beforeDestroy() {
@@ -399,6 +419,7 @@
             this.hangupAll();
             this.signalingSubscription.unsubscribe();
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true));
+            bus.$off(VIDEO_CHAT_PANES_RESIZED, this.onPanesResized);
         },
 
         watch: {

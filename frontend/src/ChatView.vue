@@ -1,7 +1,7 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
-        <splitpanes class="default-theme" horizontal style="height: 100%">
-            <pane v-if="isAllowedVideo()">
+        <splitpanes class="default-theme" horizontal style="height: 100%" @resized="onPanesResized">
+            <pane v-if="isAllowedVideo()" id="videoBlock">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane max-size="90" size="80">
@@ -57,7 +57,8 @@
       MESSAGE_DELETED,
       MESSAGE_EDITED,
       SET_EDIT_MESSAGE, USER_TYPING,
-      VIDEO_LOCAL_ESTABLISHED
+      VIDEO_LOCAL_ESTABLISHED,
+      VIDEO_CHAT_PANES_RESIZED
     } from "./bus";
     import {phoneFactory, titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
@@ -197,6 +198,9 @@
 
             onMessageMouseMove(item) {
                 this.onMessageClick(item);
+            },
+            onPanesResized(obj) {
+                bus.$emit(VIDEO_CHAT_PANES_RESIZED, obj);
             },
         },
         mounted() {
