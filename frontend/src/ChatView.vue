@@ -30,7 +30,7 @@
                         <v-divider class="ml-15"></v-divider>
                         </template>
                     </v-list>
-                    <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top" force-use-infinite-wrapper="#messagesScroller" distance="400">
+                    <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top" force-use-infinite-wrapper="#messagesScroller" :distance="0">
                         <template slot="no-more"><span/></template>
                         <template slot="no-results"><span/></template>
                     </infinite-loading>
@@ -80,7 +80,6 @@
                 chatDto: {
                     participantIds:[]
                 },
-                isLoading: false,
             }
         },
         computed: {
@@ -125,10 +124,6 @@
             },
 
             infiniteHandler($state) {
-                if (this.isLoading) {
-                    return
-                }
-                this.isLoading = true;
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
                         page: this.page,
@@ -147,7 +142,6 @@
                         return false
                     }
                 }).then(value => {
-                    this.isLoading = false;
                     if (value) {
                         $state?.loaded();
                     } else {
@@ -255,7 +249,6 @@
         },
         created() {
             this.onMessageMouseMove = debounce(this.onMessageMouseMove, 1000, {leading:true, trailing:false});
-            this.infiniteHandler = debounce(this.infiniteHandler, 1000);
         },
         components: {
             MessageEdit,
