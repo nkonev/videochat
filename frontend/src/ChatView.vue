@@ -32,7 +32,7 @@
                     </v-list>
                     <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top" force-use-infinite-wrapper="#messagesScroller" :distance="0">
                         <template slot="no-more"><span/></template>
-                        <template slot="no-results"><span/></template>
+                        <template slot="no-results">No messages</template>
                     </infinite-loading>
                 </div>
             </pane>
