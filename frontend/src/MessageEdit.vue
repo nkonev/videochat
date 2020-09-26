@@ -12,7 +12,7 @@
                 :options="editorOption"
             />
         </v-container>
-        <v-btn class="ml-1 mt-6" color="primary"><v-icon>mdi-send</v-icon></v-btn>
+        <v-btn class="ml-1 mt-6" color="primary" @click="sendMessageToChat"><v-icon>mdi-send</v-icon></v-btn>
     </v-container>
 </template>
 
