@@ -10,6 +10,7 @@
                 ref="myQuillEditor"
                 v-model="editMessageDto.text"
                 :options="editorOption"
+                @keyup.native.ctrl.enter="sendMessageToChat" @keyup.native.esc="resetInput"
             />
         </v-container>
         <v-btn class="ml-1 mt-6" color="primary" @click="sendMessageToChat"><v-icon>mdi-send</v-icon></v-btn>
@@ -25,7 +26,6 @@
     import {getHeight} from "./utils"
     import 'quill/dist/quill.core.css'
     import 'quill/dist/quill.snow.css'
-    import 'quill/dist/quill.bubble.css'
 
     import { quillEditor } from 'vue-quill-editor'
 

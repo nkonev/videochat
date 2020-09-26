@@ -18,7 +18,7 @@
                             </v-list-item-avatar>
                             <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
                               <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
-                              <v-list-item-content class="pre-formatted pa-0">{{item.text}}</v-list-item-content>
+                              <v-list-item-content class="pre-formatted pa-0" v-html="item.text"></v-list-item-content>
                             </v-list-item-content>
                             <v-list-item-action>
                                 <v-container class="mb-0 mt-0 pb-0 pt-0 mx-2 px-1">
