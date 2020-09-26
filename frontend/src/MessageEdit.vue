@@ -1,15 +1,18 @@
 <template>
-    <v-container id="sendButtonContainer" class="pa-0" style="height: 100%">
-        <v-col class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 2em">
-            <template v-if="writingUsers.length">
-                {{writingUsers.map(v=>v.login).join(', ')}} is writing...
-            </template>
-        </v-col>
-        <quill-editor
-            ref="myQuillEditor"
-            v-model="editMessageDto.text"
-            :options="editorOption"
-        />
+    <v-container id="sendButtonContainer" class="pa-0 d-flex flex-row" style="height: 100%">
+        <v-container class="ma-0 pa-0">
+            <div class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 2em">
+                <template v-if="writingUsers.length">
+                    {{writingUsers.map(v=>v.login).join(', ')}} is writing...
+                </template>
+            </div>
+            <quill-editor
+                ref="myQuillEditor"
+                v-model="editMessageDto.text"
+                :options="editorOption"
+            />
+        </v-container>
+        <v-btn class="ml-1 mt-6" color="primary"><v-icon>mdi-send</v-icon></v-btn>
     </v-container>
 </template>
 
@@ -35,6 +38,15 @@
 
     let timerId;
 
+
+    // https://quilljs.com/docs/modules/toolbar/
+    const toolbarOptions = [
+        ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+        [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+        [{ 'align': [] }],
+        ['clean']                                         // remove formatting button
+    ];
+
     export default {
         props:['chatId'],
         data() {
@@ -44,6 +56,9 @@
 
                 editorOption: {
                     // Some Quill options...
+                    modules: {
+                        toolbar: toolbarOptions,
+                    }
                 }
             }
         },
@@ -119,6 +134,10 @@
 </script>
 
 <style lang="stylus">
+//#sendButtonContainer {
+//
+//}
+
 .quill-editor {
     height calc(100% - 60px)
 }
