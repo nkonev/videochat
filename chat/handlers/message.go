@@ -6,7 +6,6 @@ import (
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -214,10 +213,7 @@ func (mc MessageHandler) PostMessage(c echo.Context) error {
 }
 
 func sanitizeMessage(policy *bluemonday.Policy, input string) string {
-	if viper.GetBool("sanitize.message") {
-		return policy.Sanitize(input)
-	}
-	return input
+	return policy.Sanitize(input)
 }
 
 func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *bluemonday.Policy) *db.Message {

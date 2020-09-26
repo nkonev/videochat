@@ -49,7 +49,6 @@ func setup() {
 	utils.InitViper(configFile, "")
 
 	viper.Set("aaa.url.base", "http://api.site.local:"+aaaEmuPort)
-	viper.Set("sanitize.message", true)
 
 	d, err := db.ConfigureDb(nil)
 	defer d.Close()
