@@ -13,7 +13,6 @@ ALTER SYSTEM SET log_line_prefix = '%a %u@%d ';
 create user aaa with password 'aaaPazZw0rd';
 create database aaa with owner aaa;
 \connect aaa;
-create extension if not exists "uuid-ossp" schema pg_catalog;
 -- create extension if not exists "hstore" schema pg_catalog;
 -- https://www.endpoint.com/blog/2012/10/30/postgresql-autoexplain-module
 -- ALTER SYSTEM set client_min_messages = notice;
@@ -23,15 +22,6 @@ create extension if not exists "uuid-ossp" schema pg_catalog;
 -- ALTER SYSTEM set log_disconnections = on;
 -- ALTER SYSTEM set log_duration = on;
 --
-/*LOAD 'auto_explain';
-ALTER SYSTEM set shared_preload_libraries = 'auto_explain';
-ALTER SYSTEM SET auto_explain.log_min_duration=0;
-ALTER SYSTEM set auto_explain.log_analyze=true;
-ALTER SYSTEM set auto_explain.log_buffers=true;
-ALTER SYSTEM set auto_explain.log_timing=true;
-ALTER SYSTEM set auto_explain.log_verbose=true;
-ALTER SYSTEM set auto_explain.log_nested_statements=true;
-*/
 
 
 create user chat with password 'chatPazZw0rd';
@@ -39,7 +29,6 @@ create user chat with password 'chatPazZw0rd';
 -- alter role chat superuser;
 create database chat with owner chat;
 \connect chat;
-create extension if not exists "uuid-ossp" schema pg_catalog;
 
 
 create user storage with password 'storagePazZw0rd';
@@ -47,4 +36,3 @@ create user storage with password 'storagePazZw0rd';
 -- alter role storage superuser;
 create database storage with owner storage;
 \connect storage;
-create extension if not exists "uuid-ossp" schema pg_catalog;

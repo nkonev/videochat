@@ -44,7 +44,7 @@ services:
         max-size: "50m"
         max-file: "1"
   postgresql:
-    image: postgres:12.2
+    image: postgres:13.0
     restart: unless-stopped
     ports:
       - 35432:5432
