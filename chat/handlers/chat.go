@@ -14,6 +14,7 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
+	"strings"
 )
 
 type ChatWrapper struct {
@@ -60,6 +61,7 @@ func (ch ChatHandler) GetChats(c echo.Context) error {
 	size := utils.FixSizeString(c.QueryParam("size"))
 	offset := utils.GetOffset(page, size)
 	searchString := c.QueryParam("searchString")
+	searchString = strings.TrimSpace(searchString)
 
 	if dbChats, err := ch.db.GetChatsWithParticipants(userPrincipalDto.UserId, size, offset, searchString, userPrincipalDto); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
