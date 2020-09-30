@@ -98,7 +98,7 @@ public class UserAccountConverter {
         return roles.stream().map(ur -> new SimpleGrantedAuthority(ur.name())).collect(Collectors.toSet());
     }
 
-    public com.github.nkonev.aaa.dto.UserAccountDTO convertToUserAccountDTO(UserAccount userAccount) {
+    public static com.github.nkonev.aaa.dto.UserAccountDTO convertToUserAccountDTO(UserAccount userAccount) {
         if (userAccount == null) { return null; }
         return new com.github.nkonev.aaa.dto.UserAccountDTO(
                 userAccount.getId(),

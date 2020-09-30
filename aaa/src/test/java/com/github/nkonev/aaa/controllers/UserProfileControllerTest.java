@@ -8,11 +8,14 @@ import com.github.nkonev.aaa.TestConstants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.EditUserDTO;
 import com.github.nkonev.aaa.dto.LockDTO;
+import com.github.nkonev.aaa.dto.UserAccountDTO;
 import com.github.nkonev.aaa.entity.jdbc.CreationType;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
+import com.github.nkonev.aaa.services.RedisEventReceiver;
+import com.google.common.util.concurrent.Uninterruptibles;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -28,6 +31,8 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MvcResult;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 
@@ -45,6 +50,9 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @Autowired
     private AaaUserDetailsService aaaUserDetailsService;
+
+    @Autowired
+    private RedisEventReceiver receiver;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileControllerTest.class);
 
@@ -68,6 +76,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @WithUserDetails(TestConstants.USER_ALICE)
     @org.junit.jupiter.api.Test
     public void fullyAuthenticatedUserCanChangeHerProfile() throws Exception {
+        receiver.clear();
         UserAccount userAccount = getUserFromBd(TestConstants.USER_ALICE);
         final String initialPassword = userAccount.getPassword();
 
@@ -99,6 +108,16 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andReturn();
 
+        for (int i=0; i<10; ++i) {
+            if (receiver.size() > 0) {
+                break;
+            } else {
+                Uninterruptibles.sleepUninterruptibly(Duration.of(1, ChronoUnit.SECONDS));
+            }
+        }
+        Assertions.assertEquals(1, receiver.size());
+        final UserAccountDTO userAccountEvent = receiver.getLast();
+        Assertions.assertEquals(newLogin, userAccountEvent.getLogin());
     }
 
     @WithUserDetails(TestConstants.USER_ALICE)

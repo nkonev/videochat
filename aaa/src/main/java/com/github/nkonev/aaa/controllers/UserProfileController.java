@@ -11,6 +11,7 @@ import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.exception.UserAlreadyPresentException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
+import com.github.nkonev.aaa.services.NotifierService;
 import com.github.nkonev.aaa.services.UserService;
 import com.github.nkonev.aaa.utils.PageUtils;
 import name.nkonev.aaa.UserDto;
@@ -63,6 +64,9 @@ public class UserProfileController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private NotifierService notifier;
 
     public static final String X_PROTOBUF_CHARSET_UTF_8 = "application/x-protobuf;charset=UTF-8";
 
@@ -197,6 +201,7 @@ public class UserProfileController {
         exists = userAccountRepository.save(exists);
 
         aaaUserDetailsService.refreshUserDetails(exists);
+        notifier.notifyProfileUpdated(exists);
 
         return UserAccountConverter.convertToEditUserDto(exists);
     }
@@ -228,6 +233,8 @@ public class UserProfileController {
         exists = userAccountRepository.save(exists);
 
         aaaUserDetailsService.refreshUserDetails(exists);
+
+        notifier.notifyProfileUpdated(exists);
 
         return UserAccountConverter.convertToEditUserDto(exists);
     }
