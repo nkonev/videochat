@@ -62,7 +62,7 @@ services:
         max-file: "1"
 
   redis:
-    image: redis:5.0.5
+    image: redis:6.0.8
     hostname: redis
     restart: unless-stopped
     ports:
