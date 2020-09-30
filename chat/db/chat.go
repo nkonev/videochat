@@ -42,8 +42,15 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 }
 
 func (db *DB) GetChats(participantId int64, limit int, offset int, searchString string) ([]*Chat, error) {
-	strForSearch := "%" + searchString + "%"
-	if rows, err := db.Query(`SELECT id, title, last_update_date_time FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND chat.title ILIKE $4 ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset, strForSearch); err != nil {
+	var rows *sql.Rows
+	var err error
+	if searchString == "" {
+		rows, err = db.Query(`SELECT id, title, last_update_date_time FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset);
+	} else {
+		strForSearch := "%" + searchString + "%"
+		rows, err = db.Query(`SELECT id, title, last_update_date_time FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND chat.title ILIKE $4 ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset, strForSearch);
+	}
+	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
 	} else {
