@@ -62,20 +62,20 @@ services:
       options:
         tag: chat-minio
 
-  coturn:
-    image: instrumentisto/coturn:4.5.1.3
-    hostname: coturn
-    ports:
-      - 3478:3478
-      - 49160-49200:49160-49200/udp
-    volumes:
-      - coturn_data:/var/lib/coturn
-    networks:
-      backend:
-    logging:
-      driver: "journald"
-      options:
-        tag: chat-coturn
+#  coturn:
+#    image: instrumentisto/coturn:4.5.1.3
+#    hostname: coturn
+#    ports:
+#      - 3478:3478
+#      - 49160-49200:49160-49200/udp
+#    volumes:
+#      - coturn_data:/var/lib/coturn
+#    networks:
+#      backend:
+#    logging:
+#      driver: "journald"
+#      options:
+#        tag: chat-coturn
 
   jaeger:
     image: jaegertracing/all-in-one:1.18.1

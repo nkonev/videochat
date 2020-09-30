@@ -40,4 +40,5 @@ jaeger:
   endpoint: "jaeger:6831"
 
 iceServers:
-  - "stun:api.site.local:3478"
+  #- "stun:chat.nkonev.name:3478"
+  - "stun:stun.l.google.com:19302"
