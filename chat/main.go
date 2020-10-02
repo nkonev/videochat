@@ -17,6 +17,7 @@ import (
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers"
+	"nkonev.name/chat/listener"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	_ "nkonev.name/chat/static_assets"
@@ -44,12 +45,15 @@ func main() {
 			configureMigrations,
 			db.ConfigureDb,
 			notifications.NewNotifications,
+			listener.RedisAaaConnection,
+			listener.CreateAaaUserProfileUpdateListener,
 		),
 		fx.Invoke(
 			initJaeger,
 			runMigrations,
 			runCentrifuge,
 			runEcho,
+			listener.ListenPubSubChannels,
 		),
 	)
 	app.Run()
