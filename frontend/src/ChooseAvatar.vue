@@ -154,13 +154,19 @@
             saveAvatar() {
                 this.createBlob().then(this.sendAvatar).then((res) => {
                     if (!res) {
-                        return axios.patch(`/api/profile`, {removeAvatar: true})
+                        if (this.removeImage) {
+                            return axios.patch(`/api/profile`, {removeAvatar: true});
+                        } else {
+                            return Promise.resolve(false);
+                        }
                     } else {
                         return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl})
                     }
                 }).then(value => {
                     console.log("PATCH result", value);
-                    this.$store.dispatch(FETCH_USER_PROFILE);
+                    if (value) {
+                        this.$store.dispatch(FETCH_USER_PROFILE);
+                    }
                     this.show = false;
                 });
             },
