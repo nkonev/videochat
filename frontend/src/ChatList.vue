@@ -27,15 +27,15 @@
 </template>
 
 <script>
-    import bus, {
-        CHAT_ADD,
-        CHAT_EDITED,
-        CHAT_DELETED,
-        CHAT_SEARCH_CHANGED,
-        LOGGED_IN,
-        OPEN_CHAT_EDIT,
-        CHANGE_TITLE, OPEN_CHAT_DELETE, UNREAD_MESSAGES_CHANGED
-    } from "./bus";
+import bus, {
+    CHAT_ADD,
+    CHAT_EDITED,
+    CHAT_DELETED,
+    CHAT_SEARCH_CHANGED,
+    LOGGED_IN,
+    OPEN_CHAT_EDIT,
+    CHANGE_TITLE, OPEN_CHAT_DELETE, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED
+} from "./bus";
     import {chat_name, root_name} from "./routes";
     import infinityListMixin, {
         findIndex,
@@ -48,6 +48,7 @@
     import {mapGetters} from 'vuex'
     import {GET_SEARCH_STRING} from "./store";
     import {titleFactory} from "./changeTitle";
+import {getCorrectUserAvatar} from "./utils";
 
     export default {
         mixins: [infinityListMixin()],
@@ -142,7 +143,13 @@
                 } else {
                     console.log("Not found to update unread messages", dto)
                 }
-            }
+            },
+            onUserProfileChanged(user) {
+                this.items.forEach(item => {
+                    replaceInArray(item.participants, user);
+                });
+                this.$forceUpdate();
+            },
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadItems);
@@ -151,6 +158,7 @@
             bus.$on(CHAT_DELETED, this.removeItem);
             bus.$on(CHAT_SEARCH_CHANGED, this.searchStringChanged);
             bus.$on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
+            bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadItems);
@@ -159,6 +167,7 @@
             bus.$off(CHAT_DELETED, this.removeItem);
             bus.$off(CHAT_SEARCH_CHANGED, this.searchStringChanged);
             bus.$off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
+            bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
         mounted() {
             bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false, false));
