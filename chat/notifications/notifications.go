@@ -22,15 +22,18 @@ type Notifications interface {
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
+	NotifyAboutProfileChanged(user *dto.User)
 }
 
 type notifictionsImpl struct {
 	centrifuge *centrifuge.Node
+	db db.DB
 }
 
-func NewNotifications(node *centrifuge.Node) Notifications {
+func NewNotifications(node *centrifuge.Node, db db.DB) Notifications {
 	return &notifictionsImpl{
 		centrifuge: node,
+		db: db,
 	}
 }
 
@@ -235,4 +238,33 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 		}
 	}
 
+}
+
+func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
+	if user == nil {
+		Logger.Errorf("user cannot be null")
+		return
+	}
+
+	coChatters, err := not.db.GetCoChattedParticipantIdsCommon(user.Id)
+	if err != nil {
+		Logger.Errorf("Error during get co-chatters for %v, error: %v", user.Id, err)
+	}
+
+	for _, participantId := range coChatters {
+		notification := CentrifugeNotification{
+			Payload:   user,
+			EventType: "user_profile_changed",
+		}
+		if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
+			Logger.Errorf("error during marshalling user_profile_changed notification: %s", err2)
+		} else {
+			participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
+			Logger.Infof("Sending notification about user_profile_changed to participantChannel: %v", participantChannel)
+			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
+			if err != nil {
+				Logger.Errorf("error publishing to personal channel: %s", err)
+			}
+		}
+	}
 }

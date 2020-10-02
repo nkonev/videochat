@@ -111,6 +111,7 @@
     import {chat_name, profile_name, root_name, videochat_name} from "./routes";
     import ChatDelete from "./ChatDelete";
     import ChooseAvatar from "./ChooseAvatar";
+    import {getCorrectUserAvatar} from "./utils";
 
     export default {
         data () {
@@ -214,8 +215,7 @@
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 console.log("Invoke avatar getter method");
-                const cacheKey = +new Date();
-                return this.currentUser.avatar + "?" + cacheKey;
+                return getCorrectUserAvatar(this.currentUser.avatar);
             },
         },
         mounted() {

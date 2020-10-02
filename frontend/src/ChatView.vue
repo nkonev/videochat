@@ -59,7 +59,8 @@
       MESSAGE_EDITED,
       SET_EDIT_MESSAGE, USER_TYPING,
       VIDEO_LOCAL_ESTABLISHED,
-      VIDEO_CHAT_PANES_RESIZED
+      VIDEO_CHAT_PANES_RESIZED,
+      USER_PROFILE_CHANGED
     } from "./bus";
     import {phoneFactory, titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
@@ -71,6 +72,7 @@
     import { Splitpanes, Pane } from 'splitpanes'
     import 'splitpanes/dist/splitpanes.css'
     import debounce from "lodash/debounce";
+    import {getCorrectUserAvatar} from "./utils";
 
     export default {
         mixins:[infinityListMixin()],
@@ -210,6 +212,16 @@
             onPanesResized(obj) {
                 bus.$emit(VIDEO_CHAT_PANES_RESIZED, obj);
             },
+            onUserProfileChanged(user) {
+                this.items.forEach(item => {
+                    if (item.owner.id == user.id) {
+                        item.owner = user;
+                        if (item.owner.avatar) {
+                            item.owner.avatar = getCorrectUserAvatar(item.owner.avatar)
+                        }
+                    }
+                })
+            },
         },
         mounted() {
             this.chatMessagesSubscription = this.centrifuge.subscribe("chatMessages"+this.chatId, (message) => {
@@ -233,6 +245,7 @@
             bus.$on(CHAT_DELETED, this.onChatDelete);
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
             bus.$on(VIDEO_LOCAL_ESTABLISHED, this.onVideoChangesHeight);
+            bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
         beforeDestroy() {
             bus.$off(MESSAGE_ADD, this.onNewMessage);
@@ -241,6 +254,7 @@
             bus.$off(CHAT_DELETED, this.onChatDelete);
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
             bus.$off(VIDEO_LOCAL_ESTABLISHED, this.onVideoChangesHeight);
+            bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
 
             this.chatMessagesSubscription.unsubscribe();
         },

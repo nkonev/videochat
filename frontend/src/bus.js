@@ -20,3 +20,4 @@ export const VIDEO_LOCAL_ESTABLISHED = "videoLocalEstablished";
 export const USER_TYPING = "userTyping";
 export const OPEN_CHOOSE_AVATAR = "openChooseAvatar";
 export const VIDEO_CHAT_PANES_RESIZED = "videoChatPanesResized";
+export const USER_PROFILE_CHANGED = "userProfileChanged";

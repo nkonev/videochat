@@ -7,7 +7,7 @@
             <v-list-item-content class="d-flex justify-space-around">
                 <div class="overline mb-4">User profile #{{ currentUser.id }}</div>
                 <v-img v-if="currentUser.avatar"
-                       :src="currentUser.avatar"
+                       :src="getAvatar()"
                        :aspect-ratio="16/9"
                        min-width="200"
                        min-height="200"
@@ -159,6 +159,7 @@ import {FETCH_USER_PROFILE, GET_USER} from "./store";
 import axios from "axios";
 import bus, {CHANGE_TITLE, OPEN_CHOOSE_AVATAR} from "./bus";
 import {titleFactory} from "./changeTitle";
+import {getCorrectUserAvatar} from "./utils";
 
 export default {
     data() {
@@ -229,6 +230,9 @@ export default {
 
         openAvatarDialog() {
             bus.$emit(OPEN_CHOOSE_AVATAR);
+        },
+        getAvatar() {
+            return getCorrectUserAvatar(this.currentUser.avatar)
         },
     },
     mounted() {
