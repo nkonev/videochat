@@ -78,6 +78,7 @@
                             v-model="currentUser.login"
                             :rules="[rules.required]"
                             label="Login"
+                            @keyup.native.enter="sendLogin()"
                         ></v-text-field>
                     </v-col>
                     <v-col md="auto" class="ml-1 mr-4">
@@ -109,6 +110,7 @@
                             :rules="[rules.required, rules.min]"
                             label="Password"
                             hint="At least 8 characters"
+                            @keyup.native.enter="sendPassword()"
                         ></v-text-field>
                     </v-col>
                     <v-col md="auto" class="ml-1 mr-4">
@@ -136,6 +138,7 @@
                             v-model="currentUser.email"
                             :rules="[rules.required, rules.email]"
                             label="E-mail"
+                            @keyup.native.enter="sendEmail()"
                         ></v-text-field>
                     </v-col>
                     <v-col md="auto" class="ml-1 mr-4">
