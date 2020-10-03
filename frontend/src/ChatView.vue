@@ -75,7 +75,7 @@
     import {getCorrectUserAvatar} from "./utils";
 
     export default {
-        mixins:[infinityListMixin()],
+        mixins: [infinityListMixin()],
         data() {
             return {
                 chatMessagesSubscription: null,
@@ -278,7 +278,7 @@
     }
 
     #chatViewContainer {
-        height: calc(100vh - 100px)
+        height: calc(100vh - 80px)
         //position: fixed
         //height: calc(100% - 80px)
         //width: calc(100% - 80px)

@@ -23,7 +23,6 @@
     import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import {getHeight} from "./utils"
     import 'quill/dist/quill.core.css'
     import 'quill/dist/quill.snow.css'
 
