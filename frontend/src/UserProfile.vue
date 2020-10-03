@@ -7,7 +7,7 @@
             <v-list-item-content class="d-flex justify-space-around">
                 <div class="overline mb-4">User profile #{{ currentUser.id }}</div>
                 <v-img v-if="currentUser.avatar"
-                       :src="getAvatar()"
+                       :src="ava"
                        :aspect-ratio="16/9"
                        min-width="200"
                        min-height="200"
@@ -186,6 +186,12 @@ export default {
     },
     computed: {
         ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
+        ava() {
+            const maybeUser = this.$store.getters[GET_USER];
+            if (maybeUser) {
+                return getCorrectUserAvatar(maybeUser.avatar);
+            }
+        }
     },
     methods: {
         submitOauthVkontakte() {
@@ -232,9 +238,9 @@ export default {
         openAvatarDialog() {
             bus.$emit(OPEN_CHOOSE_AVATAR);
         },
-        getAvatar() {
-            return getCorrectUserAvatar(this.currentUser.avatar)
-        },
+        // getAvatar() {
+        //     return getCorrectUserAvatar(this.currentUser.avatar)
+        // },
         chooseAvatar() {
             bus.$emit(OPEN_CHOOSE_AVATAR);
         }
