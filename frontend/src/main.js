@@ -11,7 +11,8 @@ import bus, {
   MESSAGE_DELETED,
   MESSAGE_EDITED,
   UNAUTHORIZED, UNREAD_MESSAGES_CHANGED,
-  USER_PROFILE_CHANGED
+  USER_PROFILE_CHANGED,
+  CHANGE_WEBSOCKET_STATUS
 } from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
@@ -24,8 +25,12 @@ const vm = new Vue({
   created(){
     const setCetrifugeSession = (cs) => {
       Vue.prototype.centrifugeSessionId = cs;
+      bus.$emit(CHANGE_WEBSOCKET_STATUS, true);
     };
-    Vue.prototype.centrifuge = setupCentrifuge(setCetrifugeSession);
+    const onDisconnected = () => {
+      bus.$emit(CHANGE_WEBSOCKET_STATUS, false);
+    };
+    Vue.prototype.centrifuge = setupCentrifuge(setCetrifugeSession, onDisconnected);
   },
   destroyed() {
     Vue.prototype.centrifuge.disconnect();

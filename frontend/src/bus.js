@@ -21,3 +21,4 @@ export const USER_TYPING = "userTyping";
 export const OPEN_CHOOSE_AVATAR = "openChooseAvatar";
 export const VIDEO_CHAT_PANES_RESIZED = "videoChatPanesResized";
 export const USER_PROFILE_CHANGED = "userProfileChanged";
+export const CHANGE_WEBSOCKET_STATUS = "changeWebsocket";

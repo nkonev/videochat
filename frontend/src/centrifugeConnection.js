@@ -1,7 +1,7 @@
 // This is your plugin object. It can be exported to be used anywhere.
 import Centrifuge from "centrifuge";
 
-export const setupCentrifuge = (centrifugeSessionFunction) => {
+export const setupCentrifuge = (centrifugeSessionFunction, onDisconnected) => {
     // Create Centrifuge object with Websocket endpoint address set in main.go
     var url = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/api/chat/websocket";
     var centrifuge = new Centrifuge(url, {
@@ -16,6 +16,7 @@ export const setupCentrifuge = (centrifugeSessionFunction) => {
     });
     centrifuge.on('disconnect', (ctx)=>{
         console.log("Disconnected response", ctx);
+        onDisconnected();
     });
     centrifuge.connect();
     return centrifuge;

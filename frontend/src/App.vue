@@ -64,7 +64,12 @@
             <v-spacer></v-spacer>
             <v-toolbar-title>{{title}}</v-toolbar-title>
             <v-spacer></v-spacer>
-
+            <v-tooltip bottom v-if="!wsConnected">
+                <template v-slot:activator="{ on, attrs }">
+                    <v-icon color="red" v-bind="attrs" v-on="on">mdi-lan-disconnect</v-icon>
+                </template>
+                <span>Websocket not connected</span>
+            </v-tooltip>
             <v-card light v-if="showSearch">
                 <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchChatString" clearable clear-icon="mdi-close-circle"></v-text-field>
             </v-card>
@@ -101,7 +106,7 @@
     import {CHANGE_SEARCH_STRING, FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
     import bus, {
         CHANGE_PHONE_BUTTON,
-        CHANGE_TITLE,
+        CHANGE_TITLE, CHANGE_WEBSOCKET_STATUS,
         LOGGED_OUT,
         OPEN_CHAT_EDIT,
         OPEN_CHOOSE_AVATAR,
@@ -131,6 +136,7 @@
                 showCallButton: false,
                 showHangButton: false,
                 chatEditId: null,
+                wsConnected: false
             }
         },
         components:{
@@ -210,6 +216,9 @@
             openAvatarDialog() {
                 bus.$emit(OPEN_CHOOSE_AVATAR);
             },
+            onChangeWsStatus(value) {
+                this.wsConnected = value;
+            }
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
@@ -225,6 +234,7 @@
             this.doSearch = debounce(this.doSearch, 700);
             bus.$on(CHANGE_TITLE, this.changeTitle);
             bus.$on(CHANGE_PHONE_BUTTON, this.changePhoneButton);
+            bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus)
         },
         watch: {
             searchChatString (searchString) {
