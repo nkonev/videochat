@@ -1,6 +1,6 @@
 <template>
-    <v-container id="sendButtonContainer" class="pa-0 d-flex flex-row" style="height: 100%">
-        <v-container class="ma-0 pa-0">
+    <v-container id="sendButtonContainer" class="py-0 px-1 d-flex flex-row" fluid style="height: 100%">
+        <v-container class="ma-0 pa-0" fluid>
             <div class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 2em">
                 <template v-if="writingUsers.length">
                     {{writingUsers.map(v=>v.login).join(', ')}} is writing...
@@ -95,9 +95,6 @@
                     this.writingUsers.push({timestamp: +new Date(), login: data.login})
                 }
             },
-            calcTextareaHeight() {
-                return getHeight("sendButtonContainer", (v) => v - 40 + "px", '100px')
-            }
         },
         computed: {
             ...mapGetters({currentUser: GET_USER})

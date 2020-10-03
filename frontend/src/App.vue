@@ -77,7 +77,7 @@
 
 
         <v-main>
-            <v-container>
+            <v-container fluid class="ma-0 pa-0">
                 <v-alert
                         dismissible
                         v-model="showAlert"

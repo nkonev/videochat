@@ -11,7 +11,7 @@
                         <v-list-item
                                 :key="item.id"
                                 dense
-                                class="pr-0 pl-1"
+                                class="pr-0 pl-4"
                         >
                             <v-list-item-avatar v-if="item.owner && item.owner.avatar">
                                 <v-img :src="item.owner.avatar"></v-img>
@@ -27,7 +27,7 @@
                                 </v-container>
                             </v-list-item-action>
                         </v-list-item>
-                        <v-divider class="ml-15"></v-divider>
+                        <v-divider ></v-divider>
                         </template>
                     </v-list>
                     <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top" force-use-infinite-wrapper="#messagesScroller" :distance="0">
