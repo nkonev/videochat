@@ -66,7 +66,7 @@
             <v-spacer></v-spacer>
             <v-tooltip bottom v-if="!wsConnected">
                 <template v-slot:activator="{ on, attrs }">
-                    <v-icon color="red" v-bind="attrs" v-on="on">mdi-lan-disconnect</v-icon>
+                    <v-icon color="error" class="mr-2" v-bind="attrs" v-on="on">mdi-lan-disconnect</v-icon>
                 </template>
                 <span>Websocket not connected</span>
             </v-tooltip>
