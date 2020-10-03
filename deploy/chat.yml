@@ -35,6 +35,16 @@ aaa:
   url:
     base: "http://aaa:8060"
     getUsers: "/internal/user/list"
+  redis:
+    address: redis:6379
+    password: ""
+    db: 0
+    connectTimeout: 5s
+    readTimeout: 0 # 0 means infinity read
+    writeTimeout: 30s
+    idleTimeout: 60s
+    maxIdle: 1
+    maxActive: 10
 
 jaeger:
   endpoint: "jaeger:6831"
