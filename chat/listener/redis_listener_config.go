@@ -173,6 +173,8 @@ func RedisAaaConnection(lc fx.Lifecycle) (*redis.Pool, error) {
 	Logger.Infof("Starting redis aaa connection")
 
 	address := viper.GetString("aaa.redis.address")
+	password := viper.GetString("aaa.redis.password")
+
 	readDuration := viper.GetDuration("aaa.redis.readTimeout")
 	writeDuration := viper.GetDuration("aaa.redis.writeTimeout")
 	connectTimeout := viper.GetDuration("aaa.redis.connectTimeout")
@@ -194,6 +196,7 @@ func RedisAaaConnection(lc fx.Lifecycle) (*redis.Pool, error) {
 				redis.DialWriteTimeout(writeDuration),
 				redis.DialConnectTimeout(connectTimeout),
 				redis.DialDatabase(dbase),
+				redis.DialPassword(password),
 				)
 			if err != nil {
 				Logger.Errorf("error dialing to Redis %v", err.Error())
