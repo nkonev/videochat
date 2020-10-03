@@ -86,11 +86,8 @@ func (tx *Tx) GetFirstParticipant(chatId int64) (int64, error) {
 	}
 }
 
-
-
-
 func (db *DB) GetCoChattedParticipantIdsCommon(participantId int64) ([]int64, error) {
-	if rows, err := db.Query("SELECT DISTINCT user_id FROM chat_participant WHERE chat_id IN (SELECT chat_id FROM chat_participant WHERE user_id = $1) AND user_id != $1", participantId); err != nil {
+	if rows, err := db.Query("SELECT DISTINCT user_id FROM chat_participant WHERE chat_id IN (SELECT chat_id FROM chat_participant WHERE user_id = $1)", participantId); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
