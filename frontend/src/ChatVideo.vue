@@ -1,5 +1,5 @@
 <template>
-    <v-col cols="12" class="video-container ma-0 pa-0">
+    <v-col cols="12" class="ma-0 pa-0" id="video-container">
         <video id="localVideo" autoPlay playsInline :style="videoContainerStyle"></video>
         <video v-for="(item, index) in getProperParticipantIds()" :key="item" :id="getRemoteVideoId(item)" autoPlay playsInline :style="videoContainerStyle"></video>
     </v-col>
@@ -333,7 +333,7 @@
             calcVideoHeight(){
                 // const containerHeight = document.getElementById("videoBlock").clientHeight;
                 // return `height: 100px`;
-                const calcedHeight = getHeight("videoBlock", (v) => v + "px", '220px');
+                const calcedHeight = getHeight("videoBlock", (v) => (v - 14) + "px", '220px');
                 console.log("Calced height", calcedHeight);
                 return "height: "+ calcedHeight;
             },
@@ -476,3 +476,11 @@
         },
     }
 </script>
+
+<style scoped lang="stylus">
+    #video-container {
+        display: flex;
+        flex-direction: row;
+        overflow-x: scroll;
+    }
+</style>
