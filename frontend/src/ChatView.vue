@@ -8,26 +8,8 @@
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%">
                     <v-list>
                         <template v-for="(item, index) in items">
-                        <v-list-item
-                                :key="item.id"
-                                dense
-                                class="pr-0 pl-4"
-                        >
-                            <v-list-item-avatar v-if="item.owner && item.owner.avatar">
-                                <v-img :src="item.owner.avatar"></v-img>
-                            </v-list-item-avatar>
-                            <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
-                              <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
-                              <v-list-item-content class="pre-formatted pa-0" v-html="item.text"></v-list-item-content>
-                            </v-list-item-content>
-                            <v-list-item-action>
-                                <v-container class="mb-0 mt-0 pb-0 pt-0 mx-2 px-1">
-                                    <v-icon class="mr-2" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
-                                    <v-icon v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
-                                </v-container>
-                            </v-list-item-action>
-                        </v-list-item>
-                        <v-divider ></v-divider>
+                            <MessageItem :key="item.id" :item="item" :chatId="chatId"></MessageItem>
+                            <v-divider ></v-divider>
                         </template>
                     </v-list>
                     <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top" force-use-infinite-wrapper="#messagesScroller" :distance="0">
@@ -73,6 +55,7 @@
     import 'splitpanes/dist/splitpanes.css'
     import debounce from "lodash/debounce";
     import {getCorrectUserAvatar} from "./utils";
+    import MessageItem from "./MessageItem";
 
     export default {
         mixins: [infinityListMixin()],
@@ -111,15 +94,6 @@
                 this.$forceUpdate();
             },
 
-            deleteMessage(dto){
-                axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
-            },
-
-            editMessage(dto){
-                const editMessageDto = {id: dto.id, text: dto.text};
-                bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
-            },
-
             onVideoChangesHeight() {
                 console.log("Adjusting height after video has been shown");
                 this.$forceUpdate();
@@ -150,9 +124,6 @@
                         $state?.complete();
                     }
                 })
-            },
-            getSubtitle(item) {
-                return `${item.owner.login} at ${item.createDateTime}`
             },
 
             onNewMessage(dto) {
@@ -199,16 +170,10 @@
             onChatDelete(dto) {
                 this.$router.push(({ name: root_name}))
             },
-            onMessageClick(dto) {
-                axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`);
-            },
             isAllowedVideo() {
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
             },
 
-            onMessageMouseMove(item) {
-                this.onMessageClick(item);
-            },
             onPanesResized(obj) {
                 bus.$emit(VIDEO_CHAT_PANES_RESIZED, obj);
             },
@@ -261,13 +226,11 @@
         destroyed() {
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(false))
         },
-        created() {
-            this.onMessageMouseMove = debounce(this.onMessageMouseMove, 1000, {leading:true, trailing:false});
-        },
         components: {
             MessageEdit,
             ChatVideo,
-            Splitpanes, Pane
+            Splitpanes, Pane,
+            MessageItem
         }
     }
 </script>
