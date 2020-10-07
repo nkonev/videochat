@@ -46,4 +46,4 @@ push-docker:
 	docker push $(IMAGE)
 
 clean:
-	rm -rf ${STATIC_JSON} "./db/${MIGRATIONS_PACKAGE}" "./${STATIC_ASSETS_PACKAGE}" storage build
+	rm -rf ${STATIC_JSON} "./db/${MIGRATIONS_PACKAGE}" "./${STATIC_ASSETS_PACKAGE}" ${EXECUTABLE} ${BUILDDIR}

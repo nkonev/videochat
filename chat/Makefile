@@ -56,4 +56,4 @@ push-docker:
 	docker push $(IMAGE)
 
 clean:
-	rm -rf ${STATIC_JSON} "./db/${MIGRATIONS_PACKAGE}" "./${STATIC_ASSETS_PACKAGE}" "${PROTO_DIR}" chat build
+	rm -rf ${STATIC_JSON} "./db/${MIGRATIONS_PACKAGE}" "./${STATIC_ASSETS_PACKAGE}" "${PROTO_DIR}" ${EXECUTABLE} ${BUILDDIR}
