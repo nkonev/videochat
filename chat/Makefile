@@ -1,4 +1,4 @@
-.PHONY: download test push-docker
+.PHONY: download test push-docker clean
 
 download: download-statik download-proto-compiler
 
@@ -14,17 +14,21 @@ check-env:
 generate: generate-git generate-static-go generate-protobufs
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
+STATIC_JSON := ./static/git.json
+MIGRATIONS_PACKAGE := static_migrations
+STATIC_ASSETS_PACKAGE := static_assets
+PROTO_DIR := ./proto
 
 generate-git:
-	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"chat\"}" > ./static/git.json
+	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"chat\"}" > ${STATIC_JSON}
 
 generate-static-go:
-	statik -src=./static -p static_assets -ns assets -f && statik -src=./db/migrations -p static_migrations -ns migrations -dest ./db -f && echo 'completed generating embed'
+	statik -src=./static -p ${STATIC_ASSETS_PACKAGE} -ns assets -f && statik -src=./db/migrations -p ${MIGRATIONS_PACKAGE} -ns migrations -dest ./db -f && echo 'completed generating embed'
 
 PROTOBUF_SRC_DIR = $(shell cd ..; pwd)
 
 generate-protobufs:
-	mkdir -p ./proto && \
+	mkdir -p ${PROTO_DIR} && \
 	docker run -it --rm -v $(PROTOBUF_SRC_DIR):/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/$(notdir $(wildcard ../protobuf/*.proto))
 
 test:
@@ -50,3 +54,6 @@ push-docker:
 	docker login -u="${DOCKER_LOGIN}" -p="${DOCKER_PASSWORD}" && \
 	echo "Will push docker chat image" && \
 	docker push $(IMAGE)
+
+clean:
+	rm -rf ${STATIC_JSON} "./db/${MIGRATIONS_PACKAGE}" "./${STATIC_ASSETS_PACKAGE}" "${PROTO_DIR}" chat build
