@@ -1,6 +1,6 @@
-export const titleFactory = (title, isShowSearch, isShowChatEditButton, chatEditId) => {
+export const titleFactory = (title, isShowSearch, isShowChatEditButton, chatEditId, isShowChatInfoButton) => {
     return {
-        title, isShowSearch, isShowChatEditButton, chatEditId
+        title, isShowSearch, isShowChatEditButton, chatEditId, isShowChatInfoButton
     }
 }
 

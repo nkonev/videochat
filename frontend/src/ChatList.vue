@@ -36,7 +36,7 @@ import bus, {
     OPEN_CHAT_EDIT,
     CHANGE_TITLE, OPEN_CHAT_DELETE, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED
 } from "./bus";
-    import {chat_name, root_name} from "./routes";
+    import {chat_name} from "./routes";
     import infinityListMixin, {
         findIndex,
         pageSize,
@@ -48,7 +48,6 @@ import bus, {
     import {mapGetters} from 'vuex'
     import {GET_SEARCH_STRING} from "./store";
     import {titleFactory} from "./changeTitle";
-import {getCorrectUserAvatar} from "./utils";
 
     export default {
         mixins: [infinityListMixin()],
@@ -170,7 +169,7 @@ import {getCorrectUserAvatar} from "./utils";
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
         mounted() {
-            bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false, false));
+            bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false, null, false));
         }
     }
 </script>

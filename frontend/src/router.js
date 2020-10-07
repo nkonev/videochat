@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import {root_name, root, chat_name, profile_name, videochat_name} from "./routes";
+import {chat_list_name, root, chat_name, profile_name, videochat_name} from "./routes";
 import Error404 from "./Error404";
 import ChatList from "./ChatList";
 import ChatView from "./ChatView";
@@ -16,7 +16,7 @@ const router = new Router({
     mode: 'history',
     // https://router.vuejs.org/en/api/options.html#routes
     routes: [
-        { name: root_name, path: root, component: ChatList},
+        { name: chat_list_name, path: root, component: ChatList},
         { name: chat_name, path: '/chat/:id', component: ChatView},
         { name: videochat_name, path: '/chat/:id/video', component: ChatView},
         { name: profile_name, path: '/profile', component: UserProfile},

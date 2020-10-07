@@ -48,8 +48,8 @@
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
 
-            <v-btn icon @click="createChat">
-                <v-icon>mdi-plus-circle-outline</v-icon>
+            <v-btn v-if="showChatInfoButton" icon @click="onInfoClicked">
+                <v-icon>mdi-information</v-icon>
             </v-btn>
             <v-btn v-if="showChatEditButton" icon @click="editChat">
                 <v-icon>mdi-lead-pencil</v-icon>
@@ -90,6 +90,7 @@
                 </v-alert>
                 <LoginModal/>
                 <ChatEdit/>
+                <ChatParticipants/>
                 <ChatDelete/>
                 <ChooseAvatar/>
                 <router-view/>
@@ -109,20 +110,22 @@
         CHANGE_TITLE, CHANGE_WEBSOCKET_STATUS,
         LOGGED_OUT,
         OPEN_CHAT_EDIT,
-        OPEN_CHOOSE_AVATAR,
+        OPEN_CHOOSE_AVATAR, OPEN_INFO_DIALOG,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
-    import {chat_name, profile_name, root_name, videochat_name} from "./routes";
+    import {chat_name, profile_name, chat_list_name, videochat_name} from "./routes";
     import ChatDelete from "./ChatDelete";
     import ChooseAvatar from "./ChooseAvatar";
     import {getCorrectUserAvatar} from "./utils";
+    import ChatParticipants from "./ChatParticipants";
 
     export default {
         data () {
             return {
                 title: "",
                 appBarItems: [
+                    { title: 'New chat', icon: 'mdi-plus-circle-outline', clickFunction: this.createChat, requireAuthenticated: true},
                     { title: 'Chats', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
                     { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
                     { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
@@ -136,14 +139,16 @@
                 showCallButton: false,
                 showHangButton: false,
                 chatEditId: null,
-                wsConnected: false
+                wsConnected: false,
+                showChatInfoButton: false
             }
         },
         components:{
             LoginModal,
             ChatEdit,
             ChatDelete,
-            ChooseAvatar
+            ChooseAvatar,
+            ChatParticipants
         },
         methods:{
             toggleLeftNavigation() {
@@ -157,7 +162,7 @@
                 });
             },
             goHome() {
-                this.$router.push(({ name: root_name}))
+                this.$router.push(({ name: chat_list_name}))
             },
             goProfile() {
                 this.$router.push(({ name: profile_name}))
@@ -184,11 +189,12 @@
                     }
                 })
             },
-            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId}) {
+            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, isShowChatInfoButton}) {
                 this.title = title;
                 this.showSearch = isShowSearch;
                 this.showChatEditButton = isShowChatEditButton;
                 this.chatEditId = chatEditId;
+                this.showChatInfoButton = isShowChatInfoButton;
             },
             changePhoneButton({show, call}) {
                 console.log("changePhoneButton", show, call);
@@ -218,7 +224,10 @@
             },
             onChangeWsStatus(value) {
                 this.wsConnected = value;
-            }
+            },
+            onInfoClicked() {
+                bus.$emit(OPEN_INFO_DIALOG, this.chatEditId);
+            },
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js

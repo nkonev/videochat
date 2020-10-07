@@ -39,21 +39,20 @@
       MESSAGE_ADD,
       MESSAGE_DELETED,
       MESSAGE_EDITED,
-      SET_EDIT_MESSAGE, USER_TYPING,
+      USER_TYPING,
       VIDEO_LOCAL_ESTABLISHED,
       VIDEO_CHAT_PANES_RESIZED,
       USER_PROFILE_CHANGED
     } from "./bus";
     import {phoneFactory, titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
-    import {root_name, videochat_name} from "./routes";
+    import {chat_list_name, videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
     import 'splitpanes/dist/splitpanes.css'
-    import debounce from "lodash/debounce";
     import {getCorrectUserAvatar} from "./utils";
     import MessageItem from "./MessageItem";
 
@@ -158,7 +157,7 @@
             getInfo() {
                 return axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
                     console.log("Got info about chat", data);
-                    bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null));
+                    bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null, true));
                     this.chatDto = data;
                 });
             },
@@ -168,7 +167,7 @@
                 }
             },
             onChatDelete(dto) {
-                this.$router.push(({ name: root_name}))
+                this.$router.push(({ name: chat_list_name}))
             },
             isAllowedVideo() {
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
@@ -200,7 +199,7 @@
                 }
             });
 
-            bus.$emit(CHANGE_TITLE, titleFactory(`Chat #${this.chatId}`, false, true, null));
+            bus.$emit(CHANGE_TITLE, titleFactory(`Chat #${this.chatId}`, false, true, null, true));
 
             this.getInfo();
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true))
