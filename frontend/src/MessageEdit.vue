@@ -107,9 +107,9 @@
             bus.$on(USER_TYPING, this.onUserTyping);
         },
         beforeDestroy() {
-            clearInterval(timerId);
             bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.$off(USER_TYPING, this.onUserTyping);
+            clearInterval(timerId);
         },
         created(){
             this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});
