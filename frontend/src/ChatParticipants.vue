@@ -5,7 +5,7 @@
                 <v-card-title>Participants</v-card-title>
 
                 <v-container fluid>
-                    <v-list>
+                    <v-list v-if="dto.participants.length > 0">
                         <template v-for="(item, index) in dto.participants">
                             <v-list-item>
                                 <v-list-item-avatar v-if="item.avatar">
@@ -18,6 +18,11 @@
                             <v-divider></v-divider>
                         </template>
                     </v-list>
+                    <v-progress-circular
+                        v-else
+                        indeterminate
+                        color="primary"
+                    ></v-progress-circular>
                 </v-container>
 
                 <v-card-actions class="pa-4">
