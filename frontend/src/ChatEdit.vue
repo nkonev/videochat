@@ -100,12 +100,12 @@
                         .then((response) => {
                             this.dto = response.data;
                         }).then(()=>{
-                        axios.get('/api/user/list', {
-                            params: {userId: [...this.dto.participantIds] + ''}
-                        }).then((response) => {
-                            this.people = response.data;
+                            axios.get('/api/user/list', {
+                                params: {userId: [...this.dto.participantIds] + ''}
+                            }).then((response) => {
+                                this.people = response.data;
+                            })
                         })
-                    })
                 } else {
                     this.dto = dtoFactory();
                 }

@@ -249,7 +249,7 @@ export default {
         }
     },
     mounted() {
-        bus.$emit(CHANGE_TITLE, titleFactory(`User profile`, false, false, null, false));
+        bus.$emit(CHANGE_TITLE, titleFactory(`User profile`, false, false, null, false, null));
     },
 }
 </script>

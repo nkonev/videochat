@@ -169,7 +169,7 @@ import bus, {
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
         mounted() {
-            bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false, null, false));
+            bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false, null, false, null));
         }
     }
 </script>

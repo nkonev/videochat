@@ -6,7 +6,7 @@
 
                 <v-container fluid>
                     <v-list>
-                        <template v-for="(item, index) in people">
+                        <template v-for="(item, index) in dto.participants">
                             <v-list-item>
                                 <v-list-item-avatar v-if="item.avatar">
                                     <v-img :src="item.avatar"></v-img>
@@ -38,6 +38,7 @@
             id: null,
             name: "",
             participantIds: [ ],
+            participants: [ ],
         }
     };
 
@@ -61,13 +62,7 @@
                     axios.get('/api/chat/'+val)
                         .then((response) => {
                             this.dto = response.data;
-                        }).then(()=>{
-                        axios.get('/api/user/list', {
-                            params: {userId: [...this.dto.participantIds] + ''}
-                        }).then((response) => {
-                            this.people = response.data;
-                        })
-                    })
+                        });
                 } else {
                     this.dto = dtoFactory();
                 }

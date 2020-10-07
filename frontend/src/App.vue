@@ -138,7 +138,8 @@
                 showChatEditButton: false,
                 showCallButton: false,
                 showHangButton: false,
-                chatEditId: null,
+                chatId: null,
+                chatEditId: null, // nullable if non-chat admin
                 wsConnected: false,
                 showChatInfoButton: false
             }
@@ -189,12 +190,13 @@
                     }
                 })
             },
-            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, isShowChatInfoButton}) {
+            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, isShowChatInfoButton, chatId}) {
                 this.title = title;
                 this.showSearch = isShowSearch;
                 this.showChatEditButton = isShowChatEditButton;
                 this.chatEditId = chatEditId;
                 this.showChatInfoButton = isShowChatInfoButton;
+                this.chatId = chatId;
             },
             changePhoneButton({show, call}) {
                 console.log("changePhoneButton", show, call);
@@ -226,7 +228,7 @@
                 this.wsConnected = value;
             },
             onInfoClicked() {
-                bus.$emit(OPEN_INFO_DIALOG, this.chatEditId);
+                bus.$emit(OPEN_INFO_DIALOG, this.chatId);
             },
         },
         computed: {
