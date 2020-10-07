@@ -34,7 +34,7 @@ Login as `admin:admin` in main window and as `nikita:password` in the Anonymous 
 Create chat in main window and add `nikita` there.
 
 
-## Generating monitoring grafana & prometheus password
+## Generating password
 ```bash
 sudo yum install -y httpd-tools
 
