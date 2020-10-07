@@ -79,6 +79,7 @@
             bus.$on(OPEN_INFO_DIALOG, this.showModal);
         },
         destroyed() {
+            this.dto = dtoFactory();
             bus.$off(OPEN_INFO_DIALOG, this.showModal);
         },
     }
