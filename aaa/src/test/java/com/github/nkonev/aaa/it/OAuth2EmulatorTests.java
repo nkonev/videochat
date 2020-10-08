@@ -15,6 +15,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.concurrent.Exchanger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
@@ -23,9 +25,11 @@ import static org.mockserver.model.HttpResponse.response;
 public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     private static final int MOCK_SERVER_FACEBOOK_PORT = 10080;
     private static final int MOCK_SERVER_VKONTAKTE_PORT = 10081;
+    private static final int MOCK_SERVER_GOOGLE_PORT = 10082;
 
     private static ClientAndServer mockServerFacebook;
     private static ClientAndServer mockServerVkontakte;
+    private static ClientAndServer mockServerGoogle;
 
     @Autowired
     protected UserAccountRepository userAccountRepository;
@@ -40,16 +44,22 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     public static void setUpClass() {
         mockServerFacebook = startClientAndServer(MOCK_SERVER_FACEBOOK_PORT);
         mockServerVkontakte = startClientAndServer(MOCK_SERVER_VKONTAKTE_PORT);
+        mockServerGoogle = startClientAndServer(MOCK_SERVER_GOOGLE_PORT);
     }
 
     @AfterAll
     public static void tearDownClass() throws Exception {
         mockServerFacebook.stop();
         mockServerVkontakte.stop();
+        mockServerGoogle.stop();
     }
 
     public static final String facebookLogin = "Nikita K";
-    public static final String vkontakteLogin = "Никита Конев";
+    public static final String vkontakteFirstName = "Никита";
+    public static final String vkontakteLastName = "Конев";
+    public static final String vkontakteLogin =vkontakteFirstName +  " " + vkontakteLastName;
+    public static final String googleLogin = "NIKITA KONEV";
+    public static final String googleId = "1234567890";
 
     @BeforeEach
     public void configureFacebookEmulator() throws InterruptedException {
@@ -130,14 +140,48 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
                 .when(request().withPath("/mock/vkontakte/method/users.get"))
                 .respond(response().withHeaders(
                         new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=\"utf-8\"")
-                        ).withStatusCode(200).withBody("{\"response\": [{\"id\": 1212, \"first_name\": \"Никита\", \"last_name\": \"Конев\"}]}")
+                        ).withStatusCode(200).withBody("{\"response\": [{\"id\": 1212, \"first_name\": \""+vkontakteFirstName+"\", \"last_name\": \""+vkontakteLastName+"\"}]}")
                 );
 
-        userAccountRepository.findByUsername(facebookLogin).ifPresent(userAccount -> {
+        userAccountRepository.findByUsername(vkontakteLogin).ifPresent(userAccount -> {
             userAccount.setLocked(false);
             userAccountRepository.save(userAccount);
         });
     }
+
+    @BeforeEach
+    public void configureGoogleEmulator(){
+        AtomicReference<String> nonceHolder = new AtomicReference<>();
+        mockServerGoogle
+                .when(request().withPath("/mock/google/o/oauth2/v2/auth")).respond(httpRequest -> {
+            String state = httpRequest.getQueryStringParameters().getEntries().stream().filter(parameter -> "state".equals(parameter.getName().getValue())).findFirst().get().getValues().get(0).getValue();
+            nonceHolder.set(httpRequest.getQueryStringParameters().getEntries().stream().filter(parameter -> "nonce".equals(parameter.getName().getValue())).findFirst().get().getValues().get(0).getValue());
+            return response().withHeaders(
+                    new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "text/html; charset=\"utf-8\""),
+                    new Header(HttpHeaderNames.LOCATION.toString(), urlPrefix+"/api/login/oauth2/code/google?code=fake_code&state="+state)
+            ).withStatusCode(302);
+        });
+
+        mockServerGoogle
+                .when(request().withPath("/mock/google/oauth2/v4/token"))
+                .respond(httpRequest -> {
+                    return response().withHeaders(
+                            new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json")
+                    ).withStatusCode(200).withBody("{\n" +
+                            "  \"id_token\": \""+nonceHolder.get()+"\", \n" +
+                            "  \"access_token\": \"fake-access-token\", \n" +
+                            "  \"scope\": \"openid https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email\", \n" +
+                            "  \"token_type\": \"Bearer\",\n" +
+                            "  \"expires_in\":  3600\n" +
+                            "}");
+                });
+
+        userAccountRepository.findByUsername(googleLogin).ifPresent(userAccount -> {
+            userAccount.setLocked(false);
+            userAccountRepository.save(userAccount);
+        });
+    }
+
 
 
     @AfterEach
@@ -150,4 +194,8 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
         mockServerVkontakte.reset();
     }
 
+    @AfterEach
+    public void resetGoogleEmulator(){
+        mockServerGoogle.reset();
+    }
 }

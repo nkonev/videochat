@@ -69,7 +69,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private AaaPostAuthenticationChecks aaaPostAuthenticationChecks;
 
     @Autowired
-    private BlogOAuth2UserService blogOAuth2UserService;
+    private AaaOAuth2LoginUserService aaaOAuth2LoginUserService;
+
+    @Autowired
+    private AaaOAuth2AuthorizationCodeUserService aaaOAuth2AuthorizationCodeUserService;
 
     @Autowired
     InMemoryClientRegistrationRepository clientRegistrationRepository;
@@ -126,7 +129,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 oauth2Login
                         .authorizedClientRepository(noOpAuthorizedClientRepository)
                         .userInfoEndpoint(userInfoEndpoint ->
-                                userInfoEndpoint.userService(blogOAuth2UserService)
+                                userInfoEndpoint.userService(aaaOAuth2LoginUserService)
+                                        .oidcUserService(aaaOAuth2AuthorizationCodeUserService)
                         )
                         .authorizationEndpoint(authorizationEndpointConfig -> {
                             authorizationEndpointConfig.authorizationRequestResolver(oAuth2AuthorizationRequestResolver());

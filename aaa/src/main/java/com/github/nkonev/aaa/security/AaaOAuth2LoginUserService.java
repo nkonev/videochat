@@ -8,7 +8,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BlogOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+public class AaaOAuth2LoginUserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     @Autowired
     private FacebookOAuth2UserService facebookOAuth2UserService;
@@ -20,9 +20,9 @@ public class BlogOAuth2UserService implements OAuth2UserService<OAuth2UserReques
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         String clientName = userRequest.getClientRegistration().getClientName();
         switch (clientName) {
-            case "vkontakte":
+            case OAuth2Providers.VKONTAKTE:
                 return vkontakteOAuth2UserService.loadUser(userRequest);
-            case "facebook":
+            case OAuth2Providers.FACEBOOK:
                 return facebookOAuth2UserService.loadUser(userRequest);
         }
         throw new RuntimeException("Unknown clientName '" + clientName + "'");

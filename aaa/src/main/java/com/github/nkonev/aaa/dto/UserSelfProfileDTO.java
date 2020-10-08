@@ -20,7 +20,7 @@ public class UserSelfProfileDTO extends UserAccountDTO {
 
     public UserSelfProfileDTO() { }
 
-    public UserSelfProfileDTO(Long id, String login, String avatar, String email, LocalDateTime lastLoginDateTime, OauthIdentifiersDTO oauthIdentifiers, Collection<UserRole> roles, Long expiresAt) {
+    public UserSelfProfileDTO(Long id, String login, String avatar, String email, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauthIdentifiers, Collection<UserRole> roles, Long expiresAt) {
         super(id, login, avatar, lastLoginDateTime, oauthIdentifiers);
         this.email = email;
         this.roles = roles;

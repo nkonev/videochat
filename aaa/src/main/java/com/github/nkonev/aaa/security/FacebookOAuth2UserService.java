@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -32,13 +33,15 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
     @Autowired
     private UserAccountRepository userAccountRepository;
 
-    public static final String LOGIN_PREFIX = "facebook_";
+    public static final String LOGIN_PREFIX = OAuth2Providers.FACEBOOK + "_";
 
     @Autowired
     private AaaPreAuthenticationChecks aaaPreAuthenticationChecks;
 
     @Autowired
     private AaaPostAuthenticationChecks aaaPostAuthenticationChecks;
+
+    final DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
 
 
     @Override
@@ -87,23 +90,23 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
 
     @Override
     protected String getOauthName() {
-        return "facebook";
+        return OAuth2Providers.FACEBOOK;
     }
 
     @Override
     protected Optional<UserAccount> findByOauthId(String oauthId) {
-        return userAccountRepository.findByOauthIdentifiersFacebookId(oauthId);
+        return userAccountRepository.findByOauth2IdentifiersFacebookId(oauthId);
     }
 
     @Override
     protected void setOauthIdToPrincipal(UserAccountDetailsDTO principal, String oauthId) {
-        principal.getOauthIdentifiers().setFacebookId(oauthId);
+        principal.getOauth2Identifiers().setFacebookId(oauthId);
     }
 
     @Override
     protected void setOauthIdToEntity(Long id, String oauthId) {
         UserAccount userAccount = userAccountRepository.findById(id).orElseThrow();
-        userAccount.getOauthIdentifiers().setFacebookId(oauthId);
+        userAccount.getOauth2Identifiers().setFacebookId(oauthId);
         userAccount = userAccountRepository.save(userAccount);
     }
 
@@ -112,7 +115,7 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
         String maybeImageUrl = getAvatarUrl(map);
         UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForFacebookInsert(oauthId, login, maybeImageUrl);
         userAccount = userAccountRepository.save(userAccount);
-        LOGGER.info("Created facebook user id={} login='{}'", oauthId, login);
+        LOGGER.info("Created {} user id={} login='{}'", getOauthName(), oauthId, login);
 
         return userAccount;
     }

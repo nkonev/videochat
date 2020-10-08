@@ -1,6 +1,7 @@
 package com.github.nkonev.aaa.converter;
 
 import com.github.nkonev.aaa.Constants;
+import com.github.nkonev.aaa.dto.OAuth2IdentifiersDTO;
 import com.github.nkonev.aaa.dto.UserAccountDTOExtended;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.CreationType;
@@ -39,14 +40,9 @@ public class UserAccountConverter {
         return Optional.ofNullable(roles).map(rs -> rs.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList())).orElse(Collections.emptyList());
     }
 
-    private static com.github.nkonev.aaa.dto.OauthIdentifiersDTO convertOauth(UserAccount.OauthIdentifiers oauthIdentifiers){
-        if (oauthIdentifiers==null) return null;
-        return new com.github.nkonev.aaa.dto.OauthIdentifiersDTO(oauthIdentifiers.getFacebookId(), oauthIdentifiers.getVkontakteId());
-    }
-
-    private static UserAccount.OauthIdentifiers convertOauth(com.github.nkonev.aaa.dto.OauthIdentifiersDTO oauthIdentifiers){
-        if (oauthIdentifiers==null) return null;
-        return new UserAccount.OauthIdentifiers(oauthIdentifiers.getFacebookId(), oauthIdentifiers.getVkontakteId());
+    private static OAuth2IdentifiersDTO convertOauth(UserAccount.OAuth2Identifiers oAuth2Identifiers){
+        if (oAuth2Identifiers ==null) return null;
+        return new OAuth2IdentifiersDTO(oAuth2Identifiers.getFacebookId(), oAuth2Identifiers.getVkontakteId(), oAuth2Identifiers.getGoogleId());
     }
 
     public static UserAccountDetailsDTO convertToUserAccountDetailsDTO(UserAccount userAccount) {
@@ -62,7 +58,7 @@ public class UserAccountConverter {
                 Collections.singletonList(convertRole(userAccount.getRole())),
                 userAccount.getEmail(),
                 userAccount.getLastLoginDateTime(),
-                convertOauth(userAccount.getOauthIdentifiers())
+                convertOauth(userAccount.getOauth2Identifiers())
         );
     }
 
@@ -74,7 +70,7 @@ public class UserAccountConverter {
                 userAccount.getAvatar(),
                 userAccount.getEmail(),
                 lastLoginDateTime,
-                userAccount.getOauthIdentifiers(),
+                userAccount.getOauth2Identifiers(),
                 convertRoles2Enum(userAccount.getRoles()),
                 expiresAt
         );
@@ -105,7 +101,7 @@ public class UserAccountConverter {
                 userAccount.getUsername(),
                 userAccount.getAvatar(),
                 userAccount.getLastLoginDateTime(),
-                convertOauth(userAccount.getOauthIdentifiers())
+                convertOauth(userAccount.getOauth2Identifiers())
         );
     }
 
@@ -133,7 +129,7 @@ public class UserAccountConverter {
                 userAccount.getAvatar(),
                 dataDTO,
                 userAccount.getLastLoginDateTime(),
-                convertOauth(userAccount.getOauthIdentifiers()),
+                convertOauth(userAccount.getOauth2Identifiers()),
                 aaaSecurityService.canLock(currentUser, userAccount),
                 aaaSecurityService.canDelete(currentUser, userAccount),
                 aaaSecurityService.canChangeRole(currentUser, userAccount)
@@ -147,7 +143,7 @@ public class UserAccountConverter {
                 userAccount.getUsername(),
                 userAccount.getAvatar(),
                 userAccount.getLastLoginDateTime(),
-                userAccount.getOauthIdentifiers()
+                userAccount.getOauth2Identifiers()
         );
     }
 
@@ -222,7 +218,7 @@ public class UserAccountConverter {
                 enabled,
                 newUserRole,
                 null,
-                new UserAccount.OauthIdentifiers(facebookId, null)
+                new UserAccount.OAuth2Identifiers(facebookId, null, null)
         );
     }
 
@@ -243,10 +239,30 @@ public class UserAccountConverter {
                 enabled,
                 newUserRole,
                 null,
-                new UserAccount.OauthIdentifiers(null, vkontakteId)
+                new UserAccount.OAuth2Identifiers(null, vkontakteId, null)
         );
     }
 
+    public static UserAccount buildUserAccountEntityForGoogleInsert(String googleId, String login, String maybeImageUrl) {
+        final boolean expired = false;
+        final boolean locked = false;
+        final boolean enabled = true;
+
+        final UserRole newUserRole = getDefaultUserRole();
+
+        return new UserAccount(
+                CreationType.GOOGLE,
+                login,
+                null,
+                maybeImageUrl,
+                expired,
+                locked,
+                enabled,
+                newUserRole,
+                null,
+                new UserAccount.OAuth2Identifiers(null, null, googleId)
+        );
+    }
 
     private static void validateLoginAndEmail(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO){
         Assert.hasLength(userAccountDTO.getLogin(), "login should have length");

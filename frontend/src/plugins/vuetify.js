@@ -6,7 +6,9 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faFacebook } from '@fortawesome/free-brands-svg-icons/faFacebook'
 import { faVk } from '@fortawesome/free-brands-svg-icons/faVk'
-library.add(faFacebook, faVk);
+import { faGoogle } from '@fortawesome/free-brands-svg-icons/faGoogle'
+
+library.add(faFacebook, faVk, faGoogle);
 Vue.component('font-awesome-icon', FontAwesomeIcon) // Register component globally
 
 Vue.use(Vuetify);

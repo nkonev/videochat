@@ -15,6 +15,7 @@
 
     <a href="/api/login/oauth2/facebook" id="a-facebook">Facebook</a>
     <a href="/api/login/oauth2/vkontakte" id="a-vkontakte">Vkontakte</a>
+    <a href="/api/login/oauth2/google" id="a-google">Google</a>
 </div>
 </body>
 </html>

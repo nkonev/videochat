@@ -26,15 +26,15 @@ public class UserAccountDTO implements Serializable {
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern= Constants.DATE_FORMAT)
     private LocalDateTime lastLoginDateTime;
 
-    private com.github.nkonev.aaa.dto.OauthIdentifiersDTO oauthIdentifiers = new com.github.nkonev.aaa.dto.OauthIdentifiersDTO();
+    private OAuth2IdentifiersDTO oauth2Identifiers = new OAuth2IdentifiersDTO();
 
-    public UserAccountDTO(Long id, String login, String avatar, LocalDateTime lastLoginDateTime, com.github.nkonev.aaa.dto.OauthIdentifiersDTO oauthIdentifiers) {
+    public UserAccountDTO(Long id, String login, String avatar, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauth2Identifiers) {
         this.id = id;
         this.login = login;
         this.avatar = avatar;
         this.lastLoginDateTime = lastLoginDateTime;
-        if (oauthIdentifiers!=null) {
-            this.oauthIdentifiers = oauthIdentifiers;
+        if (oauth2Identifiers !=null) {
+            this.oauth2Identifiers = oauth2Identifiers;
         }
     }
 
@@ -73,11 +73,11 @@ public class UserAccountDTO implements Serializable {
         this.lastLoginDateTime = lastLoginDateTime;
     }
 
-    public com.github.nkonev.aaa.dto.OauthIdentifiersDTO getOauthIdentifiers() {
-        return oauthIdentifiers;
+    public OAuth2IdentifiersDTO getOauth2Identifiers() {
+        return oauth2Identifiers;
     }
 
-    public void setOauthIdentifiers(OauthIdentifiersDTO oauthIdentifiers) {
-        this.oauthIdentifiers = oauthIdentifiers;
+    public void setOauth2Identifiers(OAuth2IdentifiersDTO oauth2Identifiers) {
+        this.oauth2Identifiers = oauth2Identifiers;
     }
 }

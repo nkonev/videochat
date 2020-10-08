@@ -139,6 +139,11 @@ spring.security:
             client-id: 1684113965162824
             client-secret: your-app-client-secret
             redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+          google:
+            client-name: "google" # use in BlogOAuth2UserService
+            client-id: 987654321
+            client-secret: your-app-client-secret
+            redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
         provider:
           vkontakte:
             authorization-uri: https://oauth.vk.com/authorize

@@ -2,15 +2,14 @@ package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.EditUserDTO;
 import com.github.nkonev.aaa.dto.UserAccountDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.exception.BadRequestException;
-import com.github.nkonev.aaa.exception.UserAlreadyPresentException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
+import com.github.nkonev.aaa.security.OAuth2Providers;
 import com.github.nkonev.aaa.services.NotifierService;
 import com.github.nkonev.aaa.services.UserService;
 import com.github.nkonev.aaa.utils.PageUtils;
@@ -293,21 +292,24 @@ public class UserProfileController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @DeleteMapping(Constants.Urls.API+Constants.Urls.PROFILE+Constants.Urls.FACEBOOK)
-    public void selfDeleteBindingFacebook(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
+    @DeleteMapping(Constants.Urls.API+Constants.Urls.PROFILE+"/{provider}")
+    public void selfDeleteBindingOauth2Provider(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @PathVariable("provider") String provider){
         long userId = userAccountDetailsDTO.getId();
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
-        userAccount.getOauthIdentifiers().setFacebookId(null);
-        userAccount = userAccountRepository.save(userAccount);
-        aaaUserDetailsService.refreshUserDetails(userAccount);
-    }
+        switch (provider) {
+            case OAuth2Providers.FACEBOOK:
+                userAccount.getOauth2Identifiers().setFacebookId(null);
+                break;
+            case OAuth2Providers.VKONTAKTE:
+                userAccount.getOauth2Identifiers().setVkontakteId(null);
+                break;
+            case OAuth2Providers.GOOGLE:
+                userAccount.getOauth2Identifiers().setGoogleId(null);
+                break;
+            default:
+                throw new RuntimeException("Wrong OAuth2 provider: " + provider);
+        }
 
-    @PreAuthorize("isAuthenticated()")
-    @DeleteMapping(Constants.Urls.API+Constants.Urls.PROFILE+Constants.Urls.VKONTAKTE)
-    public void selfDeleteBindingVkontakte(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
-        long userId = userAccountDetailsDTO.getId();
-        UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
-        userAccount.getOauthIdentifiers().setVkontakteId(null);
         userAccount = userAccountRepository.save(userAccount);
         aaaUserDetailsService.refreshUserDetails(userAccount);
     }

@@ -24,7 +24,7 @@
         <v-card-title class="title pb-0 pt-1">Bound OAuth2 providers</v-card-title>
         <v-card-actions class="mx-2">
             <v-chip
-                v-if="currentUser.oauthIdentifiers.vkontakteId"
+                v-if="currentUser.oauth2Identifiers.vkontakteId"
                 min-width="80px"
                 label
                 close
@@ -37,7 +37,7 @@
             </v-chip>
 
             <v-chip
-                v-if="currentUser.oauthIdentifiers.facebookId"
+                v-if="currentUser.oauth2Identifiers.facebookId"
                 min-width="80px"
                 label
                 close
@@ -48,19 +48,59 @@
             >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook'}" :size="'2x'"></font-awesome-icon>
             </v-chip>
+
+            <v-chip
+                v-if="currentUser.oauth2Identifiers.googleId"
+                min-width="80px"
+                label
+                close
+                class="c-btn-google py-5 mr-2"
+                text-color="white"
+                close-icon="mdi-delete"
+                @click:close="removeGoogle"
+            >
+                <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google'}" :size="'2x'"></font-awesome-icon>
+            </v-chip>
         </v-card-actions>
 
         <v-divider class="mx-4"></v-divider>
         <v-card-title class="title pb-0 pt-1">Not bound OAuth2 providers</v-card-title>
         <v-card-actions class="mx-2">
-            <v-btn v-if="!currentUser.oauthIdentifiers.vkontakteId" @click="submitOauthVkontakte" class="c-btn-vk"
-                   min-width="80px">
+            <v-chip
+                v-if="!currentUser.oauth2Identifiers.vkontakteId"
+                @click="submitOauthVkontakte"
+                min-width="80px"
+                label
+                class="c-btn-vk py-5 mr-2"
+                text-color="white"
+                close-icon="mdi-delete"
+            >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon>
-            </v-btn>
-            <v-btn v-if="!currentUser.oauthIdentifiers.facebookId" @click="submitOauthFacebook" class="c-btn-fb"
-                   min-width="80px">
-                <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon>
-            </v-btn>
+            </v-chip>
+
+            <v-chip
+                v-if="!currentUser.oauth2Identifiers.facebookId"
+                @click="submitOauthFacebook"
+                min-width="80px"
+                label
+                class="c-btn-fb py-5 mr-2"
+                text-color="white"
+                close-icon="mdi-delete"
+            >
+                <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook'}" :size="'2x'"></font-awesome-icon>
+            </v-chip>
+
+            <v-chip
+                v-if="!currentUser.oauth2Identifiers.googleId"
+                @click="submitOauthGoogle"
+                min-width="80px"
+                label
+                class="c-btn-google py-5 mr-2"
+                text-color="white"
+                close-icon="mdi-delete"
+            >
+                <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google'}" :size="'2x'"></font-awesome-icon>
+            </v-chip>
         </v-card-actions>
 
 
@@ -203,6 +243,9 @@ export default {
         submitOauthFacebook() {
             window.location.href = '/api/login/oauth2/facebook';
         },
+        submitOauthGoogle() {
+            window.location.href = '/api/login/oauth2/google';
+        },
 
         sendLogin() {
             axios.patch('/api/profile', {login: this.currentUser.login})
@@ -232,6 +275,12 @@ export default {
         },
         removeFb() {
             axios.delete('/api/profile/facebook')
+                .then((response) => {
+                    this.$store.dispatch(FETCH_USER_PROFILE);
+                })
+        },
+        removeGoogle() {
+            axios.delete('/api/profile/google')
                 .then((response) => {
                     this.$store.dispatch(FETCH_USER_PROFILE);
                 })

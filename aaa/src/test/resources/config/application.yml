@@ -131,6 +131,11 @@ spring.security:
           client-id: 1684113965162824
           client-secret: your-app-client-secret
           redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+        google:
+          client-name: "google" # use in BlogOAuth2UserService
+          client-id: 987654321
+          client-secret: your-app-client-secret
+          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
       provider:
         vkontakte:
           authorization-uri: http://127.0.0.1:10081/mock/vkontakte/authorize
@@ -142,4 +147,6 @@ spring.security:
           authorization-uri: http://127.0.0.1:10080/mock/facebook/dialog/oauth
           token-uri: http://127.0.0.1:10080/mock/facebook/oauth/access_token
           user-info-uri: http://127.0.0.1:10080/mock/facebook/me?fields=id,name,picture
-
+        google:
+          authorization-uri: http://127.0.0.1:10082/mock/google/o/oauth2/v2/auth
+          token-uri: http://127.0.0.1:10082/mock/google/oauth2/v4/token

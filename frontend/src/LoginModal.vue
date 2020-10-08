@@ -4,7 +4,7 @@
     https://vuetifyjs.com/en/components/forms/
     -->
     <v-row justify="center">
-        <v-dialog persistent v-model="show" max-width="400">
+        <v-dialog persistent v-model="show" max-width="440">
             <v-card>
                 <v-card-title class="headline">Login</v-card-title>
 
@@ -56,6 +56,7 @@
                         </v-btn>
                         <v-btn class="mr-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
                         <v-btn class="mr-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google' }" :size="'2x'"></font-awesome-icon></v-btn>
                     </v-form>
                 </v-card-text>
 
@@ -81,6 +82,7 @@
                 loadingLogin: false,
                 loadingVk: false,
                 loadingFb: false,
+                loadingGoogle: false,
 
                 valid: true,
                 username: '',
@@ -117,6 +119,11 @@
                 this.loadingFb = true;
                 this.disable = true;
                 window.location.href = '/api/login/oauth2/facebook';
+            },
+            loginGoogle() {
+                this.loadingGoogle = true;
+                this.disable = true;
+                window.location.href = '/api/login/oauth2/google';
             },
 
             validate () {

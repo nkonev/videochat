@@ -13,6 +13,7 @@
     <logger name="org.springframework.boot.test.context.SpringBootTestContextBootstrapper" level="WARN"/>
     <logger name="org.springframework.test.context.transaction.TransactionContext" level="WARN"/>
     <logger name="org.springframework.test.context.support.AbstractContextLoader" level="WARN"/>
+    <logger name="org.springframework.security" level="INFO"/>
     <logger name="org.mockserver" level="WARN"/>
 
     <root level="INFO">

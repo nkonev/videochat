@@ -13,8 +13,6 @@ import java.util.Optional;
 
 public abstract class AbstractOAuth2UserService {
 
-    final DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
-
     private boolean isAlreadyAuthenticated(){
         return SecurityContextHolder.getContext().getAuthentication()!=null && SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof UserAccountDetailsDTO;
     }

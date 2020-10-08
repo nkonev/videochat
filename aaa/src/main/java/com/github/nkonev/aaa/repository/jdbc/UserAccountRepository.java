@@ -25,9 +25,11 @@ public interface UserAccountRepository extends CrudRepository<UserAccount, Long>
     @Query("select count(id) from users u where u.username ilike :userName")
     long findByUsernameContainsIgnoreCaseCount(@Param("limit")long limit, @Param("offset")long offset, @Param("userName")String searchString);
 
-    Optional<UserAccount> findByOauthIdentifiersFacebookId(String facebookId);
+    Optional<UserAccount> findByOauth2IdentifiersFacebookId(String facebookId);
 
-    Optional<UserAccount> findByOauthIdentifiersVkontakteId(String vkontakteId);
+    Optional<UserAccount> findByOauth2IdentifiersVkontakteId(String vkontakteId);
+
+    Optional<UserAccount> findByOauth2IdentifiersGoogleId(String googleId);
 
     @Modifying
     @Query("update users set last_login_date_time = :newLastLoginDateTime where username = :userName")

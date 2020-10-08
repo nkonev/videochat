@@ -28,13 +28,13 @@ public class UserAccount {
     private LocalDateTime lastLoginDateTime;
 
     @Embedded(onEmpty = Embedded.OnEmpty.USE_EMPTY)
-    private OauthIdentifiers oauthIdentifiers = new OauthIdentifiers();
+    private OAuth2Identifiers oauth2Identifiers = new OAuth2Identifiers();
 
     public UserAccount() { }
 
     public UserAccount(CreationType creationType, String username, String password, String avatar,
                        boolean expired, boolean locked, boolean enabled,
-                       UserRole role, String email, OauthIdentifiers oauthIdentifiers) {
+                       UserRole role, String email, OAuth2Identifiers oauth2Identifiers) {
         this.creationType = creationType;
         this.username = username;
         this.password = password;
@@ -44,32 +44,34 @@ public class UserAccount {
         this.enabled = enabled;
         this.role = role;
         this.email = email;
-        if (oauthIdentifiers!=null){
-            this.oauthIdentifiers = oauthIdentifiers;
+        if (oauth2Identifiers !=null){
+            this.oauth2Identifiers = oauth2Identifiers;
         }
     }
 
-    public OauthIdentifiers getOauthIdentifiers() {
-        if (oauthIdentifiers == null){
-            oauthIdentifiers = new OauthIdentifiers();
+    public OAuth2Identifiers getOauth2Identifiers() {
+        if (oauth2Identifiers == null){
+            oauth2Identifiers = new OAuth2Identifiers();
         }
-        return oauthIdentifiers;
+        return oauth2Identifiers;
     }
 
-    public void setOauthIdentifiers(OauthIdentifiers oauthIdentifiers) {
-        this.oauthIdentifiers = oauthIdentifiers;
+    public void setOauth2Identifiers(OAuth2Identifiers oauth2Identifiers) {
+        this.oauth2Identifiers = oauth2Identifiers;
     }
 
-    public static class OauthIdentifiers {
+    public static class OAuth2Identifiers {
         private String facebookId;
         private String vkontakteId;
+        private String googleId;
 
-        public OauthIdentifiers() {
+        public OAuth2Identifiers() {
         }
 
-        public OauthIdentifiers(String facebookId, String vkontakteId) {
+        public OAuth2Identifiers(String facebookId, String vkontakteId, String googleId) {
             this.facebookId = facebookId;
             this.vkontakteId = vkontakteId;
+            this.googleId = googleId;
         }
 
         public String getFacebookId() {
@@ -86,6 +88,14 @@ public class UserAccount {
 
         public void setVkontakteId(String vkontakteId) {
             this.vkontakteId = vkontakteId;
+        }
+
+        public String getGoogleId() {
+            return googleId;
+        }
+
+        public void setGoogleId(String googleId) {
+            this.googleId = googleId;
         }
     }
 

@@ -3,12 +3,12 @@ package com.github.nkonev.aaa.it;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selenide;
 import com.github.nkonev.aaa.AbstractSeleniumRunner;
-import com.github.nkonev.aaa.CommonTestConstants;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.FailoverUtils;
 import com.github.nkonev.aaa.config.webdriver.Browser;
 import com.github.nkonev.aaa.config.webdriver.SeleniumProperties;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
+import com.github.nkonev.aaa.security.OAuth2Providers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -45,6 +45,10 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
     private void clickVkontakte() {
         $("#a-vkontakte").click();
+    }
+
+    private void clickGoogle() {
+        $("#a-google").click();
     }
 
     private void clickLogout() {
@@ -96,16 +100,16 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Long facebookLoggedId = userAccount.getId();
         Assertions.assertNotNull(facebookLoggedId);
         Assertions.assertEquals(facebookLogin, userAccount.getUsername());
-        String facebookId = userAccount.getOauthIdentifiers().getFacebookId();
+        String facebookId = userAccount.getOauth2Identifiers().getFacebookId();
         Assertions.assertNotNull(facebookId);
-        Assertions.assertNull(userAccount.getOauthIdentifiers().getVkontakteId());
+        Assertions.assertNull(userAccount.getOauth2Identifiers().getVkontakteId());
         long count = userAccountRepository.count();
 
         clickVkontakte();
         UserAccount userAccountFbAndVk = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
-        String userAccountFbAndVkFacebookId = userAccountFbAndVk.getOauthIdentifiers().getFacebookId();
+        String userAccountFbAndVkFacebookId = userAccountFbAndVk.getOauth2Identifiers().getFacebookId();
         Assertions.assertNotNull(userAccountFbAndVkFacebookId);
-        Assertions.assertNotNull(userAccountFbAndVk.getOauthIdentifiers().getVkontakteId());
+        Assertions.assertNotNull(userAccountFbAndVk.getOauth2Identifiers().getVkontakteId());
         long countAfterVk = userAccountRepository.count();
 
 
@@ -184,7 +188,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Selenide.refresh();
         // assert that he has facebook id
         UserAccount userAccountAfterBind = userAccountRepository.findByUsername(login600).orElseThrow();
-        Assertions.assertNotNull(userAccountAfterBind.getOauthIdentifiers().getFacebookId());
+        Assertions.assertNotNull(userAccountAfterBind.getOauth2Identifiers().getFacebookId());
 
         // login as another user to vk - vk id #1 save to database
         {
@@ -219,7 +223,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         clickFacebook();
         UserAccount userAccountAfterBindFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
         // assert facebook is bound - check database
-        Assertions.assertNotNull(userAccountAfterBindFacebook.getOauthIdentifiers().getFacebookId());
+        Assertions.assertNotNull(userAccountAfterBindFacebook.getOauth2Identifiers().getFacebookId());
 
         // logout
         clickLogout();
@@ -227,9 +231,11 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         // login again
         SessionHolder userAliceSession = login(loginModal600.login, loginModal600.password);
 
+        final String FACEBOOK = "/" + OAuth2Providers.FACEBOOK;
+
         // unbind facebook
         RequestEntity myPostsRequest1 = RequestEntity
-                .delete(new URI(urlWithContextPath()+ Constants.Urls.API+Constants.Urls.PROFILE+Constants.Urls.FACEBOOK))
+                .delete(new URI(urlWithContextPath()+ Constants.Urls.API+Constants.Urls.PROFILE+FACEBOOK))
                 .header(HEADER_XSRF_TOKEN, userAliceSession.newXsrf)
                 .header(COOKIE, userAliceSession.getCookiesArray())
                 .build();
@@ -238,6 +244,55 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
         // assert facebook is unbound - check database
         UserAccount userAccountAfterDeleteFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
-        Assertions.assertNull(userAccountAfterDeleteFacebook.getOauthIdentifiers().getFacebookId());
+        Assertions.assertNull(userAccountAfterDeleteFacebook.getOauth2Identifiers().getFacebookId());
     }
+
+
+
+    @Test
+    public void testGoogleLoginAndDelete() throws Exception {
+        final String googlePassword = "dummy password";
+
+        long countInitial = userAccountRepository.count();
+        Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
+
+        openOauth2TestPage();
+
+        clickGoogle();
+
+        long countBeforeDelete = FailoverUtils.retry(10, () -> {
+            long c = userAccountRepository.count();
+            if (countInitial+1 != c) {
+                throw new RuntimeException("User still not created");
+            }
+            return c;
+        });
+
+        UserAccount userAccount = userAccountRepository.findByUsername(googleLogin).orElseThrow();
+
+        Assertions.assertNotNull(userAccount.getId());
+        Assertions.assertNull(userAccount.getAvatar());
+        Assertions.assertEquals(googleLogin, userAccount.getUsername());
+        Assertions.assertEquals(googleId, userAccount.getOauth2Identifiers().getGoogleId());
+
+        userAccount.setPassword(passwordEncoder.encode(googlePassword));
+        userAccountRepository.save(userAccount);
+
+
+        SessionHolder userNikitaSession = login(googleLogin, googlePassword);
+        RequestEntity selfDeleteRequest1 = RequestEntity
+                .delete(new URI(urlWithContextPath()+ API + Constants.Urls.PROFILE))
+                .header(HEADER_XSRF_TOKEN, userNikitaSession.newXsrf)
+                .header(COOKIE, userNikitaSession.getCookiesArray())
+                .build();
+        ResponseEntity<String> selfDeleteResponse1 = testRestTemplate.exchange(selfDeleteRequest1, String.class);
+        Assertions.assertEquals(200, selfDeleteResponse1.getStatusCodeValue());
+
+        FailoverUtils.retry(10, () -> {
+            long countAfter = userAccountRepository.count();
+            Assertions.assertEquals(countBeforeDelete-1, countAfter);
+            return null;
+        });
+    }
+
 }

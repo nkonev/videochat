@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.time.LocalDateTime;
@@ -17,10 +20,14 @@ import java.util.Map;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE)
-public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails, OAuth2User {
+public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails, OAuth2User, OidcUser {
     private static final long serialVersionUID = -3271989114498135073L;
 
+    // OAuth2 specific Facebook and Vkontakte
     private Map<String, Object> oauth2Attributes = new HashMap<>();
+    // OAuth2 specific Google
+    private OidcIdToken idToken;
+    private OidcUserInfo userInfo;
 
     private String password; // password hash
     private boolean expired;
@@ -43,7 +50,7 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
             Collection<GrantedAuthority> roles,
             String email,
             LocalDateTime lastLoginDateTime,
-            OauthIdentifiersDTO oauthIdentifiers
+            OAuth2IdentifiersDTO oauthIdentifiers
     ) {
         super(id, login, avatar, lastLoginDateTime, oauthIdentifiers);
         this.password = password;
@@ -147,4 +154,26 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
         this.oauth2Attributes = oauth2Attributes;
     }
 
+    @Override
+    public Map<String, Object> getClaims() {
+        return oauth2Attributes;
+    }
+
+    @Override
+    public OidcUserInfo getUserInfo() {
+        return userInfo;
+    }
+
+    @Override
+    public OidcIdToken getIdToken() {
+        return idToken;
+    }
+
+    public void setIdToken(OidcIdToken idToken) {
+        this.idToken = idToken;
+    }
+
+    public void setUserInfo(OidcUserInfo userInfo) {
+        this.userInfo = userInfo;
+    }
 }

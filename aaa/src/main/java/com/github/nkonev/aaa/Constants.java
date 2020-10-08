@@ -1,6 +1,8 @@
 package com.github.nkonev.aaa;
 
 
+import com.github.nkonev.aaa.security.OAuth2Providers;
+
 /**
  * Created by nik on 23.05.17.
  */
@@ -13,8 +15,6 @@ public class Constants {
         public static final String IMAGE = "/image";
         public static final String ADMIN = "/admin";
         public static final String PROFILE = "/profile";
-        public static final String FACEBOOK = "/facebook";
-        public static final String VKONTAKTE = "/vkontakte";
         public static final String REGISTER = "/register";
         public static final String CONFIRM = "/confirm"; // html for handle link from email
         public static final String UUID = "uuid";
@@ -28,6 +28,7 @@ public class Constants {
         public static final String PASSWORD_RESET_SET_NEW = "/password-reset-set-new";
         public static final String SESSIONS = "/sessions";
         public static final String ROLE = "/role";
+
     }
 
     public static class Headers {
