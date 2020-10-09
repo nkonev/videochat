@@ -15,7 +15,11 @@
     import {getData, getProperData, setProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import bus, {CHANGE_PHONE_BUTTON, VIDEO_LOCAL_ESTABLISHED, VIDEO_CHAT_PANES_RESIZED} from "./bus";
+    import bus, {
+        CHANGE_PHONE_BUTTON,
+        VIDEO_LOCAL_ESTABLISHED,
+        VIDEO_CHAT_PANES_RESIZED
+    } from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
     import Vue from 'vue'
@@ -42,7 +46,7 @@
                     // userId: number
                     // peerConnection: RTCPeerConnection
                     // remoteVideo: html element
-                ]
+                ],
             }
         },
         props: ['chatDto'],
@@ -487,18 +491,6 @@
                 deep: true
             },
 
-            'chatDto.participants': {
-                handler: function (val, oldVal) {
-
-                    // this.$forceUpdate();
-
-                    Vue.nextTick(()=>{
-                        this.$forceUpdate();
-                    });
-
-                },
-                deep: true
-            }
         },
     }
 </script>

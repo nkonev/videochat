@@ -2,7 +2,7 @@
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
         <splitpanes class="default-theme" horizontal style="height: 100%" @resized="onPanesResized">
             <pane v-if="isAllowedVideo()" id="videoBlock">
-                <ChatVideo :chatDto="chatDto"/>
+                <ChatVideo :chatDto="chatDto" :key="chatDtoKey"/>
             </pane>
             <pane max-size="90" size="70">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%">
@@ -65,6 +65,7 @@
                     participantIds:[],
                     participants:[],
                 },
+                chatDtoKey: 0,
             }
         },
         computed: {
@@ -185,8 +186,10 @@
                         item.owner = patchedUser;
                     }
                 });
-                // TODO not working in ChatVideo
+
                 replaceInArray(this.chatDto.participants, patchedUser);
+                // for update ChatVideo
+                // this.chatDtoKey++;
             },
         },
         mounted() {
