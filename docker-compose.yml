@@ -83,6 +83,8 @@ services:
     restart: unless-stopped
     ports:
       - 9000:9000
+    networks:
+      backend:
     environment:
       - MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
       - MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
@@ -136,6 +138,8 @@ volumes:
 networks:
   backend:
     driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
     ipam:
       driver: default
       config:
