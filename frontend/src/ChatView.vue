@@ -62,7 +62,8 @@
             return {
                 chatMessagesSubscription: null,
                 chatDto: {
-                    participantIds:[]
+                    participantIds:[],
+                    participants:[],
                 },
             }
         },
@@ -177,14 +178,15 @@
                 bus.$emit(VIDEO_CHAT_PANES_RESIZED, obj);
             },
             onUserProfileChanged(user) {
+                const patchedUser = user;
+                patchedUser.avatar = getCorrectUserAvatar(user.avatar);
                 this.items.forEach(item => {
                     if (item.owner.id == user.id) {
-                        item.owner = user;
-                        if (item.owner.avatar) {
-                            item.owner.avatar = getCorrectUserAvatar(item.owner.avatar)
-                        }
+                        item.owner = patchedUser;
                     }
-                })
+                });
+                // TODO not working in ChatVideo
+                replaceInArray(this.chatDto.participants, patchedUser);
             },
         },
         mounted() {

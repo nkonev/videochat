@@ -4,8 +4,8 @@
             <video id="localVideo" autoPlay playsInline></video>
             <p class="video-container-element-caption">{{ currentUser.login }}</p>
         </div>
-        <div class="video-container-element" v-for="(item, index) in getProperParticipantIds()" :key="item">
-            <video :id="getRemoteVideoId(item)" autoPlay playsInline :class="otherParticipantsClass" :poster="getAvatar(item)"></video>
+        <div class="video-container-element" v-for="(item, index) in properParticipants" :key="item.id">
+            <video :id="getRemoteVideoId(item.id)" autoPlay playsInline :class="otherParticipantsClass" :poster="getAvatar(item)"></video>
             <p class="video-container-element-caption">{{ getLogin(item) }}</p>
         </div>
     </v-col>
@@ -15,11 +15,10 @@
     import {getData, getProperData, setProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import bus, {CHANGE_PHONE_BUTTON, VIDEO_LOCAL_ESTABLISHED, VIDEO_CHAT_PANES_RESIZED, MESSAGE_DELETED} from "./bus";
+    import bus, {CHANGE_PHONE_BUTTON, VIDEO_LOCAL_ESTABLISHED, VIDEO_CHAT_PANES_RESIZED} from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
     import Vue from 'vue'
-    import {getHeight} from "./utils";
 
     const EVENT_CANDIDATE = 'candidate';
     const EVENT_HELLO = 'hello';
@@ -58,16 +57,16 @@
                 } else {
                     return ""
                 }
-            }
+            },
+            properParticipants() {
+                const ppi = this.chatDto.participants.filter(pi => pi.id != this.currentUser.id);
+                console.log("Participant ids except me:", ppi);
+                return ppi;
+            },
         },
         methods: {
             getRemoteVideoId(participantId) {
                 return 'remoteVideo'+participantId;
-            },
-            getProperParticipantIds() {
-                const ppi = this.chatDto.participantIds.filter(pi => pi != this.currentUser.id);
-                console.log("Participant ids except me:", ppi);
-                return ppi;
             },
             getWebRtcConfiguration() {
                 const localPcConfig = {
@@ -96,8 +95,8 @@
             },
             initRemoteStructures() {
                 console.log("Initializing remote videos");
-                for (let pi of this.getProperParticipantIds()) {
-                    this.createAndAddNewRemoteConnectionElement(pi);
+                for (let pi of this.properParticipants) {
+                    this.createAndAddNewRemoteConnectionElement(pi.id);
                 }
 
                 this.initDevices();
@@ -350,21 +349,11 @@
                     this.prevVideoPaneSize = obj[0].size;
                 }
             },
-            getLogin(participantId) {
-                const maybe = this.chatDto.participants.filter(value => value.id == participantId);
-                if (maybe.length == 1) {
-                    return maybe[0].login;
-                } else {
-                    return ""
-                }
+            getLogin(participant) {
+                return participant.login;
             },
-            getAvatar(participantId) {
-                const maybe = this.chatDto.participants.filter(value => value.id == participantId);
-                if (maybe.length == 1) {
-                    return maybe[0].avatar;
-                } else {
-                    return ""
-                }
+            getAvatar(participant) {
+                return participant.avatar;
             },
         },
 
@@ -492,6 +481,19 @@
                             }
                             this.initializeRemoteConnectionElement(rcde);
                         }
+                    });
+
+                },
+                deep: true
+            },
+
+            'chatDto.participants': {
+                handler: function (val, oldVal) {
+
+                    // this.$forceUpdate();
+
+                    Vue.nextTick(()=>{
+                        this.$forceUpdate();
                     });
 
                 },
