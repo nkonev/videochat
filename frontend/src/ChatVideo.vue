@@ -1,7 +1,13 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <video id="localVideo" autoPlay playsInline :style="videoContainerStyle"></video>
-        <video v-for="(item, index) in getProperParticipantIds()" :key="item" :id="getRemoteVideoId(item)" autoPlay playsInline :class="otherParticipantsClass" :style="videoContainerStyle"></video>
+        <div class="video-container-element video-container-element-my">
+            <video id="localVideo" autoPlay playsInline></video>
+            <p class="video-container-element-caption">{{ currentUser.login }}</p>
+        </div>
+        <div class="video-container-element" v-for="(item, index) in getProperParticipantIds()" :key="item">
+            <video :id="getRemoteVideoId(item)" autoPlay playsInline :class="otherParticipantsClass" :poster="getAvatar(item)"></video>
+            <p class="video-container-element-caption">{{ getLogin(item) }}</p>
+        </div>
     </v-col>
 </template>
 
@@ -24,7 +30,6 @@
     export default {
         data() {
             return {
-                videoContainerStyle: 'height: 220px',
                 prevVideoPaneSize: null,
 
                 signalingSubscription: null,
@@ -120,7 +125,6 @@
                 }
 
                 bus.$emit(VIDEO_LOCAL_ESTABLISHED);
-                this.videoContainerStyle = this.calcVideoHeight();
                 bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, false))
 
                 this.initConnections();
@@ -341,19 +345,27 @@
                 videoElem.srcObject = null;
             },
 
-            calcVideoHeight(){
-                // const containerHeight = document.getElementById("videoBlock").clientHeight;
-                // return `height: 100px`;
-                const calcedHeight = getHeight("videoBlock", (v) => (v - 14) + "px", '220px');
-                console.log("Calced height", calcedHeight);
-                return "height: "+ calcedHeight;
-            },
             onPanesResized(obj) {
                 if (obj[0].size != this.prevVideoPaneSize) {
                     this.prevVideoPaneSize = obj[0].size;
-                    this.videoContainerStyle = this.calcVideoHeight();
                 }
-            }
+            },
+            getLogin(participantId) {
+                const maybe = this.chatDto.participants.filter(value => value.id == participantId);
+                if (maybe.length == 1) {
+                    return maybe[0].login;
+                } else {
+                    return ""
+                }
+            },
+            getAvatar(participantId) {
+                const maybe = this.chatDto.participants.filter(value => value.id == participantId);
+                if (maybe.length == 1) {
+                    return maybe[0].avatar;
+                } else {
+                    return ""
+                }
+            },
         },
 
         mounted() {
@@ -493,6 +505,37 @@
     #video-container {
         display: flex;
         flex-direction: row;
-        overflow-x: scroll;
+        overflow-x: auto;
+        overflow-y: hidden;
+        height 100%
+    }
+
+    .video-container-element {
+        display flex
+        flex-direction column
+        object-fit: scale-down;
+        height 100% !important
+        width 100% !important
+    }
+
+    .video-container-element-my {
+        background #b3e7ff
+    }
+
+    .video-container-element:nth-child(even) {
+        background #d5fdd5;
+    }
+
+    video {
+        //object-fit: scale-down;
+        //width 100% !important
+        height 100% !important // todo its
+    }
+
+    .video-container-element-caption {
+        top -1.8em
+        left 2em
+        text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
+        position: relative;
     }
 </style>
