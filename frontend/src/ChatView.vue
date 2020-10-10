@@ -1,6 +1,6 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
-        <splitpanes class="default-theme" horizontal style="height: 100%" @resized="onPanesResized">
+        <splitpanes class="default-theme" horizontal style="height: 100%">
             <pane v-if="isAllowedVideo()" id="videoBlock">
                 <ChatVideo :chatDto="chatDto" :key="chatDtoKey"/>
             </pane>
@@ -41,7 +41,6 @@
       MESSAGE_EDITED,
       USER_TYPING,
       VIDEO_LOCAL_ESTABLISHED,
-      VIDEO_CHAT_PANES_RESIZED,
       USER_PROFILE_CHANGED
     } from "./bus";
     import {phoneFactory, titleFactory} from "./changeTitle";
@@ -175,9 +174,6 @@
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
             },
 
-            onPanesResized(obj) {
-                bus.$emit(VIDEO_CHAT_PANES_RESIZED, obj);
-            },
             onUserProfileChanged(user) {
                 const patchedUser = user;
                 patchedUser.avatar = getCorrectUserAvatar(user.avatar);

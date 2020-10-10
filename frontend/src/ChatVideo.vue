@@ -17,8 +17,7 @@
     import {GET_USER} from "./store";
     import bus, {
         CHANGE_PHONE_BUTTON,
-        VIDEO_LOCAL_ESTABLISHED,
-        VIDEO_CHAT_PANES_RESIZED
+        VIDEO_LOCAL_ESTABLISHED
     } from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
@@ -348,11 +347,6 @@
                 videoElem.srcObject = null;
             },
 
-            onPanesResized(obj) {
-                if (obj[0].size != this.prevVideoPaneSize) {
-                    this.prevVideoPaneSize = obj[0].size;
-                }
-            },
             getLogin(participant) {
                 return participant.login;
             },
@@ -428,7 +422,6 @@
             });
 
             this.getWebRtcConfiguration();
-            bus.$on(VIDEO_CHAT_PANES_RESIZED, this.onPanesResized);
         },
 
         beforeDestroy() {
@@ -436,7 +429,6 @@
             this.hangupAll();
             this.signalingSubscription.unsubscribe();
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true));
-            bus.$off(VIDEO_CHAT_PANES_RESIZED, this.onPanesResized);
         },
 
         watch: {
