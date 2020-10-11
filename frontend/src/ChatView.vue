@@ -33,15 +33,16 @@
     } from "./InfinityListMixin";
     import Vue from 'vue'
     import bus, {
-      CHANGE_PHONE_BUTTON,
-      CHANGE_TITLE, CHAT_DELETED,
-      CHAT_EDITED,
-      MESSAGE_ADD,
-      MESSAGE_DELETED,
-      MESSAGE_EDITED,
-      USER_TYPING,
-      VIDEO_LOCAL_ESTABLISHED,
-      USER_PROFILE_CHANGED
+        CHANGE_PHONE_BUTTON,
+        CHANGE_TITLE, CHAT_DELETED,
+        CHAT_EDITED,
+        MESSAGE_ADD,
+        MESSAGE_DELETED,
+        MESSAGE_EDITED,
+        USER_TYPING,
+        VIDEO_LOCAL_ESTABLISHED,
+        USER_PROFILE_CHANGED,
+        LOGGED_IN, LOGGED_OUT
     } from "./bus";
     import {phoneFactory, titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
@@ -160,7 +161,14 @@
                     console.log("Got info about chat", data);
                     bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null, true, this.chatId));
                     this.chatDto = data;
+                }).catch(reason => {
+                    if (reason.response.status == 404) {
+                        this.goToChatList();
+                    }
                 });
+            },
+            goToChatList() {
+                this.$router.push(({ name: chat_list_name}))
             },
             onChatChange(dto) {
                 if (dto.id == this.chatId) {
@@ -187,19 +195,32 @@
                 // for update ChatVideo
                 // this.chatDtoKey++;
             },
+            onLoggedIn() {
+                this.getInfo();
+                this.subscribe();
+                this.chatDtoKey++;
+            },
+            onLoggedOut() {
+                this.unsubscribe();
+            },
+            subscribe() {
+                this.chatMessagesSubscription = this.centrifuge.subscribe("chatMessages"+this.chatId, (message) => {
+                    // actually it's used for tell server about presence of this client.
+                    // also will be used as a global notification, so we just log it
+                    const data = getData(message);
+                    console.debug("Got global notification", data);
+                    const properData = getProperData(message)
+                    if (data.type === "user_typing") {
+                        bus.$emit(USER_TYPING, properData);
+                    }
+                });
+            },
+            unsubscribe() {
+                this.chatMessagesSubscription.unsubscribe();
+            },
         },
         mounted() {
-            this.chatMessagesSubscription = this.centrifuge.subscribe("chatMessages"+this.chatId, (message) => {
-                // actually it's used for tell server about presence of this client.
-                // also will be used as a global notification, so we just log it
-                const data = getData(message);
-                console.debug("Got global notification", data);
-                const properData = getProperData(message)
-                if (data.type === "user_typing") {
-                    bus.$emit(USER_TYPING, properData);
-                }
-            });
-
+            this.subscribe();
             bus.$emit(CHANGE_TITLE, titleFactory(`Chat #${this.chatId}`, false, true, null, true, this.chatId));
 
             this.getInfo();
@@ -211,6 +232,8 @@
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
             bus.$on(VIDEO_LOCAL_ESTABLISHED, this.onVideoChangesHeight);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.$on(LOGGED_IN, this.onLoggedIn);
+            bus.$on(LOGGED_OUT, this.onLoggedOut);
         },
         beforeDestroy() {
             bus.$off(MESSAGE_ADD, this.onNewMessage);
@@ -220,8 +243,10 @@
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
             bus.$off(VIDEO_LOCAL_ESTABLISHED, this.onVideoChangesHeight);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.$off(LOGGED_IN, this.onLoggedIn);
+            bus.$off(LOGGED_OUT, this.onLoggedOut);
 
-            this.chatMessagesSubscription.unsubscribe();
+            this.unsubscribe();
         },
         destroyed() {
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(false))

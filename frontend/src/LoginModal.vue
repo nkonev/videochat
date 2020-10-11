@@ -184,6 +184,6 @@
     }
 </script>
 
-<style lang="stylus">
+<style lang="stylus" scoped>
     @import "OAuth2.styl"
 </style>
