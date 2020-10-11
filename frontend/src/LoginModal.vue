@@ -66,7 +66,7 @@
 </template>
 
 <script>
-    import bus, {LOGGED_IN, UNAUTHORIZED} from "./bus";
+    import bus, {LOGGED_IN, LOGGED_OUT} from "./bus";
     import axios from "axios";
     import {FETCH_USER_PROFILE} from "./store";
 
@@ -97,10 +97,10 @@
             }
         },
         created() {
-            bus.$on(UNAUTHORIZED, this.showLoginModal);
+            bus.$on(LOGGED_OUT, this.showLoginModal);
         },
         destroyed() {
-            bus.$off(UNAUTHORIZED, this.showLoginModal);
+            bus.$off(LOGGED_OUT, this.showLoginModal);
         },
         methods: {
             showLoginModal() {

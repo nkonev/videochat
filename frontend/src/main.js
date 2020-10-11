@@ -10,9 +10,9 @@ import bus, {
   MESSAGE_ADD,
   MESSAGE_DELETED,
   MESSAGE_EDITED,
-  UNAUTHORIZED, UNREAD_MESSAGES_CHANGED,
+  UNREAD_MESSAGES_CHANGED,
   USER_PROFILE_CHANGED,
-  CHANGE_WEBSOCKET_STATUS
+  CHANGE_WEBSOCKET_STATUS, LOGGED_OUT
 } from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
@@ -76,9 +76,9 @@ axios.interceptors.response.use((response) => {
   // https://github.com/axios/axios/issues/932#issuecomment-307390761
   // console.log("Catch error", error, error.request, error.response, error.config);
   if (error && error.response && error.response.status == 401 && error.config.url != '/api/profile') {
-    console.log("Catch 401 Unauthorized, saving url", window.location.pathname);
+    console.log("Catch 401 Unauthorized, emitting ", LOGGED_OUT);
     store.commit(UNSET_USER);
-    bus.$emit(UNAUTHORIZED, null);
+    bus.$emit(LOGGED_OUT, null);
     return Promise.reject(error)
   } else {
     console.log(error.response);

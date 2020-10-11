@@ -234,7 +234,6 @@
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
-                console.log("Invoke avatar getter method");
                 return getCorrectUserAvatar(this.currentUser.avatar);
             },
         },

@@ -9,8 +9,6 @@ export const GET_USER = 'getUser';
 export const SET_USER = 'setUser';
 export const UNSET_USER = 'unsetUser';
 export const FETCH_USER_PROFILE = 'fetchUserProfile';
-export const GET_CENTRIFUGE_SESSION = 'getCentrifugeSession';
-export const SET_CENTRIFUGE_SESSION = 'setCentrifugeSession';
 export const GET_SEARCH_STRING = 'getSearchString';
 export const SET_SEARCH_STRING = 'setSearchString';
 export const CHANGE_SEARCH_STRING = 'changeSearchString';
@@ -18,8 +16,6 @@ export const CHANGE_SEARCH_STRING = 'changeSearchString';
 const store = new Vuex.Store({
     state: {
         currentUser: null,
-        previousUrl: "",
-        centrifugeSession: "",
         searchString: ""
     },
     mutations: {
@@ -29,9 +25,6 @@ const store = new Vuex.Store({
         [UNSET_USER](state) {
             state.currentUser = null;
         },
-        [SET_CENTRIFUGE_SESSION](state, payload) {
-            state.centrifugeSession = payload;
-        },
         [SET_SEARCH_STRING](state, payload) {
             state.searchString = payload;
         },
@@ -39,9 +32,6 @@ const store = new Vuex.Store({
     getters: {
         [GET_USER](state) {
             return state.currentUser;
-        },
-        [GET_CENTRIFUGE_SESSION](state) {
-            return state.centrifugeSession;
         },
         [GET_SEARCH_STRING](state) {
             return state.searchString;
