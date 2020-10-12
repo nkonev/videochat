@@ -63,7 +63,7 @@
             },
             properParticipants() {
                 const ppi = this.chatDto.participants.filter(pi => pi.id != this.currentUser.id);
-                console.log("Participant ids except me:", ppi);
+                console.log("Participant ids except me:", ppi, "my id is", this.currentUser.id);
                 return ppi;
             },
         },
@@ -429,6 +429,13 @@
             this.hangupAll();
             this.signalingSubscription.unsubscribe();
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true));
+
+            this.prevVideoPaneSize=null;
+            this.signalingSubscription = null;
+            this.pcConfig = null;
+            this.localStream = null;
+            this.localVideo = null;
+            this.remoteConnectionData = [];
         },
 
         watch: {

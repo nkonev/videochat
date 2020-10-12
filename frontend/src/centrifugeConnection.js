@@ -18,7 +18,7 @@ export const setupCentrifuge = (centrifugeSessionFunction, onDisconnected) => {
         console.log("Disconnected response", ctx);
         onDisconnected();
     });
-    centrifuge.connect();
+
     return centrifuge;
 };
 

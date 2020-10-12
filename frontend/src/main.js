@@ -12,7 +12,7 @@ import bus, {
   MESSAGE_EDITED,
   UNREAD_MESSAGES_CHANGED,
   USER_PROFILE_CHANGED,
-  CHANGE_WEBSOCKET_STATUS, LOGGED_OUT
+  CHANGE_WEBSOCKET_STATUS, LOGGED_OUT, LOGGED_IN
 } from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
@@ -22,18 +22,33 @@ const vm = new Vue({
   vuetify,
   store,
   router,
+  methods: {
+    connectCentrifuge() {
+      this.centrifuge.connect();
+    },
+    disconnectCentrifuge() {
+      this.centrifuge.disconnect();
+    }
+  },
   created(){
     const setCetrifugeSession = (cs) => {
       Vue.prototype.centrifugeSessionId = cs;
       bus.$emit(CHANGE_WEBSOCKET_STATUS, true);
     };
     const onDisconnected = () => {
+      Vue.prototype.centrifugeSessionId = null;
       bus.$emit(CHANGE_WEBSOCKET_STATUS, false);
     };
     Vue.prototype.centrifuge = setupCentrifuge(setCetrifugeSession, onDisconnected);
+    this.connectCentrifuge();
+
+    bus.$on(LOGGED_IN, this.connectCentrifuge);
+    bus.$on(LOGGED_OUT, this.disconnectCentrifuge);
   },
   destroyed() {
-    Vue.prototype.centrifuge.disconnect();
+    this.disconnectCentrifuge();
+    bus.$off(LOGGED_IN, this.connectCentrifuge);
+    bus.$off(LOGGED_OUT, this.disconnectCentrifuge);
   },
   mounted(){
     this.centrifuge.on('publish', (ctx)=>{
