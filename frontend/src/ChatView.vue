@@ -2,7 +2,7 @@
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
         <splitpanes class="default-theme" horizontal style="height: 100%">
             <pane v-if="isAllowedVideo()" id="videoBlock">
-                <ChatVideo :chatDto="chatDto" :key="chatDtoKey"/>
+                <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane max-size="90" size="70">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%">
@@ -65,7 +65,6 @@
                     participantIds:[],
                     participants:[],
                 },
-                chatDtoKey: 0,
             }
         },
         computed: {
@@ -190,15 +189,10 @@
                         item.owner = patchedUser;
                     }
                 });
-
-                replaceInArray(this.chatDto.participants, patchedUser);
-                // for update ChatVideo
-                // this.chatDtoKey++;
             },
             onLoggedIn() {
                 this.getInfo();
                 this.subscribe();
-                this.chatDtoKey++;
             },
             onLoggedOut() {
                 this.unsubscribe();
