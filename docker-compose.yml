@@ -11,16 +11,16 @@ services:
     command: --configFile=/traefik_conf/traefik.yml
     ports:
       - 8081:80
-      - 8010:8080
+#      - 8010:8080
     extra_hosts:
       # When you apply firewalld rule these requests will go to you IDE-launched chat app
       # see also network definition in bottom
-      - "api.site.local:172.28.0.1"
+      - "api.site.local:172.27.0.1"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./docker/traefik_conf:/traefik_conf
     networks:
-      backend:
+      frontend:
     logging:
       driver: "json-file"
       options:
@@ -34,7 +34,7 @@ services:
     ports:
       - 8082:80
     networks:
-      backend:
+      frontend:
     volumes:
       - ./frontend-nginx:/usr/share/nginx/html:ro
       - ./docker/nginx/frontend.conf:/etc/nginx/conf.d/default.conf:ro
@@ -145,3 +145,12 @@ networks:
       config:
         # Also see firewalld rule in readme.md "Allow container -> host"
         - subnet: 172.28.0.0/24
+  frontend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"
+    ipam:
+      driver: default
+      config:
+        # Also see firewalld rule in readme.md "Allow container -> host"
+        - subnet: 172.27.0.0/24
