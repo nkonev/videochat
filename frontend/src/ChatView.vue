@@ -52,7 +52,6 @@
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
-    import 'splitpanes/dist/splitpanes.css'
     import {getCorrectUserAvatar} from "./utils";
     import MessageItem from "./MessageItem";
 
@@ -255,6 +254,8 @@
 </script>
 
 <style scoped lang="stylus">
+    $mobileHeight = 800px
+
     .pre-formatted {
       white-space pre-wrap
     }
@@ -266,6 +267,13 @@
         //width: calc(100% - 80px)
     }
 
+    @media screen and (max-height: $mobileHeight) {
+        #chatViewContainer {
+            height: calc(100vh - 120px)
+        }
+    }
+
+
     #messagesScroller {
         background  white
     }
@@ -274,4 +282,86 @@
         background  white
     }
 
+</style>
+
+<style lang="stylus">
+
+.splitpanes {
+    $mobileWidth = 800px
+    background-color: #f2f2f2;
+
+    //&__pane {
+    //    justify-content: center;
+    //    align-items: center;
+    //    display: flex;
+    //}
+
+    &__splitter {background-color: #ccc;position: relative;}
+
+    /* Mobile */
+    @media screen and (max-width: $mobileWidth) {
+        &__splitter:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            transition: 0.2s;
+        }
+        &--vertical > &__splitter:before {left: -30px;right: -30px; z-index: 1;}
+        &--horizontal > &__splitter:before {top: -30px;bottom: -30px; z-index: 1;}
+        &__splitter:hover:before {background-color: rgba(63, 81, 181, 0.6);}
+
+    }
+
+    /* regular (with not)*/
+    @media not screen and (max-width: $mobileWidth) {
+        .splitpanes__splitter {
+            background-color: #fff;
+            box-sizing: border-box;
+            position: relative;
+            flex-shrink: 0;
+            &:before, &:after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                background-color: rgba(0, 0, 0, .15);
+                transition: background-color 0.3s;
+            }
+            &:hover:before, &:hover:after {background-color: rgba(0, 0, 0, .25);}
+            &:first-child {cursor: auto;}
+            cursor: row-resize
+        }
+        &.splitpanes--vertical > .splitpanes__splitter,
+        .splitpanes--vertical > .splitpanes__splitter {
+            width: 7px;
+            border-left: 1px solid #eee;
+            margin-left: -1px;
+            &:before, &:after {
+                transform: translateY(-50%);
+                width: 1px;
+                height: 30px;
+            }
+            &:before {margin-left: -2px;}
+            &:after {margin-left: 1px;}
+        }
+        &.splitpanes--horizontal > .splitpanes__splitter,
+        .splitpanes--horizontal > .splitpanes__splitter {
+            height: 7px;
+            border-top: 1px solid #eee;
+            margin-top: -1px;
+            &:before,
+            &:after {
+                transform: translateX(-50%);
+                width: 30px;
+                height: 1px;
+            }
+            &:before {margin-top: -2px;}
+            &:after {margin-top: 1px;}
+        }
+
+    }
+}
 </style>
