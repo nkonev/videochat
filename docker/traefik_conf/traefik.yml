@@ -4,7 +4,7 @@ global:
   sendAnonymousUsage: false
 entryPoints:
   http:
-    address: :80
+    address: :8081
   traefik:
     address: :8080
 providers:
@@ -17,7 +17,7 @@ providers:
     directory: /traefik_conf/dynamic
 api:
   insecure: true
-  dashboard: true
+  dashboard: false
 log:
   level: DEBUG
 accessLog:
