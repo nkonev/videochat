@@ -103,6 +103,22 @@ services:
 #        max-size: "50m"
 #        max-file: "1"
 
+  openvidu:
+    image: openvidu/openvidu-server-kms:2.16.0
+    hostname: openvidu
+    restart: unless-stopped
+    ports:
+      - 4443:4443
+    networks:
+      backend:
+    environment:
+      - OPENVIDU_SECRET=MY_SECRET
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+
   jaeger:
     image: jaegertracing/all-in-one:1.18.1
     hostname: jaeger
