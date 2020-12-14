@@ -4,6 +4,7 @@ import com.github.nkonev.aaa.AbstractUtTestRunner;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.test.autoconfigure.actuate.metrics.AutoConfigureMetrics;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import java.net.URI;
 import static org.assertj.core.api.BDDAssertions.then;
 
+@AutoConfigureMetrics
 public class PrometheusTest extends AbstractUtTestRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusTest.class);
 

@@ -21,7 +21,7 @@
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
 
-        <spring.boot.version>2.3.4.RELEASE</spring.boot.version>
+        <spring.boot.version>2.4.1</spring.boot.version>
         <selenide.version>5.11.1</selenide.version>
         <logback.access.version>1.2.3</logback.access.version>
         <guava.version>29.0-jre</guava.version>
