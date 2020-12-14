@@ -97,7 +97,9 @@ axios.interceptors.response.use((response) => {
     return Promise.reject(error)
   } else {
     console.log(error.response);
-    vm.$refs.appRef.onError(error.response);
+    if (error.response.status != 409) {
+      vm.$refs.appRef.onError(error.response);
+    }
     return Promise.reject(error)
   }
 });
