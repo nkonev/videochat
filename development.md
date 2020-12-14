@@ -58,6 +58,10 @@ mkdir ./chat/proto || true
 docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto
 ```
 
+# Openvidu
+```
+docker run -p 4443:4443 --rm -e OPENVIDU_SECRET=MY_SECRET openvidu/openvidu-server-kms:2.16.0
+```
 
 # Firefox enable video on non-localhost
 https://lists.mozilla.org/pipermail/dev-platform/2019-February/023590.html

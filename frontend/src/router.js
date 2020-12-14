@@ -5,7 +5,6 @@ import Error404 from "./Error404";
 import ChatList from "./ChatList";
 import ChatView from "./ChatView";
 import UserProfile from "./UserProfile";
-import Experiment from "./Experiment"
 
 // This installs <router-view> and <router-link>,
 // and injects $router and $route to all router-enabled child components
@@ -20,7 +19,6 @@ const router = new Router({
         { name: chat_name, path: '/chat/:id', component: ChatView},
         { name: videochat_name, path: '/chat/:id/video', component: ChatView},
         { name: profile_name, path: '/profile', component: UserProfile},
-        { path: '/experiment', component: Experiment},
         { path: '*', component: Error404 },
     ]
 });
