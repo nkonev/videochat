@@ -90,6 +90,8 @@ http:
     auth-middleware:
       forwardAuth:
         address: "http://aaa:8060/internal/profile"
+        authRequestHeaders:
+          - "Cookie"
         authResponseHeaders:
           - "X-Auth-Username"
           - "X-Auth-UserId"

@@ -1,21 +1,29 @@
 http:
+  serversTransports:
+    default-transport:
+      insecureSkipVerify: false
+
   services:
     nginx-service:
       loadBalancer:
         servers:
           - url: http://api.site.local:8082
+        serversTransport: default-transport
     aaa-service:
       loadBalancer:
         servers:
           - url: http://api.site.local:8060
+        serversTransport: default-transport
     chat-service:
       loadBalancer:
         servers:
           - url: http://api.site.local:1235
+        serversTransport: default-transport
     storage-service:
       loadBalancer:
         servers:
           - url: http://api.site.local:1236
+        serversTransport: default-transport
 
   routers:
     nginx-router:
