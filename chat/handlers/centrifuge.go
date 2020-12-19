@@ -226,19 +226,6 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 }
 
 func checkPermissions(dbs db.DB, userId string, channelId int64, channelName string) error {
-	if utils.CHANNEL_PREFIX_SIGINALING == channelName {
-		if ids, err := dbs.GetParticipantIds(channelId); err != nil {
-			return err
-		} else {
-			for _, uid := range ids {
-				if fmt.Sprintf("%v", uid) == userId {
-					Logger.Infof("User %v found among participants of chat %v", userId, channelId)
-					return nil
-				}
-			}
-			return errors.New(fmt.Sprintf("User %v not found among participants", userId))
-		}
-	}
 	if utils.CHANNEL_PREFIX_CHAT_MESSAGES == channelName {
 		if ids, err := dbs.GetParticipantIds(channelId); err != nil {
 			return err
@@ -256,14 +243,7 @@ func checkPermissions(dbs db.DB, userId string, channelId int64, channelName str
 }
 
 func getChannelId(channel string) (int64, string, error) {
-	if strings.HasPrefix(channel, utils.CHANNEL_PREFIX_SIGINALING) {
-		s := channel[len(utils.CHANNEL_PREFIX_SIGINALING):]
-		if parseInt64, err := utils.ParseInt64(s); err != nil {
-			return 0, "", err
-		} else {
-			return parseInt64, utils.CHANNEL_PREFIX_SIGINALING, nil
-		}
-	} else if strings.HasPrefix(channel, utils.CHANNEL_PREFIX_CHAT_MESSAGES) {
+	if strings.HasPrefix(channel, utils.CHANNEL_PREFIX_CHAT_MESSAGES) {
 		s := channel[len(utils.CHANNEL_PREFIX_CHAT_MESSAGES):]
 		if parseInt64, err := utils.ParseInt64(s); err != nil {
 			return 0, "", err
