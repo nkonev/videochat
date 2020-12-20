@@ -10,6 +10,13 @@ services:
       update_config:
         parallelism: 1
         delay: 20s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.nginx-service.loadbalancer.server.port=8082"
+        - "traefik.http.routers.nginx-router.rule=PathPrefix(`/`)"
+        - "traefik.http.routers.nginx-router.entrypoints=http"
+        - "traefik.http.middlewares.nginx-retry-middleware.retry.attempts=4"
+        - "traefik.http.routers.nginx-router.middlewares=nginx-retry-middleware"
     logging:
       driver: "journald"
       options:

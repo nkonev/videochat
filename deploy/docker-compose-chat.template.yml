@@ -10,6 +10,17 @@ services:
       update_config:
         parallelism: 1
         delay: 20s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.chat-service.loadbalancer.server.port=1235"
+        - "traefik.http.routers.chat-router.rule=PathPrefix(`/api/chat`)"
+        - "traefik.http.routers.chat-router.entrypoints=http"
+        - "traefik.http.middlewares.chat-auth-middleware.forwardauth.address=http://aaa:8060/internal/profile"
+        - "traefik.http.middlewares.chat-auth-middleware.forwardauth.authRequestHeaders=Cookie"
+        - "traefik.http.middlewares.chat-auth-middleware.forwardauth.authResponseHeaders=X-Auth-Username,X-Auth-UserId,X-Auth-ExpiresIn,X-Auth-Role"
+        - "traefik.http.middlewares.chat-stripprefix-middleware.stripprefix.prefixes=/api"
+        - "traefik.http.middlewares.chat-retry-middleware.retry.attempts=4"
+        - "traefik.http.routers.chat-router.middlewares=chat-auth-middleware,chat-stripprefix-middleware,chat-retry-middleware"
     logging:
       driver: "journald"
       options:
