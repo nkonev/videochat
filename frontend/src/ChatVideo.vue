@@ -53,53 +53,14 @@
 
                 // --- Init a session ---
                 const sess = this.OV.initSession();
-                console.log("Prototype is", sess.constructor.prototype);
-                //const oldProcessToken = sess.constructor.prototype.processToken;
+
+                const oldProcessTokenFunction = sess.constructor.prototype.processToken;
                 sess.constructor.prototype.processToken = function (token) {
-                    var match = token.match(/^(wss?\:)\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([\/]{0,1}[^?#]*)(\?[^#]*|)(#.*|)$/);
-                    if (!!match) {
-                        var url = {
-                            protocol: match[1],
-                            host: match[2],
-                            hostname: match[3],
-                            port: match[4],
-                            pathname: match[5],
-                            search: match[6],
-                            hash: match[7]
-                        };
-                        var params = token.split('?');
-                        var queryParams = decodeURI(params[1])
-                            .split('&')
-                            .map(function (param) { return param.split('='); })
-                            .reduce(function (values, _a) {
-                                var key = _a[0], value = _a[1];
-                                values[key] = value;
-                                return values;
-                            }, {});
-                        this.sessionId = queryParams['sessionId'];
-                        var secret = queryParams['secret'];
-                        var recorder = queryParams['recorder'];
-                        var webrtcStatsInterval = queryParams['webrtcStatsInterval'];
-                        if (!!secret) {
-                            this.openvidu.secret = secret;
-                        }
-                        if (!!recorder) {
-                            this.openvidu.recorder = true;
-                        }
-                        if (!!webrtcStatsInterval) {
-                            this.openvidu.webrtcStatsInterval = +webrtcStatsInterval;
-                        }
-                        this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
-                        this.openvidu.httpUri = 'https://' + url.host;
+                    oldProcessTokenFunction.call(this, token);
 
-                        this.openvidu.wsUri = 'ws://localhost:8081/api/video/openvidu';
-                        this.openvidu.httpUri = 'http://localhost:8081/api/video';
-                    }
-                    else {
-                        logger.error('Token "' + token + '" is not valid');
-                    }
+                    this.openvidu.wsUri = 'ws://localhost:8081/api/video/openvidu';
+                    this.openvidu.httpUri = 'http://localhost:8081/api/video';
                 };
-
 
                 this.session = sess;
 
