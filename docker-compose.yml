@@ -4,7 +4,7 @@ version: '3.7'
 
 services:
   traefik:
-    image: traefik:v2.2.4
+    image: traefik:v2.4.0-rc1
     hostname: traefik
     restart: unless-stopped
     # The Static Configuration
@@ -33,7 +33,7 @@ services:
         max-size: "50m"
         max-file: "1"
   postgresql:
-    image: postgres:13.0
+    image: postgres:13.1
     restart: unless-stopped
     ports:
       - 35432:5432

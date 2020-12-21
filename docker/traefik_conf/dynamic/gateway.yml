@@ -66,6 +66,8 @@ http:
     auth-middleware:
       forwardAuth:
         address: "http://api.site.local:8060/internal/profile"
+        authRequestHeaders:
+          - "Cookie"
         authResponseHeaders:
           - "X-Auth-Username"
           - "X-Auth-UserId"
