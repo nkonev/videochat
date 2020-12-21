@@ -14,6 +14,7 @@
     } from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
+    import {getWebsocketUrlPrefix} from "./utils";
 
     import { OpenVidu } from 'openvidu-browser';
     import UserVideo from './UserVideo';
@@ -58,8 +59,8 @@
                 sess.constructor.prototype.processToken = function (token) {
                     oldProcessTokenFunction.call(this, token);
 
-                    this.openvidu.wsUri = 'ws://localhost:8081/api/video/openvidu';
-                    this.openvidu.httpUri = 'http://localhost:8081/api/video';
+                    this.openvidu.wsUri = getWebsocketUrlPrefix()+'/api/video/openvidu';
+                    this.openvidu.httpUri = '/api/video';
                 };
 
                 this.session = sess;

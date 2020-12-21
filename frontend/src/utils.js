@@ -15,3 +15,7 @@ export const getCorrectUserAvatar = (stringExistsAvatar) => {
     const cacheKey = +new Date();
     return stringExistsAvatar + "?" + cacheKey;
 }
+
+export const getWebsocketUrlPrefix = () => {
+    return ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host
+}
