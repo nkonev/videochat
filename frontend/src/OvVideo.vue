@@ -1,5 +1,5 @@
 <template>
-	<video playsinline autoplay muted/>
+	<video autoPlay playsInline/>
 </template>
 
 <script>
