@@ -86,22 +86,19 @@ services:
         max-size: "50m"
         max-file: "1"
 
-#  coturn:
-#    image: instrumentisto/coturn:4.5.1.3
-#    hostname: coturn
-#    restart: unless-stopped
-#    ports:
-#      - 3478:3478
-#      - 49160-49200:49160-49200/udp
-#    volumes:
-#      - coturn_data:/var/lib/coturn
-#    networks:
-#      backend:
-#    logging:
-#      driver: "json-file"
-#      options:
-#        max-size: "50m"
-#        max-file: "1"
+  coturn:
+    image: instrumentisto/coturn:4.5.1.3
+    hostname: coturn
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - coturn_data:/var/lib/coturn
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+    command: ["--user=scott:tiger", "--external-ip=172.28.0.1", "--relay-ip=172.28.0.1", "--lt-cred-mech"]
 
   openvidu:
     image: openvidu/openvidu-server-kms:2.16.0
