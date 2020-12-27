@@ -66,14 +66,22 @@ func (db *DB) IsAdmin(userId int64, chatId int64) (bool, error) {
 	return getIsAdminCommon(db, userId, chatId)
 }
 
-func (tx *Tx) IsParticipant(userId int64, chatId int64) (bool, error) {
+func isParticipantCommon(qq CommonOperations, userId int64, chatId int64) (bool, error) {
 	var exists bool = false
-	row := tx.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1)`, userId, chatId)
+	row := qq.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1)`, userId, chatId)
 	if err := row.Scan(&exists); err != nil {
 		return false, err
 	} else {
 		return exists, nil
 	}
+}
+
+func (tx *Tx) IsParticipant(userId int64, chatId int64) (bool, error) {
+	return isParticipantCommon(tx, userId, chatId)
+}
+
+func (db *DB) IsParticipant(userId int64, chatId int64) (bool, error) {
+	return isParticipantCommon(db, userId, chatId)
 }
 
 func (tx *Tx) GetFirstParticipant(chatId int64) (int64, error) {
