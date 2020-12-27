@@ -53,3 +53,9 @@ jaeger:
 iceServers:
   #- "stun:chat.nkonev.name:3478"
   - "stun:stun.l.google.com:19302"
+
+openvidu:
+  url:
+    base: "https://api.site.local:4443"
+  user: "OPENVIDUAPP"
+  password: "MY_SECRET"

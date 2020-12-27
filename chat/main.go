@@ -154,7 +154,9 @@ func configureEcho(
 	e.PUT("/chat/:id/message/read/:messageId", mc.ReadMessage)
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
 
-	e.GET("/chat/public/webrtc/config", handlers.GetConfiguration)
+	vh := handlers.NewVideoHandler(restClient)
+	e.GET("/chat/public/webrtc/config", vh.GetConfiguration)
+	e.POST("/chat/:id/token", vh.GetOpenviduToken)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
