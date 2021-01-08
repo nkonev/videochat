@@ -29,7 +29,7 @@ PROTOBUF_SRC_DIR = $(shell cd ..; pwd)
 
 generate-protobufs:
 	mkdir -p ${PROTO_DIR} && \
-	docker run -it --rm -v $(PROTOBUF_SRC_DIR):/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/$(notdir $(wildcard ../protobuf/*.proto))
+	docker run -t --rm -v $(PROTOBUF_SRC_DIR):/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/$(notdir $(wildcard ../protobuf/*.proto))
 
 test:
 	go test ./... -count=1 -test.v -test.timeout=20s -p 1

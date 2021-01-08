@@ -111,7 +111,7 @@ jobs:
       - name: Add entry to hosts
         run: sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
       - name: Build & test chat
-        run: (cd chat; pwd; ls -lah; make check-env download generate test package)
+        run: (cd chat; make check-env download generate test package)
       - name: Deploy chat
         if: github.ref == 'refs/heads/master'
         run: |
