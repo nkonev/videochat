@@ -35,7 +35,7 @@ jobs:
       - name: Build with Maven
         run: |
           (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
-      - name: deploy
+      - name: Deploy
         if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.travis/id_rsa.enc -out ~/.ssh/id_rsa -d
@@ -69,7 +69,7 @@ jobs:
       - name: Build with npm run
         run: |
           (cd frontend; npm install && npm run build)
-      - name: deploy
+      - name: Deploy
         if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.travis/id_rsa.enc -out ~/.ssh/id_rsa -d
@@ -85,3 +85,61 @@ jobs:
           docker push $IMAGE &&
           echo "Will deploy frontend" &&
           ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.FrontendUpdateCommand }}
+
+  chat:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.14.3
+      - name: Install software
+        run: |
+          mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
+      - name: Start & wait docker-compose environment
+        run: |
+          docker-compose up -d
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
+      - name: Add entry to hosts
+        run: sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
+      - name: Build & test chat
+        run: (cd chat; make check-env download generate test package)
+      - name: Deploy chat
+        if: github.ref == 'refs/heads/master'
+        run: |
+          mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.travis/id_rsa.enc -out ~/.ssh/id_rsa -d
+          chmod 600 ~/.ssh/id_rsa
+          (cd chat; make push-docker && echo "Will deploy chat" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.ChatUpdateCommand }} )
+      - name: Deploy storage
+        if: github.ref == 'refs/heads/master'
+        run: |
+          (cd storage; make push-docker && echo "Will deploy storage" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.StorageUpdateCommand }} )
+
+  storage:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.14.3
+      - name: Install software
+        run: |
+          mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
+      - name: Start & wait docker-compose environment
+        run: |
+          docker-compose up -d
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'
+      - name: Add entry to hosts
+        run: sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
+      - name: Build & test storage
+        run: (cd storage; make check-env download generate test package)
+      - name: Deploy storage
+        if: github.ref == 'refs/heads/master'
+        run: |
+          mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.travis/id_rsa.enc -out ~/.ssh/id_rsa -d
+          chmod 600 ~/.ssh/id_rsa
+          (cd storage; make push-docker && echo "Will deploy storage" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.StorageUpdateCommand }} )
