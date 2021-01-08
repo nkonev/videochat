@@ -41,3 +41,4 @@ sudo yum install -y httpd-tools
 # generate password
 htpasswd -bnBC 10 "" password | tr -d ':'
 ```
+
