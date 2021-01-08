@@ -37,4 +37,16 @@ jobs:
           (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
       - name: deploy
         if: github.ref == 'refs/heads/master'
-        run: echo Deploying
+        run: |
+          openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.travis/id_rsa.enc -out ~/.ssh/id_rsa -d
+          BUILDDIR=./build;
+          WORKDIR=./aaa;
+          IMAGE=nkonev/chat-aaa:latest;
+          cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp target/*-exec.jar $BUILDDIR &&
+          docker build -t $IMAGE $BUILDDIR &&
+          echo "Will login to docker" &&
+          docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" &&
+          echo "Will push docker image" &&
+          docker push $IMAGE &&
+          echo "Will deploy aaa" &&
+          ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.AaaUpdateCommand }}
