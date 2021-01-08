@@ -51,3 +51,37 @@ jobs:
           docker push $IMAGE &&
           echo "Will deploy aaa" &&
           ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.AaaUpdateCommand }}
+
+  frontend:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.16.3
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Build with npm run
+        run: |
+          (cd frontend; npm install && npm run build)
+      - name: deploy
+        if: github.ref == 'refs/heads/master'
+        run: |
+          mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.travis/id_rsa.enc -out ~/.ssh/id_rsa -d
+          chmod 600 ~/.ssh/id_rsa
+          BUILDDIR=./build;
+          WORKDIR=./frontend;
+          IMAGE=nkonev/chat-frontend:latest;
+          cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp -r ../frontend-nginx/* $BUILDDIR && cp ../docker/nginx/frontend.conf $BUILDDIR &&
+          docker build -t $IMAGE $BUILDDIR &&
+          echo "Will login to docker" &&
+          docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" &&
+          echo "Will push docker image" &&
+          docker push $IMAGE &&
+          echo "Will deploy frontend" &&
+          ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.FrontendUpdateCommand }}
