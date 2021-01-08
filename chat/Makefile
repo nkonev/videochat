@@ -50,8 +50,6 @@ package-docker:
 package: package-go package-docker
 
 push-docker:
-	echo "Will login to docker" && \
-	docker login -u="${DOCKER_LOGIN}" -p="${DOCKER_PASSWORD}" && \
 	echo "Will push docker chat image" && \
 	docker push $(IMAGE)
 
