@@ -112,10 +112,6 @@ jobs:
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.travis/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
           (cd chat; make push-docker && echo "Will deploy chat" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.ChatUpdateCommand }} )
-      - name: Deploy storage
-        if: github.ref == 'refs/heads/master'
-        run: |
-          (cd storage; make push-docker && echo "Will deploy storage" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.StorageUpdateCommand }} )
 
   storage:
     runs-on: ubuntu-20.04
