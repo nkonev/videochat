@@ -30,8 +30,8 @@ jobs:
       - name: Start & wait docker-compose environment
         run: |
           docker-compose up -d
-          wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
-          wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
       - name: Build with Maven
         run: |
           (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
