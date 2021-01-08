@@ -94,6 +94,12 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.14.3
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - name: Install software
         run: |
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
@@ -105,7 +111,7 @@ jobs:
       - name: Add entry to hosts
         run: sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
       - name: Build & test chat
-        run: (cd chat; make check-env download generate test package)
+        run: (cd chat; pwd; ls -lah; make check-env download generate test package)
       - name: Deploy chat
         if: github.ref == 'refs/heads/master'
         run: |
@@ -121,6 +127,12 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.14.3
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - name: Install software
         run: |
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
