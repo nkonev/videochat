@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/nkonev/videochat.svg?branch=master)](https://travis-ci.com/nkonev/videochat)
+[![Build Status](https://github.com/nkonev/videochat/workflows/CI%20jobs/badge.svg)](https://github.com/nkonev/videochat/actions)
 
 
 # Architecture:
