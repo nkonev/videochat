@@ -56,6 +56,6 @@ iceServers:
 
 openvidu:
   url:
-    base: "https://api.site.local:4443"
+    base: "http://api.site.local:5443"
   user: "OPENVIDUAPP"
   password: "MY_SECRET"

@@ -91,10 +91,12 @@ services:
     hostname: openvidu
     restart: unless-stopped
     ports:
-      - 4443:4443
+      - 5443:5443
     networks:
       backend:
     environment:
+      - SERVER_SSL_ENABLED=false
+      - SERVER_PORT=5443
       - OPENVIDU_SECRET=MY_SECRET
     logging:
       driver: "json-file"

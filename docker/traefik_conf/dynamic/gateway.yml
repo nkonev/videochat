@@ -1,7 +1,4 @@
 http:
-  serversTransports:
-    skip-tls-transport:
-      insecureSkipVerify: true
   services:
     nginx-service:
       loadBalancer:
@@ -21,9 +18,8 @@ http:
           - url: http://api.site.local:1236
     openvidu-service:
       loadBalancer:
-        serversTransport: "skip-tls-transport"
         servers:
-          - url: https://api.site.local:4443
+          - url: http://api.site.local:5443
 
   routers:
     nginx-router:
