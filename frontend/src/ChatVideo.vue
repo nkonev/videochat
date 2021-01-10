@@ -49,10 +49,7 @@
             joinSession() {
                 // --- Get an OpenVidu object ---
                 this.OV = new OpenVidu();
-                this.OV.setAdvancedConfiguration({iceServers: [
-                        {urls: ["turn:api.site.local:3478"], username: "scott", credential: "tiger"},
-                        {urls: ["stun:api.site.local:3478"]}
-                    ], forceMediaReconnectionAfterNetworkDrop: true})
+                this.OV.setAdvancedConfiguration({forceMediaReconnectionAfterNetworkDrop: true})
 
                 // --- Init a session ---
                 const sess = this.OV.initSession();
