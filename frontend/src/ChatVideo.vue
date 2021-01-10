@@ -20,7 +20,6 @@
     import UserVideo from './UserVideo';
 
     const OPENVIDU_SERVER_URL = "/api/video";
-    const OPENVIDU_SERVER_SECRET = "MY_SECRET";
 
     export default {
         components: {
