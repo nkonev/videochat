@@ -155,7 +155,6 @@ func configureEcho(
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
 
 	vh := handlers.NewVideoHandler(db, restClient)
-	e.GET("/chat/public/webrtc/config", vh.GetConfiguration)
 	e.POST("/chat/:id/token", vh.GetOpenviduToken)
 
 	lc.Append(fx.Hook{

@@ -50,10 +50,6 @@ aaa:
 jaeger:
   endpoint: "localhost:6831"
 
-iceServers:
-  #- "stun:chat.nkonev.name:3478"
-  - "stun:stun.l.google.com:19302"
-
 openvidu:
   url:
     base: "http://api.site.local:5443"

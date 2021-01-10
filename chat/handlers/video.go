@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -19,11 +18,6 @@ type VideoHandler struct {
 
 func NewVideoHandler(db db.DB, restClient client.RestClient) VideoHandler {
 	return VideoHandler{db, restClient}
-}
-
-func (vh VideoHandler) GetConfiguration(c echo.Context) error {
-	slice := viper.GetStringSlice("iceServers")
-	return c.JSON(200, slice)
 }
 
 func (vh VideoHandler) GetOpenviduToken(c echo.Context) error {
