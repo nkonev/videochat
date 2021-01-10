@@ -58,8 +58,8 @@
                 sess.constructor.prototype.processToken = function (token) {
                     oldProcessTokenFunction.call(this, token);
 
-                    this.openvidu.wsUri = getWebsocketUrlPrefix()+'/api/video/openvidu';
-                    this.openvidu.httpUri = '/api/video';
+                    this.openvidu.wsUri = getWebsocketUrlPrefix()+OPENVIDU_SERVER_URL+'/openvidu';
+                    this.openvidu.httpUri = OPENVIDU_SERVER_URL;
                 };
 
                 this.session = sess;
