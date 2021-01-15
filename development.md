@@ -73,7 +73,28 @@ media.devices.insecure.enabled
 ![](./.markdown/mobile-ff-2.jpg)
 
 # Validate turn server
+Firstly uncomment `TURN_USERNAME_PASSWORD=guest:somepassword` in `openvidu-server` in `docker-compose-infra.template`
+
+Then install on client machine (your PC)
 ```bash
 dnf install coturn-utils
+```
+
+Test
+```bash
 turnutils_uclient -T -u guest -w somepassword <your.public.ip.address>
+```
+
+Correct output
+```
+0: Total connect time is 0
+0: 2 connections are completed
+1: start_mclient: msz=2, tot_send_msgs=0, tot_recv_msgs=0, tot_send_bytes ~ 0, tot_recv_bytes ~ 0
+2: start_mclient: msz=2, tot_send_msgs=3, tot_recv_msgs=3, tot_send_bytes ~ 300, tot_recv_bytes ~ 300
+2: start_mclient: tot_send_msgs=10, tot_recv_msgs=10
+2: start_mclient: tot_send_bytes ~ 1000, tot_recv_bytes ~ 1000
+2: Total transmit time is 2
+2: Total lost packets 0 (0.000000%), total send dropped 0 (0.000000%)
+2: Average round trip delay 11.500000 ms; min = 11 ms, max = 13 ms
+2: Average jitter 0.800000 ms; min = 0 ms, max = 2 ms
 ```
