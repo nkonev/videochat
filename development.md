@@ -71,3 +71,9 @@ media.devices.insecure.enabled
 # Mobile firefox enable video on non-localhost
 ![](./.markdown/mobile-ff-1.jpg)
 ![](./.markdown/mobile-ff-2.jpg)
+
+# Validate turn server
+```bash
+dnf install coturn-utils
+turnutils_uclient -T -u guest -w somepassword <your.public.ip.address>
+```
