@@ -62,21 +62,6 @@ services:
       options:
         tag: chat-minio
 
-#  coturn:
-#    image: instrumentisto/coturn:4.5.1.3
-#    hostname: coturn
-#    ports:
-#      - 3478:3478
-#      - 49160-49200:49160-49200/udp
-#    volumes:
-#      - coturn_data:/var/lib/coturn
-#    networks:
-#      backend:
-#    logging:
-#      driver: "journald"
-#      options:
-#        tag: chat-coturn
-
   jaeger:
     image: jaegertracing/all-in-one:1.18.1
     hostname: jaeger
@@ -86,6 +71,172 @@ services:
       driver: "journald"
       options:
         tag: chat-jaeger
+
+  openvidu-server:
+    image: nkonev/openvidu-aio:2.16.0.1
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.openvidu-service.loadbalancer.server.port=5443"
+        - "traefik.http.routers.openvidu-router.rule=PathPrefix(`/api/video`)"
+        - "traefik.http.routers.openvidu-router.entrypoints=http"
+        - "traefik.http.middlewares.openvidu-retry-middleware.retry.attempts=4"
+        - "traefik.http.middlewares.openvidu-stripprefix-middleware.stripprefix.prefixes=/api/video"
+        - "traefik.http.middlewares.openvidu-auth-middleware.forwardauth.address=http://aaa:8060/internal/profile"
+        - "traefik.http.middlewares.openvidu-auth-middleware.forwardauth.authRequestHeaders=Cookie"
+        - "traefik.http.middlewares.openvidu-auth-middleware.forwardauth.authResponseHeaders=X-Auth-Username,X-Auth-UserId,X-Auth-ExpiresIn,X-Auth-Role"
+        - "traefik.http.routers.openvidu-router.middlewares=openvidu-stripprefix-middleware,openvidu-auth-middleware,openvidu-retry-middleware"
+    environment:
+      - SERVER_SSL_ENABLED=false
+      - SERVER_PORT=5443
+      - DOMAIN_OR_PUBLIC_IP=api.site.local
+      - OPENVIDU_SECRET=MY_SECRET
+      - SUPPORT_DEPRECATED_API=false
+      - KMS_MIN_PORT=40000
+      - KMS_MAX_PORT=40020
+      # coturn ports
+      - MIN_PORT=57001
+      - MAX_PORT=57021
+      - ENABLE_COTURN_LOGS=true
+      - TURN_BEHIND_NAT=true
+    ports:
+      # KMS ports
+      - target: 40000
+        published: 40000
+        mode: host
+      - target: 40001
+        published: 40001
+        mode: host
+      - target: 40002
+        published: 40002
+        mode: host
+      - target: 40003
+        published: 40003
+        mode: host
+      - target: 40004
+        published: 40004
+        mode: host
+      - target: 40005
+        published: 40005
+        mode: host
+      - target: 40006
+        published: 40006
+        mode: host
+      - target: 40007
+        published: 40007
+        mode: host
+      - target: 40008
+        published: 40008
+        mode: host
+      - target: 40009
+        published: 40009
+        mode: host
+      - target: 40010
+        published: 40010
+        mode: host
+      - target: 40011
+        published: 40011
+        mode: host
+      - target: 40012
+        published: 40012
+        mode: host
+      - target: 40013
+        published: 40013
+        mode: host
+      - target: 40014
+        published: 40014
+        mode: host
+      - target: 40015
+        published: 40015
+        mode: host
+      - target: 40016
+        published: 40016
+        mode: host
+      - target: 40017
+        published: 40017
+        mode: host
+      - target: 40018
+        published: 40018
+        mode: host
+      - target: 40019
+        published: 40019
+        mode: host
+      - target: 40020
+        published: 40020
+        mode: host
+      # coturn ports
+      - target: 57001
+        published: 57001
+        mode: host
+      - target: 57002
+        published: 57002
+        mode: host
+      - target: 57003
+        published: 57003
+        mode: host
+      - target: 57004
+        published: 57004
+        mode: host
+      - target: 57005
+        published: 57005
+        mode: host
+      - target: 57006
+        published: 57006
+        mode: host
+      - target: 57007
+        published: 57007
+        mode: host
+      - target: 57008
+        published: 57008
+        mode: host
+      - target: 57009
+        published: 57009
+        mode: host
+      - target: 57010
+        published: 57010
+        mode: host
+      - target: 57011
+        published: 57011
+        mode: host
+      - target: 57012
+        published: 57012
+        mode: host
+      - target: 57013
+        published: 57013
+        mode: host
+      - target: 57014
+        published: 57014
+        mode: host
+      - target: 57015
+        published: 57015
+        mode: host
+      - target: 57016
+        published: 57016
+        mode: host
+      - target: 57017
+        published: 57017
+        mode: host
+      - target: 57018
+        published: 57018
+        mode: host
+      - target: 57019
+        published: 57019
+        mode: host
+      - target: 57020
+        published: 57020
+        mode: host
+      - target: 57021
+        published: 57021
+        mode: host
+      - target: 3478
+        published: 3478
+        mode: host
+    networks:
+      backend:
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-openvidu
 
 volumes:
   postgres_data:
