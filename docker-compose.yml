@@ -87,24 +87,17 @@ services:
         max-file: "1"
 
   openvidu:
-    image: nkonev/openvidu-aio:2.16.0.1
+    image: openvidu/openvidu-server-kms:2.16.0
     hostname: openvidu
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - 5443:5443
+    networks:
+      backend:
     environment:
       - SERVER_SSL_ENABLED=false
       - SERVER_PORT=5443
       - OPENVIDU_SECRET=MY_SECRET
-      - DOMAIN_OR_PUBLIC_IP=localhost
-#      - KMS_TURN_URL=guest:somepassword@127.0.0.1:3478
-      - ENABLE_COTURN_LOGS=true
-#      - TURN_USERNAME_PASSWORD=guest:somepassword
-      - TURN_BEHIND_NAT=true
-#      - TURN_PUBLIC_IP=127.0.0.1
-#      - MIN_PORT=40000
-#      - MAX_PORT=40020
-#      - KMS_MIN_PORT=50000
-#      - KMS_MAX_PORT=50020
     logging:
       driver: "json-file"
       options:
