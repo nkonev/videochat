@@ -123,7 +123,6 @@ volumes:
   postgres_data:
   redis_data_dir:
   minio_data:
-  coturn_data:
 
 networks:
   backend:
