@@ -99,6 +99,7 @@ services:
       - MAX_PORT=57021
       - ENABLE_COTURN_LOGS=true
       - TURN_BEHIND_NAT=true
+      #- TURN_USERNAME_PASSWORD=guest:somepassword
     ports:
       # KMS ports
       - target: 40000
