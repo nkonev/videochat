@@ -83,8 +83,4 @@ http:
         address: "http://api.site.local:8060/internal/profile"
         authRequestHeaders:
           - "Cookie"
-        authResponseHeaders:
-          - "X-Auth-Username"
-          - "X-Auth-UserId"
-          - "X-Auth-ExpiresIn"
-          - "X-Auth-Role"
+        authResponseHeadersRegex: "^X-Auth-"

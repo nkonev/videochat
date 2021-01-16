@@ -84,7 +84,7 @@ services:
         - "traefik.http.middlewares.openvidu-stripprefix-middleware.stripprefix.prefixes=/api/video"
         - "traefik.http.middlewares.openvidu-auth-middleware.forwardauth.address=http://aaa:8060/internal/profile"
         - "traefik.http.middlewares.openvidu-auth-middleware.forwardauth.authRequestHeaders=Cookie"
-        - "traefik.http.middlewares.openvidu-auth-middleware.forwardauth.authResponseHeaders=X-Auth-Username,X-Auth-UserId,X-Auth-ExpiresIn,X-Auth-Role"
+        - "traefik.http.middlewares.openvidu-auth-middleware.forwardauth.authResponseHeadersRegex=^X-Auth-"
         - "traefik.http.routers.openvidu-router.middlewares=openvidu-stripprefix-middleware,openvidu-auth-middleware,openvidu-retry-middleware"
     environment:
       - SERVER_SSL_ENABLED=false

@@ -17,7 +17,7 @@ services:
         - "traefik.http.routers.storage-router.entrypoints=http"
         - "traefik.http.middlewares.storage-auth-middleware.forwardauth.address=http://aaa:8060/internal/profile"
         - "traefik.http.middlewares.storage-auth-middleware.forwardauth.authRequestHeaders=Cookie"
-        - "traefik.http.middlewares.storage-auth-middleware.forwardauth.authResponseHeaders=X-Auth-Username,X-Auth-UserId,X-Auth-ExpiresIn,X-Auth-Role"
+        - "traefik.http.middlewares.storage-auth-middleware.forwardauth.authResponseHeadersRegex=^X-Auth-"
         - "traefik.http.middlewares.storage-stripprefix-middleware.stripprefix.prefixes=/api,/storage"
         - "traefik.http.middlewares.storage-retry-middleware.retry.attempts=4"
         - "traefik.http.routers.storage-router.middlewares=storage-auth-middleware,storage-stripprefix-middleware,storage-retry-middleware"
