@@ -1,6 +1,6 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <user-video class="video-container-element-my" :stream-manager="publisher"/>
+        <user-video :stream-manager="publisher"/>
         <user-video v-for="sub in subscribers" :key="sub.stream.connection.connectionId" :stream-manager="sub"/>
     </v-col>
 </template>
@@ -159,43 +159,12 @@
     }
 </script>
 
-<style lang="stylus">
+<style lang="stylus" scoped>
     #video-container {
         display: flex;
         flex-direction: row;
         overflow-x: auto;
         overflow-y: hidden;
         height 100%
-    }
-
-    .video-container-element {
-        display flex
-        align-items flex-start
-        flex-direction column
-        object-fit: scale-down;
-        height 100% !important
-        // width 100% !important
-    }
-
-    .video-container-element-my {
-        background #b3e7ff
-    }
-
-    .video-container-element:nth-child(even) {
-        background #d5fdd5;
-    }
-
-    video {
-        //object-fit: scale-down;
-        //width 100% !important
-        height 100% !important // todo its
-    }
-
-    .video-container-element-caption {
-        margin: 0;
-        top -2.5em
-        left 1.2em
-        text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
-        position: relative;
     }
 </style>
