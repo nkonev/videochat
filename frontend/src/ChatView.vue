@@ -42,7 +42,7 @@
         USER_TYPING,
         VIDEO_LOCAL_ESTABLISHED,
         USER_PROFILE_CHANGED,
-        LOGGED_IN, LOGGED_OUT
+        LOGGED_IN, LOGGED_OUT, VIDEO_CALL_CHANGED
     } from "./bus";
     import {phoneFactory, titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
@@ -163,6 +163,12 @@
                     if (reason.response.status == 404) {
                         this.goToChatList();
                     }
+                }).then(() => {
+                    axios.get(`/api/chat/${this.chatId}/video/users`)
+                        .then(response => response.data)
+                        .then(data => {
+                            bus.$emit(VIDEO_CALL_CHANGED, data);
+                        });
                 });
             },
             goToChatList() {
@@ -205,6 +211,9 @@
                     const properData = getProperData(message)
                     if (data.type === "user_typing") {
                         bus.$emit(USER_TYPING, properData);
+                    }
+                    if (data.type === "video_call_changed") {
+                        bus.$emit(VIDEO_CALL_CHANGED, properData);
                     }
                 });
             },

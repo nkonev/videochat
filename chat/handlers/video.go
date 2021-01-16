@@ -8,16 +8,18 @@ import (
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
 )
 
 type VideoHandler struct {
 	db         db.DB
 	restClient client.RestClient
+	notificator notifications.Notifications
 }
 
-func NewVideoHandler(db db.DB, restClient client.RestClient) VideoHandler {
-	return VideoHandler{db, restClient}
+func NewVideoHandler(db db.DB, restClient client.RestClient, notificator notifications.Notifications) VideoHandler {
+	return VideoHandler{db, restClient, notificator}
 }
 
 func (vh VideoHandler) GetOpenviduToken(c echo.Context) error {
@@ -50,4 +52,57 @@ func (vh VideoHandler) GetOpenviduToken(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, &utils.H{"token": token})
+}
+
+func getUsersCount(vh VideoHandler, chatId int64, c echo.Context) (int32, error) {
+	info, err := vh.restClient.GetOpenviduSessionInfo(chatId)
+	if err != nil {
+		GetLogEntry(c.Request()).Errorf("Unable to get session info for chat %v %v", chatId, err)
+		return 0, err
+	}
+	var count int32 = 0
+	if info != nil {
+		count = info.Connections.NumberOfElements
+	}
+	return count, nil
+}
+
+func (vh VideoHandler) GetUsersCount(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+	var _, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	count, err := getUsersCount(vh, chatId, c)
+	if err != nil {
+		GetLogEntry(c.Request()).Errorf("Unable to get session info for chat %v %v", chatId, err)
+		return err
+	}
+	return c.JSON(http.StatusOK, &utils.H{"usersCount": count})
+}
+
+func (vh VideoHandler) NotifyAboutVideoCallChange(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+	var _, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	count, err := getUsersCount(vh, chatId, c)
+	if err != nil {
+		GetLogEntry(c.Request()).Errorf("Unable to get session info for chat %v %v", chatId, err)
+		return err
+	}
+
+	vh.notificator.NotifyAboutVideoCallChanged(c, chatId, count)
+	return c.NoContent(200)
 }

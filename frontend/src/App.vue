@@ -54,12 +54,21 @@
             <v-btn v-if="showChatEditButton" icon @click="editChat">
                 <v-icon>mdi-lead-pencil</v-icon>
             </v-btn>
-            <v-btn v-if="showCallButton" icon @click="createCall">
-                <v-icon color="green">mdi-phone</v-icon>
+            <v-badge
+                v-if="showCallButton || showHangButton"
+                :content="usersCount"
+                :value="usersCount"
+                color="green"
+                overlap
+                offset-y="1.8em"
+            >
+                <v-btn v-if="showCallButton" icon @click="createCall">
+                    <v-icon color="green">mdi-phone</v-icon>
+                </v-btn>
+                <v-btn v-if="showHangButton" icon @click="stopCall">
+                    <v-icon color="red">mdi-phone</v-icon>
             </v-btn>
-            <v-btn v-if="showHangButton" icon @click="stopCall">
-                <v-icon color="red">mdi-phone</v-icon>
-            </v-btn>
+            </v-badge>
 
             <v-spacer></v-spacer>
             <v-toolbar-title>{{title}}</v-toolbar-title>
@@ -110,7 +119,7 @@
         CHANGE_TITLE, CHANGE_WEBSOCKET_STATUS,
         LOGGED_OUT,
         OPEN_CHAT_EDIT,
-        OPEN_CHOOSE_AVATAR, OPEN_INFO_DIALOG,
+        OPEN_CHOOSE_AVATAR, OPEN_INFO_DIALOG, VIDEO_CALL_CHANGED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -141,7 +150,8 @@
                 chatId: null,
                 chatEditId: null, // nullable if non-chat admin
                 wsConnected: false,
-                showChatInfoButton: false
+                showChatInfoButton: false,
+                usersCount: 0
             }
         },
         components:{
@@ -230,6 +240,9 @@
             onInfoClicked() {
                 bus.$emit(OPEN_INFO_DIALOG, this.chatId);
             },
+            onVideoCallChanged(data) {
+                this.usersCount = data.usersCount
+            }
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
@@ -245,6 +258,7 @@
             bus.$on(CHANGE_TITLE, this.changeTitle);
             bus.$on(CHANGE_PHONE_BUTTON, this.changePhoneButton);
             bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus)
+            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged)
         },
         watch: {
             searchChatString (searchString) {

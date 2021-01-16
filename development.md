@@ -98,3 +98,9 @@ Correct output
 2: Average round trip delay 11.500000 ms; min = 11 ms, max = 13 ms
 2: Average jitter 0.800000 ms; min = 0 ms, max = 2 ms
 ```
+
+# Example of usage openvidu api
+https://docs.openvidu.io/en/2.16.0/reference-docs/REST-API/#get-openviduapisessionsltsession_idgt
+```
+curl s -u"OPENVIDUAPP:MY_SECRET" http://localhost:5443/openvidu/api/sessions/chat1 | jq '.'
+```

@@ -258,3 +258,66 @@ func (rc RestClient) CreateOpenviduConnection(sessionId string) (string, error) 
 
 	return sres.Token, nil
 }
+
+type SessionConnectionsObject struct {
+	NumberOfElements int32 `json:"numberOfElements"`
+}
+type SessionInfoResponse struct {
+	Connections SessionConnectionsObject `json:"connections"`
+}
+
+func (rc RestClient) GetOpenviduSessionInfo(chatId int64) (*SessionInfoResponse, error) {
+	sessionId := fmt.Sprintf("chat%v", chatId)
+
+	contentType := "application/json;charset=UTF-8"
+	url0 := viper.GetString("openvidu.url.base")
+	url1 := "/openvidu/api/sessions/"
+	fullUrl := url0 + url1 + sessionId
+
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		Logger.Errorln("Failed during parse openvidu url:", err)
+		return nil, err
+	}
+
+	request := &http.Request{
+		Method: "GET",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+	request.SetBasicAuth(viper.GetString("openvidu.user"), viper.GetString("openvidu.password"))
+
+	resp, err := rc.Do(request)
+	if err != nil {
+		Logger.Warningln("Failed to request create token response:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code == 404 {
+		Logger.Infof("Openvidu returns 404 that means that there is no such session")
+		return nil, nil
+	}
+	if !(code >= 200 && code < 300) {
+		Logger.Errorln("Openvidu get session info response responded non-200 code: ", code)
+		return nil, errors.New("Bad response code of get session info response")
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		Logger.Errorln("Failed to decode get session info response:", err)
+		return nil, err
+	}
+	sres := &SessionInfoResponse{}
+	if err := json.Unmarshal(body, sres); err != nil {
+		Logger.Errorln("Failed to parse get session info response:", err)
+		return nil, err
+	}
+
+	return sres, nil
+}

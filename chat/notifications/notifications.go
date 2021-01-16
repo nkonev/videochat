@@ -22,6 +22,7 @@ type Notifications interface {
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
+	NotifyAboutVideoCallChanged(c echo.Context, chatId int64, newUsersCount int32)
 	NotifyAboutProfileChanged(user *dto.User)
 }
 
@@ -51,6 +52,10 @@ type DisplayMessageDtoNotification struct {
 type UserTypingNotification struct {
 	Login         string `json:"login"`
 	ParticipantId int64  `json:"participantId"`
+}
+
+type VideoCallChanged struct {
+	UsersCount int32 `json:"usersCount"`
 }
 
 func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userIds []int64, tx *db.Tx) {
@@ -234,10 +239,30 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 	} else {
 		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
 		if err != nil {
-			GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
+			GetLogEntry(c.Request()).Errorf("error publishing to public channel: %s", err)
 		}
 	}
+}
 
+func (not *notifictionsImpl) NotifyAboutVideoCallChanged(c echo.Context, chatId int64, newUsersCount int32) {
+
+	channelName := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
+
+	notification := CentrifugeNotification{
+		Payload:   VideoCallChanged {
+			UsersCount: newUsersCount,
+		},
+		EventType: "video_call_changed",
+	}
+
+	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
+		GetLogEntry(c.Request()).Errorf("error during marshalling chat created VideoCallChanged: %s", err2)
+	} else {
+		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("error publishing to public channel: %s", err)
+		}
+	}
 }
 
 func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {

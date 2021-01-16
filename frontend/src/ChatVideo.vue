@@ -9,7 +9,7 @@
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import bus, {
-        CHANGE_PHONE_BUTTON,
+        CHANGE_PHONE_BUTTON, VIDEO_CALL_CHANGED,
         VIDEO_LOCAL_ESTABLISHED
     } from "./bus";
     import {phoneFactory} from "./changeTitle";
@@ -65,6 +65,7 @@
 
                 // --- Specify the actions when events take place in the session ---
 
+                // https://docs.openvidu.io/en/2.16.0/api/openvidu-browser/classes/session.html
                 // On every new Stream received...
                 this.session.on('streamCreated', ({ stream }) => {
                     const subscriber = this.session.subscribe(stream);
@@ -104,7 +105,7 @@
 
                             // --- Publish your stream ---
 
-                            this.session.publish(this.publisher);
+                            this.session.publish(this.publisher).then(() => this.notifyAboutJoining());
                         })
                         .catch(error => {
                             console.log('There was an error connecting to the session:', error.code, error.message);
@@ -122,18 +123,26 @@
                 this.publisher = undefined;
                 this.subscribers = [];
                 this.OV = undefined;
+                this.notifyAboutLeaving();
 
                 window.removeEventListener('beforeunload', this.leaveSession);
             },
             getToken() {
                 return new Promise((resolve, reject) => {
                     axios
-                        .post(`/api/chat/${this.chatId}/token`)
+                        .post(`/api/chat/${this.chatId}/video/token`)
                         .then(response => response.data)
                         .then(data => resolve(data.token))
                         .catch(error => reject(error.response));
                 });
             },
+
+            notifyAboutJoining() {
+                axios.post(`/api/chat/${this.chatId}/video/notify`)
+            },
+            notifyAboutLeaving() {
+                axios.post(`/api/chat/${this.chatId}/video/notify`)
+            }
         },
         mounted() {
             bus.$emit(VIDEO_LOCAL_ESTABLISHED);
