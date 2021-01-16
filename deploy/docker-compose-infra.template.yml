@@ -242,7 +242,6 @@ services:
 volumes:
   postgres_data:
   redis_data_dir:
-  coturn_data:
 
 networks:
   backend:
