@@ -161,10 +161,11 @@
 
     .video-container-element {
         display flex
+        align-items flex-start
         flex-direction column
         object-fit: scale-down;
         height 100% !important
-        width 100% !important
+        // width 100% !important
     }
 
     .video-container-element-my {
@@ -182,8 +183,9 @@
     }
 
     .video-container-element-caption {
-        top -1.8em
-        left 2em
+        margin: 0;
+        top -2.5em
+        left 1.2em
         text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
         position: relative;
     }
