@@ -26,10 +26,12 @@
 
                         <v-text-field
                                 v-model="password"
+                                :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
+                                @click:append="showInputablePassword = !showInputablePassword"
                                 :rules="passwordRules"
                                 label="Password"
                                 required
-                                type="password"
+                                :type="showInputablePassword ? 'text' : 'password'"
                                 :disabled="disable"
                                 @input="hideAlert()"
                         ></v-text-field>
@@ -73,6 +75,7 @@
     export default {
         data() {
             return {
+                showInputablePassword: false,
                 show: false,
                 showAlert: false,
                 loginError: "",
