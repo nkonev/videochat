@@ -67,7 +67,7 @@ module.exports = (env, argv) => {
                     test: /\.css$/,
                     use: [ // https://vue-loader.vuejs.org/ru/guide/extract-css.html#webpack-4
                         CssExtractPlugin.loader,
-                        "css-loader?sourceMap",
+                        "css-loader",
                     ]
                 },
                 {
