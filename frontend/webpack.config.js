@@ -10,11 +10,14 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const contentStaticDest = path.join(__dirname, "../frontend-nginx");
 const contentBase = path.join(contentStaticDest, "/build");
 
+const LIVE_RELOAD_PORT = 35736
+const DEVELOPMENT_MODE='development'
+
 module.exports = (env, argv) => {
     const pluginsArray = [
         // new BundleAnalyzerPlugin({defaultSizes: "parsed"}),
         new HtmlWebpackPlugin({
-            livereload: argv.mode === 'development' ? `<script src="http://localhost:35736/livereload.js"></script>` : "",
+            livereload: argv.mode === DEVELOPMENT_MODE ? `<script src="http://localhost:${LIVE_RELOAD_PORT}/livereload.js"></script>` : "",
             // Load a custom template (lodash by default)
             template: './src/index.template.html',
             inject: false
@@ -32,11 +35,11 @@ module.exports = (env, argv) => {
             ignoreOrder: false, // Enable to remove warnings about conflicting order
         }),
     ];
-    if (argv.mode === 'development') {
+    if (argv.mode === DEVELOPMENT_MODE) {
         console.log("Starting LiveReloadPlugin");
         pluginsArray.push(
             new LiveReloadPlugin({
-                port: 35736
+                port: LIVE_RELOAD_PORT
             })
         );
     }
@@ -120,7 +123,7 @@ module.exports = (env, argv) => {
         plugins: pluginsArray,
     };
 
-    if (argv.mode === 'development') {
+    if (argv.mode === DEVELOPMENT_MODE) {
         // https://github.com/vuejs/vue-loader/issues/620#issuecomment-363931521
         webpackCfg.devtool = 'cheap-module-eval-sourcemap';
     }
