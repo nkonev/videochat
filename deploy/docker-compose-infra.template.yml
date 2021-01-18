@@ -97,7 +97,6 @@ services:
       # coturn ports
       - COTURN_MIN_PORT=57001
       - COTURN_MAX_PORT=57021
-      - ENABLE_COTURN_LOGS=true
       - TURN_BEHIND_NAT=true
       #- TURN_USERNAME_PASSWORD=guest:somepassword
     ports:
