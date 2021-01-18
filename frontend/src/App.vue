@@ -139,7 +139,7 @@
                     { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
                     { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
                 ],
-                drawer: true,
+                drawer: false,
                 lastError: "",
                 showAlert: false,
                 searchChatString: "",
