@@ -198,6 +198,7 @@
             onLoggedIn() {
                 this.getInfo();
                 this.subscribe();
+                this.reloadItems();
             },
             onLoggedOut() {
                 this.unsubscribe();
