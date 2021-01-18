@@ -47,16 +47,16 @@
                         <v-btn
                                 :disabled="!valid || disable"
                                 color="success"
-                                class="mr-2"
+                                class="mr-2 mb-2"
                                 @click="loginWithUsername"
                                 min-width="80px"
                                 :loading="loadingLogin"
                         >
                             Login
                         </v-btn>
-                        <v-btn class="mr-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn class="mr-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn class="mr-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google' }" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-2 mb-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn class="mr-2 mb-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google' }" :size="'2x'"></font-awesome-icon></v-btn>
                     </v-form>
                 </v-card-text>
 
