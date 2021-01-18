@@ -8,7 +8,7 @@
                 v-model="drawer"
         >
             <template v-slot:prepend>
-                <v-list-item two-line v-if="currentUser" @click="openAvatarDialog()">
+                <v-list-item two-line v-if="currentUser">
                     <v-list-item-avatar>
                         <img :src="currentUserAvatar"/>
                     </v-list-item-avatar>
@@ -119,7 +119,7 @@
         CHANGE_TITLE, CHANGE_WEBSOCKET_STATUS,
         LOGGED_OUT,
         OPEN_CHAT_EDIT,
-        OPEN_CHOOSE_AVATAR, OPEN_INFO_DIALOG, VIDEO_CALL_CHANGED,
+        OPEN_INFO_DIALOG, VIDEO_CALL_CHANGED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -230,9 +230,6 @@
             stopCall() {
                 console.log("stopCall");
                 this.$router.push({ name: chat_name});
-            },
-            openAvatarDialog() {
-                bus.$emit(OPEN_CHOOSE_AVATAR);
             },
             onChangeWsStatus(value) {
                 this.wsConnected = value;
