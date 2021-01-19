@@ -48,9 +48,6 @@
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
 
-            <v-btn v-if="showChatInfoButton" icon @click="onInfoClicked">
-                <v-icon>mdi-information</v-icon>
-            </v-btn>
             <v-btn v-if="showChatEditButton" icon @click="editChat">
                 <v-icon>mdi-lead-pencil</v-icon>
             </v-btn>
@@ -71,7 +68,13 @@
             </v-badge>
 
             <v-spacer></v-spacer>
-            <v-toolbar-title>{{title}}</v-toolbar-title>
+            <v-btn
+                class="ma-2"
+                text
+                color="white"
+                @click="onInfoClicked"
+                :disabled="!chatId"
+            >{{title}}</v-btn>
             <v-spacer></v-spacer>
             <v-tooltip bottom v-if="!wsConnected">
                 <template v-slot:activator="{ on, attrs }">
@@ -150,7 +153,6 @@
                 chatId: null,
                 chatEditId: null, // nullable if non-chat admin
                 wsConnected: false,
-                showChatInfoButton: false,
                 usersCount: 0
             }
         },
@@ -200,12 +202,11 @@
                     }
                 })
             },
-            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, isShowChatInfoButton, chatId}) {
+            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, chatId}) {
                 this.title = title;
                 this.showSearch = isShowSearch;
                 this.showChatEditButton = isShowChatEditButton;
                 this.chatEditId = chatEditId;
-                this.showChatInfoButton = isShowChatInfoButton;
                 this.chatId = chatId;
             },
             changePhoneButton({show, call}) {
