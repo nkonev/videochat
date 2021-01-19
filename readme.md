@@ -5,14 +5,22 @@
 
 ![Architecture](./.markdown/auth.png "Title")
 
-## Add DNS names
+## Add DNS names Mac OS
 `vim /etc/hosts`
 
 ```
 127.0.0.1   api.site.local
 ```
 
-## Allow container -> host
+## Add DNS names Linux
+`vim /etc/hosts`
+
+```
+127.0.0.1   api.site.local
+127.0.0.1   host.docker.internal
+```
+
+## Allow container -> host (Linux)
 
 ```bash
 su -
