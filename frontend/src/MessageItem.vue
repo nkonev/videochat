@@ -22,7 +22,7 @@
     import axios from "axios";
     import bus, {SET_EDIT_MESSAGE} from "./bus";
     import debounce from "lodash/debounce";
-    import { format, parseISO } from 'date-fns'
+    import { format, parseISO, getDay } from 'date-fns'
 
     export default {
         props: ['item', 'chatId'],
@@ -41,7 +41,12 @@
                 bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
             },
             getSubtitle(item) {
-                return `${item.owner.login} at ${format(parseISO(item.createDateTime), 'pp')}`
+                const parsedDate = parseISO(item.createDateTime);
+                let formatString = 'H:m:s';
+                if (getDay(new Date()) - getDay(parsedDate) >= 1) {
+                    formatString = 'd MMM yyyy, ' + formatString;
+                }
+                return `${item.owner.login} at ${format(parsedDate, formatString)}`
             },
         },
         created() {
