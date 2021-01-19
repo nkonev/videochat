@@ -11,6 +11,7 @@
     "axios": "^0.19.2",
     "centrifuge": "^2.6.2",
     "lodash": "^4.17.15",
+    "openvidu-browser": "2.16.0",
     "splitpanes": "^2.2.1",
     "typeface-roboto": "0.0.75",
     "vue": "^2.6.11",
@@ -19,8 +20,7 @@
     "vue-quill-editor": "^3.0.6",
     "vue-router": "^3.3.4",
     "vuetify": "^2.3.2",
-    "vuex": "^3.4.0",
-    "openvidu-browser": "2.16.0"
+    "vuex": "^3.4.0"
   },
   "scripts": {
     "dev": "webpack --mode development --watch",
