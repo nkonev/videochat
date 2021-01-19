@@ -75,6 +75,33 @@
                 @click="onInfoClicked"
                 :disabled="!chatId"
             >{{title}}</v-btn>
+            <v-alert
+                v-model="alert"
+                close-text="Close Alert"
+                dismissible
+                prominent
+                class="ma-0 pa-0 pr-4"
+                type="success"
+            >
+                <v-row align="center">
+                    <v-col class="grow">
+                        You are called
+                    </v-col>
+                    <v-col class="shrink">
+                        <v-btn outlined>Join</v-btn>
+                    </v-col>
+                </v-row>
+            </v-alert>
+            <div class="text-center">
+                <v-btn
+                    v-if="!alert"
+                    color="deep-purple accent-4"
+                    dark
+                    @click="alert = true"
+                >
+                    Reset
+                </v-btn>
+            </div>
             <v-spacer></v-spacer>
             <v-tooltip bottom v-if="!wsConnected">
                 <template v-slot:activator="{ on, attrs }">
@@ -145,6 +172,7 @@
                 drawer: false,
                 lastError: "",
                 showAlert: false,
+                alert: true,
                 searchChatString: "",
                 showSearch: false,
                 showChatEditButton: false,
