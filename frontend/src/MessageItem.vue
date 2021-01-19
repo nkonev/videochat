@@ -7,16 +7,12 @@
         <v-img :src="item.owner.avatar"></v-img>
     </v-list-item-avatar>
     <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
-        <v-list-item-subtitle>
-            <v-container class="ma-0 pa-0">
-              <span>
-                {{getSubtitle(item)}}
-              </span>
-              <v-icon class="mx-1 ml-2" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
-              <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
-            </v-container>
-        </v-list-item-subtitle>
-        <v-list-item-content class="pre-formatted pa-0 ma-0" v-html="item.text"></v-list-item-content>
+        <v-container class="ma-0 pa-0 d-flex list-item-head">
+            {{getSubtitle(item)}}
+            <v-icon class="mx-1 ml-2" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
+            <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
+        </v-container>
+        <v-list-item-content class="pre-formatted pa-0 ma-0 mt-1" v-html="item.text"></v-list-item-content>
     </v-list-item-content>
 
     </v-list-item>
@@ -52,3 +48,12 @@
         },
     }
 </script>
+
+<style lang="stylus">
+  .list-item-head {
+    color:rgba(0, 0, 0, .6);
+    font-size: .8125rem;
+    font-weight: 500;
+    line-height: 1rem;
+  }
+</style>
