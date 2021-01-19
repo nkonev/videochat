@@ -33,4 +33,4 @@ tracing:
   spanNameLimit: 150
   jaeger:
     gen128Bit: true
-    localAgentHostPort: api.site.local:6831
+    localAgentHostPort: host.docker.internal:6831

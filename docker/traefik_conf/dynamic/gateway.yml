@@ -3,23 +3,23 @@ http:
     nginx-service:
       loadBalancer:
         servers:
-          - url: http://api.site.local:8082
+          - url: http://host.docker.internal:8082
     aaa-service:
       loadBalancer:
         servers:
-          - url: http://api.site.local:8060
+          - url: http://host.docker.internal:8060
     chat-service:
       loadBalancer:
         servers:
-          - url: http://api.site.local:1235
+          - url: http://host.docker.internal:1235
     storage-service:
       loadBalancer:
         servers:
-          - url: http://api.site.local:1236
+          - url: http://host.docker.internal:1236
     openvidu-service:
       loadBalancer:
         servers:
-          - url: http://api.site.local:5443
+          - url: http://host.docker.internal:5443
 
   routers:
     nginx-router:
@@ -80,7 +80,7 @@ http:
         attempts: 4
     auth-middleware:
       forwardAuth:
-        address: "http://api.site.local:8060/internal/profile"
+        address: "http://host.docker.internal:8060/internal/profile"
         authRequestHeaders:
           - "Cookie"
         authResponseHeadersRegex: "^X-Auth-"
