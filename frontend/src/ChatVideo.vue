@@ -123,6 +123,8 @@
                 this.publisher = undefined;
                 this.subscribers = [];
                 this.OV = undefined;
+
+                bus.$emit(VIDEO_CALL_CHANGED, {usersCount: 0}); // restore initial state
                 this.notifyAboutLeaving();
 
                 window.removeEventListener('beforeunload', this.leaveSession);
@@ -138,10 +140,14 @@
             },
 
             notifyAboutJoining() {
-                axios.post(`/api/chat/${this.chatId}/video/notify`)
+                if (this.chatId) {
+                    axios.post(`/api/chat/${this.chatId}/video/notify`);
+                }
             },
             notifyAboutLeaving() {
-                axios.post(`/api/chat/${this.chatId}/video/notify`)
+                if (this.chatId) {
+                    axios.post(`/api/chat/${this.chatId}/video/notify`);
+                }
             }
         },
         mounted() {
