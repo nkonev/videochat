@@ -10,6 +10,7 @@
     "@mdi/font": "^5.3.45",
     "axios": "^0.19.2",
     "centrifuge": "^2.6.2",
+    "date-fns": "^2.16.1",
     "lodash": "^4.17.15",
     "openvidu-browser": "2.16.0",
     "splitpanes": "^2.2.1",
