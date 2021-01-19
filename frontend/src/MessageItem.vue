@@ -1,21 +1,24 @@
 <template>
     <v-list-item
         dense
-        class="pr-0 pl-4"
+        class="pr-1 mr-1 pl-4"
     >
     <v-list-item-avatar v-if="item.owner && item.owner.avatar">
         <v-img :src="item.owner.avatar"></v-img>
     </v-list-item-avatar>
     <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
-        <v-list-item-subtitle>{{getSubtitle(item)}}</v-list-item-subtitle>
-        <v-list-item-content class="pre-formatted pa-0" v-html="item.text"></v-list-item-content>
+        <v-list-item-subtitle>
+            <v-container class="ma-0 pa-0">
+              <span>
+                {{getSubtitle(item)}}
+              </span>
+              <v-icon class="mx-1 ml-2" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
+              <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
+            </v-container>
+        </v-list-item-subtitle>
+        <v-list-item-content class="pre-formatted pa-0 ma-0" v-html="item.text"></v-list-item-content>
     </v-list-item-content>
-    <v-list-item-action>
-        <v-container class="mb-0 mt-0 pb-0 pt-0 mx-2 px-1">
-            <v-icon class="mr-2" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
-            <v-icon v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
-        </v-container>
-    </v-list-item-action>
+
     </v-list-item>
 </template>
 
