@@ -22,6 +22,7 @@
     import axios from "axios";
     import bus, {SET_EDIT_MESSAGE} from "./bus";
     import debounce from "lodash/debounce";
+    import { format, parseISO } from 'date-fns'
 
     export default {
         props: ['item', 'chatId'],
@@ -40,7 +41,7 @@
                 bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
             },
             getSubtitle(item) {
-                return `${item.owner.login} at ${item.createDateTime}`
+                return `${item.owner.login} at ${format(parseISO(item.createDateTime), 'pp')}`
             },
         },
         created() {
