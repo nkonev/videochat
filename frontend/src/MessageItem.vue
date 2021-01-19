@@ -22,7 +22,7 @@
     import axios from "axios";
     import bus, {SET_EDIT_MESSAGE} from "./bus";
     import debounce from "lodash/debounce";
-    import { format, parseISO, getDay } from 'date-fns'
+    import { format, parseISO, differenceInDays } from 'date-fns'
 
     export default {
         props: ['item', 'chatId'],
@@ -42,8 +42,8 @@
             },
             getSubtitle(item) {
                 const parsedDate = parseISO(item.createDateTime);
-                let formatString = 'H:m:s';
-                if (getDay(new Date()) - getDay(parsedDate) >= 1) {
+                let formatString = 'HH:mm:ss';
+                if (differenceInDays(new Date(), parsedDate) >= 1) {
                     formatString = 'd MMM yyyy, ' + formatString;
                 }
                 return `${item.owner.login} at ${format(parsedDate, formatString)}`
