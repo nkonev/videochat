@@ -91,7 +91,6 @@ services:
       - SERVER_PORT=5443
       #- DOMAIN_OR_PUBLIC_IP=api.site.local
       - OPENVIDU_SECRET=MY_SECRET
-      - SUPPORT_DEPRECATED_API=false
       - KMS_MIN_PORT=40000
       - KMS_MAX_PORT=40020
       # coturn ports
