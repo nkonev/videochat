@@ -160,7 +160,7 @@
                     { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
                     { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
                 ],
-                drawer: !this.$vuetify.breakpoint.xs && !this.$vuetify.breakpoint.sm && !this.$vuetify.breakpoint.md,
+                drawer: this.$vuetify.breakpoint.lgAndUp,
                 lastError: "",
                 showAlert: false,
                 searchChatString: "",
