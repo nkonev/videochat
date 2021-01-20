@@ -113,6 +113,14 @@ func (vh VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
 		return err
 	}
 
+	isParticipant, err := vh.db.IsParticipant(userId, chatId)
+	if err != nil {
+		return err
+	}
+	if !isParticipant {
+		return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You have no acces to this chat"})
+	}
+
 	vh.notificator.NotifyAboutCallInvitation(c, chatId, userId)
 	return c.NoContent(200)
 }
