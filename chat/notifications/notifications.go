@@ -24,6 +24,7 @@ type Notifications interface {
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutVideoCallChanged(c echo.Context, chatId int64, newUsersCount int32)
 	NotifyAboutProfileChanged(user *dto.User)
+	NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64)
 }
 
 type notifictionsImpl struct {
@@ -56,6 +57,10 @@ type UserTypingNotification struct {
 
 type VideoCallChanged struct {
 	UsersCount int32 `json:"usersCount"`
+}
+
+type VideoCallInvitation struct {
+	ChatId int64 `json:"chatId"`
 }
 
 func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userIds []int64, tx *db.Tx) {
@@ -290,6 +295,27 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 			if err != nil {
 				Logger.Errorf("error publishing to personal channel: %s", err)
 			}
+		}
+	}
+}
+
+func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64) {
+	notification := CentrifugeNotification{
+		Payload:   VideoCallInvitation {
+			ChatId: chatId,
+		},
+		EventType: "video_call_invitation",
+	}
+
+	participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(userId))
+
+	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
+		GetLogEntry(c.Request()).Errorf("error during marshalling chat created VideoCallChanged: %s", err2)
+	} else {
+		Logger.Infof("Sending notification about video_call_invitation to participantChannel: %v", participantChannel)
+		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
+		if err != nil {
+			Logger.Errorf("error publishing to personal channel: %s", err)
 		}
 	}
 }

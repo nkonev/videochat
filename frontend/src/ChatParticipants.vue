@@ -14,6 +14,9 @@
                                 <v-list-item-content>
                                     <v-list-item-title>{{item.login}}</v-list-item-title>
                                 </v-list-item-content>
+                                <v-list-item-action>
+                                    <v-btn icon @click="inviteToVideoCall(item.id)"><v-icon color="success">mdi-phone</v-icon></v-btn>
+                                </v-list-item-action>
                             </v-list-item>
                             <v-divider></v-divider>
                         </template>
@@ -73,6 +76,9 @@
                 }
 
             },
+            inviteToVideoCall(userId) {
+                axios.post(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`)
+            }
 
         },
         created() {

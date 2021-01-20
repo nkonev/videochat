@@ -158,6 +158,7 @@ func configureEcho(
 	e.POST("/chat/:id/video/token", vh.GetOpenviduToken)
 	e.GET("/chat/:id/video/users", vh.GetUsersCount)
 	e.POST("/chat/:id/video/notify", vh.NotifyAboutVideoCallChange)
+	e.POST("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

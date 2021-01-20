@@ -76,7 +76,7 @@
                 :disabled="!chatId"
             >{{title}}</v-btn>
             <v-alert
-                v-model="alert"
+                v-model="invitedVideoChatAlert"
                 close-text="Close Alert"
                 dismissible
                 prominent
@@ -88,7 +88,7 @@
                         You are called
                     </v-col>
                     <v-col class="shrink ma-0 pa-0">
-                        <v-btn icon><v-icon color="white">mdi-phone</v-icon></v-btn>
+                        <v-btn icon @click="onClickInvitation"><v-icon color="white">mdi-phone</v-icon></v-btn>
                     </v-col>
                 </v-row>
             </v-alert>
@@ -140,7 +140,7 @@
         CHANGE_TITLE, CHANGE_WEBSOCKET_STATUS,
         LOGGED_OUT,
         OPEN_CHAT_EDIT,
-        OPEN_INFO_DIALOG, VIDEO_CALL_CHANGED,
+        OPEN_INFO_DIALOG, VIDEO_CALL_CHANGED, VIDEO_CALL_INVITED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -163,7 +163,6 @@
                 drawer: false,
                 lastError: "",
                 showAlert: false,
-                alert: true,
                 searchChatString: "",
                 showSearch: false,
                 showChatEditButton: false,
@@ -172,7 +171,9 @@
                 chatId: null,
                 chatEditId: null, // nullable if non-chat admin
                 wsConnected: false,
-                usersCount: 0
+                usersCount: 0,
+                invitedVideoChatId: 0,
+                invitedVideoChatAlert: false
             }
         },
         components:{
@@ -259,6 +260,14 @@
             },
             onVideoCallChanged(data) {
                 this.usersCount = data.usersCount
+            },
+            onVideoCallInvited(data) {
+                this.invitedVideoChatId = data.chatId;
+                this.invitedVideoChatAlert = true;
+            },
+            onClickInvitation() {
+                this.$router.push({ name: videochat_name, params: { id: this.invitedVideoChatId }});
+                this.invitedVideoChatAlert = false;
             }
         },
         computed: {
@@ -276,6 +285,7 @@
             bus.$on(CHANGE_PHONE_BUTTON, this.changePhoneButton);
             bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus)
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged)
+            bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited)
         },
         watch: {
             searchChatString (searchString) {

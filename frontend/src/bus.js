@@ -22,3 +22,4 @@ export const USER_PROFILE_CHANGED = "userProfileChanged";
 export const CHANGE_WEBSOCKET_STATUS = "changeWebsocket";
 export const OPEN_INFO_DIALOG = "openInfo";
 export const VIDEO_CALL_CHANGED = "videoCallChanged";
+export const VIDEO_CALL_INVITED = "videoCallInvited";

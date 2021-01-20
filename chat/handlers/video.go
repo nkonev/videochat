@@ -91,11 +91,6 @@ func (vh VideoHandler) NotifyAboutVideoCallChange(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var _, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
-		return errors.New("Error during getting auth context")
-	}
 
 	count, err := getUsersCount(vh, chatId, c)
 	if err != nil {
@@ -104,5 +99,20 @@ func (vh VideoHandler) NotifyAboutVideoCallChange(c echo.Context) error {
 	}
 
 	vh.notificator.NotifyAboutVideoCallChanged(c, chatId, count)
+	return c.NoContent(200)
+}
+
+func (vh VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	userId, err := utils.ParseInt64(c.QueryParam("userId"))
+	if err != nil {
+		return err
+	}
+
+	vh.notificator.NotifyAboutCallInvitation(c, chatId, userId)
 	return c.NoContent(200)
 }
