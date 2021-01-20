@@ -84,7 +84,7 @@
                 color="success"
             >
                 <v-row align="center" class="call-blink">
-                    <v-col class="grow" v-if="!$vuetify.breakpoint.xs">
+                    <v-col class="grow" v-if="$vuetify.breakpoint.smAndUp">
                         You are called
                     </v-col>
                     <v-col class="shrink ma-0 pa-0">
