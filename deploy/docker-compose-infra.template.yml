@@ -73,7 +73,7 @@ services:
         tag: chat-jaeger
 
   openvidu-server:
-    image: nkonev/openvidu-aio:2.16.0.2
+    image: nkonev/openvidu-aio:2.16.0.3
     deploy:
       labels:
         - "traefik.enable=true"
@@ -89,7 +89,7 @@ services:
     environment:
       - SERVER_SSL_ENABLED=false
       - SERVER_PORT=5443
-      - DOMAIN_OR_PUBLIC_IP=api.site.local
+      #- DOMAIN_OR_PUBLIC_IP=api.site.local
       - OPENVIDU_SECRET=MY_SECRET
       - SUPPORT_DEPRECATED_API=false
       - KMS_MIN_PORT=40000
