@@ -80,28 +80,19 @@
                 close-text="Close Alert"
                 dismissible
                 prominent
-                class="ma-0 pa-0 pr-4"
-                type="success"
+                class="mb-0 mt-0 ml-0 mr-1 pb-0 pt-0 px-4"
+                color="success"
             >
-                <v-row align="center">
-                    <v-col class="grow">
+                <v-row align="center" class="call-blink">
+                    <v-col class="grow" v-if="!$vuetify.breakpoint.xs">
                         You are called
                     </v-col>
-                    <v-col class="shrink">
-                        <v-btn outlined>Join</v-btn>
+                    <v-col class="shrink ma-0 pa-0">
+                        <v-btn icon><v-icon color="white">mdi-phone</v-icon></v-btn>
                     </v-col>
                 </v-row>
             </v-alert>
-            <div class="text-center">
-                <v-btn
-                    v-if="!alert"
-                    color="deep-purple accent-4"
-                    dark
-                    @click="alert = true"
-                >
-                    Reset
-                </v-btn>
-            </div>
+
             <v-spacer></v-spacer>
             <v-tooltip bottom v-if="!wsConnected">
                 <template v-slot:activator="{ on, attrs }">
@@ -294,3 +285,14 @@
 
     }
 </script>
+
+<style scoped lang="stylus">
+    .call-blink {
+        animation: blink 0.5s;
+        animation-iteration-count: 10;
+    }
+
+    @keyframes blink {
+        50% { opacity: 10% }
+    }
+</style>
