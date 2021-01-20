@@ -264,6 +264,8 @@
             onVideoCallInvited(data) {
                 this.invitedVideoChatId = data.chatId;
                 this.invitedVideoChatAlert = true;
+                const audio = new Audio("/call.mp3");
+                audio.play();
             },
             onClickInvitation() {
                 this.$router.push({ name: videochat_name, params: { id: this.invitedVideoChatId }});
