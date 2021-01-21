@@ -121,7 +121,7 @@
                 <LoginModal/>
                 <ChatEdit/>
                 <ChatParticipants/>
-                <ChatDelete/>
+                <SimpleModal/>
                 <ChooseAvatar/>
                 <router-view/>
             </v-container>
@@ -145,7 +145,7 @@
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
     import {chat_name, profile_name, chat_list_name, videochat_name} from "./routes";
-    import ChatDelete from "./ChatDelete";
+    import SimpleModal from "./SimpleModal";
     import ChooseAvatar from "./ChooseAvatar";
     import {getCorrectUserAvatar} from "./utils";
     import ChatParticipants from "./ChatParticipants";
@@ -182,7 +182,7 @@
         components:{
             LoginModal,
             ChatEdit,
-            ChatDelete,
+            SimpleModal,
             ChooseAvatar,
             ChatParticipants
         },

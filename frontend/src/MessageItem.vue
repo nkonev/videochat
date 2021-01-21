@@ -20,7 +20,7 @@
 
 <script>
     import axios from "axios";
-    import bus, {SET_EDIT_MESSAGE} from "./bus";
+    import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL, SET_EDIT_MESSAGE} from "./bus";
     import debounce from "lodash/debounce";
     import { format, parseISO, differenceInDays } from 'date-fns'
 
@@ -34,7 +34,16 @@
                 this.onMessageClick(item);
             },
             deleteMessage(dto){
-                axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
+                bus.$emit(OPEN_SIMPLE_MODAL, {
+                    title: `Delete message #${dto.id}`,
+                    text: `Are you sure to delete this message ?`,
+                    actionFunction: ()=> {
+                        axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
+                            .then(() => {
+                                bus.$emit(CLOSE_SIMPLE_MODAL);
+                            })
+                    }
+                });
             },
             editMessage(dto){
                 const editMessageDto = {id: dto.id, text: dto.text};
