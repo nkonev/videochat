@@ -18,7 +18,7 @@
                     </infinite-loading>
                 </div>
             </pane>
-            <pane max-size="70" min-size="20" size="30">
+            <pane max-size="70" min-size="20" size="20">
                 <v-divider v-if="$vuetify.breakpoint.smAndDown"></v-divider>
                 <MessageEdit :chatId="chatId"/>
             </pane>
@@ -71,12 +71,19 @@
             chatId() {
                 return this.$route.params.id
             },
-            pageHeight () {
-                return document.body.scrollHeight
-            },
-            ...mapGetters({currentUser: GET_USER})
+            ...mapGetters({currentUser: GET_USER}),
         },
         methods: {
+            isAllowedVideo() {
+                return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
+            },
+            maxSizeMessages(){
+                return this.isAllowedVideo() ? 60 : 80
+            },
+            maxSizeMessageEdit() {
+                return this.isAllowedVideo() ? 20 : 20
+            },
+
             addItem(dto) {
                 console.log("Adding item", dto);
                 this.items.push(dto);
@@ -183,10 +190,6 @@
             onChatDelete(dto) {
                 this.$router.push(({ name: chat_list_name}))
             },
-            isAllowedVideo() {
-                return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
-            },
-
             onUserProfileChanged(user) {
                 const patchedUser = user;
                 patchedUser.avatar = getCorrectUserAvatar(user.avatar);
