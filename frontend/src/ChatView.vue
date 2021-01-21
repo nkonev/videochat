@@ -1,7 +1,7 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
         <splitpanes class="default-theme" horizontal style="height: 100%">
-            <pane v-if="isAllowedVideo()" id="videoBlock">
+            <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" size="30">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane max-size="90" size="70">
@@ -18,7 +18,7 @@
                     </infinite-loading>
                 </div>
             </pane>
-            <pane max-size="70" min-size="30" size="40">
+            <pane max-size="70" min-size="20" size="30">
                 <v-divider v-if="$vuetify.breakpoint.smAndDown"></v-divider>
                 <MessageEdit :chatId="chatId"/>
             </pane>
