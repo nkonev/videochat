@@ -4,7 +4,7 @@
             <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" size="20">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
-            <pane max-size="80" size="70">
+            <pane size="70">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%">
                     <v-list>
                         <template v-for="(item, index) in items">
@@ -76,12 +76,6 @@
         methods: {
             isAllowedVideo() {
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
-            },
-            maxSizeMessages(){
-                return this.isAllowedVideo() ? 60 : 80
-            },
-            maxSizeMessageEdit() {
-                return this.isAllowedVideo() ? 20 : 20
             },
 
             addItem(dto) {
