@@ -34,7 +34,7 @@ import bus, {
     CHAT_SEARCH_CHANGED,
     LOGGED_IN,
     OPEN_CHAT_EDIT,
-    CHANGE_TITLE, OPEN_CHAT_DELETE, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED
+    CHANGE_TITLE, OPEN_SIMPLE_MODAL, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED, CLOSE_SIMPLE_MODAL
 } from "./bus";
     import {chat_name} from "./routes";
     import infinityListMixin, {
@@ -128,7 +128,16 @@ import bus, {
                 return logins.join(", ")
             },
             deleteChat(chat) {
-                bus.$emit(OPEN_CHAT_DELETE, chat);
+                bus.$emit(OPEN_SIMPLE_MODAL, {
+                    title: `Delete chat #${chat.id}`,
+                    text: `Are you sure to delete chat '${chat.name}' ?`,
+                    actionFunction: ()=> {
+                        axios.delete(`/api/chat/${chat.id}`)
+                            .then(() => {
+                                bus.$emit(CLOSE_SIMPLE_MODAL);
+                            })
+                    }
+                });
             },
             leaveChat(chat) {
                 axios.put(`/api/chat/${chat.id}/leave`)
