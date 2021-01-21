@@ -60,6 +60,7 @@
                 editorOption: {
                     // Some Quill options...
                     modules: {
+                        // https://quilljs.com/docs/modules/toolbar/
                         toolbar: '#custom-toolbar',
                     },
                     placeholder: 'Press Ctrl + Enter to send, Esc to clear'
