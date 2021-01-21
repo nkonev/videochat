@@ -6,6 +6,20 @@
                     {{writingUsers.map(v=>v.login).join(', ')}} is writing...
                 </template>
             </div>
+            <div id="custom-toolbar">
+                <div class="custom-toolbar-format">
+                    <button class="ql-bold"></button>
+                    <button class="ql-italic"></button>
+                    <button class="ql-underline"></button>
+                    <button class="ql-strike"></button>
+                    <select class="ql-color"></select>
+                    <select class="ql-background"></select>
+                    <button class="ql-clean"></button>
+                </div>
+                <div class="custom-toolbar-send">
+                    <v-btn color="primary" @click="sendMessageToChat" small><v-icon color="white">mdi-send</v-icon></v-btn>
+                </div>
+            </div>
             <quill-editor
                 ref="myQuillEditor"
                 v-model="editMessageDto.text"
@@ -36,14 +50,6 @@
 
     let timerId;
 
-
-    // https://quilljs.com/docs/modules/toolbar/
-    const toolbarOptions = [
-        ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-        [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
-        ['clean']                                         // remove formatting button
-    ];
-
     export default {
         props:['chatId'],
         data() {
@@ -54,8 +60,9 @@
                 editorOption: {
                     // Some Quill options...
                     modules: {
-                        toolbar: toolbarOptions,
-                    }
+                        toolbar: '#custom-toolbar',
+                    },
+                    placeholder: 'Press Ctrl + Enter to send, Esc to clear'
                 }
             }
         },
@@ -137,5 +144,25 @@
 }
 .ql-container {
     height calc(100% - 10px)
+}
+.ql-toolbar {
+    display: inline-flex;
+    //align-items center
+}
+#custom-toolbar {
+    display: flex;
+    align-items: center
+    justify-content: space-between
+    border-bottom-width: 0
+}
+
+.custom-toolbar-format {
+    display: flex;
+    flex-grow: 0
+}
+.custom-toolbar-send {
+    display: flex;
+    flex-grow: 10
+    justify-content flex-end
 }
 </style>
