@@ -1,7 +1,7 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
         <splitpanes class="default-theme" horizontal style="height: 100%">
-            <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" size="30">
+            <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" size="20">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane max-size="80" size="70">
