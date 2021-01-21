@@ -19,6 +19,7 @@
                 </div>
             </pane>
             <pane max-size="70" size="30">
+                <v-divider v-if="$vuetify.breakpoint.smAndDown"></v-divider>
                 <MessageEdit :chatId="chatId"/>
             </pane>
         </splitpanes>
@@ -317,7 +318,6 @@
             right: 0;
             top: 0;
             bottom: 0;
-            transition: 0.2s;
         }
         &--vertical > &__splitter:before {left: -30px;right: -30px; z-index: 1;}
         &--horizontal > &__splitter:before {top: -30px;bottom: -30px; z-index: 1;}
