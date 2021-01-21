@@ -268,7 +268,9 @@
                 this.invitedVideoChatId = data.chatId;
                 this.invitedVideoChatAlert = true;
                 ++this.callReblinkCounter;
-                audio.play();
+                audio.play().catch(error => {
+                  console.error("Please allow auto playing in Safari -> Settings -> Web Sites -> Auto Play. See https://browserhow.com/how-to-allow-or-block-auto-play-sound-access-in-safari-mac/#how-to-allow-autoplay-sound-on-safari-macos for details")
+                })
             },
             onClickInvitation() {
                 this.$router.push({ name: videochat_name, params: { id: this.invitedVideoChatId }});
