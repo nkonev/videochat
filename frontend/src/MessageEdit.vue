@@ -140,10 +140,10 @@
 //}
 
 .quill-editor {
-    height calc(100% - 60px)
+    height calc(100% - 65px)
 }
 .ql-container {
-    height calc(100% - 10px)
+    height calc(100% - 15px)
 }
 .ql-toolbar {
     display: inline-flex;
