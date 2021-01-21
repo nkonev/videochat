@@ -1,6 +1,5 @@
 <template>
-    <v-container id="sendButtonContainer" class="py-0 px-1 d-flex flex-row" fluid style="height: 100%">
-        <v-container class="ma-0 pa-0" fluid>
+    <v-container id="sendButtonContainer" class="py-0 px-1 d-flex flex-column" fluid style="height: 100%">
             <div class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 2em">
                 <template v-if="writingUsers.length">
                     {{writingUsers.map(v=>v.login).join(', ')}} is writing...
@@ -26,7 +25,6 @@
                 :options="editorOption"
                 @keyup.native.ctrl.enter="sendMessageToChat" @keyup.native.esc="resetInput"
             />
-        </v-container>
     </v-container>
 </template>
 
@@ -141,11 +139,11 @@
 //}
 
 .quill-editor {
-    height calc(100% - 65px)
+    height 100%
 }
-.ql-container {
-    height calc(100% - 15px)
-}
+//.ql-container {
+//    height calc(100% - 16px)
+//}
 .ql-toolbar {
     display: inline-flex;
     //align-items center

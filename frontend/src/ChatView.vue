@@ -18,7 +18,7 @@
                     </infinite-loading>
                 </div>
             </pane>
-            <pane max-size="70" size="30">
+            <pane max-size="70" min-size="30" size="40">
                 <v-divider v-if="$vuetify.breakpoint.smAndDown"></v-divider>
                 <MessageEdit :chatId="chatId"/>
             </pane>
@@ -273,7 +273,7 @@
 
     #chatViewContainer {
         height: calc(100vh - 80px)
-        //position: fixed
+        position: relative
         //height: calc(100% - 80px)
         //width: calc(100% - 80px)
     }
@@ -286,11 +286,14 @@
 
 
     #messagesScroller {
+        overflow-y: scroll !important
         background  white
     }
 
     #sendButtonContainer {
-        background  white
+        background white
+        // position absolute
+        //height 100%
     }
 
 </style>
