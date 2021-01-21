@@ -83,7 +83,7 @@
                 class="mb-0 mt-0 ml-0 mr-1 pb-0 pt-0 px-4"
                 color="success"
             >
-                <v-row align="center" class="call-blink">
+                <v-row align="center" class="call-blink" :key="callReblinkCounter">
                     <v-col class="grow" v-if="$vuetify.breakpoint.smAndUp">
                         You are called
                     </v-col>
@@ -150,6 +150,8 @@
     import {getCorrectUserAvatar} from "./utils";
     import ChatParticipants from "./ChatParticipants";
 
+    const audio = new Audio("/call.mp3");
+
     export default {
         data () {
             return {
@@ -173,7 +175,8 @@
                 wsConnected: false,
                 usersCount: 0,
                 invitedVideoChatId: 0,
-                invitedVideoChatAlert: false
+                invitedVideoChatAlert: false,
+                callReblinkCounter: 0
             }
         },
         components:{
@@ -264,7 +267,7 @@
             onVideoCallInvited(data) {
                 this.invitedVideoChatId = data.chatId;
                 this.invitedVideoChatAlert = true;
-                const audio = new Audio("/call.mp3");
+                ++this.callReblinkCounter;
                 audio.play();
             },
             onClickInvitation() {
@@ -301,7 +304,7 @@
 <style scoped lang="stylus">
     .call-blink {
         animation: blink 0.5s;
-        animation-iteration-count: 10;
+        animation-iteration-count: 5;
     }
 
     @keyframes blink {
