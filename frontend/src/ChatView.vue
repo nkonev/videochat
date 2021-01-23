@@ -276,11 +276,11 @@
         //width: calc(100% - 80px)
     }
     //
-    @media screen and (max-width: $mobileWidth) {
-        #chatViewContainer {
-            height: calc(100vh - 116px)
-        }
-    }
+    //@media screen and (max-width: $mobileWidth) {
+    //    #chatViewContainer {
+    //        height: calc(100vh - 116px)
+    //    }
+    //}
 
 
     #messagesScroller {
