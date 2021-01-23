@@ -144,6 +144,7 @@ $mobileWidth = 800px
 .user-typing {
     height 2rem
     font-size 1rem
+    padding-left 1rem
 }
 
 .quill-editor {

@@ -4,7 +4,7 @@
             <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" size="20">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
-            <pane size="70">
+            <pane size="75">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%">
                     <v-list>
                         <template v-for="(item, index) in items">
@@ -18,7 +18,7 @@
                     </infinite-loading>
                 </div>
             </pane>
-            <pane max-size="70" min-size="20" size="20">
+            <pane max-size="70" min-size="25" size="25">
                 <v-divider v-if="$vuetify.breakpoint.smAndDown"></v-divider>
                 <MessageEdit :chatId="chatId"/>
             </pane>
