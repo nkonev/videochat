@@ -139,12 +139,15 @@ $mobileWidth = 800px
 
 #sendButtonContainer {
     min-height 25%
-}
 
-.user-typing {
-    height 2rem
-    font-size 1rem
-    padding-left 0.2em
+    .user-typing {
+        height 14px
+        max-height 14px
+        min-height 14px
+        font-size 10px !important
+        line-height 14px !important
+        padding-left 0.2em
+    }
 }
 
 .quill-editor {
@@ -159,10 +162,6 @@ $mobileWidth = 800px
     bottom 100%
 }
 @media screen and (max-width: $mobileWidth) {
-    .user-typing {
-        height 3em
-    }
-
     .ql-editor {
         padding-left 4px
         padding-right 4px
