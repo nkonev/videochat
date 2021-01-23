@@ -148,6 +148,7 @@ $mobileWidth = 800px
 
 .quill-editor {
     height 100%
+    overflow-y auto
 }
 .ql-toolbar.ql-snow {
     padding 4px
