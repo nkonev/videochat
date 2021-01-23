@@ -263,7 +263,7 @@
 </script>
 
 <style scoped lang="stylus">
-    $mobileHeight = 800px
+    $mobileWidth = 800px
 
     .pre-formatted {
       white-space pre-wrap
@@ -276,9 +276,9 @@
         //width: calc(100% - 80px)
     }
     //
-    @media screen and (max-height: $mobileHeight) {
+    @media screen and (max-width: $mobileWidth) {
         #chatViewContainer {
-            height: calc(100vh - 110px)
+            height: calc(100vh - 116px)
         }
     }
 
@@ -295,3 +295,5 @@
     }
 
 </style>
+
+

@@ -1,10 +1,16 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 d-flex flex-column" fluid style="height: 100%">
-            <div class="mb-0 mt-0 pb-0 pt-0 text--disabled caption" style="height: 2em">
+            <div class="mb-0 mt-0 pb-0 pt-0 text--disabled caption user-typing">
                 <template v-if="writingUsers.length">
                     {{writingUsers.map(v=>v.login).join(', ')}} is writing...
                 </template>
             </div>
+            <quill-editor
+                ref="myQuillEditor"
+                v-model="editMessageDto.text"
+                :options="editorOption"
+                @keyup.native.ctrl.enter="sendMessageToChat" @keyup.native.esc="resetInput"
+            />
             <div id="custom-toolbar">
                 <div class="custom-toolbar-format">
                     <button class="ql-bold"></button>
@@ -19,12 +25,7 @@
                     <v-btn color="primary" @click="sendMessageToChat" small><v-icon color="white">mdi-send</v-icon></v-btn>
                 </div>
             </div>
-            <quill-editor
-                ref="myQuillEditor"
-                v-model="editMessageDto.text"
-                :options="editorOption"
-                @keyup.native.ctrl.enter="sendMessageToChat" @keyup.native.esc="resetInput"
-            />
+
     </v-container>
 </template>
 
@@ -134,12 +135,42 @@
 </script>
 
 <style lang="stylus">
-//#sendButtonContainer {
-//
-//}
+$mobileWidth = 800px
+
+#sendButtonContainer {
+    min-height 25%
+}
+
+.user-typing {
+    height 2rem
+    font-size 1rem
+}
 
 .quill-editor {
     height 100%
+}
+.ql-toolbar.ql-snow {
+    padding 4px
+}
+.ql-snow .ql-picker.ql-expanded .ql-picker-options {
+    top: unset
+    bottom 100%
+}
+@media screen and (max-width: $mobileWidth) {
+    .user-typing {
+        height 3em
+    }
+
+    .ql-editor {
+        padding-left 4px
+        padding-right 4px
+        padding-top 2px
+        padding-bottom 2px
+    }
+
+    .ql-toolbar.ql-snow {
+        padding 2px
+    }
 }
 //.ql-container {
 //    height calc(100% - 16px)
@@ -152,7 +183,14 @@
     display: flex;
     align-items: center
     justify-content: space-between
-    border-bottom-width: 0
+    border-top-width: 0
+}
+@media screen and (max-width: $mobileWidth) {
+    #custom-toolbar {
+        border-width: 0
+    }
+    //border-left-width: 0
+    //border-right-width: 0
 }
 
 .custom-toolbar-format {
