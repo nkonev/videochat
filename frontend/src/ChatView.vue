@@ -311,6 +311,6 @@
     z-index: 1;
 }
 .splitpanes__splitter:hover:before {opacity: 1;}
-.splitpanes--vertical > .splitpanes__splitter:before {left: -30px;right: -30px;height: 100%;}
-.splitpanes--horizontal > .splitpanes__splitter:before {top: -30px;bottom: -30px;width: 100%;}
+.splitpanes--vertical > .splitpanes__splitter:before {left: -20px;right: -20px;height: 100%;}
+.splitpanes--horizontal > .splitpanes__splitter:before {top: -20px;bottom: -20px;width: 100%;}
 </style>
