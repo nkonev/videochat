@@ -8,8 +8,8 @@
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%">
                     <v-list>
                         <template v-for="(item, index) in items">
+                            <v-divider></v-divider>
                             <MessageItem :key="item.id" :item="item" :chatId="chatId"></MessageItem>
-                            <v-divider ></v-divider>
                         </template>
                     </v-list>
                     <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top" force-use-infinite-wrapper="#messagesScroller" :distance="0">
@@ -19,7 +19,6 @@
                 </div>
             </pane>
             <pane max-size="70" min-size="20" size="20">
-                <v-divider v-if="$vuetify.breakpoint.smAndDown"></v-divider>
                 <MessageEdit :chatId="chatId"/>
             </pane>
         </splitpanes>
