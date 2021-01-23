@@ -68,13 +68,13 @@
             </v-badge>
 
             <v-spacer></v-spacer>
-            <v-btn
-                class="ma-2"
-                text
-                color="white"
-                @click="onInfoClicked"
-                :disabled="!chatId"
-            >{{title}}</v-btn>
+            <v-btn class="ma-2" text color="white" @click="onInfoClicked" :disabled="!chatId">
+                <div class="d-flex flex-column">
+                    <div style="text-transform: initial">{{title}}</div>
+                    <div v-if="chatUsersCount" style="font-size: 0.8em !important; letter-spacing: initial; text-transform: initial; opacity: 50%">
+                        {{ chatUsersCount }} participants</div>
+                </div>
+            </v-btn>
             <v-alert
                 v-model="invitedVideoChatAlert"
                 close-text="Close Alert"
@@ -98,7 +98,7 @@
                 <template v-slot:activator="{ on, attrs }">
                     <v-icon color="error" class="mr-2" v-bind="attrs" v-on="on">mdi-lan-disconnect</v-icon>
                 </template>
-                <span>Websocket not connected</span>
+                <span>Websocket is not connected</span>
             </v-tooltip>
             <v-card light v-if="showSearch">
                 <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchChatString" clearable clear-icon="mdi-close-circle"></v-text-field>
@@ -171,6 +171,7 @@
                 showCallButton: false,
                 showHangButton: false,
                 chatId: null,
+                chatUsersCount: null,
                 chatEditId: null, // nullable if non-chat admin
                 wsConnected: false,
                 usersCount: 0,
@@ -225,12 +226,13 @@
                     }
                 })
             },
-            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, chatId}) {
+            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, chatId, chatUsersCount}) {
                 this.title = title;
                 this.showSearch = isShowSearch;
                 this.showChatEditButton = isShowChatEditButton;
                 this.chatEditId = chatEditId;
                 this.chatId = chatId;
+                this.chatUsersCount = chatUsersCount;
             },
             changePhoneButton({show, call}) {
                 console.log("changePhoneButton", show, call);
