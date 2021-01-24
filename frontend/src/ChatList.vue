@@ -129,6 +129,7 @@ import bus, {
             },
             deleteChat(chat) {
                 bus.$emit(OPEN_SIMPLE_MODAL, {
+                    buttonName: 'Delete',
                     title: `Delete chat #${chat.id}`,
                     text: `Are you sure to delete chat '${chat.name}' ?`,
                     actionFunction: ()=> {
@@ -141,6 +142,7 @@ import bus, {
             },
             leaveChat(chat) {
                 bus.$emit(OPEN_SIMPLE_MODAL, {
+                    buttonName: 'Leave',
                     title: `Leave chat #${chat.id}`,
                     text: `Are you sure to leave from chat '${chat.name}' ?`,
                     actionFunction: ()=> {

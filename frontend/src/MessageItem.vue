@@ -35,6 +35,7 @@
             },
             deleteMessage(dto){
                 bus.$emit(OPEN_SIMPLE_MODAL, {
+                    buttonName: 'Delete',
                     title: `Delete message #${dto.id}`,
                     text: `Are you sure to delete this message ?`,
                     actionFunction: ()=> {

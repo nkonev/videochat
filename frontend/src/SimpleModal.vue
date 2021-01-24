@@ -7,7 +7,7 @@
                 <v-card-text>{{text}}</v-card-text>
 
                 <v-card-actions class="pa-4">
-                    <v-btn color="error" class="mr-4" @click="actionFunction()">Delete</v-btn>
+                    <v-btn color="error" class="mr-4" @click="actionFunction()">{{buttonName}}</v-btn>
                     <v-btn class="mr-4" @click="show=false">Close</v-btn>
                     <v-spacer/>
                 </v-card-actions>
@@ -25,6 +25,7 @@
                 show: false,
                 title: "",
                 text: "",
+                buttonName: "",
                 actionFunction: ()=>{}
             }
         },
@@ -33,13 +34,14 @@
                 this.$data.title = newData.title;
                 this.$data.text = newData.text;
                 this.$data.actionFunction = newData.actionFunction;
-
+                this.$data.buttonName = newData.buttonName;
                 this.$data.show = true;
             },
             hideModal() {
                 this.$data.show = false;
                 this.$data.title = "";
                 this.$data.text = "";
+                this.$data.buttonName = "";
                 this.$data.actionFunction = ()=>{};
             },
         },
