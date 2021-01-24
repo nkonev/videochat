@@ -115,6 +115,15 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 			users = []*dto.User{}
 			GetLogEntry(c.Request()).Warn("Error during getting users from aaa")
 		}
+
+		for _, user := range users {
+			if admin, err := dbR.IsAdmin(user.Id, cc.Id); err != nil {
+				GetLogEntry(c.Request()).Warn("Unable to get IsAdmin for user %v in chat %v from db", user.Id, cc.Id)
+			} else {
+				user.Admin = admin
+			}
+		}
+
 		unreadMessages, err := dbR.GetUnreadMessages(cc.Id, behalfParticipantId)
 		if err != nil {
 			return nil, err

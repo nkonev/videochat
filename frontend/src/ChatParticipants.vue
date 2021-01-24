@@ -7,13 +7,19 @@
                 <v-container fluid>
                     <v-list v-if="dto.participants.length > 0">
                         <template v-for="(item, index) in dto.participants">
-                            <v-list-item>
+                            <v-list-item >
                                 <v-list-item-avatar v-if="item.avatar">
                                     <v-img :src="item.avatar"></v-img>
                                 </v-list-item-avatar>
                                 <v-list-item-content>
                                     <v-list-item-title>{{item.login}}</v-list-item-title>
                                 </v-list-item-content>
+                                <v-tooltip bottom v-if="item.admin">
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-icon v-bind="attrs" v-on="on">mdi-crown</v-icon>
+                                    </template>
+                                    <span>Admin</span>
+                                </v-tooltip>
                                 <v-list-item-action>
                                     <v-btn icon @click="inviteToVideoCall(item.id)"><v-icon color="success">mdi-phone</v-icon></v-btn>
                                 </v-list-item-action>
