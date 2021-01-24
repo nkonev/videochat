@@ -104,3 +104,8 @@ https://docs.openvidu.io/en/2.16.0/reference-docs/REST-API/#get-openviduapisessi
 ```
 curl s -u"OPENVIDUAPP:MY_SECRET" http://localhost:5443/openvidu/api/sessions/chat1 | jq '.'
 ```
+
+# Run one test
+```bash
+go test ./... -count=1 -test.v -test.timeout=20s -p 1 -run TestExtractAuth
+```

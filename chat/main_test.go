@@ -251,7 +251,7 @@ func TestGetChatsPaginated(t *testing.T) {
 		assert.Equal(t, "generated_chat93", typedTes[1])
 		assert.Equal(t, "generated_chat92", typedTes[2])
 
-		// also check get additional info froma aaa emu
+		// also check get additional info from aaa emu
 		firstChatParticipantLogins := getJsonPathResult(t, b, "$.data[0].participants.login").([]interface{})
 		assert.Equal(t, "testor_protobuf", firstChatParticipantLogins[0])
 
