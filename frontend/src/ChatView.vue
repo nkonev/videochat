@@ -1,7 +1,7 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
         <splitpanes class="default-theme" horizontal style="height: 100%">
-            <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" size="20">
+            <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" size="30">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane size="80">
@@ -14,7 +14,7 @@
                     </v-list>
                     <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top" force-use-infinite-wrapper="#messagesScroller" :distance="0">
                         <template slot="no-more"><span/></template>
-                        <template slot="no-results">No messages</template>
+                        <template slot="no-results">No more messages</template>
                     </infinite-loading>
                 </div>
             </pane>
