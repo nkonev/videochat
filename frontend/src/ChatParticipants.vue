@@ -12,7 +12,7 @@
                                     <v-img :src="item.avatar"></v-img>
                                 </v-list-item-avatar>
                                 <v-list-item-content>
-                                    <v-list-item-title>{{item.login}}</v-list-item-title>
+                                    <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> (you)</template></v-list-item-title>
                                 </v-list-item-content>
                                 <v-tooltip bottom v-if="item.admin">
                                     <template v-slot:activator="{ on, attrs }">
@@ -46,6 +46,8 @@
 <script>
     import axios from "axios";
     import bus, {OPEN_INFO_DIALOG} from "./bus";
+    import {mapGetters} from "vuex";
+    import {GET_USER} from "./store";
 
     const dtoFactory = ()=>{
         return {
@@ -65,6 +67,9 @@
                 isLoading: false,
                 people: [  ],
             }
+        },
+        computed: {
+            ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
         },
 
         methods: {
