@@ -140,7 +140,16 @@ import bus, {
                 });
             },
             leaveChat(chat) {
-                axios.put(`/api/chat/${chat.id}/leave`)
+                bus.$emit(OPEN_SIMPLE_MODAL, {
+                    title: `Leave chat #${chat.id}`,
+                    text: `Are you sure to leave from chat '${chat.name}' ?`,
+                    actionFunction: ()=> {
+                        axios.put(`/api/chat/${chat.id}/leave`)
+                            .then(() => {
+                                bus.$emit(CLOSE_SIMPLE_MODAL);
+                            })
+                    }
+                });
             },
             onChangeUnreadMessages(dto) {
                 const chatId = dto.chatId;
