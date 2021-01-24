@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -20,6 +21,21 @@ type VideoHandler struct {
 
 func NewVideoHandler(db db.DB, restClient client.RestClient, notificator notifications.Notifications) VideoHandler {
 	return VideoHandler{db, restClient, notificator}
+}
+
+func (vh VideoHandler) GetOpenviduConfig(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+	openviduWsUrl := getLoadBalancedOpenvidu(chatId)
+	return c.JSON(http.StatusOK, &utils.H{
+		"wsUrl": openviduWsUrl,
+	})
+}
+
+func getLoadBalancedOpenvidu(chatId int64) string {
+	return viper.GetString("openvidu.wsUrl")
 }
 
 func (vh VideoHandler) GetOpenviduToken(c echo.Context) error {
@@ -51,7 +67,9 @@ func (vh VideoHandler) GetOpenviduToken(c echo.Context) error {
 		GetLogEntry(c.Request()).Errorf("Unable to create openvidu connection for chat %v %v", chatId, err)
 		return err
 	}
-	return c.JSON(http.StatusOK, &utils.H{"token": token})
+	return c.JSON(http.StatusOK, &utils.H{
+		"token": token,
+	})
 }
 
 func getUsersCount(vh VideoHandler, chatId int64, c echo.Context) (int32, error) {

@@ -19,8 +19,6 @@
     import { OpenVidu } from 'openvidu-browser';
     import UserVideo from './UserVideo';
 
-    const OPENVIDU_SERVER_URL = "/api/video";
-
     export default {
         components: {
             UserVideo,
@@ -45,7 +43,7 @@
             }
         },
         methods: {
-            joinSession() {
+            joinSession(configObj) {
                 // --- Get an OpenVidu object ---
                 this.OV = new OpenVidu();
                 this.OV.setAdvancedConfiguration({forceMediaReconnectionAfterNetworkDrop: true})
@@ -57,8 +55,12 @@
                 sess.constructor.prototype.processToken = function (token) {
                     oldProcessTokenFunction.call(this, token);
 
-                    this.openvidu.wsUri = getWebsocketUrlPrefix()+OPENVIDU_SERVER_URL+'/openvidu';
-                    //this.openvidu.httpUri = OPENVIDU_SERVER_URL;
+                    if (configObj.wsUrl) {
+                        this.openvidu.wsUri = configObj.wsUrl;
+                    } else {
+                        console.log("Using default openvidu url because chat server returned empty ws url");
+                        this.openvidu.wsUri = getWebsocketUrlPrefix()+"/api/video/openvidu"
+                    }
                 };
 
                 this.session = sess;
@@ -138,6 +140,11 @@
                         .catch(error => reject(error.response));
                 });
             },
+            getConfig() {
+                return axios
+                    .get(`/api/chat/${this.chatId}/video/config`)
+                    .then(response => response.data)
+            },
 
             notifyAboutJoining() {
                 if (this.chatId) {
@@ -162,7 +169,10 @@
             bus.$emit(VIDEO_LOCAL_ESTABLISHED);
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, false));
 
-            this.joinSession();
+            this.getConfig().then(config => {
+                this.joinSession(config);
+            })
+
         },
 
         beforeDestroy() {
