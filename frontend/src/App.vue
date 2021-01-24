@@ -122,6 +122,7 @@
                 <ChatEdit/>
                 <ChatParticipants/>
                 <SimpleModal/>
+                <PermissionsWarning/>
                 <ChooseAvatar/>
                 <router-view/>
             </v-container>
@@ -140,7 +141,7 @@
         CHANGE_TITLE, CHANGE_WEBSOCKET_STATUS,
         LOGGED_OUT,
         OPEN_CHAT_EDIT,
-        OPEN_INFO_DIALOG, VIDEO_CALL_CHANGED, VIDEO_CALL_INVITED,
+        OPEN_INFO_DIALOG, OPEN_PERMISSIONS_WARNING_MODAL, VIDEO_CALL_CHANGED, VIDEO_CALL_INVITED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -149,6 +150,7 @@
     import ChooseAvatar from "./ChooseAvatar";
     import {getCorrectUserAvatar} from "./utils";
     import ChatParticipants from "./ChatParticipants";
+    import PermissionsWarning from "./PermissionsWarning";
 
     const audio = new Audio("/call.mp3");
 
@@ -185,7 +187,8 @@
             ChatEdit,
             SimpleModal,
             ChooseAvatar,
-            ChatParticipants
+            ChatParticipants,
+            PermissionsWarning
         },
         methods:{
             toggleLeftNavigation() {
@@ -271,7 +274,8 @@
                 this.invitedVideoChatAlert = true;
                 ++this.callReblinkCounter;
                 audio.play().catch(error => {
-                  console.error("Please allow auto playing in Safari -> Settings -> Web Sites -> Auto Play. See https://browserhow.com/how-to-allow-or-block-auto-play-sound-access-in-safari-mac/#how-to-allow-autoplay-sound-on-safari-macos for details")
+                    console.warn("Unable to play sound", error);
+                  bus.$emit(OPEN_PERMISSIONS_WARNING_MODAL);
                 })
             },
             onClickInvitation() {

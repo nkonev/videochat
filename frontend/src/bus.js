@@ -24,3 +24,4 @@ export const CHANGE_WEBSOCKET_STATUS = "changeWebsocket";
 export const OPEN_INFO_DIALOG = "openInfo";
 export const VIDEO_CALL_CHANGED = "videoCallChanged";
 export const VIDEO_CALL_INVITED = "videoCallInvited";
+export const OPEN_PERMISSIONS_WARNING_MODAL = "openPermissionsWarningModal";
