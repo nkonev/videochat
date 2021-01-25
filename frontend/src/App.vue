@@ -80,7 +80,7 @@
                 close-text="Close Alert"
                 dismissible
                 prominent
-                class="mb-0 mt-0 ml-0 mr-1 pb-0 pt-0 px-4"
+                class="mb-0 mt-0 ml-0 mr-1 pb-3 pt-3 px-4"
                 color="success"
             >
                 <v-row align="center" class="call-blink" :key="callReblinkCounter">
@@ -107,7 +107,7 @@
 
 
         <v-main>
-            <v-container fluid class="ma-0 pa-0">
+            <v-container fluid class="ml-0 mr-0 pl-0 pr-0 mt-2 pt-4 mb-0 pb-0">
                 <v-alert
                         dismissible
                         v-model="showAlert"
@@ -308,6 +308,12 @@
 
     }
 </script>
+
+<style lang="stylus">
+  html {
+    overflow-y auto
+  }
+</style>
 
 <style scoped lang="stylus">
     .call-blink {
