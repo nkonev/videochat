@@ -109,3 +109,25 @@ curl s -u"OPENVIDUAPP:MY_SECRET" http://localhost:5443/openvidu/api/sessions/cha
 ```bash
 go test ./... -count=1 -test.v -test.timeout=20s -p 1 -run TestExtractAuth
 ```
+
+# Add firewall exception on dev
+```bash
+firewall-cmd --zone=public --add-port=8081/tcp
+```
+
+# Add firewall exception on prod (not working)
+[link](https://www.digitalocean.com/community/tutorials/how-to-configure-the-linux-firewall-for-docker-swarm-on-centos-7)
+```
+firewall-cmd --zone=public --add-port=3478/tcp  --permanent
+firewall-cmd --zone=public --add-port=3478/udp  --permanent
+firewall-cmd --zone=public --add-port=40000-40020/udp  --permanent
+firewall-cmd --zone=public --add-port=40000-40020/tcp  --permanent
+firewall-cmd --zone=public --add-port=57001-57021/tcp  --permanent
+firewall-cmd --zone=public --add-port=57001-57021/udp  --permanent
+
+firewall-cmd --reload
+
+systemctl restart docker
+
+firewall-cmd --list-all-zones
+```
