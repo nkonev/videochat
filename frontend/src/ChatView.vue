@@ -1,6 +1,7 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
-        <splitpanes class="default-theme" horizontal style="height: 100%">
+        <splitpanes ref="spl" class="default-theme" horizontal style="height: 100%"
+                    @pane-add="onPanelAdd" @pane-remove="onPanelRemove">
             <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" size="30">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
@@ -74,6 +75,17 @@
             ...mapGetters({currentUser: GET_USER}),
         },
         methods: {
+            onPanelAdd(v) {
+              console.log("On panel add", v);
+              this.$refs.spl.panes[0].size = 30; // video
+              this.$refs.spl.panes[1].size = 50; // messages
+              this.$refs.spl.panes[2].size = 20; // edit
+            },
+            onPanelRemove(v) {
+                console.log("On panel removed", v);
+                this.$refs.spl.panes[0].size = 80; // messages
+                this.$refs.spl.panes[1].size = 20; // edit
+            },
             isAllowedVideo() {
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
             },
