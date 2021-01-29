@@ -1,11 +1,11 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
         <splitpanes ref="spl" class="default-theme" horizontal style="height: 100%"
-                    @pane-add="onPanelAdd" @pane-remove="onPanelRemove">
-            <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" size="30">
+                    @pane-add="onPanelAdd" @pane-remove="onPanelRemove" @resize="onPanelResized">
+            <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" v-bind:size="videoSize">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
-            <pane size="80">
+            <pane v-bind:size="messagesSize">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%">
                     <v-list>
                         <template v-for="(item, index) in items">
@@ -19,7 +19,7 @@
                     </infinite-loading>
                 </div>
             </pane>
-            <pane max-size="70" min-size="20" size="20">
+            <pane max-size="70" min-size="20" v-bind:size="editSize">
                 <MessageEdit :chatId="chatId"/>
             </pane>
         </splitpanes>
@@ -57,6 +57,9 @@
     import MessageItem from "./MessageItem";
     // import 'splitpanes/dist/splitpanes.css';
 
+    const default2 = [80, 20];
+    const default3 = [30, 50, 20];
+
     export default {
         mixins: [infinityListMixin()],
         data() {
@@ -73,18 +76,86 @@
                 return this.$route.params.id
             },
             ...mapGetters({currentUser: GET_USER}),
+            videoSize() {
+                let stored = this.getStored();
+                if (!stored) {
+                    this.saveToStored(this.isAllowedVideo() ? default3 : default2)
+                    stored = this.getStored();
+                }
+                if (this.isAllowedVideo()) {
+                    return stored[0]
+                } else {
+                    console.error("Unable to get video size if video is not enabled");
+                    return 0
+                }
+            },
+            messagesSize() {
+                let stored = this.getStored();
+                if (!stored) {
+                    this.saveToStored(this.isAllowedVideo() ? default3 : default2)
+                    stored = this.getStored();
+                }
+                if (this.isAllowedVideo()) {
+                    return stored[1]
+                } else {
+                    return stored[0]
+                }
+            },
+            editSize() {
+                let stored = this.getStored();
+                if (!stored) {
+                    this.saveToStored(this.isAllowedVideo() ? default3 : default2)
+                    stored = this.getStored();
+                }
+                if (this.isAllowedVideo()) {
+                    return stored[2]
+                } else {
+                    return stored[1]
+                }
+            }
         },
         methods: {
-            onPanelAdd(v) {
-              console.log("On panel add", v);
-              this.$refs.spl.panes[0].size = 30; // video
-              this.$refs.spl.panes[1].size = 50; // messages
-              this.$refs.spl.panes[2].size = 20; // edit
+            getStored() {
+                const mbItem = this.isAllowedVideo() ? localStorage.getItem('3panels') : localStorage.getItem('2panels');
+                if (!mbItem) {
+                    return null;
+                } else {
+                    return JSON.parse(mbItem);
+                }
             },
-            onPanelRemove(v) {
-                console.log("On panel removed", v);
-                this.$refs.spl.panes[0].size = 80; // messages
-                this.$refs.spl.panes[1].size = 20; // edit
+            saveToStored(arr) {
+                if (this.isAllowedVideo()) {
+                    localStorage.setItem('3panels', JSON.stringify(arr));
+                } else {
+                    localStorage.setItem('2panels', JSON.stringify(arr));
+                }
+            },
+            onPanelAdd() {
+                console.log("On panel add", this.$refs.spl.panes);
+                const stored = this.getStored();
+                if (stored) {
+                    console.log("Restoring from storage", stored);
+                    this.$refs.spl.panes[0].size = stored[0]; // video
+                    this.$refs.spl.panes[1].size = stored[1]; // messages
+                    this.$refs.spl.panes[2].size = stored[2]; // edit
+                } else {
+                    console.error("Store is null");
+                }
+            },
+            onPanelRemove() {
+                console.log("On panel removed", this.$refs.spl.panes);
+                const stored = this.getStored();
+                if (stored) {
+                    console.log("Restoring from storage", stored);
+                    this.$refs.spl.panes[0].size = stored[0]; // messages
+                    this.$refs.spl.panes[1].size = stored[1]; // edit
+                } else {
+                    console.error("Store is null");
+                }
+            },
+            onPanelResized() {
+                // console.log("On panel resized", this.$refs.spl.panes);
+                this.saveToStored(this.$refs.spl.panes.map(i => i.size));
             },
             isAllowedVideo() {
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
