@@ -135,9 +135,13 @@
                 const stored = this.getStored();
                 if (stored) {
                     console.log("Restoring from storage", stored);
-                    this.$refs.spl.panes[0].size = stored[0]; // video
-                    this.$refs.spl.panes[1].size = stored[1]; // messages
-                    this.$refs.spl.panes[2].size = stored[2]; // edit
+                    this.$nextTick(() => {
+                        if (this.$refs.spl) {
+                            this.$refs.spl.panes[0].size = stored[0]; // video
+                            this.$refs.spl.panes[1].size = stored[1]; // messages
+                            this.$refs.spl.panes[2].size = stored[2]; // edit
+                        }
+                    })
                 } else {
                     console.error("Store is null");
                 }
@@ -147,8 +151,12 @@
                 const stored = this.getStored();
                 if (stored) {
                     console.log("Restoring from storage", stored);
-                    this.$refs.spl.panes[0].size = stored[0]; // messages
-                    this.$refs.spl.panes[1].size = stored[1]; // edit
+                    this.$nextTick(() => {
+                        if (this.$refs.spl) {
+                            this.$refs.spl.panes[0].size = stored[0]; // messages
+                            this.$refs.spl.panes[1].size = stored[1]; // edit
+                        }
+                    })
                 } else {
                     console.error("Store is null");
                 }
