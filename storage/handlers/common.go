@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
@@ -29,9 +30,14 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 		return nil, err
 	}
 
+	decodedString, err := base64.StdEncoding.DecodeString(request.Header.Get("X-Auth-Username"))
+	if err != nil {
+		return nil, err
+	}
+
 	return &auth.AuthResult{
 		UserId:    i,
-		UserLogin: request.Header.Get("X-Auth-Username"),
+		UserLogin: string(decodedString),
 		ExpiresAt: t.Unix(),
 	}, nil
 }

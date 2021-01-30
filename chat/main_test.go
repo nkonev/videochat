@@ -63,7 +63,7 @@ func TestExtractAuth(t *testing.T) {
 	req := test.NewRequest("GET", "/should-be-secured", nil)
 	headers := map[string][]string{
 		"X-Auth-Expiresin": {"1590022342295000"},
-		"X-Auth-Username":  {"tester"},
+		"X-Auth-Username":  {"dGVzdGVy"},
 		"X-Auth-Userid":    {"1"},
 	}
 	req.Header = headers
@@ -144,7 +144,7 @@ func request(method, path string, body io.Reader, e *echo.Echo) (int, string, ht
 	Header := map[string][]string{
 		echo.HeaderContentType: {"application/json"},
 		"X-Auth-Expiresin":     {"1590022342295000"},
-		"X-Auth-Username":      {"tester"},
+		"X-Auth-Username":      {"dGVzdGVy"},
 		"X-Auth-Userid":        {"1"},
 	}
 	return requestWithHeader(method, path, Header, body, e)
@@ -377,7 +377,7 @@ func TestCentrifugeThatCreationNewChatMakesNotification(t *testing.T) {
 		"Accept":           {contentType},
 		"Content-Type":     {contentType},
 		"X-Auth-Expiresin": {expirationTime},
-		"X-Auth-Username":  {"tester"},
+		"X-Auth-Username":  {"dGVzdGVy"},
 		"X-Auth-Userid":    {"1"},
 	}
 
@@ -434,7 +434,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		"Accept":           {contentType},
 		"Content-Type":     {contentType},
 		"X-Auth-Expiresin": {expirationTime},
-		"X-Auth-Username":  {"tester"},
+		"X-Auth-Username":  {"dGVzdGVy"},
 		"X-Auth-Userid":    {"1"},
 	}
 
@@ -442,7 +442,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		"Accept":           {contentType},
 		"Content-Type":     {contentType},
 		"X-Auth-Expiresin": {expirationTime},
-		"X-Auth-Username":  {"tester"},
+		"X-Auth-Username":  {"dGVzdGVy"},
 		"X-Auth-Userid":    {"2"},
 	}
 
@@ -555,7 +555,7 @@ func TestBadRequestShouldReturn400(t *testing.T) {
 		"Accept":           {contentType},
 		"Content-Type":     {contentType},
 		"X-Auth-Expiresin": {expirationTime},
-		"X-Auth-Username":  {"tester"},
+		"X-Auth-Username":  {"dGVzdGVy"},
 		"X-Auth-Userid":    {"1"},
 	}
 
@@ -665,13 +665,13 @@ func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 	h1 := map[string][]string{
 		echo.HeaderContentType: {"application/json"},
 		"X-Auth-Expiresin":     {"1590022342295000"},
-		"X-Auth-Username":      {"tester"},
+		"X-Auth-Username":      {"dGVzdGVy"}, // tester
 		"X-Auth-Userid":        {"1"},
 	}
 	h2 := map[string][]string{
 		echo.HeaderContentType: {"application/json"},
 		"X-Auth-Expiresin":     {"1590022342295000"},
-		"X-Auth-Username":      {"tester2"},
+		"X-Auth-Username":      {"dGVzdGVyMg=="}, // tester2
 		"X-Auth-Userid":        {"2"},
 	}
 

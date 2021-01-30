@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -92,13 +93,13 @@ public class UserProfileController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE)
+    @GetMapping(value = Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, produces = "application/json;charset=UTF-8")
     public HttpHeaders checkAuthenticatedInternal(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
         LOGGER.info("Requesting internal user profile");
         Long expiresAt = getExpiresAt(session);
         var dto = checkAuthenticated(userAccount, session);
         HttpHeaders headers = new HttpHeaders();
-        headers.set(X_AUTH_USERNAME, dto.getLogin());
+        headers.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.getLogin().getBytes()));
         headers.set(X_AUTH_USER_ID, ""+userAccount.getId());
         headers.set(X_AUTH_EXPIRESIN, ""+expiresAt);
         convertRolesToStringList(userAccount.getRoles()).forEach(s -> {
