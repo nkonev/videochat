@@ -1,7 +1,7 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <user-video :stream-manager="publisher"/>
-        <user-video v-for="sub in subscribers" :key="sub.stream.connection.connectionId" :stream-manager="sub"/>
+        <user-video :stream-manager="publisher" v-on:dblclick.native="onDoubleClick"/>
+        <user-video v-for="sub in subscribers" :key="sub.stream.connection.connectionId" :stream-manager="sub" v-on:dblclick.native="onDoubleClick"/>
     </v-col>
 </template>
 
@@ -148,6 +148,14 @@
                 if (this.chatId) {
                     axios.put(`/api/chat/${this.chatId}/video/notify`);
                 }
+            },
+            onDoubleClick(e) {
+              const elem = e.target;
+              if (elem.requestFullscreen) {
+                  elem.requestFullscreen();
+              } else if (elem.webkitRequestFullscreen) { // Safari
+                  elem.webkitRequestFullscreen();
+              }
             }
         },
         mounted() {
