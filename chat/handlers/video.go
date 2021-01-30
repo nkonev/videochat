@@ -81,7 +81,7 @@ func (vh VideoHandler) GetUsersCount(c echo.Context) error {
 	count, err := getUsersCount(vh, chatId, c)
 	if err != nil {
 		GetLogEntry(c.Request()).Errorf("Unable to get session info for chat %v %v", chatId, err)
-		return c.NoContent(200)
+		return c.JSON(http.StatusOK, &utils.H{"usersCount": 0})
 	}
 	return c.JSON(http.StatusOK, &utils.H{"usersCount": count})
 }
