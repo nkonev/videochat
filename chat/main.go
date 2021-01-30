@@ -155,7 +155,7 @@ func configureEcho(
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
 
 	vh := handlers.NewVideoHandler(db, restClient, notificator)
-	e.POST("/chat/:id/video/token", vh.GetOpenviduToken)
+	e.GET("/chat/:id/video/token", vh.GetOpenviduToken)
 	e.GET("/chat/:id/video/users", vh.GetUsersCount)
 	e.POST("/chat/:id/video/notify", vh.NotifyAboutVideoCallChange)
 	e.POST("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)

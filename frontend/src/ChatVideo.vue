@@ -132,7 +132,7 @@
             getToken() {
                 return new Promise((resolve, reject) => {
                     axios
-                        .post(`/api/chat/${this.chatId}/video/token`)
+                        .get(`/api/chat/${this.chatId}/video/token`)
                         .then(response => response.data)
                         .then(data => resolve(data.token))
                         .catch(error => reject(error.response));
