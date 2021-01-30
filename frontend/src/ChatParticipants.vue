@@ -88,7 +88,7 @@
 
             },
             inviteToVideoCall(userId) {
-                axios.post(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`)
+                axios.put(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`)
             }
 
         },

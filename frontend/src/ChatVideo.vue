@@ -141,12 +141,12 @@
 
             notifyAboutJoining() {
                 if (this.chatId) {
-                    axios.post(`/api/chat/${this.chatId}/video/notify`);
+                    axios.put(`/api/chat/${this.chatId}/video/notify`);
                 }
             },
             notifyAboutLeaving() {
                 if (this.chatId) {
-                    axios.post(`/api/chat/${this.chatId}/video/notify`);
+                    axios.put(`/api/chat/${this.chatId}/video/notify`);
                 }
             }
         },
