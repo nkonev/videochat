@@ -1,6 +1,6 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <user-video :stream-manager="publisher" v-on:dblclick.native="onDoubleClick"/>
+        <user-video :stream-manager="publisher" v-on:dblclick.native="onDoubleClick" :key="localPublisherKey"/>
         <user-video v-for="sub in subscribers" :key="sub.stream.connection.connectionId" :stream-manager="sub" v-on:dblclick.native="onDoubleClick"/>
     </v-col>
 </template>
@@ -9,7 +9,10 @@
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import bus, {
-        CHANGE_PHONE_BUTTON, VIDEO_CALL_CHANGED,
+        CHANGE_PHONE_BUTTON,
+        SHARE_SCREEN_START, SHARE_SCREEN_STATE_CHANGED,
+        SHARE_SCREEN_STOP,
+        VIDEO_CALL_CHANGED,
         VIDEO_LOCAL_ESTABLISHED
     } from "./bus";
     import {phoneFactory} from "./changeTitle";
@@ -28,7 +31,8 @@
                 OV: undefined,
                 session: undefined,
                 publisher: undefined,
-                subscribers: []
+                subscribers: [],
+                localPublisherKey: 1
             }
         },
         props: ['chatDto'],
@@ -69,7 +73,9 @@
 
                 // https://docs.openvidu.io/en/2.16.0/api/openvidu-browser/classes/session.html
                 // On every new Stream received...
-                this.session.on('streamCreated', ({ stream }) => {
+                this.session.on('streamCreated', (obj) => {
+                    console.log("On streamCreated", obj, "existing subscribers:", this.subscribers);
+                    const stream = obj.stream;
                     const subscriber = this.session.subscribe(stream);
                     this.subscribers.push(subscriber);
                 });
@@ -87,26 +93,12 @@
                 // 'getToken' method is simulating what your server-side should do.
                 // 'token' parameter should be retrieved and returned by your own backend
                 this.getToken().then(token => {
+                    //this.token = token;
                     this.session.connect(token, { clientData: this.myUserName })
                         .then(() => {
-
                             // --- Get your own camera stream with the desired properties ---
-
-                            let publisher = this.OV.initPublisher(undefined, {
-                                audioSource: undefined, // The source of audio. If undefined default microphone
-                                videoSource: undefined, // The source of video. If undefined default webcam
-                                publishAudio: true,  	// Whether you want to start publishing with your audio unmuted or not
-                                publishVideo: true,  	// Whether you want to start publishing with your video enabled or not
-                                resolution: '640x480',  // The resolution of your video
-                                frameRate: 30,			// The frame rate of your video
-                                insertMode: 'APPEND',	// How the video is inserted in the target element 'video-container'
-                                mirror: false       	// Whether to mirror your local video or not
-                            });
-
-                            this.publisher = publisher;
-
+                            this.publisher = this.createCamPublisher();
                             // --- Publish your stream ---
-
                             this.session.publish(this.publisher).then(() => this.notifyAboutJoining());
                         })
                         .catch(error => {
@@ -163,7 +155,39 @@
               } else if (elem.webkitRequestFullscreen) { // Safari
                   elem.webkitRequestFullscreen();
               }
-            }
+            },
+            createCamPublisher() {
+                return this.OV.initPublisher(undefined, {
+                    audioSource: undefined, // The source of audio. If undefined default microphone
+                    videoSource: undefined, // The source of video. If undefined default webcam
+                    publishAudio: true,  	// Whether you want to start publishing with your audio unmuted or not
+                    publishVideo: true,  	// Whether you want to start publishing with your video enabled or not
+                    resolution: '640x480',  // The resolution of your video
+                    frameRate: 30,			// The frame rate of your video
+                    insertMode: 'APPEND',	// How the video is inserted in the target element 'video-container'
+                    mirror: false       	// Whether to mirror your local video or not
+                });
+            },
+            createScreenPublisher() {
+                return this.OV.initPublisher(undefined, { videoSource: "screen" });
+            },
+            onStartScreenSharing() {
+                this.session.unpublish(this.publisher);
+                this.localPublisherKey++;
+                this.publisher = this.createScreenPublisher();
+                this.session.publish(this.publisher).then(()=>{
+                    bus.$emit(SHARE_SCREEN_STATE_CHANGED, true);
+                });
+
+            },
+            onStopScreenSharing() {
+                this.session.unpublish(this.publisher);
+                this.localPublisherKey++;
+                this.publisher = this.createCamPublisher();
+                this.session.publish(this.publisher);
+
+                bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
+            },
         },
         mounted() {
             bus.$emit(VIDEO_LOCAL_ESTABLISHED);
@@ -174,11 +198,18 @@
             })
 
         },
-
         beforeDestroy() {
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true));
 
             this.leaveSession();
+        },
+        created() {
+            bus.$on(SHARE_SCREEN_START, this.onStartScreenSharing);
+            bus.$on(SHARE_SCREEN_STOP, this.onStopScreenSharing);
+        },
+        destroyed() {
+            bus.$off(SHARE_SCREEN_START, this.onStartScreenSharing);
+            bus.$off(SHARE_SCREEN_STOP, this.onStopScreenSharing);
         },
     }
 </script>

@@ -25,3 +25,6 @@ export const OPEN_INFO_DIALOG = "openInfo";
 export const VIDEO_CALL_CHANGED = "videoCallChanged";
 export const VIDEO_CALL_INVITED = "videoCallInvited";
 export const OPEN_PERMISSIONS_WARNING_MODAL = "openPermissionsWarningModal";
+export const SHARE_SCREEN_START = "shareScreenStart";
+export const SHARE_SCREEN_STOP = "shareScreenStop";
+export const SHARE_SCREEN_STATE_CHANGED = "shareScreenStateChanged";

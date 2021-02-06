@@ -47,7 +47,8 @@
                 :clipped-left="true"
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
-
+            <v-btn v-if="showHangButton && !shareScreen" icon @click="shareScreenStart()"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
+            <v-btn v-if="showHangButton && shareScreen" icon @click="shareScreenStop()"><v-icon>mdi-stop</v-icon></v-btn>
             <v-btn v-if="showChatEditButton" icon @click="editChat">
                 <v-icon>mdi-lead-pencil</v-icon>
             </v-btn>
@@ -138,10 +139,15 @@
     import {CHANGE_SEARCH_STRING, FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
     import bus, {
         CHANGE_PHONE_BUTTON,
-        CHANGE_TITLE, CHANGE_WEBSOCKET_STATUS,
+        CHANGE_TITLE,
+        CHANGE_WEBSOCKET_STATUS,
         LOGGED_OUT,
         OPEN_CHAT_EDIT,
-        OPEN_INFO_DIALOG, OPEN_PERMISSIONS_WARNING_MODAL, VIDEO_CALL_CHANGED, VIDEO_CALL_INVITED,
+        OPEN_INFO_DIALOG,
+        OPEN_PERMISSIONS_WARNING_MODAL,
+        SHARE_SCREEN_START, SHARE_SCREEN_STATE_CHANGED, SHARE_SCREEN_STOP,
+        VIDEO_CALL_CHANGED,
+        VIDEO_CALL_INVITED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -179,7 +185,8 @@
                 usersCount: 0,
                 invitedVideoChatId: 0,
                 invitedVideoChatAlert: false,
-                callReblinkCounter: 0
+                callReblinkCounter: 0,
+                shareScreen: false
             }
         },
         components:{
@@ -242,10 +249,12 @@
                 if (!show) {
                     this.showCallButton = false;
                     this.showHangButton = false;
+                    this.shareScreen = false;
                 } else {
                     if (call) {
                         this.showCallButton = true;
                         this.showHangButton = false;
+                        this.shareScreen = false;
                     } else {
                         this.showCallButton = false;
                         this.showHangButton = true;
@@ -259,6 +268,12 @@
             stopCall() {
                 console.log("stopCall");
                 this.$router.push({ name: chat_name});
+            },
+            shareScreenStart() {
+                bus.$emit(SHARE_SCREEN_START);
+            },
+            shareScreenStop() {
+                bus.$emit(SHARE_SCREEN_STOP);
             },
             onChangeWsStatus(value) {
                 this.wsConnected = value;
@@ -281,6 +296,9 @@
             onClickInvitation() {
                 this.$router.push({ name: videochat_name, params: { id: this.invitedVideoChatId }});
                 this.invitedVideoChatAlert = false;
+            },
+            onShareScreenStateChanged(newState) {
+                this.shareScreen = newState;
             }
         },
         computed: {
@@ -296,9 +314,10 @@
             this.doSearch = debounce(this.doSearch, 700);
             bus.$on(CHANGE_TITLE, this.changeTitle);
             bus.$on(CHANGE_PHONE_BUTTON, this.changePhoneButton);
-            bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus)
-            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged)
-            bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited)
+            bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus);
+            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
+            bus.$on(SHARE_SCREEN_STATE_CHANGED, this.onShareScreenStateChanged);
         },
         watch: {
             searchChatString (searchString) {
