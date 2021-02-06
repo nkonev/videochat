@@ -1,7 +1,14 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <user-video :stream-manager="publisher" v-on:dblclick.native="onDoubleClick" :key="localPublisherKey"/>
-        <user-video v-for="sub in subscribers" :key="sub.stream.connection.connectionId" :stream-manager="sub" v-on:dblclick.native="onDoubleClick"/>
+        <div>
+            <video
+                id="local-video"
+                style="background-color: black"
+                width="320"
+                height="240"
+            ></video>
+        </div>
+        <div id="remotes" class="col-6 pt-2"></div>
     </v-col>
 </template>
 
@@ -18,21 +25,17 @@
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
     import {getWebsocketUrlPrefix} from "./utils";
-
-    import { OpenVidu } from 'openvidu-browser';
-    import UserVideo from './UserVideo';
+    import { Client, LocalStream, RemoteStream } from 'ion-sdk-js';
+    import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
 
     export default {
-        components: {
-            UserVideo,
-        },
         data() {
             return {
-                OV: undefined,
-                session: undefined,
-                publisher: undefined,
-                subscribers: [],
-                localPublisherKey: 1
+                clientLocal: null,
+                streams: {},
+                localVideo: null,
+                remotesDiv: null,
+                signalLocal: null,
             }
         },
         props: ['chatDto'],
@@ -48,89 +51,84 @@
         },
         methods: {
             joinSession(configObj) {
-                // --- Get an OpenVidu object ---
-                this.OV = new OpenVidu();
-                this.OV.setAdvancedConfiguration({forceMediaReconnectionAfterNetworkDrop: true})
+                const config = {
+                    iceServers: [
+                        {
+                            urls: "stun:stun.l.google.com:19302",
+                        },
+                    ],
+                };
+                this.signalLocal = new IonSFUJSONRPCSignal(
+                    "ws://localhost:7000/ws"
+                );
+                this.localVideo = document.getElementById("local-video");
+                this.remotesDiv = document.getElementById("remotes");
 
-                // --- Init a session ---
-                const sess = this.OV.initSession();
+                this.clientLocal = new Client(this.signalLocal, config);
 
-                const oldProcessTokenFunction = sess.constructor.prototype.processToken;
-                sess.constructor.prototype.processToken = function (token) {
-                    oldProcessTokenFunction.call(this, token);
+                this.signalLocal.onopen = () => {
+                    this.clientLocal.join(`chat${this.chatId}`);
+                    this.startPublishing();
+                }
+                this.signalLocal.onerror = () => { console.error("Error in signal"); }
 
-                    if (configObj.wsUrl) {
-                        this.openvidu.wsUri = configObj.wsUrl;
-                    } else {
-                        console.log("Using default openvidu url because chat server returned empty ws url");
-                        this.openvidu.wsUri = getWebsocketUrlPrefix()+"/api/video/openvidu"
+                this.clientLocal.ontrack = (track, stream) => {
+                    console.log("got track", track.id, "for stream", stream.id);
+                    if (track.kind === "video") {
+                        track.onunmute = () => {
+                            console.log("Stream id", stream.id);
+                            if (!this.streams[stream.id]) {
+                                this.streams[stream.id] = stream;
+                                let remoteVideo = document.createElement("video");
+                                remoteVideo.srcObject = stream;
+                                remoteVideo.autoplay = true;
+                                remoteVideo.muted = true;
+
+                                this.remotesDiv.appendChild(remoteVideo);
+                                stream.onremovetrack = () => {
+                                    this.streams[stream.id] = null;
+                                    try {
+                                        this.remotesDiv.removeChild(remoteVideo);
+                                    } catch (e) {
+                                        console.debug("Something wrong on removing child", e, remoteVideo, this.remotesDiv);
+                                    }
+                                };
+                            }
+                        };
                     }
                 };
 
-                this.session = sess;
-
-                // --- Specify the actions when events take place in the session ---
-
-                // https://docs.openvidu.io/en/2.16.0/api/openvidu-browser/classes/session.html
-                // On every new Stream received...
-                this.session.on('streamCreated', (obj) => {
-                    console.log("On streamCreated", obj, "existing subscribers:", this.subscribers);
-                    const stream = obj.stream;
-                    const subscriber = this.session.subscribe(stream);
-                    this.subscribers.push(subscriber);
-                });
-
-                // On every Stream destroyed...
-                this.session.on('streamDestroyed', ({ stream }) => {
-                    const index = this.subscribers.indexOf(stream.streamManager, 0);
-                    if (index >= 0) {
-                        this.subscribers.splice(index, 1);
-                    }
-                });
-
-                // --- Connect to the session with a valid user token ---
-
-                // 'getToken' method is simulating what your server-side should do.
-                // 'token' parameter should be retrieved and returned by your own backend
-                this.getToken().then(token => {
-                    //this.token = token;
-                    this.session.connect(token, { clientData: this.myUserName })
-                        .then(() => {
-                            // --- Get your own camera stream with the desired properties ---
-                            this.publisher = this.createCamPublisher();
-                            // --- Publish your stream ---
-                            this.session.publish(this.publisher).then(() => this.notifyAboutJoining());
-                        })
-                        .catch(error => {
-                            console.log('There was an error connecting to the session:', error.code, error.message);
-                        });
-                });
-
                 window.addEventListener('beforeunload', this.leaveSession)
+            },
+            startPublishing() {
+                LocalStream.getUserMedia({
+                    resolution: "vga",
+                    audio: true,
+                })
+                    .then((media) => {
+                        this.localVideo.srcObject = media;
+                        this.localVideo.autoplay = true;
+                        this.localVideo.controls = true;
+                        this.localVideo.muted = true;
+                        this.clientLocal.publish(media);
+                    })
+                    .catch(console.error);
             },
 
             leaveSession() {
-                // --- Leave the session by calling 'disconnect' method over the Session object ---
-                if (this.session) this.session.disconnect();
+                this.clientLocal.leave();
+                this.clientLocal.close();
+                this.signalLocal.close();
 
-                this.session = undefined;
-                this.publisher = undefined;
-                this.subscribers = [];
-                this.OV = undefined;
+                this.clientLocal = null;
+                this.signalLocal = null;
+                this.localVideo = null;
+                this.streams = {};
+                this.remotesDiv = null;
 
                 bus.$emit(VIDEO_CALL_CHANGED, {usersCount: 0}); // restore initial state
                 this.notifyAboutLeaving();
-
                 window.removeEventListener('beforeunload', this.leaveSession);
-            },
-            getToken() {
-                return new Promise((resolve, reject) => {
-                    axios
-                        .get(`/api/chat/${this.chatId}/video/token`)
-                        .then(response => response.data)
-                        .then(data => resolve(data.token))
-                        .catch(error => reject(error.response));
-                });
             },
             getConfig() {
                 return axios
@@ -156,35 +154,10 @@
                   elem.webkitRequestFullscreen();
               }
             },
-            createCamPublisher() {
-                return this.OV.initPublisher(undefined, {
-                    audioSource: undefined, // The source of audio. If undefined default microphone
-                    videoSource: undefined, // The source of video. If undefined default webcam
-                    publishAudio: true,  	// Whether you want to start publishing with your audio unmuted or not
-                    publishVideo: true,  	// Whether you want to start publishing with your video enabled or not
-                    resolution: '640x480',  // The resolution of your video
-                    frameRate: 30,			// The frame rate of your video
-                    insertMode: 'APPEND',	// How the video is inserted in the target element 'video-container'
-                    mirror: false       	// Whether to mirror your local video or not
-                });
-            },
-            createScreenPublisher() {
-                return this.OV.initPublisher(undefined, { videoSource: "screen" });
-            },
             onStartScreenSharing() {
-                this.session.unpublish(this.publisher);
-                this.localPublisherKey++;
-                this.publisher = this.createScreenPublisher();
-                this.session.publish(this.publisher).then(()=>{
-                    bus.$emit(SHARE_SCREEN_STATE_CHANGED, true);
-                });
 
             },
             onStopScreenSharing() {
-                this.session.unpublish(this.publisher);
-                this.localPublisherKey++;
-                this.publisher = this.createCamPublisher();
-                this.session.publish(this.publisher);
 
                 bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
             },

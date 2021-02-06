@@ -86,23 +86,11 @@ services:
         max-size: "50m"
         max-file: "1"
 
-  openvidu:
-    image: openvidu/openvidu-server-kms:2.16.0
-    hostname: openvidu
-    restart: unless-stopped
+  pion-sfu:
+    image: pionwebrtc/ion-sfu:v1.8.3-jsonrpc
     ports:
-      - 5443:5443
-    networks:
-      backend:
-    environment:
-      - SERVER_SSL_ENABLED=false
-      - SERVER_PORT=5443
-      - OPENVIDU_SECRET=MY_SECRET
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "1"
+      - "5000-5200:5000-5200/udp"
+      - 7000:7000
 
   jaeger:
     image: jaegertracing/all-in-one:1.18.1
