@@ -71,6 +71,7 @@
                     this.startPublishing();
                 }
                 this.signalLocal.onerror = () => { console.error("Error in signal"); }
+                this.signalLocal.onclose = () => { console.info("Signal is closed"); }
 
                 this.clientLocal.ontrack = (track, stream) => {
                     console.log("got track", track.id, "for stream", stream.id);
@@ -116,9 +117,7 @@
             },
 
             leaveSession() {
-                this.clientLocal.leave();
                 this.clientLocal.close();
-                this.signalLocal.close();
 
                 this.clientLocal = null;
                 this.signalLocal = null;
@@ -138,12 +137,12 @@
 
             notifyAboutJoining() {
                 if (this.chatId) {
-                    axios.put(`/api/chat/${this.chatId}/video/notify`);
+                    //axios.put(`/api/chat/${this.chatId}/video/notify`);
                 }
             },
             notifyAboutLeaving() {
                 if (this.chatId) {
-                    axios.put(`/api/chat/${this.chatId}/video/notify`);
+                    //axios.put(`/api/chat/${this.chatId}/video/notify`);
                 }
             },
             onDoubleClick(e) {
