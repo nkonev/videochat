@@ -1,18 +1,11 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <div>
-            <video
-                id="local-video"
-                style="background-color: black"
-                width="320"
-                height="240"
-            ></video>
-        </div>
-        <div id="remotes" class="col-6 pt-2"></div>
+        <UserVideo ref="localVideoComponent"/>
     </v-col>
 </template>
 
 <script>
+    import Vue from 'vue';
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import bus, {
@@ -24,16 +17,16 @@
     } from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
-    import {getWebsocketUrlPrefix} from "./utils";
-    import { Client, LocalStream, RemoteStream } from 'ion-sdk-js';
+    import { Client, LocalStream } from 'ion-sdk-js';
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
+    import UserVideo from "./UserVideo";
+    const ComponentClass = Vue.extend(UserVideo);
 
     export default {
         data() {
             return {
                 clientLocal: null,
                 streams: {},
-                localVideo: null,
                 remotesDiv: null,
                 signalLocal: null,
             }
@@ -46,7 +39,6 @@
             ...mapGetters({currentUser: GET_USER}),
             myUserName() {
                 return this.currentUser.login
-                //return 'user' + Math.floor(Math.random() * 100)
             }
         },
         methods: {
@@ -61,8 +53,7 @@
                 this.signalLocal = new IonSFUJSONRPCSignal(
                     "ws://localhost:7000/ws"
                 );
-                this.localVideo = document.getElementById("local-video");
-                this.remotesDiv = document.getElementById("remotes");
+                this.remotesDiv = document.getElementById("video-container");
 
                 this.clientLocal = new Client(this.signalLocal, config);
 
@@ -80,18 +71,18 @@
                             console.log("Stream id", stream.id);
                             if (!this.streams[stream.id]) {
                                 this.streams[stream.id] = stream;
-                                let remoteVideo = document.createElement("video");
-                                remoteVideo.srcObject = stream;
-                                remoteVideo.autoplay = true;
-                                remoteVideo.muted = true;
 
-                                this.remotesDiv.appendChild(remoteVideo);
+                                const instance = new ComponentClass();
+                                instance.$mount();
+                                this.remotesDiv.appendChild(instance.$el);
+                                instance.setSource(stream);
+
                                 stream.onremovetrack = () => {
                                     this.streams[stream.id] = null;
                                     try {
-                                        this.remotesDiv.removeChild(remoteVideo);
+                                        this.remotesDiv.removeChild(instance.$el);
                                     } catch (e) {
-                                        console.debug("Something wrong on removing child", e, remoteVideo, this.remotesDiv);
+                                        console.debug("Something wrong on removing child", e, instance.$el, this.remotesDiv);
                                     }
                                 };
                             }
@@ -107,10 +98,7 @@
                     audio: true,
                 })
                     .then((media) => {
-                        this.localVideo.srcObject = media;
-                        this.localVideo.autoplay = true;
-                        this.localVideo.controls = true;
-                        this.localVideo.muted = true;
+                        this.$refs.localVideoComponent.setSource(media);
                         this.clientLocal.publish(media);
                     })
                     .catch(console.error);
@@ -118,10 +106,8 @@
 
             leaveSession() {
                 this.clientLocal.close();
-
                 this.clientLocal = null;
                 this.signalLocal = null;
-                this.localVideo = null;
                 this.streams = {};
                 this.remotesDiv = null;
 
@@ -183,6 +169,9 @@
             bus.$off(SHARE_SCREEN_START, this.onStartScreenSharing);
             bus.$off(SHARE_SCREEN_STOP, this.onStopScreenSharing);
         },
+        components: {
+            UserVideo
+        }
     }
 </script>
 

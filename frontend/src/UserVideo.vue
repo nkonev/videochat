@@ -1,35 +1,25 @@
 <template>
-<div v-if="streamManager" class="video-container-element">
-	<ov-video :stream-manager="streamManager"/>
+<div class="video-container-element">
+    <video autoPlay playsInline ref="videoRef"/>
 	<p class="video-container-element-caption">{{ clientData }}</p>
 </div>
 </template>
 
 <script>
-import OvVideo from './OvVideo';
 
 export default {
 	name: 'UserVideo',
 
-	components: {
-		OvVideo,
-	},
-
-	props: {
-		streamManager: Object,
-	},
-
 	computed: {
 		clientData () {
-			const { clientData } = this.getConnectionData();
-			return clientData;
+			return 'Name Surname';
 		},
 	},
 
 	methods: {
-		getConnectionData () {
-			const { connection } = this.streamManager.stream;
-			return JSON.parse(connection.data);
+		setSource(d) {
+		    console.log("videoRef=", this.$refs.videoRef);
+			this.$refs.videoRef.srcObject = d;
 		},
 	},
 };
