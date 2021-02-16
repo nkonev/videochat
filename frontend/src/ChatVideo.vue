@@ -67,26 +67,24 @@
                 this.clientLocal.ontrack = (track, stream) => {
                     console.log("got track", track.id, "for stream", stream.id);
                     if (track.kind === "video") {
-                        track.onunmute = () => {
-                            console.log("Stream id", stream.id);
-                            if (!this.streams[stream.id]) {
-                                this.streams[stream.id] = stream;
+                        if (!this.streams[stream.id]) {
+                            this.streams[stream.id] = stream;
 
-                                const instance = new ComponentClass();
-                                instance.$mount();
-                                this.remotesDiv.appendChild(instance.$el);
-                                instance.setSource(stream);
+                            const instance = new ComponentClass();
+                            instance.$mount();
+                            this.remotesDiv.appendChild(instance.$el);
+                            instance.setSource(stream);
 
-                                stream.onremovetrack = () => {
-                                    this.streams[stream.id] = null;
-                                    try {
-                                        this.remotesDiv.removeChild(instance.$el);
-                                    } catch (e) {
-                                        console.debug("Something wrong on removing child", e, instance.$el, this.remotesDiv);
-                                    }
-                                };
-                            }
-                        };
+                            stream.onremovetrack = () => {
+                                this.streams[stream.id] = null;
+                                try {
+                                    this.remotesDiv.removeChild(instance.$el);
+                                    instance.$destroy();
+                                } catch (e) {
+                                    console.debug("Something wrong on removing child", e, instance.$el, this.remotesDiv);
+                                }
+                            };
+                        }
                     }
                 };
 
