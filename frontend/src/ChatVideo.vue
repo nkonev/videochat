@@ -65,9 +65,10 @@
                 this.signalLocal.onclose = () => { console.info("Signal is closed"); }
 
                 this.clientLocal.ontrack = (track, stream) => {
-                    console.log("got track", track.id, "for stream", stream.id);
+                    console.debug("got track", track.id, "for stream", stream.id);
                     if (track.kind === "video") {
                         if (!this.streams[stream.id]) {
+                            console.log("set track", track.id, "for stream", stream.id);
                             this.streams[stream.id] = stream;
 
                             const instance = new ComponentClass();
@@ -77,6 +78,7 @@
 
                             stream.onremovetrack = () => {
                                 this.streams[stream.id] = null;
+                                console.log("removed track", track.id, "for stream", stream.id);
                                 try {
                                     this.remotesDiv.removeChild(instance.$el);
                                     instance.$destroy();
