@@ -51,7 +51,7 @@
                     ],
                 };
                 this.signalLocal = new IonSFUJSONRPCSignal(
-                    "ws://localhost:7000/ws"
+                    `ws://localhost:7000/ws?metadata=${this.myUserName}`
                 );
                 this.remotesDiv = document.getElementById("video-container");
 
@@ -76,6 +76,8 @@
                             instance.$mount();
                             this.remotesDiv.appendChild(instance.$el);
                             instance.setSource(stream);
+
+                            // RPC who is stream.id ? answer please to this.currentUser.id
 
                             stream.onremovetrack = () => {
                                 this.streams[stream.id] = null;
