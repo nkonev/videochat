@@ -58,8 +58,9 @@
                 this.clientLocal = new Client(this.signalLocal, config);
 
                 this.signalLocal.onopen = () => {
-                    this.clientLocal.join(`chat${this.chatId}`);
-                    this.startPublishing();
+                    this.clientLocal.join(`chat${this.chatId}`).then(()=>{
+                        this.startPublishing();
+                    })
                 }
                 this.signalLocal.onerror = () => { console.error("Error in signal"); }
                 this.signalLocal.onclose = () => { console.info("Signal is closed"); }
