@@ -184,6 +184,9 @@ $mobileWidth = 800px
     align-items: center
     justify-content: space-between
     border-top-width: 0
+    border-bottom-style dashed
+    border-left-style dashed
+    border-right-style dashed
 }
 @media screen and (max-width: $mobileWidth) {
     #custom-toolbar {
