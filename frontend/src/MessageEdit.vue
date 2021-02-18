@@ -6,7 +6,6 @@
                 </template>
             </div>
             <quill-editor
-                ref="myQuillEditor"
                 v-model="editMessageDto.text"
                 :options="editorOption"
                 @keyup.native.ctrl.enter="sendMessageToChat" @keyup.native.esc="resetInput"
