@@ -60,7 +60,7 @@
                     ],
                 };
                 this.signalLocal = new IonSFUJSONRPCSignal(
-                    `ws://localhost:7000/ws?metadata=${this.myUserName}`
+                    `ws://localhost:7000/ws?chatId=${this.chatId}`
                 );
                 this.remotesDiv = document.getElementById("video-container");
 
