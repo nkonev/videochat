@@ -22,6 +22,14 @@
     import UserVideo from "./UserVideo";
     const ComponentClass = Vue.extend(UserVideo);
 
+    const DATA_EVENT_GET_USERNAME_FOR = "getUserName";
+    const DATA_EVENT_RESPOND_USERNAME = "respondUserName";
+
+    const FIELD_TYPE = "type";
+    const FIELD_STREAM_ID = "streamId";
+    const FIELD_FOR_STREAM_ID = "forStreamId";
+    const FIELD_USERNAME = "username";
+
     export default {
         data() {
             return {
@@ -29,6 +37,7 @@
                 streams: {},
                 remotesDiv: null,
                 signalLocal: null,
+                dataChannel: null,
             }
         },
         props: ['chatDto'],
@@ -59,6 +68,16 @@
 
                 this.signalLocal.onopen = () => {
                     this.clientLocal.join(`chat${this.chatId}`).then(()=>{
+                        this.dataChannel = this.clientLocal.createDataChannel(`chat${this.chatId}`);
+                        this.dataChannel.onmessage = (m) => {
+                            const data = JSON.parse(m.data);
+                            console.log("Received", m.data);
+                            if (data[FIELD_TYPE] == DATA_EVENT_GET_USERNAME_FOR && data[FIELD_STREAM_ID] == this.$refs.localVideoComponent.getStreamId()) {
+                                this.sendData({[FIELD_TYPE]: DATA_EVENT_RESPOND_USERNAME, [FIELD_USERNAME]: this.myUserName, [FIELD_FOR_STREAM_ID]: data[FIELD_STREAM_ID]});
+                            } else if (data.type == DATA_EVENT_RESPOND_USERNAME) {
+                                this.streams[data[FIELD_FOR_STREAM_ID]].component.setUserName(data[FIELD_USERNAME]);
+                            }
+                        }
                         this.startPublishing();
                     })
                 }
@@ -70,25 +89,25 @@
                     if (track.kind === "video") {
                         if (!this.streams[stream.id]) {
                             console.log("set track", track.id, "for stream", stream.id);
-                            this.streams[stream.id] = stream;
 
-                            const instance = new ComponentClass();
-                            instance.$mount();
-                            this.remotesDiv.appendChild(instance.$el);
-                            instance.setSource(stream);
-
-                            // RPC who is stream.id ? answer please to this.currentUser.id
+                            const component = new ComponentClass();
+                            component.$mount();
+                            this.remotesDiv.appendChild(component.$el);
+                            component.setSource(stream);
+                            this.streams[stream.id] = {stream, component};
 
                             stream.onremovetrack = () => {
                                 this.streams[stream.id] = null;
                                 console.log("removed track", track.id, "for stream", stream.id);
                                 try {
-                                    this.remotesDiv.removeChild(instance.$el);
-                                    instance.$destroy();
+                                    this.remotesDiv.removeChild(component.$el);
+                                    component.$destroy();
                                 } catch (e) {
-                                    console.debug("Something wrong on removing child", e, instance.$el, this.remotesDiv);
+                                    console.debug("Something wrong on removing child", e, component.$el, this.remotesDiv);
                                 }
                             };
+
+                            this.askUserNameWithRetries(stream.id);
                         }
                     }
                 };
@@ -102,6 +121,7 @@
                 })
                     .then((media) => {
                         this.$refs.localVideoComponent.setSource(media);
+                        this.$refs.localVideoComponent.setUserName(this.myUserName)
                         this.clientLocal.publish(media);
                     })
                     .catch(console.error);
@@ -117,6 +137,22 @@
                 bus.$emit(VIDEO_CALL_CHANGED, {usersCount: 0}); // restore initial state
                 this.notifyAboutLeaving();
                 window.removeEventListener('beforeunload', this.leaveSession);
+            },
+            askUserNameWithRetries(streamId) {
+                const toSend = {[FIELD_TYPE]: DATA_EVENT_GET_USERNAME_FOR, [FIELD_STREAM_ID]: streamId};
+                try {
+                    this.sendData(toSend);
+                } catch (e) {
+                    setTimeout(()=>{
+                        console.log("Rescheduling asking for userName");
+                        this.askUserNameWithRetries(streamId);
+                    }, 1000);
+                }
+            },
+            sendData(obj) {
+                const toSend = JSON.stringify(obj);
+                console.log("Sending", toSend)
+                this.dataChannel.send(toSend);
             },
             getConfig() {
                 return axios

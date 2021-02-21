@@ -1,7 +1,7 @@
 <template>
 <div class="video-container-element">
     <video autoPlay playsInline ref="videoRef"/>
-	<p class="video-container-element-caption">{{ clientData }}</p>
+	<p class="video-container-element-caption">{{ userName }}</p>
 </div>
 </template>
 
@@ -10,17 +10,23 @@
 export default {
 	name: 'UserVideo',
 
-	computed: {
-		clientData () {
-			return 'Name Surname';
-		},
-	},
+    data()  {
+	    return {
+            userName: 'user'
+        }
+    },
 
 	methods: {
 		setSource(d) {
 		    console.log("videoRef=", this.$refs.videoRef);
 			this.$refs.videoRef.srcObject = d;
 		},
+        getStreamId() {
+		    return this.$refs.videoRef.srcObject.id;
+        },
+        setUserName(u) {
+		    this.userName = u;
+        }
 	},
 };
 </script>
