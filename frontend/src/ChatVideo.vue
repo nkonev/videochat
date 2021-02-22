@@ -174,14 +174,6 @@
                     //axios.put(`/api/chat/${this.chatId}/video/notify`);
                 }
             },
-            onDoubleClick(e) {
-              const elem = e.target;
-              if (elem.requestFullscreen) {
-                  elem.requestFullscreen();
-              } else if (elem.webkitRequestFullscreen) { // Safari
-                  elem.webkitRequestFullscreen();
-              }
-            },
             onStartScreenSharing() {
 
             },

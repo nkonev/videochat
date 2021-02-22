@@ -1,6 +1,6 @@
 <template>
 <div class="video-container-element">
-    <video autoPlay playsInline ref="videoRef"/>
+    <video autoPlay playsInline ref="videoRef" v-on:dblclick="onDoubleClick"/>
 	<p class="video-container-element-caption">{{ userName }}</p>
 </div>
 </template>
@@ -26,8 +26,16 @@ export default {
         },
         setUserName(u) {
 		    this.userName = u;
-        }
-	},
+        },
+        onDoubleClick(e) {
+            const elem = e.target;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { // Safari
+                elem.webkitRequestFullscreen();
+            }
+        },
+    },
 };
 </script>
 
