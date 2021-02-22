@@ -69,15 +69,7 @@
                 this.signalLocal.onopen = () => {
                     this.clientLocal.join(`chat${this.chatId}`).then(()=>{
                         this.dataChannel = this.clientLocal.createDataChannel(`chat${this.chatId}`);
-                        this.dataChannel.onmessage = (m) => {
-                            const data = JSON.parse(m.data);
-                            console.log("Received", m.data);
-                            if (data[FIELD_TYPE] == DATA_EVENT_GET_USERNAME_FOR && data[FIELD_STREAM_ID] == this.$refs.localVideoComponent.getStreamId()) {
-                                this.sendData({[FIELD_TYPE]: DATA_EVENT_RESPOND_USERNAME, [FIELD_USERNAME]: this.myUserName, [FIELD_FOR_STREAM_ID]: data[FIELD_STREAM_ID]});
-                            } else if (data.type == DATA_EVENT_RESPOND_USERNAME) {
-                                this.streams[data[FIELD_FOR_STREAM_ID]].component.setUserName(data[FIELD_USERNAME]);
-                            }
-                        }
+                        this.dataChannel.onmessage = this.receiveFromChannel;
                         this.startPublishing();
                     })
                 }
@@ -141,7 +133,7 @@
             askUserNameWithRetries(streamId) {
                 const toSend = {[FIELD_TYPE]: DATA_EVENT_GET_USERNAME_FOR, [FIELD_STREAM_ID]: streamId};
                 try {
-                    this.sendData(toSend);
+                    this.sendToChannel(toSend);
                 } catch (e) {
                     setTimeout(()=>{
                         console.log("Rescheduling asking for userName");
@@ -149,10 +141,22 @@
                     }, 1000);
                 }
             },
-            sendData(obj) {
+            sendToChannel(obj) {
                 const toSend = JSON.stringify(obj);
                 console.log("Sending", toSend)
                 this.dataChannel.send(toSend);
+            },
+            receiveFromChannel(m) {
+                const data = JSON.parse(m.data);
+                console.log("Received", m.data);
+                if (data[FIELD_TYPE] == DATA_EVENT_GET_USERNAME_FOR && data[FIELD_STREAM_ID] == this.$refs.localVideoComponent.getStreamId()) {
+                    this.sendToChannel({[FIELD_TYPE]: DATA_EVENT_RESPOND_USERNAME, [FIELD_USERNAME]: this.myUserName, [FIELD_FOR_STREAM_ID]: data[FIELD_STREAM_ID]});
+                } else if (data.type == DATA_EVENT_RESPOND_USERNAME) {
+                    const component = this.streams[data[FIELD_FOR_STREAM_ID]];
+                    if (component) {
+                        component.component.setUserName(data[FIELD_USERNAME]);
+                    }
+                }
             },
             getConfig() {
                 return axios
