@@ -38,6 +38,7 @@
                 remotesDiv: null,
                 signalLocal: null,
                 dataChannel: null,
+                localMedia: null,
             }
         },
         props: ['chatDto'],
@@ -112,6 +113,7 @@
                     audio: true,
                 })
                     .then((media) => {
+                        this.localMedia = media
                         this.$refs.localVideoComponent.setSource(media);
                         this.$refs.localVideoComponent.setUserName(this.myUserName)
                         this.clientLocal.publish(media);
@@ -120,11 +122,13 @@
             },
 
             leaveSession() {
+                this.localMedia.getTracks().forEach(t=>t.stop());
                 this.clientLocal.close();
                 this.clientLocal = null;
                 this.signalLocal = null;
                 this.streams = {};
                 this.remotesDiv = null;
+                this.localMedia = null;
 
                 bus.$emit(VIDEO_CALL_CHANGED, {usersCount: 0}); // restore initial state
                 this.notifyAboutLeaving();
