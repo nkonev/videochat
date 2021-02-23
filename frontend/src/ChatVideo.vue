@@ -20,6 +20,7 @@
     import { Client, LocalStream } from 'ion-sdk-js';
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
+    import {getWebsocketUrlPrefix} from "./utils";
     const ComponentClass = Vue.extend(UserVideo);
 
     const DATA_EVENT_GET_USERNAME_FOR = "getUserName";
@@ -61,7 +62,7 @@
                     ],
                 };
                 this.signalLocal = new IonSFUJSONRPCSignal(
-                    `ws://localhost:7000/ws?chatId=${this.chatId}&userId=${this.currentUser.id}`
+                    getWebsocketUrlPrefix()+`/api/video/ws?chatId=${this.chatId}`
                 );
                 this.remotesDiv = document.getElementById("video-container");
 

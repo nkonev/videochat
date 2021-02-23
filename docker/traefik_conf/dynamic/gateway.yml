@@ -16,6 +16,10 @@ http:
       loadBalancer:
         servers:
           - url: http://api.site.local:1236
+    video-service:
+      loadBalancer:
+        servers:
+          - url: http://api.site.local:7000
 
   routers:
     nginx-router:
@@ -42,6 +46,12 @@ http:
         - "auth-middleware"
         - "api-strip-prefix-middleware"
         - "retry-middleware"
+    viedo-router:
+      rule: "PathPrefix(`/api/video`)"
+      service: video-service
+      middlewares:
+        - "auth-middleware"
+        - "api-strip-prefix-middleware"
     chat-public-router:
       rule: "PathPrefix(`/api/chat/public`)"
       service: chat-service

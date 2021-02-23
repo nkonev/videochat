@@ -152,9 +152,8 @@ func main() {
 
 	client := NewRestClient()
 
-	http.Handle("/ws", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO r.Header.Get("X-Auth-UserId")
-		userId := r.URL.Query().Get("userId")
+	http.Handle("/video/ws", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userId := r.Header.Get("X-Auth-UserId")
 		chatId := r.URL.Query().Get("chatId")
 		if !checkAccess(client, userId, chatId) {
 			w.WriteHeader(http.StatusUnauthorized)
