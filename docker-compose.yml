@@ -86,13 +86,6 @@ services:
         max-size: "50m"
         max-file: "1"
 
-  pion-sfu:
-    image: pionwebrtc/ion-sfu:v1.8.3-jsonrpc
-    restart: unless-stopped
-    ports:
-      - "5000-5200:5000-5200/udp"
-      - 7000:7000
-
   jaeger:
     image: jaegertracing/all-in-one:1.18.1
     hostname: jaeger

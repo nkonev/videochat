@@ -61,7 +61,7 @@
                     ],
                 };
                 this.signalLocal = new IonSFUJSONRPCSignal(
-                    `ws://localhost:7000/ws?chatId=${this.chatId}`
+                    `ws://localhost:7000/ws?chatId=${this.chatId}&userId=${this.currentUser.id}`
                 );
                 this.remotesDiv = document.getElementById("video-container");
 
@@ -122,8 +122,12 @@
             },
 
             leaveSession() {
-                this.localMedia.getTracks().forEach(t=>t.stop());
-                this.clientLocal.close();
+                if (this.localMedia) {
+                    this.localMedia.getTracks().forEach(t => t.stop());
+                }
+                if (this.clientLocal) {
+                    this.clientLocal.close();
+                }
                 this.clientLocal = null;
                 this.signalLocal = null;
                 this.streams = {};

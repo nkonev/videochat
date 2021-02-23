@@ -13,6 +13,7 @@ http:
 auth:
   exclude:
     - "^/chat/public.*"
+    - "^/internal/access.*"
 
 postgresql:
   # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
@@ -49,9 +50,3 @@ aaa:
 
 jaeger:
   endpoint: "localhost:6831"
-
-openvidu:
-  url:
-    base: "http://api.site.local:5443"
-  user: "OPENVIDUAPP"
-  password: "MY_SECRET"

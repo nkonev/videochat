@@ -370,3 +370,23 @@ func (ch ChatHandler) LeaveChat(c echo.Context) error {
 	}
 	return errOuter
 }
+
+func (ch ChatHandler) CheckAccess(c echo.Context) error {
+	chatId, err := GetQueryParamAsInt64(c, "chatId")
+	if err != nil {
+		return err
+	}
+	userId, err := GetQueryParamAsInt64(c, "userId")
+	if err != nil {
+		return err
+	}
+	participant, err := ch.db.IsParticipant(userId, chatId)
+	if err != nil {
+		return err
+	}
+	if participant {
+		return c.NoContent(http.StatusOK)
+	} else {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+}

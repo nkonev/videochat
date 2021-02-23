@@ -16,10 +16,6 @@ http:
       loadBalancer:
         servers:
           - url: http://api.site.local:1236
-    openvidu-service:
-      loadBalancer:
-        servers:
-          - url: http://api.site.local:5443
 
   routers:
     nginx-router:
@@ -58,23 +54,12 @@ http:
       middlewares:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
-    openvidu-router:
-      rule: "PathPrefix(`/api/video`)"
-      service: openvidu-service
-      middlewares:
-        - "api-video-strip-prefix-middleware"
-        - "auth-middleware"
-        - "retry-middleware"
 
   middlewares:
     api-strip-prefix-middleware:
       stripPrefix:
         prefixes:
           - "/api"
-    api-video-strip-prefix-middleware:
-      stripPrefix:
-        prefixes:
-          - "/api/video"
     retry-middleware:
       retry:
         attempts: 4
