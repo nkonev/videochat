@@ -111,16 +111,7 @@
                 window.addEventListener('beforeunload', this.leaveSession)
             },
             startPublishing() {
-                LocalStream.getUserMedia({
-                    resolution: "vga",
-                    audio: true,
-                })
-                    .then((media) => {
-                        this.localMedia = media
-                        this.$refs.localVideoComponent.setSource(media);
-                        this.$refs.localVideoComponent.setUserName(this.myUserName)
-                        this.clientLocal.publish(media);
-                    })
+                this.getAndPublishCamera()
                     .then(()=>{
                         this.notifyAboutJoining();
                     })
@@ -190,31 +181,38 @@
             },
             onStartScreenSharing() {
                 this.localMedia.unpublish();
+                this.getAndPublishScreen()
+                    .catch(console.error);
+            },
+            onStopScreenSharing() {
+                this.localMedia.unpublish();
+                this.getAndPublishCamera();
+            },
+            getAndPublishCamera() {
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
-                LocalStream.getDisplayMedia({ audio: true }).then((media) => {
+                return LocalStream.getUserMedia({
+                  resolution: "vga",
+                  audio: true,
+                }).then((media) => {
+                  this.localMedia = media
+                  this.$refs.localVideoComponent.setSource(media);
+                  this.$refs.localVideoComponent.setUserName(this.myUserName)
+                  this.clientLocal.publish(media);
+                  bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
+                });
+            },
+            getAndPublishScreen() {
+                this.$refs.localVideoComponent.setSource(null);
+                this.localPublisherKey++;
+                return LocalStream.getDisplayMedia({ audio: true }).then((media) => {
                     this.localMedia = media
                     this.$refs.localVideoComponent.setSource(media);
                     this.$refs.localVideoComponent.setUserName(this.myUserName)
                     this.clientLocal.publish(media);
                     bus.$emit(SHARE_SCREEN_STATE_CHANGED, true);
-                }).catch(console.error);
-            },
-            onStopScreenSharing() {
-                this.localMedia.unpublish();
-                this.$refs.localVideoComponent.setSource(null);
-                this.localPublisherKey++;
-                LocalStream.getUserMedia({
-                  resolution: "vga",
-                  audio: true,
-                }).then((media) => {
-                    this.localMedia = media
-                    this.$refs.localVideoComponent.setSource(media);
-                    this.$refs.localVideoComponent.setUserName(this.myUserName)
-                    this.clientLocal.publish(media);
-                    bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
-                  });
-            },
+                });
+            }
 
         },
         mounted() {
