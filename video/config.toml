@@ -89,6 +89,7 @@ level = "trace"
 [chat.url]
 base = "http://api.site.local:1235"
 access = "/internal/access"
+notify = "/internal/video/notify"
 
 # Rest client
 [http.idle.conns]

@@ -78,6 +78,7 @@
                 this.signalLocal.onerror = () => { console.error("Error in signal"); }
                 this.signalLocal.onclose = () => { console.info("Signal is closed"); }
 
+                // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
                     console.debug("got track", track.id, "for stream", stream.id);
                     if (track.kind === "video") {
@@ -118,6 +119,9 @@
                         this.$refs.localVideoComponent.setSource(media);
                         this.$refs.localVideoComponent.setUserName(this.myUserName)
                         this.clientLocal.publish(media);
+                    })
+                    .then(()=>{
+                        this.notifyAboutJoining();
                     })
                     .catch(console.error);
             },
@@ -168,19 +172,20 @@
                 }
             },
             getConfig() {
-                return axios
-                    .get(`/api/chat/${this.chatId}/video/config`)
-                    .then(response => response.data)
+                // return axios
+                //     .get(`/api/video/config`)
+                //     .then(response => response.data)
+              return Promise.resolve(true);
             },
 
             notifyAboutJoining() {
                 if (this.chatId) {
-                    //axios.put(`/api/chat/${this.chatId}/video/notify`);
+                    axios.put(`/api/video/notify?chatId=${this.chatId}`);
                 }
             },
             notifyAboutLeaving() {
                 if (this.chatId) {
-                    //axios.put(`/api/chat/${this.chatId}/video/notify`);
+                    axios.put(`/api/video/notify?chatId=${this.chatId}`);
                 }
             },
             onStartScreenSharing() {

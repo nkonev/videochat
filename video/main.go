@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -16,7 +17,9 @@ import (
 	"net"
 	"net/http"
 	_ "net/http/pprof"
+	"net/url"
 	"os"
+	"sync"
 )
 
 var (
@@ -124,7 +127,9 @@ func NewRestClient() *http.Client {
 	return client
 }
 
-// TODO Map<ChatId<Map<UserId, Peer>>>
+type UsersResponse struct {
+	UsersCount int64 `json:"usersCount"`
+}
 
 func main() {
 	if !parse() {
@@ -152,6 +157,8 @@ func main() {
 
 	client := NewRestClient()
 
+	sessionUserPeer := &sync.Map{}
+
 	http.Handle("/video/ws", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userId := r.Header.Get("X-Auth-UserId")
 		chatId := r.URL.Query().Get("chatId")
@@ -167,11 +174,82 @@ func main() {
 		defer c.Close()
 
 		p := server.NewJSONSignal(sfu.NewPeer(s))
+		addPeerToMap(sessionUserPeer, chatId, userId, p)
 		defer p.Close()
+		defer removePeerFromMap(sessionUserPeer, chatId, userId)
 
 		jc := jsonrpc2.NewConn(r.Context(), websocketjsonrpc2.NewObjectStream(c), p)
 		<-jc.DisconnectNotify()
 	}))
+
+	// GET /api/video/users?chatId=${this.chatId} - responds users count
+	http.Handle("/video/users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userId := r.Header.Get("X-Auth-UserId")
+		chatId := r.URL.Query().Get("chatId")
+		if !checkAccess(client, userId, chatId) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		chatInterface, ok := sessionUserPeer.Load(chatId)
+		response := UsersResponse{}
+		if ok {
+			chat := chatInterface.(*sync.Map)
+			response.UsersCount = countMapLen(chat)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		marshal, err := json.Marshal(response)
+		if err != nil {
+			log.Errorf("Error during marshalling UsersResponse to json")
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			_, err := w.Write(marshal)
+			if err != nil {
+				log.Errorf("Error during sending json")
+			}
+		}
+	}))
+
+	// PUT /api/video/notify?chatId=${this.chatId}` -> "/internal/video/notify"
+	http.Handle("/video/notify", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userId := r.Header.Get("X-Auth-UserId")
+		chatId := r.URL.Query().Get("chatId")
+		if !checkAccess(client, userId, chatId) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		var usersCount int64 = 0
+		chatInterface, ok := sessionUserPeer.Load(chatId)
+		if ok {
+			chat := chatInterface.(*sync.Map)
+			usersCount = countMapLen(chat)
+		}
+
+		url0 := viper.GetString("chat.url.base")
+		url1 := viper.GetString("chat.url.notify")
+
+		fullUrl := fmt.Sprintf("%v%v?usersCount=%v&chatId=%v", url0, url1, usersCount, chatId)
+		parsedUrl, err := url.Parse(fullUrl)
+		if err != nil {
+			log.Errorf("Failed during parse chat url:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		req := &http.Request{Method: http.MethodPut, URL: parsedUrl}
+
+		response, err := client.Do(req)
+		if err != nil {
+			log.Errorf("Transport error during notifying %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			if response.StatusCode != http.StatusOK {
+				log.Errorf("Http Error %v during notifying %v", response.StatusCode, err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		}
+	}))
+	// TODO GET `/api/video/config`
 
 	go startMetrics(metricsAddr)
 
@@ -188,13 +266,45 @@ func main() {
 	}
 }
 
+func addPeerToMap(sessionUserPeer *sync.Map, chatId string, userId string, peer *server.JSONSignal) {
+	userPeerInterface, _ := sessionUserPeer.LoadOrStore(chatId, &sync.Map{})
+	userPeer := userPeerInterface.(*sync.Map)
+	userPeer.Store(userId, peer)
+}
+
+func removePeerFromMap(sessionUserPeer *sync.Map, chatId string, userId string) {
+	userPeerInterface, ok := sessionUserPeer.Load(chatId)
+	if !ok {
+		log.Infof("Cannot remove chatId=%v from sessionUserPeer", chatId)
+		return
+	}
+	userPeer := userPeerInterface.(*sync.Map)
+	userPeer.Delete(userId)
+
+	userPeerLength := countMapLen(userPeer)
+
+	if userPeerLength == 0 {
+		log.Infof("For chatId=%v there is no peers, removing user %v", chatId, userId)
+		sessionUserPeer.Delete(chatId)
+	}
+}
+
+func countMapLen(m *sync.Map) int64 {
+	var length int64 = 0
+	m.Range(func(_, _ interface{}) bool {
+		length++
+		return true
+	})
+	return length
+}
+
 func checkAccess(client *http.Client, userIdString string, chatIdString string) bool {
 	url0 := viper.GetString("chat.url.base")
 	url1 := viper.GetString("chat.url.access")
 
 	response, err := client.Get(url0 + url1 + "?userId=" + userIdString + "&chatId=" + chatIdString)
 	if err != nil {
-		log.Errorf("Error during checking access %v", err)
+		log.Errorf("Transport error during checking access %v", err)
 		return false
 	}
 	if response.StatusCode == http.StatusOK {
