@@ -177,6 +177,9 @@
             },
             onStartScreenSharing() {
                 this.localMedia.unpublish();
+                if (this.localMedia) {
+                  this.localMedia.getTracks().forEach(t => t.stop());
+                }
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
                 this.getAndPublishScreen()
@@ -184,6 +187,9 @@
             },
             onStopScreenSharing() {
                 this.localMedia.unpublish();
+                if (this.localMedia) {
+                  this.localMedia.getTracks().forEach(t => t.stop());
+                }
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
                 this.getAndPublishCamera();
