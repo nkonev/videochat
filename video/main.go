@@ -235,7 +235,7 @@ func main() {
 		fullUrl := fmt.Sprintf("%v%v?usersCount=%v&chatId=%v", url0, url1, usersCount, chatId)
 		parsedUrl, err := url.Parse(fullUrl)
 		if err != nil {
-			log.Errorf("Failed during parse chat url:", err)
+			log.Errorf("Failed during parse chat url: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
