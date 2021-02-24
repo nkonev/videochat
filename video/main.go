@@ -131,6 +131,10 @@ type UsersResponse struct {
 	UsersCount int64 `json:"usersCount"`
 }
 
+type ConfigResponse struct {
+	Urls []string `json:"urls"`
+}
+
 func main() {
 	if !parse() {
 		showHelp()
@@ -249,7 +253,23 @@ func main() {
 			}
 		}
 	}))
-	// TODO GET `/api/video/config`
+
+	// GET `/api/video/config`
+	http.Handle("/video/config", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		urls := viper.GetStringSlice("frontend.urls")
+		response := ConfigResponse{Urls: urls}
+		w.Header().Set("Content-Type", "application/json")
+		marshal, err := json.Marshal(response)
+		if err != nil {
+			log.Errorf("Error during marshalling ConfigResponse to json")
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			_, err := w.Write(marshal)
+			if err != nil {
+				log.Errorf("Error during sending json")
+			}
+		}
+	}))
 
 	go startMetrics(metricsAddr)
 

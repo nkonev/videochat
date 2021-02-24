@@ -57,7 +57,7 @@
                 const config = {
                     iceServers: [
                         {
-                            urls: "stun:stun.l.google.com:19302",
+                            urls: configObj.urls,
                         },
                     ],
                 };
@@ -172,10 +172,9 @@
                 }
             },
             getConfig() {
-                // return axios
-                //     .get(`/api/video/config`)
-                //     .then(response => response.data)
-              return Promise.resolve(true);
+                return axios
+                    .get(`/api/video/config`)
+                    .then(response => response.data)
             },
 
             notifyAboutJoining() {
