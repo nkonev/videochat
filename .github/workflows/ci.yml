@@ -152,3 +152,30 @@ jobs:
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}"
           (cd storage; make push-docker && echo "Will deploy storage" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.StorageUpdateCommand }} )
+
+  video:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.14.3
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Add entry to hosts
+        run: sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
+      - name: Build & test video
+        run: (cd video; make check-env generate test package)
+      - name: Deploy video
+        if: github.ref == 'refs/heads/master'
+        run: |
+          mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
+          chmod 600 ~/.ssh/id_rsa
+          echo "Will login to docker" &&
+          docker login -u="nkonev" -p="${{ secrets.DockerPassword }}"
+          (cd video; make push-docker && echo "Will deploy video" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.VideoUpdateCommand }} )
