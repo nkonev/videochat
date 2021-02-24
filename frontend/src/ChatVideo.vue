@@ -210,7 +210,8 @@
                 return LocalStream.getDisplayMedia({
                   audio: true,
                 }).then((media) => {
-                    this.localMedia = media
+                    this.localMedia = media;
+                    this.localMedia.unmute("audio");
                     this.$refs.localVideoComponent.setSource(media);
                     this.$refs.localVideoComponent.setUserName(this.myUserName)
                     this.clientLocal.publish(media);
