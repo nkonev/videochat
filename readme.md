@@ -6,14 +6,6 @@
 ![Architecture](./.markdown/auth.png "Title")
 
 
-## Allow container -> host (Linux)
-
-```bash
-su -
-firewall-cmd --permanent --zone=public --add-rich-rule='rule family=ipv4 source address="172.28.0.0/16" accept'
-service firewalld restart
-```
-
 ## Start docker-compose
 ```bash
 docker-compose up -d
