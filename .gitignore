@@ -16,3 +16,4 @@ target
 build
 /chat/static/git.json
 /storage/static/git.json
+/video/static/git.json
