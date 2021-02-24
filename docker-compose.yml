@@ -11,10 +11,9 @@ services:
     command: --configFile=/traefik_conf/traefik.yml
     ports:
       - 8081:8081
-#    extra_hosts:
-#      # When you apply firewalld rule these requests will go to you IDE-launched chat app
-#      # see also network definition in bottom
-#      - "api.site.local:172.27.0.1"
+    extra_hosts:
+      # https://github.com/moby/moby/pull/40007
+      - "host.docker.internal:host-gateway"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./docker/traefik_conf:/traefik_conf

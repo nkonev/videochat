@@ -19,7 +19,7 @@ http:
     video-service:
       loadBalancer:
         servers:
-          - url: http://api.site.local:7000
+          - url: http://host.docker.internal:7000
 
   routers:
     nginx-router:
