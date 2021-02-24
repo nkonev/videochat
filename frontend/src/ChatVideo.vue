@@ -73,7 +73,11 @@
                     this.clientLocal.join(`chat${this.chatId}`).then(()=>{
                         this.dataChannel = this.clientLocal.createDataChannel(`chat${this.chatId}`);
                         this.dataChannel.onmessage = this.receiveFromChannel;
-                        this.startPublishing();
+                        this.getAndPublishCamera()
+                            .then(()=>{
+                              this.notifyAboutJoining();
+                            })
+                            .catch(console.error);
                     })
                 }
                 this.signalLocal.onerror = () => { console.error("Error in signal"); }
@@ -110,14 +114,6 @@
 
                 window.addEventListener('beforeunload', this.leaveSession)
             },
-            startPublishing() {
-                this.getAndPublishCamera()
-                    .then(()=>{
-                        this.notifyAboutJoining();
-                    })
-                    .catch(console.error);
-            },
-
             leaveSession() {
                 if (this.localMedia) {
                     this.localMedia.getTracks().forEach(t => t.stop());
@@ -181,16 +177,18 @@
             },
             onStartScreenSharing() {
                 this.localMedia.unpublish();
+                this.$refs.localVideoComponent.setSource(null);
+                this.localPublisherKey++;
                 this.getAndPublishScreen()
                     .catch(console.error);
             },
             onStopScreenSharing() {
                 this.localMedia.unpublish();
+                this.$refs.localVideoComponent.setSource(null);
+                this.localPublisherKey++;
                 this.getAndPublishCamera();
             },
             getAndPublishCamera() {
-                this.$refs.localVideoComponent.setSource(null);
-                this.localPublisherKey++;
                 return LocalStream.getUserMedia({
                   resolution: "vga",
                   audio: true,
@@ -203,8 +201,6 @@
                 });
             },
             getAndPublishScreen() {
-                this.$refs.localVideoComponent.setSource(null);
-                this.localPublisherKey++;
                 return LocalStream.getDisplayMedia({ audio: true }).then((media) => {
                     this.localMedia = media
                     this.$refs.localVideoComponent.setSource(media);
