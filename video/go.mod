@@ -2,7 +2,6 @@ module nkonev.name/video
 
 require (
 	github.com/gorilla/websocket v1.4.2
-	github.com/jwangsadinata/go-multimap v0.0.0-20190620162914-c29f3d7f33b6 // indirect
 	github.com/pion/ion-log v1.0.0
 	github.com/pion/ion-sfu v1.9.0
 	github.com/prometheus/client_golang v1.9.0
