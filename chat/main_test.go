@@ -48,7 +48,7 @@ func setup() {
 	configFile := utils.InitFlags("./config-dev/config.yml")
 	utils.InitViper(configFile, "")
 
-	viper.Set("aaa.url.base", "http://api.site.local:"+aaaEmuPort)
+	viper.Set("aaa.url.base", "http://localhost:"+aaaEmuPort)
 
 	d, err := db.ConfigureDb(nil)
 	defer d.Close()

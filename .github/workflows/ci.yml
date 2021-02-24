@@ -105,8 +105,6 @@ jobs:
           docker-compose up -d postgresql redis
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
-      - name: Add entry to hosts
-        run: sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
       - name: Build & test chat
         run: (cd chat; make check-env download generate test package)
       - name: Deploy chat
@@ -140,8 +138,6 @@ jobs:
           docker-compose up -d postgresql minio
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'
-      - name: Add entry to hosts
-        run: sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
       - name: Build & test storage
         run: (cd storage; make check-env download generate test package)
       - name: Deploy storage
@@ -167,8 +163,6 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      - name: Add entry to hosts
-        run: sudo -- bash -c "echo '127.0.0.1   api.site.local' >> /etc/hosts"
       - name: Build & test video
         run: (cd video; make check-env generate test package)
       - name: Deploy video

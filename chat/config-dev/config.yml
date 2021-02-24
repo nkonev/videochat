@@ -34,7 +34,7 @@ redis:
 
 aaa:
   url:
-    base: "http://api.site.local:8060"
+    base: "http://localhost:8060"
     getUsers: "/internal/user/list"
   redis:
     address: :36379
