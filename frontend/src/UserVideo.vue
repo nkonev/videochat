@@ -22,7 +22,7 @@ export default {
 			this.$refs.videoRef.srcObject = d;
 		},
         getStreamId() {
-		    return this.$refs.videoRef.srcObject.id;
+		    return this?.$refs?.videoRef?.srcObject?.id;
         },
         setUserName(u) {
 		    this.userName = u;

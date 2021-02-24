@@ -1,6 +1,6 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <UserVideo ref="localVideoComponent"/>
+        <UserVideo ref="localVideoComponent" :key="localPublisherKey"/>
     </v-col>
 </template>
 
@@ -40,6 +40,7 @@
                 signalLocal: null,
                 dataChannel: null,
                 localMedia: null,
+                localPublisherKey: 1
             }
         },
         props: ['chatDto'],
@@ -188,12 +189,33 @@
                 }
             },
             onStartScreenSharing() {
-
+                this.localMedia.unpublish();
+                this.$refs.localVideoComponent.setSource(null);
+                this.localPublisherKey++;
+                LocalStream.getDisplayMedia({ audio: true }).then((media) => {
+                    this.localMedia = media
+                    this.$refs.localVideoComponent.setSource(media);
+                    this.$refs.localVideoComponent.setUserName(this.myUserName)
+                    this.clientLocal.publish(media);
+                    bus.$emit(SHARE_SCREEN_STATE_CHANGED, true);
+                }).catch(console.error);
             },
             onStopScreenSharing() {
-
-                bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
+                this.localMedia.unpublish();
+                this.$refs.localVideoComponent.setSource(null);
+                this.localPublisherKey++;
+                LocalStream.getUserMedia({
+                  resolution: "vga",
+                  audio: true,
+                }).then((media) => {
+                    this.localMedia = media
+                    this.$refs.localVideoComponent.setSource(media);
+                    this.$refs.localVideoComponent.setUserName(this.myUserName)
+                    this.clientLocal.publish(media);
+                    bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
+                  });
             },
+
         },
         mounted() {
             bus.$emit(VIDEO_LOCAL_ESTABLISHED);
