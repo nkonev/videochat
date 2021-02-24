@@ -156,11 +156,8 @@ func configureEcho(
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
 
 	vh := handlers.NewVideoHandler(db, restClient, notificator)
-	e.GET("/chat/:id/video/token", vh.GetOpenviduToken)
-	e.GET("/chat/:id/video/users", vh.GetUsersCount)
-	e.PUT("/chat/:id/video/notify", vh.NotifyAboutVideoCallChange)
+	e.PUT("/internal/video/notify", vh.NotifyAboutVideoCallChange)
 	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
-	e.GET("/chat/:id/video/config", vh.GetOpenviduConfig)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

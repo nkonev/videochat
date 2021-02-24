@@ -1,6 +1,6 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <UserVideo ref="localVideoComponent"/>
+        <UserVideo ref="localVideoComponent" :key="localPublisherKey"/>
     </v-col>
 </template>
 
@@ -40,6 +40,7 @@
                 signalLocal: null,
                 dataChannel: null,
                 localMedia: null,
+                localPublisherKey: 1
             }
         },
         props: ['chatDto'],
@@ -57,7 +58,7 @@
                 const config = {
                     iceServers: [
                         {
-                            urls: "stun:stun.l.google.com:19302",
+                            urls: configObj.urls,
                         },
                     ],
                 };
@@ -72,12 +73,17 @@
                     this.clientLocal.join(`chat${this.chatId}`).then(()=>{
                         this.dataChannel = this.clientLocal.createDataChannel(`chat${this.chatId}`);
                         this.dataChannel.onmessage = this.receiveFromChannel;
-                        this.startPublishing();
+                        this.getAndPublishCamera()
+                            .then(()=>{
+                              this.notifyAboutJoining();
+                            })
+                            .catch(console.error);
                     })
                 }
                 this.signalLocal.onerror = () => { console.error("Error in signal"); }
                 this.signalLocal.onclose = () => { console.info("Signal is closed"); }
 
+                // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
                     console.debug("got track", track.id, "for stream", stream.id);
                     if (track.kind === "video") {
@@ -108,20 +114,6 @@
 
                 window.addEventListener('beforeunload', this.leaveSession)
             },
-            startPublishing() {
-                LocalStream.getUserMedia({
-                    resolution: "vga",
-                    audio: true,
-                })
-                    .then((media) => {
-                        this.localMedia = media
-                        this.$refs.localVideoComponent.setSource(media);
-                        this.$refs.localVideoComponent.setUserName(this.myUserName)
-                        this.clientLocal.publish(media);
-                    })
-                    .catch(console.error);
-            },
-
             leaveSession() {
                 if (this.localMedia) {
                     this.localMedia.getTracks().forEach(t => t.stop());
@@ -169,27 +161,55 @@
             },
             getConfig() {
                 return axios
-                    .get(`/api/chat/${this.chatId}/video/config`)
+                    .get(`/api/video/config`)
                     .then(response => response.data)
             },
 
             notifyAboutJoining() {
                 if (this.chatId) {
-                    //axios.put(`/api/chat/${this.chatId}/video/notify`);
+                    axios.put(`/api/video/notify?chatId=${this.chatId}`);
                 }
             },
             notifyAboutLeaving() {
                 if (this.chatId) {
-                    //axios.put(`/api/chat/${this.chatId}/video/notify`);
+                    axios.put(`/api/video/notify?chatId=${this.chatId}`);
                 }
             },
             onStartScreenSharing() {
-
+                this.localMedia.unpublish();
+                this.$refs.localVideoComponent.setSource(null);
+                this.localPublisherKey++;
+                this.getAndPublishScreen()
+                    .catch(console.error);
             },
             onStopScreenSharing() {
-
-                bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
+                this.localMedia.unpublish();
+                this.$refs.localVideoComponent.setSource(null);
+                this.localPublisherKey++;
+                this.getAndPublishCamera();
             },
+            getAndPublishCamera() {
+                return LocalStream.getUserMedia({
+                  resolution: "vga",
+                  audio: true,
+                }).then((media) => {
+                  this.localMedia = media
+                  this.$refs.localVideoComponent.setSource(media);
+                  this.$refs.localVideoComponent.setUserName(this.myUserName)
+                  this.clientLocal.publish(media);
+                  bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
+                });
+            },
+            getAndPublishScreen() {
+                return LocalStream.getDisplayMedia({ audio: true }).then((media) => {
+                    this.localMedia = media
+                    this.$refs.localVideoComponent.setSource(media);
+                    this.$refs.localVideoComponent.setUserName(this.myUserName)
+                    this.clientLocal.publish(media);
+                    bus.$emit(SHARE_SCREEN_STATE_CHANGED, true);
+                });
+            }
+
         },
         mounted() {
             bus.$emit(VIDEO_LOCAL_ESTABLISHED);

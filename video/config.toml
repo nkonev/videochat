@@ -45,6 +45,9 @@ portrange = [5000, 5200]
 # username = "awsome"
 # credential = "awsome"
 
+[frontend]
+urls = ["stun:stun.l.google.com:19302"]
+
 # sdp semantics:
 # "unified-plan"
 # "plan-b"
@@ -89,6 +92,7 @@ level = "trace"
 [chat.url]
 base = "http://api.site.local:1235"
 access = "/internal/access"
+notify = "/internal/video/notify"
 
 # Rest client
 [http.idle.conns]
