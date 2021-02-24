@@ -207,7 +207,9 @@
                 });
             },
             getAndPublishScreen() {
-                return LocalStream.getDisplayMedia({ audio: true }).then((media) => {
+                return LocalStream.getDisplayMedia({
+                  audio: true,
+                }).then((media) => {
                     this.localMedia = media
                     this.$refs.localVideoComponent.setSource(media);
                     this.$refs.localVideoComponent.setUserName(this.myUserName)
