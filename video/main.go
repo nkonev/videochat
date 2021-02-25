@@ -54,7 +54,7 @@ func load() bool {
 	}
 
 	viper.SetConfigFile(file)
-	viper.SetConfigType("toml")
+	viper.SetConfigType("yml")
 
 	err = viper.ReadInConfig()
 	if err != nil {
