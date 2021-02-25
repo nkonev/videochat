@@ -164,7 +164,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Build & test video
-        run: (cd video; make check-env generate test package)
+        run: (cd video; make check-env download generate test package)
       - name: Deploy video
         if: github.ref == 'refs/heads/master'
         run: |

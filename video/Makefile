@@ -1,5 +1,11 @@
 .PHONY: test push-docker clean
 
+download: download-statik
+
+download-statik:
+	go get github.com/rakyll/statik
+
+
 check-env:
 	docker version && go env
 
