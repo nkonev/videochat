@@ -11,6 +11,7 @@ import (
 	"github.com/pion/ion-sfu/pkg/middlewares/datachannel"
 	"github.com/pion/ion-sfu/pkg/sfu"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rakyll/statik/fs"
 	"github.com/sourcegraph/jsonrpc2"
 	websocketjsonrpc2 "github.com/sourcegraph/jsonrpc2/websocket"
 	"github.com/spf13/viper"
@@ -18,7 +19,9 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"net/url"
+	_ "nkonev.name/video/static_assets"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -134,6 +137,22 @@ type UsersResponse struct {
 type ConfigResponse struct {
 	Urls []string `json:"urls"`
 }
+
+func configureStaticMiddleware() http.HandlerFunc {
+	statikFS, err := fs.NewWithNamespace("assets")
+	if err != nil {
+		log.Panicf("Unable to load static assets %v", err)
+	}
+
+	fileServer := http.FileServer(statikFS)
+	return func(w http.ResponseWriter, r *http.Request) {
+		reqUrl := r.RequestURI
+		if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") || reqUrl == "/git.json" {
+			fileServer.ServeHTTP(w, r)
+		}
+	}
+}
+
 
 func main() {
 	if !parse() {
@@ -270,6 +289,8 @@ func main() {
 			}
 		}
 	}))
+
+	http.HandleFunc("/", configureStaticMiddleware())
 
 	go startMetrics(metricsAddr)
 

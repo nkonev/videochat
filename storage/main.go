@@ -149,12 +149,12 @@ func configureStaticMiddleware() staticMiddleware {
 		Logger.Fatal(err)
 	}
 
+	h := http.FileServer(statikFS)
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			reqUrl := c.Request().RequestURI
 			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") || reqUrl == "/git.json" {
-				http.FileServer(statikFS).
-					ServeHTTP(c.Response().Writer, c.Request())
+				h.ServeHTTP(c.Response().Writer, c.Request())
 				return nil
 			} else {
 				return next(c)

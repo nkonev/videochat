@@ -3,7 +3,7 @@
 check-env:
 	docker version && go env
 
-generate: generate-git
+generate: generate-git generate-static-go
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 STATIC_JSON := ./static/git.json
@@ -11,6 +11,9 @@ STATIC_ASSETS_PACKAGE := static_assets
 
 generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"video\"}" > ${STATIC_JSON}
+
+generate-static-go:
+	statik -src=./static -p ${STATIC_ASSETS_PACKAGE} -ns assets -f && echo 'completed generating embed'
 
 test:
 	go test ./... -count=1 -test.v -test.timeout=20s -p 1
