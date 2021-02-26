@@ -253,6 +253,8 @@ github.com/nkonev/ion-sfu v1.9.1-0.20210226100417-bbadac8bd2fd h1:86ltCBXHq8kTkS
 github.com/nkonev/ion-sfu v1.9.1-0.20210226100417-bbadac8bd2fd/go.mod h1:B8F5RTIgI6AESOBYLfdyhVMVNugp/H947H7AixznANU=
 github.com/nkonev/ion-sfu v1.9.1-0.20210226101422-a8606fedd1d9 h1:Ika06hTFP2lVMmukbBRBZTT9Wp6Qc3c7Qm8YrPA9pO8=
 github.com/nkonev/ion-sfu v1.9.1-0.20210226101422-a8606fedd1d9/go.mod h1:B8F5RTIgI6AESOBYLfdyhVMVNugp/H947H7AixznANU=
+github.com/nkonev/ion-sfu v1.9.1-0.20210226202827-62c8b234441f h1:eUO5ULgLNMHvjNZMsBdCUQ8B64z2/cFLmnP166gCRZo=
+github.com/nkonev/ion-sfu v1.9.1-0.20210226202827-62c8b234441f/go.mod h1:B8F5RTIgI6AESOBYLfdyhVMVNugp/H947H7AixznANU=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/oklog/oklog v0.3.2/go.mod h1:FCV+B7mhrz4o+ueLpx+KqkyXRGMWOYEvfiXtdGtbWGs=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
