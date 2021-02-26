@@ -25,8 +25,17 @@ import (
 	"sync"
 )
 
+type FrontendConfig struct {
+	ICEServers   []sfu.ICEServerConfig `mapstructure:"iceserver"`
+}
+
+type ExtendedConfig struct {
+	sfu.Config
+	FrontendConfig FrontendConfig `mapstructure:"frontend"`
+}
+
 var (
-	conf        = sfu.Config{}
+	conf        = ExtendedConfig{}
 	file        string
 	cert        string
 	key         string
@@ -134,10 +143,6 @@ type UsersResponse struct {
 	UsersCount int64 `json:"usersCount"`
 }
 
-type ConfigResponse struct {
-	Urls []string `json:"urls"`
-}
-
 func configureStaticMiddleware() http.HandlerFunc {
 	statikFS, err := fs.NewWithNamespace("assets")
 	if err != nil {
@@ -166,7 +171,7 @@ func main() {
 
 	log.Infof("--- Starting SFU Node ---")
 
-	s := sfu.NewSFU(conf)
+	s := sfu.NewSFU(conf.Config)
 	dc := s.NewDatachannel(sfu.APIChannelLabel)
 	dc.Use(datachannel.SubscriberAPI)
 
@@ -275,10 +280,8 @@ func main() {
 
 	// GET `/api/video/config`
 	http.Handle("/video/config", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		urls := viper.GetStringSlice("frontend.urls")
-		response := ConfigResponse{Urls: urls}
 		w.Header().Set("Content-Type", "application/json")
-		marshal, err := json.Marshal(response)
+		marshal, err := json.Marshal(conf.FrontendConfig)
 		if err != nil {
 			log.Errorf("Error during marshalling ConfigResponse to json")
 			w.WriteHeader(http.StatusInternalServerError)

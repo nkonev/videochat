@@ -56,12 +56,21 @@
         methods: {
             joinSession(configObj) {
                 const config = {
-                    iceServers: [
-                        {
-                            urls: configObj.urls,
-                        },
-                    ],
+                    iceServers: configObj.ICEServers.map((iceServConf)=>{
+                        const result = {
+                            urls: iceServConf.URLs
+                        }
+                        if (iceServConf.Username) {
+                            result.username = iceServConf.Username;
+                        }
+                        if (iceServConf.Credential) {
+                            result.credential = iceServConf.Credential;
+                        }
+                        return result;
+                    })
                 };
+                console.info("Created webrtc config", config);
+
                 this.signalLocal = new IonSFUJSONRPCSignal(
                     getWebsocketUrlPrefix()+`/api/video/ws?chatId=${this.chatId}`
                 );
