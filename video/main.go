@@ -6,10 +6,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/nkonev/ion-sfu/cmd/signal/json-rpc/server"
+	"github.com/nkonev/ion-sfu/pkg/middlewares/datachannel"
+	"github.com/nkonev/ion-sfu/pkg/sfu"
 	log "github.com/pion/ion-log"
-	"github.com/pion/ion-sfu/cmd/signal/json-rpc/server"
-	"github.com/pion/ion-sfu/pkg/middlewares/datachannel"
-	"github.com/pion/ion-sfu/pkg/sfu"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rakyll/statik/fs"
 	"github.com/sourcegraph/jsonrpc2"
@@ -26,7 +26,7 @@ import (
 )
 
 type FrontendConfig struct {
-	ICEServers   []sfu.ICEServerConfig `mapstructure:"iceserver"`
+	ICEServers []sfu.ICEServerConfig `mapstructure:"iceserver"`
 }
 
 type ExtendedConfig struct {
@@ -157,7 +157,6 @@ func configureStaticMiddleware() http.HandlerFunc {
 		}
 	}
 }
-
 
 func main() {
 	if !parse() {
