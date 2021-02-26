@@ -69,7 +69,7 @@
                         return result;
                     })
                 };
-                console.info("Created webrtc config", config);
+                console.info("Created webrtc config", JSON.stringify(config));
 
                 this.signalLocal = new IonSFUJSONRPCSignal(
                     getWebsocketUrlPrefix()+`/api/video/ws?chatId=${this.chatId}`
