@@ -1,6 +1,6 @@
 <template>
 <div class="video-container-element">
-    <video autoPlay playsInline ref="videoRef" v-on:dblclick="onDoubleClick" :muted="muted"/>
+    <video autoPlay playsInline ref="videoRef" v-on:dblclick="onDoubleClick"/>
 	<p class="video-container-element-caption">{{ userName }}</p>
 </div>
 </template>
@@ -9,10 +9,6 @@
 
 export default {
 	name: 'UserVideo',
-
-    props: {
-        muted: Boolean
-    },
 
     data()  {
 	    return {
