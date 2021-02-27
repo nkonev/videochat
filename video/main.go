@@ -135,8 +135,8 @@ func startMetrics(addr string) {
 
 func NewRestClient() *http.Client {
 	tr := &http.Transport{
-		MaxIdleConns:       viper.GetInt("http.idle.conns.max"),
-		IdleConnTimeout:    viper.GetDuration("http.idle.connTimeout"),
+		MaxIdleConns:       viper.GetInt("http.maxIdleConns"),
+		IdleConnTimeout:    viper.GetDuration("http.idleConnTimeout"),
 		DisableCompression: viper.GetBool("http.disableCompression"),
 	}
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}

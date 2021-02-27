@@ -97,10 +97,8 @@ chat:
 
 # Rest client
 http:
-  idle:
-    conns:
-      max: 2
-    connTimeout: "10s"
+  maxIdleConns: 2
+  idleConnTimeout: '10s'
   disableCompression: false
 
 frontend:

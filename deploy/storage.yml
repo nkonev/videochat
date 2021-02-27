@@ -3,12 +3,6 @@ server:
   shutdown.timeout: "10s"
   body.limit: "100G"
   contextPath: "/api"
-http:
-  idle:
-    conns:
-      max: 2
-    connTimeout: '10s'
-  disableCompression: false
 
 auth:
   exclude:
