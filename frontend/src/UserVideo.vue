@@ -25,6 +25,9 @@ export default {
 		    console.log("videoRef=", this.$refs.videoRef);
 			this.$refs.videoRef.srcObject = d;
 		},
+        setMuted(b) {
+            this.$refs.videoRef.muted = b;
+        },
         getStreamId() {
 		    return this?.$refs?.videoRef?.srcObject?.id;
         },

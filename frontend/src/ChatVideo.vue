@@ -1,5 +1,7 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
+        <v-btn @click="muteMe()">Toggle Mute</v-btn>
+        <v-btn @click="unmuteMe()">Toggle UnMute</v-btn>
         <UserVideo ref="localVideoComponent" :key="localPublisherKey" muted/>
     </v-col>
 </template>
@@ -96,27 +98,30 @@
                 this.clientLocal.ontrack = (track, stream) => {
                     console.debug("got track", track.id, "for stream", stream.id);
                     if (track.kind === "video") {
-                        if (!this.streams[stream.id]) {
-                            console.log("set track", track.id, "for stream", stream.id);
+                        track.onunmute = () => {
+                            if (!this.streams[stream.id]) {
+                                console.log("set track", track.id, "for stream", stream.id);
 
-                            const component = new ComponentClass();
-                            component.$mount();
-                            this.remotesDiv.appendChild(component.$el);
-                            component.setSource(stream);
-                            this.streams[stream.id] = {stream, component};
+                                const component = new ComponentClass();
+                                component.$mount();
+                                this.remotesDiv.appendChild(component.$el);
+                                component.setSource(stream);
+                                component.setMuted(true);
+                                this.streams[stream.id] = {stream, component};
 
-                            stream.onremovetrack = () => {
-                                this.streams[stream.id] = null;
-                                console.log("removed track", track.id, "for stream", stream.id);
-                                try {
-                                    this.remotesDiv.removeChild(component.$el);
-                                    component.$destroy();
-                                } catch (e) {
-                                    console.debug("Something wrong on removing child", e, component.$el, this.remotesDiv);
-                                }
-                            };
+                                stream.onremovetrack = () => {
+                                    this.streams[stream.id] = null;
+                                    console.log("removed track", track.id, "for stream", stream.id);
+                                    try {
+                                        this.remotesDiv.removeChild(component.$el);
+                                        component.$destroy();
+                                    } catch (e) {
+                                        console.debug("Something wrong on removing child", e, component.$el, this.remotesDiv);
+                                    }
+                                };
 
-                            this.askUserNameWithRetries(stream.id);
+                                this.askUserNameWithRetries(stream.id);
+                            }
                         }
                     }
                 };
@@ -139,6 +144,12 @@
                 bus.$emit(VIDEO_CALL_CHANGED, {usersCount: 0}); // restore initial state
                 this.notifyAboutLeaving();
                 window.removeEventListener('beforeunload', this.leaveSession);
+            },
+            unmuteMe() {
+                this.localMedia.unmute("audio");
+            },
+            muteMe() {
+                this.localMedia.mute("audio");
             },
             askUserNameWithRetries(streamId) {
                 const toSend = {[FIELD_TYPE]: DATA_EVENT_GET_USERNAME_FOR, [FIELD_STREAM_ID]: streamId};
@@ -210,6 +221,7 @@
                 }).then((media) => {
                   this.localMedia = media
                   this.$refs.localVideoComponent.setSource(media);
+                  this.$refs.localVideoComponent.setMuted(true);
                   this.$refs.localVideoComponent.setUserName(this.myUserName)
                   this.clientLocal.publish(media);
                   bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
