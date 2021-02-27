@@ -27,6 +27,9 @@ export default {
         setUserName(u) {
 		    this.userName = u;
         },
+        setMuted(b) {
+            this.$refs.videoRef.muted = b;
+        },
         onDoubleClick(e) {
             const elem = e.target;
             if (elem.requestFullscreen) {
