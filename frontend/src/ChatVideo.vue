@@ -1,6 +1,6 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <UserVideo ref="localVideoComponent" :key="localPublisherKey" muted/>
+        <UserVideo ref="localVideoComponent" :key="localPublisherKey"/>
     </v-col>
 </template>
 
