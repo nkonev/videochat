@@ -207,7 +207,6 @@
                 return LocalStream.getUserMedia({
                   resolution: "vga",
                   audio: true,
-                  codec: 'vp9',
                 }).then((media) => {
                   this.localMedia = media
                   this.$refs.localVideoComponent.setSource(media);
@@ -220,7 +219,6 @@
             getAndPublishScreen() {
                 return LocalStream.getDisplayMedia({
                   audio: true,
-                  codec: 'vp9',
                 }).then((media) => {
                     this.localMedia = media;
                     this.localMedia.unmute("audio");
