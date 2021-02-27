@@ -205,7 +205,7 @@
             },
             getAndPublishCamera() {
                 return LocalStream.getUserMedia({
-                  resolution: "vga",
+                  resolution: "hd",
                   audio: true,
                 }).then((media) => {
                   this.localMedia = media
