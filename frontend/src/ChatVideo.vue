@@ -56,7 +56,6 @@
         methods: {
             joinSession(configObj) {
                 const config = {
-                    codec: 'h264',
                     iceServers: configObj.ICEServers.map((iceServConf)=>{
                         const result = {
                             urls: iceServConf.URLs
@@ -208,7 +207,6 @@
                 return LocalStream.getUserMedia({
                   resolution: "vga",
                   audio: true,
-                  codec: 'h264',
                 }).then((media) => {
                   this.localMedia = media
                   this.$refs.localVideoComponent.setSource(media);
@@ -221,7 +219,6 @@
             getAndPublishScreen() {
                 return LocalStream.getDisplayMedia({
                   audio: true,
-                  codec: 'h264',
                 }).then((media) => {
                     this.localMedia = media;
                     this.localMedia.unmute("audio");
