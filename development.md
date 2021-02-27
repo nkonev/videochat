@@ -115,7 +115,7 @@ go test ./... -count=1 -test.v -test.timeout=20s -p 1 -run TestExtractAuth
 firewall-cmd --zone=public --add-port=8081/tcp
 ```
 
-# Add firewall exception on prod (not working)
+# Add firewall exception on prod (not working, not need)
 [link](https://www.digitalocean.com/community/tutorials/how-to-configure-the-linux-firewall-for-docker-swarm-on-centos-7)
 ```
 firewall-cmd --zone=public --add-port=3478/tcp  --permanent
@@ -135,4 +135,14 @@ firewall-cmd --list-all-zones
 # For Github CI
 ```
 git diff --dirstat=files,0 HEAD~1 | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq
+```
+
+# Generate ports
+```python
+for x in range(5200, 5301):
+    print("""
+      - target: %d
+        published: %d
+        protocol: udp
+        mode: host""" % (x, x))
 ```

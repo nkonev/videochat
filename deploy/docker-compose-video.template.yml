@@ -1,0 +1,1058 @@
+version: '3.7'
+
+services:
+  video:
+    image: nkonev/chat-video:latest
+    networks:
+      backend:
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 20s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.video-service.loadbalancer.server.port=7000"
+        - "traefik.http.routers.video-router.rule=PathPrefix(`/api/video`)"
+        - "traefik.http.routers.video-router.entrypoints=http"
+        - "traefik.http.middlewares.video-auth-middleware.forwardauth.address=http://aaa:8060/internal/profile"
+        - "traefik.http.middlewares.video-auth-middleware.forwardauth.authRequestHeaders=Cookie"
+        - "traefik.http.middlewares.video-auth-middleware.forwardauth.authResponseHeadersRegex=^X-Auth-"
+        - "traefik.http.middlewares.video-stripprefix-middleware.stripprefix.prefixes=/api,/video"
+        - "traefik.http.routers.video-router.middlewares=video-auth-middleware,video-stripprefix-middleware"
+        - "traefik.http.routers.video-version-router.rule=Path(`/video/git.json`)"
+        - "traefik.http.routers.video-version-router.entrypoints=http"
+        - "traefik.http.routers.video-version-router.middlewares=video-auth-middleware,video-stripprefix-middleware"
+    ports:
+      # turn port
+      - target: 3478
+        published: 3478
+        protocol: udp
+        mode: host
+
+      # turn ports
+      - target: 5200
+        published: 5200
+        protocol: udp
+        mode: host
+
+      - target: 5201
+        published: 5201
+        protocol: udp
+        mode: host
+
+      - target: 5202
+        published: 5202
+        protocol: udp
+        mode: host
+
+      - target: 5203
+        published: 5203
+        protocol: udp
+        mode: host
+
+      - target: 5204
+        published: 5204
+        protocol: udp
+        mode: host
+
+      - target: 5205
+        published: 5205
+        protocol: udp
+        mode: host
+
+      - target: 5206
+        published: 5206
+        protocol: udp
+        mode: host
+
+      - target: 5207
+        published: 5207
+        protocol: udp
+        mode: host
+
+      - target: 5208
+        published: 5208
+        protocol: udp
+        mode: host
+
+      - target: 5209
+        published: 5209
+        protocol: udp
+        mode: host
+
+      - target: 5210
+        published: 5210
+        protocol: udp
+        mode: host
+
+      - target: 5211
+        published: 5211
+        protocol: udp
+        mode: host
+
+      - target: 5212
+        published: 5212
+        protocol: udp
+        mode: host
+
+      - target: 5213
+        published: 5213
+        protocol: udp
+        mode: host
+
+      - target: 5214
+        published: 5214
+        protocol: udp
+        mode: host
+
+      - target: 5215
+        published: 5215
+        protocol: udp
+        mode: host
+
+      - target: 5216
+        published: 5216
+        protocol: udp
+        mode: host
+
+      - target: 5217
+        published: 5217
+        protocol: udp
+        mode: host
+
+      - target: 5218
+        published: 5218
+        protocol: udp
+        mode: host
+
+      - target: 5219
+        published: 5219
+        protocol: udp
+        mode: host
+
+      - target: 5220
+        published: 5220
+        protocol: udp
+        mode: host
+
+      - target: 5221
+        published: 5221
+        protocol: udp
+        mode: host
+
+      - target: 5222
+        published: 5222
+        protocol: udp
+        mode: host
+
+      - target: 5223
+        published: 5223
+        protocol: udp
+        mode: host
+
+      - target: 5224
+        published: 5224
+        protocol: udp
+        mode: host
+
+      - target: 5225
+        published: 5225
+        protocol: udp
+        mode: host
+
+      - target: 5226
+        published: 5226
+        protocol: udp
+        mode: host
+
+      - target: 5227
+        published: 5227
+        protocol: udp
+        mode: host
+
+      - target: 5228
+        published: 5228
+        protocol: udp
+        mode: host
+
+      - target: 5229
+        published: 5229
+        protocol: udp
+        mode: host
+
+      - target: 5230
+        published: 5230
+        protocol: udp
+        mode: host
+
+      - target: 5231
+        published: 5231
+        protocol: udp
+        mode: host
+
+      - target: 5232
+        published: 5232
+        protocol: udp
+        mode: host
+
+      - target: 5233
+        published: 5233
+        protocol: udp
+        mode: host
+
+      - target: 5234
+        published: 5234
+        protocol: udp
+        mode: host
+
+      - target: 5235
+        published: 5235
+        protocol: udp
+        mode: host
+
+      - target: 5236
+        published: 5236
+        protocol: udp
+        mode: host
+
+      - target: 5237
+        published: 5237
+        protocol: udp
+        mode: host
+
+      - target: 5238
+        published: 5238
+        protocol: udp
+        mode: host
+
+      - target: 5239
+        published: 5239
+        protocol: udp
+        mode: host
+
+      - target: 5240
+        published: 5240
+        protocol: udp
+        mode: host
+
+      - target: 5241
+        published: 5241
+        protocol: udp
+        mode: host
+
+      - target: 5242
+        published: 5242
+        protocol: udp
+        mode: host
+
+      - target: 5243
+        published: 5243
+        protocol: udp
+        mode: host
+
+      - target: 5244
+        published: 5244
+        protocol: udp
+        mode: host
+
+      - target: 5245
+        published: 5245
+        protocol: udp
+        mode: host
+
+      - target: 5246
+        published: 5246
+        protocol: udp
+        mode: host
+
+      - target: 5247
+        published: 5247
+        protocol: udp
+        mode: host
+
+      - target: 5248
+        published: 5248
+        protocol: udp
+        mode: host
+
+      - target: 5249
+        published: 5249
+        protocol: udp
+        mode: host
+
+      - target: 5250
+        published: 5250
+        protocol: udp
+        mode: host
+
+      - target: 5251
+        published: 5251
+        protocol: udp
+        mode: host
+
+      - target: 5252
+        published: 5252
+        protocol: udp
+        mode: host
+
+      - target: 5253
+        published: 5253
+        protocol: udp
+        mode: host
+
+      - target: 5254
+        published: 5254
+        protocol: udp
+        mode: host
+
+      - target: 5255
+        published: 5255
+        protocol: udp
+        mode: host
+
+      - target: 5256
+        published: 5256
+        protocol: udp
+        mode: host
+
+      - target: 5257
+        published: 5257
+        protocol: udp
+        mode: host
+
+      - target: 5258
+        published: 5258
+        protocol: udp
+        mode: host
+
+      - target: 5259
+        published: 5259
+        protocol: udp
+        mode: host
+
+      - target: 5260
+        published: 5260
+        protocol: udp
+        mode: host
+
+      - target: 5261
+        published: 5261
+        protocol: udp
+        mode: host
+
+      - target: 5262
+        published: 5262
+        protocol: udp
+        mode: host
+
+      - target: 5263
+        published: 5263
+        protocol: udp
+        mode: host
+
+      - target: 5264
+        published: 5264
+        protocol: udp
+        mode: host
+
+      - target: 5265
+        published: 5265
+        protocol: udp
+        mode: host
+
+      - target: 5266
+        published: 5266
+        protocol: udp
+        mode: host
+
+      - target: 5267
+        published: 5267
+        protocol: udp
+        mode: host
+
+      - target: 5268
+        published: 5268
+        protocol: udp
+        mode: host
+
+      - target: 5269
+        published: 5269
+        protocol: udp
+        mode: host
+
+      - target: 5270
+        published: 5270
+        protocol: udp
+        mode: host
+
+      - target: 5271
+        published: 5271
+        protocol: udp
+        mode: host
+
+      - target: 5272
+        published: 5272
+        protocol: udp
+        mode: host
+
+      - target: 5273
+        published: 5273
+        protocol: udp
+        mode: host
+
+      - target: 5274
+        published: 5274
+        protocol: udp
+        mode: host
+
+      - target: 5275
+        published: 5275
+        protocol: udp
+        mode: host
+
+      - target: 5276
+        published: 5276
+        protocol: udp
+        mode: host
+
+      - target: 5277
+        published: 5277
+        protocol: udp
+        mode: host
+
+      - target: 5278
+        published: 5278
+        protocol: udp
+        mode: host
+
+      - target: 5279
+        published: 5279
+        protocol: udp
+        mode: host
+
+      - target: 5280
+        published: 5280
+        protocol: udp
+        mode: host
+
+      - target: 5281
+        published: 5281
+        protocol: udp
+        mode: host
+
+      - target: 5282
+        published: 5282
+        protocol: udp
+        mode: host
+
+      - target: 5283
+        published: 5283
+        protocol: udp
+        mode: host
+
+      - target: 5284
+        published: 5284
+        protocol: udp
+        mode: host
+
+      - target: 5285
+        published: 5285
+        protocol: udp
+        mode: host
+
+      - target: 5286
+        published: 5286
+        protocol: udp
+        mode: host
+
+      - target: 5287
+        published: 5287
+        protocol: udp
+        mode: host
+
+      - target: 5288
+        published: 5288
+        protocol: udp
+        mode: host
+
+      - target: 5289
+        published: 5289
+        protocol: udp
+        mode: host
+
+      - target: 5290
+        published: 5290
+        protocol: udp
+        mode: host
+
+      - target: 5291
+        published: 5291
+        protocol: udp
+        mode: host
+
+      - target: 5292
+        published: 5292
+        protocol: udp
+        mode: host
+
+      - target: 5293
+        published: 5293
+        protocol: udp
+        mode: host
+
+      - target: 5294
+        published: 5294
+        protocol: udp
+        mode: host
+
+      - target: 5295
+        published: 5295
+        protocol: udp
+        mode: host
+
+      - target: 5296
+        published: 5296
+        protocol: udp
+        mode: host
+
+      - target: 5297
+        published: 5297
+        protocol: udp
+        mode: host
+
+      - target: 5298
+        published: 5298
+        protocol: udp
+        mode: host
+
+      - target: 5299
+        published: 5299
+        protocol: udp
+        mode: host
+
+      - target: 5300
+        published: 5300
+        protocol: udp
+        mode: host
+
+
+      # webrtc port range
+ 
+      - target: 5000
+        published: 5000
+        protocol: udp
+        mode: host
+
+      - target: 5001
+        published: 5001
+        protocol: udp
+        mode: host
+
+      - target: 5002
+        published: 5002
+        protocol: udp
+        mode: host
+
+      - target: 5003
+        published: 5003
+        protocol: udp
+        mode: host
+
+      - target: 5004
+        published: 5004
+        protocol: udp
+        mode: host
+
+      - target: 5005
+        published: 5005
+        protocol: udp
+        mode: host
+
+      - target: 5006
+        published: 5006
+        protocol: udp
+        mode: host
+
+      - target: 5007
+        published: 5007
+        protocol: udp
+        mode: host
+
+      - target: 5008
+        published: 5008
+        protocol: udp
+        mode: host
+
+      - target: 5009
+        published: 5009
+        protocol: udp
+        mode: host
+
+      - target: 5010
+        published: 5010
+        protocol: udp
+        mode: host
+
+      - target: 5011
+        published: 5011
+        protocol: udp
+        mode: host
+
+      - target: 5012
+        published: 5012
+        protocol: udp
+        mode: host
+
+      - target: 5013
+        published: 5013
+        protocol: udp
+        mode: host
+
+      - target: 5014
+        published: 5014
+        protocol: udp
+        mode: host
+
+      - target: 5015
+        published: 5015
+        protocol: udp
+        mode: host
+
+      - target: 5016
+        published: 5016
+        protocol: udp
+        mode: host
+
+      - target: 5017
+        published: 5017
+        protocol: udp
+        mode: host
+
+      - target: 5018
+        published: 5018
+        protocol: udp
+        mode: host
+
+      - target: 5019
+        published: 5019
+        protocol: udp
+        mode: host
+
+      - target: 5020
+        published: 5020
+        protocol: udp
+        mode: host
+
+      - target: 5021
+        published: 5021
+        protocol: udp
+        mode: host
+
+      - target: 5022
+        published: 5022
+        protocol: udp
+        mode: host
+
+      - target: 5023
+        published: 5023
+        protocol: udp
+        mode: host
+
+      - target: 5024
+        published: 5024
+        protocol: udp
+        mode: host
+
+      - target: 5025
+        published: 5025
+        protocol: udp
+        mode: host
+
+      - target: 5026
+        published: 5026
+        protocol: udp
+        mode: host
+
+      - target: 5027
+        published: 5027
+        protocol: udp
+        mode: host
+
+      - target: 5028
+        published: 5028
+        protocol: udp
+        mode: host
+
+      - target: 5029
+        published: 5029
+        protocol: udp
+        mode: host
+
+      - target: 5030
+        published: 5030
+        protocol: udp
+        mode: host
+
+      - target: 5031
+        published: 5031
+        protocol: udp
+        mode: host
+
+      - target: 5032
+        published: 5032
+        protocol: udp
+        mode: host
+
+      - target: 5033
+        published: 5033
+        protocol: udp
+        mode: host
+
+      - target: 5034
+        published: 5034
+        protocol: udp
+        mode: host
+
+      - target: 5035
+        published: 5035
+        protocol: udp
+        mode: host
+
+      - target: 5036
+        published: 5036
+        protocol: udp
+        mode: host
+
+      - target: 5037
+        published: 5037
+        protocol: udp
+        mode: host
+
+      - target: 5038
+        published: 5038
+        protocol: udp
+        mode: host
+
+      - target: 5039
+        published: 5039
+        protocol: udp
+        mode: host
+
+      - target: 5040
+        published: 5040
+        protocol: udp
+        mode: host
+
+      - target: 5041
+        published: 5041
+        protocol: udp
+        mode: host
+
+      - target: 5042
+        published: 5042
+        protocol: udp
+        mode: host
+
+      - target: 5043
+        published: 5043
+        protocol: udp
+        mode: host
+
+      - target: 5044
+        published: 5044
+        protocol: udp
+        mode: host
+
+      - target: 5045
+        published: 5045
+        protocol: udp
+        mode: host
+
+      - target: 5046
+        published: 5046
+        protocol: udp
+        mode: host
+
+      - target: 5047
+        published: 5047
+        protocol: udp
+        mode: host
+
+      - target: 5048
+        published: 5048
+        protocol: udp
+        mode: host
+
+      - target: 5049
+        published: 5049
+        protocol: udp
+        mode: host
+
+      - target: 5050
+        published: 5050
+        protocol: udp
+        mode: host
+
+      - target: 5051
+        published: 5051
+        protocol: udp
+        mode: host
+
+      - target: 5052
+        published: 5052
+        protocol: udp
+        mode: host
+
+      - target: 5053
+        published: 5053
+        protocol: udp
+        mode: host
+
+      - target: 5054
+        published: 5054
+        protocol: udp
+        mode: host
+
+      - target: 5055
+        published: 5055
+        protocol: udp
+        mode: host
+
+      - target: 5056
+        published: 5056
+        protocol: udp
+        mode: host
+
+      - target: 5057
+        published: 5057
+        protocol: udp
+        mode: host
+
+      - target: 5058
+        published: 5058
+        protocol: udp
+        mode: host
+
+      - target: 5059
+        published: 5059
+        protocol: udp
+        mode: host
+
+      - target: 5060
+        published: 5060
+        protocol: udp
+        mode: host
+
+      - target: 5061
+        published: 5061
+        protocol: udp
+        mode: host
+
+      - target: 5062
+        published: 5062
+        protocol: udp
+        mode: host
+
+      - target: 5063
+        published: 5063
+        protocol: udp
+        mode: host
+
+      - target: 5064
+        published: 5064
+        protocol: udp
+        mode: host
+
+      - target: 5065
+        published: 5065
+        protocol: udp
+        mode: host
+
+      - target: 5066
+        published: 5066
+        protocol: udp
+        mode: host
+
+      - target: 5067
+        published: 5067
+        protocol: udp
+        mode: host
+
+      - target: 5068
+        published: 5068
+        protocol: udp
+        mode: host
+
+      - target: 5069
+        published: 5069
+        protocol: udp
+        mode: host
+
+      - target: 5070
+        published: 5070
+        protocol: udp
+        mode: host
+
+      - target: 5071
+        published: 5071
+        protocol: udp
+        mode: host
+
+      - target: 5072
+        published: 5072
+        protocol: udp
+        mode: host
+
+      - target: 5073
+        published: 5073
+        protocol: udp
+        mode: host
+
+      - target: 5074
+        published: 5074
+        protocol: udp
+        mode: host
+
+      - target: 5075
+        published: 5075
+        protocol: udp
+        mode: host
+
+      - target: 5076
+        published: 5076
+        protocol: udp
+        mode: host
+
+      - target: 5077
+        published: 5077
+        protocol: udp
+        mode: host
+
+      - target: 5078
+        published: 5078
+        protocol: udp
+        mode: host
+
+      - target: 5079
+        published: 5079
+        protocol: udp
+        mode: host
+
+      - target: 5080
+        published: 5080
+        protocol: udp
+        mode: host
+
+      - target: 5081
+        published: 5081
+        protocol: udp
+        mode: host
+
+      - target: 5082
+        published: 5082
+        protocol: udp
+        mode: host
+
+      - target: 5083
+        published: 5083
+        protocol: udp
+        mode: host
+
+      - target: 5084
+        published: 5084
+        protocol: udp
+        mode: host
+
+      - target: 5085
+        published: 5085
+        protocol: udp
+        mode: host
+
+      - target: 5086
+        published: 5086
+        protocol: udp
+        mode: host
+
+      - target: 5087
+        published: 5087
+        protocol: udp
+        mode: host
+
+      - target: 5088
+        published: 5088
+        protocol: udp
+        mode: host
+
+      - target: 5089
+        published: 5089
+        protocol: udp
+        mode: host
+
+      - target: 5090
+        published: 5090
+        protocol: udp
+        mode: host
+
+      - target: 5091
+        published: 5091
+        protocol: udp
+        mode: host
+
+      - target: 5092
+        published: 5092
+        protocol: udp
+        mode: host
+
+      - target: 5093
+        published: 5093
+        protocol: udp
+        mode: host
+
+      - target: 5094
+        published: 5094
+        protocol: udp
+        mode: host
+
+      - target: 5095
+        published: 5095
+        protocol: udp
+        mode: host
+
+      - target: 5096
+        published: 5096
+        protocol: udp
+        mode: host
+
+      - target: 5097
+        published: 5097
+        protocol: udp
+        mode: host
+
+      - target: 5098
+        published: 5098
+        protocol: udp
+        mode: host
+
+      - target: 5099
+        published: 5099
+        protocol: udp
+        mode: host
+
+      - target: 5100
+        published: 5100
+        protocol: udp
+        mode: host
+
+
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-video
+    volumes:
+      - ./video.yml:/etc/video.yml
+    command: ["-c=/etc/video.yml"]
+
+networks:
+  backend:
+    driver: overlay
