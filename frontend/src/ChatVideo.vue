@@ -223,6 +223,7 @@
                     this.localMedia = media;
                     this.localMedia.unmute("audio");
                     this.$refs.localVideoComponent.setSource(media);
+                    this.$refs.localVideoComponent.setMuted(true);
                     this.$refs.localVideoComponent.setUserName(this.myUserName)
                     this.clientLocal.publish(media);
                     bus.$emit(SHARE_SCREEN_STATE_CHANGED, true);
