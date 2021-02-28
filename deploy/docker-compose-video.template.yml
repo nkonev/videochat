@@ -29,6 +29,10 @@ services:
         published: 3478
         protocol: udp
         mode: host
+      - target: 3478
+        published: 3478
+        protocol: tcp
+        mode: host
 
       # turn ports
       - target: 5200
