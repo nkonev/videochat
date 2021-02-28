@@ -32,7 +32,9 @@ services:
       - SPRING_MAIL_PASSWORD=password
       - CUSTOM_BASE-URL=http://api.site.local:8080
       - MANAGEMENT_HEALTH_MAIL_ENABLED=false
-
+      - CSRF_COOKIE_SECURE=true
+      - CSRF_COOKIE_HTTP-ONLY=true
+      - COOKIE_SAME-SITE=Strict
     logging:
       driver: "journald"
       options:

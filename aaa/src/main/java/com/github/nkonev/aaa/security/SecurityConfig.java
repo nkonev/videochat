@@ -7,6 +7,7 @@ import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import com.github.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
 import com.github.nkonev.aaa.dto.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -83,9 +84,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private NoOpAuthorizedClientRepository noOpAuthorizedClientRepository;
 
+    @Value("${csrf.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${csrf.cookie.http-only:false}")
+    private boolean cookieHttpOnly;
+
     @Bean
     public CsrfTokenRepository csrfTokenRepository() {
-        return CookieCsrfTokenRepository.withHttpOnlyFalse();
+        final CookieCsrfTokenRepository cookieCsrfTokenRepository = new CookieCsrfTokenRepository();
+        cookieCsrfTokenRepository.setSecure(cookieSecure);
+        cookieCsrfTokenRepository.setCookieHttpOnly(cookieHttpOnly);
+        return cookieCsrfTokenRepository;
     }
 
     @Bean
