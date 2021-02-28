@@ -23,15 +23,35 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
+
+type RestClientConfig struct {
+	MaxIdleConns int
+	IdleConnTimeout time.Duration
+	DisableCompression bool
+}
 
 type FrontendConfig struct {
 	ICEServers []sfu.ICEServerConfig `mapstructure:"iceserver"`
 }
 
+type ChatConfig struct {
+	ChatUrlConfig ChatUrlConfig `mapstructure:"url"`
+}
+
+type ChatUrlConfig struct {
+	Base string
+	Access string
+	Notify string
+}
+
+
 type ExtendedConfig struct {
 	sfu.Config
 	FrontendConfig FrontendConfig `mapstructure:"frontend"`
+	RestClientConfig RestClientConfig `mapstructure:"http"`
+	ChatConfig ChatConfig `mapstructure:"chat"`
 }
 
 var (
@@ -135,9 +155,9 @@ func startMetrics(addr string) {
 
 func NewRestClient() *http.Client {
 	tr := &http.Transport{
-		MaxIdleConns:       viper.GetInt("http.maxIdleConns"),
-		IdleConnTimeout:    viper.GetDuration("http.idleConnTimeout"),
-		DisableCompression: viper.GetBool("http.disableCompression"),
+		MaxIdleConns:       conf.RestClientConfig.MaxIdleConns,
+		IdleConnTimeout:    conf.RestClientConfig.IdleConnTimeout,
+		DisableCompression: conf.RestClientConfig.DisableCompression,
 	}
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	client := &http.Client{Transport: tr}
@@ -257,8 +277,8 @@ func main() {
 			usersCount = countMapLen(chat)
 		}
 
-		url0 := viper.GetString("chat.url.base")
-		url1 := viper.GetString("chat.url.notify")
+		url0 := conf.ChatConfig.ChatUrlConfig.Base
+		url1 := conf.ChatConfig.ChatUrlConfig.Notify
 
 		fullUrl := fmt.Sprintf("%v%v?usersCount=%v&chatId=%v", url0, url1, usersCount, chatId)
 		parsedUrl, err := url.Parse(fullUrl)
@@ -347,8 +367,8 @@ func countMapLen(m *sync.Map) int64 {
 }
 
 func checkAccess(client *http.Client, userIdString string, chatIdString string) bool {
-	url0 := viper.GetString("chat.url.base")
-	url1 := viper.GetString("chat.url.access")
+	url0 := conf.ChatConfig.ChatUrlConfig.Base
+	url1 := conf.ChatConfig.ChatUrlConfig.Access
 
 	response, err := client.Get(url0 + url1 + "?userId=" + userIdString + "&chatId=" + chatIdString)
 	if err != nil {
