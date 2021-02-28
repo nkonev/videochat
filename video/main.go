@@ -27,9 +27,9 @@ import (
 )
 
 type RestClientConfig struct {
-	MaxIdleConns int
-	IdleConnTimeout time.Duration
-	DisableCompression bool
+	MaxIdleConns int `mapstructure:"maxIdleConns"`
+	IdleConnTimeout time.Duration `mapstructure:"idleConnTimeout"`
+	DisableCompression bool `mapstructure:"disableCompression"`
 }
 
 type FrontendConfig struct {
@@ -41,9 +41,9 @@ type ChatConfig struct {
 }
 
 type ChatUrlConfig struct {
-	Base string
-	Access string
-	Notify string
+	Base string `mapstructure:"base"`
+	Access string `mapstructure:"access"`
+	Notify string `mapstructure:"notify"`
 }
 
 
