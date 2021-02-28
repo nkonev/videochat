@@ -24,14 +24,6 @@ spring.session.timeout: 2d
 spring:
   application:
     name: aaa
-  sleuth:
-    sampler:
-      probability: 1.0
-      rate: 0
-    integration:
-      enabled: false
-    messaging:
-      enabled: false
 
 custom:
   email:
@@ -92,8 +84,6 @@ spring.datasource:
       validationQuery: SELECT 1;
       validationQueryTimeout: 4
       logValidationErrors: true
-
-spring.sleuth.enabled: false
 
 # https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#howto-execute-flyway-database-migrations-on-startup
 # https://flywaydb.org/documentation/configfiles
