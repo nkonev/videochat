@@ -2,7 +2,7 @@ module nkonev.name/video
 
 require (
 	github.com/gorilla/websocket v1.4.2
-	github.com/nkonev/ion-sfu v1.9.1-0.20210226202827-62c8b234441f // indirect
+	github.com/nkonev/ion-sfu v1.9.1-0.20210226202827-62c8b234441f
 	github.com/pion/ion-log v1.0.0
 	github.com/prometheus/client_golang v1.9.0
 	github.com/rakyll/statik v0.1.7
