@@ -8,7 +8,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/microcosm-cc/bluemonday"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
-	"github.com/rakyll/statik/fs"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
@@ -20,14 +19,10 @@ import (
 	"nkonev.name/chat/listener"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
-	_ "nkonev.name/chat/static_assets"
 	"nkonev.name/chat/utils"
-	"strings"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
-
-type staticMiddleware echo.MiddlewareFunc
 
 func main() {
 	configFile := utils.InitFlags("./chat/config-dev/config.yml")
@@ -40,7 +35,7 @@ func main() {
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			configureEcho,
-			configureStaticMiddleware,
+			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			configureMigrations,
 			db.ConfigureDb,
@@ -104,7 +99,7 @@ func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) 
 }
 
 func configureEcho(
-	staticMiddleware staticMiddleware,
+	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
 	notificator notifications.Notifications,
@@ -168,26 +163,6 @@ func configureEcho(
 	})
 
 	return e
-}
-
-func configureStaticMiddleware() staticMiddleware {
-	statikFS, err := fs.NewWithNamespace("assets")
-	if err != nil {
-		Logger.Fatal(err)
-	}
-
-	h := http.FileServer(statikFS)
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			reqUrl := c.Request().RequestURI
-			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") || reqUrl == "/git.json" {
-				h.ServeHTTP(c.Response().Writer, c.Request())
-				return nil
-			} else {
-				return next(c)
-			}
-		}
-	}
 }
 
 func initJaeger(lc fx.Lifecycle) error {

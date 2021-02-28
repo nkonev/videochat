@@ -166,7 +166,7 @@ func main() {
 	r.Handle("/video/notify", http.HandlerFunc(handler.NotifyChatParticipants)).Methods("PUT")
 	// GET `/api/video/config`
 	r.Handle("/video/config", http.HandlerFunc(handler.Config)).Methods("GET")
-	r.HandleFunc("/", handler.Static()).Methods("GET")
+	r.PathPrefix("/").Methods("GET").HandlerFunc(handler.Static())
 
 	go startMetrics(metricsAddr)
 

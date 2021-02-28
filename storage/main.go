@@ -9,7 +9,6 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
-	"github.com/rakyll/statik/fs"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
@@ -18,14 +17,10 @@ import (
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/handlers"
 	. "nkonev.name/storage/logger"
-	_ "nkonev.name/storage/static_assets"
 	"nkonev.name/storage/utils"
-	"strings"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
-
-type staticMiddleware echo.MiddlewareFunc
 
 func main() {
 	configFile := utils.InitFlags("./storage/config-dev/config.yml")
@@ -36,7 +31,7 @@ func main() {
 		fx.Provide(
 			configureMinio,
 			configureEcho,
-			configureStaticMiddleware,
+			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			db.ConfigureDb,
 		),
@@ -83,7 +78,7 @@ func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) 
 }
 
 func configureEcho(
-	staticMiddleware staticMiddleware,
+	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
 	db db.DB,
@@ -143,25 +138,6 @@ func configureMinio() (*minio.Client, error) {
 	return minioClient, nil
 }
 
-func configureStaticMiddleware() staticMiddleware {
-	statikFS, err := fs.NewWithNamespace("assets")
-	if err != nil {
-		Logger.Fatal(err)
-	}
-
-	h := http.FileServer(statikFS)
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			reqUrl := c.Request().RequestURI
-			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") || reqUrl == "/git.json" {
-				h.ServeHTTP(c.Response().Writer, c.Request())
-				return nil
-			} else {
-				return next(c)
-			}
-		}
-	}
-}
 
 func initJaeger(lc fx.Lifecycle) error {
 	exporter, err := jaeger.NewExporter(jaeger.Options{

@@ -4,14 +4,14 @@ import (
 	"context"
 	"database/sql"
 	dbP "database/sql"
+	"embed"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
-	_ "nkonev.name/storage/db/static_migrations"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/rakyll/statik/fs"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
+	"net/http"
 	. "nkonev.name/storage/logger"
 	"time"
 )
@@ -85,13 +85,12 @@ func (tx *Tx) SafeRollback() {
 	}
 }
 
-func migrateInternal(db *sql.DB) {
-	statikFS, err := fs.NewWithNamespace("migrations")
-	if err != nil {
-		Logger.Fatal(err)
-	}
+//go:embed migrations
+var embeddedFiles embed.FS
 
-	src, err := httpfs.New(statikFS, "/")
+func migrateInternal(db *sql.DB) {
+	staticDir := http.FS(embeddedFiles)
+	src, err := httpfs.New(staticDir, "migrations")
 	if err != nil {
 		Logger.Fatal(err)
 	}

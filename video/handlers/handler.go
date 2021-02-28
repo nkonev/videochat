@@ -1,22 +1,25 @@
 package handlers
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/nkonev/ion-sfu/cmd/signal/json-rpc/server"
 	"github.com/nkonev/ion-sfu/pkg/sfu"
+	log "github.com/pion/ion-log"
+	"github.com/sourcegraph/jsonrpc2"
+	websocketjsonrpc2 "github.com/sourcegraph/jsonrpc2/websocket"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"nkonev.name/video/config"
 	"strings"
 	"sync"
-	"github.com/rakyll/statik/fs"
-	"github.com/sourcegraph/jsonrpc2"
-	websocketjsonrpc2 "github.com/sourcegraph/jsonrpc2/websocket"
-	_ "nkonev.name/video/static_assets"
-	log "github.com/pion/ion-log"
 )
+
+//go:embed static
+var embeddedFiles embed.FS
 
 type Handler struct {
 	client *http.Client
@@ -24,7 +27,7 @@ type Handler struct {
 	sessionUserPeer *sync.Map
 	sfu *sfu.SFU
 	conf *config.ExtendedConfig
-	statikFS *http.FileSystem
+	httpFs *http.FileSystem
 }
 
 func NewHandler(
@@ -33,10 +36,11 @@ func NewHandler(
 	sfu *sfu.SFU,
 	conf *config.ExtendedConfig,
 ) Handler {
-	statikFS, err := fs.NewWithNamespace("assets")
+	fsys, err := fs.Sub(embeddedFiles, "static")
 	if err != nil {
-		log.Panicf("Unable to load static assets %v", err)
+		log.Panicf("Cannot open static embedded dir")
 	}
+	staticDir := http.FS(fsys)
 
 	return Handler{
 		client:          client,
@@ -44,7 +48,7 @@ func NewHandler(
 		sessionUserPeer: &sync.Map{},
 		sfu:             sfu,
 		conf:            conf,
-		statikFS: 		&statikFS,
+		httpFs: 		&staticDir,
 	}
 }
 
@@ -160,7 +164,7 @@ type UsersResponse struct {
 }
 
 func (h *Handler) Static() http.HandlerFunc {
-	fileServer := http.FileServer(*h.statikFS)
+	fileServer := http.FileServer(*h.httpFs)
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqUrl := r.RequestURI
 		if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") || reqUrl == "/git.json" {

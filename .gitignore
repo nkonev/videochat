@@ -3,8 +3,6 @@
 .idea
 *.iml
 node_modules
-static_assets
-static_migrations
 /chat/chat
 /chat/proto
 vendor

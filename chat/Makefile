@@ -2,10 +2,7 @@
 
 PROTOC_VERSION := 0.4.0
 
-download: download-statik download-proto-compiler
-
-download-statik:
-	go get github.com/rakyll/statik
+download: download-proto-compiler
 
 download-proto-compiler:
 	docker pull znly/protoc:${PROTOC_VERSION}
@@ -13,19 +10,14 @@ download-proto-compiler:
 check-env:
 	docker version && go env
 
-generate: generate-git generate-static-go generate-protobufs
+generate: generate-git generate-protobufs
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
-STATIC_JSON := ./static/git.json
-MIGRATIONS_PACKAGE := static_migrations
-STATIC_ASSETS_PACKAGE := static_assets
+STATIC_JSON := ./handlers/static/git.json
 PROTO_DIR := ./proto
 
 generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"chat\"}" > ${STATIC_JSON}
-
-generate-static-go:
-	statik -src=./static -p ${STATIC_ASSETS_PACKAGE} -ns assets -f && statik -src=./db/migrations -p ${MIGRATIONS_PACKAGE} -ns migrations -dest ./db -f && echo 'completed generating embed'
 
 PROTOBUF_SRC_DIR = $(shell cd ..; pwd)
 
@@ -56,4 +48,4 @@ push-docker:
 	docker push $(IMAGE)
 
 clean:
-	rm -rf ${STATIC_JSON} "./db/${MIGRATIONS_PACKAGE}" "./${STATIC_ASSETS_PACKAGE}" "${PROTO_DIR}" ${EXECUTABLE} ${BUILDDIR}
+	rm -rf ${STATIC_JSON} "${PROTO_DIR}" ${EXECUTABLE} ${BUILDDIR}
