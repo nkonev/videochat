@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/nkonev/ion-sfu/pkg/middlewares/datachannel"
 	"github.com/nkonev/ion-sfu/pkg/sfu"
@@ -156,26 +157,26 @@ func main() {
 	client := NewRestClient()
 
 	handler := handlers.NewHandler(client, &upgrader, s, &conf)
-
+	r := mux.NewRouter()
 	// SFU websocket endpoint
-	http.Handle("/video/ws", http.HandlerFunc(handler.SfuHandler))
+	r.Handle("/video/ws", http.HandlerFunc(handler.SfuHandler)).Methods("GET")
 	// GET /api/video/users?chatId=${this.chatId} - responds users count
-	http.Handle("/video/users", http.HandlerFunc(handler.Users))
+	r.Handle("/video/users", http.HandlerFunc(handler.Users)).Methods("GET")
 	// PUT /api/video/notify?chatId=${this.chatId}` -> "/internal/video/notify"
-	http.Handle("/video/notify", http.HandlerFunc(handler.NotifyChatParticipants))
+	r.Handle("/video/notify", http.HandlerFunc(handler.NotifyChatParticipants)).Methods("PUT")
 	// GET `/api/video/config`
-	http.Handle("/video/config", http.HandlerFunc(handler.Config))
-	http.HandleFunc("/", handler.Static())
+	r.Handle("/video/config", http.HandlerFunc(handler.Config)).Methods("GET")
+	r.HandleFunc("/", handler.Static()).Methods("GET")
 
 	go startMetrics(metricsAddr)
 
 	var err error
 	if key != "" && cert != "" {
 		log.Infof("Listening at https://[%s]", addr)
-		err = http.ListenAndServeTLS(addr, cert, key, nil)
+		err = http.ListenAndServeTLS(addr, cert, key, r)
 	} else {
 		log.Infof("Listening at http://[%s]", addr)
-		err = http.ListenAndServe(addr, nil)
+		err = http.ListenAndServe(addr, r)
 	}
 	if err != nil {
 		panic(err)
