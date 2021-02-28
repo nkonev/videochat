@@ -63,16 +63,8 @@ public class WebConfig implements WebMvcConfigurer {
     // see https://github.com/spring-projects/spring-boot/issues/14302#issuecomment-418712080 if you want to customize management tomcat
     @Bean
     public ServletWebServerFactory servletContainer(Valve... valves) {
-        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory() {
-            @Override
-            protected void postProcessContext(Context context) {
-                if (StringUtils.hasLength(sameSite)) {
-                    Rfc6265CookieProcessor rfc6265Processor = new Rfc6265CookieProcessor();
-                    rfc6265Processor.setSameSiteCookies(sameSite);
-                    context.setCookieProcessor(rfc6265Processor);
-                }
-            }
-        };
+        CustomizedTomcatServletWebServerFactory tomcat = new CustomizedTomcatServletWebServerFactory();
+        tomcat.setSameSite(sameSite);
         tomcat.addContextValves(valves);
 
         final File baseDir = serverProperties.getTomcat().getBasedir();
@@ -90,5 +82,22 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public ProtobufHttpMessageConverter protobufHttpMessageConverter() {
         return new ProtobufHttpMessageConverter();
+    }
+}
+
+class CustomizedTomcatServletWebServerFactory extends TomcatServletWebServerFactory {
+    private String sameSite;
+
+    @Override
+    protected void postProcessContext(Context context) {
+        if (StringUtils.hasLength(sameSite)) {
+            Rfc6265CookieProcessor rfc6265Processor = new Rfc6265CookieProcessor();
+            rfc6265Processor.setSameSiteCookies(sameSite);
+            context.setCookieProcessor(rfc6265Processor);
+        }
+    }
+
+    public void setSameSite(String sameSite) {
+        this.sameSite = sameSite;
     }
 }
