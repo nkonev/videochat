@@ -195,16 +195,18 @@ func (h *Handler) checkAccess(client *http.Client, userIdString string, chatIdSt
 func addPeerToMap(sessionUserPeer *sync.Map, chatId string, userId string, peer *server.JSONSignal) {
 	userPeerInterface, _ := sessionUserPeer.LoadOrStore(chatId, &sync.Map{})
 	userPeer := userPeerInterface.(*sync.Map)
+	log.Infof("Storing peer for userId=%v to chatId=%v", userId, chatId)
 	userPeer.Store(userId, peer)
 }
 
 func removePeerFromMap(sessionUserPeer *sync.Map, chatId string, userId string) {
 	userPeerInterface, ok := sessionUserPeer.Load(chatId)
 	if !ok {
-		log.Infof("Cannot remove chatId=%v from sessionUserPeer", chatId)
+		log.Errorf("Cannot remove chatId=%v from sessionUserPeer", chatId)
 		return
 	}
 	userPeer := userPeerInterface.(*sync.Map)
+	log.Infof("Removing peer for userId=%v from chatId=%v", userId, chatId)
 	userPeer.Delete(userId)
 
 	userPeerLength := countMapLen(userPeer)
