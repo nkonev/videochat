@@ -109,16 +109,20 @@
 
         <v-main>
             <v-container fluid class="ma-0 pa-0">
-                <v-alert
-                        dismissible
-                        v-model="showAlert"
-                        prominent
-                        type="error"
-                >
-                    <v-row align="center">
-                        <v-col class="grow">{{lastError}}</v-col>
-                    </v-row>
-                </v-alert>
+                <v-snackbar v-model="showAlert" color="error" timeout="-1" :multi-line="true">
+                    {{ lastError }}
+
+                    <template v-slot:action="{ attrs }">
+                        <v-btn
+                            text
+                            v-bind="attrs"
+                            @click="showAlert = false"
+                        >
+                            Close
+                        </v-btn>
+                    </template>
+                </v-snackbar>
+
                 <LoginModal/>
                 <ChatEdit/>
                 <ChatParticipants/>
