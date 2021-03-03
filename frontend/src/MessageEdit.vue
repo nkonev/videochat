@@ -1,10 +1,5 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 d-flex flex-column" fluid style="height: 100%">
-            <div class="mb-0 mt-0 pb-0 pt-0 text--disabled caption user-typing">
-                <template v-if="writingUsers.length">
-                    {{writingUsers.map(v=>v.login).join(', ')}} is writing...
-                </template>
-            </div>
             <quill-editor
                 v-model="editMessageDto.text"
                 :options="editorOption"
@@ -24,6 +19,9 @@
                     <v-btn color="primary" @click="sendMessageToChat" small><v-icon color="white">mdi-send</v-icon></v-btn>
                 </div>
             </div>
+            <v-tooltip v-if="writingUsers.length" :activator="'#sendButtonContainer'" top v-model="showTooltip">
+                <span>{{writingUsers.map(v=>v.login).join(', ')}} is writing...</span>
+            </v-tooltip>
 
     </v-container>
 </template>
@@ -62,7 +60,8 @@
                         toolbar: '#custom-toolbar',
                     },
                     placeholder: 'Press Ctrl + Enter to send, Esc to clear'
-                }
+                },
+                showTooltip: true
             }
         },
         methods: {
@@ -138,15 +137,6 @@ $mobileWidth = 800px
 
 #sendButtonContainer {
     min-height 25%
-
-    .user-typing {
-        height 14px
-        max-height 14px
-        min-height 14px
-        font-size 10px !important
-        line-height 14px !important
-        padding-left 0.2em
-    }
 }
 
 .quill-editor {

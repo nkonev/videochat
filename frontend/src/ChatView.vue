@@ -360,7 +360,7 @@
     }
 
     #chatViewContainer {
-        height: calc(100vh - 70px)
+        height: calc(100vh - 68px)
         position: relative
         //height: calc(100% - 80px)
         //width: calc(100% - 80px)
