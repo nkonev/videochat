@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/pion/ion-sfu/pkg/middlewares/datachannel"
-	"github.com/pion/ion-sfu/pkg/sfu"
-	log "github.com/pion/ion-log"
+	"github.com/nkonev/ion-sfu/pkg/middlewares/datachannel"
+	"github.com/nkonev/ion-sfu/pkg/sfu"
+	log "github.com/nkonev/ion-sfu/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"net"
@@ -19,6 +19,10 @@ import (
 	"os"
 )
 
+// logC need to get logger options from config
+type logC struct {
+	Config log.GlobalConfig `mapstructure:"log"`
+}
 
 var (
 	conf        = config.ExtendedConfig{}
@@ -27,6 +31,9 @@ var (
 	key         string
 	addr        string
 	metricsAddr string
+	verbosityLevel int
+	logConfig      logC
+	logger         = log.New()
 )
 
 const (
@@ -40,6 +47,7 @@ func showHelp() {
 	fmt.Println("      -key {key file}")
 	fmt.Println("      -a {listen addr}")
 	fmt.Println("      -h (show help info)")
+	fmt.Println("      -v {0-10} (verbosity level, default 0)")
 }
 
 func load() bool {
@@ -77,6 +85,20 @@ func load() bool {
 		return false
 	}
 
+
+	if len(conf.Turn.PortRange) > 2 {
+		logger.Error(nil, "config file loaded failed. turn port must be [min,max]", "file", file)
+		return false
+	}
+
+	if logConfig.Config.V < 0 {
+		logger.Error(nil, "Logger V-Level cannot be less than 0")
+		return false
+	}
+
+	logger.V(0).Info("Config file loaded", "file", file)
+
+
 	fmt.Printf("config %s load ok!\n", file)
 	return true
 }
@@ -87,6 +109,7 @@ func parse() bool {
 	flag.StringVar(&key, "key", "", "key file")
 	flag.StringVar(&addr, "a", ":7000", "address to use")
 	flag.StringVar(&metricsAddr, "m", ":8100", "merics to use")
+	flag.IntVar(&verbosityLevel, "v", 0, "verbosity level, higher value - more logs")
 	help := flag.Bool("h", false, "help info")
 	flag.Parse()
 	if !load() {
@@ -109,13 +132,14 @@ func startMetrics(addr string) {
 
 	metricsLis, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Panicf("cannot bind to metrics endpoint %s. err: %s", addr, err)
+		logger.Error(err, "cannot bind to metrics endpoint", "addr", addr)
+		os.Exit(1)
 	}
-	log.Infof("Metrics Listening at %s", addr)
+	logger.Info("Metrics Listening", "addr", addr)
 
 	err = srv.Serve(metricsLis)
 	if err != nil {
-		log.Errorf("debug server stopped. got err: %s", err)
+		logger.Error(err, "Metrics server stopped")
 	}
 }
 
@@ -136,11 +160,16 @@ func main() {
 		os.Exit(-1)
 	}
 
-	fixByFile := []string{"asm_amd64.s", "proc.go", "icegatherer.go", "jsonrpc2"}
-	fixByFunc := []string{"Handle"}
-	log.Init(conf.Log.Level, fixByFile, fixByFunc)
+	// Check that the -v is not set (default -1)
+	if verbosityLevel < 0 {
+		verbosityLevel = logConfig.Config.V
+	}
 
-	log.Infof("--- Starting SFU Node ---")
+	log.SetGlobalOptions(log.GlobalConfig{V: verbosityLevel})
+	logger.Info("--- Starting SFU Node ---")
+
+	// Pass logr instance
+	sfu.Logger = logger
 
 	s := sfu.NewSFU(conf.Config)
 	dc := s.NewDatachannel(sfu.APIChannelLabel)
@@ -166,16 +195,19 @@ func main() {
 	r.Handle("/video/notify", http.HandlerFunc(handler.NotifyChatParticipants)).Methods("PUT")
 	// GET `/api/video/config`
 	r.Handle("/video/config", http.HandlerFunc(handler.Config)).Methods("GET")
+	// PUT /internal/kick?chatId=${this.chatId}&userId=`
+	r.Handle("/internal/kick", http.HandlerFunc(handler.Kick)).Methods("PUT")
+
 	r.PathPrefix("/").Methods("GET").HandlerFunc(handler.Static())
 
 	go startMetrics(metricsAddr)
 
 	var err error
 	if key != "" && cert != "" {
-		log.Infof("Listening at https://[%s]", addr)
+		logger.Info("Listening at https://[%s]", addr)
 		err = http.ListenAndServeTLS(addr, cert, key, r)
 	} else {
-		log.Infof("Listening at http://[%s]", addr)
+		logger.Info("Listening at http://[%s]", addr)
 		err = http.ListenAndServe(addr, r)
 	}
 	if err != nil {

@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	log "github.com/pion/ion-log"
-	"github.com/pion/ion-sfu/cmd/signal/json-rpc/server"
-	"github.com/pion/ion-sfu/pkg/sfu"
+	log "github.com/nkonev/ion-sfu/pkg/logger"
+	"github.com/nkonev/ion-sfu/cmd/signal/json-rpc/server"
+	"github.com/nkonev/ion-sfu/pkg/sfu"
 	"github.com/pion/webrtc/v3"
 	"github.com/sourcegraph/jsonrpc2"
 	websocketjsonrpc2 "github.com/sourcegraph/jsonrpc2/websocket"
@@ -17,7 +17,6 @@ import (
 	"nkonev.name/video/config"
 	"strings"
 	"sync"
-	"time"
 )
 
 //go:embed static
@@ -26,7 +25,6 @@ var embeddedFiles embed.FS
 type Handler struct {
 	client    *http.Client
 	upgrader  *websocket.Upgrader
-	userPeers *sync.Map // it contains all peers of a particular user, across all the sessions
 	sfu       *sfu.SFU
 	conf      *config.ExtendedConfig
 	httpFs    *http.FileSystem
@@ -40,32 +38,22 @@ func NewHandler(
 ) Handler {
 	fsys, err := fs.Sub(embeddedFiles, "static")
 	if err != nil {
-		log.Panicf("Cannot open static embedded dir")
+		panic("Cannot open static embedded dir")
 	}
 	staticDir := http.FS(fsys)
 
 	handler := Handler{
 		client:    client,
 		upgrader:  upgrader,
-		userPeers: &sync.Map{},
 		sfu:       sfu,
 		conf:      conf,
 		httpFs:    &staticDir,
 	}
-	// TODO to lifecycle methods
-	go func() {
-		for _, session := range sfu.GetSessions() {
-			for _, peer := range session.Peers() {
-				if handler.peerIsClosed(peer) {
-					handler.removePeer(peer)
-				}
-			}
-		}
-		oneSecond, _ := time.ParseDuration("1s")
-		time.Sleep(oneSecond)
-	}()
 	return handler
 }
+
+var 	logger         = log.New()
+
 
 func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	userId := r.Header.Get("X-Auth-UserId")
@@ -81,8 +69,8 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	p := server.NewJSONSignal(sfu.NewPeer(h.sfu))
-	h.addPeerToMap(userId, p.Peer)
+	p := server.NewJSONSignal(sfu.NewPeerWithMetadata(h.sfu, userId), logger)
+	//h.addPeerToMap(userId, p.Peer)
 	defer p.Close()
 
 	jc := jsonrpc2.NewConn(r.Context(), websocketjsonrpc2.NewObjectStream(c), p)
@@ -98,21 +86,26 @@ func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chatInterface, ok := h.userPeers.Load(chatId)
 	response := UsersResponse{}
-	if ok {
-		chat := chatInterface.(*sync.Map)
-		response.UsersCount = countMapLen(chat)
+
+	if session, _:= h.sfu.GetSession(fmt.Sprintf("chat%v", chatId)); session != nil {
+		var usersCount int64
+		for _, peer:= range session.Peers() {
+			if h.peerIsAlive(peer) {
+				usersCount++
+			}
+		}
+		response.UsersCount = usersCount
 	}
 	w.Header().Set("Content-Type", "application/json")
 	marshal, err := json.Marshal(response)
 	if err != nil {
-		log.Errorf("Error during marshalling UsersResponse to json")
+		logger.Info("Error during marshalling UsersResponse to json")
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		_, err := w.Write(marshal)
 		if err != nil {
-			log.Errorf("Error during sending json")
+			logger.Info("Error during sending json")
 		}
 	}
 }
@@ -141,7 +134,7 @@ func (h *Handler) NotifyChatParticipants(w http.ResponseWriter, r *http.Request)
 	fullUrl := fmt.Sprintf("%v%v?usersCount=%v&chatId=%v", url0, url1, usersCount, chatId)
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		log.Errorf("Failed during parse chat url: %v", err)
+		logger.Info("Failed during parse chat url: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -150,11 +143,11 @@ func (h *Handler) NotifyChatParticipants(w http.ResponseWriter, r *http.Request)
 
 	response, err := h.client.Do(req)
 	if err != nil {
-		log.Errorf("Transport error during notifying %v", err)
+		logger.Info("Transport error during notifying %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		if response.StatusCode != http.StatusOK {
-			log.Errorf("Http Error %v during notifying %v", response.StatusCode, err)
+			logger.Info("Http Error %v during notifying %v", response.StatusCode, err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
@@ -179,12 +172,12 @@ func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	marshal, err := json.Marshal(h.conf.FrontendConfig)
 	if err != nil {
-		log.Errorf("Error during marshalling ConfigResponse to json")
+		logger.Info("Error during marshalling ConfigResponse to json")
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		_, err := w.Write(marshal)
 		if err != nil {
-			log.Errorf("Error during sending json")
+			logger.Info("Error during sending json")
 		}
 	}
 }
@@ -209,7 +202,7 @@ func (h *Handler) checkAccess(client *http.Client, userIdString string, chatIdSt
 
 	response, err := client.Get(url0 + url1 + "?userId=" + userIdString + "&chatId=" + chatIdString)
 	if err != nil {
-		log.Errorf("Transport error during checking access %v", err)
+		logger.Info("Transport error during checking access %v", err)
 		return false
 	}
 	if response.StatusCode == http.StatusOK {
@@ -217,7 +210,7 @@ func (h *Handler) checkAccess(client *http.Client, userIdString string, chatIdSt
 	} else if response.StatusCode == http.StatusUnauthorized {
 		return false
 	} else {
-		log.Errorf("Unexpected status on checkAccess %v", response.StatusCode)
+		logger.Info("Unexpected status on checkAccess %v", response.StatusCode)
 		return false
 	}
 }
@@ -242,13 +235,19 @@ func (h *Handler) kick(chatId, userId string) {
 	}
 	for _, peerF := range session.Peers() {
 		// if getUserId(peer) == userId
-		if h.hasPeer(userId, peerF) {
+		/*if h.hasPeer(userId, peerF) {
 			// session.disconnect(peer)
+			session.RemovePeer(peerF.ID())
+		}*/
+		gotUserId := peerF.Metadata()
+		i := gotUserId.(string)
+		if userId == i {
+			peerF.Close()
 			session.RemovePeer(peerF.ID())
 		}
 	}
 }
-
+/*
 func (h *Handler) addPeerToMap(userId string, peer *sfu.Peer) {
 	userPeerInterface, _ := h.userPeers.LoadOrStore(userId, &UserPeers{})
 	userPeer := userPeerInterface.(*UserPeers)
@@ -300,3 +299,4 @@ func countMapLen(m *sync.Map) int64 {
 	return length
 }
 
+*/

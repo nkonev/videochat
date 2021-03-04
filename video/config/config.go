@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/pion/ion-sfu/pkg/sfu"
+	"github.com/nkonev/ion-sfu/pkg/sfu"
 	"time"
 )
 
