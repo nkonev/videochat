@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	log "github.com/nkonev/ion-sfu/pkg/logger"
 	"github.com/nkonev/ion-sfu/cmd/signal/json-rpc/server"
+	log "github.com/nkonev/ion-sfu/pkg/logger"
 	"github.com/nkonev/ion-sfu/pkg/sfu"
 	"github.com/pion/webrtc/v3"
 	"github.com/sourcegraph/jsonrpc2"
@@ -16,7 +16,6 @@ import (
 	"net/url"
 	"nkonev.name/video/config"
 	"strings"
-	"sync"
 )
 
 //go:embed static
@@ -222,11 +221,6 @@ func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 	h.kick(chatId, userToKickId)
 }
 
-type UserPeers struct {
-	sync.RWMutex
-	Peers []*sfu.Peer
-}
-
 func (h *Handler) kick(chatId, userId string) {
 	// for peer := session.peers
 	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId)) // ChatVideo.vue
@@ -234,11 +228,6 @@ func (h *Handler) kick(chatId, userId string) {
 		return
 	}
 	for _, peerF := range session.Peers() {
-		// if getUserId(peer) == userId
-		/*if h.hasPeer(userId, peerF) {
-			// session.disconnect(peer)
-			session.RemovePeer(peerF.ID())
-		}*/
 		gotUserId := peerF.Metadata()
 		i := gotUserId.(string)
 		if userId == i {
