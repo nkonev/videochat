@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/nkonev/ion-sfu/pkg/middlewares/datachannel"
-	"github.com/nkonev/ion-sfu/pkg/sfu"
-	log "github.com/nkonev/ion-sfu/pkg/logger"
+	"github.com/pion/ion-sfu/pkg/middlewares/datachannel"
+	"github.com/pion/ion-sfu/pkg/sfu"
+	log "github.com/pion/ion-sfu/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"net"
@@ -204,10 +204,10 @@ func main() {
 
 	var err error
 	if key != "" && cert != "" {
-		logger.Info("Listening at https://[%s]", addr)
+		logger.Info("Started listening", "addr", "https://"+addr)
 		err = http.ListenAndServeTLS(addr, cert, key, r)
 	} else {
-		logger.Info("Listening at http://[%s]", addr)
+		logger.Info("Started listening", "addr", "http://"+addr)
 		err = http.ListenAndServe(addr, r)
 	}
 	if err != nil {
