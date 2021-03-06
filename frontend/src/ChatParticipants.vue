@@ -20,8 +20,14 @@
                                     </template>
                                     <span>Admin</span>
                                 </v-tooltip>
+                                <v-tooltip bottom v-if="isAdmin() && item.id != currentUser.id">
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-btn v-bind="attrs" v-on="on" icon @click="kickFromVideoCall(item.id)"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
+                                    </template>
+                                    <span>Kick</span>
+                                </v-tooltip>
                                 <v-list-item-action>
-                                    <v-btn icon @click="inviteToVideoCall(item.id)"><v-icon color="success">mdi-phone</v-icon></v-btn>
+                                    <v-btn v-if="item.id != currentUser.id" icon @click="inviteToVideoCall(item.id)"><v-icon color="success">mdi-phone</v-icon></v-btn>
                                 </v-list-item-action>
                             </v-list-item>
                             <v-divider></v-divider>
@@ -48,6 +54,7 @@
     import bus, {OPEN_INFO_DIALOG} from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
+    import {chat_name, videochat_name} from "./routes";
 
     const dtoFactory = ()=>{
         return {
@@ -88,9 +95,17 @@
 
             },
             inviteToVideoCall(userId) {
-                axios.put(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`)
+                axios.put(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`).then(value => {
+                    console.log("Going to video chat");
+                    this.$router.push({name: videochat_name});
+                })
+            },
+            kickFromVideoCall(userId) {
+                axios.put(`/api/chat/${this.dto.id}/video/kick?userId=${userId}`)
+            },
+            isAdmin(){
+                return this.dto.participants.filter(value => value.admin).filter(value => value.id == this.currentUser.id).length != 0
             }
-
         },
         created() {
             bus.$on(OPEN_INFO_DIALOG, this.showModal);

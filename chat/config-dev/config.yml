@@ -46,6 +46,10 @@ aaa:
     maxIdle: 1
     maxActive: 10
 
+video:
+  url:
+    base: "http://localhost:7000"
+    kick: "/internal/kick"
 
 jaeger:
   endpoint: "localhost:6831"

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
+	"nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
 )
@@ -79,4 +80,32 @@ func (vh VideoHandler) NotifyAboutKick(c echo.Context) error {
 	vh.notificator.NotifyAboutKick(c, chatId, userId)
 	return c.NoContent(200)
 
+}
+
+func (vh VideoHandler) Kick(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	userId, err := utils.ParseInt64(c.QueryParam("userId"))
+	if err != nil {
+		return err
+	}
+
+	isParticipant, err := vh.db.IsParticipant(userId, chatId)
+	if err != nil {
+		return err
+	}
+	if !isParticipant {
+		return c.JSON(http.StatusAccepted, &utils.H{"message": "user " + c.QueryParam("userId") + " is not belongs to chat " + c.QueryParam("chatId")})
+	}
+
+	err = vh.restClient.Kick(chatId, userId)
+	if err != nil {
+		logger.Logger.Warnf("Non-successful invoking video kick %v", err)
+	}
+
+	vh.notificator.NotifyAboutKick(c, chatId, userId)
+	return c.NoContent(200)
 }

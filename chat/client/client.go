@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/guregu/null"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
@@ -106,6 +107,43 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 		arr = append(arr, &participant)
 	}
 	return arr, nil
+}
+
+func (rc RestClient) Kick(chatId int64, userId int64) error {
+	contentType := "application/json;charset=UTF-8"
+	url0 := viper.GetString("video.url.base")
+	url1 := viper.GetString("video.url.kick")
+	fullUrl := fmt.Sprintf("%v%v&chatId=%v&userId=%v", url0, url1, chatId, userId)
+
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		Logger.Errorln("Failed during parse video url:", err)
+		return err
+	}
+	request := &http.Request{
+		Method: "PUT",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+
+	resp, err := rc.Do(request)
+	if err != nil {
+		Logger.Warningln("Failed to request kick response:", err)
+		return err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		Logger.Warningln("kick response responded non-200 code: ", code)
+		return err
+	}
+	return nil
 }
 
 func convertToParticipant(user *name_nkonev_aaa.UserDto) dto.User {

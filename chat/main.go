@@ -154,6 +154,7 @@ func configureEcho(
 	e.PUT("/internal/video/notify", vh.NotifyAboutVideoCallChange)
 	e.PUT("/internal/video/kick", vh.NotifyAboutKick)
 	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
+	e.PUT("/chat/:id/video/kick", vh.Kick)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
