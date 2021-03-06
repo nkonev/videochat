@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/logger"
@@ -83,6 +85,12 @@ func (vh VideoHandler) NotifyAboutKick(c echo.Context) error {
 }
 
 func (vh VideoHandler) Kick(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		logger.Logger.Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
 		return err
@@ -100,6 +108,15 @@ func (vh VideoHandler) Kick(c echo.Context) error {
 	if !isParticipant {
 		return c.JSON(http.StatusAccepted, &utils.H{"message": "user " + c.QueryParam("userId") + " is not belongs to chat " + c.QueryParam("chatId")})
 	}
+
+	admin, err := vh.db.IsAdmin(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
+	}
+	if !admin {
+		return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You have no access to this chat"})
+	}
+
 
 	err = vh.restClient.Kick(chatId, userId)
 	if err != nil {
