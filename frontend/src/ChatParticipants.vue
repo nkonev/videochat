@@ -14,21 +14,21 @@
                                 <v-list-item-content>
                                     <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> (you)</template></v-list-item-title>
                                 </v-list-item-content>
-                                <v-tooltip bottom v-if="item.admin">
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <v-icon v-bind="attrs" v-on="on">mdi-crown</v-icon>
-                                    </template>
-                                    <span>Admin</span>
-                                </v-tooltip>
                                 <v-tooltip bottom v-if="isAdmin() && item.id != currentUser.id">
                                     <template v-slot:activator="{ on, attrs }">
                                         <v-btn v-bind="attrs" v-on="on" icon @click="kickFromVideoCall(item.id)"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
                                     </template>
                                     <span>Kick</span>
                                 </v-tooltip>
-                                <v-list-item-action>
-                                    <v-btn v-if="item.id != currentUser.id" icon @click="inviteToVideoCall(item.id)"><v-icon color="success">mdi-phone</v-icon></v-btn>
-                                </v-list-item-action>
+                                <v-tooltip bottom v-if="item.admin">
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <span class="pl-1 pr-1">
+                                            <v-icon v-bind="attrs" v-on="on">mdi-crown</v-icon>
+                                        </span>
+                                    </template>
+                                    <span>Admin</span>
+                                </v-tooltip>
+                                <v-btn v-if="item.id != currentUser.id" icon @click="inviteToVideoCall(item.id)"><v-icon color="success">mdi-phone</v-icon></v-btn>
                             </v-list-item>
                             <v-divider></v-divider>
                         </template>
