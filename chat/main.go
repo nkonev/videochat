@@ -152,6 +152,7 @@ func configureEcho(
 
 	vh := handlers.NewVideoHandler(db, restClient, notificator)
 	e.PUT("/internal/video/notify", vh.NotifyAboutVideoCallChange)
+	e.PUT("/internal/video/kick", vh.NotifyAboutKick)
 	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
 
 	lc.Append(fx.Hook{

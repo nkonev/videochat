@@ -25,6 +25,7 @@ type Notifications interface {
 	NotifyAboutVideoCallChanged(c echo.Context, chatId int64, newUsersCount int64)
 	NotifyAboutProfileChanged(user *dto.User)
 	NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64)
+	NotifyAboutKick(c echo.Context, chatId int64, userId int64)
 }
 
 type notifictionsImpl struct {
@@ -60,6 +61,10 @@ type VideoCallChanged struct {
 }
 
 type VideoCallInvitation struct {
+	ChatId int64 `json:"chatId"`
+}
+
+type VideoKick struct {
 	ChatId int64 `json:"chatId"`
 }
 
@@ -310,7 +315,28 @@ func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId in
 	participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(userId))
 
 	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-		GetLogEntry(c.Request()).Errorf("error during marshalling chat created VideoCallChanged: %s", err2)
+		GetLogEntry(c.Request()).Errorf("error during marshalling VideoCallInvitation: %s", err2)
+	} else {
+		Logger.Infof("Sending notification about video_call_invitation to participantChannel: %v", participantChannel)
+		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
+		if err != nil {
+			Logger.Errorf("error publishing to personal channel: %s", err)
+		}
+	}
+}
+
+func (not *notifictionsImpl) NotifyAboutKick(c echo.Context, chatId int64, userId int64) {
+	notification := CentrifugeNotification{
+		Payload: VideoKick{
+			ChatId: chatId,
+		},
+		EventType: "video_kick",
+	}
+
+	participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(userId))
+
+	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
+		GetLogEntry(c.Request()).Errorf("error during marshalling VideoKick: %s", err2)
 	} else {
 		Logger.Infof("Sending notification about video_call_invitation to participantChannel: %v", participantChannel)
 		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)

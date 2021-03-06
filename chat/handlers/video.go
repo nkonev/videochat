@@ -56,3 +56,27 @@ func (vh VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
 	vh.notificator.NotifyAboutCallInvitation(c, chatId, userId)
 	return c.NoContent(200)
 }
+
+func (vh VideoHandler) NotifyAboutKick(c echo.Context) error {
+	chatId, err := utils.ParseInt64(c.QueryParam("chatId"))
+	if err != nil {
+		return err
+	}
+
+	userId, err := utils.ParseInt64(c.QueryParam("userId"))
+	if err != nil {
+		return err
+	}
+
+	isParticipant, err := vh.db.IsParticipant(userId, chatId)
+	if err != nil {
+		return err
+	}
+	if !isParticipant {
+		return c.JSON(http.StatusAccepted, &utils.H{"message": "user " + c.QueryParam("userId") + " is not belongs to chat " + c.QueryParam("chatId")})
+	}
+
+	vh.notificator.NotifyAboutKick(c, chatId, userId)
+	return c.NoContent(200)
+
+}

@@ -28,3 +28,4 @@ export const OPEN_PERMISSIONS_WARNING_MODAL = "openPermissionsWarningModal";
 export const SHARE_SCREEN_START = "shareScreenStart";
 export const SHARE_SCREEN_STOP = "shareScreenStop";
 export const SHARE_SCREEN_STATE_CHANGED = "shareScreenStateChanged";
+export const VIDEO_CALL_KICKED = "videoCallKicked";

@@ -265,13 +265,15 @@ func (h *Handler) checkAccess(client *http.Client, userIdString string, chatIdSt
 func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 	chatId := r.URL.Query().Get("chatId")
 	userToKickId := r.URL.Query().Get("userId")
-	h.kick(chatId, userToKickId)
+	if h.kick(chatId, userToKickId) != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
-func (h *Handler) kick(chatId, userId string) {
+func (h *Handler) kick(chatId, userId string) error {
 	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId)) // ChatVideo.vue
 	if session == nil {
-		return
+		return nil
 	}
 	for _, peerF := range session.Peers() {
 		if userId == h.getFromConnMap(peerF) {
@@ -281,4 +283,29 @@ func (h *Handler) kick(chatId, userId string) {
 			h.notify(chatId)
 		}
 	}
+
+	// send notification through chat's personal centrifuge channel
+	url0 := h.conf.ChatConfig.ChatUrlConfig.Base
+	url1 := h.conf.ChatConfig.ChatUrlConfig.Kick
+
+	fullUrl := fmt.Sprintf("%v%v?userId=%v&chatId=%v", url0, url1, userId, chatId)
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		logger.Error(err, "Failed during parse chat url")
+		return err
+	}
+
+	req := &http.Request{Method: http.MethodPut, URL: parsedUrl}
+
+	response, err := h.client.Do(req)
+	if err != nil {
+		logger.Error(err, "Transport error during kicking")
+		return err
+	} else {
+		if response.StatusCode != http.StatusOK {
+			logger.Error(err, "Http Error during kicking", "httpCode", response.StatusCode, "chatId", chatId)
+			return err
+		}
+	}
+	return nil
 }

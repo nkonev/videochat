@@ -43,11 +43,11 @@
         USER_TYPING,
         VIDEO_LOCAL_ESTABLISHED,
         USER_PROFILE_CHANGED,
-        LOGGED_IN, LOGGED_OUT, VIDEO_CALL_CHANGED
+        LOGGED_IN, LOGGED_OUT, VIDEO_CALL_CHANGED, VIDEO_CALL_KICKED
     } from "./bus";
     import {phoneFactory, titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
-    import {chat_list_name, videochat_name} from "./routes";
+    import {chat_list_name, chat_name, videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
@@ -310,6 +310,12 @@
             unsubscribe() {
                 this.chatMessagesSubscription.unsubscribe();
             },
+            onVideoCallKicked(e) {
+                if (e.chatId == this.chatId) {
+                    console.log("kicked");
+                    this.$router.push({name: chat_name});
+                }
+            },
         },
         mounted() {
             this.subscribe();
@@ -326,6 +332,7 @@
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(LOGGED_IN, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
+            bus.$on(VIDEO_CALL_KICKED, this.onVideoCallKicked);
         },
         beforeDestroy() {
             bus.$off(MESSAGE_ADD, this.onNewMessage);
@@ -337,6 +344,7 @@
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(LOGGED_IN, this.onLoggedIn);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
+            bus.$off(VIDEO_CALL_KICKED, this.onVideoCallKicked);
 
             this.unsubscribe();
         },

@@ -12,7 +12,7 @@ import bus, {
   MESSAGE_EDITED,
   UNREAD_MESSAGES_CHANGED,
   USER_PROFILE_CHANGED,
-  CHANGE_WEBSOCKET_STATUS, LOGGED_OUT, LOGGED_IN, VIDEO_CALL_INVITED
+  CHANGE_WEBSOCKET_STATUS, LOGGED_OUT, LOGGED_IN, VIDEO_CALL_INVITED, VIDEO_CALL_KICKED
 } from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
@@ -80,6 +80,9 @@ const vm = new Vue({
       } else if (getData(ctx).type === 'video_call_invitation') {
         const d = getProperData(ctx);
         bus.$emit(VIDEO_CALL_INVITED, d);
+      } else if (getData(ctx).type === 'video_kick') {
+        const d = getProperData(ctx);
+        bus.$emit(VIDEO_CALL_KICKED, d);
       }
 
     });

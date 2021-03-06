@@ -23,6 +23,7 @@ type ChatUrlConfig struct {
 	Base string `mapstructure:"base"`
 	Access string `mapstructure:"access"`
 	Notify string `mapstructure:"notify"`
+	Kick string `mapstructure:"kick"`
 }
 
 
