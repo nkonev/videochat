@@ -188,14 +188,10 @@ func main() {
 	handler := handlers.NewHandler(client, &upgrader, s, &conf)
 	r := mux.NewRouter()
 	// SFU websocket endpoint
-	r.Handle("/video/ws", http.HandlerFunc(handler.SfuHandler)).Methods("GET")
-	// GET /api/video/users?chatId=${this.chatId} - responds users count
-	r.Handle("/video/users", http.HandlerFunc(handler.Users)).Methods("GET")
-	// PUT /api/video/notify?chatId=${this.chatId}` -> "/internal/video/notify"
-	r.Handle("/video/notify", http.HandlerFunc(handler.NotifyChatParticipants)).Methods("PUT")
-	// GET `/api/video/config`
+	r.Handle("/video/{chatId}/ws", http.HandlerFunc(handler.SfuHandler)).Methods("GET")
+	r.Handle("/video/{chatId}/users", http.HandlerFunc(handler.Users)).Methods("GET")
+	r.Handle("/video/{chatId}/notify", http.HandlerFunc(handler.NotifyChatParticipants)).Methods("PUT")
 	r.Handle("/video/config", http.HandlerFunc(handler.Config)).Methods("GET")
-	// PUT /internal/kick?chatId=${this.chatId}&userId=`
 	r.Handle("/internal/kick", http.HandlerFunc(handler.Kick)).Methods("PUT")
 
 	r.PathPrefix("/").Methods("GET").HandlerFunc(handler.Static())

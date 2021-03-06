@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pion/ion-sfu/cmd/signal/json-rpc/server"
 	log "github.com/pion/ion-sfu/pkg/logger"
@@ -66,10 +67,10 @@ func NewHandler(
 
 var 	logger         = log.New()
 
-// GET /video/ws
 func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	chatId := vars["chatId"]
 	userId := r.Header.Get("X-Auth-UserId")
-	chatId := r.URL.Query().Get("chatId")
 	if !h.checkAccess(h.client, userId, chatId) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -118,10 +119,10 @@ func (h *Handler) getFromConnMap(peer0 *sfu.Peer) string {
 	}
 }
 
-// GET /api/video/users?chatId=${this.chatId} - responds users count
 func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	chatId := vars["chatId"]
 	userId := r.Header.Get("X-Auth-UserId")
-	chatId := r.URL.Query().Get("chatId")
 	if !h.checkAccess(h.client, userId, chatId) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -187,10 +188,10 @@ func (h *Handler) notify(chatId string) error {
 	return nil
 }
 
-// PUT /api/video/notify?chatId=${this.chatId}` -> "/internal/video/notify"
 func (h *Handler) NotifyChatParticipants(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	chatId := vars["chatId"]
 	userId := r.Header.Get("X-Auth-UserId")
-	chatId := r.URL.Query().Get("chatId")
 	if !h.checkAccess(h.client, userId, chatId) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -214,7 +215,6 @@ func (h *Handler) peerIsClosed(peer *sfu.Peer) bool {
 	return peer.Publisher().SignalingState() == webrtc.SignalingStateClosed
 }
 
-// GET `/api/video/config`
 func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	marshal, err := json.Marshal(h.conf.FrontendConfig)
@@ -262,7 +262,6 @@ func (h *Handler) checkAccess(client *http.Client, userIdString string, chatIdSt
 	}
 }
 
-// PUT `/internal/kick`
 func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 	chatId := r.URL.Query().Get("chatId")
 	userToKickId := r.URL.Query().Get("userId")

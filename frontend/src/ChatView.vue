@@ -257,7 +257,7 @@
                         this.goToChatList();
                     }
                 }).then(() => {
-                    axios.get(`/api/video/users?chatId=${this.chatId}`)
+                    axios.get(`/api/video/${this.chatId}/users`)
                         .then(response => response.data)
                         .then(data => {
                             bus.$emit(VIDEO_CALL_CHANGED, data);

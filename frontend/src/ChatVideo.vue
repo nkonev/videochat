@@ -72,7 +72,7 @@
                 console.info("Created webrtc config", JSON.stringify(config));
 
                 this.signalLocal = new IonSFUJSONRPCSignal(
-                    getWebsocketUrlPrefix()+`/api/video/ws?chatId=${this.chatId}`
+                    getWebsocketUrlPrefix()+`/api/video/${this.chatId}/ws`
                 );
                 this.remotesDiv = document.getElementById("video-container");
 
@@ -176,12 +176,12 @@
 
             notifyAboutJoining() {
                 if (this.chatId) {
-                    axios.put(`/api/video/notify?chatId=${this.chatId}`);
+                    axios.put(`/api/video/${this.chatId}/notify`);
                 }
             },
             notifyAboutLeaving() {
                 if (this.chatId) {
-                    axios.put(`/api/video/notify?chatId=${this.chatId}`);
+                    axios.put(`/api/video/${this.chatId}/notify`);
                 }
             },
             onStartScreenSharing() {
