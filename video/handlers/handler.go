@@ -74,7 +74,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId := vars["chatId"]
 	userId := r.Header.Get("X-Auth-UserId")
-	if !h.checkAccess(h.client, userId, chatId) {
+	if !h.checkAccess(userId, chatId) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -127,7 +127,7 @@ func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId := vars["chatId"]
 	userId := r.Header.Get("X-Auth-UserId")
-	if !h.checkAccess(h.client, userId, chatId) {
+	if !h.checkAccess(userId, chatId) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -184,6 +184,7 @@ func (h *Handler) notify(chatId string) error {
 		logger.Error(err, "Transport error during notifying")
 		return err
 	} else {
+		defer response.Body.Close()
 		if response.StatusCode != http.StatusOK {
 			logger.Error(err, "Http Error during notifying", "httpCode", response.StatusCode, "chatId", chatId)
 			return err
@@ -196,7 +197,7 @@ func (h *Handler) NotifyChatParticipants(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	chatId := vars["chatId"]
 	userId := r.Header.Get("X-Auth-UserId")
-	if !h.checkAccess(h.client, userId, chatId) {
+	if !h.checkAccess(userId, chatId) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -247,15 +248,16 @@ func (h *Handler) Static() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) checkAccess(client *http.Client, userIdString string, chatIdString string) bool {
+func (h *Handler) checkAccess(userIdString string, chatIdString string) bool {
 	url0 := h.conf.ChatConfig.ChatUrlConfig.Base
 	url1 := h.conf.ChatConfig.ChatUrlConfig.Access
 
-	response, err := client.Get(url0 + url1 + "?userId=" + userIdString + "&chatId=" + chatIdString)
+	response, err := h.client.Get(url0 + url1 + "?userId=" + userIdString + "&chatId=" + chatIdString)
 	if err != nil {
 		logger.Error(err, "Transport error during checking access")
 		return false
 	}
+	defer response.Body.Close()
 	if response.StatusCode == http.StatusOK {
 		return true
 	} else if response.StatusCode == http.StatusUnauthorized {
@@ -309,6 +311,7 @@ func (h *Handler) kick(chatId, userId string, notifyBool bool) error {
 			logger.Error(err, "Transport error during kicking")
 			return err
 		} else {
+			defer response.Body.Close()
 			if response.StatusCode != http.StatusOK {
 				logger.Error(err, "Http Error during kicking", "httpCode", response.StatusCode, "chatId", chatId)
 				return err
