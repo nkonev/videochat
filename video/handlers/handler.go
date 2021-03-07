@@ -277,6 +277,7 @@ func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) kick(chatId, userId string, notifyBool bool) error {
+	logger.Info("Invoked kick", "chatId", chatId, "userId", userId, "notify", notifyBool)
 	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId)) // ChatVideo.vue
 	if session == nil {
 		return nil

@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -10,6 +11,7 @@ import (
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
+	"time"
 )
 
 type VideoHandler struct {
@@ -117,12 +119,27 @@ func (vh VideoHandler) Kick(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You have no access to this chat"})
 	}
 
+	vh.notificator.NotifyAboutKick(c, chatId, userId)
 
-	err = vh.restClient.Kick(chatId, userId)
+	go vh.kickVideoStreamWithWait(chatId, userId)
+
+	return c.NoContent(200)
+}
+
+func (vh VideoHandler) kickVideoStreamWithWait(chatId, userId int64) {
+	duration := viper.GetDuration("video.kickVideoAfter")
+	if duration == 0 {
+		logger.Logger.Warnf("video.kickVideoAfter is not set, skipping invoking kickVideoStream()")
+		return
+	}
+	time.Sleep(duration)
+	vh.kickVideoStream(chatId, userId)
+}
+
+func (vh VideoHandler) kickVideoStream(chatId, userId int64) {
+	logger.Logger.Infof("video kick chatId=%v, userId=%v", chatId, userId)
+	err := vh.restClient.Kick(chatId, userId)
 	if err != nil {
 		logger.Logger.Warnf("Non-successful invoking video kick %v", err)
 	}
-
-	vh.notificator.NotifyAboutKick(c, chatId, userId)
-	return c.NoContent(200)
 }

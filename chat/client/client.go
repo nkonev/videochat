@@ -113,7 +113,7 @@ func (rc RestClient) Kick(chatId int64, userId int64) error {
 	contentType := "application/json;charset=UTF-8"
 	url0 := viper.GetString("video.url.base")
 	url1 := viper.GetString("video.url.kick")
-	fullUrl := fmt.Sprintf("%v%v&chatId=%v&userId=%v", url0, url1, chatId, userId)
+	fullUrl := fmt.Sprintf("%v%v?chatId=%v&userId=%v", url0, url1, chatId, userId)
 
 	requestHeaders := map[string][]string{
 		"Accept-Encoding": {"gzip, deflate"},

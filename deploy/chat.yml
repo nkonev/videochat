@@ -47,6 +47,7 @@ aaa:
     maxActive: 10
 
 video:
+  kickVideoAfter: 10s
   url:
     base: "http://video:7000"
     kick: "/internal/kick"
