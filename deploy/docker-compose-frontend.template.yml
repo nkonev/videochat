@@ -12,15 +12,15 @@ services:
         delay: 20s
       labels:
         - "traefik.enable=true"
-        - "traefik.http.services.nginx-service.loadbalancer.server.port=8082"
-        - "traefik.http.routers.nginx-router.rule=PathPrefix(`/`)"
-        - "traefik.http.routers.nginx-router.entrypoints=http"
-        - "traefik.http.middlewares.nginx-retry-middleware.retry.attempts=4"
-        - "traefik.http.routers.nginx-router.middlewares=nginx-retry-middleware"
+        - "traefik.http.services.frontend-service.loadbalancer.server.port=8082"
+        - "traefik.http.routers.frontend-router.rule=PathPrefix(`/`)"
+        - "traefik.http.routers.frontend-router.entrypoints=http"
+        - "traefik.http.middlewares.frontend-retry-middleware.retry.attempts=4"
+        - "traefik.http.routers.frontend-router.middlewares=frontend-retry-middleware"
     logging:
       driver: "journald"
       options:
-        tag: chat-nginx
+        tag: chat-frontend
 
 networks:
   backend:

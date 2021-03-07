@@ -1,6 +1,6 @@
 http:
   services:
-    nginx-service:
+    frontend-service:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:8082
@@ -22,9 +22,9 @@ http:
           - url: http://host.docker.internal:7000
 
   routers:
-    nginx-router:
+    frontend-router:
       rule: "PathPrefix(`/`)"
-      service: nginx-service
+      service: frontend-service
       middlewares:
         - "retry-middleware"
     aaa-router:

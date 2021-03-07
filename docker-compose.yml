@@ -24,7 +24,7 @@ services:
         max-file: "1"
 
   # static server
-  nginx:
+  frontend:
     image: nginx:1.16.0
     restart: unless-stopped
     ports:
