@@ -128,7 +128,7 @@ func (vh VideoHandler) Kick(c echo.Context) error {
 
 func (vh VideoHandler) kickVideoStreamWithWait(chatId, userId int64) {
 	duration := viper.GetDuration("video.kickVideoAfter")
-	if duration == 0 {
+	if duration <= 0 {
 		logger.Logger.Warnf("video.kickVideoAfter is not set, skipping invoking kickVideoStream()")
 		return
 	}
