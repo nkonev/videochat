@@ -32,8 +32,11 @@ type Handler struct {
 	httpFs      *http.FileSystem
 	connections connectionsLockableMap
 }
-
-type connectionWithData map[*sfu.Peer]string
+type extendedConnectionInfo struct {
+	userId string
+	websocketConnection *websocket.Conn
+}
+type connectionWithData map[*sfu.Peer]extendedConnectionInfo
 type connectionsLockableMap struct {
 	sync.RWMutex
 	connectionWithData
@@ -85,8 +88,8 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	peer0 := sfu.NewPeer(h.sfu)
-	h.addToConnMap(peer0, userId)
-	defer h.removeFromConnMap(peer0, userId)
+	h.addToConnMap(peer0, userId, c)
+	defer h.removeFromConnMap(peer0, userId, c)
 	p := server.NewJSONSignal(peer0, logger)
 	defer p.Close()
 
@@ -94,17 +97,18 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	<-jc.DisconnectNotify()
 }
 
-func (h *Handler) addToConnMap(peer0 *sfu.Peer, userId string) {
+func (h *Handler) addToConnMap(peer0 *sfu.Peer, userId string, conn *websocket.Conn) {
 	logger.Info("Adding peer to map", "peer", peer0.ID(), "userId", userId)
 	h.connections.Lock()
 	defer h.connections.Unlock()
-	h.connections.connectionWithData[peer0] = userId
+	h.connections.connectionWithData[peer0] = extendedConnectionInfo{userId, conn}
 }
 
-func (h *Handler) removeFromConnMap(peer0 *sfu.Peer, userId string) {
+func (h *Handler) removeFromConnMap(peer0 *sfu.Peer, userId string, conn *websocket.Conn) {
 	logger.Info("Removing peer from map", "peer", peer0.ID(), "userId", userId)
 	h.connections.Lock()
 	defer h.connections.Unlock()
+	conn.Close()
 	delete(h.connections.connectionWithData, peer0)
 }
 
@@ -113,7 +117,7 @@ func (h *Handler) getFromConnMap(peer0 *sfu.Peer) string {
 	defer h.connections.RUnlock()
 	s, ok := h.connections.connectionWithData[peer0]
 	if ok {
-		return s
+		return s.userId
 	} else {
 		return ""
 	}
@@ -281,7 +285,6 @@ func (h *Handler) kick(chatId, userId string, notifyBool bool) error {
 		if userId == h.getFromConnMap(peerF) {
 			peerF.Close()
 			session.RemovePeer(peerF.ID())
-			h.removeFromConnMap(peerF, userId)
 			h.notify(chatId)
 		}
 	}
