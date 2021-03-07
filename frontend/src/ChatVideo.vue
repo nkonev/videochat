@@ -40,7 +40,8 @@
                 signalLocal: null,
                 dataChannel: null,
                 localMedia: null,
-                localPublisherKey: 1
+                localPublisherKey: 1,
+                closingStarted: false
             }
         },
         props: ['chatDto'],
@@ -78,6 +79,12 @@
 
                 this.clientLocal = new Client(this.signalLocal, config);
 
+                this.signalLocal.onerror = () => { console.error("Error in signal"); }
+                this.signalLocal.onclose = () => {
+                  console.info("Signal is closed, something gonna happen");
+                  this.tryRestartVideoProcess();
+                }
+
                 this.signalLocal.onopen = () => {
                     this.clientLocal.join(`chat${this.chatId}`).then(()=>{
                         this.dataChannel = this.clientLocal.createDataChannel(`chat${this.chatId}`);
@@ -86,11 +93,12 @@
                             .then(()=>{
                               this.notifyAboutJoining();
                             })
-                            .catch(console.error);
+                            .catch(reason => {
+                              console.error("Error during publishing camera stream, restarting...")
+                              this.tryRestartVideoProcess();
+                            });
                     })
                 }
-                this.signalLocal.onerror = () => { console.error("Error in signal"); }
-                this.signalLocal.onclose = () => { console.info("Signal is closed"); }
 
                 // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
@@ -106,24 +114,30 @@
                             this.streams[stream.id] = {stream, component};
 
                             stream.onremovetrack = () => {
-                                this.streams[stream.id] = null;
-                                console.log("removed track", track.id, "for stream", stream.id);
-                                try {
-                                    this.remotesDiv.removeChild(component.$el);
-                                    component.$destroy();
-                                } catch (e) {
-                                    console.debug("Something wrong on removing child", e, component.$el, this.remotesDiv);
-                                }
+                                this.removeTrack(stream.id, track.id, component)
                             };
 
                             this.askUserNameWithRetries(stream.id);
                         }
                     }
                 };
-
-                window.addEventListener('beforeunload', this.leaveSession)
+            },
+            removeTrack(streamId, trackId, component) {
+              console.log("removed track", trackId, "for stream", streamId);
+              try {
+                this.remotesDiv.removeChild(component.$el);
+                component.$destroy();
+              } catch (e) {
+                console.debug("Something wrong on removing child", e, component.$el, this.remotesDiv);
+              }
+              delete this.streams[streamId];
             },
             leaveSession() {
+                for (const prop in this.streams) {
+                    console.log("Cleaning stream " + prop);
+                    const component = this.streams[prop].component;
+                    this.removeTrack(prop, '_not_set', component);
+                }
                 if (this.localMedia) {
                     this.localMedia.getTracks().forEach(t => t.stop());
                 }
@@ -138,7 +152,6 @@
 
                 bus.$emit(VIDEO_CALL_CHANGED, {usersCount: 0}); // restore initial state
                 this.notifyAboutLeaving();
-                window.removeEventListener('beforeunload', this.leaveSession);
             },
             askUserNameWithRetries(streamId) {
                 const toSend = {[FIELD_TYPE]: DATA_EVENT_GET_USERNAME_FOR, [FIELD_STREAM_ID]: streamId};
@@ -176,12 +189,16 @@
 
             notifyAboutJoining() {
                 if (this.chatId) {
-                    axios.put(`/api/video/${this.chatId}/notify`);
+                    axios.put(`/api/video/${this.chatId}/notify`).catch(error => {
+                      console.log(error.response)
+                    })
                 }
             },
             notifyAboutLeaving() {
                 if (this.chatId) {
-                    axios.put(`/api/video/${this.chatId}/notify`);
+                    axios.put(`/api/video/${this.chatId}/notify`).catch(error => {
+                      console.log(error.response)
+                    });
                 }
             },
             onStartScreenSharing() {
@@ -192,7 +209,10 @@
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
                 this.getAndPublishScreen()
-                    .catch(console.error);
+                    .catch(reason => {
+                      console.error("Error during publishing screen stream, restarting...")
+                      this.tryRestartVideoProcess();
+                    });
             },
             onStopScreenSharing() {
                 this.localMedia.unpublish();
@@ -228,21 +248,49 @@
                     this.clientLocal.publish(media);
                     bus.$emit(SHARE_SCREEN_STATE_CHANGED, true);
                 });
+            },
+            startVideoProcess() {
+                this.getConfig()
+                    .catch(reason => {
+                      console.error("Error during get config, restarting...")
+                      this.tryRestartVideoProcess();
+                    })
+                    .then(config => {
+                    this.joinSession(config);
+                })
+            },
+            tryRestartVideoProcess() {
+              setTimeout(() => {
+                if (!this.closingStarted) {
+                  console.info("Will restart video process after 1 sec");
+                  try {
+                    this.leaveSession();
+                  } catch (e) {
+                    console.warn("Some problems during leaving session, ignoring them...")
+                  }
+                  try {
+                    this.startVideoProcess();
+                  } catch (e) {
+                    console.error("Error during starting video process, restarting...")
+                    this.tryRestartVideoProcess();
+                  }
+                } else {
+                  console.info("Will not restart video process because closingStarted");
+                }
+              }, 1000);
             }
-
         },
         mounted() {
+            this.closingStarted = false;
             bus.$emit(VIDEO_LOCAL_ESTABLISHED);
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, false));
-
-            this.getConfig().then(config => {
-                this.joinSession(config);
-            })
-
+            window.addEventListener('beforeunload', this.leaveSession)
+            this.startVideoProcess();
         },
         beforeDestroy() {
             bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true));
-
+            this.closingStarted = true;
+            window.removeEventListener('beforeunload', this.leaveSession);
             this.leaveSession();
         },
         created() {
