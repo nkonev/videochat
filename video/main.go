@@ -19,20 +19,9 @@ import (
 	"os"
 )
 
-// logC need to get logger options from config
-type logC struct {
-	Config log.GlobalConfig `mapstructure:"log"`
-}
-
 var (
 	conf        = config.ExtendedConfig{}
 	file        string
-	cert        string
-	key         string
-	addr        string
-	metricsAddr string
-	verbosityLevel int
-	logConfig      logC
 	logger         = log.New()
 )
 
@@ -43,11 +32,7 @@ const (
 func showHelp() {
 	fmt.Printf("Usage:%s {params}\n", os.Args[0])
 	fmt.Println("      -c {config file}")
-	fmt.Println("      -cert {cert file}")
-	fmt.Println("      -key {key file}")
-	fmt.Println("      -a {listen addr}")
 	fmt.Println("      -h (show help info)")
-	fmt.Println("      -v {0-10} (verbosity level, default 0)")
 }
 
 func load() bool {
@@ -91,7 +76,7 @@ func load() bool {
 		return false
 	}
 
-	if logConfig.Config.V < 0 {
+	if conf.LogC.V < 0 {
 		logger.Error(nil, "Logger V-Level cannot be less than 0")
 		return false
 	}
@@ -105,11 +90,6 @@ func load() bool {
 
 func parse() bool {
 	flag.StringVar(&file, "config", "video/config.yml", "config file")
-	flag.StringVar(&cert, "cert", "", "cert file")
-	flag.StringVar(&key, "key", "", "key file")
-	flag.StringVar(&addr, "a", ":7001", "address to use")
-	flag.StringVar(&metricsAddr, "m", ":8101", "metrics to use")
-	flag.IntVar(&verbosityLevel, "v", 0, "verbosity level, higher value - more logs")
 	help := flag.Bool("h", false, "help info")
 	flag.Parse()
 	if !load() {
@@ -160,12 +140,7 @@ func main() {
 		os.Exit(-1)
 	}
 
-	// Check that the -v is not set (default -1)
-	if verbosityLevel < 0 {
-		verbosityLevel = logConfig.Config.V
-	}
-
-	log.SetGlobalOptions(log.GlobalConfig{V: verbosityLevel})
+	log.SetGlobalOptions(conf.LogC)
 	logger.Info("--- Starting SFU Node ---")
 
 	// Pass logr instance
@@ -196,15 +171,15 @@ func main() {
 
 	r.PathPrefix("/").Methods("GET").HandlerFunc(handler.Static())
 
-	go startMetrics(metricsAddr)
+	go startMetrics(conf.HttpServerConfig.MetricsAddr)
 
 	var err error
-	if key != "" && cert != "" {
-		logger.Info("Started listening", "addr", "https://"+addr)
-		err = http.ListenAndServeTLS(addr, cert, key, r)
+	if conf.HttpServerConfig.Key != "" && conf.HttpServerConfig.Cert != "" {
+		logger.Info("Started listening", "addr", "https://"+conf.HttpServerConfig.Addr)
+		err = http.ListenAndServeTLS(conf.HttpServerConfig.Addr, conf.HttpServerConfig.Cert, conf.HttpServerConfig.Key, r)
 	} else {
-		logger.Info("Started listening", "addr", "http://"+addr)
-		err = http.ListenAndServe(addr, r)
+		logger.Info("Started listening", "addr", "http://"+conf.HttpServerConfig.Addr)
+		err = http.ListenAndServe(conf.HttpServerConfig.Addr, r)
 	}
 	if err != nil {
 		panic(err)
