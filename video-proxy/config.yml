@@ -1,0 +1,2 @@
+hosts: ["localhost:7000"]
+listenAddress: ":7001"
