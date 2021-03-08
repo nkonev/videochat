@@ -15,14 +15,72 @@ import (
 
 var Logger = log.New()
 
-type VideoReplicasProvider interface {
-	GetReplicas() []string
+type ReplicaAndProxy struct {
+	Url *url.URL
+	Proxy *httputil.ReverseProxy
 }
 
-type FileVideoReplicasProvider struct { }
+type VideoReplicasProvider interface {
+	GetReplicaByUrl(url0 *url.URL) *ReplicaAndProxy
+}
 
-func (r FileVideoReplicasProvider) GetReplicas() []string {
-	return viper.GetStringSlice("urls")
+type FileVideoReplicasProvider struct {
+	Hashring *hashring.HashRing
+	CachedUrls []ReplicaAndProxy
+}
+
+func (r *FileVideoReplicasProvider) Init() {
+	urls := viper.GetStringSlice("urls")
+	var ret []ReplicaAndProxy
+	for _, u := range urls {
+		url0, err := url.Parse(u)
+		if err != nil {
+			Logger.Warnf("unable to parse %v, skipping", u)
+			continue
+		} else {
+			ret = append(ret, ReplicaAndProxy{
+				Url:          url0,
+				Proxy: httputil.NewSingleHostReverseProxy(url0),
+			})
+		}
+	}
+	r.CachedUrls = ret
+	r.Hashring = hashring.New(urls)
+}
+
+
+func (r *FileVideoReplicasProvider) GetReplicaByUrl(url0 *url.URL) *ReplicaAndProxy {
+	ring := r.Hashring
+	path := url0.Path
+	// "/video/{chatId}/ws"
+	split := strings.Split(path, "/")
+	if len(split) < 3 {
+		Logger.Warnf("Unable to get chatId from url, returning default replica")
+		return r.getDefaultReplica()
+	}
+	chatId := split[2]
+	node, ok := ring.GetNode(chatId)
+	if !ok {
+		Logger.Warnf("Unable to get node from hashring, returning replica")
+		return r.getDefaultReplica()
+	}
+
+	for _, existing := range r.CachedUrls {
+		if existing.Url.String() == node {
+			Logger.Printf("Balancing url %v - selecting %v for %v", url0, node, chatId)
+			return &existing
+		}
+	}
+	Logger.Warnf("Unable to find replica for %v", url0)
+	return nil
+}
+
+func (r *FileVideoReplicasProvider) getDefaultReplica() *ReplicaAndProxy{
+	if len(r.CachedUrls) == 0 {
+		Logger.Warnf("Unable to get default replica")
+		return nil
+	}
+	return &r.CachedUrls[0]
 }
 
 func main() {
@@ -41,56 +99,35 @@ func main() {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 
-
 	address := viper.GetString("listenAddress")
 	Logger.Printf("Starting on address %v", address)
 	provider := &FileVideoReplicasProvider{}
+	provider.Init()
+
 	http.HandleFunc("/", handleRequestAndRedirect(provider))
 	if err := http.ListenAndServe(address, nil); err != nil {
 		panic(err)
 	}
 }
 
-type Handler struct {
-
-}
-
 // Given a request send it to the appropriate url
 func handleRequestAndRedirect(r VideoReplicasProvider) func (res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
-		url0 := getProxiedReplica(r, req)
-		serveReverseProxy(url0, res, req)
+		serveReverseProxy(r.GetReplicaByUrl(req.URL), res, req)
 	}
-}
-
-// Get the url for a given proxy condition
-func getProxiedReplica(r VideoReplicasProvider, req *http.Request) string {
-	serversInRing := r.GetReplicas()
-	ring := hashring.New(serversInRing)
-	path := req.URL.Path
-	// "/video/{chatId}/ws"
-	split := strings.Split(path, "/")
-	if len(split) < 3 {
-		Logger.Printf("Unable to get chatId from url, returnig 0")
-		return serversInRing[0]
-	}
-	chat := split[2]
-	node, ok := ring.GetNode(chat)
-	if !ok {
-		Logger.Printf("Unable to get node from hashring, returnig 0")
-		return serversInRing[0]
-	}
-	Logger.Printf("Balancing url %v - selecting %v for %v", req.URL, node, chat)
-	return node
 }
 
 // Serve a reverse proxy for a given url
-func serveReverseProxy(target string, res http.ResponseWriter, req *http.Request) {
-	// parse the url
-	url0, _ := url.Parse(target)
+func serveReverseProxy(target *ReplicaAndProxy, res http.ResponseWriter, req *http.Request) {
+	if target == nil {
+		res.WriteHeader(http.StatusBadGateway)
+		return
+	}
 
+	// parse the url
+	url0 := target.Url
 	// create the reverse proxy
-	proxy := httputil.NewSingleHostReverseProxy(url0)
+	proxy := target.Proxy
 
 	// Update the headers to allow for SSL redirection
 	req.URL.Host = url0.Host
