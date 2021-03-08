@@ -16,7 +16,7 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:1236
-    video-service:
+    video-proxy-service:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:7000
@@ -48,7 +48,7 @@ http:
         - "retry-middleware"
     viedo-router:
       rule: "PathPrefix(`/api/video`)"
-      service: video-service
+      service: video-proxy-service
       middlewares:
         - "auth-middleware"
         - "api-strip-prefix-middleware"
