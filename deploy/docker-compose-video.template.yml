@@ -11,18 +11,7 @@ services:
         parallelism: 1
         delay: 20s
       labels:
-        - "traefik.enable=true"
-        - "traefik.http.services.video-service.loadbalancer.server.port=7000"
-        - "traefik.http.routers.video-router.rule=PathPrefix(`/api/video`)"
-        - "traefik.http.routers.video-router.entrypoints=http"
-        - "traefik.http.middlewares.video-auth-middleware.forwardauth.address=http://aaa:8060/internal/profile"
-        - "traefik.http.middlewares.video-auth-middleware.forwardauth.authRequestHeaders=Cookie"
-        - "traefik.http.middlewares.video-auth-middleware.forwardauth.authResponseHeadersRegex=^X-Auth-"
-        - "traefik.http.middlewares.video-stripprefix-middleware.stripprefix.prefixes=/api,/video"
-        - "traefik.http.routers.video-router.middlewares=video-auth-middleware,video-stripprefix-middleware"
-        - "traefik.http.routers.video-version-router.rule=Path(`/video/git.json`)"
-        - "traefik.http.routers.video-version-router.entrypoints=http"
-        - "traefik.http.routers.video-version-router.middlewares=video-auth-middleware,video-stripprefix-middleware"
+        - "traefik.enable=false"
     ports:
       # turn port
       - target: 3478

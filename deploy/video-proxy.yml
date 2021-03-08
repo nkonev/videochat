@@ -1,0 +1,2 @@
+urls: ["http://video:7001"]
+listenAddress: ":7000"

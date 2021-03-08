@@ -1,0 +1,36 @@
+version: '3.7'
+
+services:
+  video-proxy:
+    image: nkonev/chat-video-proxy:latest
+    networks:
+      backend:
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 20s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.video-proxy-service.loadbalancer.server.port=7000"
+        - "traefik.http.routers.video-proxy-router.rule=PathPrefix(`/api/video`)"
+        - "traefik.http.routers.video-proxy-router.entrypoints=http"
+        - "traefik.http.middlewares.video-proxy-auth-middleware.forwardauth.address=http://aaa:8060/internal/profile"
+        - "traefik.http.middlewares.video-proxy-auth-middleware.forwardauth.authRequestHeaders=Cookie"
+        - "traefik.http.middlewares.video-proxy-auth-middleware.forwardauth.authResponseHeadersRegex=^X-Auth-"
+        - "traefik.http.middlewares.video-proxy-stripprefix-middleware.stripprefix.prefixes=/api,/video"
+        - "traefik.http.routers.video-proxy-router.middlewares=video-proxy-auth-middleware,video-proxy-stripprefix-middleware"
+        - "traefik.http.routers.video-proxy-version-router.rule=Path(`/video-proxy/git.json`)"
+        - "traefik.http.routers.video-proxy-version-router.entrypoints=http"
+        - "traefik.http.routers.video-proxy-version-router.middlewares=video-proxy-auth-middleware,video-proxy-stripprefix-middleware"
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-video-proxy
+    volumes:
+      - ./video-proxy.yml:/etc/video-proxy.yml
+    command: ["-config=/etc/video-proxy.yml"]
+
+networks:
+  backend:
+    driver: overlay
