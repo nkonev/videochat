@@ -142,6 +142,8 @@
     import {mapGetters} from 'vuex'
     import {CHANGE_SEARCH_STRING, FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
     import bus, {
+        AUDIO_MUTED,
+        AUDIO_START_MUTING,
         CHANGE_PHONE_BUTTON,
         CHANGE_TITLE,
         CHANGE_WEBSOCKET_STATUS,
@@ -151,7 +153,7 @@
         OPEN_PERMISSIONS_WARNING_MODAL,
         SHARE_SCREEN_START, SHARE_SCREEN_STATE_CHANGED, SHARE_SCREEN_STOP,
         VIDEO_CALL_CHANGED,
-        VIDEO_CALL_INVITED,
+        VIDEO_CALL_INVITED, VIDEO_COMPONENT_DESTROYED, VIDEO_MUTED, VIDEO_START_MUTING,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -169,6 +171,11 @@
             return {
                 title: "",
                 appBarItems: [
+                    { title: 'Unmute audio', icon: 'mdi-microphone', clickFunction: this.toggleMuteAudio, requireAuthenticated: true, displayCondition: this.shouldDisplayAudioUnmute},
+                    { title: 'Mute audio', icon: 'mdi-microphone-off', clickFunction: this.toggleMuteAudio, requireAuthenticated: true, displayCondition: this.shouldDisplayAudioMute},
+                    { title: 'Unmute video', icon: 'mdi-video', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoUnmute},
+                    { title: 'Mute video', icon: 'mdi-video-off', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoMute},
+
                     { title: 'New chat', icon: 'mdi-plus-circle-outline', clickFunction: this.createChat, requireAuthenticated: true},
                     { title: 'Chats', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
                     { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
@@ -190,7 +197,9 @@
                 invitedVideoChatId: 0,
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
-                shareScreen: false
+                shareScreen: false,
+                audioMuted: false,
+                videoMuted: false
             }
         },
         components:{
@@ -238,6 +247,12 @@
                     } else {
                         return true
                     }
+                }).filter((value, index) => {
+                    if (value.displayCondition) {
+                        return value.displayCondition();
+                    } else {
+                        return true
+                    }
                 })
             },
             changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, chatId, chatUsersCount}) {
@@ -253,17 +268,21 @@
                 if (!show) {
                     this.showCallButton = false;
                     this.showHangButton = false;
-                    this.shareScreen = false;
                 } else {
                     if (call) {
                         this.showCallButton = true;
                         this.showHangButton = false;
-                        this.shareScreen = false;
                     } else {
                         this.showCallButton = false;
                         this.showHangButton = true;
                     }
                 }
+            },
+            onVideoDestroyed() {
+                this.chatUsersCount = 0;
+                this.shareScreen = false;
+                this.audioMuted = false;
+                this.videoMuted = false;
             },
             createCall() {
                 console.log("createCall");
@@ -303,6 +322,33 @@
             },
             onShareScreenStateChanged(newState) {
                 this.shareScreen = newState;
+            },
+            isVideoRoute() {
+                return this.$route.name == videochat_name
+            },
+            toggleMuteAudio() {
+                bus.$emit(AUDIO_START_MUTING, !this.audioMuted)
+            },
+            toggleMuteVideo() {
+                bus.$emit(VIDEO_START_MUTING, !this.videoMuted)
+            },
+            onAudioMuteChanged(newState) {
+                this.audioMuted = newState;
+            },
+            onVideoMuteChanged(newState) {
+                this.videoMuted = newState;
+            },
+            shouldDisplayAudioUnmute() {
+                return this.isVideoRoute() && this.audioMuted;
+            },
+            shouldDisplayAudioMute() {
+                return this.isVideoRoute() && !this.audioMuted;
+            },
+            shouldDisplayVideoUnmute() {
+                return this.isVideoRoute() && this.videoMuted;
+            },
+            shouldDisplayVideoMute() {
+                return this.isVideoRoute() && !this.videoMuted;
             }
         },
         computed: {
@@ -322,6 +368,9 @@
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             bus.$on(SHARE_SCREEN_STATE_CHANGED, this.onShareScreenStateChanged);
+            bus.$on(AUDIO_MUTED, this.onAudioMuteChanged);
+            bus.$on(VIDEO_MUTED, this.onVideoMuteChanged);
+            bus.$on(VIDEO_COMPONENT_DESTROYED, this.onVideoDestroyed);
         },
         watch: {
             searchChatString (searchString) {

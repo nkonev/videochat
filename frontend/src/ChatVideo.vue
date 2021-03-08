@@ -9,11 +9,13 @@
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import bus, {
+        AUDIO_MUTED,
+        AUDIO_START_MUTING,
         CHANGE_PHONE_BUTTON,
         SHARE_SCREEN_START, SHARE_SCREEN_STATE_CHANGED,
         SHARE_SCREEN_STOP,
-        VIDEO_CALL_CHANGED,
-        VIDEO_LOCAL_ESTABLISHED
+        VIDEO_COMPONENT_DESTROYED,
+        VIDEO_LOCAL_ESTABLISHED, VIDEO_MUTED, VIDEO_START_MUTING
     } from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
@@ -150,7 +152,7 @@
                 this.remotesDiv = null;
                 this.localMedia = null;
 
-                bus.$emit(VIDEO_CALL_CHANGED, {usersCount: 0}); // restore initial state
+                bus.$emit(VIDEO_COMPONENT_DESTROYED); // restore initial state in App.vue
                 this.notifyAboutLeaving();
             },
             askUserNameWithRetries(streamId) {
@@ -192,6 +194,8 @@
                     axios.put(`/api/video/${this.chatId}/notify`).catch(error => {
                       console.log(error.response)
                     })
+                } else {
+                    console.warn("Unable to notify about joining")
                 }
             },
             notifyAboutLeaving() {
@@ -199,6 +203,8 @@
                     axios.put(`/api/video/${this.chatId}/notify`).catch(error => {
                       console.log(error.response)
                     });
+                } else {
+                    console.warn("Unable to notify about leaving")
                 }
             },
             onStartScreenSharing() {
@@ -278,6 +284,26 @@
                   console.info("Will not restart video process because closingStarted");
                 }
               }, 1000);
+            },
+            onStartVideoMuting(requestedState) {
+                if (requestedState) {
+                    this.localMedia.mute("video");
+                    bus.$emit(VIDEO_MUTED, requestedState);
+                } else {
+                    this.localMedia.unmute("video").then(value => {
+                        bus.$emit(VIDEO_MUTED, requestedState);
+                    })
+                }
+            },
+            onStartAudioMuting(requestedState) {
+                if (requestedState) {
+                    this.localMedia.mute("audio");
+                    bus.$emit(AUDIO_MUTED, requestedState);
+                } else {
+                    this.localMedia.unmute("audio").then(value => {
+                        bus.$emit(AUDIO_MUTED, requestedState);
+                    })
+                }
             }
         },
         mounted() {
@@ -296,10 +322,14 @@
         created() {
             bus.$on(SHARE_SCREEN_START, this.onStartScreenSharing);
             bus.$on(SHARE_SCREEN_STOP, this.onStopScreenSharing);
+            bus.$on(VIDEO_START_MUTING, this.onStartVideoMuting);
+            bus.$on(AUDIO_START_MUTING, this.onStartAudioMuting);
         },
         destroyed() {
             bus.$off(SHARE_SCREEN_START, this.onStartScreenSharing);
             bus.$off(SHARE_SCREEN_STOP, this.onStopScreenSharing);
+            bus.$off(VIDEO_START_MUTING, this.onStartVideoMuting);
+            bus.$off(AUDIO_START_MUTING, this.onStartAudioMuting);
         },
         components: {
             UserVideo
