@@ -50,7 +50,7 @@ video:
   kickVideoAfter: 10s
   url:
     base: "http://video:7000"
-    kick: "/internal/kick"
+    kick: "/internal/%v/kick"
 
 jaeger:
   endpoint: "jaeger:6831"

@@ -192,7 +192,7 @@ func main() {
 	r.Handle("/video/{chatId}/users", http.HandlerFunc(handler.Users)).Methods("GET")
 	r.Handle("/video/{chatId}/notify", http.HandlerFunc(handler.NotifyChatParticipants)).Methods("PUT")
 	r.Handle("/video/{chatId}/config", http.HandlerFunc(handler.Config)).Methods("GET")
-	r.Handle("/internal/kick", http.HandlerFunc(handler.Kick)).Methods("PUT")
+	r.Handle("/internal/{chatId}/kick", http.HandlerFunc(handler.Kick)).Methods("PUT")
 
 	r.PathPrefix("/").Methods("GET").HandlerFunc(handler.Static())
 

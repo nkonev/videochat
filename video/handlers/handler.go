@@ -269,7 +269,8 @@ func (h *Handler) checkAccess(userIdString string, chatIdString string) bool {
 }
 
 func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
-	chatId := r.URL.Query().Get("chatId")
+	vars := mux.Vars(r)
+	chatId := vars["chatId"]
 	userToKickId := r.URL.Query().Get("userId")
 	var notifyBool bool = r.URL.Query().Get("notify") == "true"
 
