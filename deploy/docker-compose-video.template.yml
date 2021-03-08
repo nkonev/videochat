@@ -547,7 +547,7 @@ services:
         tag: chat-video
     volumes:
       - ./video.yml:/etc/video.yml
-    command: ["-c=/etc/video.yml"]
+    command: ["-config=/etc/video.yml"]
 
 networks:
   backend:

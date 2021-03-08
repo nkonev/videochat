@@ -104,11 +104,11 @@ func load() bool {
 }
 
 func parse() bool {
-	flag.StringVar(&file, "c", "config.yml", "config file")
+	flag.StringVar(&file, "config", "video/config.yml", "config file")
 	flag.StringVar(&cert, "cert", "", "cert file")
 	flag.StringVar(&key, "key", "", "key file")
 	flag.StringVar(&addr, "a", ":7000", "address to use")
-	flag.StringVar(&metricsAddr, "m", ":8100", "merics to use")
+	flag.StringVar(&metricsAddr, "m", ":8100", "metrics to use")
 	flag.IntVar(&verbosityLevel, "v", 0, "verbosity level, higher value - more logs")
 	help := flag.Bool("h", false, "help info")
 	flag.Parse()
