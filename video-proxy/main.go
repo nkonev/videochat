@@ -1,11 +1,11 @@
-package video_proxy
+package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"flag"
+	"fmt"
+	"github.com/serialx/hashring"
 	"github.com/spf13/viper"
-	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -13,105 +13,91 @@ import (
 	"strings"
 )
 
-type HostPort struct {
-	Host string
-	Port int16
-}
+var Logger = log.New()
 
 type VideoReplicasProvider interface {
-	GetReplicas() []HostPort
+	GetReplicas() []string
+}
+
+type FileVideoReplicasProvider struct { }
+
+func (r FileVideoReplicasProvider) GetReplicas() []string {
+	return viper.GetStringSlice("urls")
 }
 
 func main() {
-	// start server
-	http.HandleFunc("/", handleRequestAndRedirect)
-	if err := http.ListenAndServe(viper.GetString("listenAddress"), nil); err != nil {
+	Logger.SetReportCaller(true)
+	Logger.SetFormatter(&log.TextFormatter{ForceColors: true, FullTimestamp: true})
+	Logger.SetOutput(os.Stdout)
+
+	configFile := flag.String("config", "./video-proxy/config.yml", "Path to config file")
+	flag.Parse()
+	viper.SetConfigFile(*configFile)
+	// call multiple times to add many search paths
+	viper.SetEnvPrefix("VIDEO_PROXY")
+	viper.AutomaticEnv()
+	// Find and read the config file
+	if err := viper.ReadInConfig(); err != nil { // Handle errors reading the config file
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+
+
+	address := viper.GetString("listenAddress")
+	Logger.Printf("Starting on address %v", address)
+	provider := &FileVideoReplicasProvider{}
+	http.HandleFunc("/", handleRequestAndRedirect(provider))
+	if err := http.ListenAndServe(address, nil); err != nil {
 		panic(err)
 	}
+}
+
+type Handler struct {
+
+}
+
+// Given a request send it to the appropriate url
+func handleRequestAndRedirect(r VideoReplicasProvider) func (res http.ResponseWriter, req *http.Request) {
+	return func(res http.ResponseWriter, req *http.Request) {
+		url0 := getProxiedReplica(r, req)
+		serveReverseProxy(url0, res, req)
+	}
+}
+
+// Get the url for a given proxy condition
+func getProxiedReplica(r VideoReplicasProvider, req *http.Request) string {
+	serversInRing := r.GetReplicas()
+	ring := hashring.New(serversInRing)
+	path := req.URL.Path
+	// "/video/{chatId}/ws"
+	split := strings.Split(path, "/")
+	if len(split) < 3 {
+		Logger.Printf("Unable to get chatId from url, returnig 0")
+		return serversInRing[0]
+	}
+	chat := split[2]
+	node, ok := ring.GetNode(chat)
+	if !ok {
+		Logger.Printf("Unable to get node from hashring, returnig 0")
+		return serversInRing[0]
+	}
+	Logger.Printf("Balancing url %v - selecting %v for %v", req.URL, node, chat)
+	return node
 }
 
 // Serve a reverse proxy for a given url
 func serveReverseProxy(target string, res http.ResponseWriter, req *http.Request) {
 	// parse the url
-	url, _ := url.Parse(target)
+	url0, _ := url.Parse(target)
 
 	// create the reverse proxy
-	proxy := httputil.NewSingleHostReverseProxy(url)
+	proxy := httputil.NewSingleHostReverseProxy(url0)
 
 	// Update the headers to allow for SSL redirection
-	req.URL.Host = url.Host
-	req.URL.Scheme = url.Scheme
+	req.URL.Host = url0.Host
+	req.URL.Scheme = url0.Scheme
 	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
-	req.Host = url.Host
+	req.Host = url0.Host
 
 	// Note that ServeHttp is non blocking and uses a go routine under the hood
 	proxy.ServeHTTP(res, req)
-}
-
-// Given a request send it to the appropriate url
-func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
-	requestPayload := parseRequestBody(req)
-	url := getProxyUrl(requestPayload.ProxyCondition)
-
-	logRequestPayload(requestPayload, url)
-
-	serveReverseProxy(url, res, req)
-}
-
-// Get the url for a given proxy condition
-func getProxyUrl(proxyConditionRaw string) string {
-	proxyCondition := strings.ToUpper(proxyConditionRaw)
-
-	a_condtion_url := os.Getenv("A_CONDITION_URL")
-	b_condtion_url := os.Getenv("B_CONDITION_URL")
-	default_condtion_url := os.Getenv("DEFAULT_CONDITION_URL")
-
-	if proxyCondition == "A" {
-		return a_condtion_url
-	}
-
-	if proxyCondition == "B" {
-		return b_condtion_url
-	}
-
-	return default_condtion_url
-}
-
-// Log the typeform payload and redirect url
-func logRequestPayload(requestionPayload requestPayloadStruct, proxyUrl string) {
-	log.Printf("proxy_condition: %s, proxy_url: %s\n", requestionPayload.ProxyCondition, proxyUrl)
-}
-
-// Parse the requests body
-func parseRequestBody(request *http.Request) requestPayloadStruct {
-	decoder := requestBodyDecoder(request)
-
-	var requestPayload requestPayloadStruct
-	err := decoder.Decode(&requestPayload)
-
-	if err != nil {
-		panic(err)
-	}
-
-	return requestPayload
-}
-
-type requestPayloadStruct struct {
-	ProxyCondition string `json:"proxy_condition"`
-}
-
-// Get a json decoder for a given requests body
-func requestBodyDecoder(request *http.Request) *json.Decoder {
-	// Read body to buffer
-	body, err := ioutil.ReadAll(request.Body)
-	if err != nil {
-		log.Printf("Error reading body: %v", err)
-		panic(err)
-	}
-
-	// Because go lang is a pain in the ass if you read the body then any susequent calls
-	// are unable to read the body again....
-	request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-
-	return json.NewDecoder(ioutil.NopCloser(bytes.NewBuffer(body)))
 }

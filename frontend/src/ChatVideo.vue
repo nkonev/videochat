@@ -183,7 +183,7 @@
             },
             getConfig() {
                 return axios
-                    .get(`/api/video/config`)
+                    .get(`/api/video/${this.chatId}/config`)
                     .then(response => response.data)
             },
 

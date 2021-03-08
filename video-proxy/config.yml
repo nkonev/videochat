@@ -1,2 +1,2 @@
-hosts: ["localhost:7000"]
-listenAddress: ":7001"
+urls: ["http://localhost:7001"]
+listenAddress: ":7000"
