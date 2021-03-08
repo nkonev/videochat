@@ -9,7 +9,7 @@ check-env:
 generate: generate-git
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
-STATIC_JSON := ./handlers/static/git.json
+STATIC_JSON := ./static/git.json
 
 generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"video-proxy\"}" > ${STATIC_JSON}

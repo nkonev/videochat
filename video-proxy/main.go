@@ -1,11 +1,13 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"github.com/serialx/hashring"
 	"github.com/spf13/viper"
 	log "github.com/sirupsen/logrus"
+	"io/fs"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -104,6 +106,7 @@ func main() {
 	provider := &FileVideoReplicasProvider{}
 	provider.Init()
 
+	http.Handle("/git.json", Static())
 	http.HandleFunc("/", handleRequestAndRedirect(provider))
 	if err := http.ListenAndServe(address, nil); err != nil {
 		panic(err)
@@ -138,3 +141,23 @@ func serveReverseProxy(target *ReplicaAndProxy, res http.ResponseWriter, req *ht
 	// Note that ServeHttp is non blocking and uses a go routine under the hood
 	proxy.ServeHTTP(res, req)
 }
+
+//go:embed static
+var embeddedFiles embed.FS
+
+func Static() http.HandlerFunc {
+	fsys, err := fs.Sub(embeddedFiles, "static")
+	if err != nil {
+		panic("Cannot open static embedded dir")
+	}
+	staticDir := http.FS(fsys)
+
+	fileServer := http.FileServer(staticDir)
+	return func(w http.ResponseWriter, r *http.Request) {
+		reqUrl := r.RequestURI
+		if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") || reqUrl == "/git.json" {
+			fileServer.ServeHTTP(w, r)
+		}
+	}
+}
+
