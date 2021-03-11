@@ -345,10 +345,10 @@
                 return this.isVideoRoute() && !this.audioMuted;
             },
             shouldDisplayVideoUnmute() {
-                return this.isVideoRoute() && this.videoMuted;
+                return !this.shareScreen && this.isVideoRoute() && this.videoMuted;
             },
             shouldDisplayVideoMute() {
-                return this.isVideoRoute() && !this.videoMuted;
+                return !this.shareScreen && this.isVideoRoute() && !this.videoMuted;
             }
         },
         computed: {
