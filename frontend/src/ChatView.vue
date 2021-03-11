@@ -311,7 +311,7 @@
                 this.chatMessagesSubscription.unsubscribe();
             },
             onVideoCallKicked(e) {
-                if (e.chatId == this.chatId) {
+                if (this.$route.name == videochat_name && e.chatId == this.chatId) {
                     console.log("kicked");
                     this.$router.push({name: chat_name});
                 }
