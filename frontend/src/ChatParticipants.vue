@@ -96,8 +96,10 @@
             },
             inviteToVideoCall(userId) {
                 axios.put(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`).then(value => {
-                    console.log("Going to video chat");
-                    this.$router.push({name: videochat_name});
+                    console.log("Inviting to video chat");
+                    if (this.$route.name != videochat_name) {
+                        this.$router.push({name: videochat_name});
+                    }
                 })
             },
             kickFromVideoCall(userId) {
