@@ -29,7 +29,7 @@
                         @click="item.clickFunction"
                 >
                     <v-list-item-icon>
-                        <v-icon>{{ item.icon }}</v-icon>
+                        <v-icon :color="item.color">{{ item.icon }}</v-icon>
                     </v-list-item-icon>
 
                     <v-list-item-content>
@@ -171,10 +171,10 @@
             return {
                 title: "",
                 appBarItems: [
-                    { title: 'Unmute audio', icon: 'mdi-microphone', clickFunction: this.toggleMuteAudio, requireAuthenticated: true, displayCondition: this.shouldDisplayAudioUnmute},
-                    { title: 'Mute audio', icon: 'mdi-microphone-off', clickFunction: this.toggleMuteAudio, requireAuthenticated: true, displayCondition: this.shouldDisplayAudioMute},
-                    { title: 'Unmute video', icon: 'mdi-video', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoUnmute},
-                    { title: 'Mute video', icon: 'mdi-video-off', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoMute},
+                    { title: 'Unmute audio', icon: 'mdi-microphone-off', color: 'error', clickFunction: this.toggleMuteAudio, requireAuthenticated: true, displayCondition: this.shouldDisplayAudioUnmute},
+                    { title: 'Mute audio', icon: 'mdi-microphone', color: 'primary', clickFunction: this.toggleMuteAudio, requireAuthenticated: true, displayCondition: this.shouldDisplayAudioMute},
+                    { title: 'Unmute video', icon: 'mdi-video-off', color: 'error', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoUnmute},
+                    { title: 'Mute video', icon: 'mdi-video', color: 'primary', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoMute},
 
                     { title: 'New chat', icon: 'mdi-plus-circle-outline', clickFunction: this.createChat, requireAuthenticated: true},
                     { title: 'Chats', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
