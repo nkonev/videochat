@@ -22,7 +22,7 @@
     import { Client, LocalStream } from 'ion-sdk-js';
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
-    import {getWebsocketUrlPrefix} from "./utils";
+    import {AUDIO_MUTE_DEFAULT, getWebsocketUrlPrefix, VIDEO_MUTE_DEFAULT} from "./utils";
     const ComponentClass = Vue.extend(UserVideo);
 
     const DATA_EVENT_GET_USERNAME_FOR = "getUserName";
@@ -234,7 +234,8 @@
                   resolution: "hd",
                   audio: true,
                 }).then((media) => {
-                  this.localMedia = media
+                  this.localMedia = media;
+                  this.setMuteDefaults();
                   this.$refs.localVideoComponent.setSource(media);
                   this.$refs.localVideoComponent.setMuted(true);
                   this.$refs.localVideoComponent.setUserName(this.myUserName)
@@ -247,13 +248,25 @@
                   audio: true,
                 }).then((media) => {
                     this.localMedia = media;
-                    this.localMedia.unmute("audio");
+                    this.setMuteDefaults();
                     this.$refs.localVideoComponent.setSource(media);
                     this.$refs.localVideoComponent.setMuted(true);
                     this.$refs.localVideoComponent.setUserName(this.myUserName)
                     this.clientLocal.publish(media);
                     bus.$emit(SHARE_SCREEN_STATE_CHANGED, true);
                 });
+            },
+            setMuteDefaults(){
+                if (AUDIO_MUTE_DEFAULT) {
+                    this.localMedia.mute("audio");
+                } else {
+                    this.localMedia.unmute("audio");
+                }
+                // if (VIDEO_MUTE_DEFAULT) {
+                //     this.localMedia.mute("video");
+                // } else {
+                //     this.localMedia.unmute("video");
+                // }
             },
             startVideoProcess() {
                 this.getConfig()

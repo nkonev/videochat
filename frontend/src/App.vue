@@ -160,7 +160,7 @@
     import {chat_name, profile_name, chat_list_name, videochat_name} from "./routes";
     import SimpleModal from "./SimpleModal";
     import ChooseAvatar from "./ChooseAvatar";
-    import {getCorrectUserAvatar} from "./utils";
+    import {AUDIO_MUTE_DEFAULT, getCorrectUserAvatar, VIDEO_MUTE_DEFAULT} from "./utils";
     import ChatParticipants from "./ChatParticipants";
     import PermissionsWarning from "./PermissionsWarning";
 
@@ -198,8 +198,8 @@
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
                 shareScreen: false,
-                audioMuted: false,
-                videoMuted: false
+                audioMuted: AUDIO_MUTE_DEFAULT,
+                videoMuted: VIDEO_MUTE_DEFAULT
             }
         },
         components:{
@@ -281,8 +281,8 @@
             onVideoDestroyed() {
                 this.chatUsersCount = 0;
                 this.shareScreen = false;
-                this.audioMuted = false;
-                this.videoMuted = false;
+                this.audioMuted = AUDIO_MUTE_DEFAULT;
+                this.videoMuted = VIDEO_MUTE_DEFAULT;
             },
             createCall() {
                 console.log("createCall");
