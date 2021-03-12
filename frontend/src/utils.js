@@ -19,6 +19,3 @@ export const getCorrectUserAvatar = (stringExistsAvatar) => {
 export const getWebsocketUrlPrefix = () => {
     return ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host
 }
-
-export const VIDEO_MUTE_DEFAULT = false;
-export const AUDIO_MUTE_DEFAULT = true;
