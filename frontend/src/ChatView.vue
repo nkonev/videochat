@@ -19,7 +19,7 @@
                     </infinite-loading>
                 </div>
             </pane>
-            <pane max-size="70" min-size="20" v-bind:size="editSize">
+            <pane max-size="70" min-size="12" v-bind:size="editSize">
                 <MessageEdit :chatId="chatId"/>
             </pane>
         </splitpanes>
