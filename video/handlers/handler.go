@@ -74,7 +74,10 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId := vars["chatId"]
 	userId := r.Header.Get("X-Auth-UserId")
-	if !h.checkAccess(userId, chatId) {
+	if ok, err := h.checkAccess(userId, chatId); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} else if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -127,7 +130,10 @@ func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId := vars["chatId"]
 	userId := r.Header.Get("X-Auth-UserId")
-	if !h.checkAccess(userId, chatId) {
+	if ok, err := h.checkAccess(userId, chatId); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} else if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -197,7 +203,10 @@ func (h *Handler) NotifyChatParticipants(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	chatId := vars["chatId"]
 	userId := r.Header.Get("X-Auth-UserId")
-	if !h.checkAccess(userId, chatId) {
+	if ok, err := h.checkAccess(userId, chatId); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} else if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -248,23 +257,24 @@ func (h *Handler) Static() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) checkAccess(userIdString string, chatIdString string) bool {
+func (h *Handler) checkAccess(userIdString string, chatIdString string) (bool, error) {
 	url0 := h.conf.ChatConfig.ChatUrlConfig.Base
 	url1 := h.conf.ChatConfig.ChatUrlConfig.Access
 
 	response, err := h.client.Get(url0 + url1 + "?userId=" + userIdString + "&chatId=" + chatIdString)
 	if err != nil {
 		logger.Error(err, "Transport error during checking access")
-		return false
+		return false, err
 	}
 	defer response.Body.Close()
 	if response.StatusCode == http.StatusOK {
-		return true
+		return true, nil
 	} else if response.StatusCode == http.StatusUnauthorized {
-		return false
+		return false, nil
 	} else {
-		logger.Error(errors.New("Unexpected status on checkAccess"), "Unexpected status on checkAccess", "httpCode", response.StatusCode)
-		return false
+		err := errors.New("Unexpected status on checkAccess")
+		logger.Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
+		return false, err
 	}
 }
 
