@@ -146,3 +146,12 @@ for x in range(5200, 5301):
         protocol: udp
         mode: host""" % (x, x))
 ```
+
+
+# Temporarily allow firewalld ports for usage in local network (not necessary in Fedora)
+```
+firewall-cmd --zone=public --add-port=8081/tcp
+firewall-cmd --zone=public --add-port=3478/tcp
+firewall-cmd --zone=public --add-port=3478/udp
+firewall-cmd --zone=public --add-port=5000-5100/udp
+```

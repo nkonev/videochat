@@ -44,12 +44,7 @@ export default {
 
 <style lang="stylus" scoped>
     .video-container-element {
-        display flex
-        align-items flex-start
-        flex-direction column
-        // object-fit: scale-down;
         height 100%
-        // width 100% !important
     }
 
     .video-container-element:nth-child(even) {
@@ -57,16 +52,15 @@ export default {
     }
 
     video {
-        //object-fit: scale-down;
-        //width 100% !important
-        height 100% !important // todo its
+        height 100% !important
     }
 
     .video-container-element-caption {
+        display inherit
         margin: 0;
         top -2.5em
-        left 1.2em
+        right -1.2em
         text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
-        position: relative;
+        position: relative
     }
 </style>
