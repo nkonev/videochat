@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" persistent>
+        <v-dialog v-model="show" max-width="400" persistent>
             <v-card>
                 <v-card-title>{{title}}</v-card-title>
 
