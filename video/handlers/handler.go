@@ -221,13 +221,6 @@ func (h *Handler) peerIsAlive(peer *sfu.Peer) bool {
 	return peer.Publisher().SignalingState() != webrtc.SignalingStateClosed
 }
 
-func (h *Handler) peerIsClosed(peer *sfu.Peer) bool {
-	if peer == nil {
-		return false
-	}
-	return peer.Publisher().SignalingState() == webrtc.SignalingStateClosed
-}
-
 func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	marshal, err := json.Marshal(h.conf.FrontendConfig)
