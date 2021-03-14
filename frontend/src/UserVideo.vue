@@ -1,7 +1,7 @@
 <template>
 <div class="video-container-element">
     <video autoPlay playsInline ref="videoRef" v-on:dblclick="onDoubleClick"/>
-	<p class="video-container-element-caption">{{ userName }}</p>
+	<p class="video-container-element-caption">{{ userName }} {{audioMute}}</p>
 </div>
 </template>
 
@@ -12,7 +12,8 @@ export default {
 
     data()  {
 	    return {
-            userName: 'loading...'
+            userName: 'loading...',
+            audioMute: ''
         }
     },
 
@@ -26,6 +27,9 @@ export default {
         },
         setUserName(u) {
 		    this.userName = u;
+        },
+        setAudioMute(b) {
+		    this.audioMute = b ? "(muted)" : "";
         },
         setMuted(b) {
             this.$refs.videoRef.muted = b;

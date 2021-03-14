@@ -22,7 +22,7 @@ type Notifications interface {
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
-	NotifyAboutVideoCallChanged(c echo.Context, chatId int64, newUsersCount int64)
+	NotifyAboutVideoCallChanged(c echo.Context, dto dto.ChatNotifyDto)
 	NotifyAboutProfileChanged(user *dto.User)
 	NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64)
 	NotifyAboutKick(c echo.Context, chatId int64, userId int64)
@@ -54,10 +54,6 @@ type DisplayMessageDtoNotification struct {
 type UserTypingNotification struct {
 	Login         string `json:"login"`
 	ParticipantId int64  `json:"participantId"`
-}
-
-type VideoCallChanged struct {
-	UsersCount int64 `json:"usersCount"`
 }
 
 type VideoCallInvitation struct {
@@ -254,14 +250,12 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 	}
 }
 
-func (not *notifictionsImpl) NotifyAboutVideoCallChanged(c echo.Context, chatId int64, newUsersCount int64) {
+func (not *notifictionsImpl) NotifyAboutVideoCallChanged(c echo.Context, dto dto.ChatNotifyDto) {
 
-	channelName := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
+	channelName := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, dto.ChatId)
 
 	notification := CentrifugeNotification{
-		Payload: VideoCallChanged{
-			UsersCount: newUsersCount,
-		},
+		Payload: dto,
 		EventType: "video_call_changed",
 	}
 

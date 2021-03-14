@@ -140,10 +140,17 @@
     import axios from 'axios';
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
-    import {CHANGE_SEARCH_STRING, FETCH_USER_PROFILE, GET_USER, UNSET_USER} from "./store";
+    import {
+        CHANGE_SEARCH_STRING,
+        FETCH_USER_PROFILE,
+        GET_MUTE_AUDIO,
+        GET_MUTE_VIDEO,
+        GET_USER,
+        UNSET_USER
+    } from "./store";
     import bus, {
-        AUDIO_MUTED,
         AUDIO_START_MUTING,
+        VIDEO_START_MUTING,
         CHANGE_PHONE_BUTTON,
         CHANGE_TITLE,
         CHANGE_WEBSOCKET_STATUS,
@@ -153,7 +160,7 @@
         OPEN_PERMISSIONS_WARNING_MODAL,
         SHARE_SCREEN_START, SHARE_SCREEN_STATE_CHANGED, SHARE_SCREEN_STOP,
         VIDEO_CALL_CHANGED,
-        VIDEO_CALL_INVITED, VIDEO_COMPONENT_DESTROYED, VIDEO_MUTED, VIDEO_START_MUTING,
+        VIDEO_CALL_INVITED, VIDEO_COMPONENT_DESTROYED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -198,8 +205,6 @@
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
                 shareScreen: false,
-                audioMuted: false,
-                videoMuted: false
             }
         },
         components:{
@@ -281,8 +286,6 @@
             onVideoDestroyed() {
                 this.chatUsersCount = 0;
                 this.shareScreen = false;
-                this.audioMuted = false;
-                this.videoMuted = false;
             },
             createCall() {
                 console.log("createCall");
@@ -332,12 +335,6 @@
             toggleMuteVideo() {
                 bus.$emit(VIDEO_START_MUTING, !this.videoMuted)
             },
-            onAudioMuteChanged(newState) {
-                this.audioMuted = newState;
-            },
-            onVideoMuteChanged(newState) {
-                this.videoMuted = newState;
-            },
             shouldDisplayAudioUnmute() {
                 return this.isVideoRoute() && this.audioMuted;
             },
@@ -352,7 +349,7 @@
             }
         },
         computed: {
-            ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
+            ...mapGetters({currentUser: GET_USER, videoMuted: GET_MUTE_VIDEO, audioMuted: GET_MUTE_AUDIO}), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return getCorrectUserAvatar(this.currentUser.avatar);
             },
@@ -368,8 +365,6 @@
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             bus.$on(SHARE_SCREEN_STATE_CHANGED, this.onShareScreenStateChanged);
-            bus.$on(AUDIO_MUTED, this.onAudioMuteChanged);
-            bus.$on(VIDEO_MUTED, this.onVideoMuteChanged);
             bus.$on(VIDEO_COMPONENT_DESTROYED, this.onVideoDestroyed);
         },
         watch: {

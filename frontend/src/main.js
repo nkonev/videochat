@@ -52,7 +52,7 @@ const vm = new Vue({
   },
   mounted(){
     this.centrifuge.on('publish', (ctx)=>{
-      console.log("Got personal message", ctx);
+      console.debug("Got personal message", ctx);
       if (getData(ctx).type === 'chat_created') {
         const d = getProperData(ctx);
         bus.$emit(CHAT_ADD, d);

@@ -7,15 +7,14 @@
 <script>
     import Vue from 'vue';
     import {mapGetters} from "vuex";
-    import {GET_USER} from "./store";
+    import {GET_MUTE_AUDIO, GET_MUTE_VIDEO, GET_USER, SET_MUTE_AUDIO, SET_MUTE_VIDEO} from "./store";
     import bus, {
-        AUDIO_MUTED,
         AUDIO_START_MUTING,
         CHANGE_PHONE_BUTTON,
         SHARE_SCREEN_START, SHARE_SCREEN_STATE_CHANGED,
-        SHARE_SCREEN_STOP,
+        SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED,
         VIDEO_COMPONENT_DESTROYED,
-        VIDEO_LOCAL_ESTABLISHED, VIDEO_MUTED, VIDEO_START_MUTING
+        VIDEO_LOCAL_ESTABLISHED, VIDEO_START_MUTING
     } from "./bus";
     import {phoneFactory} from "./changeTitle";
     import axios from "axios";
@@ -23,15 +22,11 @@
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
     import {getWebsocketUrlPrefix} from "./utils";
+    import { v4 as uuidv4 } from 'uuid';
+
     const ComponentClass = Vue.extend(UserVideo);
 
-    const DATA_EVENT_GET_USERNAME_FOR = "getUserName";
-    const DATA_EVENT_RESPOND_USERNAME = "respondUserName";
-
-    const FIELD_TYPE = "type";
-    const FIELD_STREAM_ID = "streamId";
-    const FIELD_FOR_STREAM_ID = "forStreamId";
-    const FIELD_USERNAME = "username";
+    const peerId = uuidv4();
 
     export default {
         data() {
@@ -51,7 +46,7 @@
             chatId() {
                 return this.$route.params.id
             },
-            ...mapGetters({currentUser: GET_USER}),
+            ...mapGetters({currentUser: GET_USER, videoMuted: GET_MUTE_VIDEO, audioMuted: GET_MUTE_AUDIO}),
             myUserName() {
                 return this.currentUser.login
             }
@@ -88,9 +83,7 @@
                 }
 
                 this.signalLocal.onopen = () => {
-                    this.clientLocal.join(`chat${this.chatId}`).then(()=>{
-                        this.dataChannel = this.clientLocal.createDataChannel(`chat${this.chatId}`);
-                        this.dataChannel.onmessage = this.receiveFromChannel;
+                    this.clientLocal.join(`chat${this.chatId}`, peerId).then(()=>{
                         this.getAndPublishCamera()
                             .then(()=>{
                               this.notifyAboutJoining();
@@ -153,47 +146,51 @@
                 this.localMedia = null;
 
                 bus.$emit(VIDEO_COMPONENT_DESTROYED); // restore initial state in App.vue
+                this.$store.commit(SET_MUTE_VIDEO, false);
+                this.$store.commit(SET_MUTE_AUDIO, false);
+
                 this.notifyAboutLeaving();
             },
             askUserNameWithRetries(streamId) {
-                const toSend = {[FIELD_TYPE]: DATA_EVENT_GET_USERNAME_FOR, [FIELD_STREAM_ID]: streamId};
-                try {
-                    this.sendToChannel(toSend);
-                } catch (e) {
-                    setTimeout(()=>{
+                // request-response with axios and error handling
+                axios.get(`/api/video/${this.chatId}/user-by-stream-id/${streamId}`)
+                .then(value => {
+                    if (value.status == 204) {
                         console.log("Rescheduling asking for userName");
-                        this.askUserNameWithRetries(streamId);
-                    }, 1000);
-                }
-            },
-            sendToChannel(obj) {
-                const toSend = JSON.stringify(obj);
-                console.log("Sending to data channel", toSend)
-                this.dataChannel.send(toSend);
-            },
-            receiveFromChannel(m) {
-                const data = JSON.parse(m.data);
-                console.log("Received from data channel", m.data);
-                if (data[FIELD_TYPE] == DATA_EVENT_GET_USERNAME_FOR && data[FIELD_STREAM_ID] == this.$refs.localVideoComponent.getStreamId()) {
-                    this.sendToChannel({[FIELD_TYPE]: DATA_EVENT_RESPOND_USERNAME, [FIELD_USERNAME]: this.myUserName, [FIELD_FOR_STREAM_ID]: data[FIELD_STREAM_ID]});
-                } else if (data[FIELD_TYPE] == DATA_EVENT_RESPOND_USERNAME) {
-                    const component = this.streams[data[FIELD_FOR_STREAM_ID]];
-                    if (component) {
-                        component.component.setUserName(data[FIELD_USERNAME]);
+                        setTimeout(()=>{
+                                this.askUserNameWithRetries(streamId);
+                        }, 1000);
+                    } else {
+                        const data = value.data;
+                        if (data) {
+                            const component = this.streams[data.streamId];
+                            if (component) {
+                                component.component.setUserName(data.login);
+                            }
+                        }
                     }
-                }
+                })
             },
             getConfig() {
                 return axios
                     .get(`/api/video/${this.chatId}/config`)
                     .then(response => response.data)
             },
-
+            notifyWithData() {
+                const toSend = {
+                    peerId: peerId,
+                    streamId: this.$refs.localVideoComponent.getStreamId(),
+                    login: this.myUserName,
+                    videoMute: this.videoMuted, // from store
+                    audioMute: this.audioMuted
+                };
+                axios.put(`/api/video/${this.chatId}/notify`, toSend).catch(error => {
+                    console.log(error.response)
+                })
+            },
             notifyAboutJoining() {
                 if (this.chatId) {
-                    axios.put(`/api/video/${this.chatId}/notify`).catch(error => {
-                      console.log(error.response)
-                    })
+                    this.notifyWithData();
                 } else {
                     console.warn("Unable to notify about joining")
                 }
@@ -237,7 +234,7 @@
                   this.localMedia = media
                   this.$refs.localVideoComponent.setSource(media);
                   this.$refs.localVideoComponent.setMuted(true);
-                  this.$refs.localVideoComponent.setUserName(this.myUserName)
+                  this.$refs.localVideoComponent.setUserName(this.myUserName);
                   this.clientLocal.publish(media);
                   bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
                 });
@@ -288,23 +285,40 @@
             onStartVideoMuting(requestedState) {
                 if (requestedState) {
                     this.localMedia.mute("video");
-                    bus.$emit(VIDEO_MUTED, requestedState);
+                    this.$store.commit(SET_MUTE_VIDEO, requestedState);
+                    this.notifyWithData();
                 } else {
                     this.localMedia.unmute("video").then(value => {
-                        bus.$emit(VIDEO_MUTED, requestedState);
+                        this.$store.commit(SET_MUTE_VIDEO, requestedState);
+                        this.notifyWithData();
                     })
                 }
             },
             onStartAudioMuting(requestedState) {
                 if (requestedState) {
                     this.localMedia.mute("audio");
-                    bus.$emit(AUDIO_MUTED, requestedState);
+                    this.$store.commit(SET_MUTE_AUDIO, requestedState);
+                    this.$refs.localVideoComponent.setAudioMute(requestedState);
+                    this.notifyWithData();
                 } else {
                     this.localMedia.unmute("audio").then(value => {
-                        bus.$emit(AUDIO_MUTED, requestedState);
+                        this.$store.commit(SET_MUTE_AUDIO, requestedState);
+                        this.$refs.localVideoComponent.setAudioMute(requestedState);
+                        this.notifyWithData();
                     })
                 }
-            }
+            },
+            onVideoCallChanged(dto) {
+                if (dto) {
+                    const data = dto.data;
+                    if (data) {
+                        const component = this.streams[data.streamId];
+                        if (component) {
+                            component.component.setAudioMute(data.audioMute);
+                        }
+                    }
+                }
+            },
         },
         mounted() {
             this.closingStarted = false;
@@ -324,12 +338,14 @@
             bus.$on(SHARE_SCREEN_STOP, this.onStopScreenSharing);
             bus.$on(VIDEO_START_MUTING, this.onStartVideoMuting);
             bus.$on(AUDIO_START_MUTING, this.onStartAudioMuting);
+            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
         },
         destroyed() {
             bus.$off(SHARE_SCREEN_START, this.onStartScreenSharing);
             bus.$off(SHARE_SCREEN_STOP, this.onStopScreenSharing);
             bus.$off(VIDEO_START_MUTING, this.onStartVideoMuting);
             bus.$off(AUDIO_START_MUTING, this.onStartAudioMuting);
+            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
         },
         components: {
             UserVideo

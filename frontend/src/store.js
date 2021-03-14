@@ -12,11 +12,18 @@ export const FETCH_USER_PROFILE = 'fetchUserProfile';
 export const GET_SEARCH_STRING = 'getSearchString';
 export const SET_SEARCH_STRING = 'setSearchString';
 export const CHANGE_SEARCH_STRING = 'changeSearchString';
+export const GET_MUTE_VIDEO = 'getMuteVideo';
+export const SET_MUTE_VIDEO = 'setMuteVideo';
+export const GET_MUTE_AUDIO = 'getMuteAudio';
+export const SET_MUTE_AUDIO = 'setMuteAudio';
+
 
 const store = new Vuex.Store({
     state: {
         currentUser: null,
-        searchString: ""
+        searchString: "",
+        muteVideo: false,
+        muteAudio: false
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -28,6 +35,12 @@ const store = new Vuex.Store({
         [SET_SEARCH_STRING](state, payload) {
             state.searchString = payload;
         },
+        [SET_MUTE_VIDEO](state, payload) {
+            state.muteVideo = payload;
+        },
+        [SET_MUTE_AUDIO](state, payload) {
+            state.muteAudio = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -35,6 +48,12 @@ const store = new Vuex.Store({
         },
         [GET_SEARCH_STRING](state) {
             return state.searchString;
+        },
+        [GET_MUTE_VIDEO](state) {
+            return state.muteVideo;
+        },
+        [GET_MUTE_AUDIO](state) {
+            return state.muteAudio;
         },
     },
     actions: {

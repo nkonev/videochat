@@ -8,6 +8,7 @@ import (
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
+	"nkonev.name/chat/handlers/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
@@ -25,17 +26,13 @@ func NewVideoHandler(db db.DB, restClient client.RestClient, notificator notific
 }
 
 func (vh VideoHandler) NotifyAboutVideoCallChange(c echo.Context) error {
-	chatId, err := GetQueryParamAsInt64(c, "chatId")
-	if err != nil {
+	var bindTo = new(dto.ChatNotifyDto)
+	if err := c.Bind(bindTo); err != nil {
+		logger.Logger.Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
-	usersCount, err := GetQueryParamAsInt64(c, "usersCount")
-	if err != nil {
-		return err
-	}
-
-	vh.notificator.NotifyAboutVideoCallChanged(c, chatId, usersCount)
+	vh.notificator.NotifyAboutVideoCallChanged(c, *bindTo)
 	return c.NoContent(200)
 }
 
