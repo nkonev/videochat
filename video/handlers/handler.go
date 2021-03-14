@@ -25,12 +25,12 @@ import (
 var embeddedFiles embed.FS
 
 type Handler struct {
-	client      *http.Client
-	upgrader    *websocket.Upgrader
-	sfu         *sfu.SFU
-	conf        *config.ExtendedConfig
-	httpFs      *http.FileSystem
-	connections connectionsLockableMap
+	client          *http.Client
+	upgrader        *websocket.Upgrader
+	sfu             *sfu.SFU
+	conf            *config.ExtendedConfig
+	httpFs          *http.FileSystem
+	peerUserIdIndex connectionsLockableMap
 }
 type extendedConnectionInfo struct {
 	userId string
@@ -59,7 +59,7 @@ func NewHandler(
 		sfu:         sfu,
 		conf:        conf,
 		httpFs:      &staticDir,
-		connections: connectionsLockableMap{
+		peerUserIdIndex: connectionsLockableMap{
 			RWMutex:            sync.RWMutex{},
 			connectionWithData: connectionWithData{},
 		},
@@ -101,23 +101,23 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) addToConnMap(peer0 *sfu.Peer, userId string) {
 	logger.Info("Adding peer to map", "peer", peer0.ID(), "userId", userId)
-	h.connections.Lock()
-	defer h.connections.Unlock()
-	h.connections.connectionWithData[peer0] = extendedConnectionInfo{userId}
+	h.peerUserIdIndex.Lock()
+	defer h.peerUserIdIndex.Unlock()
+	h.peerUserIdIndex.connectionWithData[peer0] = extendedConnectionInfo{userId}
 }
 
 func (h *Handler) removeFromConnMap(peer0 *sfu.Peer, userId string, conn *websocket.Conn) {
 	logger.Info("Removing peer from map", "peer", peer0.ID(), "userId", userId)
-	h.connections.Lock()
-	defer h.connections.Unlock()
+	h.peerUserIdIndex.Lock()
+	defer h.peerUserIdIndex.Unlock()
 	conn.Close()
-	delete(h.connections.connectionWithData, peer0)
+	delete(h.peerUserIdIndex.connectionWithData, peer0)
 }
 
-func (h *Handler) getFromConnMap(peer0 *sfu.Peer) string {
-	h.connections.RLock()
-	defer h.connections.RUnlock()
-	s, ok := h.connections.connectionWithData[peer0]
+func (h *Handler) getUserIdFromIndex(peer0 *sfu.Peer) string {
+	h.peerUserIdIndex.RLock()
+	defer h.peerUserIdIndex.RUnlock()
+	s, ok := h.peerUserIdIndex.connectionWithData[peer0]
 	if ok {
 		return s.userId
 	} else {
@@ -295,7 +295,7 @@ func (h *Handler) kick(chatId, userId string, notifyBool bool) error {
 		return nil
 	}
 	for _, peerF := range session.Peers() {
-		if userId == h.getFromConnMap(peerF) {
+		if userId == h.getUserIdFromIndex(peerF) {
 			peerF.Close()
 			session.RemovePeer(peerF.ID())
 			h.notify(chatId)
