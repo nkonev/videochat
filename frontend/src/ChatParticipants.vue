@@ -69,7 +69,6 @@
         data () {
             return {
                 show: false,
-                search: null,
                 dto: dtoFactory(),
                 isLoading: false,
                 people: [  ],
