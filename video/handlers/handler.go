@@ -34,7 +34,6 @@ type Handler struct {
 }
 type extendedConnectionInfo struct {
 	userId string
-	websocketConnection *websocket.Conn
 }
 type connectionWithData map[*sfu.Peer]extendedConnectionInfo
 type connectionsLockableMap struct {
@@ -91,7 +90,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	peer0 := sfu.NewPeer(h.sfu)
-	h.addToConnMap(peer0, userId, c)
+	h.addToConnMap(peer0, userId)
 	defer h.removeFromConnMap(peer0, userId, c)
 	p := server.NewJSONSignal(peer0, logger)
 	defer p.Close()
@@ -100,11 +99,11 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	<-jc.DisconnectNotify()
 }
 
-func (h *Handler) addToConnMap(peer0 *sfu.Peer, userId string, conn *websocket.Conn) {
+func (h *Handler) addToConnMap(peer0 *sfu.Peer, userId string) {
 	logger.Info("Adding peer to map", "peer", peer0.ID(), "userId", userId)
 	h.connections.Lock()
 	defer h.connections.Unlock()
-	h.connections.connectionWithData[peer0] = extendedConnectionInfo{userId, conn}
+	h.connections.connectionWithData[peer0] = extendedConnectionInfo{userId}
 }
 
 func (h *Handler) removeFromConnMap(peer0 *sfu.Peer, userId string, conn *websocket.Conn) {
