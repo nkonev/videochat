@@ -96,8 +96,8 @@
                               this.notifyAboutJoining();
                             })
                             .catch(reason => {
-                              console.error("Error during publishing camera stream, restarting...")
-                              this.tryRestartVideoProcess();
+                              console.error("Error during publishing camera stream, won't restart...", reason);
+                              this.$refs.localVideoComponent.setUserName('Error get getUserMedia');
                             });
                     })
                 }
@@ -216,8 +216,8 @@
                 this.localPublisherKey++;
                 this.getAndPublishScreen()
                     .catch(reason => {
-                      console.error("Error during publishing screen stream, restarting...")
-                      this.tryRestartVideoProcess();
+                      console.error("Error during publishing screen stream, won't restart...", reason);
+                      this.$refs.localVideoComponent.setUserName('Error get getDisplayMedia');
                     });
             },
             onStopScreenSharing() {
