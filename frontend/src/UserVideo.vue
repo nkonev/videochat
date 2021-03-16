@@ -31,7 +31,7 @@ export default {
         setAudioMute(b) {
 		    this.audioMute = b ? "(muted)" : "";
         },
-        setMuted(b) {
+        setStreamMuted(b) {
             this.$refs.videoRef.muted = b;
         },
         onDoubleClick(e) {

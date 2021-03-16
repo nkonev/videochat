@@ -168,6 +168,7 @@
                             const component = this.streams[data.streamId];
                             if (component) {
                                 component.component.setUserName(data.login);
+                                component.component.setAudioMute(data.audioMute);
                             }
                         }
                     }
@@ -235,7 +236,7 @@
                 }).then((media) => {
                   this.localMedia = media
                   this.$refs.localVideoComponent.setSource(media);
-                  this.$refs.localVideoComponent.setMuted(true);
+                  this.$refs.localVideoComponent.setStreamMuted(true);
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
                   this.clientLocal.publish(media);
                   bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
@@ -248,7 +249,7 @@
                     this.localMedia = media;
                     this.localMedia.unmute("audio");
                     this.$refs.localVideoComponent.setSource(media);
-                    this.$refs.localVideoComponent.setMuted(true);
+                    this.$refs.localVideoComponent.setStreamMuted(true);
                     this.$refs.localVideoComponent.setUserName(this.myUserName)
                     this.clientLocal.publish(media);
                     bus.$emit(SHARE_SCREEN_STATE_CHANGED, true);
