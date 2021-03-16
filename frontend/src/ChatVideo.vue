@@ -156,10 +156,12 @@
                 axios.get(`/api/video/${this.chatId}/user-by-stream-id/${streamId}`)
                 .then(value => {
                     if (value.status == 204) {
-                        console.log("Rescheduling asking for userName");
-                        setTimeout(()=>{
-                                this.askUserNameWithRetries(streamId);
-                        }, 1000);
+                        if (!this.closingStarted) {
+                            console.log("Rescheduling asking for userName");
+                            setTimeout(() => {
+                              this.askUserNameWithRetries(streamId);
+                            }, 1000);
+                        }
                     } else {
                         const data = value.data;
                         if (data) {
