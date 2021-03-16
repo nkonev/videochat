@@ -338,7 +338,7 @@ func (h *Handler) NotifyChatParticipants(w http.ResponseWriter, r *http.Request)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if metadata := h.getPeerMetadata(chatId, userId); metadata != nil {
+		if metadata := h.getPeerMetadataByStreamId(chatId, bodyStruct.StreamId); metadata != nil && metadata.Peer != nil {
 			h.storeToIndex(metadata.Peer, userId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
 			if err := h.notify(chatId, &bodyStruct); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -427,21 +427,22 @@ type peerWithMetadata struct {
 	*sfu.Session
 }
 
-func (h *Handler) getPeerMetadata(chatId, userId string) *peerWithMetadata {
-	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId)) // ChatVideo.vue
+func (h *Handler) getPeerMetadatas(chatId, userId string) []peerWithMetadata {
+	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId))
+	var result []peerWithMetadata
 	if session == nil {
-		return nil
+		return result
 	}
 	for _, peerF := range session.Peers() {
 		if eci := h.getExtendedConnectionInfo(peerF); eci != nil && eci.userId == userId {
-			return &peerWithMetadata{
+			result = append(result, peerWithMetadata{
 				peerF,
 				eci,
 				session,
-			}
+			})
 		}
 	}
-	return nil
+	return result
 }
 
 func (h *Handler) getPeerMetadataByStreamId(chatId, streamId string) *peerWithMetadata {
@@ -464,7 +465,8 @@ func (h *Handler) getPeerMetadataByStreamId(chatId, streamId string) *peerWithMe
 func (h *Handler) kick(chatId, userId string, notifyBool bool) error {
 	logger.Info("Invoked kick", "chatId", chatId, "userId", userId, "notify", notifyBool)
 
-	if metadata := h.getPeerMetadata(chatId, userId); metadata != nil {
+	metadatas := h.getPeerMetadatas(chatId, userId)
+	for _, metadata := range metadatas {
 		metadata.Peer.Close()
 		metadata.Session.RemovePeer(metadata.Peer.ID())
 		h.notify(chatId, nil)
