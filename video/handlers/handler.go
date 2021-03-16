@@ -109,7 +109,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) storeToIndex(peer0 *sfu.Peer, userId, peerId, streamId, login string, videoMute, audioMute bool) {
-	logger.Info("Storing peer to map", "peer", peer0.ID(), "userId", userId)
+	logger.Info("Storing peer to map", "peer", peer0.ID(), "userId", userId, "streamId", streamId, "login", login)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
 	h.peerUserIdIndex.connectionWithData[peer0] = ExtendedPeerInfo{
