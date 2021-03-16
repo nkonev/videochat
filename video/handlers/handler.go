@@ -38,9 +38,9 @@ type Handler struct {
 type ExtendedPeerInfo struct {
 	userId string
 	// will be added after PUT /notify
-	peerId string
-	streamId string
-	login string
+	peerId    string
+	streamId  string
+	login     string
 	videoMute bool
 	audioMute bool
 }
@@ -63,11 +63,11 @@ func NewHandler(
 	staticDir := http.FS(fsys)
 
 	handler := Handler{
-		client:      client,
-		upgrader:    upgrader,
-		sfu:         sfu,
-		conf:        conf,
-		httpFs:      &staticDir,
+		client:   client,
+		upgrader: upgrader,
+		sfu:      sfu,
+		conf:     conf,
+		httpFs:   &staticDir,
 		peerUserIdIndex: connectionsLockableMap{
 			RWMutex:            sync.RWMutex{},
 			connectionWithData: connectionWithData{},
@@ -76,7 +76,7 @@ func NewHandler(
 	return handler
 }
 
-var 	logger         = log.New()
+var logger = log.New()
 
 func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -172,7 +172,7 @@ func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId := vars["chatId"]
-	streamId := vars["streamId"]
+	streamId := r.URL.Query().Get("streamId")
 	userId := r.Header.Get("X-Auth-UserId") // behalf
 	if ok, err := h.checkAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -184,7 +184,7 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 
 	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId))
 	if session != nil {
-		for _, peer:= range session.Peers() {
+		for _, peer := range session.Peers() {
 			if h.peerIsAlive(peer) {
 				if pwm := h.getPeerMetadataByStreamId(chatId, streamId); pwm != nil && pwm.ExtendedPeerInfo != nil && pwm.ExtendedPeerInfo.streamId != "" {
 					w.Header().Set("Content-Type", "application/json")
@@ -214,9 +214,9 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 }
 
 type chatNotifyDto struct {
-	Data *NotifyDto  `json:"data"`
-	UsersCount int64 `json:"usersCount"`
-	ChatId int64     `json:"chatId"`
+	Data       *NotifyDto `json:"data"`
+	UsersCount int64      `json:"usersCount"`
+	ChatId     int64      `json:"chatId"`
 }
 
 func ParseInt64(s string) (int64, error) {
@@ -231,7 +231,7 @@ func (h *Handler) countPeers(chatId string) int64 {
 	var usersCount int64 = 0
 	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId))
 	if session != nil {
-		for _, peer:= range session.Peers() {
+		for _, peer := range session.Peers() {
 			if h.peerIsAlive(peer) {
 				usersCount++
 			}
@@ -244,7 +244,7 @@ func (h *Handler) notify(chatId string, data *NotifyDto) error {
 	var usersCount = h.countPeers(chatId)
 	var chatNotifyDto = chatNotifyDto{}
 	if data != nil {
-		logger.Info("Notifying with data")
+		logger.Info("Notifying with data", "streamId", data.StreamId, "login", data.Login)
 		chatNotifyDto.Data = data
 	} else {
 		logger.Info("Notifying without data")
@@ -284,8 +284,8 @@ func (h *Handler) notify(chatId string, data *NotifyDto) error {
 
 	req := &http.Request{
 		Method: http.MethodPut,
-		URL: parsedUrl,
-		Body: r,
+		URL:    parsedUrl,
+		Body:   r,
 		Header: requestHeaders,
 	}
 
@@ -304,11 +304,11 @@ func (h *Handler) notify(chatId string, data *NotifyDto) error {
 }
 
 type NotifyDto struct {
-	PeerId string `json:"peerId"`
-	StreamId string `json:"streamId"`
-	Login string `json:"login"`
-	VideoMute bool `json:"videoMute"`
-	AudioMute bool `json:"audioMute"`
+	PeerId    string `json:"peerId"`
+	StreamId  string `json:"streamId"`
+	Login     string `json:"login"`
+	VideoMute bool   `json:"videoMute"`
+	AudioMute bool   `json:"audioMute"`
 }
 
 func (h *Handler) NotifyChatParticipants(w http.ResponseWriter, r *http.Request) {

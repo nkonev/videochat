@@ -294,10 +294,6 @@ github.com/pion/interceptor v0.0.9 h1:fk5hTdyLO3KURQsf/+RjMpEm4NE3yeTY9Kh97b5Bvw
 github.com/pion/interceptor v0.0.9/go.mod h1:dHgEP5dtxOTf21MObuBAjJeAayPxLUAZjerGH8Xr07c=
 github.com/pion/ion-log v1.0.0 h1:2lJLImCmfCWCR38hLWsjQfBWe6NFz/htbqiYHwvOP/Q=
 github.com/pion/ion-log v1.0.0/go.mod h1:jwcla9KoB9bB/4FxYDSRJPcPYSLp5XiUUMnOLaqwl4E=
-github.com/pion/ion-sfu v1.9.4-0.20210304193051-6b6be58a1c9b h1:jdeshI6fJVKvSN8Bh1Ii5vZW9xoRH4NBJVD0fD6z3vw=
-github.com/pion/ion-sfu v1.9.4-0.20210304193051-6b6be58a1c9b/go.mod h1:BQf2nidxkQU5Qc37e13i+rc7Q+qt8CWp0HmYtsy00o8=
-github.com/pion/ion-sfu v1.9.4-0.20210310235214-010ae7899278 h1:/gwKq6CM9pYV0E1FIEnGrxmCw/D6/B9iz8nReRLqD4Y=
-github.com/pion/ion-sfu v1.9.4-0.20210310235214-010ae7899278/go.mod h1:BQf2nidxkQU5Qc37e13i+rc7Q+qt8CWp0HmYtsy00o8=
 github.com/pion/ion-sfu v1.9.5-0.20210314172637-ba98f1c5f103 h1:KBBISwdSuyTNUb1n/VCvEyh5vsZqtyfo0/vxWrJwMo4=
 github.com/pion/ion-sfu v1.9.5-0.20210314172637-ba98f1c5f103/go.mod h1:BQf2nidxkQU5Qc37e13i+rc7Q+qt8CWp0HmYtsy00o8=
 github.com/pion/logging v0.2.2 h1:M9+AIj/+pxNsDfAT64+MAVgJO0rsyLnoJKCqf//DoeY=

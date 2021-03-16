@@ -153,7 +153,7 @@
             },
             askUserNameWithRetries(streamId) {
                 // request-response with axios and error handling
-                axios.get(`/api/video/${this.chatId}/user-by-stream-id/${streamId}`)
+                axios.get(`/api/video/${this.chatId}/user?streamId=${streamId}`)
                 .then(value => {
                     if (value.status == 204) {
                         if (!this.closingStarted) {

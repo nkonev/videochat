@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	log "github.com/pion/ion-sfu/pkg/logger"
 	"github.com/pion/ion-sfu/pkg/middlewares/datachannel"
 	"github.com/pion/ion-sfu/pkg/sfu"
-	log "github.com/pion/ion-sfu/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"net"
@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	conf        = config.ExtendedConfig{}
-	file        string
-	logger         = log.New()
+	conf   = config.ExtendedConfig{}
+	file   string
+	logger = log.New()
 )
 
 const (
@@ -70,7 +70,6 @@ func load() bool {
 		return false
 	}
 
-
 	if len(conf.Turn.PortRange) > 2 {
 		logger.Error(nil, "config file loaded failed. turn port must be [min,max]", "file", file)
 		return false
@@ -82,7 +81,6 @@ func load() bool {
 	}
 
 	logger.V(0).Info("Config file loaded", "file", file)
-
 
 	fmt.Printf("config %s load ok!\n", file)
 	return true
@@ -165,7 +163,7 @@ func main() {
 	// SFU websocket endpoint
 	r.Handle("/video/{chatId}/ws", http.HandlerFunc(handler.SfuHandler)).Methods("GET")
 	r.Handle("/video/{chatId}/users", http.HandlerFunc(handler.Users)).Methods("GET")
-	r.Handle("/video/{chatId}/user-by-stream-id/{streamId}", http.HandlerFunc(handler.UserByStreamId)).Methods("GET")
+	r.Handle("/video/{chatId}/user", http.HandlerFunc(handler.UserByStreamId)).Methods("GET")
 	r.Handle("/video/{chatId}/notify", http.HandlerFunc(handler.NotifyChatParticipants)).Methods("PUT")
 	r.Handle("/video/{chatId}/config", http.HandlerFunc(handler.Config)).Methods("GET")
 	r.Handle("/internal/{chatId}/kick", http.HandlerFunc(handler.Kick)).Methods("PUT")
@@ -186,4 +184,3 @@ func main() {
 		panic(err)
 	}
 }
-
