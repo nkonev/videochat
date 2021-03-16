@@ -338,8 +338,8 @@ func (h *Handler) NotifyChatParticipants(w http.ResponseWriter, r *http.Request)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if metadata := h.getPeerMetadataByStreamId(chatId, bodyStruct.StreamId); metadata != nil && metadata.Peer != nil {
-			h.storeToIndex(metadata.Peer, userId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+		if peerF := h.getPeerByPeerId(chatId, bodyStruct.PeerId); peerF != nil {
+			h.storeToIndex(peerF, userId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
 			if err := h.notify(chatId, &bodyStruct); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 			}
@@ -457,6 +457,19 @@ func (h *Handler) getPeerMetadataByStreamId(chatId, streamId string) *peerWithMe
 				eci,
 				session,
 			}
+		}
+	}
+	return nil
+}
+
+func (h *Handler) getPeerByPeerId(chatId, peerId string) *sfu.Peer {
+	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId)) // ChatVideo.vue
+	if session == nil {
+		return nil
+	}
+	for _, peerF := range session.Peers() {
+		if peerF.ID() == peerId {
+			return peerF
 		}
 	}
 	return nil
