@@ -6,44 +6,56 @@
                 <v-card-title v-else>Create chat</v-card-title>
 
                 <v-container fluid>
-                    <v-text-field label="Chat name" v-model="dto.name" @keyup.native.enter="saveChat"></v-text-field>
-                    <v-autocomplete
-                            v-model="dto.participantIds"
-                            :disabled="isLoading"
-                            :items="people"
-                            filled
-                            chips
-                            color="blue-grey lighten-2"
-                            label="Select users for add to chat"
-                            item-text="login"
-                            item-value="id"
-                            multiple
-                            :hide-selected="true"
-                            :search-input.sync="search"
+                    <v-form
+                        ref="form"
+                        v-model="valid"
+                        lazy-validation
+                        @keyup.native.enter="saveChat"
                     >
-                        <template v-slot:selection="data">
-                            <v-chip
-                                    v-bind="data.attrs"
-                                    :input-value="data.selected"
-                                    close
-                                    @click="data.select"
-                                    @click:close="removeSelected(data.item)"
-                            >
-                                <v-avatar left v-if="data.item.avatar">
-                                    <v-img :src="data.item.avatar"></v-img>
-                                </v-avatar>
-                                {{ data.item.login }}
-                            </v-chip>
-                        </template>
-                        <template v-slot:item="data">
-                            <v-list-item-avatar v-if="data.item.avatar">
-                                <img :src="data.item.avatar">
-                            </v-list-item-avatar>
-                            <v-list-item-content>
-                                <v-list-item-title v-html="data.item.login"></v-list-item-title>
-                            </v-list-item-content>
-                        </template>
-                    </v-autocomplete>
+                        <v-text-field
+                            label="Chat name"
+                            v-model="dto.name"
+                            required
+                            :rules="chatNameRules"
+                        ></v-text-field>
+                        <v-autocomplete
+                                v-model="dto.participantIds"
+                                :disabled="isLoading"
+                                :items="people"
+                                filled
+                                chips
+                                color="blue-grey lighten-2"
+                                label="Select users for add to chat"
+                                item-text="login"
+                                item-value="id"
+                                multiple
+                                :hide-selected="true"
+                                :search-input.sync="search"
+                        >
+                            <template v-slot:selection="data">
+                                <v-chip
+                                        v-bind="data.attrs"
+                                        :input-value="data.selected"
+                                        close
+                                        @click="data.select"
+                                        @click:close="removeSelected(data.item)"
+                                >
+                                    <v-avatar left v-if="data.item.avatar">
+                                        <v-img :src="data.item.avatar"></v-img>
+                                    </v-avatar>
+                                    {{ data.item.login }}
+                                </v-chip>
+                            </template>
+                            <template v-slot:item="data">
+                                <v-list-item-avatar v-if="data.item.avatar">
+                                    <img :src="data.item.avatar">
+                                </v-list-item-avatar>
+                                <v-list-item-content>
+                                    <v-list-item-title v-html="data.item.login"></v-list-item-title>
+                                </v-list-item-content>
+                            </template>
+                        </v-autocomplete>
+                    </v-form>
                 </v-container>
 
                 <v-card-actions class="pa-4">
@@ -81,6 +93,10 @@
                 dto: dtoFactory(),
                 isLoading: false,
                 people: [  ], // available person to chat with
+                chatNameRules: [
+                    v => !!v || 'Chat name is required',
+                ],
+                valid: true
             }
         },
 
@@ -140,12 +156,19 @@
                 }
             },
             saveChat() {
-                const dtoToPost = this.dto;
-                (dtoToPost.id ? axios.put(`/api/chat`, dtoToPost) : axios.post(`/api/chat`, dtoToPost))
-                    .then(() => {
-                        this.show=false;
-                    })
+                const valid = this.validate();
+                if (valid) {
+                    const dtoToPost = this.dto;
+                    (dtoToPost.id ? axios.put(`/api/chat`, dtoToPost) : axios.post(`/api/chat`, dtoToPost))
+                        .then(() => {
+                            this.show = false;
+                        })
+                }
             },
+            validate () {
+                return this.$refs.form.validate()
+            },
+
         },
         created() {
             // https://forum-archive.vuejs.org/topic/5174/debounce-replacement-in-vue-2-0
