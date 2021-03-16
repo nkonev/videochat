@@ -344,7 +344,7 @@ func (h *Handler) NotifyChatParticipants(w http.ResponseWriter, r *http.Request)
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 		} else {
-			logger.Info("Not found metadata for", "chatId", chatId, "userId", userId)
+			logger.Info("Not found peer metadata by", "chatId", chatId, "peerId", bodyStruct.PeerId)
 		}
 	} else {
 		if err := h.notify(chatId, nil); err != nil {
