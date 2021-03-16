@@ -45,9 +45,8 @@
 
     <repositories>
         <repository>
-            <id>jcenter</id>
-            <name>jcenter repository</name>
-            <url>https://jcenter.bintray.com</url>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -56,9 +55,8 @@
 
     <pluginRepositories>
         <pluginRepository>
-            <id>jcenter</id>
-            <name>jcenter plugins repository</name>
-            <url>https://jcenter.bintray.com</url>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
