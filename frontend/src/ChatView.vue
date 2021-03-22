@@ -34,8 +34,7 @@
     } from "./InfinityListMixin";
     import Vue from 'vue'
     import bus, {
-        CHANGE_PHONE_BUTTON,
-        CHANGE_TITLE, CHAT_DELETED,
+        CHAT_DELETED,
         CHAT_EDITED,
         MESSAGE_ADD,
         MESSAGE_DELETED,
@@ -45,13 +44,17 @@
         USER_PROFILE_CHANGED,
         LOGGED_IN, LOGGED_OUT, VIDEO_CALL_CHANGED, VIDEO_CALL_KICKED
     } from "./bus";
-    import {phoneFactory, titleFactory} from "./changeTitle";
     import MessageEdit from "./MessageEdit";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
-    import {GET_USER} from "./store";
+    import {
+        GET_USER, SET_CHAT_ID, SET_CHAT_USERS_COUNT,
+        SET_SHOW_CALL_BUTTON, SET_SHOW_CHAT_EDIT_BUTTON,
+        SET_SHOW_HANG_BUTTON, SET_SHOW_SEARCH, SET_TITLE,
+        SET_VIDEO_CHAT_USERS_COUNT
+    } from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
     import {getCorrectUserAvatar} from "./utils";
     import MessageItem from "./MessageItem";
@@ -250,7 +253,12 @@
             getInfo() {
                 return axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
                     console.log("Got info about chat", data);
-                    bus.$emit(CHANGE_TITLE, titleFactory(data.name, false, data.canEdit, data.canEdit ? this.chatId: null, this.chatId, data.participants.length));
+                    this.$store.commit(SET_TITLE, data.name);
+                    this.$store.commit(SET_CHAT_USERS_COUNT, data.participants.length);
+                    this.$store.commit(SET_SHOW_SEARCH, false);
+                    this.$store.commit(SET_CHAT_ID, this.chatId);
+                    this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, data.canEdit);
+
                     this.chatDto = data;
                 }).catch(reason => {
                     if (reason.response.status == 404) {
@@ -261,6 +269,7 @@
                         .then(response => response.data)
                         .then(data => {
                             bus.$emit(VIDEO_CALL_CHANGED, data);
+                            this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, data.usersCount);
                         });
                 });
             },
@@ -304,6 +313,7 @@
                     }
                     if (data.type === "video_call_changed") {
                         bus.$emit(VIDEO_CALL_CHANGED, properData);
+                        this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, properData.usersCount);
                     }
                 });
             },
@@ -319,10 +329,18 @@
         },
         mounted() {
             this.subscribe();
-            bus.$emit(CHANGE_TITLE, titleFactory(`Chat #${this.chatId}`, false, true, null, this.chatId, null));
+
+            this.$store.commit(SET_TITLE, `Chat #${this.chatId}`);
+            this.$store.commit(SET_CHAT_USERS_COUNT, 0);
+            this.$store.commit(SET_SHOW_SEARCH, false);
+            this.$store.commit(SET_CHAT_ID, this.chatId);
+            this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
 
             this.getInfo();
-            bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true))
+
+            this.$store.commit(SET_SHOW_CALL_BUTTON, true);
+            this.$store.commit(SET_SHOW_HANG_BUTTON, false);
+
             bus.$on(MESSAGE_ADD, this.onNewMessage);
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$on(CHAT_EDITED, this.onChatChange);
@@ -349,7 +367,8 @@
             this.unsubscribe();
         },
         destroyed() {
-            bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(false))
+            this.$store.commit(SET_SHOW_CALL_BUTTON, false);
+            this.$store.commit(SET_SHOW_HANG_BUTTON, false);
         },
         components: {
             MessageEdit,

@@ -199,10 +199,17 @@
 
 <script>
 import {mapGetters} from "vuex";
-import {FETCH_USER_PROFILE, GET_USER} from "./store";
+import {
+    FETCH_USER_PROFILE,
+    GET_USER,
+    SET_CHAT_ID,
+    SET_CHAT_USERS_COUNT,
+    SET_MUTE_VIDEO, SET_SHOW_CHAT_EDIT_BUTTON,
+    SET_SHOW_SEARCH,
+    SET_TITLE
+} from "./store";
 import axios from "axios";
-import bus, {CHANGE_TITLE, OPEN_CHOOSE_AVATAR} from "./bus";
-import {titleFactory} from "./changeTitle";
+import bus, { OPEN_CHOOSE_AVATAR} from "./bus";
 import {getCorrectUserAvatar} from "./utils";
 
 export default {
@@ -298,7 +305,11 @@ export default {
         }
     },
     mounted() {
-        bus.$emit(CHANGE_TITLE, titleFactory(`User profile`, false, false, null, null, null));
+        this.$store.commit(SET_TITLE, `User profile`);
+        this.$store.commit(SET_CHAT_USERS_COUNT, 0);
+        this.$store.commit(SET_SHOW_SEARCH, false);
+        this.$store.commit(SET_CHAT_ID, null);
+        this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
     },
 }
 </script>

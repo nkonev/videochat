@@ -7,16 +7,21 @@
 <script>
     import Vue from 'vue';
     import {mapGetters} from "vuex";
-    import {GET_MUTE_AUDIO, GET_MUTE_VIDEO, GET_USER, SET_MUTE_AUDIO, SET_MUTE_VIDEO} from "./store";
+    import {
+        GET_MUTE_AUDIO,
+        GET_MUTE_VIDEO,
+        GET_USER,
+        SET_MUTE_AUDIO,
+        SET_MUTE_VIDEO, SET_SHARE_SCREEN,
+        SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON,
+        SET_VIDEO_CHAT_USERS_COUNT
+    } from "./store";
     import bus, {
         AUDIO_START_MUTING,
-        CHANGE_PHONE_BUTTON,
-        SHARE_SCREEN_START, SHARE_SCREEN_STATE_CHANGED,
+        SHARE_SCREEN_START,
         SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED,
-        VIDEO_COMPONENT_DESTROYED,
         VIDEO_LOCAL_ESTABLISHED, VIDEO_START_MUTING
     } from "./bus";
-    import {phoneFactory} from "./changeTitle";
     import axios from "axios";
     import { Client, LocalStream } from 'ion-sdk-js';
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
@@ -145,7 +150,6 @@
                 this.remotesDiv = null;
                 this.localMedia = null;
 
-                bus.$emit(VIDEO_COMPONENT_DESTROYED); // restore initial state in App.vue
                 this.$store.commit(SET_MUTE_VIDEO, false);
                 this.$store.commit(SET_MUTE_AUDIO, false);
 
@@ -239,7 +243,7 @@
                   this.$refs.localVideoComponent.setStreamMuted(true);
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
                   this.clientLocal.publish(media);
-                  bus.$emit(SHARE_SCREEN_STATE_CHANGED, false);
+                  this.$store.commit(SET_SHARE_SCREEN, false);
                 });
             },
             getAndPublishScreen() {
@@ -252,7 +256,7 @@
                     this.$refs.localVideoComponent.setStreamMuted(true);
                     this.$refs.localVideoComponent.setUserName(this.myUserName)
                     this.clientLocal.publish(media);
-                    bus.$emit(SHARE_SCREEN_STATE_CHANGED, true);
+                    this.$store.commit(SET_SHARE_SCREEN, true);
                 });
             },
             startVideoProcess() {
@@ -326,12 +330,17 @@
         mounted() {
             this.closingStarted = false;
             bus.$emit(VIDEO_LOCAL_ESTABLISHED);
-            bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, false));
+            this.$store.commit(SET_SHOW_CALL_BUTTON, false);
+            this.$store.commit(SET_SHOW_HANG_BUTTON, true);
             window.addEventListener('beforeunload', this.leaveSession)
             this.startVideoProcess();
         },
         beforeDestroy() {
-            bus.$emit(CHANGE_PHONE_BUTTON, phoneFactory(true, true));
+            this.$store.commit(SET_SHOW_CALL_BUTTON, true);
+            this.$store.commit(SET_SHOW_HANG_BUTTON, false);
+            this.$store.commit(SET_SHARE_SCREEN, false);
+            this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
+
             this.closingStarted = true;
             window.removeEventListener('beforeunload', this.leaveSession);
             this.leaveSession();
@@ -348,7 +357,7 @@
             bus.$off(SHARE_SCREEN_STOP, this.onStopScreenSharing);
             bus.$off(VIDEO_START_MUTING, this.onStartVideoMuting);
             bus.$off(AUDIO_START_MUTING, this.onStartAudioMuting);
-            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
         },
         components: {
             UserVideo

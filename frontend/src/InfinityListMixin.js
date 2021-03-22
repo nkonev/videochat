@@ -40,7 +40,7 @@ export default () => {
                 page: 0,
                 items: [],
                 itemsTotal: 0,
-                infiniteId: new Date(),
+                infiniteId: +new Date(),
             }
         },
         components:{

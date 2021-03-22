@@ -34,7 +34,7 @@ import bus, {
     CHAT_SEARCH_CHANGED,
     LOGGED_IN,
     OPEN_CHAT_EDIT,
-    CHANGE_TITLE, OPEN_SIMPLE_MODAL, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED, CLOSE_SIMPLE_MODAL
+    OPEN_SIMPLE_MODAL, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED, CLOSE_SIMPLE_MODAL
 } from "./bus";
     import {chat_name} from "./routes";
     import infinityListMixin, {
@@ -46,8 +46,14 @@ import bus, {
     } from "./InfinityListMixin";
     import axios from "axios";
     import {mapGetters} from 'vuex'
-    import {GET_SEARCH_STRING} from "./store";
-    import {titleFactory} from "./changeTitle";
+import {
+    GET_SEARCH_STRING,
+    SET_CHAT_ID,
+    SET_CHAT_USERS_COUNT,
+    SET_SHOW_CHAT_EDIT_BUTTON,
+    SET_SHOW_SEARCH,
+    SET_TITLE
+} from "./store";
 
     export default {
         mixins: [infinityListMixin()],
@@ -189,7 +195,11 @@ import bus, {
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
         mounted() {
-            bus.$emit(CHANGE_TITLE, titleFactory("Chats", true, false, null, null, null));
+            this.$store.commit(SET_TITLE, "Chats");
+            this.$store.commit(SET_CHAT_USERS_COUNT, 0);
+            this.$store.commit(SET_SHOW_SEARCH, true);
+            this.$store.commit(SET_CHAT_ID, null);
+            this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
         }
     }
 </script>

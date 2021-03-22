@@ -54,8 +54,8 @@
             </v-btn>
             <v-badge
                 v-if="showCallButton || showHangButton"
-                :content="usersCount"
-                :value="usersCount"
+                :content="videoChatUsersCount"
+                :value="videoChatUsersCount"
                 color="green"
                 overlap
                 offset-y="1.8em"
@@ -142,25 +142,28 @@
     import {mapGetters} from 'vuex'
     import {
         CHANGE_SEARCH_STRING,
-        FETCH_USER_PROFILE,
+        FETCH_USER_PROFILE, GET_CHAT_ID, GET_CHAT_USERS_COUNT,
         GET_MUTE_AUDIO,
         GET_MUTE_VIDEO,
+        GET_SHARE_SCREEN,
+        GET_SHOW_CALL_BUTTON,
+        GET_SHOW_CHAT_EDIT_BUTTON,
+        GET_SHOW_HANG_BUTTON,
+        GET_SHOW_SEARCH, GET_TITLE,
         GET_USER,
+        GET_VIDEO_CHAT_USERS_COUNT,
         UNSET_USER
     } from "./store";
     import bus, {
         AUDIO_START_MUTING,
         VIDEO_START_MUTING,
-        CHANGE_PHONE_BUTTON,
-        CHANGE_TITLE,
         CHANGE_WEBSOCKET_STATUS,
         LOGGED_OUT,
         OPEN_CHAT_EDIT,
         OPEN_INFO_DIALOG,
         OPEN_PERMISSIONS_WARNING_MODAL,
-        SHARE_SCREEN_START, SHARE_SCREEN_STATE_CHANGED, SHARE_SCREEN_STOP,
-        VIDEO_CALL_CHANGED,
-        VIDEO_CALL_INVITED, VIDEO_COMPONENT_DESTROYED,
+        SHARE_SCREEN_START, SHARE_SCREEN_STOP,
+        VIDEO_CALL_INVITED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -176,7 +179,6 @@
     export default {
         data () {
             return {
-                title: "",
                 appBarItems: [
                     { title: 'Unmute audio', icon: 'mdi-microphone-off', color: 'error', clickFunction: this.toggleMuteAudio, requireAuthenticated: true, displayCondition: this.shouldDisplayAudioUnmute},
                     { title: 'Mute audio', icon: 'mdi-microphone', color: 'primary', clickFunction: this.toggleMuteAudio, requireAuthenticated: true, displayCondition: this.shouldDisplayAudioMute},
@@ -192,19 +194,10 @@
                 lastError: "",
                 showAlert: false,
                 searchChatString: "",
-                showSearch: false,
-                showChatEditButton: false,
-                showCallButton: false,
-                showHangButton: false,
-                chatId: null,
-                chatUsersCount: null,
-                chatEditId: null, // nullable if non-chat admin
                 wsConnected: false,
-                usersCount: 0,
                 invitedVideoChatId: 0,
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
-                shareScreen: false,
             }
         },
         components:{
@@ -240,7 +233,7 @@
                 bus.$emit(OPEN_CHAT_EDIT, null);
             },
             editChat() {
-                bus.$emit(OPEN_CHAT_EDIT, this.chatEditId);
+                bus.$emit(OPEN_CHAT_EDIT, this.chatId);
             },
             doSearch(searchString) {
                 this.$store.dispatch(CHANGE_SEARCH_STRING, searchString);
@@ -259,33 +252,6 @@
                         return true
                     }
                 })
-            },
-            changeTitle({title, isShowSearch, isShowChatEditButton, chatEditId, chatId, chatUsersCount}) {
-                this.title = title;
-                this.showSearch = isShowSearch;
-                this.showChatEditButton = isShowChatEditButton;
-                this.chatEditId = chatEditId;
-                this.chatId = chatId;
-                this.chatUsersCount = chatUsersCount;
-            },
-            changePhoneButton({show, call}) {
-                console.log("changePhoneButton", show, call);
-                if (!show) {
-                    this.showCallButton = false;
-                    this.showHangButton = false;
-                } else {
-                    if (call) {
-                        this.showCallButton = true;
-                        this.showHangButton = false;
-                    } else {
-                        this.showCallButton = false;
-                        this.showHangButton = true;
-                    }
-                }
-            },
-            onVideoDestroyed() {
-                this.chatUsersCount = 0;
-                this.shareScreen = false;
             },
             createCall() {
                 console.log("createCall");
@@ -307,9 +273,6 @@
             onInfoClicked() {
                 bus.$emit(OPEN_INFO_DIALOG, this.chatId);
             },
-            onVideoCallChanged(data) {
-                this.usersCount = data.usersCount
-            },
             onVideoCallInvited(data) {
                 this.invitedVideoChatId = data.chatId;
                 this.invitedVideoChatAlert = true;
@@ -322,9 +285,6 @@
             onClickInvitation() {
                 this.$router.push({ name: videochat_name, params: { id: this.invitedVideoChatId }});
                 this.invitedVideoChatAlert = false;
-            },
-            onShareScreenStateChanged(newState) {
-                this.shareScreen = newState;
             },
             isVideoRoute() {
                 return this.$route.name == videochat_name
@@ -349,7 +309,20 @@
             }
         },
         computed: {
-            ...mapGetters({currentUser: GET_USER, videoMuted: GET_MUTE_VIDEO, audioMuted: GET_MUTE_AUDIO}), // currentUser is here, 'getUser' -- in store.js
+            ...mapGetters({
+                currentUser: GET_USER,
+                videoMuted: GET_MUTE_VIDEO,
+                audioMuted: GET_MUTE_AUDIO,
+                showCallButton: GET_SHOW_CALL_BUTTON,
+                showHangButton: GET_SHOW_HANG_BUTTON,
+                shareScreen: GET_SHARE_SCREEN,
+                videoChatUsersCount: GET_VIDEO_CHAT_USERS_COUNT,
+                showChatEditButton: GET_SHOW_CHAT_EDIT_BUTTON,
+                showSearch: GET_SHOW_SEARCH,
+                chatId: GET_CHAT_ID,
+                title: GET_TITLE,
+                chatUsersCount: GET_CHAT_USERS_COUNT,
+            }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return getCorrectUserAvatar(this.currentUser.avatar);
             },
@@ -359,13 +332,8 @@
         },
         created() {
             this.doSearch = debounce(this.doSearch, 700);
-            bus.$on(CHANGE_TITLE, this.changeTitle);
-            bus.$on(CHANGE_PHONE_BUTTON, this.changePhoneButton);
             bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus);
-            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
-            bus.$on(SHARE_SCREEN_STATE_CHANGED, this.onShareScreenStateChanged);
-            bus.$on(VIDEO_COMPONENT_DESTROYED, this.onVideoDestroyed);
         },
         watch: {
             searchChatString (searchString) {
