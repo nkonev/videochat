@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/centrifugal/protocol"
-	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
+	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/oliveagle/jsonpath"
 	"github.com/spf13/viper"
@@ -21,9 +21,9 @@ import (
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers"
+	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
-	name_nkonev_aaa "nkonev.name/chat/proto"
 	"nkonev.name/chat/utils"
 	"os"
 	"strings"
@@ -88,19 +88,17 @@ type ProtobufAaaEmu struct{}
 func (receiver ProtobufAaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	resp.WriteHeader(200)
 
-	userResp := &name_nkonev_aaa.UsersResponse{}
-	u1 := &name_nkonev_aaa.UserDto{
+	u1 := &dto.User{
 		Id:     1,
 		Login:  "testor_protobuf",
-		Avatar: "http://image.jpg",
+		Avatar: null.StringFrom("http://image.jpg"),
 	}
-	u2 := &name_nkonev_aaa.UserDto{
+	u2 := &dto.User{
 		Id:    2,
 		Login: "testor_protobuf2",
 	}
-	var users = []*name_nkonev_aaa.UserDto{u1, u2}
-	userResp.Users = users
-	out, err := proto.Marshal(userResp)
+	var users = []*dto.User{u1, u2}
+	out, err := json.Marshal(users)
 	if err != nil {
 		Logger.Errorln("Failed to encode get users request:", err)
 		return

@@ -13,9 +13,6 @@ import com.github.nkonev.aaa.security.OAuth2Providers;
 import com.github.nkonev.aaa.services.NotifierService;
 import com.github.nkonev.aaa.services.UserService;
 import com.github.nkonev.aaa.utils.PageUtils;
-import name.nkonev.aaa.UserDto;
-import name.nkonev.aaa.UsersRequest;
-import name.nkonev.aaa.UsersResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,8 +64,6 @@ public class UserProfileController {
 
     @Autowired
     private NotifierService notifier;
-
-    public static final String X_PROTOBUF_CHARSET_UTF_8 = "application/x-protobuf;charset=UTF-8";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
@@ -155,26 +150,13 @@ public class UserProfileController {
         return result;
     }
 
-    @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST, produces = X_PROTOBUF_CHARSET_UTF_8)
-    public UsersResponse getUserInternal(@RequestBody UsersRequest usersRequest,
+    @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST)
+    public List<com.github.nkonev.aaa.dto.UserAccountDTO> getUserInternal(
+            @RequestParam(value = "userId") List<Long> userIds,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
-        LOGGER.info("Requesting internal users {}", usersRequest);
-        List<UserAccountDTO> users = getUsers(usersRequest.getUserIdsList(), userAccountPrincipal);
-        UsersResponse.Builder responseBuilder = UsersResponse.newBuilder();
-
-        users.forEach(userAccountDTO -> {
-            UserDto.Builder builder = UserDto.newBuilder()
-                    .setId(userAccountDTO.getId())
-                    .setLogin(userAccountDTO.getLogin());
-            if (userAccountDTO.getAvatar() != null) {
-                builder.setAvatar(userAccountDTO.getAvatar());
-            }
-            UserDto user = builder.build();
-            responseBuilder.addUsers(user);
-        });
-
-        return responseBuilder.build();
+        LOGGER.info("Requesting internal users {}", userIds);
+        return getUsers(userIds, userAccountPrincipal);
     }
 
     @PostMapping(Constants.Urls.API+Constants.Urls.PROFILE)

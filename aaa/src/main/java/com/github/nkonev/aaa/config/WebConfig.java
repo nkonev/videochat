@@ -13,7 +13,6 @@ import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
@@ -77,11 +76,6 @@ public class WebConfig implements WebMvcConfigurer {
         tomcat.setProtocol("org.apache.coyote.http11.Http11Nio2Protocol");
 
         return tomcat;
-    }
-
-    @Bean
-    public ProtobufHttpMessageConverter protobufHttpMessageConverter() {
-        return new ProtobufHttpMessageConverter();
     }
 }
 

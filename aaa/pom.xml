@@ -28,11 +28,6 @@
         <greenmail.version>1.5.10</greenmail.version>
         <mockserver.version>5.10.0</mockserver.version>
 
-        <grpc.java.lib.version>3.12.2</grpc.java.lib.version>
-        <os.maven.plugin.version>1.6.2</os.maven.plugin.version>
-        <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>
-        <protoc.version>3.12.2</protoc.version>
-
         <skipTests>false</skipTests>
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
         <opentracing-spring-jaeger-web-starter.version>3.1.2</opentracing-spring-jaeger-web-starter.version>
@@ -64,14 +59,6 @@
     </pluginRepositories>
 
     <build>
-        <extensions>
-            <extension>
-                <groupId>kr.motd.maven</groupId>
-                <artifactId>os-maven-plugin</artifactId>
-                <version>${os.maven.plugin.version}</version>
-            </extension>
-        </extensions>
-
         <defaultGoal>clean package</defaultGoal>
 
         <resources>
@@ -139,23 +126,6 @@
                             <failOnNoGitDirectory>false</failOnNoGitDirectory>
                             <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.xolstice.maven.plugins</groupId>
-                <artifactId>protobuf-maven-plugin</artifactId>
-                <version>${protobuf.maven.plugin.version}</version>
-                <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
-                    <protoSourceRoot>${basedir}/../protobuf</protoSourceRoot>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -400,12 +370,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-access</artifactId>
             <version>${logback.access.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>${grpc.java.lib.version}</version>
         </dependency>
 
         <dependency>

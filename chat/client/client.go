@@ -1,12 +1,10 @@
 package client
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	"github.com/guregu/null"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
@@ -16,7 +14,8 @@ import (
 	"net/url"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
-	name_nkonev_aaa "nkonev.name/chat/proto"
+	"nkonev.name/chat/utils"
+	"strings"
 )
 
 type RestClient struct {
@@ -40,18 +39,17 @@ func NewRestClient() RestClient {
 
 // https://developers.google.com/protocol-buffers/docs/gotutorial
 func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, error) {
-	contentType := "application/x-protobuf;charset=UTF-8"
+	contentType := "application/json;charset=UTF-8"
 	url0 := viper.GetString("aaa.url.base")
 	url1 := viper.GetString("aaa.url.getUsers")
 	fullUrl := url0 + url1
-	userReq := &name_nkonev_aaa.UsersRequest{UserIds: userIds}
-	useRequestBytes, err := proto.Marshal(userReq)
-	if err != nil {
-		Logger.Warningln("Failed to encode get users request: ", err)
-		return nil, err
+
+	var userIdsString []string
+	for _, userIdInt := range userIds {
+		userIdsString = append(userIdsString, utils.Int64ToString(userIdInt))
 	}
 
-	userRequestReader := bytes.NewReader(useRequestBytes)
+	join := strings.Join(userIdsString, ",")
 
 	requestHeaders := map[string][]string{
 		"Accept-Encoding": {"gzip, deflate"},
@@ -59,20 +57,14 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 		"Content-Type":    {contentType},
 	}
 
-	if err != nil {
-		Logger.Warningln("Error during inserting tracing")
-	}
-
-	parsedUrl, err := url.Parse(fullUrl)
+	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
 	if err != nil {
 		Logger.Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
-	userRequestReadCloser := ioutil.NopCloser(userRequestReader)
 	request := &http.Request{
 		Method: "GET",
 		Header: requestHeaders,
-		Body:   userRequestReadCloser,
 		URL:    parsedUrl,
 	}
 
@@ -90,23 +82,18 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 		Logger.Warningln("Users response responded non-200 code: ", code)
 		return nil, err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		Logger.Errorln("Failed to decode get users response:", err)
 		return nil, err
 	}
-	users := &name_nkonev_aaa.UsersResponse{}
-	if err := proto.Unmarshal(body, users); err != nil {
+
+	users := &[]*dto.User{}
+	if err := json.Unmarshal(bodyBytes, users); err != nil {
 		Logger.Errorln("Failed to parse users:", err)
 		return nil, err
 	}
-
-	var arr []*dto.User
-	for _, nu := range users.Users {
-		participant := convertToParticipant(nu)
-		arr = append(arr, &participant)
-	}
-	return arr, nil
+	return *users, nil
 }
 
 func (rc RestClient) Kick(chatId int64, userId int64) error {
@@ -145,13 +132,4 @@ func (rc RestClient) Kick(chatId int64, userId int64) error {
 		return err
 	}
 	return nil
-}
-
-func convertToParticipant(user *name_nkonev_aaa.UserDto) dto.User {
-	var nullableAvatar = null.NewString(user.Avatar, user.Avatar != "")
-	return dto.User{
-		Id:     user.Id,
-		Login:  user.Login,
-		Avatar: nullableAvatar,
-	}
 }
