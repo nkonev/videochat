@@ -417,7 +417,7 @@
 <style lang="stylus">
 .splitpanes {background-color: #f8f8f8;}
 
-.splitpanes__splitter {background-color: #ccc;position: relative;}
+.splitpanes__splitter {background-color: #ccc;position: relative; cursor: crosshair}
 .splitpanes__splitter:before {
     content: '';
     position: absolute;
@@ -429,6 +429,6 @@
     z-index: 1;
 }
 .splitpanes__splitter:hover:before {opacity: 1;}
-.splitpanes--vertical > .splitpanes__splitter:before {left: -20px;right: -20px;height: 100%;}
-.splitpanes--horizontal > .splitpanes__splitter:before {top: -20px;bottom: -20px;width: 100%;}
+.splitpanes--vertical > .splitpanes__splitter:before {left: -10px;right: -10px;height: 100%;}
+.splitpanes--horizontal > .splitpanes__splitter:before {top: -10px;bottom: -10px;width: 100%;}
 </style>
