@@ -42,7 +42,7 @@
         USER_TYPING,
         VIDEO_LOCAL_ESTABLISHED,
         USER_PROFILE_CHANGED,
-        LOGGED_IN, LOGGED_OUT, VIDEO_CALL_CHANGED, VIDEO_CALL_KICKED
+        LOGGED_IN, LOGGED_OUT, VIDEO_CALL_CHANGED, VIDEO_CALL_KICKED, MESSAGE_BROADCAST
     } from "./bus";
     import MessageEdit from "./MessageEdit";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
@@ -310,10 +310,11 @@
                     const properData = getProperData(message)
                     if (data.type === "user_typing") {
                         bus.$emit(USER_TYPING, properData);
-                    }
-                    if (data.type === "video_call_changed") {
+                    } else if (data.type === "video_call_changed") {
                         bus.$emit(VIDEO_CALL_CHANGED, properData);
                         this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, properData.usersCount);
+                    } else if (data.type === "user_broadcast") {
+                        bus.$emit(MESSAGE_BROADCAST, properData);
                     }
                 });
             },

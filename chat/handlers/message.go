@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	strip "github.com/grokify/html-strip-tags-go"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/microcosm-cc/bluemonday"
@@ -355,11 +356,54 @@ func (mc MessageHandler) TypeMessage(c echo.Context) error {
 		return err
 	}
 
+	if participant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
+		GetLogEntry(c.Request()).Errorf("Error during checking participant")
+		return err
+	} else if !participant {
+		GetLogEntry(c.Request()).Infof("User %v is not participant of chat %v, skipping", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusAccepted)
+	}
+
 	var ownersSet = map[int64]bool{}
 	ownersSet[userPrincipalDto.UserId] = true
 	var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 	typingUser := owners[userPrincipalDto.UserId]
 
 	mc.notificator.NotifyAboutMessageTyping(c, chatId, typingUser)
+	return c.NoContent(http.StatusAccepted)
+}
+
+type BroadcastDto struct {
+	Text string `json:"text"`
+}
+
+func (mc MessageHandler) BroadcastMessage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	if participant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
+		GetLogEntry(c.Request()).Errorf("Error during checking participant")
+		return err
+	} else if !participant {
+		GetLogEntry(c.Request()).Infof("User %v is not participant of chat %v, skipping", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusAccepted)
+	}
+
+	var bindTo = new(BroadcastDto)
+	if err := c.Bind(bindTo); err != nil {
+		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+
+
+	mc.notificator.NotifyAboutBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, strip.StripTags(bindTo.Text))
 	return c.NoContent(http.StatusAccepted)
 }

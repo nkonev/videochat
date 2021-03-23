@@ -26,6 +26,7 @@ type Notifications interface {
 	NotifyAboutProfileChanged(user *dto.User)
 	NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64)
 	NotifyAboutKick(c echo.Context, chatId int64, userId int64)
+	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
 }
 
 type notifictionsImpl struct {
@@ -338,4 +339,36 @@ func (not *notifictionsImpl) NotifyAboutKick(c echo.Context, chatId int64, userI
 			Logger.Errorf("error publishing to personal channel: %s", err)
 		}
 	}
+}
+
+type UserBroadcastNotification struct {
+	Login         string `json:"login"`
+	UserId int64  `json:"userId"`
+	Text string `json:"text"`
+}
+
+func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string) {
+
+	channelName := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
+
+	ut := UserBroadcastNotification{
+		Login:         login,
+		UserId: userId,
+		Text: text,
+	}
+
+	notification := CentrifugeNotification{
+		Payload:   ut,
+		EventType: "user_broadcast",
+	}
+
+	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
+		GetLogEntry(c.Request()).Errorf("error during marshalling chat created UserBroadcastNotification: %s", err2)
+	} else {
+		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("error publishing to public channel: %s", err)
+		}
+	}
+
 }

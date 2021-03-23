@@ -149,6 +149,7 @@ func configureEcho(
 	e.DELETE("/chat/:id/message/:messageId", mc.DeleteMessage)
 	e.PUT("/chat/:id/message/read/:messageId", mc.ReadMessage)
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
+	e.PUT("/chat/:id/broadcast", mc.BroadcastMessage)
 
 	vh := handlers.NewVideoHandler(db, restClient, notificator)
 	e.PUT("/internal/video/notify", vh.NotifyAboutVideoCallChange)

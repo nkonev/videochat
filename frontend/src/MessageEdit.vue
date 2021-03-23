@@ -16,11 +16,17 @@
                     <button class="ql-clean"></button>
                 </div>
                 <div class="custom-toolbar-send">
+                    <v-switch v-if="isAdmin()" dense hide-details
+                              class="ma-0 mr-4"
+                        v-model="sendBroadcast"
+                        :label="`Broadcast`"
+                    ></v-switch>
                     <v-btn color="primary" @click="sendMessageToChat" small><v-icon color="white">mdi-send</v-icon></v-btn>
                 </div>
             </div>
-            <v-tooltip v-if="writingUsers.length" :activator="'#sendButtonContainer'" top v-model="showTooltip">
-                <span>{{writingUsers.map(v=>v.login).join(', ')}} is writing...</span>
+            <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#sendButtonContainer'" top v-model="showTooltip">
+                <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} is writing...</span>
+                <span v-else>{{broadcastMessage}}</span>
             </v-tooltip>
 
     </v-container>
@@ -28,7 +34,7 @@
 
 <script>
     import axios from "axios";
-    import bus, {SET_EDIT_MESSAGE, USER_TYPING} from "./bus";
+    import bus, {MESSAGE_BROADCAST, SET_EDIT_MESSAGE, USER_TYPING} from "./bus";
     import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
@@ -61,7 +67,9 @@
                     },
                     placeholder: 'Press Ctrl + Enter to send, Esc to clear'
                 },
-                showTooltip: true
+                showTooltip: true,
+                sendBroadcast: false,
+                broadcastMessage: null
             }
         },
         methods: {
@@ -80,22 +88,55 @@
             onSetMessage(dto) {
                 this.editMessageDto = dto;
             },
-            notifyAboutTyping() {
-                axios.put(`/api/chat/`+this.chatId+'/typing')
+            notifyAboutBroadcast(clear) {
+                if (clear) {
+                    axios.put(`/api/chat/`+this.chatId+'/broadcast', {text: null});
+                } else {
+                    axios.put(`/api/chat/`+this.chatId+'/broadcast', {text: this.editMessageDto.text});
+                }
             },
+            notifyAboutTyping() {
+                axios.put(`/api/chat/` + this.chatId + '/typing');
+            },
+            sendNotification() {
+                if (this.sendBroadcast) {
+                    this.notifyAboutBroadcast();
+                } else {
+                    this.notifyAboutTyping();
+                }
+            },
+
             onUserTyping(data) {
                 console.log("OnUserTyping", data);
 
-                if (this.currentUser.id == data.participantId) {
+                if (!this.sendBroadcast && this.currentUser.id == data.participantId) {
                     console.log("Skipping myself typing notifications");
                     return;
                 }
+                this.showTooltip = true;
 
                 const idx = this.writingUsers.findIndex(value => value.login === data.login);
                 if (idx !== -1) {
                     this.writingUsers[idx].timestamp = + new Date();
                 } else {
                     this.writingUsers.push({timestamp: +new Date(), login: data.login})
+                }
+            },
+            isAdmin() {
+                if (this.currentUser) {
+                    return this.currentUser.roles.filter(v => v == "ROLE_ADMIN").length > 0
+                } else {
+                    return false
+                }
+            },
+            onUserBroadcast(dto) {
+                console.log("onUserBroadcast", dto);
+                const stripped = dto.text;
+                if (stripped && stripped.length > 0) {
+                    this.showTooltip = true;
+                    this.broadcastMessage = dto.text;
+                } else {
+                    this.broadcastMessage = null;
                 }
             },
         },
@@ -109,10 +150,12 @@
                 this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
             }, 500);
             bus.$on(USER_TYPING, this.onUserTyping);
+            bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
         },
         beforeDestroy() {
             bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.$off(USER_TYPING, this.onUserTyping);
+            bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
             clearInterval(timerId);
         },
         created(){
@@ -121,9 +164,17 @@
         watch: {
             'editMessageDto.text': {
                 handler: function (newValue, oldValue) {
-                    if (newValue && newValue != "")
-                    this.notifyAboutTyping();
+                    this.sendNotification();
                 },
+            },
+            sendBroadcast: {
+                handler: function (newValue, oldValue) {
+                    if (!newValue) {
+                        this.notifyAboutBroadcast(true);
+                    } else {
+                        this.notifyAboutBroadcast();
+                    }
+                }
             }
         },
         components: {

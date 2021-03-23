@@ -10,6 +10,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/gomodule/redigo v1.8.2
 	github.com/gorilla/websocket v1.4.2
+	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/guregu/null v4.0.0+incompatible
 	github.com/jackc/pgx/v4 v4.8.1
 	github.com/labstack/echo/v4 v4.1.16
