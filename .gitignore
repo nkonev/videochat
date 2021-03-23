@@ -4,13 +4,12 @@
 *.iml
 node_modules
 /chat/chat
-/chat/proto
 vendor
 .vendor-new
-grpc
 target
 /frontend-nginx
 /storage/storage
 build
 git.json
 /video/video
+/video-proxy/video-proxy
