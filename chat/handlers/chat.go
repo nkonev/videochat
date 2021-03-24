@@ -102,7 +102,7 @@ func (ch ChatHandler) GetChats(c echo.Context) error {
 	}
 }
 
-func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Context, chatId int64, behalfParticipantId int64) (*dto.ChatDto, error) {
+func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Context, chatId int64, behalfParticipantId int64, authResult *auth.AuthResult) (*dto.ChatDto, error) {
 	if cc, err := dbR.GetChatWithParticipants(behalfParticipantId, chatId); err != nil {
 		return nil, err
 	} else {
@@ -129,6 +129,9 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 			return nil, err
 		}
 		chatDto := convertToDto(cc, users, unreadMessages)
+		if authResult != nil && authResult.HasRole("ROLE_ADMIN") {
+			chatDto.CanBroadcast = true
+		}
 
 		return chatDto, nil
 	}
@@ -146,7 +149,7 @@ func (ch ChatHandler) GetChat(c echo.Context) error {
 		return err
 	}
 
-	if chat, err := getChat(&ch.db, ch.restClient, c, chatId, userPrincipalDto.UserId); err != nil {
+	if chat, err := getChat(&ch.db, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto); err != nil {
 		return err
 	} else {
 		if chat == nil {
@@ -206,7 +209,7 @@ func (ch ChatHandler) CreateChat(c echo.Context) error {
 			}
 		}
 
-		responseDto, err := getChat(tx, ch.restClient, c, id, userPrincipalDto.UserId)
+		responseDto, err := getChat(tx, ch.restClient, c, id, userPrincipalDto.UserId, userPrincipalDto)
 		if err != nil {
 			return err
 		}
@@ -321,7 +324,7 @@ func (ch ChatHandler) EditChat(c echo.Context) error {
 			}
 		}
 
-		if responseDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId); err != nil {
+		if responseDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, userPrincipalDto); err != nil {
 			return err
 		} else {
 			ch.notificator.NotifyAboutNewChat(c, responseDto, userIdsToNotifyAboutChatCreated, tx)
@@ -357,7 +360,7 @@ func (ch ChatHandler) LeaveChat(c echo.Context) error {
 		if err2 != nil {
 			return err2
 		}
-		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser); err != nil {
+		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, nil); err != nil {
 			return err
 		} else {
 			ch.notificator.NotifyAboutChangeChat(c, responseDto, responseDto.ParticipantIds, tx)

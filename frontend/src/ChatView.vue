@@ -20,7 +20,7 @@
                 </div>
             </pane>
             <pane max-size="70" min-size="12" v-bind:size="editSize">
-                <MessageEdit :chatId="chatId"/>
+                <MessageEdit :chatId="chatId" :canBroadcast="canBroadcast"/>
             </pane>
         </splitpanes>
     </v-container>
@@ -77,6 +77,9 @@
         computed: {
             chatId() {
                 return this.$route.params.id
+            },
+            canBroadcast() {
+                return this.chatDto.canBroadcast;
             },
             ...mapGetters({currentUser: GET_USER}),
             videoSize() {

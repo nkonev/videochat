@@ -14,4 +14,5 @@ type ChatDto struct {
 	CanEdit            null.Bool `json:"canEdit"`
 	CanLeave           null.Bool `json:"canLeave"`
 	UnreadMessages     int64     `json:"unreadMessages"`
+	CanBroadcast 	   bool 	 `json:"canBroadcast"`
 }

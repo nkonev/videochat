@@ -16,7 +16,7 @@
                     <button class="ql-clean"></button>
                 </div>
                 <div class="custom-toolbar-send">
-                    <v-switch v-if="isAdmin()" dense hide-details
+                    <v-switch v-if="canBroadcast" dense hide-details
                               class="ma-0 mr-4"
                         v-model="sendBroadcast"
                         :label="$vuetify.breakpoint.smAndUp ? `Broadcast` : null"
@@ -53,7 +53,7 @@
     let timerId;
 
     export default {
-        props:['chatId'],
+        props:['chatId', 'canBroadcast'],
         data() {
             return {
                 editMessageDto: dtoFactory(),
@@ -120,13 +120,6 @@
                     this.writingUsers[idx].timestamp = + new Date();
                 } else {
                     this.writingUsers.push({timestamp: +new Date(), login: data.login})
-                }
-            },
-            isAdmin() {
-                if (this.currentUser) {
-                    return this.currentUser.roles.filter(v => v == "ROLE_ADMIN").length > 0
-                } else {
-                    return false
                 }
             },
             onUserBroadcast(dto) {
