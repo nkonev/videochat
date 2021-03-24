@@ -19,7 +19,7 @@
                     <v-switch v-if="isAdmin()" dense hide-details
                               class="ma-0 mr-4"
                         v-model="sendBroadcast"
-                        :label="`Broadcast`"
+                        :label="$vuetify.breakpoint.smAndUp ? `Broadcast` : null"
                     ></v-switch>
                     <v-btn color="primary" @click="sendMessageToChat" small><v-icon color="white">mdi-send</v-icon></v-btn>
                 </div>

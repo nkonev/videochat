@@ -384,6 +384,10 @@ func (mc MessageHandler) BroadcastMessage(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
+	if !userPrincipalDto.HasRole("ROLE_ADMIN") {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
 		return err
