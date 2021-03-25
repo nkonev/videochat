@@ -103,7 +103,7 @@
                 // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
                     console.debug("got track", track.id, "for stream", stream.id);
-                    if (track.kind === "video") {
+                    track.onunmute = () => {
                         if (!this.streams[stream.id]) {
                             console.log("set track", track.id, "for stream", stream.id);
 
@@ -222,6 +222,9 @@
                     .catch(reason => {
                       console.error("Error during publishing screen stream, won't restart...", reason);
                       this.$refs.localVideoComponent.setUserName('Error get getDisplayMedia');
+                    })
+                    .then(value => {
+                        this.notifyWithData();
                     });
             },
             onStopScreenSharing() {
@@ -231,19 +234,24 @@
                 }
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
-                this.getAndPublishCamera();
+                this.getAndPublishCamera()
+                    .then(value => {
+                        this.notifyWithData();
+                    });
             },
             getAndPublishCamera() {
                 return LocalStream.getUserMedia({
                   resolution: "hd",
                   audio: true,
                 }).then((media) => {
-                  this.localMedia = media
+                  this.localMedia = media;
                   this.$refs.localVideoComponent.setSource(media);
                   this.$refs.localVideoComponent.setStreamMuted(true);
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
+                  this.$refs.localVideoComponent.setAudioMute(this.audioMuted);
                   this.clientLocal.publish(media);
                   this.$store.commit(SET_SHARE_SCREEN, false);
+                  this.setMuteDefaults();
                 });
             },
             getAndPublishScreen() {
@@ -251,13 +259,22 @@
                   audio: true,
                 }).then((media) => {
                     this.localMedia = media;
-                    this.localMedia.unmute("audio");
+                    //this.localMedia.unmute("audio");
                     this.$refs.localVideoComponent.setSource(media);
                     this.$refs.localVideoComponent.setStreamMuted(true);
-                    this.$refs.localVideoComponent.setUserName(this.myUserName)
+                    this.$refs.localVideoComponent.setAudioMute(this.audioMuted);
+                    this.$refs.localVideoComponent.setUserName(this.myUserName);
                     this.clientLocal.publish(media);
                     this.$store.commit(SET_SHARE_SCREEN, true);
+                    this.setMuteDefaults();
                 });
+            },
+            setMuteDefaults() {
+                if (this.audioMuted) {
+                    this.localMedia.mute("audio");
+                } else {
+                    this.localMedia.unmute("audio");
+                }
             },
             startVideoProcess() {
                 this.getConfig()

@@ -41,7 +41,7 @@ const store = new Vuex.Store({
         currentUser: null,
         searchString: "",
         muteVideo: false,
-        muteAudio: false,
+        muteAudio: true,
         title: "",
         isShowSearch: true,
         chatId: null,
