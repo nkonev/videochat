@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from "axios";
 import bus, {CHAT_SEARCH_CHANGED} from "./bus";
+import {audioMuteDefault} from "./utils";
 
 Vue.use(Vuex);
 
@@ -41,7 +42,7 @@ const store = new Vuex.Store({
         currentUser: null,
         searchString: "",
         muteVideo: false,
-        muteAudio: true,
+        muteAudio: audioMuteDefault,
         title: "",
         isShowSearch: true,
         chatId: null,

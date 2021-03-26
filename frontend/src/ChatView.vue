@@ -40,7 +40,6 @@
         MESSAGE_DELETED,
         MESSAGE_EDITED,
         USER_TYPING,
-        VIDEO_LOCAL_ESTABLISHED,
         USER_PROFILE_CHANGED,
         LOGGED_IN, LOGGED_OUT, VIDEO_CALL_CHANGED, VIDEO_CALL_KICKED, MESSAGE_BROADCAST
     } from "./bus";
@@ -189,11 +188,6 @@
                 console.log("Removing item", dto);
                 const idxToRemove = findIndex(this.items, dto);
                 this.items.splice(idxToRemove, 1);
-                this.$forceUpdate();
-            },
-
-            onVideoChangesHeight() {
-                console.log("Adjusting height after video has been shown");
                 this.$forceUpdate();
             },
 
@@ -350,7 +344,6 @@
             bus.$on(CHAT_EDITED, this.onChatChange);
             bus.$on(CHAT_DELETED, this.onChatDelete);
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
-            bus.$on(VIDEO_LOCAL_ESTABLISHED, this.onVideoChangesHeight);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(LOGGED_IN, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
@@ -362,7 +355,6 @@
             bus.$off(CHAT_EDITED, this.onChatChange);
             bus.$off(CHAT_DELETED, this.onChatDelete);
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
-            bus.$off(VIDEO_LOCAL_ESTABLISHED, this.onVideoChangesHeight);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(LOGGED_IN, this.onLoggedIn);
             bus.$off(LOGGED_OUT, this.onLoggedOut);

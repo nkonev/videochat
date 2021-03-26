@@ -20,13 +20,13 @@
         AUDIO_START_MUTING,
         SHARE_SCREEN_START,
         SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED,
-        VIDEO_LOCAL_ESTABLISHED, VIDEO_START_MUTING
+        VIDEO_START_MUTING
     } from "./bus";
     import axios from "axios";
     import { Client, LocalStream } from 'ion-sdk-js';
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
-    import {getWebsocketUrlPrefix} from "./utils";
+    import {audioMuteDefault, getWebsocketUrlPrefix} from "./utils";
     import { v4 as uuidv4 } from 'uuid';
 
     const ComponentClass = Vue.extend(UserVideo);
@@ -151,7 +151,7 @@
                 this.localMedia = null;
 
                 this.$store.commit(SET_MUTE_VIDEO, false);
-                this.$store.commit(SET_MUTE_AUDIO, false);
+                this.$store.commit(SET_MUTE_AUDIO, audioMuteDefault);
 
                 this.notifyAboutLeaving();
             },
@@ -346,7 +346,6 @@
         },
         mounted() {
             this.closingStarted = false;
-            bus.$emit(VIDEO_LOCAL_ESTABLISHED);
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
             this.$store.commit(SET_SHOW_HANG_BUTTON, true);
             window.addEventListener('beforeunload', this.leaveSession)
