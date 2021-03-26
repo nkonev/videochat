@@ -187,6 +187,11 @@ $mobileWidth = 800px
     height 100%
     overflow-y auto
 }
+
+.ql-editor {
+  padding 10px 8px
+}
+
 .ql-toolbar.ql-snow {
     padding 4px
 }
