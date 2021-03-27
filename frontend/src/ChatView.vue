@@ -221,11 +221,7 @@
             onNewMessage(dto) {
                 if (dto.chatId == this.chatId) {
                     this.addItem(dto);
-                    if (this.currentUser.id == dto.ownerId) {
-                        this.scrollDown();
-                    } else {
-                        // TODO show "Go bottom" tooltip
-                    }
+                    this.scrollDown();
                 } else {
                     console.log("Skipping", dto)
                 }
