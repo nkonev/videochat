@@ -1,7 +1,7 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
         <splitpanes ref="spl" class="default-theme" horizontal style="height: 100%"
-                    @pane-add="onPanelAdd" @pane-remove="onPanelRemove" @resize="onPanelResized">
+                    @pane-add="onPanelAdd(isScrolledToBottom())" @pane-remove="onPanelRemove()" @resize="onPanelResized">
             <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" v-bind:size="videoSize">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
@@ -135,7 +135,7 @@
                     localStorage.setItem('2panels', JSON.stringify(arr));
                 }
             },
-            onPanelAdd() {
+            onPanelAdd(wasScrolled) {
                 console.log("On panel add", this.$refs.spl.panes);
                 const stored = this.getStored();
                 if (stored) {
@@ -145,6 +145,9 @@
                             this.$refs.spl.panes[0].size = stored[0]; // video
                             this.$refs.spl.panes[1].size = stored[1]; // messages
                             this.$refs.spl.panes[2].size = stored[2]; // edit
+                            if(wasScrolled) {
+                                this.scrollDown();
+                            }
                         }
                     })
                 } else {
