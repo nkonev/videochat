@@ -220,8 +220,11 @@
 
             onNewMessage(dto) {
                 if (dto.chatId == this.chatId) {
+                    const wasScrolled = this.isScrolledToBottom();
                     this.addItem(dto);
-                    this.scrollDown();
+                    if (this.currentUser.id == dto.ownerId || wasScrolled) {
+                        this.scrollDown();
+                    }
                 } else {
                     console.log("Skipping", dto)
                 }
@@ -242,10 +245,14 @@
             },
             scrollDown() {
                 Vue.nextTick(()=>{
-                    var myDiv = document.getElementById("messagesScroller");
+                    const myDiv = document.getElementById("messagesScroller");
                     console.log("myDiv.scrollTop", myDiv.scrollTop, "myDiv.scrollHeight", myDiv.scrollHeight);
                     myDiv.scrollTop = myDiv.scrollHeight;
                 });
+            },
+            isScrolledToBottom() {
+                const myDiv = document.getElementById("messagesScroller");
+                return myDiv.scrollHeight - myDiv.scrollTop === myDiv.clientHeight
             },
             getInfo() {
                 return axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
