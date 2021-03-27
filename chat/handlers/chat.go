@@ -69,7 +69,7 @@ func (ch ChatHandler) GetChats(c echo.Context) error {
 	} else {
 		chatDtos := make([]*dto.ChatDto, 0)
 		for _, cc := range dbChats {
-			messages, err := ch.db.GetUnreadMessages(cc.Id, userPrincipalDto.UserId)
+			messages, err := ch.db.GetUnreadMessagesCount(cc.Id, userPrincipalDto.UserId)
 			if err != nil {
 				return err
 			}
@@ -124,7 +124,7 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 			}
 		}
 
-		unreadMessages, err := dbR.GetUnreadMessages(cc.Id, behalfParticipantId)
+		unreadMessages, err := dbR.GetUnreadMessagesCount(cc.Id, behalfParticipantId)
 		if err != nil {
 			return nil, err
 		}

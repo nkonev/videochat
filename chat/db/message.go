@@ -130,7 +130,7 @@ func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error 
 	return nil
 }
 
-func getUnreadMessagesCommon(co CommonOperations, chatId int64, userId int64) (int64, error) {
+func getUnreadMessagesCountCommon(co CommonOperations, chatId int64, userId int64) (int64, error) {
 	var count int64
 	row := co.QueryRow("SELECT COUNT(*) FROM message WHERE chat_id = $1 AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = $2 AND chat_id = $1), 0)", chatId, userId)
 	err := row.Scan(&count)
@@ -141,10 +141,10 @@ func getUnreadMessagesCommon(co CommonOperations, chatId int64, userId int64) (i
 	}
 }
 
-func (db *DB) GetUnreadMessages(chatId int64, userId int64) (int64, error) {
-	return getUnreadMessagesCommon(db, chatId, userId)
+func (db *DB) GetUnreadMessagesCount(chatId int64, userId int64) (int64, error) {
+	return getUnreadMessagesCountCommon(db, chatId, userId)
 }
 
-func (tx *Tx) GetUnreadMessages(chatId int64, userId int64) (int64, error) {
-	return getUnreadMessagesCommon(tx, chatId, userId)
+func (tx *Tx) GetUnreadMessagesCount(chatId int64, userId int64) (int64, error) {
+	return getUnreadMessagesCountCommon(tx, chatId, userId)
 }

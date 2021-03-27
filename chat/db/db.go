@@ -39,7 +39,7 @@ type CommonOperations interface {
 	GetChat(participantId, chatId int64) (*Chat, error)
 	GetChatWithParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error)
 	GetMessage(chatId int64, userId int64, messageId int64) (*Message, error)
-	GetUnreadMessages(chatId int64, userId int64) (int64, error)
+	GetUnreadMessagesCount(chatId int64, userId int64) (int64, error)
 }
 
 func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {

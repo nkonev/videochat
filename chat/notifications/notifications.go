@@ -94,7 +94,7 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 			continue
 		}
 
-		unreadMessages, err := tx.GetUnreadMessages(newChatDto.Id, participantId)
+		unreadMessages, err := tx.GetUnreadMessagesCount(newChatDto.Id, participantId)
 		if err != nil {
 			GetLogEntry(c.Request()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
 			continue
@@ -130,7 +130,7 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
 		GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
 
-		unreadMessages, err := tx.GetUnreadMessages(chatId, participantId)
+		unreadMessages, err := tx.GetUnreadMessagesCount(chatId, participantId)
 		if err != nil {
 			GetLogEntry(c.Request()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
 			continue
