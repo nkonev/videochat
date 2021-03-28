@@ -49,6 +49,7 @@ export default {
 <style lang="stylus" scoped>
     .video-container-element {
         height 100%
+        width min-content
     }
 
     .video-container-element:nth-child(even) {
@@ -66,5 +67,7 @@ export default {
         right -1.2em
         text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
         position: relative
+        width initial
+        white-space nowrap
     }
 </style>
