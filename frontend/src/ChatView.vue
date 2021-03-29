@@ -41,7 +41,7 @@
         MESSAGE_EDITED,
         USER_TYPING,
         USER_PROFILE_CHANGED,
-        LOGGED_IN, LOGGED_OUT, VIDEO_CALL_CHANGED, VIDEO_CALL_KICKED, MESSAGE_BROADCAST
+        LOGGED_IN, LOGGED_OUT, VIDEO_CALL_CHANGED, VIDEO_CALL_KICKED, MESSAGE_BROADCAST, REFRESH_ON_WEBSOCKET_RESTORED
     } from "./bus";
     import MessageEdit from "./MessageEdit";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
@@ -334,6 +334,9 @@
                     this.$router.push({name: chat_name});
                 }
             },
+            onWsRestoredRefresh() {
+                this.searchStringChanged();
+            },
         },
         mounted() {
             this.subscribe();
@@ -358,6 +361,7 @@
             bus.$on(LOGGED_IN, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(VIDEO_CALL_KICKED, this.onVideoCallKicked);
+            bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         },
         beforeDestroy() {
             bus.$off(MESSAGE_ADD, this.onNewMessage);
@@ -369,6 +373,7 @@
             bus.$off(LOGGED_IN, this.onLoggedIn);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(VIDEO_CALL_KICKED, this.onVideoCallKicked);
+            bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
             this.unsubscribe();
         },

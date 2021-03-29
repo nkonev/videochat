@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
-import vuetify from '@/plugins/vuetify'
-import {setupCentrifuge} from "@/centrifugeConnection"
+import vuetify from './plugins/vuetify'
+import {setupCentrifuge} from "./centrifugeConnection"
 import axios from "axios";
 import bus, {
   CHAT_ADD,
@@ -31,13 +31,15 @@ const vm = new Vue({
     }
   },
   created(){
+    let initialized = false;
     const setCetrifugeSession = (cs) => {
       Vue.prototype.centrifugeSessionId = cs;
-      bus.$emit(CHANGE_WEBSOCKET_STATUS, true);
+      bus.$emit(CHANGE_WEBSOCKET_STATUS, {connected: true, wasInitialized: initialized});
+      initialized = true;
     };
     const onDisconnected = () => {
       Vue.prototype.centrifugeSessionId = null;
-      bus.$emit(CHANGE_WEBSOCKET_STATUS, false);
+      bus.$emit(CHANGE_WEBSOCKET_STATUS, {connected: false, wasInitialized: initialized});
     };
     Vue.prototype.centrifuge = setupCentrifuge(setCetrifugeSession, onDisconnected);
     this.connectCentrifuge();
@@ -103,7 +105,7 @@ axios.interceptors.response.use((response) => {
     return Promise.reject(error)
   } else {
     console.log(error.response);
-    if (error.response.status != 409) {
+    if (!error.config.url.includes("/message/read/")) {
       const errorMessage  = "Request: " + JSON.stringify(error.config) + ", Response:" + JSON.stringify(error.response);
       vm.$refs.appRef.onError(errorMessage);
     }

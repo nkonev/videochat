@@ -34,7 +34,7 @@ import bus, {
     CHAT_SEARCH_CHANGED,
     LOGGED_IN,
     OPEN_CHAT_EDIT,
-    OPEN_SIMPLE_MODAL, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED, CLOSE_SIMPLE_MODAL
+    OPEN_SIMPLE_MODAL, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED, CLOSE_SIMPLE_MODAL, REFRESH_ON_WEBSOCKET_RESTORED
 } from "./bus";
     import {chat_name} from "./routes";
     import infinityListMixin, {
@@ -175,6 +175,9 @@ import {
                 });
                 this.$forceUpdate();
             },
+            onWsRestoredRefresh() {
+                this.searchStringChanged();
+            },
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadItems);
@@ -184,6 +187,7 @@ import {
             bus.$on(CHAT_SEARCH_CHANGED, this.searchStringChanged);
             bus.$on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadItems);
@@ -193,6 +197,7 @@ import {
             bus.$off(CHAT_SEARCH_CHANGED, this.searchStringChanged);
             bus.$off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         },
         mounted() {
             this.$store.commit(SET_TITLE, "Chats");

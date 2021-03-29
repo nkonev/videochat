@@ -122,6 +122,19 @@
                         </v-btn>
                     </template>
                 </v-snackbar>
+                <v-snackbar v-model="showWebsocketRestored" color="black" timeout="-1" :multi-line="true">
+                    Websocket connection has been restored, press to update
+
+                    <template v-slot:action="{ attrs }">
+                        <v-btn
+                            text
+                            v-bind="attrs"
+                            @click="onPressWebsocketRestored()"
+                        >
+                            Update
+                        </v-btn>
+                    </template>
+                </v-snackbar>
 
                 <LoginModal/>
                 <ChatEdit/>
@@ -163,7 +176,7 @@
         OPEN_INFO_DIALOG,
         OPEN_PERMISSIONS_WARNING_MODAL,
         SHARE_SCREEN_START, SHARE_SCREEN_STOP,
-        VIDEO_CALL_INVITED,
+        VIDEO_CALL_INVITED, REFRESH_ON_WEBSOCKET_RESTORED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -198,6 +211,7 @@
                 invitedVideoChatId: 0,
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
+                showWebsocketRestored: false,
             }
         },
         components:{
@@ -267,8 +281,12 @@
             shareScreenStop() {
                 bus.$emit(SHARE_SCREEN_STOP);
             },
-            onChangeWsStatus(value) {
-                this.wsConnected = value;
+            onChangeWsStatus({connected, wasInitialized}) {
+                console.log("onChangeWsStatus: connected", connected, "wasInitialized", wasInitialized)
+                this.wsConnected = connected;
+                if (connected && wasInitialized) {
+                    this.showWebsocketRestored = true;
+                }
             },
             onInfoClicked() {
                 bus.$emit(OPEN_INFO_DIALOG, this.chatId);
@@ -306,7 +324,11 @@
             },
             shouldDisplayVideoMute() {
                 return !this.shareScreen && this.isVideoRoute() && !this.videoMuted;
-            }
+            },
+            onPressWebsocketRestored() {
+                this.showWebsocketRestored = false;
+                bus.$emit(REFRESH_ON_WEBSOCKET_RESTORED);
+            },
         },
         computed: {
             ...mapGetters({

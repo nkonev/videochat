@@ -28,3 +28,4 @@ export const SHARE_SCREEN_STOP = "shareScreenStop";
 export const VIDEO_CALL_KICKED = "videoCallKicked";
 export const VIDEO_START_MUTING = "videoStartMuting";
 export const AUDIO_START_MUTING = "audioStartMuting";
+export const REFRESH_ON_WEBSOCKET_RESTORED = "refreshOnWsRestored";
