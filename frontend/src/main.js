@@ -31,15 +31,15 @@ const vm = new Vue({
     }
   },
   created(){
-    let initialized = false;
+    Vue.prototype.centrifugeInitialized = false;
     const setCetrifugeSession = (cs) => {
       Vue.prototype.centrifugeSessionId = cs;
-      bus.$emit(CHANGE_WEBSOCKET_STATUS, {connected: true, wasInitialized: initialized});
-      initialized = true;
+      bus.$emit(CHANGE_WEBSOCKET_STATUS, {connected: true, wasInitialized: Vue.prototype.centrifugeInitialized});
+      Vue.prototype.centrifugeInitialized = true;
     };
     const onDisconnected = () => {
       Vue.prototype.centrifugeSessionId = null;
-      bus.$emit(CHANGE_WEBSOCKET_STATUS, {connected: false, wasInitialized: initialized});
+      bus.$emit(CHANGE_WEBSOCKET_STATUS, {connected: false, wasInitialized: Vue.prototype.centrifugeInitialized});
     };
     Vue.prototype.centrifuge = setupCentrifuge(setCetrifugeSession, onDisconnected);
     this.connectCentrifuge();
