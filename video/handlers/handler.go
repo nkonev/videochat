@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 //go:embed static
@@ -512,4 +513,36 @@ func (h *Handler) kick(chatId, userId string, notifyBool bool) error {
 		}
 	}
 	return nil
+}
+
+func (h *Handler) notifyAllChats() {
+	for sessionName, _ := range h.sfu.GetSessions() {
+		var chatId string
+		if _, err := fmt.Sscanf(sessionName, "chat%v", &chatId); err != nil {
+			logger.Error(err, "error during reading chat id from session", "sessionName", sessionName)
+		} else {
+			logger.Info("Notifying chat", "chatId", chatId)
+			if err = h.notify(chatId, nil); err != nil {
+				logger.Error(err, "error during sending periodic notification")
+			}
+		}
+	}
+}
+
+func (h *Handler) Schedule() *chan struct{} {
+	ticker := time.NewTicker(h.conf.SyncNotificationPeriod)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <- ticker.C:
+				logger.Info("Notifying chats")
+				h.notifyAllChats()
+			case <- quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+	return &quit
 }

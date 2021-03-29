@@ -17,6 +17,7 @@ import (
 	"nkonev.name/video/config"
 	"nkonev.name/video/handlers"
 	"os"
+	"time"
 )
 
 var (
@@ -78,6 +79,11 @@ func load() bool {
 	if conf.LogC.V < 0 {
 		logger.Error(nil, "Logger V-Level cannot be less than 0")
 		return false
+	}
+
+	if conf.SyncNotificationPeriod == 0 {
+		conf.SyncNotificationPeriod = 5 * time.Second
+		logger.Info("Setting default sync notification period", "syncNotificationPeriod", conf.SyncNotificationPeriod)
 	}
 
 	logger.V(0).Info("Config file loaded", "file", file)
@@ -172,6 +178,8 @@ func main() {
 
 	go startMetrics(conf.HttpServerConfig.MetricsAddr)
 
+	schedule := handler.Schedule()
+
 	var err error
 	if conf.HttpServerConfig.Key != "" && conf.HttpServerConfig.Cert != "" {
 		logger.Info("Started listening", "addr", "https://"+conf.HttpServerConfig.Addr)
@@ -180,6 +188,7 @@ func main() {
 		logger.Info("Started listening", "addr", "http://"+conf.HttpServerConfig.Addr)
 		err = http.ListenAndServe(conf.HttpServerConfig.Addr, r)
 	}
+	*schedule <- struct { }{}
 	if err != nil {
 		panic(err)
 	}

@@ -41,5 +41,6 @@ type ExtendedConfig struct {
 	ChatConfig ChatConfig `mapstructure:"chat"`
 	HttpServerConfig HttpServerConfig `mapstructure:"server"`
 	LogC log.GlobalConfig `mapstructure:"log"`
+	SyncNotificationPeriod time.Duration `mapstructure:"syncNotificationPeriod"`
 }
 
