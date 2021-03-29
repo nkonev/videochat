@@ -76,24 +76,6 @@
                         {{ chatUsersCount }} participants</div>
                 </div>
             </v-btn>
-            <v-alert
-                v-model="invitedVideoChatAlert"
-                close-text="Close Alert"
-                dismissible
-                prominent
-                class="mb-0 mt-0 ml-0 mr-1 pb-0 pt-0 px-4"
-                color="success"
-            >
-                <v-row align="center" class="call-blink" :key="callReblinkCounter">
-                    <v-col class="grow" v-if="$vuetify.breakpoint.smAndUp">
-                        You are called
-                    </v-col>
-                    <v-col class="shrink ma-0 pa-0">
-                        <v-btn icon @click="onClickInvitation"><v-icon color="white">mdi-phone</v-icon></v-btn>
-                    </v-col>
-                </v-row>
-            </v-alert>
-
             <v-spacer></v-spacer>
             <v-tooltip bottom v-if="!wsConnected">
                 <template v-slot:activator="{ on, attrs }">
@@ -124,7 +106,6 @@
                 </v-snackbar>
                 <v-snackbar v-model="showWebsocketRestored" color="black" timeout="-1" :multi-line="true">
                     Websocket connection has been restored, press to update
-
                     <template v-slot:action="{ attrs }">
                         <v-btn
                             text
@@ -133,6 +114,13 @@
                         >
                             Update
                         </v-btn>
+                    </template>
+                </v-snackbar>
+                <v-snackbar v-model="invitedVideoChatAlert" class="call-blink" color="success" timeout="-1" :multi-line="true" :key="callReblinkCounter" top>
+                    You are called into chat #{{invitedVideoChatId}}, press to join
+                    <template v-slot:action="{ attrs }">
+                        <v-btn icon v-bind="attrs" @click="onClickInvitation()"><v-icon color="white">mdi-phone</v-icon></v-btn>
+                        <v-btn icon v-bind="attrs" @click="invitedVideoChatAlert = false"><v-icon color="white">mdi-close-circle</v-icon></v-btn>
                     </template>
                 </v-snackbar>
 
