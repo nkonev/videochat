@@ -41,7 +41,7 @@
 
 
         <v-app-bar
-                color="indigo"
+                :color="wsConnected ? 'indigo' : 'error'"
                 dark
                 app
                 :clipped-left="true"
@@ -79,7 +79,7 @@
             <v-spacer></v-spacer>
             <v-tooltip bottom v-if="!wsConnected">
                 <template v-slot:activator="{ on, attrs }">
-                    <v-icon color="error" class="mr-2" v-bind="attrs" v-on="on">mdi-lan-disconnect</v-icon>
+                    <v-icon color="white" class="mr-2" v-bind="attrs" v-on="on">mdi-lan-disconnect</v-icon>
                 </template>
                 <span>Websocket is not connected</span>
             </v-tooltip>
@@ -114,6 +114,8 @@
                         >
                             Update
                         </v-btn>
+                        <v-btn text v-bind="attrs" @click="showWebsocketRestored = false">Close</v-btn>
+
                     </template>
                 </v-snackbar>
                 <v-snackbar v-model="invitedVideoChatAlert" class="call-blink" color="success" timeout="-1" :multi-line="true" :key="callReblinkCounter" top>
