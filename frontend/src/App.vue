@@ -356,6 +356,12 @@
     }
 </script>
 
+<style lang="stylus">
+    html {
+        overflow-y auto
+    }
+</style>
+
 <style scoped lang="stylus">
     .call-blink {
         animation: blink 0.5s;
