@@ -7,7 +7,13 @@
                     :key="item.id"
             >
                 <v-list-item-content @click="openChat(item)">
-                    <v-list-item-title>{{item.name}} <v-badge v-if="item.unreadMessages" :content="item.unreadMessages" offset-x="-4" /></v-list-item-title>
+                    <v-list-item-title>
+                        <span>
+                            {{item.name}}
+                        </span>
+                        <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0"></v-badge>
+                        <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0"/>
+                    </v-list-item-title>
                     <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-action>
@@ -34,7 +40,12 @@ import bus, {
     CHAT_SEARCH_CHANGED,
     LOGGED_IN,
     OPEN_CHAT_EDIT,
-    OPEN_SIMPLE_MODAL, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED, CLOSE_SIMPLE_MODAL, REFRESH_ON_WEBSOCKET_RESTORED
+    OPEN_SIMPLE_MODAL,
+    UNREAD_MESSAGES_CHANGED,
+    USER_PROFILE_CHANGED,
+    CLOSE_SIMPLE_MODAL,
+    REFRESH_ON_WEBSOCKET_RESTORED,
+    VIDEO_CALL_CHANGED
 } from "./bus";
     import {chat_name} from "./routes";
     import infinityListMixin, {
@@ -178,6 +189,18 @@ import {
             onWsRestoredRefresh() {
                 this.searchStringChanged();
             },
+            onVideoCallChanged(dto) {
+                let matched = false;
+                this.items.forEach(item => {
+                    if (item.id == dto.chatId) {
+                        item.videoChatUsersCount = dto.usersCount;
+                        matched = true;
+                    }
+                });
+                if (matched) {
+                    this.$forceUpdate();
+                }
+            },
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadItems);
@@ -188,6 +211,7 @@ import {
             bus.$on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadItems);
@@ -198,6 +222,7 @@ import {
             bus.$off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+            bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
         },
         mounted() {
             this.$store.commit(SET_TITLE, "Chats");

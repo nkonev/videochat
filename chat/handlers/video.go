@@ -32,7 +32,13 @@ func (vh VideoHandler) NotifyAboutVideoCallChange(c echo.Context) error {
 		return err
 	}
 
-	vh.notificator.NotifyAboutVideoCallChanged(c, *bindTo)
+	ids, err := vh.db.GetParticipantIds(bindTo.ChatId)
+	if err != nil {
+		logger.Logger.Warnf("Error during get participants of chat %v", bindTo.ChatId)
+		return err
+	}
+
+	vh.notificator.NotifyAboutVideoCallChanged(c, *bindTo, ids)
 	return c.NoContent(200)
 }
 

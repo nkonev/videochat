@@ -145,7 +145,7 @@
                             this.$refs.spl.panes[0].size = stored[0]; // video
                             this.$refs.spl.panes[1].size = stored[1]; // messages
                             this.$refs.spl.panes[2].size = stored[2]; // edit
-                            if(wasScrolled) {
+                            if (wasScrolled) {
                                 this.scrollDown();
                             }
                         }
@@ -201,7 +201,7 @@
                         size: pageSize,
                         reverse: true
                     },
-                }).then(({ data }) => {
+                }).then(({data}) => {
                     const list = data;
                     if (list.length) {
                         this.page += 1;
@@ -247,7 +247,7 @@
                 }
             },
             scrollDown() {
-                Vue.nextTick(()=>{
+                Vue.nextTick(() => {
                     const myDiv = document.getElementById("messagesScroller");
                     console.log("myDiv.scrollTop", myDiv.scrollTop, "myDiv.scrollHeight", myDiv.scrollHeight);
                     myDiv.scrollTop = myDiv.scrollHeight;
@@ -258,7 +258,7 @@
                 return myDiv.scrollHeight - myDiv.scrollTop === myDiv.clientHeight
             },
             getInfo() {
-                return axios.get(`/api/chat/${this.chatId}`).then(({ data }) => {
+                return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
                     console.log("Got info about chat", data);
                     this.$store.commit(SET_TITLE, data.name);
                     this.$store.commit(SET_CHAT_USERS_COUNT, data.participants.length);
@@ -281,7 +281,7 @@
                 });
             },
             goToChatList() {
-                this.$router.push(({ name: chat_list_name}))
+                this.$router.push(({name: chat_list_name}))
             },
             onChatChange(dto) {
                 if (dto.id == this.chatId) {
@@ -289,7 +289,7 @@
                 }
             },
             onChatDelete(dto) {
-                this.$router.push(({ name: chat_list_name}))
+                this.$router.push(({name: chat_list_name}))
             },
             onUserProfileChanged(user) {
                 const patchedUser = user;
@@ -309,7 +309,7 @@
                 this.unsubscribe();
             },
             subscribe() {
-                this.chatMessagesSubscription = this.centrifuge.subscribe("chatMessages"+this.chatId, (message) => {
+                this.chatMessagesSubscription = this.centrifuge.subscribe("chatMessages" + this.chatId, (message) => {
                     // actually it's used for tell server about presence of this client.
                     // also will be used as a global notification, so we just log it
                     const data = getData(message);
@@ -317,9 +317,6 @@
                     const properData = getProperData(message)
                     if (data.type === "user_typing") {
                         bus.$emit(USER_TYPING, properData);
-                    } else if (data.type === "video_call_changed") {
-                        bus.$emit(VIDEO_CALL_CHANGED, properData);
-                        this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, properData.usersCount);
                     } else if (data.type === "user_broadcast") {
                         bus.$emit(MESSAGE_BROADCAST, properData);
                     }
@@ -336,6 +333,11 @@
             },
             onWsRestoredRefresh() {
                 this.searchStringChanged();
+            },
+            onVideoCallChanged(dto) {
+                if (dto.chatId == this.chatId) {
+                    this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, dto.usersCount);
+                }
             },
         },
         mounted() {
@@ -362,6 +364,7 @@
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(VIDEO_CALL_KICKED, this.onVideoCallKicked);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
         },
         beforeDestroy() {
             bus.$off(MESSAGE_ADD, this.onNewMessage);
@@ -374,12 +377,14 @@
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(VIDEO_CALL_KICKED, this.onVideoCallKicked);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+            bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
 
             this.unsubscribe();
         },
         destroyed() {
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
             this.$store.commit(SET_SHOW_HANG_BUTTON, false);
+            this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
         },
         components: {
             MessageEdit,
