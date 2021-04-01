@@ -183,7 +183,7 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId))
+	session := h.getSessionWithoutCreatingAnew(chatId)
 	if session != nil {
 		for _, peer := range session.Peers() {
 			if h.peerIsAlive(peer) {
@@ -228,9 +228,18 @@ func ParseInt64(s string) (int64, error) {
 	}
 }
 
+func (h *Handler) getSessionWithoutCreatingAnew(chatId string) *sfu.Session {
+	sessionName := fmt.Sprintf("chat%v", chatId)
+	if session, ok := h.sfu.GetSessions()[sessionName]; ok {
+		return session
+	} else {
+		return nil
+	}
+}
+
 func (h *Handler) countPeers(chatId string) int64 {
 	var usersCount int64 = 0
-	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId))
+	session := h.getSessionWithoutCreatingAnew(chatId)
 	if session != nil {
 		for _, peer := range session.Peers() {
 			if h.peerIsAlive(peer) {
@@ -245,10 +254,10 @@ func (h *Handler) notify(chatId string, data *NotifyDto) error {
 	var usersCount = h.countPeers(chatId)
 	var chatNotifyDto = chatNotifyDto{}
 	if data != nil {
-		logger.Info("Notifying with data", "streamId", data.StreamId, "login", data.Login)
+		logger.Info("Notifying with data", "chatId", chatId, "streamId", data.StreamId, "login", data.Login)
 		chatNotifyDto.Data = data
 	} else {
-		logger.Info("Notifying without data")
+		logger.Info("Notifying without data", "chatId", chatId)
 	}
 	chatNotifyDto.UsersCount = usersCount
 	parseInt64, err2 := ParseInt64(chatId)
@@ -429,7 +438,7 @@ type peerWithMetadata struct {
 }
 
 func (h *Handler) getPeerMetadatas(chatId, userId string) []peerWithMetadata {
-	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId))
+	session := h.getSessionWithoutCreatingAnew(chatId)
 	var result []peerWithMetadata
 	if session == nil {
 		return result
@@ -447,7 +456,7 @@ func (h *Handler) getPeerMetadatas(chatId, userId string) []peerWithMetadata {
 }
 
 func (h *Handler) getPeerMetadataByStreamId(chatId, streamId string) *peerWithMetadata {
-	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId)) // ChatVideo.vue
+	session := h.getSessionWithoutCreatingAnew(chatId)// ChatVideo.vue
 	if session == nil {
 		return nil
 	}
@@ -464,7 +473,7 @@ func (h *Handler) getPeerMetadataByStreamId(chatId, streamId string) *peerWithMe
 }
 
 func (h *Handler) getPeerByPeerId(chatId, peerId string) *sfu.Peer {
-	session, _ := h.sfu.GetSession(fmt.Sprintf("chat%v", chatId)) // ChatVideo.vue
+	session := h.getSessionWithoutCreatingAnew(chatId) // ChatVideo.vue
 	if session == nil {
 		return nil
 	}
@@ -521,7 +530,6 @@ func (h *Handler) notifyAllChats() {
 		if _, err := fmt.Sscanf(sessionName, "chat%v", &chatId); err != nil {
 			logger.Error(err, "error during reading chat id from session", "sessionName", sessionName)
 		} else {
-			logger.Info("Notifying chat", "chatId", chatId)
 			if err = h.notify(chatId, nil); err != nil {
 				logger.Error(err, "error during sending periodic notification")
 			}
@@ -536,7 +544,7 @@ func (h *Handler) Schedule() *chan struct{} {
 		for {
 			select {
 			case <- ticker.C:
-				logger.Info("Notifying chats")
+				logger.Info("Invoked chats periodic notificator")
 				h.notifyAllChats()
 			case <- quit:
 				ticker.Stop()
