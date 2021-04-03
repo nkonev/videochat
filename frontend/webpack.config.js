@@ -77,7 +77,7 @@ module.exports = (env, argv) => {
                     test: /\.styl|stylus$/,
                     use: [
                         CssExtractPlugin.loader,
-                        "css-loader?sourceMap",
+                        "css-loader",
                         'stylus-loader'
                     ]
                 },
@@ -104,7 +104,7 @@ module.exports = (env, argv) => {
                     test: /\.s(c|a)ss$/,
                     use: [
                         CssExtractPlugin.loader,
-                        'css-loader?sourceMap',
+                        'css-loader',
                         {
                             loader: 'sass-loader',
                             // Requires sass-loader@^8.0.0
@@ -125,7 +125,7 @@ module.exports = (env, argv) => {
 
     if (argv.mode === DEVELOPMENT_MODE) {
         // https://github.com/vuejs/vue-loader/issues/620#issuecomment-363931521
-        webpackCfg.devtool = 'cheap-module-eval-sourcemap';
+        webpackCfg.devtool = 'source-map';
     }
 
     return webpackCfg;
