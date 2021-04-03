@@ -92,6 +92,7 @@ module.exports = (env, argv) => {
                             }
                         }
                     ],
+                    type: 'javascript/auto'
                 },
                 {
                     test: /\.vue$/,
