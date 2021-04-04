@@ -23,7 +23,7 @@
             <v-divider></v-divider>
 
             <v-list dense>
-                <v-list-item v-if="this.isVideoRoute()">
+                <v-list-item v-if="isVideoRoute()">
                     <v-menu
                         bottom
                         offset-y

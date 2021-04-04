@@ -353,7 +353,7 @@
             getVideoResolution() {
                 let got = this.getStoredVideoResolution();
                 if (!got) {
-                    this.storeVideoResolution("hd");
+                    this.storeVideoResolution('shd');
                     got = this.getStoredVideoResolution();
                 }
                 return got;
