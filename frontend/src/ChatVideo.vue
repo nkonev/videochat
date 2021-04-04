@@ -17,9 +17,9 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import bus, {
-        AUDIO_START_MUTING,
+        AUDIO_START_MUTING, REQUEST_CHANGE_VIDEO_RESOLUTION,
         SHARE_SCREEN_START,
-        SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED,
+        SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED, VIDEO_RESOLUTION_CHANGED,
         VIDEO_START_MUTING
     } from "./bus";
     import axios from "axios";
@@ -81,7 +81,7 @@
 
                 this.clientLocal = new Client(this.signalLocal, config);
 
-                this.signalLocal.onerror = () => { console.error("Error in signal"); }
+                this.signalLocal.onerror = (e) => { console.error("Error in signal", e); }
                 this.signalLocal.onclose = () => {
                   console.info("Signal is closed, something gonna happen");
                   this.tryRestartVideoProcess();
@@ -240,8 +240,10 @@
                     });
             },
             getAndPublishCamera() {
+                const resolution = this.getVideoResolution();
+                bus.$emit(VIDEO_RESOLUTION_CHANGED, resolution);
                 return LocalStream.getUserMedia({
-                  resolution: "hd",
+                  resolution: resolution,
                   audio: true,
                 }).then((media) => {
                   this.localMedia = media;
@@ -343,6 +345,25 @@
                     }
                 }
             },
+            onVideoResolutionChanged(newResolution) {
+                this.storeVideoResolution(newResolution);
+                this.signalLocal.onclose = null; // remove onclose handler with restart in order to prevent cyclic restarts
+                this.tryRestartVideoProcess();
+            },
+            getVideoResolution() {
+                let got = this.getStoredVideoResolution();
+                if (!got) {
+                    this.storeVideoResolution("hd");
+                    got = this.getStoredVideoResolution();
+                }
+                return got;
+            },
+            getStoredVideoResolution() {
+                return localStorage.getItem('videoResolution');
+            },
+            storeVideoResolution(newVideoResolution) {
+                localStorage.setItem('videoResolution', newVideoResolution);
+            },
         },
         mounted() {
             this.closingStarted = false;
@@ -367,6 +388,7 @@
             bus.$on(VIDEO_START_MUTING, this.onStartVideoMuting);
             bus.$on(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$on(REQUEST_CHANGE_VIDEO_RESOLUTION, this.onVideoResolutionChanged);
         },
         destroyed() {
             bus.$off(SHARE_SCREEN_START, this.onStartScreenSharing);
@@ -374,6 +396,7 @@
             bus.$off(VIDEO_START_MUTING, this.onStartVideoMuting);
             bus.$off(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$off(REQUEST_CHANGE_VIDEO_RESOLUTION, this.onVideoResolutionChanged);
         },
         components: {
             UserVideo

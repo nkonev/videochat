@@ -23,6 +23,34 @@
             <v-divider></v-divider>
 
             <v-list dense>
+                <v-list-item v-if="this.isVideoRoute()">
+                    <v-menu
+                        bottom
+                        offset-y
+                        absolute
+                    >
+                        <template v-slot:activator="{ on, attrs }">
+                            <v-list-item-icon v-bind="attrs" v-on="on">
+                                <v-icon>mdi-cog</v-icon>
+                            </v-list-item-icon>
+
+                            <v-list-item-content v-bind="attrs" v-on="on">
+                                <v-list-item-title>Video: {{videoResolution}}</v-list-item-title>
+                            </v-list-item-content>
+                        </template>
+                        <v-list>
+                            <!-- https://github.com/pion/ion-sdk-js/blob/master/src/stream.ts#L10 -->
+                            <v-list-item
+                                v-for="(item, i) in ['qvga', 'vga', 'shd', 'hd', 'fhd', 'qhd']"
+                                :disabled="item == videoResolution"
+                                :key="i"
+                                @click="saveVideoResolution(item)"
+                            >
+                                <v-list-item-title>{{ item }}</v-list-item-title>
+                            </v-list-item>
+                        </v-list>
+                    </v-menu>
+                </v-list-item>
                 <v-list-item
                         v-for="item in getAppBarItems()"
                         :key="item.title"
@@ -166,7 +194,7 @@
         OPEN_INFO_DIALOG,
         OPEN_PERMISSIONS_WARNING_MODAL,
         SHARE_SCREEN_START, SHARE_SCREEN_STOP,
-        VIDEO_CALL_INVITED, REFRESH_ON_WEBSOCKET_RESTORED,
+        VIDEO_CALL_INVITED, REFRESH_ON_WEBSOCKET_RESTORED, REQUEST_CHANGE_VIDEO_RESOLUTION, VIDEO_RESOLUTION_CHANGED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -202,6 +230,7 @@
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
                 showWebsocketRestored: false,
+                videoResolution: null,
             }
         },
         components:{
@@ -319,6 +348,13 @@
                 this.showWebsocketRestored = false;
                 bus.$emit(REFRESH_ON_WEBSOCKET_RESTORED);
             },
+            saveVideoResolution(newResolution) {
+                console.log("Saving new video resolution", newResolution);
+                bus.$emit(REQUEST_CHANGE_VIDEO_RESOLUTION, newResolution);
+            },
+            onVideoResolutionChanged(res) {
+                this.videoResolution = res;
+            },
         },
         computed: {
             ...mapGetters({
@@ -346,6 +382,7 @@
             this.doSearch = debounce(this.doSearch, 700);
             bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
+            bus.$on(VIDEO_RESOLUTION_CHANGED, this.onVideoResolutionChanged)
         },
         watch: {
             searchChatString (searchString) {
