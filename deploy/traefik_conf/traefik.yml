@@ -1,4 +1,6 @@
 # https://docs.traefik.io/reference/static-configuration/file/
+pilot:
+  dashboard: false
 global:
   checkNewVersion: false
   sendAnonymousUsage: false
