@@ -65,7 +65,7 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - name: Build with npm run
         run: |
-          (cd frontend; npm install && npm run build)
+          (cd frontend; rm -rf node_modules; npm install && npm run build)
       - name: Deploy
         if: github.ref == 'refs/heads/master'
         run: |
