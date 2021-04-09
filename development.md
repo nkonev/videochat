@@ -155,3 +155,10 @@ firewall-cmd --zone=public --add-port=3478/tcp
 firewall-cmd --zone=public --add-port=3478/udp
 firewall-cmd --zone=public --add-port=5000-5100/udp
 ```
+
+# Fixing fibers issue
+```
+# npm install --global node-gyp
+$ /usr/bin/node /home/nkonev/go_1_11/videochat/frontend/node_modules/fibers/build
+# yum groupinstall 'Development Tools'
+```

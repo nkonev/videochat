@@ -83,16 +83,10 @@ module.exports = (env, argv) => {
                 },
                 {
                     test: /\.(ttf|eot|woff|woff2|svg)$/,
-                    use: [
-                        {
-                            loader: 'file-loader',
-                            options: {
-                                name: '[name].[ext]',
-                                outputPath: 'fonts/'
-                            }
-                        }
-                    ],
-                    type: 'javascript/auto'
+                    type: 'asset/resource',
+                    generator: {
+                        filename: 'fonts/[name][ext]'
+                    }
                 },
                 {
                     test: /\.vue$/,
@@ -111,10 +105,6 @@ module.exports = (env, argv) => {
                             // Requires sass-loader@^8.0.0
                             options: {
                                 implementation: require('sass'),
-                                sassOptions: {
-                                    fiber: require('fibers'),
-                                    indentedSyntax: true // optional
-                                },
                             },
                         },
                     ],
