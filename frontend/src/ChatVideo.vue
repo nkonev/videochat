@@ -32,6 +32,10 @@
     const ComponentClass = Vue.extend(UserVideo);
 
     const peerId = uuidv4();
+    let pingTimerId;
+    const pingInterval = 5000;
+    const videoProcessRestartInterval = 1000;
+    const askUserNameInterval = 1000;
 
     export default {
         data() {
@@ -92,6 +96,8 @@
                         this.getAndPublishCamera()
                             .then(()=>{
                               this.notifyAboutJoining();
+                            }).then(value => {
+                                this.startHealthCheckPing();
                             })
                             .catch(reason => {
                               console.error("Error during publishing camera stream, won't restart...", reason);
@@ -132,7 +138,14 @@
               }
               delete this.streams[streamId];
             },
+            tryRestartWithResetOncloseHandler() {
+                this.signalLocal.onclose = null; // remove onclose handler with restart in order to prevent cyclic restarts
+                this.tryRestartVideoProcess();
+            },
             leaveSession() {
+                if (pingTimerId) {
+                    clearInterval(pingTimerId);
+                }
                 for (const prop in this.streams) {
                     console.log("Cleaning stream " + prop);
                     const component = this.streams[prop].component;
@@ -155,6 +168,21 @@
 
                 this.notifyAboutLeaving();
             },
+            startHealthCheckPing() {
+                let localStreamId = this.$refs.localVideoComponent.getStreamId();
+                console.log("Setting up ping every", pingInterval, "ms");
+                pingTimerId = setInterval(()=>{
+                    axios.get(`/api/video/${this.chatId}/user?streamId=${localStreamId}`)
+                        .then(value => {
+                            if (value.status == 204) {
+                                console.warn("Detected absence of self user on server, restarting...");
+                                this.tryRestartWithResetOncloseHandler();
+                            } else {
+                                console.debug("Successfully checked self user");
+                            }
+                        })
+                }, pingInterval)
+            },
             askUserNameWithRetries(streamId) {
                 // request-response with axios and error handling
                 axios.get(`/api/video/${this.chatId}/user?streamId=${streamId}`)
@@ -164,7 +192,7 @@
                             console.log("Rescheduling asking for userName");
                             setTimeout(() => {
                               this.askUserNameWithRetries(streamId);
-                            }, 1000);
+                            }, askUserNameInterval);
                         }
                     } else {
                         const data = value.data;
@@ -306,7 +334,7 @@
                 } else {
                   console.info("Will not restart video process because closingStarted");
                 }
-              }, 1000);
+              }, videoProcessRestartInterval);
             },
             onStartVideoMuting(requestedState) {
                 if (requestedState) {
@@ -347,8 +375,7 @@
             },
             onVideoResolutionChanged(newResolution) {
                 this.storeVideoResolution(newResolution);
-                this.signalLocal.onclose = null; // remove onclose handler with restart in order to prevent cyclic restarts
-                this.tryRestartVideoProcess();
+                this.tryRestartWithResetOncloseHandler();
             },
             getVideoResolution() {
                 let got = this.getStoredVideoResolution();
