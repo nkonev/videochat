@@ -18,21 +18,22 @@
 
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
         <java.version>11</java.version>
-        <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
+        <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
+        <flatten-maven-plugin.version>1.2.2</flatten-maven-plugin.version>
+        <versions-maven-plugin.version>2.8.1</versions-maven-plugin.version>
 
-        <spring.boot.version>2.4.2</spring.boot.version>
+        <spring.boot.version>2.4.5</spring.boot.version>
         <selenide.version>5.11.1</selenide.version>
         <logback.access.version>1.2.3</logback.access.version>
-        <guava.version>29.0-jre</guava.version>
+        <guava.version>30.1.1-jre</guava.version>
         <greenmail.version>1.6.2</greenmail.version>
-        <mockserver.version>5.10.0</mockserver.version>
+        <mockserver.version>5.11.2</mockserver.version>
 
         <skipTests>false</skipTests>
-        <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
-        <opentracing-spring-jaeger-web-starter.version>3.1.2</opentracing-spring-jaeger-web-starter.version>
+        <opentracing-spring-jaeger-web-starter.version>3.3.1</opentracing-spring-jaeger-web-starter.version>
 
-        <git.commit.id.plugin.version>2.2.5</git.commit.id.plugin.version>
+        <git.commit.id.plugin.version>4.0.4</git.commit.id.plugin.version>
 
         <git-template-json>git.template.json</git-template-json>
         <git-json>git.json</git-json>
@@ -94,7 +95,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.7</version>
+                    <version>${versions-maven-plugin.version}</version>
                 </plugin>
 
                 <plugin>
@@ -188,7 +189,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
-                <version>1.2.1</version>
+                <version>${flatten-maven-plugin.version}</version>
                 <configuration>
                     <updatePomFile>true</updatePomFile>
                     <flattenMode>resolveCiFriendliesOnly</flattenMode>
