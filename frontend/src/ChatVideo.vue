@@ -172,30 +172,29 @@
                 let localStreamId = this.$refs.localVideoComponent.getStreamId();
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
-                    axios.get(`/api/video/${this.chatId}/user?streamId=${localStreamId}`)
-                        .then(value => {
-                            if (value.status == 204) {
-                                console.warn("Detected absence of self user on server, restarting...");
-                                this.tryRestartWithResetOncloseHandler();
-                            } else {
-                                console.debug("Successfully checked self user");
-                            }
-                        })
+                    this.signalLocal.call("userByStreamId", {streamId: localStreamId}).then(value => {
+                        if (!value.found) {
+                            console.warn("Detected absence of self user on server, restarting...");
+                            this.tryRestartWithResetOncloseHandler();
+                        } else {
+                            console.debug("Successfully checked self user", value);
+                        }
+                    })
                 }, pingInterval)
             },
             askUserNameWithRetries(streamId) {
-                // request-response with axios and error handling
-                axios.get(`/api/video/${this.chatId}/user?streamId=${streamId}`)
-                .then(value => {
-                    if (value.status == 204) {
+                // request-response with signalLocal and error handling
+                this.signalLocal.call("userByStreamId", {streamId: streamId}).then(value => {
+                    if (!value.found) {
                         if (!this.closingStarted) {
                             console.log("Rescheduling asking for userName");
                             setTimeout(() => {
-                              this.askUserNameWithRetries(streamId);
+                                this.askUserNameWithRetries(streamId);
                             }, askUserNameInterval);
                         }
                     } else {
-                        const data = value.data;
+                        console.debug("Successfully got data by streamId", streamId);
+                        const data = value.userDto;
                         if (data) {
                             const component = this.streams[data.streamId];
                             if (component) {
