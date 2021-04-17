@@ -3,7 +3,7 @@
         dense
         class="pr-1 mr-1 pl-4"
     >
-    <v-list-item-avatar v-if="item.owner && item.owner.avatar">
+    <v-list-item-avatar v-if="item.owner && item.owner.avatar" @click="onOwnerClick(item)" class="message-owner">
         <v-img :src="item.owner.avatar"></v-img>
     </v-list-item-avatar>
     <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
@@ -23,12 +23,16 @@
     import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL, SET_EDIT_MESSAGE} from "./bus";
     import debounce from "lodash/debounce";
     import { format, parseISO, differenceInDays } from 'date-fns'
+    import {profile_name} from "./routes";
 
     export default {
         props: ['item', 'chatId'],
         methods: {
             onMessageClick(dto) {
                 axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`);
+            },
+            onOwnerClick(dto) {
+                this.$router.push(({ name: profile_name, params: { id: dto.owner.id}}));
             },
             onMessageMouseMove(item) {
                 this.onMessageClick(item);
@@ -71,5 +75,8 @@
     font-size: .8125rem;
     font-weight: 500;
     line-height: 1rem;
+  }
+  .message-owner {
+      cursor pointer
   }
 </style>
