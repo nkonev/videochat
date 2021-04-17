@@ -512,9 +512,8 @@ func (h *HttpHandler) Kick(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId := vars["chatId"]
 	userToKickId := r.URL.Query().Get("userId")
-	var notifyBool bool = r.URL.Query().Get("notify") == "true"
 
-	if h.kick(chatId, userToKickId, notifyBool) != nil {
+	if h.kick(chatId, userToKickId) != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -573,8 +572,8 @@ func (h *HttpHandler) getPeerByPeerId(chatId, peerId string) *sfu.Peer {
 	return nil
 }
 
-func (h *HttpHandler) kick(chatId, userId string, notifyBool bool) error {
-	logger.Info("Invoked kick", "chatId", chatId, "userId", userId, "notify", notifyBool)
+func (h *HttpHandler) kick(chatId, userId string) error {
+	logger.Info("Invoked kick", "chatId", chatId, "userId", userId)
 
 	metadatas := h.getPeerMetadatas(chatId, userId)
 	for _, metadata := range metadatas {
@@ -583,32 +582,6 @@ func (h *HttpHandler) kick(chatId, userId string, notifyBool bool) error {
 		h.notify(chatId, nil)
 	}
 
-	// send kick notification through chat's personal centrifuge channel
-	if notifyBool {
-		url0 := h.conf.ChatConfig.ChatUrlConfig.Base
-		url1 := h.conf.ChatConfig.ChatUrlConfig.Kick
-
-		fullUrl := fmt.Sprintf("%v%v?userId=%v&chatId=%v", url0, url1, userId, chatId)
-		parsedUrl, err := url.Parse(fullUrl)
-		if err != nil {
-			logger.Error(err, "Failed during parse chat url")
-			return err
-		}
-
-		req := &http.Request{Method: http.MethodPut, URL: parsedUrl}
-
-		response, err := h.client.Do(req)
-		if err != nil {
-			logger.Error(err, "Transport error during kicking")
-			return err
-		} else {
-			defer response.Body.Close()
-			if response.StatusCode != http.StatusOK {
-				logger.Error(err, "Http Error during kicking", "httpCode", response.StatusCode, "chatId", chatId)
-				return err
-			}
-		}
-	}
 	return nil
 }
 
