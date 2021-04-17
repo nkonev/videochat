@@ -35,16 +35,9 @@ aaa:
   url:
     base: "http://localhost:8060"
     getUsers: "/internal/user/list"
-  redis:
-    address: :36379
-    password: ""
-    db: 0
-    connectTimeout: 5s
-    readTimeout: 0 # 0 means infinity read
-    writeTimeout: 30s
-    idleTimeout: 60s
-    maxIdle: 1
-    maxActive: 10
+
+rabbitmq:
+  url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
 
 video:
   kickVideoAfter: 10s

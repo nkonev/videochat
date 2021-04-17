@@ -40,8 +40,8 @@ func main() {
 			configureMigrations,
 			db.ConfigureDb,
 			notifications.NewNotifications,
-			listener.RedisAaaConnection,
 			listener.CreateAaaUserProfileUpdateListener,
+			listener.CreateRabbitMqConnection,
 		),
 		fx.Invoke(
 			initJaeger,

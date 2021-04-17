@@ -7,10 +7,10 @@ import (
 	"nkonev.name/chat/notifications"
 )
 
-type AaaUserProfileUpdateListener func(channel string, data []byte) error
+type AaaUserProfileUpdateListener func(data []byte) error
 
 func CreateAaaUserProfileUpdateListener(not notifications.Notifications) AaaUserProfileUpdateListener {
-	return func(channel string, data []byte) error {
+	return func(data []byte) error {
 		s := string(data)
 		Logger.Infof("Received %v", s)
 

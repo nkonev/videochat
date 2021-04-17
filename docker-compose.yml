@@ -94,7 +94,6 @@ services:
   rabbitmq:
     image: rabbitmq:3.8.14
     hostname: rabbitmq
-    container_name: rabbitmq-blog-dev
     restart: unless-stopped
     ports:
       - 35672:15672

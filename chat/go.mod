@@ -12,6 +12,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/guregu/null v4.0.0+incompatible
+	github.com/isayme/go-amqp-reconnect v0.0.0-20210303120416-fc811b0bcda2
 	github.com/jackc/pgx/v4 v4.8.1
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/microcosm-cc/bluemonday v1.0.3
@@ -19,6 +20,7 @@ require (
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/viper v1.7.0
+	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.5.1
 	go.opencensus.io v0.22.4
 	go.uber.org/fx v1.12.0
