@@ -1,5 +1,0 @@
-{
-  "build.version": "${git.build.version}",
-  "git.commit.id": "${git.commit.id}",
-  "build.time": "${git.build.time}"
-}

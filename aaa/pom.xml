@@ -33,9 +33,6 @@
         <skipTests>false</skipTests>
         <opentracing-spring-jaeger-web-starter.version>3.3.1</opentracing-spring-jaeger-web-starter.version>
 
-        <git.commit.id.plugin.version>4.0.4</git.commit.id.plugin.version>
-
-        <git-template-json>git.template.json</git-template-json>
         <git-json>git.json</git-json>
     </properties>
 
@@ -66,15 +63,6 @@
             <!-- copy properties such as liquibase.yml -->
             <resource>
                 <directory>${basedir}/src/main/resources</directory>
-            </resource>
-
-            <!-- placeholders will be replaced with git-commit-id plugin -->
-            <resource>
-                <directory>${basedir}/src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>**/${git-template-json}</include>
-                </includes>
             </resource>
         </resources>
 
@@ -113,25 +101,6 @@
 
         <plugins>
             <plugin>
-                <groupId>pl.project13.maven</groupId>
-                <artifactId>git-commit-id-plugin</artifactId>
-                <version>${git.commit.id.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>get-the-git-infos</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>revision</goal>
-                        </goals>
-                        <configuration>
-                            <failOnNoGitDirectory>false</failOnNoGitDirectory>
-                            <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring.boot.version}</version>
@@ -168,8 +137,13 @@
                         <phase>compile</phase>
                         <configuration>
                             <tasks>
+                                <mkdir dir="${project.build.outputDirectory}/static"/>
                                 <!-- this is just static file which'll be served by tomcat -->
-                                <move file="${project.build.outputDirectory}/static/${git-template-json}" tofile="${project.build.outputDirectory}/static/${git-json}"/>
+                                <!-- https://ant.apache.org/manual/Tasks/exec.html -->
+                                <exec dir="${project.basedir}" executable="bash" failonerror="true" searchpath="true">
+                                    <arg value="git-info.sh"/>
+                                    <arg value="${project.build.outputDirectory}/static/${git-json}"/>
+                                </exec>
                                 <!-- this file used by travis (see .travis.yml) for pick-up version and use it in docker push -->
                                 <echo file="${project.build.directory}/VERSIONFILE">${project.version}</echo>
                             </tasks>
