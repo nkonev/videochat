@@ -112,7 +112,6 @@ spring.flyway:
   out-of-order: true
 
 spring.redis.url: redis://127.0.0.1:36379/0
-spring.data.redis.repositories.enabled: false
 
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
