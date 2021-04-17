@@ -3,12 +3,15 @@
         dense
         class="pr-1 mr-1 pl-4"
     >
-    <v-list-item-avatar v-if="item.owner && item.owner.avatar" @click="onOwnerClick(item)" class="message-owner">
-        <v-img :src="item.owner.avatar"></v-img>
-    </v-list-item-avatar>
-    <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
+        <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">
+            <v-list-item-avatar v-if="item.owner && item.owner.avatar" @click="onOwnerClick(item)">
+                <v-img :src="item.owner.avatar"></v-img>
+            </v-list-item-avatar>
+        </router-link>
+
+        <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
         <v-container class="ma-0 pa-0 d-flex list-item-head">
-            {{getSubtitle(item)}}
+            <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item)}}</router-link><span class="with-space"> at </span>{{getDate(item)}}
             <v-icon class="mx-1 ml-2" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
             <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
         </v-container>
@@ -54,13 +57,16 @@
                 const editMessageDto = {id: dto.id, text: dto.text};
                 bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
             },
-            getSubtitle(item) {
+            getOwner(item) {
+                return item.owner.login
+            },
+            getDate(item) {
                 const parsedDate = parseISO(item.createDateTime);
                 let formatString = 'HH:mm:ss';
                 if (differenceInDays(new Date(), parsedDate) >= 1) {
                     formatString = 'd MMM yyyy, ' + formatString;
                 }
-                return `${item.owner.login} at ${format(parsedDate, formatString)}`
+                return `${format(parsedDate, formatString)}`
             },
         },
         created() {
@@ -76,12 +82,12 @@
     font-weight: 500;
     line-height: 1rem;
   }
-  .message-owner {
-      cursor pointer
-  }
   .message-item-text {
       display inline-block
       word-wrap break-word
       overflow-wrap break-word
+  }
+  .with-space {
+      white-space: pre;
   }
 </style>
