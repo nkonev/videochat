@@ -14,7 +14,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
-import com.github.nkonev.aaa.services.RedisEventReceiver;
+import com.github.nkonev.aaa.services.EventReceiver;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
@@ -52,7 +52,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     private AaaUserDetailsService aaaUserDetailsService;
 
     @Autowired
-    private RedisEventReceiver receiver;
+    private EventReceiver receiver;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileControllerTest.class);
 

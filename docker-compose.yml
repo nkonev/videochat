@@ -91,6 +91,27 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  rabbitmq:
+    image: rabbitmq:3.8.14
+    hostname: rabbitmq
+    container_name: rabbitmq-blog-dev
+    restart: unless-stopped
+    ports:
+      - 35672:15672
+      - 36672:5672
+    environment:
+      - RABBITMQ_DEFAULT_USER=videoChat
+      - RABBITMQ_DEFAULT_PASS=videoChatPazZw0rd
+    volumes:
+      - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - rabbitmq_data_dir:/var/lib/rabbitmq/mnesia
+    networks:
+      backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+
   jaeger:
     image: jaegertracing/all-in-one:1.18.1
     hostname: jaeger
@@ -110,6 +131,7 @@ volumes:
   postgres_data:
   redis_data_dir:
   minio_data:
+  rabbitmq_data_dir:
 
 networks:
   backend:

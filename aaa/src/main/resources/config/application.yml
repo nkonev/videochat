@@ -113,6 +113,11 @@ spring.flyway:
 
 spring.redis.url: redis://127.0.0.1:36379/0
 
+spring.rabbitmq:
+  addresses: localhost:36672
+  username: videoChat
+  password: videoChatPazZw0rd
+
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
 management:
