@@ -47,14 +47,12 @@
                 dataChannel: null,
                 localMedia: null,
                 localPublisherKey: 1,
-                closingStarted: false
+                closingStarted: false,
+                chatId: null
             }
         },
         props: ['chatDto'],
         computed: {
-            chatId() {
-                return this.$route.params.id
-            },
             ...mapGetters({currentUser: GET_USER, videoMuted: GET_MUTE_VIDEO, audioMuted: GET_MUTE_AUDIO}),
             myUserName() {
                 return this.currentUser.login
@@ -392,6 +390,8 @@
             },
         },
         mounted() {
+            this.chatId = this.$route.params.id;
+
             this.closingStarted = false;
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
             this.$store.commit(SET_SHOW_HANG_BUTTON, true);
