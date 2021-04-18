@@ -154,6 +154,7 @@ func (h *HttpHandler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	peer0 := sfu.NewPeer(h.sfu)
 	h.storeToIndex(peer0, userId, "", "", "", false, false)
 	defer h.removeFromIndex(peer0, userId, c)
+	defer h.notifyAboutLeaving(chatId)
 	p := server.NewJSONSignal(peer0, logger)
 	je := &JsonRpcExtendedHandler{p, h}
 	defer p.Close()
@@ -229,8 +230,8 @@ func (e *errorNoAccess) Error() string { return "No access" }
 type errorInternal struct {}
 func (e *errorInternal) Error() string { return "Internal error" }
 
-func (h *HttpHandler) userByStreamId(chatId string, streamId string, userId string) (*NotifyDto, error) {
-	if ok, err := h.checkAccess(userId, chatId); err != nil {
+func (h *HttpHandler) userByStreamId(chatId string, interestingStreamId string, behalfUserId string) (*NotifyDto, error) {
+	if ok, err := h.checkAccess(behalfUserId, chatId); err != nil {
 		return nil, &errorInternal{}
 	} else if !ok {
 		return nil, &errorNoAccess{}
@@ -240,7 +241,7 @@ func (h *HttpHandler) userByStreamId(chatId string, streamId string, userId stri
 	if session != nil {
 		for _, peer := range session.Peers() {
 			if h.peerIsAlive(peer) {
-				if pwm := h.getPeerMetadataByStreamId(chatId, streamId); pwm != nil && pwm.ExtendedPeerInfo != nil && pwm.ExtendedPeerInfo.streamId != "" {
+				if pwm := h.getPeerMetadataByStreamId(chatId, interestingStreamId); pwm != nil && pwm.ExtendedPeerInfo != nil && pwm.ExtendedPeerInfo.streamId != "" {
 					d := NotifyDto{
 						PeerId:    pwm.ExtendedPeerInfo.peerId,
 						StreamId:  pwm.ExtendedPeerInfo.streamId,
@@ -548,6 +549,14 @@ func (h *HttpHandler) kick(chatId, userId string) error {
 	}
 
 	return nil
+}
+
+func (h *HttpHandler) notifyAboutLeaving(chatId string) {
+	if err := h.notify(chatId, nil); err != nil {
+		logger.Error(err, "error during sending leave notification")
+	} else {
+		logger.Info("Successfully sent notification about leaving")
+	}
 }
 
 func (h *HttpHandler) notifyAllChats() {

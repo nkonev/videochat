@@ -163,8 +163,6 @@
 
                 this.$store.commit(SET_MUTE_VIDEO, false);
                 this.$store.commit(SET_MUTE_AUDIO, audioMuteDefault);
-
-                this.notifyAboutLeaving();
             },
             startHealthCheckPing() {
                 let localStreamId = this.$refs.localVideoComponent.getStreamId();
@@ -225,15 +223,6 @@
                     this.notifyWithData();
                 } else {
                     console.warn("Unable to notify about joining")
-                }
-            },
-            notifyAboutLeaving() {
-                if (this.chatId) {
-                    axios.put(`/api/video/${this.chatId}/notify`).catch(error => {
-                      console.log(error.response)
-                    });
-                } else {
-                    console.warn("Unable to notify about leaving")
                 }
             },
             onStartScreenSharing() {
