@@ -176,7 +176,7 @@ func main() {
 	r.Handle("/video/{chatId}/config", http.HandlerFunc(handler.Config)).Methods("GET")
 
 	r.Handle("/internal/{chatId}/kick", http.HandlerFunc(handler.Kick)).Methods("PUT")
-	r.Handle("/internal/video/{chatId}/user", http.HandlerFunc(handler.UserByStreamId)).Methods("GET")
+	r.Handle("/internal/{chatId}/user", http.HandlerFunc(handler.UserByStreamId)).Methods("GET")
 
 	r.PathPrefix("/").Methods("GET").HandlerFunc(handler.Static())
 
