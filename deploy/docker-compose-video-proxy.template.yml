@@ -18,7 +18,7 @@ services:
         - "traefik.http.middlewares.video-proxy-auth-middleware.forwardauth.address=http://aaa:8060/internal/profile"
         - "traefik.http.middlewares.video-proxy-auth-middleware.forwardauth.authRequestHeaders=Cookie"
         - "traefik.http.middlewares.video-proxy-auth-middleware.forwardauth.authResponseHeadersRegex=^X-Auth-"
-        - "traefik.http.middlewares.video-proxy-stripprefix-middleware.stripprefix.prefixes=/api,/video"
+        - "traefik.http.middlewares.video-proxy-stripprefix-middleware.stripprefix.prefixes=/api,/video-proxy,/video"
         - "traefik.http.routers.video-proxy-router.middlewares=video-proxy-auth-middleware,video-proxy-stripprefix-middleware"
         - "traefik.http.routers.video-proxy-version-router.rule=Path(`/video-proxy/git.json`)"
         - "traefik.http.routers.video-proxy-version-router.entrypoints=http"
