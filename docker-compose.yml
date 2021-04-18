@@ -92,7 +92,7 @@ services:
         max-file: "1"
 
   rabbitmq:
-    image: rabbitmq:3.8.14
+    image: rabbitmq:3.8.14-management
     hostname: rabbitmq
     restart: unless-stopped
     ports:
@@ -102,7 +102,6 @@ services:
       - RABBITMQ_DEFAULT_USER=videoChat
       - RABBITMQ_DEFAULT_PASS=videoChatPazZw0rd
     volumes:
-      - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
       - rabbitmq_data_dir:/var/lib/rabbitmq/mnesia
     networks:
       backend:

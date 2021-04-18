@@ -41,14 +41,18 @@ func main() {
 			db.ConfigureDb,
 			notifications.NewNotifications,
 			listener.CreateAaaUserProfileUpdateListener,
+			listener.CreateVideoListener,
 			listener.CreateRabbitMqConnection,
+			listener.CreateAaaQueue,
+			listener.CreateVideoQueue,
 		),
 		fx.Invoke(
 			initJaeger,
 			runMigrations,
 			runCentrifuge,
 			runEcho,
-			listener.ListenPubSubChannels,
+			listener.ListenAaaQueue,
+			listener.ListenVideoQueue,
 		),
 	)
 	app.Run()
@@ -152,8 +156,6 @@ func configureEcho(
 	e.PUT("/chat/:id/broadcast", mc.BroadcastMessage)
 
 	vh := handlers.NewVideoHandler(db, restClient, notificator)
-	e.PUT("/internal/video/notify", vh.NotifyAboutVideoCallChange)
-	e.PUT("/internal/video/kick", vh.NotifyAboutKick)
 	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
 	e.PUT("/chat/:id/video/kick", vh.Kick)
 

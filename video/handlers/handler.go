@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"context"
 	"embed"
 	"encoding/json"
@@ -18,8 +17,8 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"nkonev.name/video/config"
+	"nkonev.name/video/producer"
 	"strconv"
 	"strings"
 	"sync"
@@ -36,6 +35,7 @@ type HttpHandler struct {
 	conf            *config.ExtendedConfig
 	httpFs          *http.FileSystem
 	peerUserIdIndex connectionsLockableMap
+	rabbitMqPublisher *producer.RabbitPublisher
 }
 type ExtendedPeerInfo struct {
 	userId string
@@ -91,6 +91,7 @@ func NewHandler(
 	upgrader *websocket.Upgrader,
 	sfu *sfu.SFU,
 	conf *config.ExtendedConfig,
+	rabbitMqPublisher *producer.RabbitPublisher,
 ) HttpHandler {
 	fsys, err := fs.Sub(embeddedFiles, "static")
 	if err != nil {
@@ -108,6 +109,7 @@ func NewHandler(
 			RWMutex:            sync.RWMutex{},
 			connectionWithData: connectionWithData{},
 		},
+		rabbitMqPublisher: rabbitMqPublisher,
 	}
 	return handler
 }
@@ -342,50 +344,13 @@ func (h *HttpHandler) notify(chatId string, data *NotifyDto) error {
 	}
 	chatNotifyDto.ChatId = parseInt64
 
-	url0 := h.conf.ChatConfig.ChatUrlConfig.Base
-	url1 := h.conf.ChatConfig.ChatUrlConfig.Notify
-
-	fullUrl := fmt.Sprintf("%v%v", url0, url1)
-	parsedUrl, err := url.Parse(fullUrl)
-	if err != nil {
-		logger.Error(err, "Failed during parse chat url")
-		return err
-	}
-
 	marshal, err2 := json.Marshal(chatNotifyDto)
 	if err2 != nil {
 		logger.Error(err2, "Failed during marshal chatNotifyDto")
 		return err2
 	}
 
-	r := ioutil.NopCloser(bytes.NewReader(marshal))
-	contentType := "application/json;charset=UTF-8"
-
-	requestHeaders := map[string][]string{
-		"Accept-Encoding": {"gzip, deflate"},
-		"Accept":          {contentType},
-		"Content-Type":    {contentType},
-	}
-
-	req := &http.Request{
-		Method: http.MethodPut,
-		URL:    parsedUrl,
-		Body:   r,
-		Header: requestHeaders,
-	}
-
-	response, err := h.client.Do(req)
-	if err != nil {
-		logger.Error(err, "Transport error during notifying")
-		return err
-	} else {
-		defer response.Body.Close()
-		if response.StatusCode != http.StatusOK {
-			logger.Error(err, "Http Error during notifying", "httpCode", response.StatusCode, "chatId", chatId)
-			return err
-		}
-	}
-	return nil
+	return h.rabbitMqPublisher.Publish(marshal)
 }
 
 type NotifyDto struct {

@@ -22,7 +22,7 @@ type Notifications interface {
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
-	NotifyAboutVideoCallChanged(c echo.Context, dto dto.ChatNotifyDto, participantIds []int64)
+	NotifyAboutVideoCallChanged(dto dto.ChatNotifyDto, participantIds []int64)
 	NotifyAboutProfileChanged(user *dto.User)
 	NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64)
 	NotifyAboutKick(c echo.Context, chatId int64, userId int64)
@@ -251,11 +251,11 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 	}
 }
 
-func (not *notifictionsImpl) NotifyAboutVideoCallChanged(c echo.Context, dto dto.ChatNotifyDto, participantIds []int64) {
+func (not *notifictionsImpl) NotifyAboutVideoCallChanged(dto dto.ChatNotifyDto, participantIds []int64) {
 	// TODO potential bad performance on frontend, consider batching
 	for _, participantId := range participantIds {
 		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
-		GetLogEntry(c.Request()).Infof("Sending notification about change video chat the chat to participantChannel: %v", participantChannel)
+		Logger.Infof("Sending notification about change video chat the chat to participantChannel: %v", participantChannel)
 
 		notification := CentrifugeNotification{
 			Payload:   dto,
@@ -263,11 +263,11 @@ func (not *notifictionsImpl) NotifyAboutVideoCallChanged(c echo.Context, dto dto
 		}
 
 		if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-			GetLogEntry(c.Request()).Errorf("error during marshalling chat created VideoCallChanged: %s", err2)
+			Logger.Errorf("error during marshalling chat created VideoCallChanged: %s", err2)
 		} else {
 			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
 			if err != nil {
-				GetLogEntry(c.Request()).Errorf("error publishing to public channel: %s", err)
+				Logger.Errorf("error publishing to public channel: %s", err)
 			}
 		}
 	}

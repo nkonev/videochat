@@ -16,6 +16,10 @@ type FrontendConfig struct {
 	ICEServers []sfu.ICEServerConfig `mapstructure:"iceserver"`
 }
 
+type RabbitMqConfig struct {
+	Url string `mapstructure:"url"`
+}
+
 type ChatConfig struct {
 	ChatUrlConfig ChatUrlConfig `mapstructure:"url"`
 }
@@ -23,8 +27,6 @@ type ChatConfig struct {
 type ChatUrlConfig struct {
 	Base string `mapstructure:"base"`
 	Access string `mapstructure:"access"`
-	Notify string `mapstructure:"notify"`
-	Kick string `mapstructure:"kick"`
 }
 
 type HttpServerConfig struct {
@@ -42,5 +44,6 @@ type ExtendedConfig struct {
 	HttpServerConfig HttpServerConfig `mapstructure:"server"`
 	LogC log.GlobalConfig `mapstructure:"log"`
 	SyncNotificationPeriod time.Duration `mapstructure:"syncNotificationPeriod"`
+	RabbitMqConfig RabbitMqConfig `mapstructure:"rabbitmq"`
 }
 

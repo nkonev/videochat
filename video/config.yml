@@ -95,7 +95,6 @@ chat:
   url:
     base: "http://localhost:1235"
     access: "/internal/access"
-    notify: "/internal/video/notify"
 
 # Rest client
 http:
@@ -106,3 +105,6 @@ http:
 frontend:
   iceserver:
     - urls: ["stun:stun.l.google.com:19302"]
+
+rabbitmq:
+  url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"

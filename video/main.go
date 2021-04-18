@@ -16,6 +16,7 @@ import (
 	_ "net/http/pprof"
 	"nkonev.name/video/config"
 	"nkonev.name/video/handlers"
+	"nkonev.name/video/producer"
 	"os"
 	"time"
 )
@@ -164,7 +165,9 @@ func main() {
 
 	client := NewRestClient()
 
-	handler := handlers.NewHandler(client, &upgrader, s, &conf)
+	publisher := producer.NewRabbitPublisher(conf.RabbitMqConfig)
+
+	handler := handlers.NewHandler(client, &upgrader, s, &conf, publisher)
 	r := mux.NewRouter()
 	// SFU websocket endpoint
 	r.Handle("/video/{chatId}/ws", http.HandlerFunc(handler.SfuHandler)).Methods("GET")
