@@ -26,6 +26,9 @@ services:
       - _JAVA_OPTIONS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx512m -XX:MetaspaceSize=128M -XX:MaxMetaspaceSize=256M -XX:OnOutOfMemoryError="kill -9 %p" -Dnetworkaddress.cache.ttl=0 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/aaa
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/aaa?connectTimeout=10&socketTimeout=40&ApplicationName=aaa-app
       - SPRING_REDIS_URL=redis://redis:6379/0
+      - SPRING_RABBITMQ_ADDRESSES=rabbitmq:5672
+      - SPRING_RABBITMQ_USERNAME=videoChat
+      - SPRING_RABBITMQ_PASSWORD=videoChatPazZw0rd
       - SPRING_MAIL_HOST=smtp.yandex.ru
       - CUSTOM_EMAIL_FROM=username@yandex.ru
       - SPRING_MAIL_USERNAME=username

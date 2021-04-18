@@ -114,3 +114,5 @@ frontend:
       username: "uSerNamE"
       credential: "SeCrEt"
 
+rabbitmq:
+  url: "amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672"

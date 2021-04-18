@@ -55,4 +55,5 @@ video:
 jaeger:
   endpoint: "jaeger:6831"
 
-
+rabbitmq:
+  url: "amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672"
