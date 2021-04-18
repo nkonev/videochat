@@ -362,7 +362,7 @@ type NotifyDto struct {
 	AudioMute bool   `json:"audioMute"`
 }
 
-func (h *HttpHandler) NotifyChatParticipants(w http.ResponseWriter, r *http.Request) {
+func (h *HttpHandler) StoreInfoAndNotifyChatParticipants(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId := vars["chatId"]
 	userId := r.Header.Get("X-Auth-UserId")
@@ -389,8 +389,8 @@ func (h *HttpHandler) NotifyChatParticipants(w http.ResponseWriter, r *http.Requ
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if peerF := h.getPeerByPeerId(chatId, bodyStruct.PeerId); peerF != nil {
-			h.storeToIndex(peerF, userId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+		if sfuPeer := h.getPeerByPeerId(chatId, bodyStruct.PeerId); sfuPeer != nil {
+			h.storeToIndex(sfuPeer, userId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
 			if err := h.notify(chatId, &bodyStruct); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 			}
