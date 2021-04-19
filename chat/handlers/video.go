@@ -103,6 +103,8 @@ type KickUserDto struct {
 	UserId int64 `json:"userId"`
 }
 
+// It's control shot for video microservice.
+// It will kick user forcibly if user's frontend didn't received message from centrifuge.
 func (vh VideoHandler) kickVideoStream(chatId, userId int64) {
 	logger.Logger.Infof("video kick chatId=%v, userId=%v", chatId, userId)
 
