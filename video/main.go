@@ -85,7 +85,7 @@ func load() bool {
 	}
 
 	if conf.SyncNotificationPeriod == 0 {
-		conf.SyncNotificationPeriod = 5 * time.Second
+		conf.SyncNotificationPeriod = 2 * time.Second
 		logger.Info("Setting default sync notification period", "syncNotificationPeriod", conf.SyncNotificationPeriod)
 	}
 
