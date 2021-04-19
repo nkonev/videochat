@@ -89,6 +89,10 @@ func load() bool {
 		logger.Info("Setting default sync notification period", "syncNotificationPeriod", conf.SyncNotificationPeriod)
 	}
 
+	if conf.ScalingConfig.Rack == 0 {
+		logger.Info("Don't forget to set rack in case scaling")
+	}
+
 	logger.V(0).Info("Config file loaded", "file", file)
 
 	fmt.Printf("config %s load ok!\n", file)
@@ -170,7 +174,7 @@ func main() {
 	rabbitmqConnection := myRabbitmq.CreateRabbitMqConnection(conf.RabbitMqConfig)
 	publisherService := producer.NewRabbitPublisher(rabbitmqConnection)
 	handler := handlers.NewHandler(client, &upgrader, s, &conf, publisherService)
-	listenerService := listener.NewVideoListener(&handler, rabbitmqConnection)
+	listenerService := listener.NewVideoListener(&handler, rabbitmqConnection, conf.ScalingConfig)
 	listenerService.ListenVideoKickQueue()
 
 	r := mux.NewRouter()

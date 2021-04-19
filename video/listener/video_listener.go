@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/isayme/go-amqp-reconnect/rabbitmq"
+	"nkonev.name/video/config"
 	"nkonev.name/video/handlers"
 	myRabbitmq "nkonev.name/video/rabbitmq"
 )
@@ -36,22 +37,25 @@ func createVideoListener(h *handlers.HttpHandler) VideoListenerFunction {
 type VideoListenerService struct {
 	channel *rabbitmq.Channel
 	listenerFunction VideoListenerFunction
+	rackId int32
 }
 
 
-func NewVideoListener(h *handlers.HttpHandler, connection *rabbitmq.Connection) *VideoListenerService {
+func NewVideoListener(h *handlers.HttpHandler, connection *rabbitmq.Connection, scalingConfig config.ScalingConfig) *VideoListenerService {
 	channel := myRabbitmq.CreateRabbitMqChannel(connection)
 	listener := createVideoListener(h)
 
 	return &VideoListenerService{
 		channel: channel,
 		listenerFunction: listener,
+		rackId: scalingConfig.Rack,
 	}
 }
 
 func (r *VideoListenerService) ListenVideoKickQueue() {
 	createFanoutExchange(videoKickExchange, r.channel)
-	amqpQueue := createAnonymousQueue(r.channel)
+	queueName := fmt.Sprintf("video-kick-%v", r.rackId)
+	amqpQueue := createQueue(r.channel, queueName)
 	bindQueueToExchange(videoKickExchange, amqpQueue, r.channel)
 	listenQueue(r.channel, amqpQueue, r.listenerFunction)
 }

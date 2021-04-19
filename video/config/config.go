@@ -36,6 +36,10 @@ type HttpServerConfig struct {
 	Key string `mapstructure:"key"`
 }
 
+type ScalingConfig struct {
+	Rack int32 `mapstructure:"rack"`
+}
+
 type ExtendedConfig struct {
 	sfu.Config
 	FrontendConfig FrontendConfig `mapstructure:"frontend"`
@@ -45,5 +49,6 @@ type ExtendedConfig struct {
 	LogC log.GlobalConfig `mapstructure:"log"`
 	SyncNotificationPeriod time.Duration `mapstructure:"syncNotificationPeriod"`
 	RabbitMqConfig RabbitMqConfig `mapstructure:"rabbitmq"`
+	ScalingConfig ScalingConfig `mapstructure:"scaling"`
 }
 

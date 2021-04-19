@@ -22,7 +22,7 @@ func createFanoutExchange(name string, consume *rabbitmq.Channel) {
 		nil,      // arguments
 	)
 	if err != nil {
-		logger.Error(err, "Unable to declare to exchange, restarting.", "exchange", name)
+		logger.Error(err, "Unable to declare to exchange, exit.", "exchange", name)
 		panic(err)
 	} else {
 		logger.Info("Successfully declared exchange", "exchange", name)
@@ -39,7 +39,7 @@ func bindQueueToExchange(exchangeName string, queue *amqp.Queue, consume *rabbit
 		nil,
 	)
 	if err != nil {
-		logger.Error(err, "Unable to bind queue to exchange, restarting.", "exchange", exchangeName)
+		logger.Error(err, "Unable to bind queue to exchange, exit.", "exchange", exchangeName, "queue", queue.Name)
 		panic(err)
 	} else {
 		logger.Info("Successfully bound queue to exchange", "exchange", exchangeName)
@@ -47,22 +47,22 @@ func bindQueueToExchange(exchangeName string, queue *amqp.Queue, consume *rabbit
 }
 
 
-func createAnonymousQueue(consumeCh *rabbitmq.Channel) *amqp.Queue {
+func createQueue(consumeCh *rabbitmq.Channel, queueName string) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
-		"", // name
-		false,   // durable
+		queueName, // name
+		true,   // durable
 		false,   // delete when unused
-		true,   // exclusive
+		false,   // exclusive
 		false,   // no-wait
 		nil,     // arguments
 	)
 	if err != nil {
-		logger.Error(err, "Unable to declare to queue, restarting.")
+		logger.Error(err, "Unable to declare to queue, exit.", "queue", queueName)
 		panic(err)
 	} else {
-		logger.Info("Successfully declared queue", )
+		logger.Info("Successfully declared queue", "queue", queueName)
 	}
 	return &q
 }
@@ -86,7 +86,7 @@ func listenQueue(
 			nil,
 		)
 		if err != nil {
-			logger.Error(err, "Unable to connect to queue, restarting", "queue", queue.Name)
+			logger.Error(err, "Unable to connect to queue, exit", "queue", queue.Name)
 			panic(err)
 		} else {
 			logger.Info("Successfully connected to queue", "queue", queue.Name)
