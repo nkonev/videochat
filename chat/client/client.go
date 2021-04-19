@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
@@ -94,42 +93,4 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 		return nil, err
 	}
 	return *users, nil
-}
-
-func (rc RestClient) Kick(chatId int64, userId int64) error {
-	contentType := "application/json;charset=UTF-8"
-	url0 := viper.GetString("video.url.base")
-	urlKickTemplate := viper.GetString("video.url.kick")
-	urlKick := fmt.Sprintf(urlKickTemplate, chatId)
-	fullUrl := fmt.Sprintf("%v%v?userId=%v", url0, urlKick, userId)
-
-	requestHeaders := map[string][]string{
-		"Accept-Encoding": {"gzip, deflate"},
-		"Accept":          {contentType},
-		"Content-Type":    {contentType},
-	}
-
-	parsedUrl, err := url.Parse(fullUrl)
-	if err != nil {
-		Logger.Errorln("Failed during parse video url:", err)
-		return err
-	}
-	request := &http.Request{
-		Method: "PUT",
-		Header: requestHeaders,
-		URL:    parsedUrl,
-	}
-
-	resp, err := rc.Do(request)
-	if err != nil {
-		Logger.Warningln("Failed to request kick response:", err)
-		return err
-	}
-	defer resp.Body.Close()
-	code := resp.StatusCode
-	if code != 200 {
-		Logger.Warningln("kick response responded non-200 code: ", code)
-		return err
-	}
-	return nil
 }

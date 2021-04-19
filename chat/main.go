@@ -19,6 +19,8 @@ import (
 	"nkonev.name/chat/listener"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/producer"
+	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/utils"
 )
 
@@ -42,9 +44,13 @@ func main() {
 			notifications.NewNotifications,
 			listener.CreateAaaUserProfileUpdateListener,
 			listener.CreateVideoListener,
-			listener.CreateRabbitMqConnection,
+			rabbitmq.CreateRabbitMqConnection,
+			listener.CreateAaaChannel,
+			listener.CreateVideoChannel,
 			listener.CreateAaaQueue,
 			listener.CreateVideoQueue,
+			producer.CreateVideoKickChannel,
+			producer.NewRabbitPublisher,
 		),
 		fx.Invoke(
 			initJaeger,
@@ -111,6 +117,7 @@ func configureEcho(
 	db db.DB,
 	policy *bluemonday.Policy,
 	restClient client.RestClient,
+	publisher *producer.RabbitPublisher,
 ) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")
@@ -155,7 +162,7 @@ func configureEcho(
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
 	e.PUT("/chat/:id/broadcast", mc.BroadcastMessage)
 
-	vh := handlers.NewVideoHandler(db, restClient, notificator)
+	vh := handlers.NewVideoHandler(db, notificator, publisher)
 	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
 	e.PUT("/chat/:id/video/kick", vh.Kick)
 

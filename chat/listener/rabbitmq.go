@@ -3,34 +3,23 @@ package listener
 import (
 	"fmt"
 	"github.com/isayme/go-amqp-reconnect/rabbitmq"
-	"github.com/spf13/viper"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
 	"math/rand"
 	. "nkonev.name/chat/logger"
 	"time"
+	myRabbit "nkonev.name/chat/rabbitmq"
 )
 
 const aaaEventsQueue = "aaa-events"
 const videoNotificationsQueue = "video-notifications"
 
-func CreateRabbitMqConnection() *rabbitmq.Channel{
-	rabbitmq.Debug = true
-
-	conn, err := rabbitmq.Dial(viper.GetString("rabbitmq.url"))
-	if err != nil {
-		Logger.Panic(err)
-	}
-
-	consumeCh, err := conn.Channel()
-	if err != nil {
-		Logger.Panic(err)
-	}
-	return consumeCh
-}
 
 type AaaEventsQueue amqp.Queue
 type VideoNotificationsQueue amqp.Queue
+
+type AaaEventsChannel rabbitmq.Channel
+type VideoNotificationsChannel rabbitmq.Channel
 
 func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
@@ -63,14 +52,30 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	return &q
 }
 
-func CreateAaaQueue(consumeCh *rabbitmq.Channel) *AaaEventsQueue{
-	q := create(aaaEventsQueue, consumeCh)
+func CreateAaaChannel(connection *rabbitmq.Connection) *AaaEventsChannel{
+	channel := *myRabbit.CreateRabbitMqChannel(connection)
+	var typedChannel = AaaEventsChannel(channel)
+	return &typedChannel
+}
+
+func CreateVideoChannel(connection *rabbitmq.Connection) *VideoNotificationsChannel{
+	channel := *myRabbit.CreateRabbitMqChannel(connection)
+	var typedChannel = VideoNotificationsChannel(channel)
+	return &typedChannel
+}
+
+func CreateAaaQueue(consumeCh *AaaEventsChannel) *AaaEventsQueue{
+	var typedChannel = *consumeCh
+	channel := rabbitmq.Channel(typedChannel)
+	q := create(aaaEventsQueue, &channel)
 	var queue  AaaEventsQueue = AaaEventsQueue(*q)
 	return &queue
 }
 
-func CreateVideoQueue(consumeCh *rabbitmq.Channel) *VideoNotificationsQueue{
-	q := create(videoNotificationsQueue, consumeCh)
+func CreateVideoQueue(consumeCh *VideoNotificationsChannel) *VideoNotificationsQueue{
+	var typedChannel = *consumeCh
+	channel := rabbitmq.Channel(typedChannel)
+	q := create(videoNotificationsQueue, &channel)
 	var queue  VideoNotificationsQueue = VideoNotificationsQueue(*q)
 	return &queue
 }
@@ -111,7 +116,7 @@ func listen(
 }
 
 func ListenAaaQueue(
-	channel *rabbitmq.Channel,
+	channel *AaaEventsChannel,
 	queue *AaaEventsQueue,
 	onMessage AaaUserProfileUpdateListener,
 	lc fx.Lifecycle) {
@@ -121,11 +126,14 @@ func ListenAaaQueue(
 
 	var targetFunction func(data []byte) error = onMessage
 
-	listen(channel, &amqpQueue, targetFunction, lc)
+	var typedChannel = *channel
+	rabbitChannel := rabbitmq.Channel(typedChannel)
+
+	listen(&rabbitChannel, &amqpQueue, targetFunction, lc)
 }
 
 func ListenVideoQueue(
-	channel *rabbitmq.Channel,
+	channel *VideoNotificationsChannel,
 	queue *VideoNotificationsQueue,
 	onMessage VideoListener,
 	lc fx.Lifecycle) {
@@ -135,5 +143,8 @@ func ListenVideoQueue(
 
 	var targetFunction func(data []byte) error = onMessage
 
-	listen(channel, &amqpQueue, targetFunction, lc)
+	var typedChannel = *channel
+	rabbitChannel := rabbitmq.Channel(typedChannel)
+
+	listen(&rabbitChannel, &amqpQueue, targetFunction, lc)
 }

@@ -48,9 +48,6 @@ aaa:
 
 video:
   kickVideoAfter: 10s
-  url:
-    base: "http://video-proxy:7000"
-    kick: "/internal/%v/kick"
 
 jaeger:
   endpoint: "jaeger:6831"

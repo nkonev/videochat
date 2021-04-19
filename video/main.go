@@ -16,9 +16,11 @@ import (
 	_ "net/http/pprof"
 	"nkonev.name/video/config"
 	"nkonev.name/video/handlers"
+	"nkonev.name/video/listener"
 	"nkonev.name/video/producer"
 	"os"
 	"time"
+	myRabbitmq "nkonev.name/video/rabbitmq"
 )
 
 var (
@@ -165,9 +167,12 @@ func main() {
 
 	client := NewRestClient()
 
-	publisher := producer.NewRabbitPublisher(conf.RabbitMqConfig)
+	rabbitmqConnection := myRabbitmq.CreateRabbitMqConnection(conf.RabbitMqConfig)
+	publisherService := producer.NewRabbitPublisher(rabbitmqConnection)
+	handler := handlers.NewHandler(client, &upgrader, s, &conf, publisherService)
+	listenerService := listener.NewVideoListener(&handler, rabbitmqConnection)
+	listenerService.ListenVideoKickQueue()
 
-	handler := handlers.NewHandler(client, &upgrader, s, &conf, publisher)
 	r := mux.NewRouter()
 	// SFU websocket endpoint
 	r.Handle("/video/{chatId}/ws", http.HandlerFunc(handler.SfuHandler)).Methods("GET")

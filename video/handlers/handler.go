@@ -479,7 +479,7 @@ func (h *HttpHandler) Kick(w http.ResponseWriter, r *http.Request) {
 	chatId := vars["chatId"]
 	userToKickId := r.URL.Query().Get("userId")
 
-	if h.kick(chatId, userToKickId) != nil {
+	if h.KickUser(chatId, userToKickId) != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -538,7 +538,7 @@ func (h *HttpHandler) getPeerByPeerId(chatId, peerId string) *sfu.Peer {
 	return nil
 }
 
-func (h *HttpHandler) kick(chatId, userId string) error {
+func (h *HttpHandler) KickUser(chatId, userId string) error {
 	logger.Info("Invoked kick", "chatId", chatId, "userId", userId)
 
 	metadatas := h.getPeerMetadatas(chatId, userId)

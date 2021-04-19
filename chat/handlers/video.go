@@ -1,27 +1,28 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
-	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/producer"
 	"nkonev.name/chat/utils"
 	"time"
 )
 
 type VideoHandler struct {
 	db          db.DB
-	restClient  client.RestClient
 	notificator notifications.Notifications
+	producer *producer.RabbitPublisher
 }
 
-func NewVideoHandler(db db.DB, restClient client.RestClient, notificator notifications.Notifications) VideoHandler {
-	return VideoHandler{db, restClient, notificator}
+func NewVideoHandler(db db.DB, notificator notifications.Notifications, producer *producer.RabbitPublisher) VideoHandler {
+	return VideoHandler{db, notificator, producer}
 }
 
 func (vh VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
@@ -97,10 +98,22 @@ func (vh VideoHandler) kickVideoStreamWithWait(chatId, userId int64) {
 	vh.kickVideoStream(chatId, userId)
 }
 
+type KickUserDto struct {
+	ChatId int64 `json:"chatId"`
+	UserId int64 `json:"userId"`
+}
+
 func (vh VideoHandler) kickVideoStream(chatId, userId int64) {
 	logger.Logger.Infof("video kick chatId=%v, userId=%v", chatId, userId)
-	err := vh.restClient.Kick(chatId, userId)
+
+	dto := KickUserDto{ChatId: chatId, UserId: userId}
+	marshal, err := json.Marshal(dto)
 	if err != nil {
+		logger.Logger.Warnf("Non-successful marshalling video kick %v", err)
+		return
+	}
+
+	if err = vh.producer.Publish(marshal); err != nil {
 		logger.Logger.Warnf("Non-successful invoking video kick %v", err)
 	}
 }
