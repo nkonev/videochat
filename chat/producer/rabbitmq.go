@@ -30,18 +30,14 @@ type RabbitPublisher struct {
 	channel *rabbitmq.Channel
 }
 
-type VideoKickChannel rabbitmq.Channel
+type VideoKickChannel struct {*rabbitmq.Channel}
 
-func CreateVideoKickChannel(connection *rabbitmq.Connection) *VideoKickChannel {
-	channel := *myRabbitmq.CreateRabbitMqChannel(connection)
-	var typedChannel = VideoKickChannel(channel)
-	return &typedChannel
+func CreateVideoKickChannel(connection *rabbitmq.Connection) VideoKickChannel {
+	return VideoKickChannel{myRabbitmq.CreateRabbitMqChannel(connection)}
 }
 
-func NewRabbitPublisher(channel *VideoKickChannel) *RabbitPublisher {
-	defaultChannel := *channel
-	var typedChannel = rabbitmq.Channel(defaultChannel)
+func NewRabbitPublisher(channel VideoKickChannel) *RabbitPublisher {
 	return &RabbitPublisher{
-		channel: &typedChannel,
+		channel: channel.Channel,
 	}
 }
