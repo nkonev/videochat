@@ -14,7 +14,7 @@
                                 <v-list-item-content>
                                     <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> (you)</template></v-list-item-title>
                                 </v-list-item-content>
-                                <v-tooltip bottom v-if="isAdmin() && item.id != currentUser.id">
+                                <v-tooltip bottom v-if="dto.canVideoKick && item.id != currentUser.id">
                                     <template v-slot:activator="{ on, attrs }">
                                         <v-btn v-bind="attrs" v-on="on" icon @click="kickFromVideoCall(item.id)"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
                                     </template>
@@ -104,9 +104,6 @@
             kickFromVideoCall(userId) {
                 axios.put(`/api/chat/${this.dto.id}/video/kick?userId=${userId}`)
             },
-            isAdmin(){
-                return this.dto.participants.filter(value => value.admin).filter(value => value.id == this.currentUser.id).length != 0
-            }
         },
         created() {
             bus.$on(OPEN_INFO_DIALOG, this.showModal);

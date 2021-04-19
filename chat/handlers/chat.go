@@ -132,6 +132,7 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 		if authResult != nil && authResult.HasRole("ROLE_ADMIN") {
 			chatDto.CanBroadcast = true
 		}
+		chatDto.CanVideoKick = cc.IsAdmin
 
 		return chatDto, nil
 	}

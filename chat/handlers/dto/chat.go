@@ -15,4 +15,5 @@ type ChatDto struct {
 	CanLeave           null.Bool `json:"canLeave"`
 	UnreadMessages     int64     `json:"unreadMessages"`
 	CanBroadcast 	   bool 	 `json:"canBroadcast"`
+	CanVideoKick	   bool 	 `json:"canVideoKick"`
 }
