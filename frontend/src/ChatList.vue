@@ -8,7 +8,7 @@
             >
                 <v-list-item-content @click="openChat(item)">
                     <v-list-item-title>
-                        <span>
+                        <span class="min-height">
                             {{item.name}}
                         </span>
                         <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0"></v-badge>
@@ -233,3 +233,10 @@ import {
         }
     }
 </script>
+
+<style lang="stylus" scoped>
+    .min-height {
+        display inline-block
+        min-height 22px
+    }
+</style>
