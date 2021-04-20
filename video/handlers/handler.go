@@ -28,14 +28,19 @@ import (
 //go:embed static
 var embeddedFiles embed.FS
 
-type Handler struct {
-	client          *http.Client
-	upgrader        *websocket.Upgrader
+type ExtendedService struct {
 	sfu             *sfu.SFU
-	conf            *config.ExtendedConfig
-	httpFs          *http.FileSystem
 	peerUserIdIndex connectionsLockableMap
 	rabbitMqPublisher *producer.RabbitPublisher
+	conf            *config.ExtendedConfig
+	client          *http.Client
+}
+
+type Handler struct {
+	upgrader        *websocket.Upgrader
+	conf            *config.ExtendedConfig
+	httpFs          *http.FileSystem
+	service *ExtendedService
 }
 type ExtendedPeerInfo struct {
 	userId int64
@@ -54,7 +59,7 @@ type connectionsLockableMap struct {
 
 type JsonRpcExtendedHandler struct {
 	*server.JSONSignal
-	parentHandler *Handler
+	service *ExtendedService
 }
 
 type ContextData struct {
@@ -86,12 +91,29 @@ type UserByStreamId struct {
 	StreamId string `json:"streamId"`
 }
 
-func NewHandler(
-	client *http.Client,
-	upgrader *websocket.Upgrader,
+func NewExtendedService(
 	sfu *sfu.SFU,
 	conf *config.ExtendedConfig,
 	rabbitMqPublisher *producer.RabbitPublisher,
+	client *http.Client,
+) ExtendedService {
+	handler := ExtendedService{
+		sfu:      sfu,
+		conf:     conf,
+		peerUserIdIndex: connectionsLockableMap{
+			RWMutex:            sync.RWMutex{},
+			connectionWithData: connectionWithData{},
+		},
+		rabbitMqPublisher: rabbitMqPublisher,
+		client:   client,
+	}
+	return handler
+}
+
+func NewHandler(
+	upgrader *websocket.Upgrader,
+	conf *config.ExtendedConfig,
+	service *ExtendedService,
 ) Handler {
 	fsys, err := fs.Sub(embeddedFiles, "static")
 	if err != nil {
@@ -100,16 +122,10 @@ func NewHandler(
 	staticDir := http.FS(fsys)
 
 	handler := Handler{
-		client:   client,
 		upgrader: upgrader,
-		sfu:      sfu,
 		conf:     conf,
 		httpFs:   &staticDir,
-		peerUserIdIndex: connectionsLockableMap{
-			RWMutex:            sync.RWMutex{},
-			connectionWithData: connectionWithData{},
-		},
-		rabbitMqPublisher: rabbitMqPublisher,
+		service: service,
 	}
 	return handler
 }
@@ -125,7 +141,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok, err := h.checkAccess(userId, chatId); err != nil {
+	if ok, err := h.service.checkAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else if !ok {
@@ -143,19 +159,19 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	peer0 := sfu.NewPeer(h.sfu)
-	h.storeToIndex(peer0, userId, "", "", "", false, false)
-	defer h.removeFromIndex(peer0, userId, c)
-	defer h.notifyAboutLeaving(chatId)
+	peer0 := sfu.NewPeer(h.service.sfu)
+	h.service.storeToIndex(peer0, userId, "", "", "", false, false)
+	defer h.service.removeFromIndex(peer0, userId, c)
+	defer h.service.notifyAboutLeaving(chatId)
 	p := server.NewJSONSignal(peer0, logger)
-	je := &JsonRpcExtendedHandler{p, h}
+	je := &JsonRpcExtendedHandler{p, h.service}
 	defer p.Close()
 
 	jc := jsonrpc2.NewConn(r.Context(), websocketjsonrpc2.NewObjectStream(c), je)
 	<-jc.DisconnectNotify()
 }
 
-func (h *Handler) storeToIndex(peer0 *sfu.Peer, userId int64, peerId, streamId, login string, videoMute, audioMute bool) {
+func (h *ExtendedService) storeToIndex(peer0 *sfu.Peer, userId int64, peerId, streamId, login string, videoMute, audioMute bool) {
 	logger.Info("Storing peer to map", "peer", peer0.ID(), "userId", userId, "streamId", streamId, "login", login)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
@@ -169,7 +185,7 @@ func (h *Handler) storeToIndex(peer0 *sfu.Peer, userId int64, peerId, streamId, 
 	}
 }
 
-func (h *Handler) removeFromIndex(peer0 *sfu.Peer, userId int64, conn *websocket.Conn) {
+func (h *ExtendedService) removeFromIndex(peer0 *sfu.Peer, userId int64, conn *websocket.Conn) {
 	logger.Info("Removing peer from map", "peer", peer0.ID(), "userId", userId)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
@@ -177,7 +193,7 @@ func (h *Handler) removeFromIndex(peer0 *sfu.Peer, userId int64, conn *websocket
 	delete(h.peerUserIdIndex.connectionWithData, peer0)
 }
 
-func (h *Handler) getExtendedConnectionInfo(peer0 *sfu.Peer) *ExtendedPeerInfo {
+func (h *ExtendedService) getExtendedConnectionInfo(peer0 *sfu.Peer) *ExtendedPeerInfo {
 	h.peerUserIdIndex.RLock()
 	defer h.peerUserIdIndex.RUnlock()
 	s, ok := h.peerUserIdIndex.connectionWithData[peer0]
@@ -195,7 +211,7 @@ func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if ok, err := h.checkAccess(userId, chatId); err != nil {
+	if ok, err := h.service.checkAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else if !ok {
@@ -204,7 +220,7 @@ func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := UsersResponse{}
-	response.UsersCount = h.countPeers(chatId)
+	response.UsersCount = h.service.countPeers(chatId)
 
 	w.Header().Set("Content-Type", "application/json")
 	marshal, err := json.Marshal(response)
@@ -225,7 +241,7 @@ func (e *errorNoAccess) Error() string { return "No access" }
 type errorInternal struct {}
 func (e *errorInternal) Error() string { return "Internal error" }
 
-func (h *Handler) userByStreamId(chatId int64, interestingStreamId string, behalfUserId int64) (*StoreNotifyDto, error) {
+func (h *ExtendedService) userByStreamId(chatId int64, interestingStreamId string, behalfUserId int64) (*StoreNotifyDto, error) {
 	if ok, err := h.checkAccess(behalfUserId, chatId); err != nil {
 		return nil, &errorInternal{}
 	} else if !ok {
@@ -262,7 +278,7 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userDto, err := h.userByStreamId(chatId, streamId, userId)
+	userDto, err := h.service.userByStreamId(chatId, streamId, userId)
 	if err != nil {
 		if errors.Is(err, &errorNoAccess{}) {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -305,7 +321,7 @@ func ParseInt64(s string) (int64, error) {
 	}
 }
 
-func (h *Handler) getSessionWithoutCreatingAnew(chatId int64) *sfu.Session {
+func (h *ExtendedService) getSessionWithoutCreatingAnew(chatId int64) *sfu.Session {
 	sessionName := fmt.Sprintf("chat%v", chatId)
 	if session, ok := h.sfu.GetSessions()[sessionName]; ok {
 		return session
@@ -314,7 +330,7 @@ func (h *Handler) getSessionWithoutCreatingAnew(chatId int64) *sfu.Session {
 	}
 }
 
-func (h *Handler) countPeers(chatId int64) int64 {
+func (h *ExtendedService) countPeers(chatId int64) int64 {
 	var usersCount int64 = 0
 	session := h.getSessionWithoutCreatingAnew(chatId)
 	if session != nil {
@@ -327,7 +343,7 @@ func (h *Handler) countPeers(chatId int64) int64 {
 	return usersCount
 }
 
-func (h *Handler) notify(chatId int64, data *StoreNotifyDto) error {
+func (h *ExtendedService) notify(chatId int64, data *StoreNotifyDto) error {
 	var usersCount = h.countPeers(chatId)
 	var chatNotifyDto = chatNotifyDto{}
 	if data != nil {
@@ -364,7 +380,7 @@ func (h *Handler) StoreInfoAndNotifyChatParticipants(w http.ResponseWriter, r *h
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if ok, err := h.checkAccess(userId, chatId); err != nil {
+	if ok, err := h.service.checkAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else if !ok {
@@ -387,23 +403,23 @@ func (h *Handler) StoreInfoAndNotifyChatParticipants(w http.ResponseWriter, r *h
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if sfuPeer := h.getPeerByPeerId(chatId, bodyStruct.PeerId); sfuPeer != nil {
-			h.storeToIndex(sfuPeer, userId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
-			if err := h.notify(chatId, &bodyStruct); err != nil {
+		if sfuPeer := h.service.getPeerByPeerId(chatId, bodyStruct.PeerId); sfuPeer != nil {
+			h.service.storeToIndex(sfuPeer, userId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+			if err := h.service.notify(chatId, &bodyStruct); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 		} else {
 			logger.Info("Not found peer metadata by", "chatId", chatId, "peerId", bodyStruct.PeerId)
 		}
 	} else {
-		if err := h.notify(chatId, nil); err != nil {
+		if err := h.service.notify(chatId, nil); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
 
 }
 
-func (h *Handler) peerIsAlive(peer *sfu.Peer) bool {
+func (h *ExtendedService) peerIsAlive(peer *sfu.Peer) bool {
 	if peer == nil {
 		return false
 	}
@@ -438,7 +454,7 @@ func (h *Handler) Static() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) checkAccess(userId int64, chatId int64) (bool, error) {
+func (h *ExtendedService) checkAccess(userId int64, chatId int64) (bool, error) {
 	url0 := h.conf.ChatConfig.ChatUrlConfig.Base
 	url1 := h.conf.ChatConfig.ChatUrlConfig.Access
 
@@ -469,7 +485,7 @@ func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	if h.KickUser(chatId, userToKickId) != nil {
+	if h.service.KickUser(chatId, userToKickId) != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -480,7 +496,7 @@ type peerWithMetadata struct {
 	*sfu.Session
 }
 
-func (h *Handler) getPeerMetadatas(chatId, userId int64) []peerWithMetadata {
+func (h *ExtendedService) getPeerMetadatas(chatId, userId int64) []peerWithMetadata {
 	session := h.getSessionWithoutCreatingAnew(chatId)
 	var result []peerWithMetadata
 	if session == nil {
@@ -498,7 +514,7 @@ func (h *Handler) getPeerMetadatas(chatId, userId int64) []peerWithMetadata {
 	return result
 }
 
-func (h *Handler) getPeerMetadataByStreamId(chatId int64, streamId string) *peerWithMetadata {
+func (h *ExtendedService) getPeerMetadataByStreamId(chatId int64, streamId string) *peerWithMetadata {
 	session := h.getSessionWithoutCreatingAnew(chatId)// ChatVideo.vue
 	if session == nil {
 		return nil
@@ -515,7 +531,7 @@ func (h *Handler) getPeerMetadataByStreamId(chatId int64, streamId string) *peer
 	return nil
 }
 
-func (h *Handler) getPeerByPeerId(chatId int64, peerId string) *sfu.Peer {
+func (h *ExtendedService) getPeerByPeerId(chatId int64, peerId string) *sfu.Peer {
 	session := h.getSessionWithoutCreatingAnew(chatId) // ChatVideo.vue
 	if session == nil {
 		return nil
@@ -528,7 +544,7 @@ func (h *Handler) getPeerByPeerId(chatId int64, peerId string) *sfu.Peer {
 	return nil
 }
 
-func (h *Handler) KickUser(chatId, userId int64) error {
+func (h *ExtendedService) KickUser(chatId, userId int64) error {
 	logger.Info("Invoked kick", "chatId", chatId, "userId", userId)
 
 	metadatas := h.getPeerMetadatas(chatId, userId)
@@ -541,7 +557,7 @@ func (h *Handler) KickUser(chatId, userId int64) error {
 	return nil
 }
 
-func (h *Handler) notifyAboutLeaving(chatId int64) {
+func (h *ExtendedService) notifyAboutLeaving(chatId int64) {
 	if err := h.notify(chatId, nil); err != nil {
 		logger.Error(err, "error during sending leave notification")
 	} else {
@@ -549,7 +565,7 @@ func (h *Handler) notifyAboutLeaving(chatId int64) {
 	}
 }
 
-func (h *Handler) notifyAllChats() {
+func (h *ExtendedService) notifyAllChats() {
 	for sessionName, _ := range h.sfu.GetSessions() {
 		var chatId int64
 		if _, err := fmt.Sscanf(sessionName, "chat%d", &chatId); err != nil {
@@ -576,7 +592,7 @@ func parseChatIdAndUserId(chatId, userId string) (int64, int64, error) {
 	return chatIdInt64, userId64, nil
 }
 
-func (h *Handler) Schedule() *chan struct{} {
+func (h *ExtendedService) Schedule() *chan struct{} {
 	ticker := time.NewTicker(h.conf.SyncNotificationPeriod)
 	quit := make(chan struct{})
 	go func() {
@@ -631,7 +647,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			replyError(err)
 			break
 		}
-		userDto, err := p.parentHandler.userByStreamId(fromContext.chatId, userByStreamId.StreamId, fromContext.userId)
+		userDto, err := p.service.userByStreamId(fromContext.chatId, userByStreamId.StreamId, fromContext.userId)
 		if err != nil {
 			replyError(err)
 			break

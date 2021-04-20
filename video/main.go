@@ -173,8 +173,9 @@ func main() {
 
 	rabbitmqConnection := myRabbitmq.CreateRabbitMqConnection(conf.RabbitMqConfig)
 	publisherService := producer.NewRabbitPublisher(rabbitmqConnection)
-	handler := handlers.NewHandler(client, &upgrader, s, &conf, publisherService)
-	listenerService := listener.NewVideoListener(&handler, rabbitmqConnection, conf.ScalingConfig)
+	extendedService := handlers.NewExtendedService(s, &conf, publisherService, client)
+	handler := handlers.NewHandler(&upgrader, &conf, &extendedService)
+	listenerService := listener.NewVideoListener(&extendedService, rabbitmqConnection, conf.ScalingConfig)
 	listenerService.ListenVideoKickQueue()
 
 	r := mux.NewRouter()
@@ -191,7 +192,7 @@ func main() {
 
 	go startMetrics(conf.HttpServerConfig.MetricsAddr)
 
-	schedule := handler.Schedule()
+	schedule := extendedService.Schedule()
 
 	var err error
 	if conf.HttpServerConfig.Key != "" && conf.HttpServerConfig.Cert != "" {

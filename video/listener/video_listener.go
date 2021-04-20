@@ -16,7 +16,7 @@ type KickUserDto struct {
 	UserId int64 `json:"userId"`
 }
 
-func createVideoListener(h *handlers.Handler) VideoListenerFunction {
+func createVideoListener(h *handlers.ExtendedService) VideoListenerFunction {
 	return func(data []byte) error {
 		var bindTo = new(KickUserDto)
 		err := json.Unmarshal(data, &bindTo)
@@ -41,7 +41,7 @@ type VideoListenerService struct {
 }
 
 
-func NewVideoListener(h *handlers.Handler, connection *rabbitmq.Connection, scalingConfig config.ScalingConfig) *VideoListenerService {
+func NewVideoListener(h *handlers.ExtendedService, connection *rabbitmq.Connection, scalingConfig config.ScalingConfig) *VideoListenerService {
 	channel := myRabbitmq.CreateRabbitMqChannel(connection)
 	listener := createVideoListener(h)
 
