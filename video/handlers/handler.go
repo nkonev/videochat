@@ -28,7 +28,7 @@ import (
 //go:embed static
 var embeddedFiles embed.FS
 
-type HttpHandler struct {
+type Handler struct {
 	client          *http.Client
 	upgrader        *websocket.Upgrader
 	sfu             *sfu.SFU
@@ -38,7 +38,7 @@ type HttpHandler struct {
 	rabbitMqPublisher *producer.RabbitPublisher
 }
 type ExtendedPeerInfo struct {
-	userId string
+	userId int64
 	// will be added after PUT /notify
 	peerId    string
 	streamId  string
@@ -54,7 +54,7 @@ type connectionsLockableMap struct {
 
 type JsonRpcExtendedHandler struct {
 	*server.JSONSignal
-	parentHandler *HttpHandler
+	parentHandler *Handler
 }
 
 type ContextData struct {
@@ -92,14 +92,14 @@ func NewHandler(
 	sfu *sfu.SFU,
 	conf *config.ExtendedConfig,
 	rabbitMqPublisher *producer.RabbitPublisher,
-) HttpHandler {
+) Handler {
 	fsys, err := fs.Sub(embeddedFiles, "static")
 	if err != nil {
 		panic("Cannot open static embedded dir")
 	}
 	staticDir := http.FS(fsys)
 
-	handler := HttpHandler{
+	handler := Handler{
 		client:   client,
 		upgrader: upgrader,
 		sfu:      sfu,
@@ -116,10 +116,15 @@ func NewHandler(
 
 var logger = log.New()
 
-func (h *HttpHandler) SfuHandler(w http.ResponseWriter, r *http.Request) {
+
+func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	chatId := vars["chatId"]
-	userId := r.Header.Get("X-Auth-UserId")
+	chatId, userId, err := parseChatIdAndUserId(vars["chatId"], r.Header.Get("X-Auth-UserId"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	if ok, err := h.checkAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -128,20 +133,7 @@ func (h *HttpHandler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chatIdInt64, err2 := ParseInt64(chatId)
-	if err2 != nil {
-		logger.Error(err2, "Failed during parse chat id")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	userId64, err2 := ParseInt64(userId)
-	if err2 != nil {
-		logger.Error(err2, "Failed during parse user id")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId64, chatId: chatIdInt64}))
+	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId}))
 
 	c, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -163,7 +155,7 @@ func (h *HttpHandler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	<-jc.DisconnectNotify()
 }
 
-func (h *HttpHandler) storeToIndex(peer0 *sfu.Peer, userId, peerId, streamId, login string, videoMute, audioMute bool) {
+func (h *Handler) storeToIndex(peer0 *sfu.Peer, userId int64, peerId, streamId, login string, videoMute, audioMute bool) {
 	logger.Info("Storing peer to map", "peer", peer0.ID(), "userId", userId, "streamId", streamId, "login", login)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
@@ -177,7 +169,7 @@ func (h *HttpHandler) storeToIndex(peer0 *sfu.Peer, userId, peerId, streamId, lo
 	}
 }
 
-func (h *HttpHandler) removeFromIndex(peer0 *sfu.Peer, userId string, conn *websocket.Conn) {
+func (h *Handler) removeFromIndex(peer0 *sfu.Peer, userId int64, conn *websocket.Conn) {
 	logger.Info("Removing peer from map", "peer", peer0.ID(), "userId", userId)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
@@ -185,7 +177,7 @@ func (h *HttpHandler) removeFromIndex(peer0 *sfu.Peer, userId string, conn *webs
 	delete(h.peerUserIdIndex.connectionWithData, peer0)
 }
 
-func (h *HttpHandler) getExtendedConnectionInfo(peer0 *sfu.Peer) *ExtendedPeerInfo {
+func (h *Handler) getExtendedConnectionInfo(peer0 *sfu.Peer) *ExtendedPeerInfo {
 	h.peerUserIdIndex.RLock()
 	defer h.peerUserIdIndex.RUnlock()
 	s, ok := h.peerUserIdIndex.connectionWithData[peer0]
@@ -196,10 +188,13 @@ func (h *HttpHandler) getExtendedConnectionInfo(peer0 *sfu.Peer) *ExtendedPeerIn
 	}
 }
 
-func (h *HttpHandler) Users(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	chatId := vars["chatId"]
-	userId := r.Header.Get("X-Auth-UserId")
+	chatId, userId, err := parseChatIdAndUserId(vars["chatId"], r.Header.Get("X-Auth-UserId"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	if ok, err := h.checkAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -230,7 +225,7 @@ func (e *errorNoAccess) Error() string { return "No access" }
 type errorInternal struct {}
 func (e *errorInternal) Error() string { return "Internal error" }
 
-func (h *HttpHandler) userByStreamId(chatId string, interestingStreamId string, behalfUserId string) (*NotifyDto, error) {
+func (h *Handler) userByStreamId(chatId int64, interestingStreamId string, behalfUserId int64) (*StoreNotifyDto, error) {
 	if ok, err := h.checkAccess(behalfUserId, chatId); err != nil {
 		return nil, &errorInternal{}
 	} else if !ok {
@@ -242,7 +237,7 @@ func (h *HttpHandler) userByStreamId(chatId string, interestingStreamId string, 
 		for _, peer := range session.Peers() {
 			if h.peerIsAlive(peer) {
 				if pwm := h.getPeerMetadataByStreamId(chatId, interestingStreamId); pwm != nil && pwm.ExtendedPeerInfo != nil && pwm.ExtendedPeerInfo.streamId != "" {
-					d := NotifyDto{
+					d := StoreNotifyDto{
 						PeerId:    pwm.ExtendedPeerInfo.peerId,
 						StreamId:  pwm.ExtendedPeerInfo.streamId,
 						Login:     pwm.ExtendedPeerInfo.login,
@@ -258,11 +253,14 @@ func (h *HttpHandler) userByStreamId(chatId string, interestingStreamId string, 
 }
 
 
-func (h *HttpHandler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	chatId := vars["chatId"]
 	streamId := r.URL.Query().Get("streamId")
-	userId := r.Header.Get("X-Auth-UserId") // behalf
+	chatId, userId, err := parseChatIdAndUserId(vars["chatId"], r.Header.Get("X-Auth-UserId")) // behalf this userId
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	userDto, err := h.userByStreamId(chatId, streamId, userId)
 	if err != nil {
@@ -292,10 +290,11 @@ func (h *HttpHandler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// sent to chat through RabbitMQ
 type chatNotifyDto struct {
-	Data       *NotifyDto `json:"data"`
-	UsersCount int64      `json:"usersCount"`
-	ChatId     int64      `json:"chatId"`
+	Data       *StoreNotifyDto `json:"data"`
+	UsersCount int64           `json:"usersCount"`
+	ChatId     int64           `json:"chatId"`
 }
 
 func ParseInt64(s string) (int64, error) {
@@ -306,7 +305,7 @@ func ParseInt64(s string) (int64, error) {
 	}
 }
 
-func (h *HttpHandler) getSessionWithoutCreatingAnew(chatId string) *sfu.Session {
+func (h *Handler) getSessionWithoutCreatingAnew(chatId int64) *sfu.Session {
 	sessionName := fmt.Sprintf("chat%v", chatId)
 	if session, ok := h.sfu.GetSessions()[sessionName]; ok {
 		return session
@@ -315,7 +314,7 @@ func (h *HttpHandler) getSessionWithoutCreatingAnew(chatId string) *sfu.Session 
 	}
 }
 
-func (h *HttpHandler) countPeers(chatId string) int64 {
+func (h *Handler) countPeers(chatId int64) int64 {
 	var usersCount int64 = 0
 	session := h.getSessionWithoutCreatingAnew(chatId)
 	if session != nil {
@@ -328,7 +327,7 @@ func (h *HttpHandler) countPeers(chatId string) int64 {
 	return usersCount
 }
 
-func (h *HttpHandler) notify(chatId string, data *NotifyDto) error {
+func (h *Handler) notify(chatId int64, data *StoreNotifyDto) error {
 	var usersCount = h.countPeers(chatId)
 	var chatNotifyDto = chatNotifyDto{}
 	if data != nil {
@@ -338,12 +337,7 @@ func (h *HttpHandler) notify(chatId string, data *NotifyDto) error {
 		logger.Info("Notifying without data", "chatId", chatId)
 	}
 	chatNotifyDto.UsersCount = usersCount
-	parseInt64, err2 := ParseInt64(chatId)
-	if err2 != nil {
-		logger.Error(err2, "Failed during parse chat id")
-		return err2
-	}
-	chatNotifyDto.ChatId = parseInt64
+	chatNotifyDto.ChatId = chatId
 
 	marshal, err2 := json.Marshal(chatNotifyDto)
 	if err2 != nil {
@@ -354,7 +348,8 @@ func (h *HttpHandler) notify(chatId string, data *NotifyDto) error {
 	return h.rabbitMqPublisher.Publish(marshal)
 }
 
-type NotifyDto struct {
+// input Dto
+type StoreNotifyDto struct {
 	PeerId    string `json:"peerId"`
 	StreamId  string `json:"streamId"`
 	Login     string `json:"login"`
@@ -362,10 +357,13 @@ type NotifyDto struct {
 	AudioMute bool   `json:"audioMute"`
 }
 
-func (h *HttpHandler) StoreInfoAndNotifyChatParticipants(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) StoreInfoAndNotifyChatParticipants(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	chatId := vars["chatId"]
-	userId := r.Header.Get("X-Auth-UserId")
+	chatId, userId, err := parseChatIdAndUserId(vars["chatId"], r.Header.Get("X-Auth-UserId"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	if ok, err := h.checkAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -382,10 +380,10 @@ func (h *HttpHandler) StoreInfoAndNotifyChatParticipants(w http.ResponseWriter, 
 	}
 	if len(bodyBytes) > 0 {
 		logger.Info("Reading optional body")
-		var bodyStruct NotifyDto
+		var bodyStruct StoreNotifyDto
 		err := json.Unmarshal(bodyBytes, &bodyStruct)
 		if err != nil {
-			logger.Error(err, "Unable to read body's []byte to NotifyDto")
+			logger.Error(err, "Unable to read body's []byte to StoreNotifyDto")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -405,14 +403,14 @@ func (h *HttpHandler) StoreInfoAndNotifyChatParticipants(w http.ResponseWriter, 
 
 }
 
-func (h *HttpHandler) peerIsAlive(peer *sfu.Peer) bool {
+func (h *Handler) peerIsAlive(peer *sfu.Peer) bool {
 	if peer == nil {
 		return false
 	}
 	return peer.Publisher().SignalingState() != webrtc.SignalingStateClosed
 }
 
-func (h *HttpHandler) Config(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	marshal, err := json.Marshal(h.conf.FrontendConfig)
 	if err != nil {
@@ -430,7 +428,7 @@ type UsersResponse struct {
 	UsersCount int64 `json:"usersCount"`
 }
 
-func (h *HttpHandler) Static() http.HandlerFunc {
+func (h *Handler) Static() http.HandlerFunc {
 	fileServer := http.FileServer(*h.httpFs)
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqUrl := r.RequestURI
@@ -440,19 +438,7 @@ func (h *HttpHandler) Static() http.HandlerFunc {
 	}
 }
 
-func (h *HttpHandler) checkAccess(userIdString string, chatIdString string) (bool, error) {
-	userId, err := ParseInt64(userIdString)
-	if err != nil {
-		return false, err
-	}
-	chatId, err := ParseInt64(chatIdString)
-	if err != nil {
-		return false, err
-	}
-	return h.checkAccessInt64(userId, chatId)
-}
-
-func (h *HttpHandler) checkAccessInt64(userId int64, chatId int64) (bool, error) {
+func (h *Handler) checkAccess(userId int64, chatId int64) (bool, error) {
 	url0 := h.conf.ChatConfig.ChatUrlConfig.Base
 	url1 := h.conf.ChatConfig.ChatUrlConfig.Access
 
@@ -474,10 +460,14 @@ func (h *HttpHandler) checkAccessInt64(userId int64, chatId int64) (bool, error)
 	}
 }
 
-func (h *HttpHandler) Kick(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	chatId := vars["chatId"]
-	userToKickId := r.URL.Query().Get("userId")
+	chatId, userToKickId, err := parseChatIdAndUserId(vars["chatId"], r.URL.Query().Get("userId"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 
 	if h.KickUser(chatId, userToKickId) != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -490,7 +480,7 @@ type peerWithMetadata struct {
 	*sfu.Session
 }
 
-func (h *HttpHandler) getPeerMetadatas(chatId, userId string) []peerWithMetadata {
+func (h *Handler) getPeerMetadatas(chatId, userId int64) []peerWithMetadata {
 	session := h.getSessionWithoutCreatingAnew(chatId)
 	var result []peerWithMetadata
 	if session == nil {
@@ -508,7 +498,7 @@ func (h *HttpHandler) getPeerMetadatas(chatId, userId string) []peerWithMetadata
 	return result
 }
 
-func (h *HttpHandler) getPeerMetadataByStreamId(chatId, streamId string) *peerWithMetadata {
+func (h *Handler) getPeerMetadataByStreamId(chatId int64, streamId string) *peerWithMetadata {
 	session := h.getSessionWithoutCreatingAnew(chatId)// ChatVideo.vue
 	if session == nil {
 		return nil
@@ -525,7 +515,7 @@ func (h *HttpHandler) getPeerMetadataByStreamId(chatId, streamId string) *peerWi
 	return nil
 }
 
-func (h *HttpHandler) getPeerByPeerId(chatId, peerId string) *sfu.Peer {
+func (h *Handler) getPeerByPeerId(chatId int64, peerId string) *sfu.Peer {
 	session := h.getSessionWithoutCreatingAnew(chatId) // ChatVideo.vue
 	if session == nil {
 		return nil
@@ -538,7 +528,7 @@ func (h *HttpHandler) getPeerByPeerId(chatId, peerId string) *sfu.Peer {
 	return nil
 }
 
-func (h *HttpHandler) KickUser(chatId, userId string) error {
+func (h *Handler) KickUser(chatId, userId int64) error {
 	logger.Info("Invoked kick", "chatId", chatId, "userId", userId)
 
 	metadatas := h.getPeerMetadatas(chatId, userId)
@@ -551,7 +541,7 @@ func (h *HttpHandler) KickUser(chatId, userId string) error {
 	return nil
 }
 
-func (h *HttpHandler) notifyAboutLeaving(chatId string) {
+func (h *Handler) notifyAboutLeaving(chatId int64) {
 	if err := h.notify(chatId, nil); err != nil {
 		logger.Error(err, "error during sending leave notification")
 	} else {
@@ -559,10 +549,10 @@ func (h *HttpHandler) notifyAboutLeaving(chatId string) {
 	}
 }
 
-func (h *HttpHandler) notifyAllChats() {
+func (h *Handler) notifyAllChats() {
 	for sessionName, _ := range h.sfu.GetSessions() {
-		var chatId string
-		if _, err := fmt.Sscanf(sessionName, "chat%v", &chatId); err != nil {
+		var chatId int64
+		if _, err := fmt.Sscanf(sessionName, "chat%d", &chatId); err != nil {
 			logger.Error(err, "error during reading chat id from session", "sessionName", sessionName)
 		} else {
 			if err = h.notify(chatId, nil); err != nil {
@@ -572,7 +562,21 @@ func (h *HttpHandler) notifyAllChats() {
 	}
 }
 
-func (h *HttpHandler) Schedule() *chan struct{} {
+func parseChatIdAndUserId(chatId, userId string) (int64, int64, error) {
+	chatIdInt64, err2 := ParseInt64(chatId)
+	if err2 != nil {
+		logger.Error(err2, "Failed during parse chat id")
+		return -1, -1, err2
+	}
+	userId64, err2 := ParseInt64(userId)
+	if err2 != nil {
+		logger.Error(err2, "Failed during parse user id")
+		return -1, -1, err2
+	}
+	return chatIdInt64, userId64, nil
+}
+
+func (h *Handler) Schedule() *chan struct{} {
 	ticker := time.NewTicker(h.conf.SyncNotificationPeriod)
 	quit := make(chan struct{})
 	go func() {
@@ -591,8 +595,8 @@ func (h *HttpHandler) Schedule() *chan struct{} {
 }
 
 type UserDtoWrapper struct {
-	UserDto *NotifyDto `json:"userDto"`
-	Found bool `json:"found"`
+	UserDto *StoreNotifyDto `json:"userDto"`
+	Found bool              `json:"found"`
 }
 
 func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
@@ -627,7 +631,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			replyError(err)
 			break
 		}
-		userDto, err := p.parentHandler.userByStreamId(fmt.Sprintf("%v", fromContext.chatId), userByStreamId.StreamId, fmt.Sprintf("%v", fromContext.userId))
+		userDto, err := p.parentHandler.userByStreamId(fromContext.chatId, userByStreamId.StreamId, fromContext.userId)
 		if err != nil {
 			replyError(err)
 			break

@@ -16,7 +16,7 @@ type KickUserDto struct {
 	UserId int64 `json:"userId"`
 }
 
-func createVideoListener(h *handlers.HttpHandler) VideoListenerFunction {
+func createVideoListener(h *handlers.Handler) VideoListenerFunction {
 	return func(data []byte) error {
 		var bindTo = new(KickUserDto)
 		err := json.Unmarshal(data, &bindTo)
@@ -25,7 +25,7 @@ func createVideoListener(h *handlers.HttpHandler) VideoListenerFunction {
 			return err
 		}
 		logger.Info("Deserialized kick message", "chatId", bindTo.ChatId, "userId", bindTo.UserId)
-		if err := h.KickUser(fmt.Sprintf("%v", bindTo.ChatId), fmt.Sprintf("%v", bindTo.UserId)); err != nil {
+		if err := h.KickUser(bindTo.ChatId, bindTo.UserId); err != nil {
 			logger.Error(err, "Error during kicking user", "chatId", bindTo.ChatId, "userId", bindTo.UserId)
 			return err
 		}
@@ -41,7 +41,7 @@ type VideoListenerService struct {
 }
 
 
-func NewVideoListener(h *handlers.HttpHandler, connection *rabbitmq.Connection, scalingConfig config.ScalingConfig) *VideoListenerService {
+func NewVideoListener(h *handlers.Handler, connection *rabbitmq.Connection, scalingConfig config.ScalingConfig) *VideoListenerService {
 	channel := myRabbitmq.CreateRabbitMqChannel(connection)
 	listener := createVideoListener(h)
 
