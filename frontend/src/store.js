@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from "axios";
-import bus, {CHAT_SEARCH_CHANGED} from "./bus";
 import {audioMuteDefault} from "./utils";
 
 Vue.use(Vuex);
@@ -146,11 +145,6 @@ const store = new Vuex.Store({
                 context.commit(SET_USER, data);
             });
         },
-        [CHANGE_SEARCH_STRING](context, data) {
-            context.commit(SET_SEARCH_STRING, data);
-            bus.$emit(CHAT_SEARCH_CHANGED);
-        },
-
     }
 });
 

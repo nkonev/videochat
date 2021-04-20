@@ -37,7 +37,6 @@ import bus, {
     CHAT_ADD,
     CHAT_EDITED,
     CHAT_DELETED,
-    CHAT_SEARCH_CHANGED,
     LOGGED_IN,
     OPEN_CHAT_EDIT,
     OPEN_SIMPLE_MODAL,
@@ -72,7 +71,6 @@ import {
             chatRoute() {
                 return chat_name;
             },
-            ...mapGetters({storedSearchString: GET_SEARCH_STRING})
         },
         data() {
             return {
@@ -120,7 +118,7 @@ import {
                     params: {
                         page: this.page,
                         size: pageSize,
-                        searchString: this.storedSearchString
+                        searchString: this.$store.getters[GET_SEARCH_STRING]
                     },
                 }).then(({ data }) => {
                     const list = data.data;
@@ -207,18 +205,26 @@ import {
             bus.$on(CHAT_ADD, this.addItem);
             bus.$on(CHAT_EDITED, this.changeItem);
             bus.$on(CHAT_DELETED, this.removeItem);
-            bus.$on(CHAT_SEARCH_CHANGED, this.searchStringChanged);
             bus.$on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+
+            this.unwatch = this.$store.watch(
+                (state, getters) => getters[GET_SEARCH_STRING],
+                (newValue, oldValue) => {
+                    console.log(`Updating search string from ${oldValue} to ${newValue}`);
+                    this.searchStringChanged();
+                },
+            );
         },
         destroyed() {
+            this.unwatch();
+
             bus.$off(LOGGED_IN, this.reloadItems);
             bus.$off(CHAT_ADD, this.addItem);
             bus.$off(CHAT_EDITED, this.changeItem);
             bus.$off(CHAT_DELETED, this.removeItem);
-            bus.$off(CHAT_SEARCH_CHANGED, this.searchStringChanged);
             bus.$off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);

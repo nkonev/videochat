@@ -172,17 +172,16 @@
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
     import {
-        CHANGE_SEARCH_STRING,
         FETCH_USER_PROFILE, GET_CHAT_ID, GET_CHAT_USERS_COUNT,
         GET_MUTE_AUDIO,
-        GET_MUTE_VIDEO,
+        GET_MUTE_VIDEO, GET_SEARCH_STRING,
         GET_SHARE_SCREEN,
         GET_SHOW_CALL_BUTTON,
         GET_SHOW_CHAT_EDIT_BUTTON,
         GET_SHOW_HANG_BUTTON,
         GET_SHOW_SEARCH, GET_TITLE,
         GET_USER,
-        GET_VIDEO_CHAT_USERS_COUNT,
+        GET_VIDEO_CHAT_USERS_COUNT, SET_SEARCH_STRING,
         UNSET_USER
     } from "./store";
     import bus, {
@@ -224,7 +223,6 @@
                 drawer: this.$vuetify.breakpoint.lgAndUp,
                 lastError: "",
                 showAlert: false,
-                searchChatString: "",
                 wsConnected: false,
                 invitedVideoChatId: 0,
                 invitedVideoChatAlert: false,
@@ -269,7 +267,7 @@
                 bus.$emit(OPEN_CHAT_EDIT, this.chatId);
             },
             doSearch(searchString) {
-                this.$store.dispatch(CHANGE_SEARCH_STRING, searchString);
+                this.$store.commit(SET_SEARCH_STRING, searchString);
             },
             getAppBarItems(){
                 return this.appBarItems.filter((value, index) => {
@@ -374,6 +372,14 @@
             currentUserAvatar() {
                 return getCorrectUserAvatar(this.currentUser.avatar);
             },
+            searchChatString: {
+                get() {
+                    return this.$store.getters[GET_SEARCH_STRING];
+                },
+                set(newValue) {
+                    this.doSearch(newValue);
+                }
+            }
         },
         mounted() {
             this.$store.dispatch(FETCH_USER_PROFILE);
@@ -383,11 +389,6 @@
             bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             bus.$on(VIDEO_RESOLUTION_CHANGED, this.onVideoResolutionChanged)
-        },
-        watch: {
-            searchChatString (searchString) {
-                this.doSearch(searchString);
-            },
         },
 
     }
