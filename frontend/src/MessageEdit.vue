@@ -13,6 +13,7 @@
                     <button class="ql-strike"></button>
                     <select class="ql-color"></select>
                     <select class="ql-background"></select>
+                    <button class="ql-link"></button>
                     <button class="ql-clean"></button>
                 </div>
                 <div class="custom-toolbar-send">
@@ -217,6 +218,9 @@ $mobileWidth = 800px
 .ql-toolbar {
     display: inline-flex;
     //align-items center
+}
+.ql-snow .ql-tooltip {
+    left 0 !important
 }
 #custom-toolbar {
     display: flex;
