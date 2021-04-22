@@ -105,6 +105,14 @@ func GetBoolean(s string) bool {
 	}
 }
 
+func GetBooleanWithError(s string) (bool, error) {
+	if parseBool, err := strconv.ParseBool(s); err != nil {
+		return false, err
+	} else {
+		return parseBool, nil
+	}
+}
+
 func ParseInt64(s string) (int64, error) {
 	if i, err := strconv.ParseInt(s, 10, 64); err != nil {
 		return 0, err

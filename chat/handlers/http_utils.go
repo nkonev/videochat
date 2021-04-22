@@ -22,3 +22,12 @@ func GetQueryParamAsInt64(c echo.Context, name string) (int64, error) {
 	}
 	return param, nil
 }
+
+func GetQueryParamAsBoolean(c echo.Context, name string) (bool, error) {
+	paramString := c.QueryParam(name)
+	param, err := utils.GetBooleanWithError(paramString)
+	if err != nil {
+		return false, err
+	}
+	return param, nil
+}

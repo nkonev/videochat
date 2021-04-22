@@ -112,3 +112,19 @@ func (db *DB) GetCoChattedParticipantIdsCommon(participantId int64) ([]int64, er
 		return list, nil
 	}
 }
+
+func setAdminCommon(qq CommonOperations, userId int64, chatId int64, newAdmin bool) error {
+	if _, err := qq.Exec("UPDATE chat_participant SET admin = $3 WHERE user_id = $1 AND chat_id = $2", userId, chatId, newAdmin); err != nil {
+		Logger.Errorf("Error during editing participant admin id %v", err)
+		return err
+	}
+	return nil
+}
+
+func (tx *Tx) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
+	return setAdminCommon(tx, userId, chatId, newAdmin)
+}
+
+func (db *DB) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
+	return setAdminCommon(db, userId, chatId, newAdmin)
+}

@@ -133,7 +133,7 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 			chatDto.CanBroadcast = true
 		}
 		chatDto.CanVideoKick = cc.IsAdmin
-
+		chatDto.CanChangeChatAdmins = cc.IsAdmin
 		return chatDto, nil
 	}
 }
@@ -368,6 +368,80 @@ func (ch ChatHandler) LeaveChat(c echo.Context) error {
 			ch.notificator.NotifyAboutDeleteChat(c, responseDto, []int64{userPrincipalDto.UserId}, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
+	})
+	if errOuter != nil {
+		GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
+	}
+	return errOuter
+}
+
+type ChangeAdminResponseDto struct {
+	Admin bool `json:"admin"`
+}
+
+func (ch ChatHandler) ChangeParticipant(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
+
+		// check that I am admin
+		admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !admin {
+			return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You have no access to this chat"})
+		}
+		interestingUserId, err := GetPathParamAsInt64(c, "participantId")
+		participant, err := tx.IsParticipant(interestingUserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !participant {
+			return c.JSON(http.StatusBadRequest, &utils.H{"message": "User is not belong to chat"})
+		}
+
+		newAdmin, err := GetQueryParamAsBoolean(c, "admin")
+		if err != nil {
+			return err
+		}
+		err = tx.SetAdmin(interestingUserId, chatId, newAdmin)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during changing chat admin in database %v", err)
+			return err
+		}
+		isAdmin, err := tx.IsAdmin(interestingUserId, chatId)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during getting chat admin in database %v", err)
+			return err
+		}
+		participantIds, err := tx.GetParticipantIds(chatId)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during getting chat participants %v", err)
+			return err
+		}
+
+		var userIdsToNotifyAboutChatChanged []int64
+		for _, participantIdFromRequest := range participantIds {
+			userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, participantIdFromRequest)
+		}
+		if responseDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto); err != nil {
+			return err
+		} else {
+			ch.notificator.NotifyAboutChangeChat(c, responseDto, userIdsToNotifyAboutChatChanged, tx)
+		}
+		responseDto := ChangeAdminResponseDto{Admin: isAdmin}
+
+		return c.JSON(http.StatusAccepted, responseDto)
 	})
 	if errOuter != nil {
 		GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)

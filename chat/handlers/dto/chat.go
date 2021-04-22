@@ -16,4 +16,5 @@ type ChatDto struct {
 	UnreadMessages     int64     `json:"unreadMessages"`
 	CanBroadcast 	   bool 	 `json:"canBroadcast"`
 	CanVideoKick	   bool 	 `json:"canVideoKick"`
+	CanChangeChatAdmins	   bool 	 `json:"canChangeChatAdmins"`
 }
