@@ -14,6 +14,15 @@
                                 <v-list-item-content>
                                     <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> (you)</template></v-list-item-title>
                                 </v-list-item-content>
+                                <v-container>
+                                <v-switch
+                                    inset
+                                    :messages="item.adminLoading ? `Changing chat admin...` : `${item.admin ? `Chat admin` : `Regular user`}`"
+                                    v-model="item.adminChange"
+                                    :loading="item.adminLoading ? 'primary' : false"
+                                    @change="changeChatAdmin(item)"
+                                ></v-switch>
+                                </v-container>
                                 <v-tooltip bottom v-if="dto.canVideoKick && item.id != currentUser.id">
                                     <template v-slot:activator="{ on, attrs }">
                                         <v-btn v-bind="attrs" v-on="on" icon @click="kickFromVideoCall(item.id)"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
@@ -71,7 +80,6 @@
                 show: false,
                 dto: dtoFactory(),
                 isLoading: false,
-                people: [  ],
             }
         },
         computed: {
@@ -87,11 +95,25 @@
                     axios.get('/api/chat/'+val)
                         .then((response) => {
                             this.dto = response.data;
+                            this.dto.participants.forEach(item => {
+                                item.adminLoading = false;
+                                item.adminChange = item.admin;
+                            })
                         });
                 } else {
                     this.dto = dtoFactory();
                 }
 
+            },
+            changeChatAdmin(item) {
+                item.adminLoading = true;
+                this.$forceUpdate();
+                setTimeout(()=>{
+                    item.adminLoading = false;
+                    item.admin = true;
+                    item.adminChange = true;
+                    this.$forceUpdate();
+                }, 5000)
             },
             inviteToVideoCall(userId) {
                 axios.put(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`).then(value => {
