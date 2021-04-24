@@ -503,6 +503,69 @@ func (ch ChatHandler) DeleteParticipant(c echo.Context) error {
 	return errOuter
 }
 
+type AddParticipantsDto struct {
+	ParticipantIds     []int64   `json:"addParticipantIds"`
+}
+
+func (ch ChatHandler) AddParticipants(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
+
+		// check that I am admin
+		admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !admin {
+			return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You have no access to this chat"})
+		}
+		var bindTo = new(AddParticipantsDto)
+		if err := c.Bind(bindTo); err != nil {
+			GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
+			return err
+		}
+
+		for _, participantId := range bindTo.ParticipantIds {
+			err = tx.AddParticipant(participantId, chatId, false)
+			if err != nil {
+				GetLogEntry(c.Request()).Errorf("Error during changing chat admin in database %v", err)
+				return err
+			}
+		}
+		participantIds, err := tx.GetParticipantIds(chatId)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during getting chat participants %v", err)
+			return err
+		}
+
+		var userIdsToNotifyAboutChatChanged []int64
+		for _, participantIdFromRequest := range participantIds {
+			userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, participantIdFromRequest)
+		}
+		if chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto); err != nil {
+			return err
+		} else {
+			ch.notificator.NotifyAboutChangeChat(c, chatDto, userIdsToNotifyAboutChatChanged, tx)
+		}
+
+		return c.NoContent(http.StatusAccepted)
+	})
+	if errOuter != nil {
+		GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
+	}
+	return errOuter
+}
+
 func (ch ChatHandler) CheckAccess(c echo.Context) error {
 	chatId, err := GetQueryParamAsInt64(c, "chatId")
 	if err != nil {

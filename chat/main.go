@@ -152,6 +152,7 @@ func configureEcho(
 	e.PUT("/chat/:id/leave", ch.LeaveChat)
 	e.PUT("/chat/:id/user/:participantId", ch.ChangeParticipant)
 	e.DELETE("/chat/:id/user/:participantId", ch.DeleteParticipant)
+	e.PUT("/chat/:id/users", ch.AddParticipants)
 	e.GET("/internal/access", ch.CheckAccess)
 
 	mc := handlers.NewMessageHandler(db, policy, notificator, restClient)

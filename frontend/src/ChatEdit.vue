@@ -30,6 +30,7 @@
                                 item-value="id"
                                 multiple
                                 :hide-selected="true"
+                                hide-details
                                 :search-input.sync="search"
                         >
                             <template v-slot:selection="data">

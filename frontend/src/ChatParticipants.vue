@@ -42,9 +42,16 @@
                             <v-divider></v-divider>
                         </template>
                     </v-list>
-                    <!--<v-autocomplete
+                    <v-progress-circular
+                        v-else
+                        indeterminate
+                        color="primary"
+                    ></v-progress-circular>
+
+                    <v-autocomplete
+                        v-if="dto.canEdit"
                         v-model="newParticipantIds"
-                        :disabled="participantIdsIsLoading"
+                        :disabled="newParticipantIdsIsLoading"
                         :items="people"
                         filled
                         chips
@@ -54,6 +61,7 @@
                         item-value="id"
                         multiple
                         :hide-selected="true"
+                        hide-details
                         :search-input.sync="search"
                     >
                       <template v-slot:selection="data">
@@ -78,17 +86,12 @@
                           <v-list-item-title v-html="data.item.login"></v-list-item-title>
                         </v-list-item-content>
                       </template>
-                    </v-autocomplete>-->
-                    <v-progress-circular
-                        v-else
-                        indeterminate
-                        color="primary"
-                    ></v-progress-circular>
+                    </v-autocomplete>
                 </v-container>
 
                 <v-card-actions class="pa-4">
+                    <v-btn v-if="dto.canEdit" color="primary" class="mr-4" @click="addSelectedParticipants()">Add participants</v-btn>
                     <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
-                    <v-spacer/>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -101,6 +104,7 @@
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import {chat_name, videochat_name} from "./routes";
+    import debounce from "lodash/debounce";
 
     const dtoFactory = ()=>{
         return {
@@ -118,7 +122,7 @@
                 dto: dtoFactory(),
                 chatId: null,
 
-                participantIdsIsLoading: false,
+                newParticipantIdsIsLoading: false,
                 newParticipantIds: [],
                 people: [  ], // available person to chat with
                 search: null,
@@ -182,7 +186,7 @@
                 this.newParticipantIds = [];
                 this.people = [];
                 this.dto = dtoFactory();
-                this.participantIdsIsLoading = false;
+                this.newParticipantIdsIsLoading = false;
                 this.search = null;
             },
             removeNewSelected (item) {
@@ -191,21 +195,29 @@
               if (index >= 0) this.newParticipantIds.splice(index, 1)
             },
             doNewSearch(searchString) {
-              if (this.participantIdsIsLoading) return;
+              if (this.newParticipantIdsIsLoading) return;
 
               if (!searchString) {
                   return;
               }
 
-              this.participantIdsIsLoading = true;
+              this.newParticipantIdsIsLoading = true;
 
               axios.get(`/api/user?searchString=${searchString}`)
                   .then((response) => {
                     console.log("Fetched users", response.data.data);
-                    this.people = [...this.people, ...response.data.data];
+                    this.people = [...this.people, ...response.data.data].filter(value => !this.dto.participantIds.includes(value.id));
                   })
-                  .finally(() => (this.participantIdsIsLoading = false))
+                  .finally(() => (this.newParticipantIdsIsLoading = false))
             },
+            addSelectedParticipants() {
+                axios.put(`/api/chat/${this.dto.id}/users`, {
+                  addParticipantIds: this.newParticipantIds
+                }).then(value => {
+                    this.newParticipantIds = [];
+                    this.search = null;
+                })
+            }
         },
         watch: {
             search (searchString) {
@@ -213,7 +225,8 @@
             },
         },
 
-      created() {
+        created() {
+            this.doNewSearch = debounce(this.doNewSearch, 700);
             bus.$on(OPEN_INFO_DIALOG, this.showModal);
             bus.$on(CHAT_EDITED, this.onChatChange);
         },
@@ -223,10 +236,3 @@
         },
     }
 </script>
-
-<style lang="stylus">
-.v-messages__message {
-    position fixed
-
-}
-</style>
