@@ -14,11 +14,18 @@
                                 <v-list-item-content>
                                     <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> (you)</template></v-list-item-title>
                                 </v-list-item-content>
+                                <v-tooltip bottom v-if="item.admin">
+                                  <template v-slot:activator="{ on, attrs }">
+                                          <span class="pl-1 pr-1">
+                                              <v-icon v-bind="attrs" v-on="on">mdi-crown</v-icon>
+                                          </span>
+                                  </template>
+                                  <span>Admin</span>
+                                </v-tooltip>
                                 <v-btn v-if="dto.canEdit && item.id != currentUser.id" icon @click="deleteParticipant(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
                                 <v-switch v-if="dto.canChangeChatAdmins && item.id != currentUser.id"
                                     class="ml-2"
                                     inset
-                                    :messages="item.adminLoading ? `Changing ...` : `${item.admin ? `Chat admin` : `Regular user`}`"
                                     v-model="item.adminChange"
                                     :loading="item.adminLoading ? 'primary' : false"
                                     @change="changeChatAdmin(item)"
@@ -28,14 +35,6 @@
                                         <v-btn v-bind="attrs" v-on="on" icon @click="kickFromVideoCall(item.id)"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
                                     </template>
                                     <span>Kick</span>
-                                </v-tooltip>
-                                <v-tooltip bottom v-if="item.admin">
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <span class="pl-1 pr-1">
-                                            <v-icon v-bind="attrs" v-on="on">mdi-crown</v-icon>
-                                        </span>
-                                    </template>
-                                    <span>Admin</span>
                                 </v-tooltip>
                                 <v-btn v-if="item.id != currentUser.id" icon @click="inviteToVideoCall(item.id)"><v-icon color="success">mdi-phone</v-icon></v-btn>
                             </v-list-item>
@@ -90,7 +89,7 @@
                 </v-container>
 
                 <v-card-actions class="pa-4">
-                    <v-btn v-if="dto.canEdit" color="primary" class="mr-4" @click="addSelectedParticipants()">Add participants</v-btn>
+                    <v-btn v-if="dto.canEdit" :disabled="newParticipantIds.length == 0" color="primary" class="mr-4" @click="addSelectedParticipants()">Add participants</v-btn>
                     <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
                 </v-card-actions>
             </v-card>
