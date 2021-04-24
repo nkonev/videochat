@@ -99,7 +99,7 @@
 
 <script>
     import axios from "axios";
-    import bus, {CHAT_EDITED, OPEN_INFO_DIALOG} from "./bus";
+    import bus, {CHAT_DELETED, CHAT_EDITED, OPEN_INFO_DIALOG} from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import {chat_name, videochat_name} from "./routes";
@@ -216,6 +216,9 @@
                     this.newParticipantIds = [];
                     this.search = null;
                 })
+            },
+            onChatDelete() {
+                this.closeModal();
             }
         },
         watch: {
@@ -228,10 +231,12 @@
             this.doNewSearch = debounce(this.doNewSearch, 700);
             bus.$on(OPEN_INFO_DIALOG, this.showModal);
             bus.$on(CHAT_EDITED, this.onChatChange);
+            bus.$on(CHAT_DELETED, this.onChatDelete);
         },
         destroyed() {
             bus.$off(OPEN_INFO_DIALOG, this.showModal);
             bus.$off(CHAT_EDITED, this.onChatChange);
+            bus.$off(CHAT_DELETED, this.onChatDelete);
         },
     }
 </script>
