@@ -42,6 +42,43 @@
                             <v-divider></v-divider>
                         </template>
                     </v-list>
+                    <!--<v-autocomplete
+                        v-model="newParticipantIds"
+                        :disabled="participantIdsIsLoading"
+                        :items="people"
+                        filled
+                        chips
+                        color="blue-grey lighten-2"
+                        label="Select users for add to chat"
+                        item-text="login"
+                        item-value="id"
+                        multiple
+                        :hide-selected="true"
+                        :search-input.sync="search"
+                    >
+                      <template v-slot:selection="data">
+                        <v-chip
+                            v-bind="data.attrs"
+                            :input-value="data.selected"
+                            close
+                            @click="data.select"
+                            @click:close="removeNewSelected(data.item)"
+                        >
+                          <v-avatar left v-if="data.item.avatar">
+                            <v-img :src="data.item.avatar"></v-img>
+                          </v-avatar>
+                          {{ data.item.login }}
+                        </v-chip>
+                      </template>
+                      <template v-slot:item="data">
+                        <v-list-item-avatar v-if="data.item.avatar">
+                          <img :src="data.item.avatar">
+                        </v-list-item-avatar>
+                        <v-list-item-content>
+                          <v-list-item-title v-html="data.item.login"></v-list-item-title>
+                        </v-list-item-content>
+                      </template>
+                    </v-autocomplete>-->
                     <v-progress-circular
                         v-else
                         indeterminate
@@ -50,7 +87,7 @@
                 </v-container>
 
                 <v-card-actions class="pa-4">
-                    <v-btn color="error" class="mr-4" @click="show=false">Close</v-btn>
+                    <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>
@@ -79,8 +116,12 @@
             return {
                 show: false,
                 dto: dtoFactory(),
-                isLoading: false,
                 chatId: null,
+
+                participantIdsIsLoading: false,
+                newParticipantIds: [],
+                people: [  ], // available person to chat with
+                search: null,
             }
         },
         computed: {
@@ -91,8 +132,8 @@
             showModal(chatId) {
                 this.chatId = chatId;
 
-                this.$data.show = true;
-                if (this.chatId) {
+                this.show = true;
+                if (this.chatId && this.show) {
                     this.loadData();
                 } else {
                     this.dto = dtoFactory();
@@ -127,22 +168,56 @@
                 axios.put(`/api/chat/${this.dto.id}/video/kick?userId=${userId}`)
             },
             onChatChange() {
-                if (this.chatId) {
+                if (this.chatId && this.show) {
                     this.loadData();
                 }
             },
             deleteParticipant(participant) {
                 console.log("Deleting participant", participant);
                 axios.delete(`/api/chat/${this.dto.id}/user/${participant.id}`)
-            }
+            },
+            closeModal() {
+                this.show = false;
+                this.chatId = null;
+                this.newParticipantIds = [];
+                this.people = [];
+                this.dto = dtoFactory();
+                this.participantIdsIsLoading = false;
+                this.search = null;
+            },
+            removeNewSelected (item) {
+              console.debug("Removing", item, this.newParticipantIds);
+              const index = this.newParticipantIds.indexOf(item.id);
+              if (index >= 0) this.newParticipantIds.splice(index, 1)
+            },
+            doNewSearch(searchString) {
+              if (this.participantIdsIsLoading) return;
+
+              if (!searchString) {
+                  return;
+              }
+
+              this.participantIdsIsLoading = true;
+
+              axios.get(`/api/user?searchString=${searchString}`)
+                  .then((response) => {
+                    console.log("Fetched users", response.data.data);
+                    this.people = [...this.people, ...response.data.data];
+                  })
+                  .finally(() => (this.participantIdsIsLoading = false))
+            },
         },
-        created() {
+        watch: {
+            search (searchString) {
+              this.doNewSearch(searchString);
+            },
+        },
+
+      created() {
             bus.$on(OPEN_INFO_DIALOG, this.showModal);
             bus.$on(CHAT_EDITED, this.onChatChange);
         },
         destroyed() {
-            this.chatId = null;
-            this.dto = dtoFactory();
             bus.$off(OPEN_INFO_DIALOG, this.showModal);
             bus.$off(CHAT_EDITED, this.onChatChange);
         },
