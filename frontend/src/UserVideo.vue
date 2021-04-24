@@ -1,6 +1,6 @@
 <template>
 <div class="video-container-element">
-    <video autoPlay playsInline ref="videoRef" v-on:dblclick="onDoubleClick"/>
+  <video autoPlay playsInline muted ref="videoRef" v-on:dblclick="onDoubleClick"/>
 	<p class="video-container-element-caption">{{ userName }} {{audioMute}}</p>
 </div>
 </template>
