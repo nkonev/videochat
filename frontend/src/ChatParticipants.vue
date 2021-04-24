@@ -14,7 +14,9 @@
                                 <v-list-item-content>
                                     <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> (you)</template></v-list-item-title>
                                 </v-list-item-content>
+                                <v-btn v-if="dto.canEdit && item.id != currentUser.id" icon @click="deleteParticipant(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
                                 <v-switch v-if="dto.canChangeChatAdmins && item.id != currentUser.id"
+                                    class="ml-2"
                                     inset
                                     :messages="item.adminLoading ? `Changing ...` : `${item.admin ? `Chat admin` : `Regular user`}`"
                                     v-model="item.adminChange"
@@ -99,7 +101,7 @@
             },
             loadData() {
                 console.log("Getting info about chat id", this.chatId);
-                axios.get('/api/chat/'+this.chatId)
+                axios.get('/api/chat/' + this.chatId)
                     .then((response) => {
                       this.dto = response.data;
                       this.dto.participants.forEach(item => {
@@ -111,13 +113,7 @@
             changeChatAdmin(item) {
                 item.adminLoading = true;
                 this.$forceUpdate();
-                axios.put(`/api/chat/${this.dto.id}/user/${item.id}?admin=${item.adminChange}`).then(response => {
-                    const newItem = response.data;
-                    item.adminLoading = false;
-                    item.admin = newItem.admin;
-                    item.adminChange = newItem.admin;
-                    this.$forceUpdate();
-                })
+                axios.put(`/api/chat/${this.dto.id}/user/${item.id}?admin=${item.adminChange}`);
             },
             inviteToVideoCall(userId) {
                 axios.put(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`).then(value => {
@@ -131,7 +127,13 @@
                 axios.put(`/api/chat/${this.dto.id}/video/kick?userId=${userId}`)
             },
             onChatChange() {
-                this.loadData();
+                if (this.chatId) {
+                    this.loadData();
+                }
+            },
+            deleteParticipant(participant) {
+                console.log("Deleting participant", participant);
+                axios.delete(`/api/chat/${this.dto.id}/user/${participant.id}`)
             }
         },
         created() {
@@ -139,6 +141,7 @@
             bus.$on(CHAT_EDITED, this.onChatChange);
         },
         destroyed() {
+            this.chatId = null;
             this.dto = dtoFactory();
             bus.$off(OPEN_INFO_DIALOG, this.showModal);
             bus.$off(CHAT_EDITED, this.onChatChange);
