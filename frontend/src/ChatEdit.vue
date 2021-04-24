@@ -160,6 +160,7 @@
                 const valid = this.validate();
                 if (valid) {
                     const dtoToPost = this.dto;
+                    dtoToPost.participants = null;
                     (dtoToPost.id ? axios.put(`/api/chat`, dtoToPost) : axios.post(`/api/chat`, dtoToPost))
                         .then(() => {
                             this.show = false;
