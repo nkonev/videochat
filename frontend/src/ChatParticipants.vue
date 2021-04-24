@@ -58,7 +58,7 @@
 
 <script>
     import axios from "axios";
-    import bus, {OPEN_INFO_DIALOG} from "./bus";
+    import bus, {CHAT_EDITED, OPEN_INFO_DIALOG} from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import {chat_name, videochat_name} from "./routes";
@@ -78,6 +78,7 @@
                 show: false,
                 dto: dtoFactory(),
                 isLoading: false,
+                chatId: null,
             }
         },
         computed: {
@@ -86,22 +87,26 @@
 
         methods: {
             showModal(chatId) {
+                this.chatId = chatId;
+
                 this.$data.show = true;
-                const val = chatId;
-                if (val) {
-                    console.log("Getting info about chat id", val);
-                    axios.get('/api/chat/'+val)
-                        .then((response) => {
-                            this.dto = response.data;
-                            this.dto.participants.forEach(item => {
-                                item.adminLoading = false;
-                                item.adminChange = item.admin;
-                            })
-                        });
+                if (this.chatId) {
+                    this.loadData();
                 } else {
                     this.dto = dtoFactory();
                 }
 
+            },
+            loadData() {
+                console.log("Getting info about chat id", this.chatId);
+                axios.get('/api/chat/'+this.chatId)
+                    .then((response) => {
+                      this.dto = response.data;
+                      this.dto.participants.forEach(item => {
+                        item.adminLoading = false;
+                        item.adminChange = item.admin;
+                      })
+                    });
             },
             changeChatAdmin(item) {
                 item.adminLoading = true;
@@ -125,13 +130,18 @@
             kickFromVideoCall(userId) {
                 axios.put(`/api/chat/${this.dto.id}/video/kick?userId=${userId}`)
             },
+            onChatChange() {
+                this.loadData();
+            }
         },
         created() {
             bus.$on(OPEN_INFO_DIALOG, this.showModal);
+            bus.$on(CHAT_EDITED, this.onChatChange);
         },
         destroyed() {
             this.dto = dtoFactory();
             bus.$off(OPEN_INFO_DIALOG, this.showModal);
+            bus.$off(CHAT_EDITED, this.onChatChange);
         },
     }
 </script>
