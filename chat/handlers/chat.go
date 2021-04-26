@@ -191,12 +191,6 @@ func (ch ChatHandler) CreateChat(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	if bindTo.ParticipantIds == nil {
-		GetLogEntry(c.Request()).Infof("participantIds is required for chat creation")
-		return c.NoContent(http.StatusBadRequest)
-	}
-	participantIds := *bindTo.ParticipantIds
-
 	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
 		id, _, err := tx.CreateChat(convertToCreatableChat(bindTo))
 		if err != nil {
@@ -206,13 +200,17 @@ func (ch ChatHandler) CreateChat(c echo.Context) error {
 		if err := tx.AddParticipant(userPrincipalDto.UserId, id, true); err != nil {
 			return err
 		}
-		// add other participants except admin
-		for _, participantId := range participantIds {
-			if participantId == userPrincipalDto.UserId {
-				continue
-			}
-			if err := tx.AddParticipant(participantId, id, false); err != nil {
-				return err
+
+		if bindTo.ParticipantIds != nil {
+			participantIds := *bindTo.ParticipantIds
+			// add other participants except admin
+			for _, participantId := range participantIds {
+				if participantId == userPrincipalDto.UserId {
+					continue
+				}
+				if err := tx.AddParticipant(participantId, id, false); err != nil {
+					return err
+				}
 			}
 		}
 
