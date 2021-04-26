@@ -29,7 +29,7 @@ type EditChatDto struct {
 
 type CreateChatDto struct {
 	Name           string  `json:"name"`
-	ParticipantIds []int64 `json:"participantIds"`
+	ParticipantIds *[]int64 `json:"participantIds"`
 }
 
 type ChatHandler struct {
@@ -191,6 +191,12 @@ func (ch ChatHandler) CreateChat(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
+	if bindTo.ParticipantIds == nil {
+		GetLogEntry(c.Request()).Infof("participantIds is required for chat creation")
+		return c.NoContent(http.StatusBadRequest)
+	}
+	participantIds := *bindTo.ParticipantIds
+
 	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
 		id, _, err := tx.CreateChat(convertToCreatableChat(bindTo))
 		if err != nil {
@@ -201,7 +207,7 @@ func (ch ChatHandler) CreateChat(c echo.Context) error {
 			return err
 		}
 		// add other participants except admin
-		for _, participantId := range bindTo.ParticipantIds {
+		for _, participantId := range participantIds {
 			if participantId == userPrincipalDto.UserId {
 				continue
 			}
@@ -303,25 +309,37 @@ func (ch ChatHandler) EditChat(c echo.Context) error {
 			return err
 		}
 
-		for _, participantIdFromRequest := range bindTo.ParticipantIds {
-			// not exists in database
-			if !utils.Contains(existsChatParticipantIdsFromDatabase, participantIdFromRequest) {
-				if err := tx.AddParticipant(participantIdFromRequest, bindTo.Id, false); err != nil {
-					return err
+		if bindTo.ParticipantIds != nil {
+			// editing participants
+			participantIds := *bindTo.ParticipantIds
+			for _, participantIdFromRequest := range participantIds {
+				// not exists in database
+				if !utils.Contains(existsChatParticipantIdsFromDatabase, participantIdFromRequest) {
+					if err := tx.AddParticipant(participantIdFromRequest, bindTo.Id, false); err != nil {
+						return err
+					}
+					userIdsToNotifyAboutChatCreated = append(userIdsToNotifyAboutChatCreated, participantIdFromRequest)
+				} else { // exists in database
+					userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, participantIdFromRequest)
 				}
-				userIdsToNotifyAboutChatCreated = append(userIdsToNotifyAboutChatCreated, participantIdFromRequest)
-			} else { // exists in database
-				userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, participantIdFromRequest)
 			}
-		}
-
-		for _, participantIdFromDatabase := range existsChatParticipantIdsFromDatabase {
-			// not present in request array and not myself
-			if !utils.Contains(bindTo.ParticipantIds, participantIdFromDatabase) && participantIdFromDatabase != userPrincipalDto.UserId {
-				if err := tx.DeleteParticipant(participantIdFromDatabase, bindTo.Id); err != nil {
-					return err
+			for _, participantIdFromDatabase := range existsChatParticipantIdsFromDatabase {
+				// not present in request array and not myself
+				if !utils.Contains(participantIds, participantIdFromDatabase) && participantIdFromDatabase != userPrincipalDto.UserId {
+					if err := tx.DeleteParticipant(participantIdFromDatabase, bindTo.Id); err != nil {
+						return err
+					}
+					userIdsToNotifyAboutChatDeleted = append(userIdsToNotifyAboutChatDeleted, participantIdFromDatabase)
 				}
-				userIdsToNotifyAboutChatDeleted = append(userIdsToNotifyAboutChatDeleted, participantIdFromDatabase)
+			}
+		} else {
+			// not editing participants - just sending notification about chat (name) change
+			if ids, err := tx.GetParticipantIds(bindTo.Id); err != nil {
+				return err
+			} else {
+				for _, pid := range ids {
+					userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, pid)
+				}
 			}
 		}
 

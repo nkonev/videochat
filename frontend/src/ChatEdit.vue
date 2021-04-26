@@ -14,12 +14,13 @@
                     >
                         <v-text-field
                             label="Chat name"
-                            v-model="dto.name"
+                            v-model="editDto.name"
                             required
                             :rules="chatNameRules"
                         ></v-text-field>
                         <v-autocomplete
-                                v-model="dto.participantIds"
+                                v-if="isNew"
+                                v-model="editDto.participantIds"
                                 :disabled="isLoading"
                                 :items="people"
                                 filled
@@ -64,7 +65,7 @@
                         <v-btn color="primary" class="mr-4" @click="saveChat" v-if="isEdit()">Edit</v-btn>
                         <v-btn color="primary" class="mr-4" @click="saveChat" v-else>Create</v-btn>
                     </template>
-                    <v-btn color="error" class="mr-4" @click="show=false">Close</v-btn>
+                    <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>
@@ -91,7 +92,7 @@
                 show: false,
                 editChatId: null,
                 search: null,
-                dto: dtoFactory(),
+                editDto: dtoFactory(),
                 isLoading: false,
                 people: [  ], // available person to chat with
                 chatNameRules: [
@@ -100,7 +101,11 @@
                 valid: true
             }
         },
-
+        computed: {
+            isNew() {
+                return !this.editChatId;
+            }
+        },
         watch: {
             search (searchString) {
                 this.doSearch(searchString);
@@ -109,29 +114,24 @@
         methods: {
             showModal(chatId) {
                 this.$data.show = true;
-                const val = chatId;
                 this.editChatId = chatId;
-                if (val) {
-                    console.log("Getting info about chat id", val);
-                    axios.get('/api/chat/'+val)
+                if (this.editChatId) {
+                    console.log("Getting info about chat id", this.editChatId);
+                    axios.get('/api/chat/'+this.editChatId)
                         .then((response) => {
-                            this.dto = response.data;
-                        }).then(()=>{
-                            axios.get('/api/user/list', {
-                                params: {userId: [...this.dto.participantIds] + ''}
-                            }).then((response) => {
-                                this.people = response.data;
-                            })
+                            this.editDto = {
+                                id: this.editChatId,
+                                name: response.data.name,
+                            }
                         })
                 } else {
-                    this.dto = dtoFactory();
+                    this.editDto = dtoFactory();
                 }
 
             },
-            removeSelected (item) {
-                console.debug("Removing", item, this.dto.participantIds);
-                const index = this.dto.participantIds.indexOf(item.id);
-                if (index >= 0) this.dto.participantIds.splice(index, 1)
+            removeSelected(item) {
+                const index = this.editDto.participantIds.indexOf(item.id);
+                if (index >= 0) this.editDto.participantIds.splice(index, 1)
             },
             doSearch(searchString) {
                 if (this.isLoading) return;
@@ -159,18 +159,29 @@
             saveChat() {
                 const valid = this.validate();
                 if (valid) {
-                    const dtoToPost = this.dto;
-                    dtoToPost.participants = null;
-                    (dtoToPost.id ? axios.put(`/api/chat`, dtoToPost) : axios.post(`/api/chat`, dtoToPost))
+                    const dtoToPost = {
+                        id: this.editDto.id,
+                        name: this.editDto.name,
+                        participantIds: this.isNew ? this.editDto.participantIds : null,
+                    };
+                    (this.isNew ? axios.post(`/api/chat`, dtoToPost) : axios.put(`/api/chat`, dtoToPost))
                         .then(() => {
-                            this.show = false;
+                            this.closeModal();
                         })
                 }
             },
             validate () {
                 return this.$refs.form.validate()
             },
-
+            closeModal() {
+                this.show = false;
+                this.editChatId = null;
+                this.search = null;
+                this.editDto = dtoFactory();
+                this.isLoading = false;
+                this.people = [  ];
+                this.valid = true;
+            }
         },
         created() {
             // https://forum-archive.vuejs.org/topic/5174/debounce-replacement-in-vue-2-0
