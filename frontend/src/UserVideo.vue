@@ -1,7 +1,7 @@
 <template>
 <div class="video-container-element">
     <video autoPlay playsInline ref="videoRef" v-on:dblclick="onDoubleClick"/>
-	<p class="video-container-element-caption">{{ userName }} {{audioMute}}</p>
+	  <p class="video-container-element-caption">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon></p>
 </div>
 </template>
 
@@ -13,28 +13,28 @@ export default {
     data()  {
 	    return {
             userName: 'loading...',
-            audioMute: ''
+            audioMute: false
         }
     },
 
 	methods: {
-		setSource(d) {
-		    console.log("videoRef=", this.$refs.videoRef);
-			this.$refs.videoRef.srcObject = d;
-		},
-        getStreamId() {
-		    return this?.$refs?.videoRef?.srcObject?.id;
-        },
-        setUserName(u) {
-		    this.userName = u;
-        },
-        setAudioMute(b) {
-		    this.audioMute = b ? "(muted)" : "";
-        },
-        setStreamMuted(b) {
-            this.$refs.videoRef.muted = b;
-        },
-        onDoubleClick(e) {
+      setSource(d) {
+          console.log("videoRef=", this.$refs.videoRef);
+          this.$refs.videoRef.srcObject = d;
+      },
+      getStreamId() {
+		      return this?.$refs?.videoRef?.srcObject?.id;
+      },
+      setUserName(u) {
+		      this.userName = u;
+      },
+      setAudioMute(b) {
+		      this.audioMute = b;
+      },
+      setStreamMuted(b) {
+          this.$refs.videoRef.muted = b;
+      },
+      onDoubleClick(e) {
             const elem = e.target;
             if (elem.requestFullscreen) {
                 elem.requestFullscreen();
