@@ -8,7 +8,7 @@
 
                 <v-card-actions class="pa-4">
                     <v-btn color="error" class="mr-4" @click="actionFunction()">{{buttonName}}</v-btn>
-                    <v-btn class="mr-4" @click="show=false">Close</v-btn>
+                    <v-btn class="mr-4" @click="lightClose()">Close</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>
@@ -37,12 +37,15 @@
                 this.$data.buttonName = newData.buttonName;
                 this.$data.show = true;
             },
-            hideModal() {
+            lightClose() {
                 this.$data.show = false;
+                this.$data.actionFunction = ()=>{};
+            },
+            hideModal() {
+                this.lightClose();
                 this.$data.title = "";
                 this.$data.text = "";
                 this.$data.buttonName = "";
-                this.$data.actionFunction = ()=>{};
             },
         },
         created() {

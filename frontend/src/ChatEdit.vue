@@ -19,7 +19,7 @@
                             :rules="chatNameRules"
                         ></v-text-field>
                         <v-autocomplete
-                                v-if="isNew && show"
+                                v-if="isNew"
                                 v-model="editDto.participantIds"
                                 :disabled="isLoading"
                                 :items="people"
@@ -175,7 +175,7 @@
             },
             closeModal() {
                 this.show = false;
-                this.editChatId = null;
+                // this.editChatId = null;
                 this.search = null;
                 this.editDto = dtoFactory();
                 this.isLoading = false;
