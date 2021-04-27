@@ -3,20 +3,19 @@ package listener
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/isayme/go-amqp-reconnect/rabbitmq"
-	"nkonev.name/video/config"
+	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
+	"github.com/lucsky/cuid"
+	"go.uber.org/atomic"
 	"nkonev.name/video/handlers"
 	myRabbitmq "nkonev.name/video/rabbitmq"
 )
-
-type VideoListenerFunction func(data []byte) error
 
 type KickUserDto struct {
 	ChatId int64 `json:"chatId"`
 	UserId int64 `json:"userId"`
 }
 
-func createVideoListener(h *handlers.ExtendedService) VideoListenerFunction {
+func createVideoListener(h *handlers.ExtendedService) myRabbitmq.VideoListenerFunction {
 	return func(data []byte) error {
 		var bindTo = new(KickUserDto)
 		err := json.Unmarshal(data, &bindTo)
@@ -36,26 +35,29 @@ func createVideoListener(h *handlers.ExtendedService) VideoListenerFunction {
 
 type VideoListenerService struct {
 	channel *rabbitmq.Channel
-	listenerFunction VideoListenerFunction
-	rackId int32
+	listenerFunction myRabbitmq.VideoListenerFunction
 }
 
 
-func NewVideoListener(h *handlers.ExtendedService, connection *rabbitmq.Connection, scalingConfig config.ScalingConfig) *VideoListenerService {
-	channel := myRabbitmq.CreateRabbitMqChannel(connection)
+func NewVideoListener(h *handlers.ExtendedService, connection *rabbitmq.Connection) *VideoListenerService {
 	listener := createVideoListener(h)
+	initialized := atomic.NewBool(false)
+	queueNameText := fmt.Sprintf("video-kick-%v", cuid.New())
+	channel := myRabbitmq.CreateRabbitMqChannelWithRecreate(connection, func(argChannel *rabbitmq.Channel) (error) {
+		createFanoutExchange(videoKickExchange, argChannel)
+		amqpQueue := createQueue(argChannel, queueNameText)
+		bindQueueToExchange(videoKickExchange, amqpQueue, argChannel)
 
-	return &VideoListenerService{
+		if !initialized.Load() {
+			listenQueue(argChannel, amqpQueue, listener)
+			initialized.Store(true)
+		}
+		return nil
+	})
+	r := &VideoListenerService{
 		channel: channel,
 		listenerFunction: listener,
-		rackId: scalingConfig.Rack,
 	}
-}
 
-func (r *VideoListenerService) ListenVideoKickQueue() {
-	createFanoutExchange(videoKickExchange, r.channel)
-	queueName := fmt.Sprintf("video-kick-%v", r.rackId)
-	amqpQueue := createQueue(r.channel, queueName)
-	bindQueueToExchange(videoKickExchange, amqpQueue, r.channel)
-	listenQueue(r.channel, amqpQueue, r.listenerFunction)
+	return r
 }

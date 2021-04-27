@@ -117,7 +117,4 @@ frontend:
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672"
 
-scaling:
-  rack: 1
-
 syncNotificationPeriod: 2s

@@ -1,7 +1,7 @@
 package producer
 
 import (
-	"github.com/isayme/go-amqp-reconnect/rabbitmq"
+	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	log "github.com/pion/ion-sfu/pkg/logger"
 	"github.com/streadway/amqp"
 	"time"

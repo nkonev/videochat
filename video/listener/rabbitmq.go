@@ -1,7 +1,7 @@
 package listener
 
 import (
-	"github.com/isayme/go-amqp-reconnect/rabbitmq"
+	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	log "github.com/pion/ion-sfu/pkg/logger"
 	"github.com/streadway/amqp"
 )
@@ -47,22 +47,22 @@ func bindQueueToExchange(exchangeName string, queue *amqp.Queue, consume *rabbit
 }
 
 
-func createQueue(consumeCh *rabbitmq.Channel, queueName string) *amqp.Queue {
+func createQueue(consumeCh *rabbitmq.Channel, maybeQueueName string) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
-		queueName, // name
-		true,   // durable
-		false,   // delete when unused
+		maybeQueueName, // name
+		false,   // durable
+		true,   // delete when unused
 		false,   // exclusive
 		false,   // no-wait
 		nil,     // arguments
 	)
 	if err != nil {
-		logger.Error(err, "Unable to declare to queue, exit.", "queue", queueName)
+		logger.Error(err, "Unable to declare to queue, exit.")
 		panic(err)
 	} else {
-		logger.Info("Successfully declared queue", "queue", queueName)
+		logger.Info("Successfully declared queue", "queue", q.Name)
 	}
 	return &q
 }
@@ -95,6 +95,7 @@ func listenQueue(
 		for msg := range deliveries {
 			onMessage(msg.Body)
 		}
+		logger.Info("Successfully disconnected from queue", "queue", queue.Name)
 	}()
 }
 

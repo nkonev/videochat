@@ -89,10 +89,6 @@ func load() bool {
 		logger.Info("Setting default sync notification period", "syncNotificationPeriod", conf.SyncNotificationPeriod)
 	}
 
-	if conf.ScalingConfig.Rack == 0 {
-		logger.Info("Don't forget to set rack in case scaling")
-	}
-
 	logger.V(0).Info("Config file loaded", "file", file)
 
 	fmt.Printf("config %s load ok!\n", file)
@@ -175,8 +171,7 @@ func main() {
 	publisherService := producer.NewRabbitPublisher(rabbitmqConnection)
 	extendedService := handlers.NewExtendedService(s, &conf, publisherService, client)
 	handler := handlers.NewHandler(&upgrader, &conf, &extendedService)
-	listenerService := listener.NewVideoListener(&extendedService, rabbitmqConnection, conf.ScalingConfig)
-	listenerService.ListenVideoKickQueue()
+	listener.NewVideoListener(&extendedService, rabbitmqConnection)
 
 	r := mux.NewRouter()
 	// SFU websocket endpoint
