@@ -102,7 +102,7 @@
     import bus, {CHAT_DELETED, CHAT_EDITED, OPEN_INFO_DIALOG} from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import {chat_name, videochat_name} from "./routes";
+    import {videochat_name} from "./routes";
     import debounce from "lodash/debounce";
 
     const dtoFactory = ()=>{
@@ -147,11 +147,11 @@
                 console.log("Getting info about chat id", this.chatId);
                 axios.get('/api/chat/' + this.chatId)
                     .then((response) => {
-                      this.dto = response.data;
-                      this.dto.participants.forEach(item => {
-                        item.adminLoading = false;
-                        item.adminChange = item.admin;
-                      })
+                        this.dto = response.data;
+                        this.dto.participants.forEach(item => {
+                            item.adminLoading = false;
+                            item.adminChange = item.admin;
+                        })
                     });
             },
             changeChatAdmin(item) {
@@ -189,25 +189,25 @@
                 this.search = null;
             },
             removeNewSelected (item) {
-              console.debug("Removing", item, this.newParticipantIds);
-              const index = this.newParticipantIds.indexOf(item.id);
-              if (index >= 0) this.newParticipantIds.splice(index, 1)
+                console.debug("Removing", item, this.newParticipantIds);
+                const index = this.newParticipantIds.indexOf(item.id);
+                if (index >= 0) this.newParticipantIds.splice(index, 1)
             },
             doNewSearch(searchString) {
-              if (this.newParticipantIdsIsLoading) return;
+                if (this.newParticipantIdsIsLoading) return;
 
-              if (!searchString) {
-                  return;
-              }
+                if (!searchString) {
+                    return;
+                }
 
-              this.newParticipantIdsIsLoading = true;
+                this.newParticipantIdsIsLoading = true;
 
-              axios.get(`/api/user?searchString=${searchString}`)
-                  .then((response) => {
-                    console.log("Fetched users", response.data.data);
-                    this.people = [...this.people, ...response.data.data].filter(value => !this.dto.participantIds.includes(value.id));
-                  })
-                  .finally(() => (this.newParticipantIdsIsLoading = false))
+                axios.get(`/api/user?searchString=${searchString}`)
+                    .then((response) => {
+                      console.log("Fetched users", response.data.data);
+                      this.people = [...this.people, ...response.data.data].filter(value => !this.dto.participantIds.includes(value.id));
+                    })
+                    .finally(() => (this.newParticipantIdsIsLoading = false))
             },
             addSelectedParticipants() {
                 axios.put(`/api/chat/${this.dto.id}/users`, {
