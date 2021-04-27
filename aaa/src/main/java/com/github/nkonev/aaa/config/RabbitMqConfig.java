@@ -19,7 +19,7 @@ public class RabbitMqConfig {
 
     @Bean
     public Queue aaaEvents() {
-        return new Queue(QUEUE_EVENTS_NAME);
+        return new Queue(QUEUE_EVENTS_NAME, false);
     }
 
     @Bean

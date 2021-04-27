@@ -23,7 +23,7 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
 		name, // name
-		true,   // durable
+		false,   // durable
 		false,   // delete when unused
 		false,   // exclusive
 		false,   // no-wait
