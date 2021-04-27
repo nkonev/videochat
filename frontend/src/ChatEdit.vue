@@ -19,7 +19,7 @@
                             :rules="chatNameRules"
                         ></v-text-field>
                         <v-autocomplete
-                                v-if="isNew"
+                                v-if="isNew && show"
                                 v-model="editDto.participantIds"
                                 :disabled="isLoading"
                                 :items="people"
