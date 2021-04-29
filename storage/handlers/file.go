@@ -13,20 +13,17 @@ import (
 	"image/jpeg"
 	"net/http"
 	"nkonev.name/storage/auth"
-	"nkonev.name/storage/db"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
 	"strconv"
 )
 
 type FileHandler struct {
-	db          db.DB
 	minio		*minio.Client
 }
 
-func NewFileHandler (db db.DB, minio *minio.Client) FileHandler {
+func NewFileHandler (minio *minio.Client) FileHandler {
 	return FileHandler{
-		db: db,
 		minio: minio,
 	}
 }
@@ -62,6 +59,13 @@ func (h *FileHandler) ensureAndGetAvatarBucket() (string, error) {
 	return bucketName, err
 }
 
+
+// Go enum
+type AvatarType string
+
+const (
+	AVATAR_200x200 AvatarType = "AVATAR_200x200"
+)
 
 func (fh *FileHandler) PutAvatar(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
@@ -108,15 +112,8 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 		return err
 	}
 
-	avatarType := db.AVATAR_200x200
+	avatarType := AVATAR_200x200
 	filename := fmt.Sprintf("%v_%v.jpg", userPrincipalDto.UserId, avatarType)
-	err = db.Transact(fh.db, func(tx *db.Tx) (error) {
-		return tx.CreateAvatarMetadata(userPrincipalDto.UserId, avatarType, filename)
-	})
-	if err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during inserting into database: %v", err)
-		return err
-	}
 
 	if _, err := fh.minio.PutObject(context.Background(), bucketName, filename, byteBuffer, int64(byteBuffer.Len()), minio.PutObjectOptions{ContentType: contentType}); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during upload object: %v", err)

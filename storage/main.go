@@ -14,7 +14,6 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/fx"
 	"net/http"
-	"nkonev.name/storage/db"
 	"nkonev.name/storage/handlers"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
@@ -33,11 +32,9 @@ func main() {
 			configureEcho,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
-			db.ConfigureDb,
 		),
 		fx.Invoke(
 			initJaeger,
-			runMigrations,
 			runEcho,
 		),
 	)
@@ -81,7 +78,6 @@ func configureEcho(
 	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
-	db db.DB,
 	m *minio.Client,
 ) *echo.Echo {
 
@@ -106,7 +102,7 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	ch := handlers.NewFileHandler(db, m)
+	ch := handlers.NewFileHandler(m)
 	e.POST("/storage/avatar", ch.PutAvatar)
 	e.GET(fmt.Sprintf("%v/:filename", handlers.UrlStorageGetAvatar), ch.Download)
 
@@ -162,10 +158,6 @@ func initJaeger(lc fx.Lifecycle) error {
 		},
 	})
 	return nil
-}
-
-func runMigrations(db db.DB) {
-	db.Migrate()
 }
 
 // rely on viper import and it's configured by

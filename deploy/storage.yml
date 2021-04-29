@@ -8,13 +8,6 @@ auth:
   exclude:
     - "^/storage/public.*"
 
-postgresql:
-  # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
-  url: "postgres://storage:storagePazZw0rd@postgresql:5432/storage?sslmode=disable&application_name=storage-app"
-  maxOpenConnections: 16
-  maxIdleConnections: 4
-  maxLifetime: 30s
-
 
 aaa:
   url:

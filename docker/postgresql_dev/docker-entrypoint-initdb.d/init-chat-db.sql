@@ -30,9 +30,3 @@ alter role chat superuser;
 create database chat with owner chat;
 \connect chat;
 
-
-create user storage with password 'storagePazZw0rd';
--- superuser only for test!
-alter role storage superuser;
-create database storage with owner storage;
-\connect storage;
