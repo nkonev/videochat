@@ -32,7 +32,7 @@
         props: ['item', 'chatId'],
         methods: {
             onMessageClick(dto) {
-                axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`);
+                this.centrifuge.send({payload: { chatId: this.chatId, messageId: dto.id}, "type": "message_read"})
             },
             onOwnerClick(dto) {
                 this.$router.push(({ name: profile_name, params: { id: dto.owner.id}}));

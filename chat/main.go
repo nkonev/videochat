@@ -6,7 +6,6 @@ import (
 	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/microcosm-cc/bluemonday"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
@@ -36,6 +35,9 @@ func main() {
 			client.NewRestClient,
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
+			handlers.NewChatHandler,
+			handlers.NewMessageHandler,
+			handlers.NewVideoHandler,
 			configureEcho,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
@@ -112,12 +114,10 @@ func configureEcho(
 	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
-	notificator notifications.Notifications,
 	node *centrifuge.Node,
-	db db.DB,
-	policy *bluemonday.Policy,
-	restClient client.RestClient,
-	publisher *producer.RabbitPublisher,
+	ch handlers.ChatHandler,
+	mc handlers.MessageHandler,
+	vh handlers.VideoHandler,
 ) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")
@@ -143,7 +143,6 @@ func configureEcho(
 
 	e.GET("/chat/websocket", handlers.Convert(handlers.CentrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
 
-	ch := handlers.NewChatHandler(db, notificator, restClient)
 	e.GET("/chat", ch.GetChats)
 	e.GET("/chat/:id", ch.GetChat)
 	e.POST("/chat", ch.CreateChat)
@@ -155,17 +154,14 @@ func configureEcho(
 	e.PUT("/chat/:id/users", ch.AddParticipants)
 	e.GET("/internal/access", ch.CheckAccess)
 
-	mc := handlers.NewMessageHandler(db, policy, notificator, restClient)
 	e.GET("/chat/:id/message", mc.GetMessages)
 	e.GET("/chat/:id/message/:messageId", mc.GetMessage)
 	e.POST("/chat/:id/message", mc.PostMessage)
 	e.PUT("/chat/:id/message", mc.EditMessage)
 	e.DELETE("/chat/:id/message/:messageId", mc.DeleteMessage)
-	e.PUT("/chat/:id/message/read/:messageId", mc.ReadMessage)
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
 	e.PUT("/chat/:id/broadcast", mc.BroadcastMessage)
 
-	vh := handlers.NewVideoHandler(db, notificator, publisher)
 	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
 	e.PUT("/chat/:id/video/kick", vh.Kick)
 
