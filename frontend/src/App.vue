@@ -157,7 +157,8 @@
                 <SimpleModal/>
                 <PermissionsWarning/>
                 <ChooseAvatar/>
-                <router-view/>
+
+                <router-view :key="$route.fullPath"/>
             </v-container>
         </v-main>
     </v-app>
