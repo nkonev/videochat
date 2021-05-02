@@ -158,7 +158,7 @@
                 <PermissionsWarning/>
                 <ChooseAvatar/>
 
-                <router-view :key="$route.fullPath"/>
+                <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
         </v-main>
     </v-app>
