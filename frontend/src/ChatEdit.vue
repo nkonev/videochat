@@ -76,7 +76,7 @@
 <script>
     import axios from "axios";
     import debounce from "lodash/debounce";
-    import bus, {CHAT_ADD, CHAT_EDITED, OPEN_CHAT_EDIT} from "./bus";
+    import bus, {OPEN_CHAT_EDIT} from "./bus";
 
     const dtoFactory = ()=>{
         return {

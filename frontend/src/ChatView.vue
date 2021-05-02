@@ -289,7 +289,9 @@
                 }
             },
             onChatDelete(dto) {
-                this.$router.push(({name: chat_list_name}))
+                if (dto.id == this.chatId) {
+                    this.$router.push(({name: chat_list_name}))
+                }
             },
             onUserProfileChanged(user) {
                 const patchedUser = user;

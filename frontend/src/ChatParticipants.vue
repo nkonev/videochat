@@ -170,8 +170,8 @@
             kickFromVideoCall(userId) {
                 axios.put(`/api/chat/${this.dto.id}/video/kick?userId=${userId}`)
             },
-            onChatChange() {
-                if (this.chatId && this.show) {
+            onChatChange(dto) {
+                if (this.show && dto.id == this.chatId) {
                     this.loadData();
                 }
             },
@@ -217,8 +217,10 @@
                     this.search = null;
                 })
             },
-            onChatDelete() {
-                this.closeModal();
+            onChatDelete(dto) {
+                if (dto.id == this.chatId) {
+                    this.closeModal();
+                }
             }
         },
         watch: {
