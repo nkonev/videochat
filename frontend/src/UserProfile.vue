@@ -6,8 +6,8 @@
         <v-list-item three-line>
             <v-list-item-content class="d-flex justify-space-around">
                 <div class="overline mb-4">User profile #{{ currentUser.id }}</div>
-                <v-img v-if="currentUser.avatar"
-                       :src="getAvatar(currentUser.avatar)"
+                <v-img v-if="currentUser.avatarBig || currentUser.avatar"
+                       :src="getAvatar(currentUser)"
                        :aspect-ratio="16/9"
                        min-width="200"
                        min-height="200"
@@ -78,8 +78,14 @@ export default {
         },
     },
     methods: {
-        getAvatar(a) {
-            return getCorrectUserAvatar(a)
+        getAvatar(u) {
+            if (u.avatarBig) {
+                return getCorrectUserAvatar(u.avatarBig)
+            } else if (u.avatar) {
+                return getCorrectUserAvatar(u.avatar)
+            } else {
+                return null
+            }
         },
         loadUser() {
             this.currentUser = null;

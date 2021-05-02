@@ -14,6 +14,7 @@ public class UserAccount {
     private String username;
     private String password; // hash
     private String avatar; // avatar url
+    private String avatarBig; // avatar url
     private boolean expired;
     private boolean locked;
     private boolean enabled; // synonym to "confirmed"
@@ -32,13 +33,14 @@ public class UserAccount {
 
     public UserAccount() { }
 
-    public UserAccount(CreationType creationType, String username, String password, String avatar,
+    public UserAccount(CreationType creationType, String username, String password, String avatar, String avatarBig,
                        boolean expired, boolean locked, boolean enabled,
                        UserRole role, String email, OAuth2Identifiers oauth2Identifiers) {
         this.creationType = creationType;
         this.username = username;
         this.password = password;
         this.avatar = avatar;
+        this.avatarBig = avatarBig;
         this.expired = expired;
         this.locked = locked;
         this.enabled = enabled;
@@ -58,6 +60,14 @@ public class UserAccount {
 
     public void setOauth2Identifiers(OAuth2Identifiers oauth2Identifiers) {
         this.oauth2Identifiers = oauth2Identifiers;
+    }
+
+    public String getAvatarBig() {
+        return avatarBig;
+    }
+
+    public void setAvatarBig(String avatarBig) {
+        this.avatarBig = avatarBig;
     }
 
     public static class OAuth2Identifiers {

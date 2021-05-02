@@ -15,12 +15,14 @@ public class EditUserDTO {
 
     @Email
     private String email;
+    private String avatarBig;
 
     public EditUserDTO() { }
 
-    public EditUserDTO(String login, String avatar, String password, String email) {
+    public EditUserDTO(String login, String avatar, String avatarBig, String password, String email) {
         this.login = login;
         this.avatar = avatar;
+        this.avatarBig = avatarBig;
         this.password = password;
         this.email = email;
     }
@@ -63,5 +65,13 @@ public class EditUserDTO {
 
     public void setRemoveAvatar(Boolean removeAvatar) {
         this.removeAvatar = removeAvatar;
+    }
+
+    public String getAvatarBig() {
+        return avatarBig;
+    }
+
+    public void setAvatarBig(String avatarBig) {
+        this.avatarBig = avatarBig;
     }
 }

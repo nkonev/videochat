@@ -6,7 +6,7 @@
         <v-list-item three-line>
             <v-list-item-content class="d-flex justify-space-around">
                 <div class="overline mb-4">User profile #{{ currentUser.id }}</div>
-                <v-img v-if="currentUser.avatar"
+                <v-img v-if="currentUser.avatarBig || currentUser.avatar"
                        :src="ava"
                        :aspect-ratio="16/9"
                        min-width="200"
@@ -239,7 +239,13 @@ export default {
         ava() {
             const maybeUser = this.$store.getters[GET_USER];
             if (maybeUser) {
-                return getCorrectUserAvatar(maybeUser.avatar);
+                if (maybeUser.avatarBig) {
+                    return getCorrectUserAvatar(maybeUser.avatarBig)
+                } else if (maybeUser.avatar) {
+                    return getCorrectUserAvatar(maybeUser.avatar)
+                } else {
+                    return null
+                }
             }
         }
     },

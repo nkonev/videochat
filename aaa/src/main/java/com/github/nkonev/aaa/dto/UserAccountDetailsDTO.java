@@ -43,6 +43,7 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
             Long id,
             String login,
             String avatar,
+            String avatarBig,
             String password,
             boolean expired,
             boolean locked,
@@ -52,7 +53,7 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
             LocalDateTime lastLoginDateTime,
             OAuth2IdentifiersDTO oauthIdentifiers
     ) {
-        super(id, login, avatar, lastLoginDateTime, oauthIdentifiers);
+        super(id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers);
         this.password = password;
         this.expired = expired;
         this.locked = locked;

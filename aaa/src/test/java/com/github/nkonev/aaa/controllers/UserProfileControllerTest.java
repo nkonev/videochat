@@ -463,7 +463,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     private long createUserForDelete(String login) {
         UserAccount userAccount = new UserAccount(
                 CreationType.REGISTRATION,
-                login, null, null, false, false, true,
+                login, null, null, null, false, false, true,
                 UserRole.ROLE_USER, login+"@example.com", null);
         userAccount = userAccountRepository.save(userAccount);
 

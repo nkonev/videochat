@@ -65,6 +65,7 @@ type AvatarType string
 
 const (
 	AVATAR_200x200 AvatarType = "AVATAR_200x200"
+	AVATAR_640x640 AvatarType = "AVATAR_640x640"
 )
 
 func (fh *FileHandler) PutAvatar(c echo.Context) error {
@@ -103,26 +104,35 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 		return err
 	}
 
-	dstImage := imaging.Resize(srcImage, 200, 200, imaging.Lanczos)
+	filename200, err := fh.putSizedFile(c, srcImage, err, userPrincipalDto, bucketName, contentType, 200, 200, AVATAR_200x200)
+	if err != nil {
+		return err
+	}
+	filename640, err := fh.putSizedFile(c, srcImage, err, userPrincipalDto, bucketName, contentType, 640, 640, AVATAR_640x640)
+	if err != nil {
+		return err
+	}
 
+	relativeUrl := fmt.Sprintf("%v%v/%v", viper.GetString("server.contextPath"), UrlStorageGetAvatar, filename200)
+	relativeBigUrl := fmt.Sprintf("%v%v/%v", viper.GetString("server.contextPath"), UrlStorageGetAvatar, filename640)
+
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "filename": filename200, "filenameBig": filename640, "relativeUrl" : relativeUrl, "relativeBigUrl": relativeBigUrl})
+}
+
+func (fh *FileHandler) putSizedFile(c echo.Context, srcImage image.Image, err error, userPrincipalDto *auth.AuthResult, bucketName string, contentType string, width, height int, avatarType AvatarType) (string, error) {
+	dstImage := imaging.Resize(srcImage, width, height, imaging.Lanczos)
 	byteBuffer := new(bytes.Buffer)
 	err = jpeg.Encode(byteBuffer, dstImage, nil)
 	if err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during encoding image: %v", err)
-		return err
+		return "", err
 	}
-
-	avatarType := AVATAR_200x200
 	filename := fmt.Sprintf("%v_%v.jpg", userPrincipalDto.UserId, avatarType)
-
 	if _, err := fh.minio.PutObject(context.Background(), bucketName, filename, byteBuffer, int64(byteBuffer.Len()), minio.PutObjectOptions{ContentType: contentType}); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during upload object: %v", err)
-		return err
+		return "", err
 	}
-
-	relativeUrl := fmt.Sprintf("%v%v/%v", viper.GetString("server.contextPath"), UrlStorageGetAvatar, filename)
-
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "filename": filename, "relativeUrl": relativeUrl})
+	return filename, nil
 }
 
 func (h *FileHandler) Download(c echo.Context) error {

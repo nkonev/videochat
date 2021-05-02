@@ -15,8 +15,8 @@ public class UserAccountDTOExtended extends UserAccountDTO {
 
     public UserAccountDTOExtended() { }
 
-    public UserAccountDTOExtended(Long id, String login, String avatar, DataDTO managementData, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauthIdentifiers, boolean canLock, boolean canDelete, boolean canChangeRole) {
-        super(id, login, avatar, lastLoginDateTime, oauthIdentifiers);
+    public UserAccountDTOExtended(Long id, String login, String avatar, String avatarBig, DataDTO managementData, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauthIdentifiers, boolean canLock, boolean canDelete, boolean canChangeRole) {
+        super(id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers);
         this.managementData = managementData;
         this.canDelete = canDelete;
         this.canLock = canLock;

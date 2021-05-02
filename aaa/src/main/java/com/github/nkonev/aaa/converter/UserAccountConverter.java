@@ -8,7 +8,6 @@ import com.github.nkonev.aaa.entity.jdbc.CreationType;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.exception.BadRequestException;
-import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaSecurityService;
 import com.github.nkonev.aaa.security.FacebookOAuth2UserService;
 import com.github.nkonev.aaa.security.VkontakteOAuth2UserService;
@@ -29,9 +28,6 @@ public class UserAccountConverter {
     @Autowired
     private AaaSecurityService aaaSecurityService;
 
-    @Autowired
-    private UserAccountRepository userAccountRepository;
-
     private static UserRole getDefaultUserRole(){
         return UserRole.ROLE_USER;
     }
@@ -51,6 +47,7 @@ public class UserAccountConverter {
                 userAccount.getId(),
                 userAccount.getUsername(),
                 userAccount.getAvatar(),
+                userAccount.getAvatarBig(),
                 userAccount.getPassword(),
                 userAccount.isExpired(),
                 userAccount.isLocked(),
@@ -68,6 +65,7 @@ public class UserAccountConverter {
                 userAccount.getId(),
                 userAccount.getUsername(),
                 userAccount.getAvatar(),
+                userAccount.getAvatarBig(),
                 userAccount.getEmail(),
                 lastLoginDateTime,
                 userAccount.getOauth2Identifiers(),
@@ -100,19 +98,10 @@ public class UserAccountConverter {
                 userAccount.getId(),
                 userAccount.getUsername(),
                 userAccount.getAvatar(),
+                userAccount.getAvatarBig(),
                 userAccount.getLastLoginDateTime(),
                 convertOauth(userAccount.getOauth2Identifiers())
         );
-    }
-
-    public com.github.nkonev.aaa.dto.OwnerDTO convertToOwnerDTO(Long ownerId) {
-        if (ownerId == null) { return null; }
-        Optional<UserAccount> byId = userAccountRepository.findById(ownerId);
-        return byId.map(userAccount -> new com.github.nkonev.aaa.dto.OwnerDTO(
-                userAccount.getId(),
-                userAccount.getUsername(),
-                userAccount.getAvatar()
-        )).orElse(null);
     }
 
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended convertToUserAccountDTOExtended(UserAccountDetailsDTO currentUser, UserAccount userAccount) {
@@ -127,6 +116,7 @@ public class UserAccountConverter {
                 userAccount.getId(),
                 userAccount.getUsername(),
                 userAccount.getAvatar(),
+                userAccount.getAvatarBig(),
                 dataDTO,
                 userAccount.getLastLoginDateTime(),
                 convertOauth(userAccount.getOauth2Identifiers()),
@@ -135,18 +125,6 @@ public class UserAccountConverter {
                 aaaSecurityService.canChangeRole(currentUser, userAccount)
         );
     }
-
-    public static com.github.nkonev.aaa.dto.UserAccountDTO convertToUserAccountDTO(UserAccountDetailsDTO userAccount) {
-        if (userAccount == null) { return null; }
-        return new com.github.nkonev.aaa.dto.UserAccountDTO(
-                userAccount.getId(),
-                userAccount.getUsername(),
-                userAccount.getAvatar(),
-                userAccount.getLastLoginDateTime(),
-                userAccount.getOauth2Identifiers()
-        );
-    }
-
 
     private static void validateUserPassword(String password) {
         Assert.notNull(password, "password must be set");
@@ -176,6 +154,7 @@ public class UserAccountConverter {
                 userAccountDTO.getLogin(),
                 passwordEncoder.encode(password),
                 userAccountDTO.getAvatar(),
+                userAccountDTO.getAvatarBig(),
                 expired,
                 locked,
                 enabled,
@@ -213,6 +192,7 @@ public class UserAccountConverter {
                 login,
                 null,
                 maybeImageUrl,
+                null,
                 expired,
                 locked,
                 enabled,
@@ -232,6 +212,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 CreationType.VKONTAKTE,
                 login,
+                null,
                 null,
                 null,
                 expired,
@@ -255,6 +236,7 @@ public class UserAccountConverter {
                 login,
                 null,
                 maybeImageUrl,
+                null,
                 expired,
                 locked,
                 enabled,
@@ -280,8 +262,10 @@ public class UserAccountConverter {
         userAccount.setUsername(userAccountDTO.getLogin());
         if (Boolean.TRUE.equals(userAccountDTO.getRemoveAvatar())){
             userAccount.setAvatar(null);
+            userAccount.setAvatarBig(null);
         } else {
             userAccount.setAvatar(userAccountDTO.getAvatar());
+            userAccount.setAvatarBig(userAccountDTO.getAvatarBig());
         }
         if (!StringUtils.isEmpty(userAccountDTO.getEmail())) {
             String email = userAccountDTO.getEmail();
@@ -302,8 +286,10 @@ public class UserAccountConverter {
         }
         if (Boolean.TRUE.equals(userAccountDTO.getRemoveAvatar())){
             userAccount.setAvatar(null);
+            userAccount.setAvatarBig(null);
         } else if (!StringUtils.isEmpty(userAccountDTO.getAvatar())) {
             userAccount.setAvatar(userAccountDTO.getAvatar());
+            userAccount.setAvatarBig(userAccountDTO.getAvatarBig());
         }
         if (!StringUtils.isEmpty(userAccountDTO.getEmail())) {
             String email = userAccountDTO.getEmail();
@@ -315,6 +301,7 @@ public class UserAccountConverter {
     public static com.github.nkonev.aaa.dto.EditUserDTO convertToEditUserDto(UserAccount userAccount) {
         com.github.nkonev.aaa.dto.EditUserDTO e = new com.github.nkonev.aaa.dto.EditUserDTO();
         e.setAvatar(userAccount.getAvatar());
+        e.setAvatarBig(userAccount.getAvatarBig());
         e.setEmail(userAccount.getEmail());
         e.setLogin(userAccount.getUsername());
         return e;

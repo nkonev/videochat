@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN avatar_big character varying(256);

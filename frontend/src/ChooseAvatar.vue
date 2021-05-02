@@ -68,7 +68,9 @@
         computed: {
             initialImage() {
                 const user = this.$store.getters[GET_USER];
-                if (user) {
+                if (user && user.avatarBig) {
+                    return user.avatarBig
+                } else if (user && user.avatar) {
                     return user.avatar
                 } else {
                     return null
@@ -79,32 +81,6 @@
             }
         },
         methods: {
-            initialImageInternal(){
-                let url;
-                if (!this.initialImage) {
-                    url = this.initialImage;
-                } else if (typeof this.initialImage === "function") {
-                    url = this.initialImage();
-                } else if (typeof this.initialImage === "string") {
-                    url = this.initialImage;
-                } else {
-                    throw "Allowed string or function for prop initialImage"
-                }
-                console.log("Initial image", url);
-                if (url) {
-                    axios.head(url).then(resp => {
-                        // once set imageContentType for able to change image
-                        let raw = resp.headers.get("content-type");
-                        if (raw) {
-                            let arr = raw.split(";");
-                            raw = arr[0];
-                        }
-                        this.imageContentType = raw;
-                        console.log("Initial image content-type", this.imageContentType);
-                    });
-                }
-                return url;
-            },
             handleCroppaFileChoose(e){
                 this.removeImage = false;
                 this.imageContentType = e.type;
@@ -160,7 +136,7 @@
                             return Promise.resolve(false);
                         }
                     } else {
-                        return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl})
+                        return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl})
                     }
                 }).then(value => {
                     console.log("PATCH result", value);

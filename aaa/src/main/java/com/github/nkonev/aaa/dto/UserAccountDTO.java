@@ -23,15 +23,18 @@ public class UserAccountDTO implements Serializable {
 
     private String avatar;
 
+    private String avatarBig;
+
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern= Constants.DATE_FORMAT)
     private LocalDateTime lastLoginDateTime;
 
     private OAuth2IdentifiersDTO oauth2Identifiers = new OAuth2IdentifiersDTO();
 
-    public UserAccountDTO(Long id, String login, String avatar, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauth2Identifiers) {
+    public UserAccountDTO(Long id, String login, String avatar, String avatarBig, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauth2Identifiers) {
         this.id = id;
         this.login = login;
         this.avatar = avatar;
+        this.avatarBig = avatarBig;
         this.lastLoginDateTime = lastLoginDateTime;
         if (oauth2Identifiers !=null) {
             this.oauth2Identifiers = oauth2Identifiers;
@@ -79,5 +82,13 @@ public class UserAccountDTO implements Serializable {
 
     public void setOauth2Identifiers(OAuth2IdentifiersDTO oauth2Identifiers) {
         this.oauth2Identifiers = oauth2Identifiers;
+    }
+
+    public String getAvatarBig() {
+        return avatarBig;
+    }
+
+    public void setAvatarBig(String avatarBig) {
+        this.avatarBig = avatarBig;
     }
 }
