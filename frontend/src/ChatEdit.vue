@@ -10,7 +10,7 @@
                         ref="form"
                         v-model="valid"
                         lazy-validation
-                        @keyup.native.enter="saveChat"
+                        @keydown.native.enter.prevent="saveChat"
                     >
                         <v-text-field
                             label="Chat name"
