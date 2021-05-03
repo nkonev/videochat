@@ -33,8 +33,8 @@
                 </v-container>
 
                 <v-card-actions class="pa-4">
-                    <v-btn color="primary" class="mr-4" @click="saveAvatar()">Choose</v-btn>
-                    <v-btn color="error" class="mr-4" @click="show=false">Close</v-btn>
+                    <v-btn color="primary" class="mr-4" @click="saveAvatar()" :loading="uploading" :disabled="uploading">Choose</v-btn>
+                    <v-btn color="error" class="mr-4" @click="show=false" :disabled="uploading">Close</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>
@@ -63,6 +63,7 @@
                 removeImage: false,
                 imageContentType: null,
                 imageChanged: false,
+                uploading: false
             }
         },
         computed: {
@@ -128,6 +129,7 @@
                 return axios.post('/api/storage/avatar', formData, config)
             },
             saveAvatar() {
+                this.uploading = true;
                 this.createBlob().then(this.sendAvatar).then((res) => {
                     if (!res) {
                         if (this.removeImage) {
@@ -144,6 +146,8 @@
                         this.$store.dispatch(FETCH_USER_PROFILE);
                     }
                     this.show = false;
+                }).finally(() => {
+                    this.uploading = false;
                 });
             },
 
