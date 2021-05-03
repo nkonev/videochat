@@ -155,6 +155,11 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 			return
 		}
 		Logger.Infof("Connected websocket centrifuge client hasCredentials %v, credentials %v", ok, creds)
+		userId, err := utils.ParseInt64(creds.UserID)
+		if err != nil {
+			Logger.Errorf("Unable to parse userId from %v", creds.UserID)
+			return
+		}
 
 		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
 			clientInfo, presenceDuration, err := createPresence(creds, client)
@@ -231,13 +236,9 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 					Logger.Errorf("client %v sent non-parseable message - cannot unmarshall payload", creds.UserID)
 					return centrifuge.MessageReply{}
 				} else {
-					userId, err := utils.ParseInt64(creds.UserID)
-					if err != nil {
-						Logger.Errorf("Unable to parse userId from %v", creds.UserID)
-						return centrifuge.MessageReply{}
-					}
+					// TODO to separated centrifuge messages handler
 					Logger.Infof("Putting message read messageId=%v, chatId=%v, userId=%v", mr.MessageId, mr.ChatId, userId)
-					err = readMessage(dbs, userId, mr.ChatId, mr.MessageId)
+					err = markMessageAsRead(dbs, userId, mr.ChatId, mr.MessageId)
 					if err != nil {
 						Logger.Errorf("Error during putting message read messageId=%v, chatId=%v, userId=%v: err=%v", mr.MessageId, mr.ChatId, userId, err)
 						return centrifuge.MessageReply{}
@@ -298,7 +299,7 @@ func getChannelId(channel string) (int64, string, error) {
 	}
 }
 
-func readMessage(db db.DB, userId, chatId, messageId int64) error {
+func markMessageAsRead(db db.DB, userId, chatId, messageId int64) error {
 	if participant, err := db.IsParticipant(userId, chatId); err != nil {
 		Logger.Errorf("Error during checking participant")
 		return err
