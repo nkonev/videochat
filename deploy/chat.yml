@@ -21,30 +21,24 @@ postgresql:
   maxIdleConnections: 4
   maxLifetime: 30s
 
-redis:
-  host: redis
-  port: 6379
-  password: ""
-  db: 1
-  connectTimeout: 5s
-  readTimeout: 30s
-  writeTimeout: 30s
-  idleTimeout: 60s
+centrifuge:
+  redis:
+    host: redis
+    port: 6379
+    password: ""
+    db: 1
+    connectTimeout: 5s
+    readTimeout: 30s
+    writeTimeout: 30s
+    idleTimeout: 60s
 
 aaa:
   url:
     base: "http://aaa:8060"
     getUsers: "/internal/user/list"
-  redis:
-    address: redis:6379
-    password: ""
-    db: 0
-    connectTimeout: 5s
-    readTimeout: 0 # 0 means infinity read
-    writeTimeout: 30s
-    idleTimeout: 60s
-    maxIdle: 1
-    maxActive: 10
+
+rabbitmq:
+  url: "amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672"
 
 video:
   kickVideoAfter: 10s
@@ -52,5 +46,17 @@ video:
 jaeger:
   endpoint: "jaeger:6831"
 
-rabbitmq:
-  url: "amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672"
+redis:
+  address: redis:36379
+  password: ""
+  db: 1
+  connectTimeout: 5s
+  readTimeout: 30s
+  writeTimeout: 30s
+  idleTimeout: 60s
+  maxIdle: 1
+  maxActive: 10
+
+online:
+  notification:
+    period: 2s
