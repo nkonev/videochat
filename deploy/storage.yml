@@ -8,12 +8,6 @@ auth:
   exclude:
     - "^/storage/public.*"
 
-
-aaa:
-  url:
-    base: "http://aaa:8060"
-    getUsers: "/internal/user/list"
-
 jaeger:
   endpoint: "jaeger:6831"
 
