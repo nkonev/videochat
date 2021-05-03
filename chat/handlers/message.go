@@ -68,15 +68,6 @@ func (mc MessageHandler) GetMessages(c echo.Context) error {
 			ownersSet[c.OwnerId] = true
 		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
-		for ownerId, userDto := range owners {
-			if admin, err := mc.db.IsAdmin(ownerId, chatId); err != nil {
-				GetLogEntry(c.Request()).Errorf("Error getting isAdmin for userId=%v for chatId=%v", ownerId, chatId)
-			} else {
-				userDto.Admin = admin
-			}
-
-		}
-
 		messageDtos := make([]*dto.DisplayMessageDto, 0)
 		for _, c := range messages {
 			messageDtos = append(messageDtos, convertToMessageDto(c, owners, userPrincipalDto))

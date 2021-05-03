@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"github.com/getlantern/deepcopy"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
@@ -116,14 +117,6 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 			GetLogEntry(c.Request()).Warn("Error during getting users from aaa")
 		}
 
-		for _, user := range users {
-			if admin, err := dbR.IsAdmin(user.Id, cc.Id); err != nil {
-				GetLogEntry(c.Request()).Warnf("Unable to get IsAdmin for user %v in chat %v from db", user.Id, cc.Id)
-			} else {
-				user.Admin = admin
-			}
-		}
-
 		unreadMessages, err := dbR.GetUnreadMessagesCount(cc.Id, behalfParticipantId)
 		if err != nil {
 			return nil, err
@@ -156,8 +149,31 @@ func (ch ChatHandler) GetChat(c echo.Context) error {
 		if chat == nil {
 			return c.NoContent(http.StatusNotFound)
 		} else {
-			GetLogEntry(c.Request()).Infof("Successfully returning %v chat", chat)
-			return c.JSON(200, chat)
+			var copiedChat = &dto.ChatDtoWithAdmin{}
+			err := deepcopy.Copy(copiedChat, chat)
+			if err!= nil {
+				GetLogEntry(c.Request()).Errorf("error during performing deep copy chat: %s", err)
+				return c.NoContent(http.StatusInternalServerError)
+			}
+
+			var adminedUsers []*dto.UserWithAdmin
+			for _, participant := range copiedChat.Participants {
+				var copied  = &dto.UserWithAdmin{}
+				if err := deepcopy.Copy(copied, participant); err != nil {
+					GetLogEntry(c.Request()).Errorf("error during performing deep copy user: %s", err)
+				} else {
+					if admin, err := ch.db.IsAdmin(participant.Id, copiedChat.Id); err != nil {
+						GetLogEntry(c.Request()).Warnf("Unable to get IsAdmin for user %v in chat %v from db", participant.Id, copiedChat.Id)
+					} else {
+						copied.Admin = admin
+					}
+					adminedUsers = append(adminedUsers, copied)
+				}
+			}
+			copiedChat.Participants = adminedUsers
+
+			GetLogEntry(c.Request()).Infof("Successfully returning %v chat", copiedChat)
+			return c.JSON(200, copiedChat)
 		}
 	}
 }
