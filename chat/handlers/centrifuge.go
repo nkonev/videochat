@@ -12,7 +12,9 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"nkonev.name/chat/db"
+	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/redis"
 	"nkonev.name/chat/utils"
 	"strings"
 	"time"
@@ -86,7 +88,7 @@ func modifyMessage(msg []byte, originatorUserId string, originatorClientId strin
 	return json.Marshal(v)
 }
 
-func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
+func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineStorage) *centrifuge.Node {
 	// We use default config here as starting point. Default config contains
 	// reasonable values for available options.
 	cfg := centrifuge.DefaultConfig
@@ -111,14 +113,14 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 	// things. Here we initialize new Node instance and pass config to it.
 	node, _ := centrifuge.New(cfg)
 
-	redisHost := viper.GetString("redis.host")
-	redisPort := viper.GetInt("redis.port")
-	redisPassword := viper.GetString("redis.password")
-	redisDB := viper.GetInt("redis.db")
-	readTimeout := viper.GetDuration("redis.readTimeout")
-	writeTimeout := viper.GetDuration("redis.writeTimeout")
-	connectTimeout := viper.GetDuration("redis.connectTimeout")
-	idleTimeout := viper.GetDuration("redis.idleTimeout")
+	redisHost := viper.GetString("centrifuge.redis.host")
+	redisPort := viper.GetInt("centrifuge.redis.port")
+	redisPassword := viper.GetString("centrifuge.redis.password")
+	redisDB := viper.GetInt("centrifuge.redis.db")
+	readTimeout := viper.GetDuration("centrifuge.redis.readTimeout")
+	writeTimeout := viper.GetDuration("centrifuge.redis.writeTimeout")
+	connectTimeout := viper.GetDuration("centrifuge.redis.connectTimeout")
+	idleTimeout := viper.GetDuration("centrifuge.redis.idleTimeout")
 
 	redisConf := centrifuge.RedisShardConfig{
 		Host:           redisHost,
@@ -160,6 +162,8 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 			Logger.Errorf("Unable to parse userId from %v", creds.UserID)
 			return
 		}
+		onlineStorage.PutUserOnline(userId)
+		notifyAboutOnline(node, userId, true)
 
 		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
 			clientInfo, presenceDuration, err := createPresence(creds, client)
@@ -219,6 +223,8 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 		// Set Disconnect Handler to react on client disconnect events.
 		client.On().Disconnect(func(e centrifuge.DisconnectEvent) centrifuge.DisconnectReply {
 			Logger.Printf("client %v disconnected", creds.UserID)
+			onlineStorage.RemoveUserOnline(userId)
+			notifyAboutOnline(node, userId, false)
 			return centrifuge.DisconnectReply{}
 		})
 
@@ -313,3 +319,102 @@ func markMessageAsRead(db db.DB, userId, chatId, messageId int64) error {
 	}
 	return nil
 }
+
+type UserOnlineChanged struct {
+	UserId int64 `json:"userId"`
+	Online bool `json:"online"`
+}
+
+func notifyAboutOnline(node *centrifuge.Node, userId int64, online bool) {
+	channels, err := node.Channels()
+	if err != nil {
+		Logger.Errorf("Error during getting channels")
+		return
+	}
+	for _, ch := range channels {
+		_, _, err := getChannelId(ch)
+		if err == nil {
+			notification := dto.CentrifugeNotification{
+				Payload: []UserOnlineChanged{UserOnlineChanged{
+						UserId: userId,
+						Online: online,
+					},
+				},
+				EventType: "user_online_changed",
+			}
+			if marshalledBytes, err := json.Marshal(notification); err != nil {
+				Logger.Errorf("error during marshalling user_online_changed notification: %s", err)
+			} else {
+				_, err := node.Publish(ch, marshalledBytes)
+				if err != nil {
+					Logger.Errorf("error publishing to personal channel: %s", err)
+				}
+			}
+		}
+	}
+}
+
+func periodicNotifyAboutOnline(node *centrifuge.Node, dbs db.DB, onlineStorage redis.OnlineStorage) {
+	channels, err := node.Channels()
+	if err != nil {
+		Logger.Errorf("Error during getting channels")
+		return
+	}
+	for _, ch := range channels {
+		chatId, _, err := getChannelId(ch)
+		if err == nil {
+			participantIds, err := dbs.GetParticipantIds(chatId)
+			if err != nil {
+				Logger.Errorf("error publishing to personal channel: %s", err)
+				continue
+			}
+
+			var arr []UserOnlineChanged
+			for _, participantId := range participantIds {
+				online, err := onlineStorage.GetUserOnline(participantId)
+				if err != nil {
+					continue
+				}
+				arr = append(arr, UserOnlineChanged{
+					UserId: participantId,
+					Online: online,
+				})
+			}
+
+			notification := dto.CentrifugeNotification{
+				Payload:   arr,
+				EventType: "user_online_changed",
+			}
+			for _, participantId := range participantIds {
+				if marshalledBytes, err := json.Marshal(notification); err != nil {
+					Logger.Errorf("error during marshalling user_online_changed notification: %s", err)
+				} else {
+					participantChannel := node.PersonalChannel(utils.Int64ToString(participantId))
+					_, err := node.Publish(participantChannel, marshalledBytes)
+					if err != nil {
+						Logger.Errorf("error publishing to personal channel: %s", err)
+					}
+				}
+			}
+		}
+	}
+}
+
+func ScheduleNotifications(node *centrifuge.Node, dbs db.DB, onlineStorage redis.OnlineStorage) *chan struct{} {
+	ticker := time.NewTicker(viper.GetDuration("online.notification.period"))
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <- ticker.C:
+				Logger.Info("Invoked chat user online periodic notificator")
+				periodicNotifyAboutOnline(node, dbs, onlineStorage)
+			case <- quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+	return &quit
+}
+

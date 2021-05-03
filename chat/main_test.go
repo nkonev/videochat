@@ -26,6 +26,7 @@ import (
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
+	"nkonev.name/chat/redis"
 	"nkonev.name/chat/utils"
 	"os"
 	"strings"
@@ -161,6 +162,8 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 		fx.Logger(Logger),
 		fx.Populate(&s),
 		fx.Provide(
+			redis.RedisPooledConnection,
+			redis.NewOnlineStorage,
 			client.NewRestClient,
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
@@ -197,6 +200,8 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 		fx.Logger(Logger),
 		fx.Populate(&s),
 		fx.Provide(
+			redis.RedisPooledConnection,
+			redis.NewOnlineStorage,
 			client.NewRestClient,
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,

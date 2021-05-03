@@ -7,11 +7,21 @@
                 <v-container fluid>
                     <v-list v-if="dto.participants.length > 0">
                         <template v-for="(item, index) in dto.participants">
-                            <v-list-item >
-                                <v-list-item-avatar v-if="item.avatar">
-                                    <v-img :src="item.avatar"></v-img>
-                                </v-list-item-avatar>
-                                <v-list-item-content>
+                            <v-list-item class="pl-0 ml-1 pr-0 mr-1 mb-1 mt-1">
+                                <v-badge
+                                    v-if="item.avatar"
+                                    color="success accent-4"
+                                    dot
+                                    bottom
+                                    overlap
+                                    bordered
+                                    :value="item.online"
+                                >
+                                    <v-list-item-avatar class="ma-0 pa-0">
+                                        <v-img :src="item.avatar"></v-img>
+                                    </v-list-item-avatar>
+                                </v-badge>
+                                <v-list-item-content class="ml-4">
                                     <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> (you)</template></v-list-item-title>
                                 </v-list-item-content>
                                 <v-tooltip bottom v-if="item.admin">
@@ -99,7 +109,7 @@
 
 <script>
     import axios from "axios";
-    import bus, {CHAT_DELETED, CHAT_EDITED, OPEN_INFO_DIALOG} from "./bus";
+    import bus, {CHAT_DELETED, CHAT_EDITED, OPEN_INFO_DIALOG, USER_ONLINE_CHANGED} from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import {videochat_name} from "./routes";
@@ -151,6 +161,7 @@
                         this.dto.participants.forEach(item => {
                             item.adminLoading = false;
                             item.adminChange = item.admin;
+                            item.online = false;
                         })
                     });
             },
@@ -221,6 +232,16 @@
                 if (dto.id == this.chatId) {
                     this.closeModal();
                 }
+            },
+            onUserOnlineChanged(dtos) {
+                this.dto.participants.forEach(item => {
+                    dtos.forEach(dtoItem => {
+                        if (dtoItem.userId == item.id) {
+                            item.online = dtoItem.online;
+                        }
+                    })
+                })
+                this.$forceUpdate()
             }
         },
         watch: {
@@ -234,11 +255,13 @@
             bus.$on(OPEN_INFO_DIALOG, this.showModal);
             bus.$on(CHAT_EDITED, this.onChatChange);
             bus.$on(CHAT_DELETED, this.onChatDelete);
+            bus.$on(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
         },
         destroyed() {
             bus.$off(OPEN_INFO_DIALOG, this.showModal);
             bus.$off(CHAT_EDITED, this.onChatChange);
             bus.$off(CHAT_DELETED, this.onChatDelete);
+            bus.$off(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
         },
     }
 </script>

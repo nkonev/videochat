@@ -12,7 +12,13 @@ import bus, {
   MESSAGE_EDITED,
   UNREAD_MESSAGES_CHANGED,
   USER_PROFILE_CHANGED,
-  CHANGE_WEBSOCKET_STATUS, LOGGED_OUT, LOGGED_IN, VIDEO_CALL_INVITED, VIDEO_CALL_KICKED, VIDEO_CALL_CHANGED
+  CHANGE_WEBSOCKET_STATUS,
+  LOGGED_OUT,
+  LOGGED_IN,
+  VIDEO_CALL_INVITED,
+  VIDEO_CALL_KICKED,
+  VIDEO_CALL_CHANGED,
+  USER_ONLINE_CHANGED
 } from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
@@ -88,6 +94,9 @@ const vm = new Vue({
       } else if (getData(ctx).type === "video_call_changed") {
         const d = getProperData(ctx);
         bus.$emit(VIDEO_CALL_CHANGED, d);
+      } else if (getData(ctx).type === "user_online_changed") {
+        const d = getProperData(ctx);
+        bus.$emit(USER_ONLINE_CHANGED, d);
       }
 
     });

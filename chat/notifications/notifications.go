@@ -41,12 +41,6 @@ func NewNotifications(node *centrifuge.Node, db db.DB) Notifications {
 	}
 }
 
-// created or modified
-type CentrifugeNotification struct {
-	Payload   interface{} `json:"payload"`
-	EventType string      `json:"type"`
-}
-
 type DisplayMessageDtoNotification struct {
 	dto.DisplayMessageDto
 	ChatId int64 `json:"chatId"`
@@ -105,7 +99,7 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 		copied.CanLeave = null.BoolFrom(!admin)
 		copied.UnreadMessages = unreadMessages
 
-		notification := CentrifugeNotification{
+		notification := dto.CentrifugeNotification{
 			Payload:   copied,
 			EventType: eventType,
 		}
@@ -141,7 +135,7 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 			UnreadMessages: unreadMessages,
 		}
 
-		notification := CentrifugeNotification{
+		notification := dto.CentrifugeNotification{
 			Payload:   payload,
 			EventType: "unread_messages_changed",
 		}
@@ -193,7 +187,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				*copied,
 				chatId,
 			}
-			notification := CentrifugeNotification{
+			notification := dto.CentrifugeNotification{
 				Payload:   dn,
 				EventType: eventType,
 			}
@@ -236,7 +230,7 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 		ParticipantId: user.Id,
 	}
 
-	notification := CentrifugeNotification{
+	notification := dto.CentrifugeNotification{
 		Payload:   ut,
 		EventType: "user_typing",
 	}
@@ -251,14 +245,14 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 	}
 }
 
-func (not *notifictionsImpl) NotifyAboutVideoCallChanged(dto dto.ChatNotifyDto, participantIds []int64) {
+func (not *notifictionsImpl) NotifyAboutVideoCallChanged(cn dto.ChatNotifyDto, participantIds []int64) {
 	// TODO potential bad performance on frontend, consider batching
 	for _, participantId := range participantIds {
 		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
 		Logger.Infof("Sending notification about change video chat the chat to participantChannel: %v", participantChannel)
 
-		notification := CentrifugeNotification{
-			Payload:   dto,
+		notification := dto.CentrifugeNotification{
+			Payload:   cn,
 			EventType: "video_call_changed",
 		}
 
@@ -285,7 +279,7 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 	}
 
 	for _, participantId := range coChatters {
-		notification := CentrifugeNotification{
+		notification := dto.CentrifugeNotification{
 			Payload:   user,
 			EventType: "user_profile_changed",
 		}
@@ -303,7 +297,7 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 }
 
 func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64) {
-	notification := CentrifugeNotification{
+	notification := dto.CentrifugeNotification{
 		Payload: VideoCallInvitation{
 			ChatId: chatId,
 		},
@@ -324,7 +318,7 @@ func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId in
 }
 
 func (not *notifictionsImpl) NotifyAboutKick(c echo.Context, chatId int64, userId int64) {
-	notification := CentrifugeNotification{
+	notification := dto.CentrifugeNotification{
 		Payload: VideoKick{
 			ChatId: chatId,
 		},
@@ -360,7 +354,7 @@ func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId
 		Text: text,
 	}
 
-	notification := CentrifugeNotification{
+	notification := dto.CentrifugeNotification{
 		Payload:   ut,
 		EventType: "user_broadcast",
 	}

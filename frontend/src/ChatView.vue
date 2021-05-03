@@ -41,7 +41,13 @@
         MESSAGE_EDITED,
         USER_TYPING,
         USER_PROFILE_CHANGED,
-        LOGGED_IN, LOGGED_OUT, VIDEO_CALL_CHANGED, VIDEO_CALL_KICKED, MESSAGE_BROADCAST, REFRESH_ON_WEBSOCKET_RESTORED
+        LOGGED_IN,
+        LOGGED_OUT,
+        VIDEO_CALL_CHANGED,
+        VIDEO_CALL_KICKED,
+        MESSAGE_BROADCAST,
+        REFRESH_ON_WEBSOCKET_RESTORED,
+        USER_ONLINE_CHANGED
     } from "./bus";
     import MessageEdit from "./MessageEdit";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
@@ -321,6 +327,8 @@
                         bus.$emit(USER_TYPING, properData);
                     } else if (data.type === "user_broadcast") {
                         bus.$emit(MESSAGE_BROADCAST, properData);
+                    } else if (data.type === "user_online_changed") {
+                        bus.$emit(USER_ONLINE_CHANGED, properData);
                     }
                 });
             },

@@ -30,3 +30,4 @@ export const AUDIO_START_MUTING = "audioStartMuting";
 export const REFRESH_ON_WEBSOCKET_RESTORED = "refreshOnWsRestored";
 export const REQUEST_CHANGE_VIDEO_RESOLUTION = "requestChangeVideoResolution";
 export const VIDEO_RESOLUTION_CHANGED = "videoResolutionChanged";
+export const USER_ONLINE_CHANGED = "onlineChanged";
