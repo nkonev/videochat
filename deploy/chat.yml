@@ -47,7 +47,7 @@ jaeger:
   endpoint: "jaeger:6831"
 
 redis:
-  address: redis:36379
+  address: redis:6379
   password: ""
   db: 1
   connectTimeout: 5s

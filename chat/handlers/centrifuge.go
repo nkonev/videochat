@@ -369,7 +369,7 @@ func periodicNotifyAboutOnline(node *centrifuge.Node, dbs db.DB, onlineStorage r
 				continue
 			}
 
-			var arr []UserOnlineChanged
+			var arr []UserOnlineChanged = make([]UserOnlineChanged, 0)
 			for _, participantId := range participantIds {
 				online, err := onlineStorage.GetUserOnline(participantId)
 				if err != nil {
