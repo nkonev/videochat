@@ -1,6 +1,6 @@
 <template>
     <div class="video-container-element">
-        <video autoPlay playsInline ref="videoRef" v-on:dblclick="onDoubleClick"/>
+        <video autoPlay playsInline ref="videoRef" :muted="initialMuted" v-on:dblclick="onDoubleClick"/>
         <p class="video-container-element-caption">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon></p>
     </div>
 </template>
@@ -17,6 +17,12 @@ export default {
         }
     },
 
+    props: {
+        initialMuted: {
+            type: Boolean
+        }
+    },
+
     methods: {
         setSource(d) {
             console.log("videoRef=", this.$refs.videoRef);
@@ -24,6 +30,9 @@ export default {
         },
         getStreamId() {
             return this?.$refs?.videoRef?.srcObject?.id;
+        },
+        getVideoElement() {
+            return this?.$refs?.videoRef;
         },
         setUserName(u) {
             this.userName = u;
