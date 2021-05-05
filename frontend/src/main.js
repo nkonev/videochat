@@ -116,11 +116,10 @@ axios.interceptors.response.use((response) => {
     bus.$emit(LOGGED_OUT, null);
     return Promise.reject(error)
   } else {
-    console.log(error.response);
-    if (!error.config.url.includes("/message/read/")) {
-      const errorMessage  = "Request: " + JSON.stringify(error.config) + ", Response:" + JSON.stringify(error.response);
-      vm.$refs.appRef.onError(errorMessage);
-    }
+    const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response:" + JSON.stringify(error.response);
+    console.error(consoleErrorMessage);
+    const errorMessage  = "Http error. Check the console";
+    vm.$refs.appRef.onError(errorMessage);
     return Promise.reject(error)
   }
 });
