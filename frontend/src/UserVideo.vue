@@ -37,7 +37,7 @@ export default {
         setUserName(u) {
             this.userName = u;
         },
-        setAudioMute(b) {
+        setDisplayAudioMute(b) {
             this.audioMute = b;
         },
         setStreamMuted(b) {

@@ -222,7 +222,7 @@
                             const component = this.streams[data.streamId];
                             if (component) {
                                 component.component.setUserName(data.login);
-                                component.component.setAudioMute(data.audioMute);
+                                component.component.setDisplayAudioMute(data.audioMute);
                             }
                         }
                     }
@@ -306,7 +306,7 @@
                   this.$refs.localVideoComponent.setSource(media);
                   this.$refs.localVideoComponent.setStreamMuted(true);
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
-                  this.$refs.localVideoComponent.setAudioMute(this.audioMuted);
+                  this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
                   this.clientLocal.publish(media);
                   this.$store.commit(SET_SHARE_SCREEN, false);
                   this.setLocalMuteDefaults();
@@ -320,7 +320,7 @@
                     //this.localMedia.unmute("audio");
                     this.$refs.localVideoComponent.setSource(media);
                     this.$refs.localVideoComponent.setStreamMuted(true);
-                    this.$refs.localVideoComponent.setAudioMute(this.audioMuted);
+                    this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
                     this.$refs.localVideoComponent.setUserName(this.myUserName);
                     this.clientLocal.publish(media);
                     this.$store.commit(SET_SHARE_SCREEN, true);
@@ -381,12 +381,12 @@
                 if (requestedState) {
                     this.localMedia.mute("audio");
                     this.$store.commit(SET_MUTE_AUDIO, requestedState);
-                    this.$refs.localVideoComponent.setAudioMute(requestedState);
+                    this.$refs.localVideoComponent.setDisplayAudioMute(requestedState);
                     this.notifyWithData();
                 } else {
                     this.localMedia.unmute("audio").then(value => {
                         this.$store.commit(SET_MUTE_AUDIO, requestedState);
-                        this.$refs.localVideoComponent.setAudioMute(requestedState);
+                        this.$refs.localVideoComponent.setDisplayAudioMute(requestedState);
                         this.notifyWithData();
                     })
                 }
@@ -397,7 +397,7 @@
                     if (data) {
                         const component = this.streams[data.streamId];
                         if (component) {
-                            component.component.setAudioMute(data.audioMute);
+                            component.component.setDisplayAudioMute(data.audioMute);
                         }
                     }
                 }

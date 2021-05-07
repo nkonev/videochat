@@ -116,7 +116,7 @@ axios.interceptors.response.use((response) => {
     bus.$emit(LOGGED_OUT, null);
     return Promise.reject(error)
   } else {
-    const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response:" + JSON.stringify(error.response);
+    const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
     console.error(consoleErrorMessage);
     const errorMessage  = "Http error. Check the console";
     vm.$refs.appRef.onError(errorMessage);
