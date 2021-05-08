@@ -72,6 +72,7 @@
                 :color="wsConnected ? 'indigo' : 'error'"
                 dark
                 app
+                id="myAppBar"
                 :clipped-left="true"
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>

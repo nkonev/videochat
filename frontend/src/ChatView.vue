@@ -1,5 +1,5 @@
 <template>
-    <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
+    <v-container class="ma-0 pa-0" id="chatViewContainer" fluid v-bind:style="{height: splitpanesHeight + 'px'}">
         <splitpanes ref="spl" class="default-theme" horizontal style="height: 100%"
                     @pane-add="onPanelAdd(isScrolledToBottom())" @pane-remove="onPanelRemove()" @resize="onPanelResized">
             <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" v-bind:size="videoSize">
@@ -64,9 +64,19 @@
     import {getCorrectUserAvatar} from "./utils";
     import MessageItem from "./MessageItem";
     // import 'splitpanes/dist/splitpanes.css';
+    import debounce from "lodash/debounce";
+
 
     const default2 = [80, 20];
     const default3 = [30, 50, 20];
+
+    const calcSplitpanesHeight = () => {
+        const appBarHeight = parseInt(document.getElementById("myAppBar").style.height.replace('px', ''));
+        const displayableWindowHeight = window.innerHeight;
+        const ret = displayableWindowHeight - appBarHeight;
+        console.log("splitpanesHeight", ret);
+        return ret;
+    }
 
     export default {
         mixins: [infinityListMixin()],
@@ -77,6 +87,7 @@
                     participantIds:[],
                     participants:[],
                 },
+                splitpanesHeight: 0,
             }
         },
         computed: {
@@ -349,8 +360,18 @@
                     this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, dto.usersCount);
                 }
             },
+            onResizedListener() {
+                this.splitpanesHeight = calcSplitpanesHeight();
+            }
+        },
+        created() {
+            this.onResizedListener = debounce(this.onResizedListener, 50, {leading:false, trailing:true});
         },
         mounted() {
+            this.splitpanesHeight = calcSplitpanesHeight();
+
+            window.addEventListener('resize', this.onResizedListener);
+
             this.subscribe();
 
             this.$store.commit(SET_TITLE, `Chat #${this.chatId}`);
@@ -377,6 +398,8 @@
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
         },
         beforeDestroy() {
+            window.removeEventListener('resize', this.onResizedListener);
+
             bus.$off(MESSAGE_ADD, this.onNewMessage);
             bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$off(CHAT_EDITED, this.onChatChange);
@@ -413,7 +436,6 @@
     }
 
     #chatViewContainer {
-        height: calc(100vh - 68px)
         position: relative
         //height: calc(100% - 80px)
         //width: calc(100% - 80px)

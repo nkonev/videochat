@@ -1,5 +1,5 @@
 <template>
-    <v-container id="sendButtonContainer" class="py-0 px-1 d-flex flex-column" fluid style="height: 100%">
+    <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid style="height: 100%">
             <quill-editor
                 @input="updateModel"
                 :options="editorOption"
