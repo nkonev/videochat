@@ -195,12 +195,13 @@
                 let localStreamId = this.$refs.localVideoComponent.getStreamId();
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
+                    console.debug("Checking self user", "streamId", localStreamId);
                     this.signalLocal.call("userByStreamId", {streamId: localStreamId}).then(value => {
                         if (!value.found) {
-                            console.warn("Detected absence of self user on server, restarting...");
+                            console.warn("Detected absence of self user on server, restarting...", "streamId", localStreamId);
                             this.tryRestartWithResetOncloseHandler();
                         } else {
-                            console.debug("Successfully checked self user", value);
+                            console.debug("Successfully checked self user",  "streamId", localStreamId, value);
                         }
                     })
                 }, pingInterval)
