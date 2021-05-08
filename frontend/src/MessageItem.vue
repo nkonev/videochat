@@ -4,7 +4,7 @@
         class="pr-1 mr-1 pl-4"
     >
         <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">
-            <v-list-item-avatar v-if="item.owner && item.owner.avatar" @click="onOwnerClick(item)">
+            <v-list-item-avatar v-if="item.owner && item.owner.avatar">
                 <v-img :src="item.owner.avatar"></v-img>
             </v-list-item-avatar>
         </router-link>
@@ -33,9 +33,6 @@
         methods: {
             onMessageClick(dto) {
                 this.centrifuge.send({payload: { chatId: this.chatId, messageId: dto.id}, "type": "message_read"})
-            },
-            onOwnerClick(dto) {
-                this.$router.push(({ name: profile_name, params: { id: dto.owner.id}}));
             },
             onMessageMouseMove(item) {
                 this.onMessageClick(item);
