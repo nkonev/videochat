@@ -1,6 +1,7 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid v-bind:style="{height: splitpanesHeight + 'px'}">
         <splitpanes ref="spl" class="default-theme" horizontal style="height: 100%"
+                    :dbl-click-splitter="false"
                     @pane-add="onPanelAdd(isScrolledToBottom())" @pane-remove="onPanelRemove()" @resize="onPanelResized">
             <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" v-bind:size="videoSize">
                 <ChatVideo :chatDto="chatDto"/>
