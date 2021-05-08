@@ -58,7 +58,7 @@ func NewExtendedService(
 }
 
 func (h *ExtendedService) storeToIndex(peer0 *sfu.Peer, userId int64, peerId, streamId, login string, videoMute, audioMute bool) {
-	logger.Info("Storing peer to map", "peer", peer0.ID(), "userId", userId, "streamId", streamId, "login", login)
+	logger.Info("Storing peer to map", "peer_id", peer0.ID(), "userId", userId, "streamId", streamId, "login", login)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
 	h.peerUserIdIndex.connectionWithData[peer0] = ExtendedPeerInfo{
@@ -72,7 +72,7 @@ func (h *ExtendedService) storeToIndex(peer0 *sfu.Peer, userId int64, peerId, st
 }
 
 func (h *ExtendedService) removeFromIndex(peer0 *sfu.Peer, userId int64, conn *websocket.Conn) {
-	logger.Info("Removing peer from map", "peer", peer0.ID(), "userId", userId)
+	logger.Info("Removing peer from map", "peer_id", peer0.ID(), "userId", userId)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
 	conn.Close()

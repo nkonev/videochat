@@ -240,7 +240,7 @@ func (h *Handler) StoreInfoAndNotifyChatParticipants(w http.ResponseWriter, r *h
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 		} else {
-			logger.Info("Not found peer metadata by", "chatId", chatId, "peerId", bodyStruct.PeerId)
+			logger.Info("Not found peer metadata by", "chatId", chatId, "peer_id", bodyStruct.PeerId)
 		}
 	} else {
 		if err := h.service.notify(chatId, nil); err != nil {

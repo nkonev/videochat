@@ -48,7 +48,6 @@
 
     const ComponentClass = Vue.extend(UserVideo);
 
-    const peerId = uuidv4();
     let pingTimerId;
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
@@ -67,7 +66,8 @@
                 closingStarted: false,
                 chatId: null,
                 remoteVideoIsMuted: true,
-                showPermissionAsk: true
+                showPermissionAsk: true,
+                peerId: null
             }
         },
         props: ['chatDto'],
@@ -115,8 +115,9 @@
                   this.tryRestartVideoProcess();
                 }
 
+                this.peerId = uuidv4();
                 this.signalLocal.onopen = () => {
-                    this.clientLocal.join(`chat${this.chatId}`, peerId).then(()=>{
+                    this.clientLocal.join(`chat${this.chatId}`, this.peerId).then(()=>{
                         this.getAndPublishCamera()
                             .then(()=>{
                               this.notifyAboutJoining();
@@ -234,7 +235,7 @@
             },
             notifyWithData() {
                 const toSend = {
-                    peerId: peerId,
+                    peerId: this.peerId,
                     streamId: this.$refs.localVideoComponent.getStreamId(),
                     login: this.myUserName,
                     videoMute: this.videoMuted, // from store
