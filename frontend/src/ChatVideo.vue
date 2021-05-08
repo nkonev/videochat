@@ -44,10 +44,9 @@
     import UserVideo from "./UserVideo";
     import {audioMuteDefault, getWebsocketUrlPrefix} from "./utils";
     import { v4 as uuidv4 } from 'uuid';
-    import Vuetify from 'vuetify/lib/framework'
+    import vuetify from './plugins/vuetify'
 
     const ComponentClass = Vue.extend(UserVideo);
-    const vuetify = new Vuetify();
 
     const peerId = uuidv4();
     let pingTimerId;
@@ -136,7 +135,7 @@
                     console.debug("got track", track.id, "for stream", stream.id);
                     track.onunmute = () => {
                         if (!this.streams[stream.id]) {
-                            console.log("set track", track.id, "for stream", stream.id, "vuetify", this.$vuetify);
+                            console.log("set track", track.id, "for stream", stream.id);
 
                             const component = new ComponentClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted }});
                             component.$mount();
