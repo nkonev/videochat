@@ -1,7 +1,7 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
         <v-snackbar v-model="showPermissionAsk" color="warning" timeout="-1" :multi-line="true" top>
-            Please allow audio
+            Please allow audio autoplay. If not, it will be enabled after unmute.
             <template v-slot:action="{ attrs }">
                 <v-btn
                     text
