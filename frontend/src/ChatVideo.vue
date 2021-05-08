@@ -324,9 +324,7 @@
             },
             getAndPublishScreen() {
                 this.insideSwitchingCameraScreen = true;
-                return LocalStream.getDisplayMedia({
-                  audio: true,
-                }).then((media) => {
+                return LocalStream.getDisplayMedia({ }).then((media) => {
                     this.localMedia = media;
                     //this.localMedia.unmute("audio");
                     this.$refs.localVideoComponent.setSource(media);
