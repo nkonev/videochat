@@ -347,7 +347,7 @@
             tryRestartVideoProcess() {
               setTimeout(() => {
                 if (!this.closingStarted) {
-                  console.info("Will restart video process after 1 sec");
+                  console.info("Will restart video process after", videoProcessRestartInterval, "ms");
                   try {
                     this.leaveSession();
                   } catch (e) {
