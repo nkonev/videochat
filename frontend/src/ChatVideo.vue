@@ -67,7 +67,8 @@
                 chatId: null,
                 remoteVideoIsMuted: true,
                 showPermissionAsk: true,
-                peerId: null
+                peerId: null,
+                insideSwitchingCameraScreen: false,
             }
         },
         props: ['chatDto'],
@@ -187,23 +188,29 @@
                 this.streams = {};
                 this.remotesDiv = null;
                 this.localMedia = null;
+                this.insideSwitchingCameraScreen = false;
+                this.peerId = null;
 
                 this.$store.commit(SET_MUTE_VIDEO, false);
                 this.$store.commit(SET_MUTE_AUDIO, audioMuteDefault);
             },
             startHealthCheckPing() {
-                let localStreamId = this.$refs.localVideoComponent.getStreamId();
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
-                    console.debug("Checking self user", "streamId", localStreamId);
-                    this.signalLocal.call("userByStreamId", {streamId: localStreamId}).then(value => {
-                        if (!value.found) {
-                            console.warn("Detected absence of self user on server, restarting...", "streamId", localStreamId);
-                            this.tryRestartWithResetOncloseHandler();
-                        } else {
-                            console.debug("Successfully checked self user",  "streamId", localStreamId, value);
-                        }
-                    })
+                    if (!this.insideSwitchingCameraScreen) {
+                        const localStreamId = this.$refs.localVideoComponent.getStreamId();
+                        console.debug("Checking self user", "streamId", localStreamId);
+                        this.signalLocal.call("userByStreamId", {streamId: localStreamId}).then(value => {
+                            if (!value.found) {
+                                console.warn("Detected absence of self user on server, restarting...", "streamId", localStreamId);
+                                this.tryRestartWithResetOncloseHandler();
+                            } else {
+                                console.debug("Successfully checked self user", "streamId", localStreamId, value);
+                            }
+                        })
+                    } else {
+                        console.debug("Skipping checking self user because we switch camera to screen sharing or vice versa");
+                    }
                 }, pingInterval)
             },
             askUserNameWithRetries(streamId) {
@@ -297,6 +304,7 @@
                     });
             },
             getAndPublishCamera() {
+                this.insideSwitchingCameraScreen = true;
                 const resolution = this.getVideoResolution();
                 bus.$emit(VIDEO_RESOLUTION_CHANGED, resolution);
                 return LocalStream.getUserMedia({
@@ -311,9 +319,11 @@
                   this.clientLocal.publish(media);
                   this.$store.commit(SET_SHARE_SCREEN, false);
                   this.setLocalMuteDefaults();
+                  this.insideSwitchingCameraScreen = false;
                 });
             },
             getAndPublishScreen() {
+                this.insideSwitchingCameraScreen = true;
                 return LocalStream.getDisplayMedia({
                   audio: true,
                 }).then((media) => {
@@ -326,6 +336,7 @@
                     this.clientLocal.publish(media);
                     this.$store.commit(SET_SHARE_SCREEN, true);
                     this.setLocalMuteDefaults();
+                    this.insideSwitchingCameraScreen = false;
                 });
             },
             setLocalMuteDefaults() {
