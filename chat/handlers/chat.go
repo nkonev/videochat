@@ -198,7 +198,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		Participants:       users,
 		CanEdit:            null.BoolFrom(c.IsAdmin),
 		LastUpdateDateTime: c.LastUpdateDateTime,
-		CanLeave:           null.BoolFrom(!c.IsAdmin),
+		CanLeave:           null.BoolFrom(!c.IsAdmin && !c.TetATet),
 		UnreadMessages:     unreadMessages,
 		IsTetATet: 			c.TetATet,
 	}
@@ -648,6 +648,7 @@ func (ch ChatHandler) TetATet(c echo.Context) error {
 	}
 
 	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
+		// check existing tet-a-tet chat
 		exists, chatId, err := tx.IsExistsTetATet(userPrincipalDto.UserId, toParticipantId)
 		if err != nil {
 			GetLogEntry(c.Request()).Errorf("Error during checking exists tet-a-tet chat %v", err)
@@ -657,27 +658,28 @@ func (ch ChatHandler) TetATet(c echo.Context) error {
 			return c.JSON(http.StatusAccepted, TetATetResponse{Id: chatId})
 		}
 
-		chatId, err2 := tx.CreateTetATetChat(userPrincipalDto.UserId, toParticipantId)
+		// create tet-a-tet chat
+		chatId2, err2 := tx.CreateTetATetChat(userPrincipalDto.UserId, toParticipantId)
 		if err2 != nil {
 			GetLogEntry(c.Request()).Errorf("Error during creating tet-a-tet chat %v", err2)
 			return err2
 		}
-		// add admin
-		if err := tx.AddParticipant(userPrincipalDto.UserId, chatId, false); err != nil {
+
+		if err := tx.AddParticipant(userPrincipalDto.UserId, chatId2, false); err != nil {
 			return err
 		}
-		if err := tx.AddParticipant(toParticipantId, chatId, false); err != nil {
+		if err := tx.AddParticipant(toParticipantId, chatId2, false); err != nil {
 			return err
 		}
 
-		responseDto, err3 := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto)
+		responseDto, err3 := getChat(tx, ch.restClient, c, chatId2, userPrincipalDto.UserId, userPrincipalDto)
 		if err3 != nil {
 			return err3
 		}
 
 		ch.notificator.NotifyAboutNewChat(c, responseDto, responseDto.ParticipantIds, tx)
 
-		return c.JSON(http.StatusCreated, TetATetResponse{Id: chatId})
+		return c.JSON(http.StatusCreated, TetATetResponse{Id: chatId2})
 	})
 	if errOuter != nil {
 		GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)

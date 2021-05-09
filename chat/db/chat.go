@@ -55,7 +55,7 @@ func (tx *Tx) CreateTetATetChat(behalfUserId int64, toParticipantId int64) (int6
 }
 
 func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int64, error) {
-	res := tx.QueryRow("select b.chat_id from (select a.count>=2 as exists, a.chat_id from ( (select cp.chat_id, count(cp.user_id) from chat_participant cp join chat ch on ch.id = cp.chat_id where ch.tet_a_tet = true and (cp.user_id = $1 or cp.user_id = $2) group by cp.chat_id)) a) b where b.exists is true;", participant1, participant2)
+	res := tx.QueryRow("select b.chat_id from (select a.count >= 2 as exists, a.chat_id from ( (select cp.chat_id, count(cp.user_id) from chat_participant cp join chat ch on ch.id = cp.chat_id where ch.tet_a_tet = true and (cp.user_id = $1 or cp.user_id = $2) group by cp.chat_id)) a) b where b.exists is true;", participant1, participant2)
 	var chatId int64
 	if err := res.Scan(&chatId); err != nil {
 		if err == sql.ErrNoRows {
@@ -66,7 +66,6 @@ func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int
 		return false, 0, err
 	}
 	return true, chatId, nil
-
 }
 
 func (db *DB) GetChats(participantId int64, limit int, offset int, searchString string) ([]*Chat, error) {
