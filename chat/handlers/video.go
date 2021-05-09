@@ -45,7 +45,7 @@ func (vh VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
 	}
 
 	vh.notificator.NotifyAboutCallInvitation(c, chatId, userId)
-	return c.NoContent(200)
+	return c.NoContent(http.StatusOK)
 }
 
 func (vh VideoHandler) Kick(c echo.Context) error {
@@ -85,7 +85,7 @@ func (vh VideoHandler) Kick(c echo.Context) error {
 
 	go vh.kickVideoStreamWithWait(chatId, userId)
 
-	return c.NoContent(200)
+	return c.NoContent(http.StatusOK)
 }
 
 func (vh VideoHandler) kickVideoStreamWithWait(chatId, userId int64) {

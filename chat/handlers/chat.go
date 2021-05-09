@@ -99,7 +99,7 @@ func (ch ChatHandler) GetChats(c echo.Context) error {
 			return errors.New("Error during getting user chat count")
 		}
 		GetLogEntry(c.Request()).Infof("Successfully returning %v chats", len(chatDtos))
-		return c.JSON(200, ChatWrapper{Data: chatDtos, Count: userChatCount})
+		return c.JSON(http.StatusOK, ChatWrapper{Data: chatDtos, Count: userChatCount})
 	}
 }
 
@@ -173,7 +173,7 @@ func (ch ChatHandler) GetChat(c echo.Context) error {
 			copiedChat.Participants = adminedUsers
 
 			GetLogEntry(c.Request()).Infof("Successfully returning %v chat", copiedChat)
-			return c.JSON(200, copiedChat)
+			return c.JSON(http.StatusOK, copiedChat)
 		}
 	}
 }

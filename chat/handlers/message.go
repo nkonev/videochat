@@ -74,7 +74,7 @@ func (mc MessageHandler) GetMessages(c echo.Context) error {
 		}
 
 		GetLogEntry(c.Request()).Infof("Successfully returning %v messages", len(messageDtos))
-		return c.JSON(200, messageDtos)
+		return c.JSON(http.StatusOK, messageDtos)
 	}
 }
 
@@ -118,7 +118,7 @@ func (mc MessageHandler) GetMessage(c echo.Context) error {
 		return c.NoContent(http.StatusNotFound)
 	}
 	GetLogEntry(c.Request()).Infof("Successfully returning message %v", message)
-	return c.JSON(200, message)
+	return c.JSON(http.StatusOK, message)
 }
 
 func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, userPrincipalDto *auth.AuthResult) *dto.DisplayMessageDto {
