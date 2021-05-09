@@ -5,7 +5,6 @@
                 <v-card-title>Find user</v-card-title>
 
                 <v-autocomplete
-                    v-model="participantId"
                     :disabled="isLoading"
                     :items="people"
                     filled
@@ -48,7 +47,6 @@
                 show: false,
                 search: null,
                 isLoading: false,
-                participantId: 0,
                 people: [  ], // available person to chat with
             }
         },
