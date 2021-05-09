@@ -154,8 +154,8 @@ func main() {
 	// Pass logr instance
 	sfu.Logger = logger
 
-	s := sfu.NewSFU(conf.Config)
-	dc := s.NewDatachannel(sfu.APIChannelLabel)
+	sfuInstance := sfu.NewSFU(conf.Config)
+	dc := sfuInstance.NewDatachannel(sfu.APIChannelLabel)
 	dc.Use(datachannel.SubscriberAPI)
 
 	upgrader := websocket.Upgrader{
@@ -170,8 +170,8 @@ func main() {
 
 	rabbitmqConnection := myRabbitmq.CreateRabbitMqConnection(conf.RabbitMqConfig)
 	publisherService := producer.NewRabbitPublisher(rabbitmqConnection)
-	extendedService := service.NewExtendedService(s, &conf, publisherService, client)
-	handler := handlers.NewHandler(&upgrader, s, &conf, &extendedService)
+	extendedService := service.NewExtendedService(sfuInstance, &conf, publisherService, client)
+	handler := handlers.NewHandler(&upgrader, sfuInstance, &conf, &extendedService)
 	listener.NewVideoListener(&extendedService, rabbitmqConnection)
 
 	r := mux.NewRouter()
