@@ -16,6 +16,8 @@ import (
 	"io/fs"
 	"net/http"
 	"nkonev.name/video/config"
+	"nkonev.name/video/dto"
+	"nkonev.name/video/service"
 	"strings"
 )
 
@@ -24,15 +26,16 @@ var embeddedFiles embed.FS
 
 type Handler struct {
 	upgrader        *websocket.Upgrader
+	sfu 			*sfu.SFU
 	conf            *config.ExtendedConfig
 	httpFs          *http.FileSystem
-	service *ExtendedService
+	service *service.ExtendedService
 }
 
 
 type JsonRpcExtendedHandler struct {
 	*server.JSONSignal
-	service *ExtendedService
+	service *service.ExtendedService
 }
 
 type ContextData struct {
@@ -66,8 +69,9 @@ type UserByStreamId struct {
 
 func NewHandler(
 	upgrader *websocket.Upgrader,
+	sfu *sfu.SFU,
 	conf *config.ExtendedConfig,
-	service *ExtendedService,
+	service *service.ExtendedService,
 ) Handler {
 	fsys, err := fs.Sub(embeddedFiles, "static")
 	if err != nil {
@@ -77,6 +81,7 @@ func NewHandler(
 
 	handler := Handler{
 		upgrader: upgrader,
+		sfu: sfu,
 		conf:     conf,
 		httpFs:   &staticDir,
 		service: service,
@@ -95,7 +100,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok, err := h.service.checkAccess(userId, chatId); err != nil {
+	if ok, err := h.service.CheckAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else if !ok {
@@ -113,10 +118,10 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	peer0 := sfu.NewPeer(h.service.sfu)
-	h.service.storeToIndex(peer0, userId, "", "", "", false, false)
-	defer h.service.removeFromIndex(peer0, userId, c)
-	defer h.service.notifyAboutLeaving(chatId)
+	peer0 := sfu.NewPeer(h.sfu)
+	h.service.StoreToIndex(peer0, userId, "", "", "", false, false)
+	defer h.service.RemoveFromIndex(peer0, userId, c)
+	defer h.service.NotifyAboutLeaving(chatId)
 	p := server.NewJSONSignal(peer0, logger)
 	je := &JsonRpcExtendedHandler{p, h.service}
 	defer p.Close()
@@ -133,7 +138,7 @@ func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if ok, err := h.service.checkAccess(userId, chatId); err != nil {
+	if ok, err := h.service.CheckAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else if !ok {
@@ -142,7 +147,7 @@ func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := UsersResponse{}
-	response.UsersCount = h.service.countPeers(chatId)
+	response.UsersCount = h.service.CountPeers(chatId)
 
 	w.Header().Set("Content-Type", "application/json")
 	marshal, err := json.Marshal(response)
@@ -166,9 +171,9 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userDto, err := h.service.userByStreamId(chatId, streamId, userId)
+	userDto, err := h.service.UserByStreamId(chatId, streamId, userId)
 	if err != nil {
-		if errors.Is(err, &errorNoAccess{}) {
+		if errors.Is(err, &service.ErrorNoAccess{}) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		} else {
@@ -192,15 +197,6 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	return
-}
-
-// input Dto
-type StoreNotifyDto struct {
-	PeerId    string `json:"peerId"`
-	StreamId  string `json:"streamId"`
-	Login     string `json:"login"`
-	VideoMute bool   `json:"videoMute"`
-	AudioMute bool   `json:"audioMute"`
 }
 
 func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
@@ -247,12 +243,12 @@ func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 }
 
 func parseChatIdAndUserId(chatId, userId string) (int64, int64, error) {
-	chatIdInt64, err2 := ParseInt64(chatId)
+	chatIdInt64, err2 := service.ParseInt64(chatId)
 	if err2 != nil {
 		logger.Error(err2, "Failed during parse chat id")
 		return -1, -1, err2
 	}
-	userId64, err2 := ParseInt64(userId)
+	userId64, err2 := service.ParseInt64(userId)
 	if err2 != nil {
 		logger.Error(err2, "Failed during parse user id")
 		return -1, -1, err2
@@ -261,13 +257,13 @@ func parseChatIdAndUserId(chatId, userId string) (int64, int64, error) {
 }
 
 type UserDtoWrapper struct {
-	UserDto *StoreNotifyDto `json:"userDto"`
+	UserDto *dto.StoreNotifyDto `json:"userDto"`
 	Found bool              `json:"found"`
 }
 
 func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
 	replyError := func(err error) {
-		if errors.Is(err, &errorNoAccess{}) {
+		if errors.Is(err, &service.ErrorNoAccess{}) {
 			_ = conn.ReplyWithError(ctx, req.ID, &jsonrpc2.Error{
 				Code:    401,
 				Message: err.Error(),
@@ -297,7 +293,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			replyError(err)
 			break
 		}
-		userDto, err := p.service.userByStreamId(fromContext.chatId, userByStreamId.StreamId, fromContext.userId)
+		userDto, err := p.service.UserByStreamId(fromContext.chatId, userByStreamId.StreamId, fromContext.userId)
 		if err != nil {
 			replyError(err)
 			break
@@ -310,15 +306,15 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 		_ = conn.Reply(ctx, req.ID, resp)
 
 	case "putUserData": {
-		var bodyStruct StoreNotifyDto
+		var bodyStruct dto.StoreNotifyDto
 		err := json.Unmarshal(*req.Params, &bodyStruct)
 		if err != nil {
 			p.Logger.Error(err, "error parsing StoreNotifyDto request")
 			break
 		}
-		if sfuPeer := p.service.getPeerByPeerId(fromContext.chatId, bodyStruct.PeerId); sfuPeer != nil {
-			p.service.storeToIndex(sfuPeer, fromContext.chatId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
-			if err := p.service.notify(fromContext.chatId, &bodyStruct); err != nil {
+		if sfuPeer := p.service.GetPeerByPeerId(fromContext.chatId, bodyStruct.PeerId); sfuPeer != nil {
+			p.service.StoreToIndex(sfuPeer, fromContext.chatId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+			if err := p.service.Notify(fromContext.chatId, &bodyStruct); err != nil {
 				p.Logger.Error(err, "error during sending notification")
 			}
 		} else {

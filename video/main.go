@@ -18,6 +18,7 @@ import (
 	"nkonev.name/video/handlers"
 	"nkonev.name/video/listener"
 	"nkonev.name/video/producer"
+	"nkonev.name/video/service"
 	"os"
 	"time"
 	myRabbitmq "nkonev.name/video/rabbitmq"
@@ -169,8 +170,8 @@ func main() {
 
 	rabbitmqConnection := myRabbitmq.CreateRabbitMqConnection(conf.RabbitMqConfig)
 	publisherService := producer.NewRabbitPublisher(rabbitmqConnection)
-	extendedService := handlers.NewExtendedService(s, &conf, publisherService, client)
-	handler := handlers.NewHandler(&upgrader, &conf, &extendedService)
+	extendedService := service.NewExtendedService(s, &conf, publisherService, client)
+	handler := handlers.NewHandler(&upgrader, s, &conf, &extendedService)
 	listener.NewVideoListener(&extendedService, rabbitmqConnection)
 
 	r := mux.NewRouter()

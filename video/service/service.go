@@ -1,4 +1,4 @@
-package handlers
+package service
 
 import (
 	"encoding/json"
@@ -8,12 +8,16 @@ import (
 	"github.com/pion/webrtc/v3"
 	"net/http"
 	"nkonev.name/video/config"
+	"nkonev.name/video/dto"
 	"nkonev.name/video/producer"
 	"strconv"
 	"sync"
 	"github.com/gorilla/websocket"
 	"time"
+	log "github.com/pion/ion-sfu/pkg/logger"
 )
+
+var logger = log.New()
 
 type ExtendedService struct {
 	sfu             *sfu.SFU
@@ -57,7 +61,7 @@ func NewExtendedService(
 	return handler
 }
 
-func (h *ExtendedService) storeToIndex(peer0 *sfu.Peer, userId int64, peerId, streamId, login string, videoMute, audioMute bool) {
+func (h *ExtendedService) StoreToIndex(peer0 *sfu.Peer, userId int64, peerId, streamId, login string, videoMute, audioMute bool) {
 	logger.Info("Storing peer to map", "peer_id", peer0.ID(), "userId", userId, "streamId", streamId, "login", login)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
@@ -71,7 +75,7 @@ func (h *ExtendedService) storeToIndex(peer0 *sfu.Peer, userId int64, peerId, st
 	}
 }
 
-func (h *ExtendedService) removeFromIndex(peer0 *sfu.Peer, userId int64, conn *websocket.Conn) {
+func (h *ExtendedService) RemoveFromIndex(peer0 *sfu.Peer, userId int64, conn *websocket.Conn) {
 	logger.Info("Removing peer from map", "peer_id", peer0.ID(), "userId", userId)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
@@ -90,17 +94,17 @@ func (h *ExtendedService) getExtendedConnectionInfo(peer0 *sfu.Peer) *ExtendedPe
 	}
 }
 
-type errorNoAccess struct {}
-func (e *errorNoAccess) Error() string { return "No access" }
+type ErrorNoAccess struct {}
+func (e *ErrorNoAccess) Error() string { return "No access" }
 
 type errorInternal struct {}
 func (e *errorInternal) Error() string { return "Internal error" }
 
-func (h *ExtendedService) userByStreamId(chatId int64, interestingStreamId string, behalfUserId int64) (*StoreNotifyDto, error) {
-	if ok, err := h.checkAccess(behalfUserId, chatId); err != nil {
+func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId string, behalfUserId int64) (*dto.StoreNotifyDto, error) {
+	if ok, err := h.CheckAccess(behalfUserId, chatId); err != nil {
 		return nil, &errorInternal{}
 	} else if !ok {
-		return nil, &errorNoAccess{}
+		return nil, &ErrorNoAccess{}
 	}
 
 	session := h.getSessionWithoutCreatingAnew(chatId)
@@ -108,7 +112,7 @@ func (h *ExtendedService) userByStreamId(chatId int64, interestingStreamId strin
 		for _, peer := range session.Peers() {
 			if h.peerIsAlive(peer) {
 				if pwm := h.getPeerMetadataByStreamId(chatId, interestingStreamId); pwm != nil && pwm.ExtendedPeerInfo != nil && pwm.ExtendedPeerInfo.streamId != "" {
-					d := StoreNotifyDto{
+					d := dto.StoreNotifyDto{
 						PeerId:    pwm.ExtendedPeerInfo.peerId,
 						StreamId:  pwm.ExtendedPeerInfo.streamId,
 						Login:     pwm.ExtendedPeerInfo.login,
@@ -125,7 +129,7 @@ func (h *ExtendedService) userByStreamId(chatId int64, interestingStreamId strin
 
 // sent to chat through RabbitMQ
 type chatNotifyDto struct {
-	Data       *StoreNotifyDto `json:"data"`
+	Data       *dto.StoreNotifyDto `json:"data"`
 	UsersCount int64           `json:"usersCount"`
 	ChatId     int64           `json:"chatId"`
 }
@@ -148,7 +152,7 @@ func (h *ExtendedService) getSessionWithoutCreatingAnew(chatId int64) *sfu.Sessi
 }
 
 
-func (h *ExtendedService) countPeers(chatId int64) int64 {
+func (h *ExtendedService) CountPeers(chatId int64) int64 {
 	var usersCount int64 = 0
 	session := h.getSessionWithoutCreatingAnew(chatId)
 	if session != nil {
@@ -161,8 +165,8 @@ func (h *ExtendedService) countPeers(chatId int64) int64 {
 	return usersCount
 }
 
-func (h *ExtendedService) notify(chatId int64, data *StoreNotifyDto) error {
-	var usersCount = h.countPeers(chatId)
+func (h *ExtendedService) Notify(chatId int64, data *dto.StoreNotifyDto) error {
+	var usersCount = h.CountPeers(chatId)
 	var chatNotifyDto = chatNotifyDto{}
 	if data != nil {
 		logger.Info("Notifying with data", "chatId", chatId, "streamId", data.StreamId, "login", data.Login)
@@ -189,7 +193,7 @@ func (h *ExtendedService) peerIsAlive(peer *sfu.Peer) bool {
 	return peer.Publisher().SignalingState() != webrtc.SignalingStateClosed
 }
 
-func (h *ExtendedService) checkAccess(userId int64, chatId int64) (bool, error) {
+func (h *ExtendedService) CheckAccess(userId int64, chatId int64) (bool, error) {
 	url0 := h.conf.ChatConfig.ChatUrlConfig.Base
 	url1 := h.conf.ChatConfig.ChatUrlConfig.Access
 
@@ -253,7 +257,7 @@ func (h *ExtendedService) getPeerMetadataByStreamId(chatId int64, streamId strin
 	return nil
 }
 
-func (h *ExtendedService) getPeerByPeerId(chatId int64, peerId string) *sfu.Peer {
+func (h *ExtendedService) GetPeerByPeerId(chatId int64, peerId string) *sfu.Peer {
 	session := h.getSessionWithoutCreatingAnew(chatId) // ChatVideo.vue
 	if session == nil {
 		return nil
@@ -273,14 +277,14 @@ func (h *ExtendedService) KickUser(chatId, userId int64) error {
 	for _, metadata := range metadatas {
 		metadata.Peer.Close()
 		metadata.Session.RemovePeer(metadata.Peer.ID())
-		h.notify(chatId, nil)
+		h.Notify(chatId, nil)
 	}
 
 	return nil
 }
 
-func (h *ExtendedService) notifyAboutLeaving(chatId int64) {
-	if err := h.notify(chatId, nil); err != nil {
+func (h *ExtendedService) NotifyAboutLeaving(chatId int64) {
+	if err := h.Notify(chatId, nil); err != nil {
 		logger.Error(err, "error during sending leave notification")
 	} else {
 		logger.Info("Successfully sent notification about leaving")
@@ -293,7 +297,7 @@ func (h *ExtendedService) notifyAllChats() {
 		if _, err := fmt.Sscanf(sessionName, "chat%d", &chatId); err != nil {
 			logger.Error(err, "error during reading chat id from session", "sessionName", sessionName)
 		} else {
-			if err = h.notify(chatId, nil); err != nil {
+			if err = h.Notify(chatId, nil); err != nil {
 				logger.Error(err, "error during sending periodic notification")
 			}
 		}

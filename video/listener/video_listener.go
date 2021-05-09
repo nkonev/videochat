@@ -6,8 +6,8 @@ import (
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/lucsky/cuid"
 	"go.uber.org/atomic"
-	"nkonev.name/video/handlers"
 	myRabbitmq "nkonev.name/video/rabbitmq"
+	"nkonev.name/video/service"
 )
 
 type KickUserDto struct {
@@ -15,7 +15,7 @@ type KickUserDto struct {
 	UserId int64 `json:"userId"`
 }
 
-func createVideoListener(h *handlers.ExtendedService) myRabbitmq.VideoListenerFunction {
+func createVideoListener(h *service.ExtendedService) myRabbitmq.VideoListenerFunction {
 	return func(data []byte) error {
 		var bindTo = new(KickUserDto)
 		err := json.Unmarshal(data, &bindTo)
@@ -39,7 +39,7 @@ type VideoListenerService struct {
 }
 
 
-func NewVideoListener(h *handlers.ExtendedService, connection *rabbitmq.Connection) *VideoListenerService {
+func NewVideoListener(h *service.ExtendedService, connection *rabbitmq.Connection) *VideoListenerService {
 	listener := createVideoListener(h)
 	initialized := atomic.NewBool(false)
 	queueNameText := fmt.Sprintf("video-kick-%v", cuid.New())
