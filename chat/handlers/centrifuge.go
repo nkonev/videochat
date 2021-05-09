@@ -228,6 +228,16 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 			return centrifuge.DisconnectReply{}
 		})
 
+		client.On().Refresh(func(event centrifuge.RefreshEvent) centrifuge.RefreshReply {
+			onlineStorage.PutUserOnline(userId)
+			return centrifuge.RefreshReply{}
+		})
+
+		client.On().SubRefresh(func(event centrifuge.SubRefreshEvent) centrifuge.SubRefreshReply {
+			onlineStorage.PutUserOnline(userId)
+			return centrifuge.SubRefreshReply{}
+		})
+
 		client.On().Message(func(event centrifuge.MessageEvent) centrifuge.MessageReply {
 			var v = &TypedMessage{}
 
