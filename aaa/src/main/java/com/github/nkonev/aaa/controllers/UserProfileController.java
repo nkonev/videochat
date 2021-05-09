@@ -150,7 +150,7 @@ public class UserProfileController {
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.USER_ID)
     public com.github.nkonev.aaa.dto.UserAccountDTO getUser(
-            @PathVariable(value = "userId") Long userId,
+            @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
         final UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
