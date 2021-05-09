@@ -93,12 +93,8 @@ export default {
         },
         loadUser() {
             this.viewableUser = null;
-            axios.get('/api/user/list', {
-                params: {userId: this.userId}
-            }).then((response) => {
-                if (response.data.length) {
-                    this.viewableUser = response.data[0];
-                }
+            axios.get(`/api/user/${this.userId}`).then((response) => {
+                this.viewableUser = response.data;
             })
         },
         tetATet(withUserId) {

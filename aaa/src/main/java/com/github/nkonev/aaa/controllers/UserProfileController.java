@@ -7,6 +7,7 @@ import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.exception.BadRequestException;
+import com.github.nkonev.aaa.exception.DataNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
 import com.github.nkonev.aaa.security.OAuth2Providers;
@@ -29,10 +30,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -148,6 +146,19 @@ public class UserProfileController {
             }
         }
         return result;
+    }
+
+    @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+"/{userId}")
+    public com.github.nkonev.aaa.dto.UserAccountDTO getUser(
+            @PathVariable(value = "userId") Long userId,
+            @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
+    ) {
+        final UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
+        if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.getId())) {
+            return UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.getLastLoginDateTime(), null);
+        } else {
+            return userAccountConverter.convertToUserAccountDTO(userAccountEntity);
+        }
     }
 
     @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST)
