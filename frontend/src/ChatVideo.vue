@@ -44,7 +44,7 @@
     import { v4 as uuidv4 } from 'uuid';
     import vuetify from './plugins/vuetify'
 
-    const ComponentClass = Vue.extend(UserVideo);
+    const UserVideoClass = Vue.extend(UserVideo);
 
     let pingTimerId;
     const pingInterval = 5000;
@@ -137,7 +137,7 @@
                         if (!this.streams[stream.id]) {
                             console.log("set track", track.id, "for stream", stream.id);
 
-                            const component = new ComponentClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted }});
+                            const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted }});
                             component.$mount();
                             this.remotesDiv.appendChild(component.$el);
                             component.setSource(stream);
@@ -170,10 +170,10 @@
                 if (pingTimerId) {
                     clearInterval(pingTimerId);
                 }
-                for (const prop in this.streams) {
-                    console.log("Cleaning stream " + prop);
-                    const component = this.streams[prop].component;
-                    this.removeTrack(prop, '_not_set', component);
+                for (const streamId in this.streams) {
+                    console.log("Cleaning stream " + streamId);
+                    const component = this.streams[streamId].component;
+                    this.removeTrack(streamId, '_not_set', component);
                 }
                 if (this.localMedia) {
                     this.localMedia.getTracks().forEach(t => t.stop());
@@ -402,9 +402,9 @@
                 if (dto) {
                     const data = dto.data;
                     if (data) {
-                        const component = this.streams[data.streamId];
-                        if (component) {
-                            component.component.setDisplayAudioMute(data.audioMute);
+                        const streamInfo = this.streams[data.streamId];
+                        if (streamInfo) {
+                            streamInfo.component.setDisplayAudioMute(data.audioMute);
                         }
                     }
                 }
