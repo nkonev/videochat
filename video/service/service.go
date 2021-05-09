@@ -62,7 +62,7 @@ func NewExtendedService(
 }
 
 func (h *ExtendedService) StoreToIndex(peer0 *sfu.Peer, userId int64, peerId, streamId, login string, videoMute, audioMute bool) {
-	logger.Info("Storing peer to map", "peer_id", peer0.ID(), "userId", userId, "streamId", streamId, "login", login)
+	logger.Info("Storing peer to map", "peer_id", peer0.ID(), "user_id", userId, "stream_id", streamId, "login", login, "video_mute", videoMute, "audio_mute", audioMute)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
 	h.peerUserIdIndex.connectionWithData[peer0] = ExtendedPeerInfo{
@@ -76,7 +76,7 @@ func (h *ExtendedService) StoreToIndex(peer0 *sfu.Peer, userId int64, peerId, st
 }
 
 func (h *ExtendedService) RemoveFromIndex(peer0 *sfu.Peer, userId int64, conn *websocket.Conn) {
-	logger.Info("Removing peer from map", "peer_id", peer0.ID(), "userId", userId)
+	logger.Info("Removing peer from map", "peer_id", peer0.ID(), "user_id", userId)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
 	conn.Close()
@@ -169,10 +169,10 @@ func (h *ExtendedService) Notify(chatId int64, data *dto.StoreNotifyDto) error {
 	var usersCount = h.CountPeers(chatId)
 	var chatNotifyDto = chatNotifyDto{}
 	if data != nil {
-		logger.Info("Notifying with data", "chatId", chatId, "streamId", data.StreamId, "login", data.Login)
+		logger.Info("Notifying with data", "chat_id", chatId, "stream_id", data.StreamId, "login", data.Login)
 		chatNotifyDto.Data = data
 	} else {
-		logger.Info("Notifying without data", "chatId", chatId)
+		logger.Info("Notifying without data", "chat_id", chatId)
 	}
 	chatNotifyDto.UsersCount = usersCount
 	chatNotifyDto.ChatId = chatId
@@ -271,7 +271,7 @@ func (h *ExtendedService) GetPeerByPeerId(chatId int64, peerId string) *sfu.Peer
 }
 
 func (h *ExtendedService) KickUser(chatId, userId int64) error {
-	logger.Info("Invoked kick", "chatId", chatId, "userId", userId)
+	logger.Info("Invoked kick", "chat_id", chatId, "user_id", userId)
 
 	metadatas := h.getPeerMetadatas(chatId, userId)
 	for _, metadata := range metadatas {

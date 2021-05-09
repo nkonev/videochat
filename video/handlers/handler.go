@@ -112,7 +112,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 
 	c, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		logger.Error(err, "Unable to upgrade request to websocket", "userId", userId, "chatId", chatId)
+		logger.Error(err, "Unable to upgrade request to websocket", "user_id", userId, "chat_id", chatId)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -318,7 +318,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 				p.Logger.Error(err, "error during sending notification")
 			}
 		} else {
-			logger.Info("Not found peer metadata by", "chatId", fromContext.chatId, "peer_id", bodyStruct.PeerId)
+			logger.Info("Not found peer metadata by", "chat_id", fromContext.chatId, "peer_id", bodyStruct.PeerId)
 		}
 	}
 	default:
