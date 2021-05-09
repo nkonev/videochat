@@ -95,7 +95,8 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 		}
 
 		// TODO move to better place
-		copied.CanEdit = null.BoolFrom(admin)
+		copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
+		copied.CanDelete = null.BoolFrom(admin)
 		copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet)
 		copied.UnreadMessages = unreadMessages
 		for _, participant := range copied.Participants {

@@ -128,9 +128,6 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 		if authResult != nil && authResult.HasRole("ROLE_ADMIN") {
 			chatDto.CanBroadcast = true
 		}
-		chatDto.CanVideoKick = cc.IsAdmin
-		chatDto.CanChangeChatAdmins = cc.IsAdmin
-		chatDto.IsTetATet = cc.TetATet
 
 		for _, participant := range users {
 			if chatDto.IsTetATet && participant.Id != behalfParticipantId {
@@ -196,11 +193,14 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		Name:               c.Title,
 		ParticipantIds:     c.ParticipantsIds,
 		Participants:       users,
-		CanEdit:            null.BoolFrom(c.IsAdmin),
+		CanEdit:            null.BoolFrom(c.IsAdmin && !c.TetATet),
+		CanDelete:          null.BoolFrom(c.IsAdmin),
 		LastUpdateDateTime: c.LastUpdateDateTime,
 		CanLeave:           null.BoolFrom(!c.IsAdmin && !c.TetATet),
 		UnreadMessages:     unreadMessages,
 		IsTetATet: 			c.TetATet,
+		CanVideoKick: c.IsAdmin,
+		CanChangeChatAdmins: c.IsAdmin && !c.TetATet,
 	}
 }
 
@@ -665,10 +665,10 @@ func (ch ChatHandler) TetATet(c echo.Context) error {
 			return err2
 		}
 
-		if err := tx.AddParticipant(userPrincipalDto.UserId, chatId2, false); err != nil {
+		if err := tx.AddParticipant(userPrincipalDto.UserId, chatId2, true); err != nil {
 			return err
 		}
-		if err := tx.AddParticipant(toParticipantId, chatId2, false); err != nil {
+		if err := tx.AddParticipant(toParticipantId, chatId2, true); err != nil {
 			return err
 		}
 

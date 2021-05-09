@@ -12,6 +12,7 @@ type ChatDto struct {
 	ParticipantIds     []int64   `json:"participantIds"`
 	Participants       []*User   `json:"participants"`
 	CanEdit            null.Bool `json:"canEdit"`
+	CanDelete            null.Bool `json:"canDelete"`
 	CanLeave           null.Bool `json:"canLeave"`
 	UnreadMessages     int64     `json:"unreadMessages"`
 	CanBroadcast 	   bool 	 `json:"canBroadcast"`
@@ -20,6 +21,7 @@ type ChatDto struct {
 	IsTetATet			   bool 	 `json:"tetATet"`
 }
 
+// copied view for GET /chat/:id
 type ChatDtoWithAdmin struct {
 	Id                 int64     `json:"id"`
 	Name               string    `json:"name"`
@@ -27,6 +29,7 @@ type ChatDtoWithAdmin struct {
 	ParticipantIds     []int64   `json:"participantIds"`
 	Participants       []*UserWithAdmin   `json:"participants"`
 	CanEdit            null.Bool `json:"canEdit"`
+	CanDelete            null.Bool `json:"canDelete"`
 	CanLeave           null.Bool `json:"canLeave"`
 	UnreadMessages     int64     `json:"unreadMessages"`
 	CanBroadcast 	   bool 	 `json:"canBroadcast"`
