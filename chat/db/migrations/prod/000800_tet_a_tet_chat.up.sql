@@ -1,0 +1,1 @@
+alter table chat add column tet_a_tet boolean not null default false;

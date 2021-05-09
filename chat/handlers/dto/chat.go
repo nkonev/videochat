@@ -17,6 +17,7 @@ type ChatDto struct {
 	CanBroadcast 	   bool 	 `json:"canBroadcast"`
 	CanVideoKick	   bool 	 `json:"canVideoKick"`
 	CanChangeChatAdmins	   bool 	 `json:"canChangeChatAdmins"`
+	IsTetATet			   bool 	 `json:"tetATet"`
 }
 
 type ChatDtoWithAdmin struct {
@@ -31,4 +32,5 @@ type ChatDtoWithAdmin struct {
 	CanBroadcast 	   bool 	 `json:"canBroadcast"`
 	CanVideoKick	   bool 	 `json:"canVideoKick"`
 	CanChangeChatAdmins	   bool 	 `json:"canChangeChatAdmins"`
+	IsTetATet			   bool 	 `json:"tetATet"`
 }

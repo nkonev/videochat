@@ -90,6 +90,9 @@ func (ch ChatHandler) GetChats(c echo.Context) error {
 				user := users[participantId]
 				if user != nil {
 					chatDto.Participants = append(chatDto.Participants, user)
+					if chatDto.IsTetATet && user.Id != userPrincipalDto.UserId {
+						chatDto.Name = user.Login
+					}
 				}
 			}
 		}
@@ -127,6 +130,14 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 		}
 		chatDto.CanVideoKick = cc.IsAdmin
 		chatDto.CanChangeChatAdmins = cc.IsAdmin
+		chatDto.IsTetATet = cc.TetATet
+
+		for _, participant := range users {
+			if chatDto.IsTetATet && participant.Id != behalfParticipantId {
+				chatDto.Name = participant.Login
+			}
+		}
+
 		return chatDto, nil
 	}
 }
@@ -167,6 +178,7 @@ func (ch ChatHandler) GetChat(c echo.Context) error {
 					} else {
 						copied.Admin = admin
 					}
+
 					adminedUsers = append(adminedUsers, copied)
 				}
 			}
@@ -188,6 +200,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		LastUpdateDateTime: c.LastUpdateDateTime,
 		CanLeave:           null.BoolFrom(!c.IsAdmin),
 		UnreadMessages:     unreadMessages,
+		IsTetATet: 			c.TetATet,
 	}
 }
 
@@ -616,4 +629,58 @@ func (ch ChatHandler) CheckAccess(c echo.Context) error {
 	} else {
 		return c.NoContent(http.StatusUnauthorized)
 	}
+}
+
+type TetATetResponse struct {
+	Id int64 `json:"id"`
+}
+
+func (ch ChatHandler) TetATet(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	toParticipantId, err := GetPathParamAsInt64(c, "participantId")
+	if err != nil {
+		GetLogEntry(c.Request()).Errorf("Error during parsing participantId %v", err)
+		return err
+	}
+
+	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
+		exists, chatId, err := tx.IsExistsTetATet(userPrincipalDto.UserId, toParticipantId)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during checking exists tet-a-tet chat %v", err)
+			return err
+		}
+		if exists {
+			return c.JSON(http.StatusAccepted, TetATetResponse{Id: chatId})
+		}
+
+		chatId, err2 := tx.CreateTetATetChat(userPrincipalDto.UserId, toParticipantId)
+		if err2 != nil {
+			GetLogEntry(c.Request()).Errorf("Error during creating tet-a-tet chat %v", err2)
+			return err2
+		}
+		// add admin
+		if err := tx.AddParticipant(userPrincipalDto.UserId, chatId, false); err != nil {
+			return err
+		}
+		if err := tx.AddParticipant(toParticipantId, chatId, false); err != nil {
+			return err
+		}
+
+		responseDto, err3 := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto)
+		if err3 != nil {
+			return err3
+		}
+
+		ch.notificator.NotifyAboutNewChat(c, responseDto, responseDto.ParticipantIds, tx)
+
+		return c.JSON(http.StatusCreated, TetATetResponse{Id: chatId})
+	})
+	if errOuter != nil {
+		GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
+	}
+	return errOuter
 }

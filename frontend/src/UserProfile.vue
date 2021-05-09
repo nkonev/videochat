@@ -1,20 +1,20 @@
 <template>
-    <v-card v-if="currentUser"
+    <v-card v-if="viewableUser"
             class="mr-auto"
             max-width="640"
     >
         <v-list-item three-line>
             <v-list-item-content class="d-flex justify-space-around">
-                <div class="overline mb-4">User profile #{{ currentUser.id }}</div>
-                <v-img v-if="currentUser.avatarBig || currentUser.avatar"
-                       :src="getAvatar(currentUser)"
+                <div class="overline mb-4">User profile #{{ viewableUser.id }}</div>
+                <v-img v-if="viewableUser.avatarBig || viewableUser.avatar"
+                       :src="getAvatar(viewableUser)"
                        :aspect-ratio="16/9"
                        min-width="200"
                        min-height="200"
                 >
                 </v-img>
-                <v-list-item-title class="headline mb-1 mt-2">{{ currentUser.login }}</v-list-item-title>
-                <v-list-item-subtitle v-if="currentUser.email">{{ currentUser.email }}</v-list-item-subtitle>
+                <v-list-item-title class="headline mb-1 mt-2">{{ viewableUser.login }} <v-btn v-if="currentUser.id != viewableUser.id" color="primary" icon @click="tetATet(viewableUser.id)"><v-icon>mdi-message-text-outline</v-icon></v-btn></v-list-item-title>
+                <v-list-item-subtitle v-if="viewableUser.email">{{ viewableUser.email }}</v-list-item-subtitle>
             </v-list-item-content>
         </v-list-item>
 
@@ -22,7 +22,7 @@
         <v-card-title class="title pb-0 pt-1">Bound OAuth2 providers</v-card-title>
         <v-card-actions class="mx-2">
             <v-chip
-                v-if="currentUser.oauth2Identifiers.vkontakteId"
+                v-if="viewableUser.oauth2Identifiers.vkontakteId"
                 min-width="80px"
                 label
                 class="c-btn-vk py-5 mr-2"
@@ -32,7 +32,7 @@
             </v-chip>
 
             <v-chip
-                v-if="currentUser.oauth2Identifiers.facebookId"
+                v-if="viewableUser.oauth2Identifiers.facebookId"
                 min-width="80px"
                 label
                 class="c-btn-fb py-5 mr-2"
@@ -42,7 +42,7 @@
             </v-chip>
 
             <v-chip
-                v-if="currentUser.oauth2Identifiers.googleId"
+                v-if="viewableUser.oauth2Identifiers.googleId"
                 min-width="80px"
                 label
                 class="c-btn-google py-5 mr-2"
@@ -57,6 +57,7 @@
 <script>
 
 import {
+    GET_USER,
     SET_CHAT_ID,
     SET_CHAT_USERS_COUNT,
     SET_SHOW_CHAT_EDIT_BUTTON,
@@ -65,17 +66,20 @@ import {
 } from "./store";
 import axios from "axios";
 import {getCorrectUserAvatar} from "./utils";
+import {chat_name} from "./routes";
+import {mapGetters} from "vuex";
 
 export default {
     data() {
         return {
-            currentUser: null
+            viewableUser: null
         }
     },
     computed: {
         userId() {
             return this.$route.params.id
         },
+        ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
     },
     methods: {
         getAvatar(u) {
@@ -88,15 +92,19 @@ export default {
             }
         },
         loadUser() {
-            this.currentUser = null;
+            this.viewableUser = null;
             axios.get('/api/user/list', {
                 params: {userId: this.userId}
             }).then((response) => {
                 if (response.data.length) {
-                    this.currentUser = response.data[0];
+                    this.viewableUser = response.data[0];
                 }
             })
-
+        },
+        tetATet(withUserId) {
+            axios.put(`/api/chat/tet-a-tet/${withUserId}`).then(response => {
+                this.$router.push(({ name: chat_name, params: { id: response.data.id}}));
+            })
         }
     },
     mounted() {

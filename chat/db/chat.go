@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"time"
@@ -13,6 +14,7 @@ type Chat struct {
 	Id                 int64
 	Title              string
 	LastUpdateDateTime time.Time
+	TetATet            bool
 }
 
 type ChatWithParticipants struct {
@@ -41,14 +43,40 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	return id, &lastUpdateDateTime, nil
 }
 
+func (tx *Tx) CreateTetATetChat(behalfUserId int64, toParticipantId int64) (int64, error) {
+	tetATetChatName := fmt.Sprintf("tet_a_tet_%v_%v", behalfUserId, toParticipantId)
+	res := tx.QueryRow(`INSERT INTO chat (title, tet_a_tet) VALUES ($1, true) RETURNING id`, tetATetChatName)
+	var id int64
+	if err := res.Scan(&id); err != nil {
+		Logger.Errorf("Error during getting chat id %v", err)
+		return 0, err
+	}
+	return id, nil
+}
+
+func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int64, error) {
+	res := tx.QueryRow("select b.chat_id from (select a.count>=2 as exists, a.chat_id from ( (select cp.chat_id, count(cp.user_id) from chat_participant cp join chat ch on ch.id = cp.chat_id where ch.tet_a_tet = true and (cp.user_id = $1 or cp.user_id = $2) group by cp.chat_id)) a) b where b.exists is true;", participant1, participant2)
+	var chatId int64
+	if err := res.Scan(&chatId); err != nil {
+		if err == sql.ErrNoRows {
+			// there were no rows, but otherwise no error occurred
+			return false, 0, nil
+		}
+		Logger.Errorf("Error during getting chat id %v", err)
+		return false, 0, err
+	}
+	return true, chatId, nil
+
+}
+
 func (db *DB) GetChats(participantId int64, limit int, offset int, searchString string) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
 	if searchString == "" {
-		rows, err = db.Query(`SELECT id, title, last_update_date_time FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset);
+		rows, err = db.Query(`SELECT id, title, last_update_date_time, tet_a_tet FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset);
 	} else {
 		strForSearch := "%" + searchString + "%"
-		rows, err = db.Query(`SELECT id, title, last_update_date_time FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND chat.title ILIKE $4 ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset, strForSearch);
+		rows, err = db.Query(`SELECT id, title, last_update_date_time, tet_a_tet FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND chat.title ILIKE $4 ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset, strForSearch);
 	}
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
@@ -58,7 +86,7 @@ func (db *DB) GetChats(participantId int64, limit int, offset int, searchString 
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
-			if err := rows.Scan(&chat.Id, &chat.Title, &chat.LastUpdateDateTime); err != nil {
+			if err := rows.Scan(&chat.Id, &chat.Title, &chat.LastUpdateDateTime, &chat.TetATet); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -163,9 +191,9 @@ func (tx *Tx) EditChat(id int64, newTitle string) (*time.Time, error) {
 }
 
 func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, error) {
-	row := co.QueryRow(`SELECT id, title, last_update_date_time FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
+	row := co.QueryRow(`SELECT id, title, last_update_date_time, tet_a_tet FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
 	chat := Chat{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.LastUpdateDateTime)
+	err := row.Scan(&chat.Id, &chat.Title, &chat.LastUpdateDateTime, &chat.TetATet)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// there were no rows, but otherwise no error occurred
