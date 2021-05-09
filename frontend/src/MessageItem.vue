@@ -2,6 +2,7 @@
     <v-list-item
         dense
         class="pr-1 mr-1 pl-4"
+        :class="{ highlight: highlight }"
     >
         <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">
             <v-list-item-avatar v-if="item.owner && item.owner.avatar">
@@ -10,14 +11,13 @@
         </router-link>
 
         <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
-        <v-container class="ma-0 pa-0 d-flex list-item-head">
-            <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item)}}</router-link><span class="with-space"> at </span>{{getDate(item)}}
-            <v-icon class="mx-1 ml-2" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
-            <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
-        </v-container>
-        <v-list-item-content class="pre-formatted pa-0 ma-0 mt-1 message-item-text" v-html="item.text"></v-list-item-content>
-    </v-list-item-content>
-
+            <v-container class="ma-0 pa-0 d-flex list-item-head">
+                <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item)}}</router-link><span class="with-space"> at </span>{{getDate(item)}}
+                <v-icon class="mx-1 ml-2" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
+                <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
+            </v-container>
+            <v-list-item-content class="pre-formatted pa-0 ma-0 mt-1 message-item-text" v-html="item.text"></v-list-item-content>
+        </v-list-item-content>
     </v-list-item>
 </template>
 
@@ -29,7 +29,7 @@
     import {profile_name} from "./routes";
 
     export default {
-        props: ['item', 'chatId'],
+        props: ['item', 'chatId', 'highlight'],
         methods: {
             onMessageClick(dto) {
                 this.centrifuge.send({payload: { chatId: this.chatId, messageId: dto.id}, "type": "message_read"})
@@ -86,5 +86,8 @@
   }
   .with-space {
       white-space: pre;
+  }
+  .highlight {
+      background #cde3ff
   }
 </style>

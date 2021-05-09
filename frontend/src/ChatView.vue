@@ -10,8 +10,8 @@
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%">
                     <v-list>
                         <template v-for="(item, index) in items">
-                            <v-divider></v-divider>
-                            <MessageItem :key="item.id" :item="item" :chatId="chatId"></MessageItem>
+                            <MessageItem :key="item.id" :item="item" :chatId="chatId" :highlight="item.owner.id === currentUser.id"></MessageItem>
+                            <v-divider :dark="item.owner.id === currentUser.id"></v-divider>
                         </template>
                     </v-list>
                     <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" direction="top" force-use-infinite-wrapper="#messagesScroller" :distance="0">
