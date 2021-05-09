@@ -268,8 +268,7 @@
                         videoElement.muted = false;
                         videoElement.play();
                     }
-                    // Set remoteVideoIsMuted to false so that all future autoplays
-                    // work.
+                    // Set remoteVideoIsMuted to false so that all future autoplays work.
                     this.remoteVideoIsMuted = false;
                 }
             },
