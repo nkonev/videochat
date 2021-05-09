@@ -4,15 +4,13 @@
             Please allow audio autoplay. If not, it will be enabled after unmute.
             <template v-slot:action="{ attrs }">
                 <v-btn
-                    text
+                    light
                     v-bind="attrs"
                     @click="onClickPermitted()"
-                    class="blink-btn"
                 >
                     Allow
                 </v-btn>
-                <v-btn text v-bind="attrs" @click="showPermissionAsk = false">Close</v-btn>
-
+                <v-btn icon v-bind="attrs" @click="showPermissionAsk = false"><v-icon color="white">mdi-close-circle</v-icon></v-btn>
             </template>
         </v-snackbar>
 
@@ -481,12 +479,4 @@
         height 100%
     }
 
-    .blink-btn {
-        animation: blink 0.5s;
-        animation-iteration-count: 20;
-    }
-
-    @keyframes blink {
-        50% { opacity: 10% }
-    }
 </style>
