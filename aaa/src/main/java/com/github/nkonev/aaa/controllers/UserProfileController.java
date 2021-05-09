@@ -148,7 +148,7 @@ public class UserProfileController {
         return result;
     }
 
-    @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+"/{userId}")
+    @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.USER_ID)
     public com.github.nkonev.aaa.dto.UserAccountDTO getUser(
             @PathVariable(value = "userId") Long userId,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
