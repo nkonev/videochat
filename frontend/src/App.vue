@@ -78,6 +78,8 @@
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
             <v-btn v-if="showHangButton && !shareScreen && $vuetify.breakpoint.smAndUp" icon @click="shareScreenStart()"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
             <v-btn v-if="showHangButton && shareScreen" icon @click="shareScreenStop()"><v-icon>mdi-stop</v-icon></v-btn>
+            <v-btn v-if="shouldDisplayAudioMute()" icon @click="toggleMuteAudio()"><v-icon>mdi-microphone</v-icon></v-btn>
+            <v-btn v-if="shouldDisplayAudioUnmute()" icon @click="toggleMuteAudio()"><v-icon>mdi-microphone-off</v-icon></v-btn>
             <v-badge
                 v-if="showCallButton || showHangButton"
                 :content="videoChatUsersCount"
@@ -331,10 +333,10 @@
                 bus.$emit(VIDEO_START_MUTING, !this.videoMuted)
             },
             shouldDisplayAudioUnmute() {
-                return this.isVideoRoute() && this.audioMuted;
+                return this.isVideoRoute() && this.audioMuted && this.currentUser != null;
             },
             shouldDisplayAudioMute() {
-                return this.isVideoRoute() && !this.audioMuted;
+                return this.isVideoRoute() && !this.audioMuted && this.currentUser != null;
             },
             shouldDisplayVideoUnmute() {
                 return !this.shareScreen && this.isVideoRoute() && this.videoMuted;
