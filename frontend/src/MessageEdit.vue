@@ -27,7 +27,7 @@
                     <v-btn color="primary" @click="sendMessageToChat" small><v-icon color="white">mdi-send</v-icon></v-btn>
                 </div>
             </div>
-            <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#sendButtonContainer'" top v-model="showTooltip">
+            <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#sendButtonContainer'" top v-model="showTooltip" :key="tooltipKey">
                 <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} is writing...</span>
                 <span v-else>{{broadcastMessage}}</span>
             </v-tooltip>
@@ -72,7 +72,8 @@
                 },
                 showTooltip: true,
                 sendBroadcast: false,
-                broadcastMessage: null
+                broadcastMessage: null,
+                tooltipKey: 0
             }
         },
         methods: {
@@ -112,7 +113,7 @@
             },
 
             onUserTyping(data) {
-                console.log("OnUserTyping", data);
+                console.debug("OnUserTyping", data);
 
                 if (!this.sendBroadcast && this.currentUser.id == data.participantId) {
                     console.log("Skipping myself typing notifications");
@@ -131,6 +132,7 @@
                 console.log("onUserBroadcast", dto);
                 const stripped = dto.text;
                 if (stripped && stripped.length > 0) {
+                    this.tooltipKey++;
                     this.showTooltip = true;
                     this.broadcastMessage = dto.text;
                 } else {
@@ -161,6 +163,7 @@
         },
         created(){
             this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});
+            this.notifyAboutBroadcast = debounce(this.notifyAboutBroadcast, 100, {leading:true, trailing:true});
         },
         watch: {
             'editMessageDto.text': {
