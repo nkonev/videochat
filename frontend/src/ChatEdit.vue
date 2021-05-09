@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" persistent>
             <v-card>
-                <v-card-title v-if="isEdit()">Edit chat #{{editChatId}}</v-card-title>
+                <v-card-title v-if="!isNew">Edit chat #{{editChatId}}</v-card-title>
                 <v-card-title v-else>Create chat</v-card-title>
 
                 <v-container fluid>
@@ -62,7 +62,7 @@
 
                 <v-card-actions class="pa-4">
                     <template>
-                        <v-btn color="primary" class="mr-4" @click="saveChat" v-if="isEdit()">Edit</v-btn>
+                        <v-btn color="primary" class="mr-4" @click="saveChat" v-if="!isNew">Edit</v-btn>
                         <v-btn color="primary" class="mr-4" @click="saveChat" v-else>Create</v-btn>
                     </template>
                     <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
@@ -148,13 +148,6 @@
                         this.people = [...this.people, ...response.data.data];
                     })
                     .finally(() => (this.isLoading = false))
-            },
-            isEdit() {
-                if (this.editChatId) {
-                    return true
-                } else {
-                    return false
-                }
             },
             saveChat() {
                 const valid = this.validate();
