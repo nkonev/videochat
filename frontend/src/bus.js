@@ -6,6 +6,7 @@ export const CHAT_ADD = "chatAdd";
 export const CHAT_EDITED = "chatEdited";
 export const CHAT_DELETED = "chatDeleted";
 export const OPEN_CHAT_EDIT = "openChatEdit";
+export const OPEN_FIND_USER = "openFindUser";
 export const OPEN_SIMPLE_MODAL = "openSimpleModal";
 export const CLOSE_SIMPLE_MODAL = "closeSimpleModal";
 export const MESSAGE_ADD = "messageAdd";

@@ -160,6 +160,7 @@
                 <SimpleModal/>
                 <PermissionsWarning/>
                 <ChooseAvatar/>
+                <FindUser/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -193,8 +194,13 @@
         OPEN_CHAT_EDIT,
         OPEN_INFO_DIALOG,
         OPEN_PERMISSIONS_WARNING_MODAL,
-        SHARE_SCREEN_START, SHARE_SCREEN_STOP,
-        VIDEO_CALL_INVITED, REFRESH_ON_WEBSOCKET_RESTORED, REQUEST_CHANGE_VIDEO_RESOLUTION, VIDEO_RESOLUTION_CHANGED,
+        SHARE_SCREEN_START,
+        SHARE_SCREEN_STOP,
+        VIDEO_CALL_INVITED,
+        REFRESH_ON_WEBSOCKET_RESTORED,
+        REQUEST_CHANGE_VIDEO_RESOLUTION,
+        VIDEO_RESOLUTION_CHANGED,
+        OPEN_FIND_USER,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import debounce from "lodash/debounce";
@@ -204,6 +210,7 @@
     import {getCorrectUserAvatar} from "./utils";
     import ChatParticipants from "./ChatParticipants";
     import PermissionsWarning from "./PermissionsWarning";
+    import FindUser from "./FindUser";
 
     const audio = new Audio("/call.mp3");
 
@@ -217,6 +224,7 @@
                     { title: 'Mute video', icon: 'mdi-video', color: 'primary', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoMute},
 
                     { title: 'Chats', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
+                    { title: 'Find user', icon: 'mdi-magnify', clickFunction: this.findUser, requireAuthenticated: true},
                     { title: 'New chat', icon: 'mdi-plus-circle-outline', clickFunction: this.createChat, requireAuthenticated: true},
                     { title: 'Edit chat', icon: 'mdi-lead-pencil', clickFunction: this.editChat, requireAuthenticated: true, displayCondition: this.shouldDisplayEditChat},
                     { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
@@ -239,7 +247,8 @@
             SimpleModal,
             ChooseAvatar,
             ChatParticipants,
-            PermissionsWarning
+            PermissionsWarning,
+            FindUser
         },
         methods:{
             toggleLeftNavigation() {
@@ -325,6 +334,9 @@
             },
             isVideoRoute() {
                 return this.$route.name == videochat_name
+            },
+            findUser() {
+                bus.$emit(OPEN_FIND_USER)
             },
             toggleMuteAudio() {
                 bus.$emit(AUDIO_START_MUTING, !this.audioMuted)
