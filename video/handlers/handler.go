@@ -14,7 +14,6 @@ import (
 	"github.com/sourcegraph/jsonrpc2"
 	websocketjsonrpc2 "github.com/sourcegraph/jsonrpc2/websocket"
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"nkonev.name/video/config"
 	"strings"
@@ -204,52 +203,6 @@ type StoreNotifyDto struct {
 	AudioMute bool   `json:"audioMute"`
 }
 
-func (h *Handler) StoreInfoAndNotifyChatParticipants(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	chatId, userId, err := parseChatIdAndUserId(vars["chatId"], r.Header.Get("X-Auth-UserId"))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	if ok, err := h.service.checkAccess(userId, chatId); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	} else if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	bodyBytes, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		logger.Error(err, "Unable to read body to []byte")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if len(bodyBytes) > 0 {
-		logger.Info("Reading optional body")
-		var bodyStruct StoreNotifyDto
-		err := json.Unmarshal(bodyBytes, &bodyStruct)
-		if err != nil {
-			logger.Error(err, "Unable to read body's []byte to StoreNotifyDto")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		if sfuPeer := h.service.getPeerByPeerId(chatId, bodyStruct.PeerId); sfuPeer != nil {
-			h.service.storeToIndex(sfuPeer, userId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
-			if err := h.service.notify(chatId, &bodyStruct); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-		} else {
-			logger.Info("Not found peer metadata by", "chatId", chatId, "peer_id", bodyStruct.PeerId)
-		}
-	} else {
-		if err := h.service.notify(chatId, nil); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	}
-
-}
-
 func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	marshal, err := json.Marshal(h.conf.FrontendConfig)
@@ -356,6 +309,22 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 		}
 		_ = conn.Reply(ctx, req.ID, resp)
 
+	case "putUserData": {
+		var bodyStruct StoreNotifyDto
+		err := json.Unmarshal(*req.Params, &bodyStruct)
+		if err != nil {
+			p.Logger.Error(err, "error parsing StoreNotifyDto request")
+			break
+		}
+		if sfuPeer := p.service.getPeerByPeerId(fromContext.chatId, bodyStruct.PeerId); sfuPeer != nil {
+			p.service.storeToIndex(sfuPeer, fromContext.chatId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+			if err := p.service.notify(fromContext.chatId, &bodyStruct); err != nil {
+				p.Logger.Error(err, "error during sending notification")
+			}
+		} else {
+			logger.Info("Not found peer metadata by", "chatId", fromContext.chatId, "peer_id", bodyStruct.PeerId)
+		}
+	}
 	default:
 		p.JSONSignal.Handle(ctx, conn, req)
 	}

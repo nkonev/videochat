@@ -247,9 +247,7 @@
                     videoMute: this.videoMuted, // from store
                     audioMute: this.audioMuted
                 };
-                axios.put(`/api/video/${this.chatId}/notify`, toSend).catch(error => {
-                    console.log(error.response)
-                })
+                this.signalLocal.notify("putUserData", toSend)
             },
             notifyAboutJoining() {
                 if (this.chatId) {
