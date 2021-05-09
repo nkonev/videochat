@@ -349,8 +349,8 @@
                       this.tryRestartVideoProcess();
                     })
                     .then(config => {
-                    this.joinSession(config);
-                })
+                        this.joinSession(config);
+                    })
             },
             tryRestartVideoProcess() {
               setTimeout(() => {
