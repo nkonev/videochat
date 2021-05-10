@@ -381,13 +381,15 @@
                 shareScreen: GET_SHARE_SCREEN,
                 videoChatUsersCount: GET_VIDEO_CHAT_USERS_COUNT,
                 showChatEditButton: GET_SHOW_CHAT_EDIT_BUTTON,
-                showSearch: GET_SHOW_SEARCH,
                 chatId: GET_CHAT_ID,
                 title: GET_TITLE,
                 chatUsersCount: GET_CHAT_USERS_COUNT,
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return getCorrectUserAvatar(this.currentUser.avatar);
+            },
+            showSearch() {
+                return false
             },
             searchChatString: {
                 get() {
