@@ -366,7 +366,7 @@
             }
         },
         created() {
-            this.onResizedListener = debounce(this.onResizedListener, 50, {leading:false, trailing:true});
+            this.onResizedListener = debounce(this.onResizedListener, 200, {leading:true, trailing:true});
         },
         mounted() {
             this.splitpanesHeight = calcSplitpanesHeight();
