@@ -111,9 +111,6 @@
                 </template>
                 <span>Websocket is not connected</span>
             </v-tooltip>
-            <v-card light v-if="showSearch">
-                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchChatString" clearable clear-icon="mdi-close-circle" placeholder="Find chat"></v-text-field>
-            </v-card>
         </v-app-bar>
 
 
@@ -176,14 +173,14 @@
     import {
         FETCH_USER_PROFILE, GET_CHAT_ID, GET_CHAT_USERS_COUNT,
         GET_MUTE_AUDIO,
-        GET_MUTE_VIDEO, GET_SEARCH_STRING,
+        GET_MUTE_VIDEO,
         GET_SHARE_SCREEN,
         GET_SHOW_CALL_BUTTON,
         GET_SHOW_CHAT_EDIT_BUTTON,
         GET_SHOW_HANG_BUTTON,
-        GET_SHOW_SEARCH, GET_TITLE,
+        GET_TITLE,
         GET_USER,
-        GET_VIDEO_CHAT_USERS_COUNT, SET_SEARCH_STRING,
+        GET_VIDEO_CHAT_USERS_COUNT,
         UNSET_USER
     } from "./store";
     import bus, {
@@ -276,9 +273,6 @@
             },
             editChat() {
                 bus.$emit(OPEN_CHAT_EDIT, this.chatId);
-            },
-            doSearch(searchString) {
-                this.$store.commit(SET_SEARCH_STRING, searchString);
             },
             getAppBarItems(){
                 return this.appBarItems.filter((value, index) => {
@@ -388,23 +382,11 @@
             currentUserAvatar() {
                 return getCorrectUserAvatar(this.currentUser.avatar);
             },
-            showSearch() {
-                return false
-            },
-            searchChatString: {
-                get() {
-                    return this.$store.getters[GET_SEARCH_STRING];
-                },
-                set(newValue) {
-                    this.doSearch(newValue);
-                }
-            }
         },
         mounted() {
             this.$store.dispatch(FETCH_USER_PROFILE);
         },
         created() {
-            this.doSearch = debounce(this.doSearch, 700);
             bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             bus.$on(VIDEO_RESOLUTION_CHANGED, this.onVideoResolutionChanged)

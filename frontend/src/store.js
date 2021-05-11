@@ -9,9 +9,6 @@ export const GET_USER = 'getUser';
 export const SET_USER = 'setUser';
 export const UNSET_USER = 'unsetUser';
 export const FETCH_USER_PROFILE = 'fetchUserProfile';
-export const GET_SEARCH_STRING = 'getSearchString';
-export const SET_SEARCH_STRING = 'setSearchString';
-export const CHANGE_SEARCH_STRING = 'changeSearchString';
 export const GET_MUTE_VIDEO = 'getMuteVideo';
 export const SET_MUTE_VIDEO = 'setMuteVideo';
 export const GET_MUTE_AUDIO = 'getMuteAudio';
@@ -39,7 +36,6 @@ export const SET_SHOW_CHAT_EDIT_BUTTON = 'setChatEditButton';
 const store = new Vuex.Store({
     state: {
         currentUser: null,
-        searchString: "",
         muteVideo: false,
         muteAudio: audioMuteDefault,
         title: "",
@@ -59,9 +55,6 @@ const store = new Vuex.Store({
         },
         [UNSET_USER](state) {
             state.currentUser = null;
-        },
-        [SET_SEARCH_STRING](state, payload) {
-            state.searchString = payload;
         },
         [SET_MUTE_VIDEO](state, payload) {
             state.muteVideo = payload;
@@ -100,9 +93,6 @@ const store = new Vuex.Store({
     getters: {
         [GET_USER](state) {
             return state.currentUser;
-        },
-        [GET_SEARCH_STRING](state) {
-            return state.searchString;
         },
         [GET_MUTE_VIDEO](state) {
             return state.muteVideo;

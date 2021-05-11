@@ -33,19 +33,19 @@
 </template>
 
 <script>
-import bus, {
-    CHAT_ADD,
-    CHAT_EDITED,
-    CHAT_DELETED,
-    LOGGED_IN,
-    OPEN_CHAT_EDIT,
-    OPEN_SIMPLE_MODAL,
-    UNREAD_MESSAGES_CHANGED,
-    USER_PROFILE_CHANGED,
-    CLOSE_SIMPLE_MODAL,
-    REFRESH_ON_WEBSOCKET_RESTORED,
-    VIDEO_CALL_CHANGED
-} from "./bus";
+    import bus, {
+        CHAT_ADD,
+        CHAT_EDITED,
+        CHAT_DELETED,
+        LOGGED_IN,
+        OPEN_CHAT_EDIT,
+        OPEN_SIMPLE_MODAL,
+        UNREAD_MESSAGES_CHANGED,
+        USER_PROFILE_CHANGED,
+        CLOSE_SIMPLE_MODAL,
+        REFRESH_ON_WEBSOCKET_RESTORED,
+        VIDEO_CALL_CHANGED
+    } from "./bus";
     import {chat_name} from "./routes";
     import infinityListMixin, {
         findIndex,
@@ -55,15 +55,13 @@ import bus, {
         moveToFirstPosition
     } from "./InfinityListMixin";
     import axios from "axios";
-    import {mapGetters} from 'vuex'
-import {
-    GET_SEARCH_STRING,
-    SET_CHAT_ID,
-    SET_CHAT_USERS_COUNT,
-    SET_SHOW_CHAT_EDIT_BUTTON,
-    SET_SHOW_SEARCH,
-    SET_TITLE
-} from "./store";
+    import {
+        SET_CHAT_ID,
+        SET_CHAT_USERS_COUNT,
+        SET_SHOW_CHAT_EDIT_BUTTON,
+        SET_SHOW_SEARCH,
+        SET_TITLE
+    } from "./store";
 
     export default {
         mixins: [infinityListMixin()],
@@ -118,7 +116,6 @@ import {
                     params: {
                         page: this.page,
                         size: pageSize,
-                        searchString: this.$store.getters[GET_SEARCH_STRING]
                     },
                 }).then(({ data }) => {
                     const list = data.data;
@@ -209,18 +206,8 @@ import {
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
-
-            this.unwatch = this.$store.watch(
-                (state, getters) => getters[GET_SEARCH_STRING],
-                (newValue, oldValue) => {
-                    console.log(`Updating search string from ${oldValue} to ${newValue}`);
-                    this.searchStringChanged();
-                },
-            );
         },
         destroyed() {
-            this.unwatch();
-
             bus.$off(LOGGED_IN, this.reloadItems);
             bus.$off(CHAT_ADD, this.addItem);
             bus.$off(CHAT_EDITED, this.changeItem);
