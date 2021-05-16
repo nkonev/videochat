@@ -17,9 +17,11 @@
                                     bordered
                                     :value="item.online"
                                 >
-                                    <v-list-item-avatar class="ma-0 pa-0">
-                                        <v-img :src="item.avatar"></v-img>
-                                    </v-list-item-avatar>
+                                    <router-link :to="{ name: 'profileUser', params: { id: item.id }}">
+                                        <v-list-item-avatar class="ma-0 pa-0">
+                                            <v-img :src="item.avatar"></v-img>
+                                        </v-list-item-avatar>
+                                    </router-link>
                                 </v-badge>
                                 <v-list-item-content class="ml-4">
                                     <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> (you)</template></v-list-item-title>
@@ -275,6 +277,9 @@
             search (searchString) {
               this.doNewSearch(searchString);
             },
+            '$route' (to, from) {
+                this.closeModal();
+            }
         },
 
         created() {
