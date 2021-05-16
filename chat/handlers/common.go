@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/araddon/dateparse"
 	"github.com/centrifugal/centrifuge"
@@ -125,6 +126,11 @@ func ConfigureAuthMiddleware() AuthMiddleware {
 	}
 }
 
+type ExtendedCreds struct {
+	Login string `json:"login"`
+	SessionId string `json:"sessionId"`
+}
+
 func CentrifugeAuthMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authResult, _, err := authorize(r)
@@ -135,12 +141,20 @@ func CentrifugeAuthMiddleware(h http.Handler) http.Handler {
 			Logger.Errorf("Not authenticated centrifuge request")
 			return
 		} else {
+			marshal, err := json.Marshal(authResult)
+			if err != nil {
+				Logger.Errorf("Unable to serialize authResult %v in centrifuge auth middleware", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
 			ctx := r.Context()
 			newCtx := centrifuge.SetCredentials(ctx, &centrifuge.Credentials{
 				UserID:   fmt.Sprintf("%v", authResult.UserId),
 				ExpireAt: authResult.ExpiresAt,
-				Info:     []byte(fmt.Sprintf("{\"login\": \"%v\"}", authResult.UserLogin)),
+				Info:     marshal,
 			})
+
 			r = r.WithContext(newCtx)
 			h.ServeHTTP(w, r)
 		}

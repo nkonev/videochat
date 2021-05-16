@@ -23,7 +23,7 @@
                 <v-list-item-subtitle v-if="viewableUser.email">{{ viewableUser.email }}</v-list-item-subtitle>
 
                 <v-container class="ma-0 pa-0">
-                    <v-btn v-if="currentUser.id != viewableUser.id" color="primary" @click="tetATet(viewableUser.id)">
+                    <v-btn v-if="isNotMyself()" color="primary" @click="tetATet(viewableUser.id)">
                         <v-icon>mdi-message-text-outline</v-icon>
                         Open chat
                     </v-btn>
@@ -82,12 +82,14 @@ import {getCorrectUserAvatar} from "./utils";
 import {chat_name} from "./routes";
 import {mapGetters} from "vuex";
 import bus, {USER_ONLINE_CHANGED} from "./bus";
+import subscriptionMixin from "./subscriptionMixin";
 
 export default {
+    mixins: [subscriptionMixin()],
     data() {
         return {
             viewableUser: null,
-            online: false
+            online: false,
         }
     },
     computed: {
@@ -106,12 +108,20 @@ export default {
                 return null
             }
         },
+        isNotMyself() {
+            return this.currentUser && this.currentUser.id != this.viewableUser.id
+        },
+        subscribeToOnline() {
+            return axios.put('/api/chat/subscription/online', {userIds: [this.viewableUser.id]}).then(value => {
+                this.processSubscriptionResponse(value);
+            })
+        },
         loadUser() {
             this.viewableUser = null;
             axios.get(`/api/user/${this.userId}`).then((response) => {
                 this.viewableUser = response.data;
             }).then(() => {
-                axios.put('/api/chat/subscription/online', {userIds: [this.viewableUser.id]})
+                this.subscribeToOnline()
             })
         },
         tetATet(withUserId) {
@@ -138,8 +148,10 @@ export default {
     },
     created() {
         bus.$on(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
+        this.initSubscription(this.subscribeToOnline)
     },
     destroyed() {
+        this.closeSubscription();
         axios.put('/api/chat/subscription/online', {userIds: []})
         bus.$off(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
     }

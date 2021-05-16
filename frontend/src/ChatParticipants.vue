@@ -114,6 +114,7 @@
     import {GET_USER} from "./store";
     import {videochat_name} from "./routes";
     import debounce from "lodash/debounce";
+    import subscriptionMixin from "./subscriptionMixin";
 
     const dtoFactory = ()=>{
         return {
@@ -125,6 +126,7 @@
     };
 
     export default {
+        mixins: [subscriptionMixin()],
         data () {
             return {
                 show: false,
@@ -151,7 +153,12 @@
                 } else {
                     this.dto = dtoFactory();
                 }
-
+                this.initSubscription(this.subscribeToOnline)
+            },
+            subscribeToOnline() {
+                return axios.put('/api/chat/subscription/online', {userIds: this.dto.participantIds}).then(value => {
+                    this.processSubscriptionResponse(value);
+                })
             },
             loadData() {
                 console.log("Getting info about chat id", this.chatId);
@@ -164,8 +171,7 @@
                             item.online = false;
                         })
                     }).then(() => {
-                        const usersToCheckOnline = this.dto.participants.map(value => value.id)
-                        axios.put('/api/chat/subscription/online', {userIds: usersToCheckOnline})
+                        this.subscribeToOnline();
                     })
             },
             changeChatAdmin(item) {
@@ -194,6 +200,7 @@
                 axios.delete(`/api/chat/${this.dto.id}/user/${participant.id}`)
             },
             closeModal() {
+                this.closeSubscription();
                 this.show = false;
                 this.chatId = null;
                 this.newParticipantIds = [];

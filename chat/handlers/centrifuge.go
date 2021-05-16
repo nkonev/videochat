@@ -11,6 +11,7 @@ import (
 	"github.com/m7shapan/njson"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
+	"nkonev.name/chat/auth"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
@@ -162,6 +163,13 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 			Logger.Errorf("Unable to parse userId from %v", creds.UserID)
 			return
 		}
+		var authResult = auth.AuthResult{}
+		err = json.Unmarshal(creds.Info, &authResult)
+		if err != nil {
+			Logger.Errorf("Unable to parse authResult from creds: %v", err)
+			return
+		}
+
 		onlineStorage.PutUserOnline(userId)
 		notifyAboutOnlineInChat(node, userId, true)
 
@@ -211,7 +219,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 		// channel. But in our simple chat app we allow everyone to publish into
 		// any channel.
 		client.On().Publish(func(e centrifuge.PublishEvent) centrifuge.PublishReply {
-			Logger.Printf("client %v publishes into channel %s: %s", creds.UserID, e.Channel, string(e.Data))
+			Logger.Printf("User %v publishes into channel %s: %s", creds.UserID, e.Channel, string(e.Data))
 			message, err := modifyMessage(e.Data, e.Info.GetUser(), e.Info.GetClient())
 			if err != nil {
 				Logger.Errorf("Error during modifyMessage %v", err)
@@ -222,7 +230,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 
 		// Set Disconnect Handler to react on client disconnect events.
 		client.On().Disconnect(func(e centrifuge.DisconnectEvent) centrifuge.DisconnectReply {
-			Logger.Printf("client %v disconnected", creds.UserID)
+			Logger.Printf("Centrifuge user %v disconnected", creds.UserID)
 			onlineStorage.RemoveUserOnline(userId)
 			notifyAboutOnlineInChat(node, userId, false)
 			return centrifuge.DisconnectReply{}
@@ -230,11 +238,13 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 
 		client.On().Refresh(func(event centrifuge.RefreshEvent) centrifuge.RefreshReply {
 			onlineStorage.PutUserOnline(userId)
+			Logger.Infof("Refreshing centrifuge session for user %v", userId)
 			return centrifuge.RefreshReply{}
 		})
 
 		client.On().SubRefresh(func(event centrifuge.SubRefreshEvent) centrifuge.SubRefreshReply {
 			onlineStorage.PutUserOnline(userId)
+			Logger.Infof("SubRefreshing centrifuge session for user %v", userId)
 			return centrifuge.SubRefreshReply{}
 		})
 
@@ -271,7 +281,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 		transportName := client.Transport().Name()
 		// In our example clients connect with JSON protocol but it can also be Protobuf.
 		transportEncoding := client.Transport().Encoding()
-		Logger.Printf("client %v connected via %s (%s)", creds.UserID, transportName, transportEncoding)
+		Logger.Printf("Centrifuge user %v connected via %s (%s)", creds.UserID, transportName, transportEncoding)
 	})
 
 	lc.Append(fx.Hook{
@@ -365,19 +375,31 @@ func notifyAboutOnlineInChat(node *centrifuge.Node, userId int64, online bool) {
 	}
 }
 
-func periodicNotifyAboutOnline(node *centrifuge.Node, dbs db.DB, onlineStorage redis.OnlineStorage, subscriptionService SubscribeHandler) {
+func periodicNotifyAboutOnline(node *centrifuge.Node, onlineStorage redis.OnlineStorage, subscriptionService SubscribeHandler) {
 	subscriptions, err := subscriptionService.GetAllUserOnlineSubscriptions()
 	if err != nil {
 		Logger.Errorf("Error during getting subscriptions: %v", err)
 		return
 	}
-	Logger.Infof("Found %v user online subscriptions", len(subscriptions))
-	for _, subscriptionId := range subscriptions {
-		userIdStr := GetUserIdFromSubscriptionIdAsString(subscriptionId)
-		participantChannel := node.PersonalChannel(userIdStr)
+	Logger.Debugf("Found %v user online subscriptions", len(subscriptions))
 
-		subscribedUsersIds, err := subscriptionService.GetUserOnlineSubscribedUsers(subscriptionId)
+	var alreadySent map[int64]bool = map[int64]bool{}
+
+	for _, subscriptionId := range subscriptions {
+		userId, err := GetUserIdFromSubscriptionId(subscriptionId)
 		if err != nil {
+			Logger.Errorf("Error during parsing user id")
+			continue
+		}
+		if alreadySent[userId] == true {
+			Logger.Debugf("Skipping already sent")
+			continue
+		}
+		alreadySent[userId] = true
+		participantChannel := node.PersonalChannel(utils.Int64ToString(userId))
+
+		subscribedUsersIds, err2 := subscriptionService.GetUserOnlineSubscribedUsers(subscriptionId)
+		if err2 != nil {
 			Logger.Errorf("Error during getting usersIds")
 			continue
 		}
@@ -411,15 +433,14 @@ func periodicNotifyAboutOnline(node *centrifuge.Node, dbs db.DB, onlineStorage r
 	}
 }
 
-func ScheduleNotifications(node *centrifuge.Node, dbs db.DB, onlineStorage redis.OnlineStorage, subscriptionService SubscribeHandler) *chan struct{} {
+func ScheduleNotifications(node *centrifuge.Node, onlineStorage redis.OnlineStorage, subscriptionService SubscribeHandler) *chan struct{} {
 	ticker := time.NewTicker(viper.GetDuration("online.notification.period"))
 	quit := make(chan struct{})
 	go func() {
 		for {
 			select {
 			case <- ticker.C:
-				Logger.Info("Invoked chat user online periodic notificator")
-				periodicNotifyAboutOnline(node, dbs, onlineStorage, subscriptionService)
+				periodicNotifyAboutOnline(node, onlineStorage, subscriptionService)
 			case <- quit:
 				ticker.Stop()
 				return

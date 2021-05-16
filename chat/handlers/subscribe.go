@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gomodule/redigo/redis"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
@@ -28,9 +29,13 @@ type SubscribeRequestDto struct {
 
 const prefix = "subscription:user:online"
 
-func GetUserIdFromSubscriptionIdAsString(subscriptionId string) (string) {
+func GetUserIdFromSubscriptionId(subscriptionId string) (int64, error) {
 	split := strings.Split(subscriptionId, ":")
-	return split[3]
+	return utils.ParseInt64(split[3])
+}
+
+type SubscriptionResponse struct {
+	Ttl int64 `json:"ttl"` // in seconds
 }
 
 func (ch SubscribeHandler) PutSubscription(c echo.Context) error {
@@ -48,7 +53,7 @@ func (ch SubscribeHandler) PutSubscription(c echo.Context) error {
 	conn := ch.redis.Get()
 	defer conn.Close()
 
-	subscriptionId := fmt.Sprintf("%v:%v:%v", prefix, userPrincipalDto.UserId, userPrincipalDto.SessionId)
+	subscriptionId := buildSubscriptionId(userPrincipalDto.UserId, userPrincipalDto.SessionId)
 	if len(bindTo.Users) == 0 {
 		_, err := conn.Do("DEL", subscriptionId)
 		if err != nil {
@@ -59,6 +64,11 @@ func (ch SubscribeHandler) PutSubscription(c echo.Context) error {
 		}
 
 	} else {
+		ttl := viper.GetInt64("subscription.user.online.ttl") // seconds
+		if ttl == 0 {
+			ttl = 30
+		}
+
 		args := []interface{}{subscriptionId}
 		for _, x := range bindTo.Users {
 			args = append(args, x)
@@ -68,9 +78,19 @@ func (ch SubscribeHandler) PutSubscription(c echo.Context) error {
 			Logger.Errorf("Error during putting to user online subscription, %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		} else {
-			return c.NoContent(http.StatusAccepted)
+			_, err := conn.Do("EXPIRE", subscriptionId, ttl)
+			if err != nil {
+				Logger.Errorf("Error during setting expiration, %v", err)
+				return c.NoContent(http.StatusInternalServerError)
+			}
+			return c.JSON(http.StatusAccepted, SubscriptionResponse{Ttl: ttl})
 		}
 	}
+}
+
+func buildSubscriptionId(userId int64, sessionId string) string {
+	subscriptionId := fmt.Sprintf("%v:%v:%v", prefix, userId, sessionId)
+	return subscriptionId
 }
 
 // e. g. get all sessions which have subscription
