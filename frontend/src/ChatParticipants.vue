@@ -109,7 +109,14 @@
 
 <script>
     import axios from "axios";
-    import bus, {CHAT_DELETED, CHAT_EDITED, OPEN_INFO_DIALOG, USER_ONLINE_CHANGED} from "./bus";
+    import bus, {
+        CHAT_DELETED,
+        CHAT_EDITED,
+        CLOSE_SIMPLE_MODAL,
+        OPEN_INFO_DIALOG,
+        OPEN_SIMPLE_MODAL,
+        USER_ONLINE_CHANGED
+    } from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import {videochat_name} from "./routes";
@@ -196,8 +203,17 @@
                 }
             },
             deleteParticipant(participant) {
-                console.log("Deleting participant", participant);
-                axios.delete(`/api/chat/${this.dto.id}/user/${participant.id}`)
+                bus.$emit(OPEN_SIMPLE_MODAL, {
+                    buttonName: 'Remove',
+                    title: `Remove participant #${participant.id}`,
+                    text: `Are you sure to remove user #${participant.id} '${participant.login}' from this chat ?`,
+                    actionFunction: ()=> {
+                        axios.delete(`/api/chat/${this.dto.id}/user/${participant.id}`)
+                            .then(() => {
+                                bus.$emit(CLOSE_SIMPLE_MODAL);
+                            })
+                    }
+                });
             },
             closeModal() {
                 this.closeSubscription();
