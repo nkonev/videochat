@@ -88,7 +88,7 @@ func modifyMessage(msg []byte, originatorUserId string, originatorClientId strin
 	return json.Marshal(v)
 }
 
-func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineStorage) *centrifuge.Node {
+func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineStorage, subscriptionService SubscribeHandler) *centrifuge.Node {
 	// We use default config here as starting point. Default config contains
 	// reasonable values for available options.
 	cfg := centrifuge.DefaultConfig
@@ -163,7 +163,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 			return
 		}
 		onlineStorage.PutUserOnline(userId)
-		notifyAboutOnline(node, userId, true)
+		notifyAboutOnlineInChat(node, userId, true)
 
 		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
 			clientInfo, presenceDuration, err := createPresence(creds, client)
@@ -171,16 +171,16 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 				Logger.Errorf("Error during creating presence %v", err)
 				return centrifuge.SubscribeReply{Error: centrifuge.ErrorInternal}
 			}
-			channelId, channelName, err := getChannelId(e.Channel)
+			chatId, channelName, err := getChatId(e.Channel)
 			if err != nil {
 				Logger.Errorf("Error getting channel id %v", err)
 				return centrifuge.SubscribeReply{Error: centrifuge.ErrorInternal}
 			}
-			Logger.Infof("Get channel id %v, channel name %v", channelId, channelName)
+			Logger.Infof("Get channel id %v, channel name %v", chatId, channelName)
 
-			err = checkPermissions(dbs, creds.UserID, channelId, channelName)
+			err = checkPermissions(dbs, creds.UserID, chatId, channelName)
 			if err != nil {
-				Logger.Errorf("Error during checking permissions userId %v, channelId %v, channelName %v,", creds.UserID, channelId, channelName)
+				Logger.Errorf("Error during checking permissions userId %v, channelId %v, channelName %v,", creds.UserID, chatId, channelName)
 				return centrifuge.SubscribeReply{Error: centrifuge.ErrorPermissionDenied}
 			}
 
@@ -224,7 +224,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 		client.On().Disconnect(func(e centrifuge.DisconnectEvent) centrifuge.DisconnectReply {
 			Logger.Printf("client %v disconnected", creds.UserID)
 			onlineStorage.RemoveUserOnline(userId)
-			notifyAboutOnline(node, userId, false)
+			notifyAboutOnlineInChat(node, userId, false)
 			return centrifuge.DisconnectReply{}
 		})
 
@@ -302,7 +302,7 @@ func checkPermissions(dbs db.DB, userId string, channelId int64, channelName str
 	return errors.New(fmt.Sprintf("User %v not allowed to use unknown channel %v", userId, channelName))
 }
 
-func getChannelId(channel string) (int64, string, error) {
+func getChatId(channel string) (int64, string, error) {
 	if strings.HasPrefix(channel, utils.CHANNEL_PREFIX_CHAT_MESSAGES) {
 		s := channel[len(utils.CHANNEL_PREFIX_CHAT_MESSAGES):]
 		if parseInt64, err := utils.ParseInt64(s); err != nil {
@@ -335,14 +335,15 @@ type UserOnlineChanged struct {
 	Online bool `json:"online"`
 }
 
-func notifyAboutOnline(node *centrifuge.Node, userId int64, online bool) {
+const userOnlineChangedType = "user_online_changed"
+func notifyAboutOnlineInChat(node *centrifuge.Node, userId int64, online bool) {
 	channels, err := node.Channels()
 	if err != nil {
 		Logger.Errorf("Error during getting channels")
 		return
 	}
 	for _, ch := range channels {
-		_, _, err := getChannelId(ch)
+		_, _, err := getChatId(ch)
 		if err == nil {
 			notification := dto.CentrifugeNotification{
 				Payload: []UserOnlineChanged{UserOnlineChanged{
@@ -350,7 +351,7 @@ func notifyAboutOnline(node *centrifuge.Node, userId int64, online bool) {
 						Online: online,
 					},
 				},
-				EventType: "user_online_changed",
+				EventType: userOnlineChangedType,
 			}
 			if marshalledBytes, err := json.Marshal(notification); err != nil {
 				Logger.Errorf("error during marshalling user_online_changed notification: %s", err)
@@ -364,53 +365,53 @@ func notifyAboutOnline(node *centrifuge.Node, userId int64, online bool) {
 	}
 }
 
-func periodicNotifyAboutOnline(node *centrifuge.Node, dbs db.DB, onlineStorage redis.OnlineStorage) {
-	channels, err := node.Channels()
+func periodicNotifyAboutOnline(node *centrifuge.Node, dbs db.DB, onlineStorage redis.OnlineStorage, subscriptionService SubscribeHandler) {
+	subscriptions, err := subscriptionService.GetAllUserOnlineSubscriptions()
 	if err != nil {
-		Logger.Errorf("Error during getting channels")
+		Logger.Errorf("Error during getting subscriptions: %v", err)
 		return
 	}
-	for _, ch := range channels {
-		chatId, _, err := getChannelId(ch)
-		if err == nil {
-			participantIds, err := dbs.GetParticipantIds(chatId)
+	Logger.Infof("Found %v user online subscriptions", len(subscriptions))
+	for _, subscriptionId := range subscriptions {
+		userIdStr := GetUserIdFromSubscriptionIdAsString(subscriptionId)
+		participantChannel := node.PersonalChannel(userIdStr)
+
+		subscribedUsersIds, err := subscriptionService.GetUserOnlineSubscribedUsers(subscriptionId)
+		if err != nil {
+			Logger.Errorf("Error during getting usersIds")
+			continue
+		}
+
+		var arr []UserOnlineChanged = make([]UserOnlineChanged, 0)
+		for _, participantId := range subscribedUsersIds {
+			online, err := onlineStorage.GetUserOnline(participantId)
 			if err != nil {
-				Logger.Errorf("error publishing to personal channel: %s", err)
 				continue
 			}
+			arr = append(arr, UserOnlineChanged{
+				UserId: participantId,
+				Online: online,
+			})
+		}
 
-			var arr []UserOnlineChanged = make([]UserOnlineChanged, 0)
-			for _, participantId := range participantIds {
-				online, err := onlineStorage.GetUserOnline(participantId)
-				if err != nil {
-					continue
-				}
-				arr = append(arr, UserOnlineChanged{
-					UserId: participantId,
-					Online: online,
-				})
-			}
+		notification := dto.CentrifugeNotification{
+			Payload:   arr,
+			EventType: userOnlineChangedType,
+		}
 
-			notification := dto.CentrifugeNotification{
-				Payload:   arr,
-				EventType: "user_online_changed",
-			}
-			for _, participantId := range participantIds {
-				if marshalledBytes, err := json.Marshal(notification); err != nil {
-					Logger.Errorf("error during marshalling user_online_changed notification: %s", err)
-				} else {
-					participantChannel := node.PersonalChannel(utils.Int64ToString(participantId))
-					_, err := node.Publish(participantChannel, marshalledBytes)
-					if err != nil {
-						Logger.Errorf("error publishing to personal channel: %s", err)
-					}
-				}
+		if marshalledBytes, err := json.Marshal(notification); err != nil {
+			Logger.Errorf("error during marshalling user_online_changed notification: %s", err)
+		} else {
+			_, err := node.Publish(participantChannel, marshalledBytes)
+			if err != nil {
+				Logger.Errorf("error publishing to personal channel: %s", err)
 			}
 		}
+
 	}
 }
 
-func ScheduleNotifications(node *centrifuge.Node, dbs db.DB, onlineStorage redis.OnlineStorage) *chan struct{} {
+func ScheduleNotifications(node *centrifuge.Node, dbs db.DB, onlineStorage redis.OnlineStorage, subscriptionService SubscribeHandler) *chan struct{} {
 	ticker := time.NewTicker(viper.GetDuration("online.notification.period"))
 	quit := make(chan struct{})
 	go func() {
@@ -418,7 +419,7 @@ func ScheduleNotifications(node *centrifuge.Node, dbs db.DB, onlineStorage redis
 			select {
 			case <- ticker.C:
 				Logger.Info("Invoked chat user online periodic notificator")
-				periodicNotifyAboutOnline(node, dbs, onlineStorage)
+				periodicNotifyAboutOnline(node, dbs, onlineStorage, subscriptionService)
 			case <- quit:
 				ticker.Stop()
 				return

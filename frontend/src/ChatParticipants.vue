@@ -163,7 +163,10 @@
                             item.adminChange = item.admin;
                             item.online = false;
                         })
-                    });
+                    }).then(() => {
+                        const usersToCheckOnline = this.dto.participants.map(value => value.id)
+                        axios.put('/api/chat/subscription/online', {userIds: usersToCheckOnline})
+                    })
             },
             changeChatAdmin(item) {
                 item.adminLoading = true;
@@ -198,6 +201,7 @@
                 this.dto = dtoFactory();
                 this.newParticipantIdsIsLoading = false;
                 this.search = null;
+                axios.put('/api/chat/subscription/online', {userIds: []})
             },
             removeNewSelected (item) {
                 console.debug("Removing", item, this.newParticipantIds);

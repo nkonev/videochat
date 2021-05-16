@@ -36,6 +36,7 @@ func main() {
 			redis.RedisPooledConnection,
 			redis.NewOnlineStorage,
 			client.NewRestClient,
+			handlers.NewSubscribeHandler,
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
@@ -122,6 +123,7 @@ func configureEcho(
 	ch handlers.ChatHandler,
 	mc handlers.MessageHandler,
 	vh handlers.VideoHandler,
+	sh handlers.SubscribeHandler,
 ) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")
@@ -169,6 +171,8 @@ func configureEcho(
 
 	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
 	e.PUT("/chat/:id/video/kick", vh.Kick)
+
+	e.PUT("/chat/subscription/online", sh.PutSubscription)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

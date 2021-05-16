@@ -95,6 +95,7 @@ public class UserProfileController {
         headers.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.getLogin().getBytes()));
         headers.set(X_AUTH_USER_ID, ""+userAccount.getId());
         headers.set(X_AUTH_EXPIRESIN, ""+expiresAt);
+        headers.set(X_AUTH_SESSION_ID, session.getId());
         convertRolesToStringList(userAccount.getRoles()).forEach(s -> {
             headers.add(X_AUTH_ROLE, s);
         });

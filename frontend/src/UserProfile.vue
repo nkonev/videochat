@@ -13,8 +13,21 @@
                        min-height="200"
                 >
                 </v-img>
-                <v-list-item-title class="headline mb-1 mt-2">{{ viewableUser.login }} <v-btn v-if="currentUser.id != viewableUser.id" color="primary" icon @click="tetATet(viewableUser.id)"><v-icon>mdi-message-text-outline</v-icon></v-btn></v-list-item-title>
+                <v-list-item-title class="headline mb-1 mt-2">
+                    {{ viewableUser.login }}
+                    <template>
+                        <span v-if="online" class="grey--text"><v-icon color="success">mdi-checkbox-marked-circle</v-icon> Online</span>
+                        <span v-else class="grey--text"><v-icon color="error">mdi-checkbox-marked-circle</v-icon> Offline</span>
+                    </template>
+                </v-list-item-title>
                 <v-list-item-subtitle v-if="viewableUser.email">{{ viewableUser.email }}</v-list-item-subtitle>
+
+                <v-container class="ma-0 pa-0">
+                    <v-btn v-if="currentUser.id != viewableUser.id" color="primary" @click="tetATet(viewableUser.id)">
+                        <v-icon>mdi-message-text-outline</v-icon>
+                        Open chat
+                    </v-btn>
+                </v-container>
             </v-list-item-content>
         </v-list-item>
 
@@ -68,11 +81,13 @@ import axios from "axios";
 import {getCorrectUserAvatar} from "./utils";
 import {chat_name} from "./routes";
 import {mapGetters} from "vuex";
+import bus, {USER_ONLINE_CHANGED} from "./bus";
 
 export default {
     data() {
         return {
-            viewableUser: null
+            viewableUser: null,
+            online: false
         }
     },
     computed: {
@@ -95,11 +110,20 @@ export default {
             this.viewableUser = null;
             axios.get(`/api/user/${this.userId}`).then((response) => {
                 this.viewableUser = response.data;
+            }).then(() => {
+                axios.put('/api/chat/subscription/online', {userIds: [this.viewableUser.id]})
             })
         },
         tetATet(withUserId) {
             axios.put(`/api/chat/tet-a-tet/${withUserId}`).then(response => {
                 this.$router.push(({ name: chat_name, params: { id: response.data.id}}));
+            })
+        },
+        onUserOnlineChanged(dtos) {
+            dtos.forEach(dtoItem => {
+                if (dtoItem.userId == this.userId) {
+                    this.online = dtoItem.online;
+                }
             })
         }
     },
@@ -112,6 +136,13 @@ export default {
 
         this.loadUser();
     },
+    created() {
+        bus.$on(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
+    },
+    destroyed() {
+        axios.put('/api/chat/subscription/online', {userIds: []})
+        bus.$off(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
+    }
 }
 </script>
 

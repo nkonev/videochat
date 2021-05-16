@@ -329,18 +329,17 @@
                 this.unsubscribe();
             },
             subscribe() {
-                this.chatMessagesSubscription = this.centrifuge.subscribe("chatMessages" + this.chatId, (message) => {
+                const channel = "chatMessages" + this.chatId;
+                this.chatMessagesSubscription = this.centrifuge.subscribe(channel, (message) => {
                     // actually it's used for tell server about presence of this client.
                     // also will be used as a global notification, so we just log it
                     const data = getData(message);
-                    console.debug("Got global notification", data);
+                    console.debug("Got message from channel", channel, data);
                     const properData = getProperData(message)
                     if (data.type === "user_typing") {
                         bus.$emit(USER_TYPING, properData);
                     } else if (data.type === "user_broadcast") {
                         bus.$emit(MESSAGE_BROADCAST, properData);
-                    } else if (data.type === "user_online_changed") {
-                        bus.$emit(USER_ONLINE_CHANGED, properData);
                     }
                 });
             },
