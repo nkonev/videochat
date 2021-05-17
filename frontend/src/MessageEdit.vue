@@ -210,6 +210,15 @@ $mobileWidth = 800px
     top: unset
     bottom 100%
 }
+
+.ql-snow .ql-picker svg {
+    position: absolute;
+    margin-top: -9px;
+    right: 0;
+    top: 50%;
+    width: 18px;
+}
+
 @media screen and (max-width: $mobileWidth) {
     .ql-editor {
         padding-left 4px
