@@ -50,6 +50,7 @@
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
     const askUserNameInterval = 1000;
+    const defaultResolution = 'hd';
 
     export default {
         data() {
@@ -414,7 +415,7 @@
             getVideoResolution() {
                 let got = this.getStoredVideoResolution();
                 if (!got) {
-                    this.storeVideoResolution('shd');
+                    this.storeVideoResolution(defaultResolution);
                     got = this.getStoredVideoResolution();
                 }
                 return got;
