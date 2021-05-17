@@ -36,7 +36,7 @@ type ExtendedPeerInfo struct {
 	videoMute bool
 	audioMute bool
 }
-type connectionWithData map[*sfu.Peer]ExtendedPeerInfo
+type connectionWithData map[sfu.Peer]ExtendedPeerInfo
 type connectionsLockableMap struct {
 	sync.RWMutex
 	connectionWithData
@@ -61,7 +61,7 @@ func NewExtendedService(
 	return handler
 }
 
-func (h *ExtendedService) StoreToIndex(peer0 *sfu.Peer, userId int64, peerId, streamId, login string, videoMute, audioMute bool) {
+func (h *ExtendedService) StoreToIndex(peer0 sfu.Peer, userId int64, peerId, streamId, login string, videoMute, audioMute bool) {
 	logger.Info("Storing peer to map", "peer_id", peer0.ID(), "user_id", userId, "stream_id", streamId, "login", login, "video_mute", videoMute, "audio_mute", audioMute)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
@@ -75,7 +75,7 @@ func (h *ExtendedService) StoreToIndex(peer0 *sfu.Peer, userId int64, peerId, st
 	}
 }
 
-func (h *ExtendedService) RemoveFromIndex(peer0 *sfu.Peer, userId int64, conn *websocket.Conn) {
+func (h *ExtendedService) RemoveFromIndex(peer0 sfu.Peer, userId int64, conn *websocket.Conn) {
 	logger.Info("Removing peer from map", "peer_id", peer0.ID(), "user_id", userId)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
@@ -83,7 +83,7 @@ func (h *ExtendedService) RemoveFromIndex(peer0 *sfu.Peer, userId int64, conn *w
 	delete(h.peerUserIdIndex.connectionWithData, peer0)
 }
 
-func (h *ExtendedService) getExtendedConnectionInfo(peer0 *sfu.Peer) *ExtendedPeerInfo {
+func (h *ExtendedService) getExtendedConnectionInfo(peer0 sfu.Peer) *ExtendedPeerInfo {
 	h.peerUserIdIndex.RLock()
 	defer h.peerUserIdIndex.RUnlock()
 	s, ok := h.peerUserIdIndex.connectionWithData[peer0]
@@ -142,7 +142,7 @@ func ParseInt64(s string) (int64, error) {
 	}
 }
 
-func (h *ExtendedService) getSessionWithoutCreatingAnew(chatId int64) *sfu.Session {
+func (h *ExtendedService) getSessionWithoutCreatingAnew(chatId int64) sfu.Session {
 	sessionName := fmt.Sprintf("chat%v", chatId)
 	if session, ok := h.sfu.GetSessions()[sessionName]; ok {
 		return session
@@ -186,7 +186,7 @@ func (h *ExtendedService) Notify(chatId int64, data *dto.StoreNotifyDto) error {
 	return h.rabbitMqPublisher.Publish(marshal)
 }
 
-func (h *ExtendedService) peerIsAlive(peer *sfu.Peer) bool {
+func (h *ExtendedService) peerIsAlive(peer sfu.Peer) bool {
 	if peer == nil {
 		return false
 	}
@@ -216,9 +216,9 @@ func (h *ExtendedService) CheckAccess(userId int64, chatId int64) (bool, error) 
 }
 
 type peerWithMetadata struct {
-	*sfu.Peer
+	sfu.Peer
 	*ExtendedPeerInfo
-	*sfu.Session
+	sfu.Session
 }
 
 func (h *ExtendedService) getPeerMetadatas(chatId, userId int64) []peerWithMetadata {
@@ -257,7 +257,7 @@ func (h *ExtendedService) getPeerMetadataByStreamId(chatId int64, streamId strin
 	return nil
 }
 
-func (h *ExtendedService) GetPeerByPeerId(chatId int64, peerId string) *sfu.Peer {
+func (h *ExtendedService) GetPeerByPeerId(chatId int64, peerId string) sfu.Peer {
 	session := h.getSessionWithoutCreatingAnew(chatId) // ChatVideo.vue
 	if session == nil {
 		return nil
@@ -276,7 +276,7 @@ func (h *ExtendedService) KickUser(chatId, userId int64) error {
 	metadatas := h.getPeerMetadatas(chatId, userId)
 	for _, metadata := range metadatas {
 		metadata.Peer.Close()
-		metadata.Session.RemovePeer(metadata.Peer.ID())
+		metadata.Session.RemovePeer(metadata.Peer)
 		h.Notify(chatId, nil)
 	}
 
