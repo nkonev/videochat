@@ -86,28 +86,14 @@
                 this.showPermissionAsk = false;
             },
             joinSession(configObj) {
-                const config = {
-                    iceServers: configObj.ICEServers.map((iceServConf)=>{
-                        const result = {
-                            urls: iceServConf.URLs
-                        }
-                        if (iceServConf.Username) {
-                            result.username = iceServConf.Username;
-                        }
-                        if (iceServConf.Credential) {
-                            result.credential = iceServConf.Credential;
-                        }
-                        return result;
-                    })
-                };
-                console.info("Created webrtc config", JSON.stringify(config));
+                console.info("Used webrtc config", JSON.stringify(configObj));
 
                 this.signalLocal = new IonSFUJSONRPCSignal(
                     getWebsocketUrlPrefix()+`/api/video/${this.chatId}/ws`
                 );
                 this.remotesDiv = document.getElementById("video-container");
 
-                this.clientLocal = new Client(this.signalLocal, config);
+                this.clientLocal = new Client(this.signalLocal, configObj);
 
                 this.signalLocal.onerror = (e) => { console.error("Error in signal", e); }
                 this.signalLocal.onclose = () => {

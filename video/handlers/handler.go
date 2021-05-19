@@ -200,8 +200,14 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+type ICEServerConfigDto struct {
+	URLs       []string `json:"urls"`
+	Username   string   `json:"username"`
+	Credential string   `json:"credential"`
+}
+
 type FrontendConfigDto struct {
-	ICEServers []sfu.ICEServerConfig
+	ICEServers []ICEServerConfigDto `json:"iceServers"`
 }
 
 func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
@@ -210,7 +216,11 @@ func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 	var responseSliceFrontendConfig = FrontendConfigDto{}
 
 	for _, s := range frontendConfig.ICEServers {
-		var newElement = s.ICEServerConfig
+		var newElement = ICEServerConfigDto{
+			URLs: s.ICEServerConfig.URLs,
+			Username: s.ICEServerConfig.Username,
+			Credential: s.ICEServerConfig.Credential,
+		}
 		if s.LongTermCredentialDuration != 0 {
 			username, password, err2 := turn.GenerateLongTermCredentials(h.conf.Turn.Auth.Secret, s.LongTermCredentialDuration)
 			if err2 != nil {
