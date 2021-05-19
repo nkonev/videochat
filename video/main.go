@@ -18,10 +18,10 @@ import (
 	"nkonev.name/video/handlers"
 	"nkonev.name/video/listener"
 	"nkonev.name/video/producer"
+	myRabbitmq "nkonev.name/video/rabbitmq"
 	"nkonev.name/video/service"
 	"os"
 	"time"
-	myRabbitmq "nkonev.name/video/rabbitmq"
 )
 
 var (
@@ -63,6 +63,13 @@ func load() bool {
 	if err != nil {
 		fmt.Printf("sfu core config file %s loaded failed. %v\n", file, err)
 		return false
+	}
+	for _, tc := range conf.FrontendConfig.ICEServers {
+		err = viper.GetViper().Unmarshal(&tc.ICEServerConfig)
+		if err != nil {
+			fmt.Printf("sfu extended turn config %s loaded failed. %v\n", file, err)
+			return false
+		}
 	}
 
 	if len(conf.WebRTC.ICEPortRange) > 2 {
@@ -154,6 +161,7 @@ func main() {
 	// Pass logr instance
 	sfu.Logger = logger
 
+	conf.TurnAuth = service.GetCompositeTurnAuth(conf)
 	sfuInstance := sfu.NewSFU(conf.Config)
 	dc := sfuInstance.NewDatachannel(sfu.APIChannelLabel)
 	dc.Use(datachannel.SubscriberAPI)
@@ -197,8 +205,9 @@ func main() {
 		logger.Info("Started listening", "addr", "http://"+conf.HttpServerConfig.Addr)
 		err = http.ListenAndServe(conf.HttpServerConfig.Addr, r)
 	}
-	*schedule <- struct { }{}
+	*schedule <- struct{}{}
 	if err != nil {
 		panic(err)
 	}
 }
+

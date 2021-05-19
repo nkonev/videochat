@@ -11,6 +11,7 @@ import (
 	"github.com/pion/ion-sfu/cmd/signal/json-rpc/server"
 	log "github.com/pion/ion-sfu/pkg/logger"
 	"github.com/pion/ion-sfu/pkg/sfu"
+	"github.com/pion/turn/v2"
 	"github.com/sourcegraph/jsonrpc2"
 	websocketjsonrpc2 "github.com/sourcegraph/jsonrpc2/websocket"
 	"io/fs"
@@ -199,9 +200,31 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+type FrontendConfigDto struct {
+	ICEServers []sfu.ICEServerConfig
+}
+
 func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	marshal, err := json.Marshal(h.conf.FrontendConfig)
+	frontendConfig := h.conf.FrontendConfig
+	var responseSliceFrontendConfig = FrontendConfigDto{}
+
+	for _, s := range frontendConfig.ICEServers {
+		var newElement = s.ICEServerConfig
+		if s.LongTermCredentialDuration != 0 {
+			username, password, err2 := turn.GenerateLongTermCredentials(h.conf.Turn.Auth.Secret, s.LongTermCredentialDuration)
+			if err2 != nil {
+				logger.Error(err2, "Error during GenerateLongTermCredentials")
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			newElement.Credential = password
+			newElement.Username = username
+		}
+		responseSliceFrontendConfig.ICEServers = append(responseSliceFrontendConfig.ICEServers, newElement)
+	}
+
+	marshal, err := json.Marshal(responseSliceFrontendConfig)
 	if err != nil {
 		logger.Error(err, "Error during marshalling ConfigResponse to json")
 		w.WriteHeader(http.StatusInternalServerError)

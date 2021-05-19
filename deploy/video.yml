@@ -52,7 +52,7 @@ webrtc:
   iceserver:
 #    - urls: ["stun:stun.l.google.com:19302"]
     - urls: ["turn:api.site.local:3478"]
-      username: "uSerNamE"
+      username: "InternalUserNamE" # keep in secret
       credential: "SeCrEt"
 
 # sdp semantics:
@@ -88,11 +88,10 @@ turn:
 # key="path/to/key.pem"
   portrange: [5200, 5300]
   auth:
-# Use an auth secret to generate long-term credentials defined in RFC5389-10.2
-# NOTE: This takes precedence over `credentials` if defined.
-#    secret: "secretAwsome"
-# Sets the credentials pairs
-    credentials: "uSerNamE=SeCrEt"
+# Use an auth secret to generate long(short)-term credentials defined in RFC5389-10.2
+    secret: "secretAwsome"
+# Sets the permanent credentials pairs
+    credentials: "InternalUserNamE=SeCrEt"
 
 
 chat:
@@ -110,9 +109,9 @@ http:
 
 frontend:
   iceserver:
-    - urls: ["turn:api.site.local:3478"]
-      username: "uSerNamE"
-      credential: "SeCrEt"
+    - server:
+        urls: ["turn:api.site.local:3478"]
+      turnCredentialDuration: 60s
 
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672"

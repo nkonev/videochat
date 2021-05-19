@@ -12,8 +12,13 @@ type RestClientConfig struct {
 	DisableCompression bool `mapstructure:"disableCompression"`
 }
 
+type ExtendedICEServerConfig struct {
+	ICEServerConfig       sfu.ICEServerConfig `mapstructure:"server"`
+	LongTermCredentialDuration time.Duration `mapstructure:"turnCredentialDuration"`
+}
+
 type FrontendConfig struct {
-	ICEServers []sfu.ICEServerConfig `mapstructure:"iceserver"`
+	ICEServers []ExtendedICEServerConfig `mapstructure:"iceserver"`
 }
 
 type RabbitMqConfig struct {
