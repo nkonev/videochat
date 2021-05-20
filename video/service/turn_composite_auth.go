@@ -16,12 +16,12 @@ func GetCompositeTurnAuth(conf config.ExtendedConfig) turn.AuthHandler {
 		usersMap[kv[1]] = turn.GenerateAuthKey(kv[1], conf.Config.Turn.Realm, kv[2])
 	}
 	var constantAuth turn.AuthHandler = func(username string, realm string, srcAddr net.Addr) ([]byte, bool) {
-		turnConstantLogger.Tracef("Authentication username=%q realm=%q srcAddr=%v\n", username, realm, srcAddr)
+		turnConstantLogger.Tracef("Authentication with constant username=%q realm=%q srcAddr=%v\n", username, realm, srcAddr)
 		if key, ok := usersMap[username]; ok {
-			turnConstantLogger.Tracef("Successful authentication username=%q realm=%q srcAddr=%v\n", username, realm, srcAddr)
+			turnConstantLogger.Tracef("Successful authentication with constant username=%q realm=%q srcAddr=%v\n", username, realm, srcAddr)
 			return key, true
 		}
-		turnConstantLogger.Tracef("Failed authentication username=%q realm=%q srcAddr=%v\n", username, realm, srcAddr)
+		turnConstantLogger.Tracef("Failed authentication with constant username=%q realm=%q srcAddr=%v, will try next longterm creds AuthHandler\n", username, realm, srcAddr)
 		return nil, false
 	}
 
