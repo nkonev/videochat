@@ -111,7 +111,7 @@ frontend:
   iceserver:
     - server:
         urls: ["turn:api.site.local:3478"]
-      turnCredentialDuration: 60s
+      turnCredentialDuration: '168h'
 
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672"
