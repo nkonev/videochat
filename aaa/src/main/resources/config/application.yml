@@ -76,7 +76,7 @@ server.servlet.encoding.force-response: true
 spring.mvc.static-path-pattern: /**
 # You need to remove "file:..." element for production or you can to remove spring.resources.static-locations
 # first element - for eliminate manual restart app in IntelliJ for copy compiled js to target/classes, last slash is important, second element - for documentation
-spring.resources.static-locations: file:aaa/src/main/resources/static/, classpath:/static/
+spring.web.resources.static-locations: file:aaa/src/main/resources/static/, classpath:/static/
 
 
 spring.datasource:
