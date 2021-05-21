@@ -24,7 +24,7 @@ type Notifications interface {
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutVideoCallChanged(dto dto.ChatNotifyDto, participantIds []int64)
 	NotifyAboutProfileChanged(user *dto.User)
-	NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64)
+	NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64, chatName string)
 	NotifyAboutKick(c echo.Context, chatId int64, userId int64)
 	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
 }
@@ -53,6 +53,7 @@ type UserTypingNotification struct {
 
 type VideoCallInvitation struct {
 	ChatId int64 `json:"chatId"`
+	ChatName string `json:"chatName"`
 }
 
 type VideoKick struct {
@@ -302,10 +303,11 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 	}
 }
 
-func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64) {
+func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64, chatName string) {
 	notification := dto.CentrifugeNotification{
 		Payload: VideoCallInvitation{
 			ChatId: chatId,
+			ChatName: chatName,
 		},
 		EventType: "video_call_invitation",
 	}

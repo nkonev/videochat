@@ -144,7 +144,7 @@
                     </template>
                 </v-snackbar>
                 <v-snackbar v-model="invitedVideoChatAlert" class="call-blink" color="success" timeout="-1" :multi-line="true" :key="callReblinkCounter" top>
-                    You are called into chat #{{invitedVideoChatId}}, press to join
+                    You are called into chat #{{invitedVideoChatId}} '{{invitedVideoChatName}}', press to join
                     <template v-slot:action="{ attrs }">
                         <v-btn icon v-bind="attrs" @click="onClickInvitation()"><v-icon color="white">mdi-phone</v-icon></v-btn>
                         <v-btn icon v-bind="attrs" @click="invitedVideoChatAlert = false"><v-icon color="white">mdi-close-circle</v-icon></v-btn>
@@ -232,6 +232,7 @@
                 showAlert: false,
                 wsConnected: false,
                 invitedVideoChatId: 0,
+                invitedVideoChatName: null,
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
                 showWebsocketRestored: false,
@@ -315,6 +316,7 @@
             },
             onVideoCallInvited(data) {
                 this.invitedVideoChatId = data.chatId;
+                this.invitedVideoChatName = data.chatName;
                 this.invitedVideoChatAlert = true;
                 ++this.callReblinkCounter;
                 audio.play().catch(error => {
@@ -324,6 +326,8 @@
             },
             onClickInvitation() {
                 this.$router.push({ name: videochat_name, params: { id: this.invitedVideoChatId }});
+                this.invitedVideoChatId = 0;
+                this.invitedVideoChatName = null;
                 this.invitedVideoChatAlert = false;
             },
             isVideoRoute() {

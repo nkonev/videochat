@@ -21,6 +21,29 @@ type ChatDto struct {
 	IsTetATet			   bool 	 `json:"tetATet"`
 }
 
+type ChatDtoWithTetATet interface {
+	GetId() int64
+	GetName() string
+	GetIsTetATet() bool
+	SetName(s string)
+}
+
+func (r *ChatDto) GetId() int64 {
+	return r.Id
+}
+
+func (r *ChatDto) GetName() string {
+	return r.Name
+}
+
+func (r *ChatDto) SetName(s string) {
+	r.Name = s
+}
+
+func (r *ChatDto) GetIsTetATet() bool {
+	return r.IsTetATet
+}
+
 // copied view for GET /chat/:id
 type ChatDtoWithAdmin struct {
 	Id                 int64     `json:"id"`
