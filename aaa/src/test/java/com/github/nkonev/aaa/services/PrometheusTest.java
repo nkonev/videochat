@@ -25,7 +25,7 @@ public class PrometheusTest extends AbstractUtTestRunner {
         );
 
         then(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        then(entity.getBody()).contains("jvm_");
+        then(entity.getBody()).contains("tomcat_sessions_");
 
     }
 
