@@ -68,6 +68,7 @@
                 showPermissionAsk: true,
                 peerId: null,
                 insideSwitchingCameraScreen: false,
+                restartingStarted: false,
             }
         },
         props: ['chatDto'],
@@ -150,7 +151,9 @@
               delete this.streams[streamId];
             },
             tryRestartWithResetOncloseHandler() {
-                this.signalLocal.onclose = null; // remove onclose handler with restart in order to prevent cyclic restarts
+                if (this.signalLocal) {
+                    this.signalLocal.onclose = null; // remove onclose handler with restart in order to prevent cyclic restarts
+                }
                 this.tryRestartVideoProcess();
             },
             leaveSession() {
@@ -328,33 +331,37 @@
             },
             startVideoProcess() {
                 this.getConfig()
-                    .catch(reason => {
-                      console.error("Error during get config, restarting...")
-                      this.tryRestartVideoProcess();
-                    })
                     .then(config => {
+                        console.info("Joining to session...")
                         this.joinSession(config);
+                    })
+                    .catch(reason => {
+                        console.error("Error during get config, restarting...")
+                        this.tryRestartVideoProcess();
                     })
             },
             tryRestartVideoProcess() {
-              setTimeout(() => {
-                if (!this.closingStarted) {
-                  console.info("Will restart video process after", videoProcessRestartInterval, "ms");
-                  try {
-                    this.leaveSession();
-                  } catch (e) {
-                    console.warn("Some problems during leaving session, ignoring them...")
-                  }
-                  try {
-                    this.startVideoProcess();
-                  } catch (e) {
-                    console.error("Error during starting video process, restarting...")
-                    this.tryRestartVideoProcess();
-                  }
+                if (!this.closingStarted && !this.restartingStarted) {
+                    this.restartingStarted = true;
+                    setTimeout(() => {
+                        console.info("Will restart video process after", videoProcessRestartInterval, "ms");
+                        try {
+                            this.leaveSession();
+                        } catch (e) {
+                            console.warn("Some problems during leaving session, ignoring them...")
+                        }
+                        try {
+                            this.startVideoProcess();
+                            this.restartingStarted = false;
+                        } catch (e) {
+                            console.error("Error during starting video process, restarting...");
+                            this.restartingStarted = false;
+                            this.tryRestartVideoProcess();
+                        }
+                    }, videoProcessRestartInterval);
                 } else {
-                  console.info("Will not restart video process because closingStarted");
+                    console.info("Will not restart video process because", "closingStarted", this.closingStarted, "restartingStarted", this.restartingStarted);
                 }
-              }, videoProcessRestartInterval);
             },
             onStartVideoMuting(requestedState) {
                 if (requestedState) {
