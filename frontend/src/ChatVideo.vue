@@ -333,7 +333,7 @@
                 this.getConfig()
                     .then(config => {
                         console.info("Joining to session...")
-                        this.joinSession(config);
+                        return this.joinSession(config);
                     })
                     .catch(reason => {
                         console.error("Error during get config, restarting...")
