@@ -17,6 +17,10 @@
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
             </v-container>
             <v-list-item-content class="pre-formatted pa-0 ma-0 mt-1 message-item-text" v-html="item.text"></v-list-item-content>
+            <v-container class="pa-0 mt-1">
+                <v-btn icon tile small><v-icon small>mdi-file-download</v-icon></v-btn>
+                <v-btn icon tile small><v-icon small>mdi-file-document-multiple</v-icon></v-btn>
+            </v-container>
         </v-list-item-content>
     </v-list-item>
 </template>
@@ -83,6 +87,10 @@
       display inline-block
       word-wrap break-word
       overflow-wrap break-word
+
+      p {
+          margin-bottom 0
+      }
   }
   .with-space {
       white-space: pre;
