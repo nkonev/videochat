@@ -158,6 +158,7 @@
                 <PermissionsWarning/>
                 <ChooseAvatar/>
                 <FindUser/>
+                <FileUploadModal/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -200,7 +201,6 @@
         OPEN_FIND_USER,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
-    import debounce from "lodash/debounce";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
     import SimpleModal from "./SimpleModal";
     import ChooseAvatar from "./ChooseAvatar";
@@ -208,6 +208,7 @@
     import ChatParticipants from "./ChatParticipants";
     import PermissionsWarning from "./PermissionsWarning";
     import FindUser from "./FindUser";
+    import FileUploadModal from './FileUploadModal'
 
     const audio = new Audio("/call.mp3");
 
@@ -246,7 +247,8 @@
             ChooseAvatar,
             ChatParticipants,
             PermissionsWarning,
-            FindUser
+            FindUser,
+            FileUploadModal
         },
         methods:{
             toggleLeftNavigation() {
