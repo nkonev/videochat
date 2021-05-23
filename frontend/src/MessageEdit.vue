@@ -19,9 +19,8 @@
                     <button class="ql-clean"></button>
                 </div>
                 <div class="custom-toolbar-send">
-                    <v-switch v-if="canBroadcast" dense hide-details
-                              class="ma-0 mr-4"
-                        v-model="sendBroadcast"
+                    <v-btn icon tile class="mr-4"><v-icon color="primary" >mdi-file-upload</v-icon></v-btn>
+                    <v-switch v-if="canBroadcast" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                         :label="$vuetify.breakpoint.smAndUp ? `Broadcast` : null"
                     ></v-switch>
                     <v-btn color="primary" @click="sendMessageToChat" small><v-icon color="white">mdi-send</v-icon></v-btn>
