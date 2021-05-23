@@ -34,3 +34,5 @@ export const VIDEO_RESOLUTION_CHANGED = "videoResolutionChanged";
 export const USER_ONLINE_CHANGED = "onlineChanged";
 export const OPEN_FILE_UPLOAD_MODAL = "openFileUploadModal";
 export const CLOSE_FILE_UPLOAD_MODAL = "closeFileUploadModal";
+export const OPEN_VIEW_FILES_DIALOG = "openViewAttachedFiles";
+export const CLOSE_VIEW_FILES_DIALOG = "closeViewAttachedFiles";

@@ -20,6 +20,14 @@
                 </div>
                 <div class="custom-toolbar-send">
                     <v-btn icon tile class="mr-4" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
+                    <v-badge
+                        :content="13"
+                        color="green"
+                        overlap
+                        left
+                    >
+                        <v-btn icon tile class="mr-4" @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
+                    </v-badge>
                     <v-switch v-if="canBroadcast" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                         :label="$vuetify.breakpoint.smAndUp ? `Broadcast` : null"
                     ></v-switch>
@@ -36,7 +44,13 @@
 
 <script>
     import axios from "axios";
-    import bus, {MESSAGE_BROADCAST, OPEN_FILE_UPLOAD_MODAL, SET_EDIT_MESSAGE, USER_TYPING} from "./bus";
+    import bus, {
+        MESSAGE_BROADCAST,
+        OPEN_FILE_UPLOAD_MODAL,
+        OPEN_VIEW_FILES_DIALOG,
+        SET_EDIT_MESSAGE,
+        USER_TYPING
+    } from "./bus";
     import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
@@ -143,6 +157,9 @@
             },
             openFileUpload() {
                 bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.chatId);
+            },
+            onFilesClicked() {
+                bus.$emit(OPEN_VIEW_FILES_DIALOG);
             }
         },
         computed: {
