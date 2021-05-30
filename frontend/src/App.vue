@@ -159,6 +159,7 @@
                 <ChooseAvatar/>
                 <FindUser/>
                 <FileUploadModal/>
+                <FileListModal/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -190,7 +191,7 @@
         CHANGE_WEBSOCKET_STATUS,
         LOGGED_OUT,
         OPEN_CHAT_EDIT,
-        OPEN_INFO_DIALOG,
+        OPEN_PARTICIPANTS_DIALOG,
         OPEN_PERMISSIONS_WARNING_MODAL,
         SHARE_SCREEN_START,
         SHARE_SCREEN_STOP,
@@ -208,7 +209,8 @@
     import ChatParticipants from "./ChatParticipants";
     import PermissionsWarning from "./PermissionsWarning";
     import FindUser from "./FindUser";
-    import FileUploadModal from './FileUploadModal'
+    import FileUploadModal from './FileUploadModal';
+    import FileListModal from "./FileListModal";
 
     const audio = new Audio("/call.mp3");
 
@@ -248,7 +250,8 @@
             ChatParticipants,
             PermissionsWarning,
             FindUser,
-            FileUploadModal
+            FileUploadModal,
+            FileListModal,
         },
         methods:{
             toggleLeftNavigation() {
@@ -314,7 +317,7 @@
                 }
             },
             onInfoClicked() {
-                bus.$emit(OPEN_INFO_DIALOG, this.chatId);
+                bus.$emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
             },
             onVideoCallInvited(data) {
                 this.invitedVideoChatId = data.chatId;

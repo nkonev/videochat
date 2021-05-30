@@ -115,7 +115,7 @@
         CHAT_DELETED,
         CHAT_EDITED,
         CLOSE_SIMPLE_MODAL,
-        OPEN_INFO_DIALOG,
+        OPEN_PARTICIPANTS_DIALOG,
         OPEN_SIMPLE_MODAL,
         USER_ONLINE_CHANGED
     } from "./bus";
@@ -284,13 +284,13 @@
 
         created() {
             this.doNewSearch = debounce(this.doNewSearch, 700);
-            bus.$on(OPEN_INFO_DIALOG, this.showModal);
+            bus.$on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
             bus.$on(CHAT_EDITED, this.onChatChange);
             bus.$on(CHAT_DELETED, this.onChatDelete);
             bus.$on(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
         },
         destroyed() {
-            bus.$off(OPEN_INFO_DIALOG, this.showModal);
+            bus.$off(OPEN_PARTICIPANTS_DIALOG, this.showModal);
             bus.$off(CHAT_EDITED, this.onChatChange);
             bus.$off(CHAT_DELETED, this.onChatDelete);
             bus.$off(USER_ONLINE_CHANGED, this.onUserOnlineChanged);

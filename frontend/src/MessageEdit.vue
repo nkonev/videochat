@@ -159,7 +159,7 @@
                 bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.chatId);
             },
             onFilesClicked() {
-                bus.$emit(OPEN_VIEW_FILES_DIALOG);
+                bus.$emit(OPEN_VIEW_FILES_DIALOG, this.chatId);
             }
         },
         computed: {
