@@ -102,7 +102,7 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	ch := handlers.NewFileHandler(m)
+	ch := handlers.NewAvatarHandler(m)
 	e.POST("/storage/avatar", ch.PutAvatar)
 	e.GET(fmt.Sprintf("%v/:filename", handlers.UrlStorageGetAvatar), ch.Download)
 

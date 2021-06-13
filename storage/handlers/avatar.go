@@ -18,12 +18,12 @@ import (
 	"strconv"
 )
 
-type FileHandler struct {
+type AvatarHandler struct {
 	minio		*minio.Client
 }
 
-func NewFileHandler (minio *minio.Client) FileHandler {
-	return FileHandler{
+func NewAvatarHandler(minio *minio.Client) AvatarHandler {
+	return AvatarHandler{
 		minio: minio,
 	}
 }
@@ -31,7 +31,7 @@ func NewFileHandler (minio *minio.Client) FileHandler {
 const FormFile = "data"
 const UrlStorageGetAvatar = "/storage/public/avatar"
 
-func (h *FileHandler) ensureBucket(bucketName, location string) error {
+func (h *AvatarHandler) ensureBucket(bucketName, location string) error {
 	// Check to see if we already own this bucket (which happens if you run this twice)
 	exists, err := h.minio.BucketExists(context.Background(), bucketName)
 	if err == nil && exists {
@@ -52,7 +52,7 @@ func (h *FileHandler) ensureBucket(bucketName, location string) error {
 	}
 }
 
-func (h *FileHandler) ensureAndGetAvatarBucket() (string, error) {
+func (h *AvatarHandler) ensureAndGetAvatarBucket() (string, error) {
 	bucketName := viper.GetString("minio.bucket.avatar")
 	bucketLocation := viper.GetString("minio.location")
 	err := h.ensureBucket(bucketName, bucketLocation)
@@ -68,7 +68,7 @@ const (
 	AVATAR_640x640 AvatarType = "AVATAR_640x640"
 )
 
-func (fh *FileHandler) PutAvatar(c echo.Context) error {
+func (fh *AvatarHandler) PutAvatar(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -119,7 +119,7 @@ func (fh *FileHandler) PutAvatar(c echo.Context) error {
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "filename": filename200, "filenameBig": filename640, "relativeUrl" : relativeUrl, "relativeBigUrl": relativeBigUrl})
 }
 
-func (fh *FileHandler) putSizedFile(c echo.Context, srcImage image.Image, err error, userPrincipalDto *auth.AuthResult, bucketName string, contentType string, width, height int, avatarType AvatarType) (string, error) {
+func (fh *AvatarHandler) putSizedFile(c echo.Context, srcImage image.Image, err error, userPrincipalDto *auth.AuthResult, bucketName string, contentType string, width, height int, avatarType AvatarType) (string, error) {
 	dstImage := imaging.Resize(srcImage, width, height, imaging.Lanczos)
 	byteBuffer := new(bytes.Buffer)
 	err = jpeg.Encode(byteBuffer, dstImage, nil)
@@ -135,7 +135,7 @@ func (fh *FileHandler) putSizedFile(c echo.Context, srcImage image.Image, err er
 	return filename, nil
 }
 
-func (h *FileHandler) Download(c echo.Context) error {
+func (h *AvatarHandler) Download(c echo.Context) error {
 	bucketName, err := h.ensureAndGetAvatarBucket()
 	if err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during get bucket: %v", err)
