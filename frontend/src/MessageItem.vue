@@ -69,7 +69,7 @@
                 return `${format(parsedDate, formatString)}`
             },
             onFilesClicked(itemId) {
-                bus.$emit(OPEN_VIEW_FILES_DIALOG, itemId);
+                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, messageId :itemId});
             }
         },
         created() {

@@ -56,10 +56,11 @@ export default {
     },
 
     methods: {
-        showModal(chatId) {
+        showModal({chatId, messageId}) {
+            console.log("Opening files modal, chatId=", chatId, ", messageId=", messageId);
             this.chatId = chatId;
             this.show = true;
-            axios.get(`/api/storage/${this.chatId}`)
+            axios.get(`/api/storage/${this.chatId}` + (messageId ? "?messageId="+messageId : ""))
                 .then((response) => {
                     this.dto = response.data;
                 })
