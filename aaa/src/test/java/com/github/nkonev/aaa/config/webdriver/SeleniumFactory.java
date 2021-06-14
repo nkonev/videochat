@@ -25,7 +25,7 @@ public class SeleniumFactory implements FactoryBean<WebDriver> {
 
 
     public static final String FIREFOX_DRIVER_VERSION = "0.21.0"; // https://github.com/mozilla/geckodriver/releases
-    public static final String CHROME_DRIVER_VERSION = "89.0.4389.23"; // https://sites.google.com/chromium.org/driver/downloads
+    public static final String CHROME_DRIVER_VERSION = "2.40"; // https://sites.google.com/chromium.org/driver/downloads
     public static final String CUSTOM_SELENIUM_ENABLE = "custom.selenium.start";
 
     private WebDriver driver;

@@ -32,7 +32,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
       - name: Build with Maven
         run: |
-          (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true -Dcustom.chrome.driver.version=91.0.4472.77)
+          (cd aaa; ./mvnw clean package -Dcustom.selenium.headless=true)
       - name: Deploy
         if: github.ref == 'refs/heads/master'
         run: |
