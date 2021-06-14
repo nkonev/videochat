@@ -10,14 +10,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install software
         run: |
-          cd /tmp
-          cur_dir=$(pwd)
-          wget https://github.com/SugaryHull/ungoogled-chromium-binaries/releases/download/87.0.4280.141-1.unportable1/ungoogled-chromium-common_87.0.4280.141-1.unportable1_amd64.deb
-          wget https://github.com/SugaryHull/ungoogled-chromium-binaries/releases/download/87.0.4280.141-1.unportable1/ungoogled-chromium_87.0.4280.141-1.unportable1_amd64.deb
-          sudo apt install -f ./ungoogled-chromium_*.deb ./ungoogled-chromium-common_*.deb
           sudo apt update
-          sudo apt install -y ungoogled-chromium
-          cd $cur_dir
+          sudo apt install -y chromium-browser
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Set up JDK 11
         uses: actions/setup-java@v1

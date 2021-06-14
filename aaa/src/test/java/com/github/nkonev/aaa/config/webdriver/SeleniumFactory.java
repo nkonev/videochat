@@ -1,8 +1,8 @@
 package com.github.nkonev.aaa.config.webdriver;
 
 import com.codeborne.selenide.WebDriverRunner;
-import io.github.bonigarcia.wdm.DriverManagerType;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import io.github.bonigarcia.wdm.config.DriverManagerType;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -25,7 +25,7 @@ public class SeleniumFactory implements FactoryBean<WebDriver> {
 
 
     public static final String FIREFOX_DRIVER_VERSION = "0.21.0"; // https://github.com/mozilla/geckodriver/releases
-    public static final String CHROME_DRIVER_VERSION = "2.40"; // https://sites.google.com/a/chromium.org/chromedriver/
+    public static final String CHROME_DRIVER_VERSION = "89.0.4389.23"; // https://sites.google.com/chromium.org/driver/downloads
     public static final String CUSTOM_SELENIUM_ENABLE = "custom.selenium.start";
 
     private WebDriver driver;
@@ -74,7 +74,7 @@ public class SeleniumFactory implements FactoryBean<WebDriver> {
             {
                 System.setProperty("webdriver.firefox.logfile", "/dev/null");
                 // firefox
-                WebDriverManager.getInstance(DriverManagerType.FIREFOX).version(FIREFOX_DRIVER_VERSION).setup(); // download executables if need and set System.properties
+                WebDriverManager.getInstance(DriverManagerType.FIREFOX).driverVersion(FIREFOX_DRIVER_VERSION).setup(); // download executables if need and set System.properties
                 // https://developer.mozilla.org/en-US/Firefox/Headless_mode
                 FirefoxOptions firefoxOptions = new FirefoxOptions();
                 firefoxOptions.setLogLevel(FirefoxDriverLogLevel.INFO);
@@ -87,7 +87,7 @@ public class SeleniumFactory implements FactoryBean<WebDriver> {
             break;
             case CHROME:
             {
-                WebDriverManager.getInstance(DriverManagerType.CHROME).version(CHROME_DRIVER_VERSION).setup(); // download executables if need and set System.properties
+                WebDriverManager.getInstance(DriverManagerType.CHROME).driverVersion(CHROME_DRIVER_VERSION).setup(); // download executables if need and set System.properties
                 // https://developers.google.com/web/updates/2017/04/headless-chrome
                 ChromeOptions chromeOptions = new ChromeOptions();
                 if (seleniumConfiguration.isHeadless()) {
