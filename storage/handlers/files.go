@@ -38,8 +38,8 @@ type FileInfoDto struct {
 }
 
 const filenameKey = "filename"
-const ownerIdKey = "ownerId"
-const chatIdKey = "chatId"
+const ownerIdKey = "ownerid"
+const chatIdKey = "chatid"
 
 func NewFilesHandler(
 	minio *minio.Client,
@@ -50,6 +50,39 @@ func NewFilesHandler(
 		serverUrl:          viper.GetString("server.url"),
 		chatClient: chatClient,
 	}
+}
+
+func serializeTags(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult, chatId int64) map[string]string {
+	var userMetadata = map[string]string{}
+	userMetadata[filenameKey] = file.Filename
+	userMetadata[ownerIdKey] = utils.Int64ToString(userPrincipalDto.UserId)
+	userMetadata[chatIdKey] = utils.Int64ToString(chatId)
+	return userMetadata
+}
+
+func deserializeTags(userMetadata minio.StringMap) (int64, int64, string, error) {
+	filename, ok := userMetadata["X-Amz-Meta-"+strings.Title(filenameKey)]
+	if ! ok {
+		return 0, 0, "", errors.New("Unable to get filename")
+	}
+	ownerIdString, ok := userMetadata["X-Amz-Meta-"+strings.Title(ownerIdKey)]
+	if ! ok {
+		return 0, 0, "", errors.New("Unable to get owner id")
+	}
+	ownerId, err := utils.ParseInt64(ownerIdString)
+	if err != nil {
+		return 0, 0, "", err
+	}
+
+	chatIdString, ok := userMetadata["X-Amz-Meta-"+strings.Title(chatIdKey)]
+	if ! ok {
+		return 0, 0, "", errors.New("Unable to get chat id")
+	}
+	chatId, err := utils.ParseInt64(chatIdString)
+	if err != nil {
+		return 0, 0, "", err
+	}
+	return chatId, ownerId, filename, nil
 }
 
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
@@ -101,10 +134,8 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	fileUuid := uuid.New().String()
 	filename := fmt.Sprintf("chat/%v/%v%v", chatId, fileUuid, dotExt)
 
-	var userMetadata = map[string]string{}
-	userMetadata[filenameKey] = file.Filename
-	userMetadata[ownerIdKey] = utils.Int64ToString(userPrincipalDto.UserId)
-	userMetadata[chatIdKey] = utils.Int64ToString(chatId)
+	var userMetadata = serializeTags(file, userPrincipalDto, chatId)
+
 	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, file.Size, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		Logger.Errorf("Error during upload object: %v", err)
 		return err
@@ -207,7 +238,13 @@ func (h *FilesHandler) ListChatFilesHandler(c echo.Context) error {
 		}
 		metadata := objInfo.UserMetadata
 
-		info := FileInfoDto{Id: objInfo.Key, Filename: metadata[filenameKey], Url: *downloadUrl, Size: objInfo.Size}
+		_, _, fileName, err := deserializeTags(metadata)
+		if err != nil {
+			Logger.Errorf("Error get file name url: %v", err)
+			fileName = objInfo.Key
+		}
+
+		info := FileInfoDto{Id: objInfo.Key, Filename: fileName, Url: *downloadUrl, Size: objInfo.Size}
 		list = append(list, info)
 	}
 

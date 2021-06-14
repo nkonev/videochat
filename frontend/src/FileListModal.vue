@@ -12,7 +12,7 @@
                                     <v-icon>mdi-file</v-icon>
                                 </v-list-item-avatar>
                                 <v-list-item-content class="ml-4">
-                                    <v-list-item-title>{{item.name}}</v-list-item-title>
+                                    <v-list-item-title>{{item.filename}}</v-list-item-title>
                                 </v-list-item-content>
                             </v-list-item>
                             <v-divider></v-divider>
