@@ -42,22 +42,18 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
     private void clickFacebook() throws InterruptedException {
         $("#a-facebook").click();
-        TimeUnit.SECONDS.sleep(2);
     }
 
     private void clickVkontakte() throws InterruptedException {
         $("#a-vkontakte").click();
-        TimeUnit.SECONDS.sleep(2);
     }
 
     private void clickGoogle() throws InterruptedException {
         $("#a-google").click();
-        TimeUnit.SECONDS.sleep(2);
     }
 
     private void clickLogout() throws InterruptedException {
         $("#btn-logout").click();
-        TimeUnit.SECONDS.sleep(2);
     }
 
     private class LoginPage {
@@ -87,7 +83,6 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         openOauth2TestPage();
 
         clickFacebook();
-        $("#facebookId").should(Condition.appear, Condition.ownText(facebookId));
 
         UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
         Assertions.assertNotNull(userAccount.getId());
@@ -101,7 +96,6 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         openOauth2TestPage();
 
         clickFacebook();
-        $("#facebookId").should(Condition.appear, Condition.ownText(facebookId));
 
         UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
         Long facebookLoggedId = userAccount.getId();
@@ -113,7 +107,6 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         long count = userAccountRepository.count();
 
         clickVkontakte();
-        $("#vkontakteId").should(Condition.appear, Condition.ownText(vkontakteId));
 
         UserAccount userAccountFbAndVk = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
         String userAccountFbAndVkFacebookId = userAccountFbAndVk.getOauth2Identifiers().getFacebookId();
@@ -188,7 +181,6 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         // bind facebook to him
         openOauth2TestPage();
         clickFacebook();
-        $("#facebookId").should(Condition.appear, Condition.ownText(facebookId));
         Assertions.assertEquals(countInitial, userAccountRepository.count());
 
         // logout
@@ -232,7 +224,6 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         openOauth2TestPage();
         clickFacebook();
 
-        $("#facebookId").should(Condition.appear, Condition.ownText(facebookId));
         UserAccount userAccountAfterBindFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
         // assert facebook is bound - check database
         Assertions.assertNotNull(userAccountAfterBindFacebook.getOauth2Identifiers().getFacebookId());
