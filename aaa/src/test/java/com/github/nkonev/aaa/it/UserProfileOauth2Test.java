@@ -179,6 +179,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         // bind facebook to him
         openOauth2TestPage();
         clickFacebook();
+        $("#facebookId").should(Condition.ownText("1234"));
         Assertions.assertEquals(countInitial, userAccountRepository.count());
 
         // logout
@@ -221,6 +222,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         // bind facebook
         openOauth2TestPage();
         clickFacebook();
+        $("#facebookId").should(Condition.ownText("1234"));
         UserAccount userAccountAfterBindFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
         // assert facebook is bound - check database
         Assertions.assertNotNull(userAccountAfterBindFacebook.getOauth2Identifiers().getFacebookId());
