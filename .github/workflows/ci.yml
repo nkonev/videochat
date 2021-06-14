@@ -10,18 +10,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install software
         run: |
-          cat <<EOF | sudo tee /etc/apt/sources.list.d/bionic-updates.list
-          # for deb-based chromium. Supported only 'til 2023
-          # see also /etc/apt/preferences.d/chromium-deb-bionic-updates
-          deb http://archive.ubuntu.com/ubuntu/ bionic-updates universe
-          EOF
-          cat <<EOF | sudo tee /etc/apt/preferences.d/chromium-deb-bionic-updates
-          Package: chromium-browser chromium-browser-l10n chromium-codecs-ffmpeg-extra chromium-codecs-ffmpeg
-          Pin: release a=bionic-updates
-          Pin-Priority: 900
-          EOF
+          echo 'deb http://download.opensuse.org/repositories/home:/ungoogled_chromium/Ubuntu_Focal/ /' | sudo tee /etc/apt/sources.list.d/home-ungoogled_chromium.list > /dev/null
+          curl -s 'https://download.opensuse.org/repositories/home:/ungoogled_chromium/Ubuntu_Focal/Release.key' | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home-ungoogled_chromium.gpg > /dev/null
           sudo apt update
-          sudo apt install -y chromium-browser
+          sudo apt install -y ungoogled-chromium
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Set up JDK 11
         uses: actions/setup-java@v1
