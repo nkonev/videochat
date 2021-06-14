@@ -239,6 +239,7 @@ func (h *FilesHandler) ListChatFilesHandler(c echo.Context) error {
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
+		Recursive: true,
 	})
 
 	var list []FileInfoDto = make([]FileInfoDto, 0)
