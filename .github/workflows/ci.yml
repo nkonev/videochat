@@ -10,11 +10,15 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install software
         run: |
-          sudo add-apt-repository ppa:xalt7x/chromium-deb-vaapi
-          cat <<EOF | sudo tee /etc/apt/preferences.d/pin-xalt7x-chromium-deb-vaapi
-          Package: *
-          Pin: release o=LP-PPA-xalt7x-chromium-deb-vaapi
-          Pin-Priority: 1337
+          cat <<EOF | sudo tee /etc/apt/sources.list.d/bionic-updates.list
+          # for deb-based chromium. Supported only 'til 2023
+          # see also /etc/apt/preferences.d/chromium-deb-bionic-updates
+          deb http://archive.ubuntu.com/ubuntu/ bionic-updates universe
+          EOF
+          cat <<EOF | sudo tee /etc/apt/preferences.d/chromium-deb-bionic-updates
+          Package: chromium-browser chromium-browser-l10n chromium-codecs-ffmpeg-extra chromium-codecs-ffmpeg
+          Pin: release a=bionic-updates
+          Pin-Priority: 900
           EOF
           sudo apt update
           sudo apt install -y chromium-browser
