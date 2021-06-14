@@ -33,12 +33,8 @@ jobs:
       - name: Build with Maven
         run: |
           (
-          export DISPLAY=:99.0;
-          sh -e /etc/init.d/xvfb start;
-          sleep 3 # give xvfb some time to start;
           cd aaa;
-          ./mvnw clean package -Dcustom.selenium.headless=false;
-          sh -e /etc/init.d/xvfb stop
+          xvfb-run --auto-servernum ./mvnw clean package -Dcustom.selenium.headless=false;
           )
       - name: Deploy
         if: github.ref == 'refs/heads/master'
