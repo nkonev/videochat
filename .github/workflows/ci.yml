@@ -11,7 +11,7 @@ jobs:
       - name: Install software
         run: |
           sudo apt update
-          sudo apt install -y chromium-browser=85.0.4183.83-0ubuntu
+          sudo apt install -y chromium-browser=85.0.4183.83-0
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Set up JDK 11
         uses: actions/setup-java@v1
