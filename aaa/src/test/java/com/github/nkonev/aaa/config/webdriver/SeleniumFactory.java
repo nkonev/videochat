@@ -87,7 +87,8 @@ public class SeleniumFactory implements FactoryBean<WebDriver> {
             break;
             case CHROME:
             {
-                WebDriverManager.getInstance(DriverManagerType.CHROME).driverVersion(CHROME_DRIVER_VERSION).setup(); // download executables if need and set System.properties
+                final String version = System.getProperty("custom.chrome.driver.version", CHROME_DRIVER_VERSION);
+                WebDriverManager.getInstance(DriverManagerType.CHROME).avoidBrowserDetection().driverVersion(version).setup(); // download executables if need and set System.properties
                 // https://developers.google.com/web/updates/2017/04/headless-chrome
                 ChromeOptions chromeOptions = new ChromeOptions();
                 if (seleniumConfiguration.isHeadless()) {
