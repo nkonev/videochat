@@ -63,11 +63,12 @@ func serializeTags(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult
 }
 
 func deserializeTags(userMetadata minio.StringMap) (int64, int64, string, error) {
-	filename, ok := userMetadata["X-Amz-Meta-"+strings.Title(filenameKey)]
+	const xAmzMetaPrefix = "X-Amz-Meta-"
+	filename, ok := userMetadata[xAmzMetaPrefix+strings.Title(filenameKey)]
 	if ! ok {
 		return 0, 0, "", errors.New("Unable to get filename")
 	}
-	ownerIdString, ok := userMetadata["X-Amz-Meta-"+strings.Title(ownerIdKey)]
+	ownerIdString, ok := userMetadata[xAmzMetaPrefix+strings.Title(ownerIdKey)]
 	if ! ok {
 		return 0, 0, "", errors.New("Unable to get owner id")
 	}
@@ -76,7 +77,7 @@ func deserializeTags(userMetadata minio.StringMap) (int64, int64, string, error)
 		return 0, 0, "", err
 	}
 
-	chatIdString, ok := userMetadata["X-Amz-Meta-"+strings.Title(chatIdKey)]
+	chatIdString, ok := userMetadata[xAmzMetaPrefix+strings.Title(chatIdKey)]
 	if ! ok {
 		return 0, 0, "", errors.New("Unable to get chat id")
 	}
