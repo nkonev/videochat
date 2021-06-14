@@ -22,43 +22,14 @@ type AvatarHandler struct {
 	minio		*minio.Client
 }
 
-func NewAvatarHandler(minio *minio.Client) AvatarHandler {
-	return AvatarHandler{
+func NewAvatarHandler(minio *minio.Client) *AvatarHandler {
+	return &AvatarHandler{
 		minio: minio,
 	}
 }
 
 const FormFile = "data"
 const UrlStorageGetAvatar = "/storage/public/avatar"
-
-func (h *AvatarHandler) ensureBucket(bucketName, location string) error {
-	// Check to see if we already own this bucket (which happens if you run this twice)
-	exists, err := h.minio.BucketExists(context.Background(), bucketName)
-	if err == nil && exists {
-		Logger.Debugf("Bucket '%s' already present", bucketName)
-		return nil
-	} else if err != nil {
-		return err
-	} else {
-		if err := h.minio.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{
-			Region:        location,
-			ObjectLocking: false,
-		}); err != nil {
-			return err
-		} else {
-			Logger.Infof("Successfully created bucket '%s'", bucketName)
-			return nil
-		}
-	}
-}
-
-func (h *AvatarHandler) ensureAndGetAvatarBucket() (string, error) {
-	bucketName := viper.GetString("minio.bucket.avatar")
-	bucketLocation := viper.GetString("minio.location")
-	err := h.ensureBucket(bucketName, bucketLocation)
-	return bucketName, err
-}
-
 
 // Go enum
 type AvatarType string
@@ -68,7 +39,7 @@ const (
 	AVATAR_640x640 AvatarType = "AVATAR_640x640"
 )
 
-func (fh *AvatarHandler) PutAvatar(c echo.Context) error {
+func (h *AvatarHandler) PutAvatar(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -81,7 +52,7 @@ func (fh *AvatarHandler) PutAvatar(c echo.Context) error {
 		return err
 	}
 
-	bucketName, err := fh.ensureAndGetAvatarBucket()
+	bucketName, err := EnsureAndGetAvatarBucket(h.minio)
 	if err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during get bucket: %v", err)
 		return err
@@ -104,11 +75,11 @@ func (fh *AvatarHandler) PutAvatar(c echo.Context) error {
 		return err
 	}
 
-	filename200, err := fh.putSizedFile(c, srcImage, err, userPrincipalDto, bucketName, contentType, 200, 200, AVATAR_200x200)
+	filename200, err := h.putSizedFile(c, srcImage, err, userPrincipalDto, bucketName, contentType, 200, 200, AVATAR_200x200)
 	if err != nil {
 		return err
 	}
-	filename640, err := fh.putSizedFile(c, srcImage, err, userPrincipalDto, bucketName, contentType, 640, 640, AVATAR_640x640)
+	filename640, err := h.putSizedFile(c, srcImage, err, userPrincipalDto, bucketName, contentType, 640, 640, AVATAR_640x640)
 	if err != nil {
 		return err
 	}
@@ -136,7 +107,7 @@ func (fh *AvatarHandler) putSizedFile(c echo.Context, srcImage image.Image, err 
 }
 
 func (h *AvatarHandler) Download(c echo.Context) error {
-	bucketName, err := h.ensureAndGetAvatarBucket()
+	bucketName, err := EnsureAndGetAvatarBucket(h.minio)
 	if err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during get bucket: %v", err)
 		return err

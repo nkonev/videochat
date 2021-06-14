@@ -41,6 +41,7 @@ import bus, {
 } from "./bus";
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
+import axios from "axios";
 
 export default {
     data () {
@@ -58,6 +59,10 @@ export default {
         showModal(chatId) {
             this.chatId = chatId;
             this.show = true;
+            axios.get(`/api/storage/${this.chatId}`)
+                .then((response) => {
+                    this.dto = response.data;
+                })
         },
         closeModal() {
             this.show = false;

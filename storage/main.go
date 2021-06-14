@@ -14,6 +14,7 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/fx"
 	"net/http"
+	"nkonev.name/storage/client"
 	"nkonev.name/storage/handlers"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
@@ -30,8 +31,11 @@ func main() {
 		fx.Provide(
 			configureMinio,
 			configureEcho,
+			client.NewChatAccessClient,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
+			handlers.NewAvatarHandler,
+			handlers.NewFilesHandler,
 		),
 		fx.Invoke(
 			initJaeger,
@@ -78,7 +82,8 @@ func configureEcho(
 	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
-	m *minio.Client,
+	ch *handlers.AvatarHandler,
+	fh *handlers.FilesHandler,
 ) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")
@@ -102,9 +107,10 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	ch := handlers.NewAvatarHandler(m)
 	e.POST("/storage/avatar", ch.PutAvatar)
 	e.GET(fmt.Sprintf("%v/:filename", handlers.UrlStorageGetAvatar), ch.Download)
+	e.POST("/storage/:chatId/file", fh.UploadHandler)
+	e.GET("/storage/:chatId", fh.ListChatFilesHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

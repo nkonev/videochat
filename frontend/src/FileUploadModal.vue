@@ -12,6 +12,7 @@
                         show-size
                         small-chips
                         truncate-length="15"
+                        @change="updateFiles"
                     ></v-file-input>
 
                     <v-progress-linear
@@ -38,12 +39,14 @@
 
 <script>
 import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL} from "./bus";
+import axios from "axios";
 
 export default {
     data () {
         return {
             uploading: false,
             show: false,
+            files: [],
         }
     },
     methods: {
@@ -52,18 +55,33 @@ export default {
         },
         hideModal() {
             this.$data.show = false;
+            this.files = [];
         },
         upload() {
             this.uploading = true;
-            setTimeout(()=>{
-                this.uploading = false;
-            }, 5000);
+            const config = {
+                headers: { 'content-type': 'multipart/form-data' }
+            }
+            console.log("Sending file to storage");
+            const formData = new FormData();
+            formData.append('data', this.files[0]);
+            return axios.post(`/api/storage/${this.chatId}/file`, formData, config)
+                .then(value => {
+                    this.uploading = false;
+                })
+        },
+        updateFiles(files) {
+            console.log("updateFiles", files);
+            this.files = [...this.files, ...files];
         }
     },
     computed: {
         totalProgress() {
             return 25;
-        }
+        },
+        chatId() {
+            return this.$route.params.id
+        },
     },
     created() {
         bus.$on(OPEN_FILE_UPLOAD_MODAL, this.showModal);

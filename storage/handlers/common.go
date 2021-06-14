@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"encoding/base64"
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
+	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/storage/auth"
@@ -35,10 +37,13 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 		return nil, err
 	}
 
+	roles := request.Header.Values("X-Auth-Role")
+
 	return &auth.AuthResult{
 		UserId:    i,
 		UserLogin: string(decodedString),
 		ExpiresAt: t.Unix(),
+		Roles: roles,
 	}, nil
 }
 
@@ -89,10 +94,44 @@ func ConfigureAuthMiddleware() AuthMiddleware {
 	}
 }
 
-
 func Convert(h http.Handler) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		h.ServeHTTP(c.Response().Writer, c.Request())
 		return nil
 	}
+}
+
+func EnsureBucket(minioClient *minio.Client, bucketName, location string) error {
+	// Check to see if we already own this bucket (which happens if you run this twice)
+	exists, err := minioClient.BucketExists(context.Background(), bucketName)
+	if err == nil && exists {
+		Logger.Debugf("Bucket '%s' already present", bucketName)
+		return nil
+	} else if err != nil {
+		return err
+	} else {
+		if err := minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{
+			Region:        location,
+			ObjectLocking: false,
+		}); err != nil {
+			return err
+		} else {
+			Logger.Infof("Successfully created bucket '%s'", bucketName)
+			return nil
+		}
+	}
+}
+
+func EnsureAndGetAvatarBucket(minioClient *minio.Client) (string, error) {
+	bucketName := viper.GetString("minio.bucket.avatar")
+	bucketLocation := viper.GetString("minio.location")
+	err := EnsureBucket(minioClient, bucketName, bucketLocation)
+	return bucketName, err
+}
+
+func EnsureAndGetFilesBucket(minioClient *minio.Client) (string, error) {
+	bucketName := viper.GetString("minio.bucket.files")
+	bucketLocation := viper.GetString("minio.location")
+	err := EnsureBucket(minioClient, bucketName, bucketLocation)
+	return bucketName, err
 }
