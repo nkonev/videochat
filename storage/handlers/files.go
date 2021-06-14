@@ -110,6 +110,8 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	}
 	files := form.File[filesMultipartKey]
 
+	fileItemUuid := uuid.New().String()
+
 	for _, file := range files {
 		bucketName, err := EnsureAndGetFilesBucket(h.minio)
 		if err != nil {
@@ -136,7 +138,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		defer src.Close()
 
 		fileUuid := uuid.New().String()
-		filename := fmt.Sprintf("chat/%v/%v%v", chatId, fileUuid, dotExt)
+		filename := fmt.Sprintf("chat/%v/%v/%v%v", chatId, fileItemUuid, fileUuid, dotExt)
 
 		var userMetadata = serializeTags(file, userPrincipalDto, chatId)
 
@@ -146,7 +148,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid})
 }
 
 func getDotExtension(file *multipart.FileHeader) string {
@@ -218,6 +220,8 @@ func (h *FilesHandler) ListChatFilesHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
+	fileItemUuid := c.QueryParam("fileItemUuid")
+
 	bucket, err := EnsureAndGetFilesBucket(h.minio)
 	if err != nil {
 		return err
@@ -225,7 +229,12 @@ func (h *FilesHandler) ListChatFilesHandler(c echo.Context) error {
 
 	Logger.Debugf("Listing bucket '%v':", bucket)
 
-	filenameChatPrefix := fmt.Sprintf("chat/%v/", chatId)
+	var filenameChatPrefix string
+	if fileItemUuid == "" {
+		filenameChatPrefix = fmt.Sprintf("chat/%v/", chatId)
+	} else {
+		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
+	}
 
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
@@ -262,7 +271,7 @@ func (h *FilesHandler) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, cha
 		return nil, err
 	}
 
-	filenameChatPrefix := fmt.Sprintf("chat/%v/", chatId)
+	filenameChatPrefix := fmt.Sprintf("chat/%v/", chatId) // TODO revise
 
 	downloadUrl.Path += filenameChatPrefix + objInfo.Key
 	str := downloadUrl.String()

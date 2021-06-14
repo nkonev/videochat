@@ -35,3 +35,4 @@ export const USER_ONLINE_CHANGED = "onlineChanged";
 export const OPEN_FILE_UPLOAD_MODAL = "openFileUploadModal";
 export const CLOSE_FILE_UPLOAD_MODAL = "closeFileUploadModal";
 export const OPEN_VIEW_FILES_DIALOG = "openViewFiles";
+export const SET_FILE_ITEM_UUID = "setFileItemUuid";

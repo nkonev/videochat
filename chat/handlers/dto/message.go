@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"time"
 )
@@ -14,4 +15,5 @@ type DisplayMessageDto struct {
 	EditDateTime   null.Time `json:"editDateTime"`
 	Owner          *User     `json:"owner"`
 	CanEdit        bool      `json:"canEdit"`
+	FileItemUuid *uuid.UUID `json:"fileItemUuid"`
 }

@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/google/uuid"
 	strip "github.com/grokify/html-strip-tags-go"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
@@ -22,10 +23,12 @@ import (
 type EditMessageDto struct {
 	Id   int64  `json:"id"`
 	Text string `json:"text"`
+	FileItemUuid *uuid.UUID `json:"fileItemUuid"`
 }
 
 type CreateMessageDto struct {
 	Text string `json:"text"`
+	FileItemUuid *uuid.UUID `json:"fileItemUuid"`
 }
 
 type MessageHandler struct {
@@ -132,6 +135,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, user
 		EditDateTime:   dbMessage.EditDateTime,
 		Owner:          user,
 		CanEdit:        dbMessage.OwnerId == userPrincipalDto.UserId,
+		FileItemUuid: dbMessage.FileItemUuid,
 	}
 }
 
@@ -221,6 +225,7 @@ func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthRe
 		Text:    trim(sanitizeMessage(policy, dto.Text)),
 		ChatId:  chatId,
 		OwnerId: authPrincipal.UserId,
+		FileItemUuid: dto.FileItemUuid,
 	}
 }
 
@@ -282,6 +287,7 @@ func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResul
 		ChatId:       chatId,
 		OwnerId:      authPrincipal.UserId,
 		EditDateTime: null.TimeFrom(time.Now()),
+		FileItemUuid: dto.FileItemUuid,
 	}
 }
 

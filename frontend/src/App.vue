@@ -199,7 +199,7 @@
         REFRESH_ON_WEBSOCKET_RESTORED,
         REQUEST_CHANGE_VIDEO_RESOLUTION,
         VIDEO_RESOLUTION_CHANGED,
-        OPEN_FIND_USER,
+        OPEN_FIND_USER, OPEN_VIEW_FILES_DIALOG,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -224,6 +224,7 @@
                     { title: 'Mute video', icon: 'mdi-video', color: 'primary', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoMute},
 
                     { title: 'Chats', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
+                    { title: 'Chat files', icon: 'mdi-file-download', clickFunction: this.displayChatFiles, requireAuthenticated: true, displayCondition: this.shouldDisplayFiles },
                     { title: 'Find user', icon: 'mdi-magnify', clickFunction: this.findUser, requireAuthenticated: true},
                     { title: 'New chat', icon: 'mdi-plus-circle-outline', clickFunction: this.createChat, requireAuthenticated: true},
                     { title: 'Edit chat', icon: 'mdi-lead-pencil', clickFunction: this.editChat, requireAuthenticated: true, displayCondition: this.shouldDisplayEditChat},
@@ -359,6 +360,9 @@
             shouldDisplayVideoMute() {
                 return !this.shareScreen && this.isVideoRoute() && !this.videoMuted;
             },
+            shouldDisplayFiles() {
+                return this.chatId;
+            },
             shouldDisplayEditChat() {
                 return this.showChatEditButton;
             },
@@ -372,6 +376,9 @@
             },
             onVideoResolutionChanged(res) {
                 this.videoResolution = res;
+            },
+            displayChatFiles() {
+                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId});
             },
         },
         computed: {

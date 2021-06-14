@@ -17,9 +17,8 @@
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
             </v-container>
             <v-list-item-content class="pre-formatted pa-0 ma-0 mt-1 message-item-text" v-html="item.text"></v-list-item-content>
-            <v-container class="pa-0 mt-1">
-                <v-btn icon tile small><v-icon small>mdi-file-download</v-icon></v-btn>
-                <v-btn icon tile small @click="onFilesClicked(item.id)"><v-icon small>mdi-file-document-multiple</v-icon></v-btn>
+            <v-container class="pa-0 mt-1" v-if="item.fileItemUuid">
+                <v-btn icon tile small @click="onFilesClicked(item.fileItemUuid)"><v-icon small>mdi-file-download</v-icon></v-btn>
             </v-container>
         </v-list-item-content>
     </v-list-item>
@@ -69,7 +68,7 @@
                 return `${format(parsedDate, formatString)}`
             },
             onFilesClicked(itemId) {
-                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, messageId :itemId});
+                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid :itemId});
             }
         },
         created() {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/guregu/null"
 	. "nkonev.name/chat/logger"
 	"time"
@@ -16,6 +17,7 @@ type Message struct {
 	OwnerId        int64
 	CreateDateTime time.Time
 	EditDateTime   null.Time
+	FileItemUuid *uuid.UUID
 }
 
 func (db *DB) GetMessages(chatId int64, userId int64, limit int, offset int, reverse bool) ([]*Message, error) {
@@ -23,7 +25,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, offset int, rev
 	if reverse {
 		order = "desc"
 	}
-	if rows, err := db.Query(fmt.Sprintf(`SELECT * FROM message WHERE chat_id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) ORDER BY id %s LIMIT $2 OFFSET $3`, order), userId, limit, offset, chatId); err != nil {
+	if rows, err := db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.chat_id, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message m WHERE chat_id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) ORDER BY id %s LIMIT $2 OFFSET $3`, order), userId, limit, offset, chatId); err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
 	} else {
@@ -31,7 +33,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, offset int, rev
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{}
-			if err := rows.Scan(&message.Id, &message.Text, &message.ChatId, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime); err != nil {
+			if err := rows.Scan(&message.Id, &message.Text, &message.ChatId, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
@@ -49,7 +51,7 @@ func (tx *Tx) CreateMessage(m *Message) (id int64, createDatetime time.Time, edi
 		return id, createDatetime, editDatetime, errors.New("text required")
 	}
 
-	res := tx.QueryRow(`INSERT INTO message (text, chat_id, owner_id) VALUES ($1, $2, $3) RETURNING id, create_date_time, edit_date_time`, m.Text, m.ChatId, m.OwnerId)
+	res := tx.QueryRow(`INSERT INTO message (text, chat_id, owner_id, file_item_uuid) VALUES ($1, $2, $3, $4) RETURNING id, create_date_time, edit_date_time`, m.Text, m.ChatId, m.OwnerId, m.FileItemUuid)
 	if err := res.Scan(&id, &createDatetime, &editDatetime); err != nil {
 		Logger.Errorf("Error during getting message id %v", err)
 		return id, createDatetime, editDatetime, err
@@ -69,9 +71,9 @@ func (db *DB) CountMessages() (int64, error) {
 }
 
 func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId int64) (*Message, error) {
-	row := co.QueryRow(`SELECT * FROM message m WHERE m.id = $1 AND chat_id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
+	row := co.QueryRow(`SELECT m.id, m.text, m.chat_id, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message m WHERE m.id = $1 AND chat_id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
 	message := Message{}
-	err := row.Scan(&message.Id, &message.Text, &message.ChatId, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime)
+	err := row.Scan(&message.Id, &message.Text, &message.ChatId, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// there were no rows, but otherwise no error occurred
@@ -115,7 +117,7 @@ func (tx *Tx) EditMessage(m *Message) error {
 		return errors.New("id required")
 	}
 
-	if _, err := tx.Exec(`UPDATE message SET text = $1, edit_date_time = utc_now() WHERE owner_id = $2 AND id = $3`, m.Text, m.OwnerId, m.Id); err != nil {
+	if _, err := tx.Exec(`UPDATE message SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2, WHERE owner_id = $3 AND id = $4`, m.Text, m.FileItemUuid, m.OwnerId, m.Id); err != nil {
 		Logger.Errorf("Error during editing message id %v", err)
 		return err
 	}

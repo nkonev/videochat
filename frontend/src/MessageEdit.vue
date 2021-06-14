@@ -48,7 +48,7 @@
         MESSAGE_BROADCAST,
         OPEN_FILE_UPLOAD_MODAL,
         OPEN_VIEW_FILES_DIALOG,
-        SET_EDIT_MESSAGE,
+        SET_EDIT_MESSAGE, SET_FILE_ITEM_UUID,
         USER_TYPING
     } from "./bus";
     import debounce from "lodash/debounce";
@@ -86,7 +86,7 @@
                 showTooltip: true,
                 sendBroadcast: false,
                 broadcastMessage: null,
-                tooltipKey: 0
+                tooltipKey: 0,
             }
         },
         methods: {
@@ -101,6 +101,7 @@
               console.log("Resetting text input");
               this.editMessageDto.text = "";
               this.editMessageDto.id = null;
+              this.editMessageDto.fileItemUuid = null;
               this.$refs.quillEditorInstance.clear();
             },
             onSetMessage(dto) {
@@ -160,7 +161,10 @@
             },
             onFilesClicked() {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId});
-            }
+            },
+            onFileItemUuid(uuid) {
+                this.editMessageDto.fileItemUuid = uuid;
+            },
         },
         computed: {
             ...mapGetters({currentUser: GET_USER})
@@ -173,11 +177,13 @@
             }, 500);
             bus.$on(USER_TYPING, this.onUserTyping);
             bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
+            bus.$on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
         },
         beforeDestroy() {
             bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.$off(USER_TYPING, this.onUserTyping);
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
+            bus.$off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             clearInterval(timerId);
         },
         created(){

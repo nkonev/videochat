@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL} from "./bus";
+import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL, SET_FILE_ITEM_UUID} from "./bus";
 import axios from "axios";
 
 export default {
@@ -68,7 +68,8 @@ export default {
                 formData.append('files', file);
             }
             return axios.post(`/api/storage/${this.chatId}/file`, formData, config)
-                .then(value => {
+                .then(response => {
+                    bus.$emit(SET_FILE_ITEM_UUID, response.data.fileItemUuid);
                     this.uploading = false;
                 })
         },
