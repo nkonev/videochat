@@ -11,6 +11,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.security.OAuth2Providers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.RequestEntity;
@@ -27,7 +28,7 @@ import static com.github.nkonev.aaa.CommonTestConstants.HEADER_XSRF_TOKEN;
 import static com.github.nkonev.aaa.Constants.Urls.API;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
-
+@Disabled // TODO think about HtmlUnit
 public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
     @Autowired
