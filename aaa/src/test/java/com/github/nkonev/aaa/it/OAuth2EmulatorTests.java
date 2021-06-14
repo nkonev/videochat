@@ -55,9 +55,11 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     }
 
     public static final String facebookLogin = "Nikita K";
+    public static final String facebookId = "1234";
     public static final String vkontakteFirstName = "Никита";
     public static final String vkontakteLastName = "Конев";
     public static final String vkontakteLogin =vkontakteFirstName +  " " + vkontakteLastName;
+    public static final String vkontakteId = "1212";
     public static final String googleLogin = "NIKITA KONEV";
     public static final String googleId = "1234567890";
 
@@ -88,7 +90,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
                 .respond(response().withHeaders(
                         new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json")
                         ).withStatusCode(200).withBody("{\n" +
-                                "  \"id\": \"1234\", \n" +
+                                "  \"id\": \""+facebookId+"\", \n" +
                                 "  \"name\": \""+facebookLogin+"\",\n" +
                                 "  \"picture\": {\n" +
                                 "      \"data\": {\t\n" +
@@ -140,7 +142,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
                 .when(request().withPath("/mock/vkontakte/method/users.get"))
                 .respond(response().withHeaders(
                         new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=\"utf-8\"")
-                        ).withStatusCode(200).withBody("{\"response\": [{\"id\": 1212, \"first_name\": \""+vkontakteFirstName+"\", \"last_name\": \""+vkontakteLastName+"\"}]}")
+                        ).withStatusCode(200).withBody("{\"response\": [{\"id\": "+vkontakteId+", \"first_name\": \""+vkontakteFirstName+"\", \"last_name\": \""+vkontakteLastName+"\"}]}")
                 );
 
         userAccountRepository.findByUsername(vkontakteLogin).ifPresent(userAccount -> {
