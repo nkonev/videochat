@@ -29,6 +29,8 @@ type RenameDto struct {
 	Newname string `json:"newname"`
 }
 
+const filesMultipartKey = "files";
+
 type FileInfoDto struct {
 	Id        string `json:"id"`
 	Filename  string `json:"filename"`
@@ -101,44 +103,46 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	file, err := c.FormFile(FormFile)
-	if err != nil {
-		Logger.Errorf("Error during extracting form %v parameter: %v", FormFile, err)
-		return err
-	}
-
-	bucketName, err := EnsureAndGetFilesBucket(h.minio)
+	form, err := c.MultipartForm()
 	if err != nil {
 		return err
 	}
+	files := form.File[filesMultipartKey]
 
-	userLimitOk, err := h.checkUserLimit(bucketName, userPrincipalDto, file)
-	if err != nil {
-		return err
-	}
-	if !userLimitOk {
-		return c.JSON(http.StatusRequestEntityTooLarge, &utils.H{"status": "fail"})
-	}
+	for _, file := range files {
+		bucketName, err := EnsureAndGetFilesBucket(h.minio)
+		if err != nil {
+			return err
+		}
 
-	contentType := file.Header.Get("Content-Type")
-	dotExt := getDotExtension(file)
+		userLimitOk, err := h.checkUserLimit(bucketName, userPrincipalDto, file)
+		if err != nil {
+			return err
+		}
+		if !userLimitOk {
+			return c.JSON(http.StatusRequestEntityTooLarge, &utils.H{"status": "fail"})
+		}
 
-	Logger.Debugf("Determined content type: %v", contentType)
+		contentType := file.Header.Get("Content-Type")
+		dotExt := getDotExtension(file)
 
-	src, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer src.Close()
+		Logger.Debugf("Determined content type: %v", contentType)
 
-	fileUuid := uuid.New().String()
-	filename := fmt.Sprintf("chat/%v/%v%v", chatId, fileUuid, dotExt)
+		src, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer src.Close()
 
-	var userMetadata = serializeTags(file, userPrincipalDto, chatId)
+		fileUuid := uuid.New().String()
+		filename := fmt.Sprintf("chat/%v/%v%v", chatId, fileUuid, dotExt)
 
-	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, file.Size, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
-		Logger.Errorf("Error during upload object: %v", err)
-		return err
+		var userMetadata = serializeTags(file, userPrincipalDto, chatId)
+
+		if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, file.Size, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
+			Logger.Errorf("Error during upload object: %v", err)
+			return err
+		}
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok"})

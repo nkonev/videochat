@@ -64,7 +64,9 @@ export default {
             }
             console.log("Sending file to storage");
             const formData = new FormData();
-            formData.append('data', this.files[0]);
+            for (const file of this.files) {
+                formData.append('files', file);
+            }
             return axios.post(`/api/storage/${this.chatId}/file`, formData, config)
                 .then(value => {
                     this.uploading = false;
