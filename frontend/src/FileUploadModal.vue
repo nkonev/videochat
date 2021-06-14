@@ -7,6 +7,7 @@
                 <v-container>
                     <v-file-input
                         :disabled="uploading"
+                        :value="files"
                         counter
                         multiple
                         show-size
@@ -69,13 +70,14 @@ export default {
             }
             return axios.post(`/api/storage/${this.chatId}/file`, formData, config)
                 .then(response => {
-                    bus.$emit(SET_FILE_ITEM_UUID, response.data.fileItemUuid);
+                    bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: this.files.length});
                     this.uploading = false;
                 })
+                .then(()=>{this.hideModal();})
         },
         updateFiles(files) {
             console.log("updateFiles", files);
-            this.files = [...this.files, ...files];
+            this.files = [...files];
         }
     },
     computed: {

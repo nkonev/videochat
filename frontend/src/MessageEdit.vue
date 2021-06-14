@@ -21,7 +21,8 @@
                 <div class="custom-toolbar-send">
                     <v-btn icon tile class="mr-4" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
                     <v-badge
-                        :content="13"
+                        :value="fileCount"
+                        :content="fileCount"
                         color="green"
                         overlap
                         left
@@ -87,6 +88,7 @@
                 sendBroadcast: false,
                 broadcastMessage: null,
                 tooltipKey: 0,
+                fileCount: null,
             }
         },
         methods: {
@@ -103,6 +105,7 @@
               this.editMessageDto.id = null;
               this.editMessageDto.fileItemUuid = null;
               this.$refs.quillEditorInstance.clear();
+              this.fileCount = null;
             },
             onSetMessage(dto) {
                 this.editMessageDto = dto;
@@ -162,8 +165,9 @@
             onFilesClicked() {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId});
             },
-            onFileItemUuid(uuid) {
-                this.editMessageDto.fileItemUuid = uuid;
+            onFileItemUuid({fileItemUuid, count}) {
+                this.editMessageDto.fileItemUuid = fileItemUuid;
+                this.fileCount = count;
             },
         },
         computed: {
