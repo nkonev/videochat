@@ -48,11 +48,13 @@ export default {
             uploading: false,
             show: false,
             files: [],
+            fileItemUuid: null, // null at first upload, non-nul when user adds files
         }
     },
     methods: {
-        showModal(chatId) {
+        showModal(fileItemUuid) {
             this.$data.show = true;
+            this.$data.fileItemUuid = fileItemUuid;
         },
         hideModal() {
             this.$data.show = false;
@@ -68,9 +70,9 @@ export default {
             for (const file of this.files) {
                 formData.append('files', file);
             }
-            return axios.post(`/api/storage/${this.chatId}/file`, formData, config)
+            return axios.post(`/api/storage/${this.chatId}/file`+(this.fileItemUuid ? `/${this.fileItemUuid}` : ''), formData, config)
                 .then(response => {
-                    bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: this.files.length});
+                    bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: response.data.count});
                     this.uploading = false;
                 })
                 .then(()=>{this.hideModal();})

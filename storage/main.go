@@ -110,6 +110,7 @@ func configureEcho(
 	e.POST("/storage/avatar", ch.PutAvatar)
 	e.GET(fmt.Sprintf("%v/:filename", handlers.UrlStorageGetAvatar), ch.Download)
 	e.POST("/storage/:chatId/file", fh.UploadHandler)
+	e.POST("/storage/:chatId/file/:fileItemUuid", fh.UploadHandler)
 	e.GET("/storage/:chatId", fh.ListChatFilesHandler)
 
 	lc.Append(fx.Hook{

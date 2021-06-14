@@ -104,20 +104,51 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
+	bucketName, err := EnsureAndGetFilesBucket(h.minio)
+	if err != nil {
+		return err
+	}
+
+	fileItemUuid := uuid.New().String()
+
+	fileItemUuidString := c.Param("fileItemUuid")
+	if fileItemUuidString != "" {
+		fileItemUuid = fileItemUuidString
+	}
+
+	// check this fileItem belongs to user
+	filenameChatPrefix := fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+		WithMetadata: true,
+		Prefix:       filenameChatPrefix,
+		Recursive: true,
+	})
+	for objInfo := range objects {
+		gotChatId, gotOwnerId, _, err := deserializeTags(objInfo.UserMetadata)
+		if err != nil {
+			Logger.Errorf("Error deserializeTags: %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		if gotChatId != chatId {
+			Logger.Errorf("Wrong chatId: expected %v but got %v", chatId, gotChatId)
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
+		if gotOwnerId != userPrincipalDto.UserId {
+			Logger.Errorf("Wrong ownerId: expected %v but got %v", userPrincipalDto.UserId, gotOwnerId)
+			return c.NoContent(http.StatusUnauthorized)
+		}
+	}
+	// end check
+
 	form, err := c.MultipartForm()
 	if err != nil {
 		return err
 	}
 	files := form.File[filesMultipartKey]
 
-	fileItemUuid := uuid.New().String()
-
 	for _, file := range files {
-		bucketName, err := EnsureAndGetFilesBucket(h.minio)
-		if err != nil {
-			return err
-		}
-
 		userLimitOk, err := h.checkUserLimit(bucketName, userPrincipalDto, file)
 		if err != nil {
 			return err
@@ -148,7 +179,19 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid})
+	// get count
+	var count = 0
+	var objectsNew <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+		Prefix:       filenameChatPrefix,
+		Recursive: true,
+	})
+	count = len(objectsNew)
+	for oi := range objectsNew {
+		Logger.Debugf("Processing %v", oi.Key)
+		count++
+	}
+
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid, "count": count})
 }
 
 func getDotExtension(file *multipart.FileHeader) string {

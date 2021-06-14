@@ -20,15 +20,17 @@
                 </div>
                 <div class="custom-toolbar-send">
                     <v-btn icon tile class="mr-4" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
-                    <v-badge
-                        :value="fileCount"
-                        :content="fileCount"
-                        color="green"
-                        overlap
-                        left
-                    >
-                        <v-btn icon tile class="mr-4" @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
-                    </v-badge>
+                    <template v-if="this.editMessageDto.fileItemUuid">
+                        <v-badge
+                            :value="fileCount"
+                            :content="fileCount"
+                            color="green"
+                            overlap
+                            left
+                        >
+                            <v-btn icon tile class="mr-4" @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
+                        </v-badge>
+                    </template>
                     <v-switch v-if="canBroadcast" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                         :label="$vuetify.breakpoint.smAndUp ? `Broadcast` : null"
                     ></v-switch>
@@ -160,10 +162,10 @@
                 this.editMessageDto.text = html;
             },
             openFileUpload() {
-                bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.chatId);
+                bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.editMessageDto.fileItemUuid);
             },
             onFilesClicked() {
-                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId});
+                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid});
             },
             onFileItemUuid({fileItemUuid, count}) {
                 this.editMessageDto.fileItemUuid = fileItemUuid;
