@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
@@ -39,20 +40,24 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         open(urlPrefix+"/oauth2.html");
     }
 
-    private void clickFacebook() {
+    private void clickFacebook() throws InterruptedException {
         $("#a-facebook").click();
+        TimeUnit.SECONDS.sleep(2);
     }
 
-    private void clickVkontakte() {
+    private void clickVkontakte() throws InterruptedException {
         $("#a-vkontakte").click();
+        TimeUnit.SECONDS.sleep(2);
     }
 
-    private void clickGoogle() {
+    private void clickGoogle() throws InterruptedException {
         $("#a-google").click();
+        TimeUnit.SECONDS.sleep(2);
     }
 
-    private void clickLogout() {
+    private void clickLogout() throws InterruptedException {
         $("#btn-logout").click();
+        TimeUnit.SECONDS.sleep(2);
     }
 
     private class LoginPage {
@@ -76,7 +81,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
     }
 
     @Test
-    public void testFacebookLogin()  {
+    public void testFacebookLogin() throws InterruptedException {
         Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
         openOauth2TestPage();
@@ -90,7 +95,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
     }
 
     @Test
-    public void testFacebookLoginAndMergeVkontakte()  {
+    public void testFacebookLoginAndMergeVkontakte() throws InterruptedException {
         Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
         openOauth2TestPage();
@@ -226,6 +231,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         // bind facebook
         openOauth2TestPage();
         clickFacebook();
+
         $("#facebookId").should(Condition.appear, Condition.ownText(facebookId));
         UserAccount userAccountAfterBindFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
         // assert facebook is bound - check database
