@@ -1,5 +1,6 @@
 package com.github.nkonev.aaa.it;
 
+import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.github.nkonev.aaa.AbstractSeleniumRunner;
@@ -8,7 +9,6 @@ import com.github.nkonev.aaa.FailoverUtils;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.security.OAuth2Providers;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.RequestEntity;
@@ -41,6 +41,10 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
     private void clickVkontakte() throws InterruptedException, IOException {
         currentPage.getElementById("a-vkontakte").click();
         openOauth2TestPage(); // refresh page's csrf after redirects
+    }
+
+    private WebResponse clickVkontakteClear() throws InterruptedException, IOException {
+        return currentPage.getElementById("a-vkontakte").click().getWebResponse();
     }
 
     private void clickGoogle() throws InterruptedException, IOException {
@@ -204,9 +208,10 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         loginPage.login();
         // try to bind him vk, but emulator returns previous vk id #1 - here backend must argue that we already have vk id #1 in our database on another user
         openOauth2TestPage();
-        clickVkontakte();
+        webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+        final WebResponse vkLoginResponse = clickVkontakteClear();
 
-        Assertions.assertTrue(currentPage.getBody().getTextContent().contains("Somebody already taken this vkontakte id"));
+        Assertions.assertTrue(vkLoginResponse.getContentAsString().contains("Somebody already taken this vkontakte id"));
     }
 
     @Test
