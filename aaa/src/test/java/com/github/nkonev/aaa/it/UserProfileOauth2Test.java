@@ -75,10 +75,9 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
             currentPage.getElementById("btn-login").click();
         }
     }
-/*
+
     @Test
-    public void testFacebookLogin() throws InterruptedException {
-        Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
+    public void testFacebookLogin() throws InterruptedException, IOException {
 
         openOauth2TestPage();
 
@@ -88,7 +87,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Assertions.assertNotNull(userAccount.getId());
         Assertions.assertEquals(facebookLogin, userAccount.getUsername());
     }
-*/
+
     @Test
     public void testFacebookLoginAndMergeVkontakte() throws InterruptedException, IOException {
 
