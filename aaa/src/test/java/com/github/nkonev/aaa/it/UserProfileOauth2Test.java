@@ -120,13 +120,12 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Assertions.assertEquals(userAccount.getUsername(), userAccountFbAndVk.getUsername());
     }
 
-
+*/
     @Test
     public void testVkontakteLoginAndDelete() throws Exception {
         final String vkontaktePassword = "dummy password";
 
         long countInitial = userAccountRepository.count();
-        Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
         openOauth2TestPage();
 
@@ -165,7 +164,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
             return null;
         });
     }
-*/
+
     @Test
     public void testBindIdToAccountAndConflict() throws Exception {
         long countInitial = userAccountRepository.count();
