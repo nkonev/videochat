@@ -53,12 +53,9 @@ custom.it.user: admin
 custom.it.password: admin
 custom.it.user.id: 1
 
-custom.selenium.implicitly-wait-timeout: 10
-custom.selenium.browser: CHROME
-custom.selenium.window-height: 900
-custom.selenium.window-width: 1600
-custom.selenium.selenide-condition-timeout: 10
-custom.selenium.selenide-polling-interval: 10000
+custom.htmlunit.implicitly-wait-timeout: 10000
+custom.htmlunit.window-height: 900
+custom.htmlunit.window-width: 1600
 
 
 spring.datasource:

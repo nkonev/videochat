@@ -1,58 +1,56 @@
 package com.github.nkonev.aaa.it;
 
-import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.Selenide;
-import com.github.nkonev.aaa.AbstractSeleniumRunner;
+import com.gargoylesoftware.htmlunit.WebResponse;
+import com.gargoylesoftware.htmlunit.html.HtmlInput;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.github.nkonev.aaa.AbstractHtmlUnitRunner;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.FailoverUtils;
-import com.github.nkonev.aaa.config.webdriver.Browser;
-import com.github.nkonev.aaa.config.webdriver.SeleniumProperties;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.security.OAuth2Providers;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.io.IOException;
 import java.net.URI;
-
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.open;
 import static com.github.nkonev.aaa.CommonTestConstants.COMMON_PASSWORD;
 import static com.github.nkonev.aaa.CommonTestConstants.HEADER_XSRF_TOKEN;
 import static com.github.nkonev.aaa.Constants.Urls.API;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
-
-public class UserProfileOauth2Test extends AbstractSeleniumRunner {
-
-    @Autowired
-    private SeleniumProperties seleniumConfiguration;
+public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private void openOauth2TestPage() {
-        open(urlPrefix+"/oauth2.html");
+    private HtmlPage currentPage;
+
+    private void openOauth2TestPage() throws IOException {
+        currentPage = webClient.getPage(urlPrefix+"/oauth2.html");
     }
 
-    private void clickFacebook() {
-        $("#a-facebook").click();
+    private void clickFacebook() throws IOException {
+        currentPage = currentPage.getElementById("a-facebook").click();
     }
 
-    private void clickVkontakte() {
-        $("#a-vkontakte").click();
+    private void clickVkontakte() throws IOException {
+        currentPage = currentPage.getElementById("a-vkontakte").click();
     }
 
-    private void clickGoogle() {
-        $("#a-google").click();
+    private WebResponse clickVkontakteAndReturn() throws IOException {
+        return currentPage.getElementById("a-vkontakte").click().getWebResponse();
     }
 
-    private void clickLogout() {
-        $("#btn-logout").click();
+    private void clickGoogle() throws IOException {
+        currentPage = currentPage.getElementById("a-google").click();
+    }
+
+    private void clickLogout() throws IOException {
+        currentPage.getElementById("btn-logout").click();
     }
 
     private class LoginPage {
@@ -61,23 +59,22 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
             this.password = password;
         }
 
-        private void openLoginPage() {
-            open(urlPrefix+"/login.html");
+        private void openLoginPage() throws IOException {
+            currentPage = webClient.getPage(urlPrefix+"/login.html");
         }
 
         private String login;
         private String password;
 
-        private void login() {
-            $("input#username").setValue(this.login);
-            $("input#password").setValue(this.password);
-            $("#btn-login").click();
+        private void login() throws IOException {
+            ((HtmlInput)currentPage.getElementById("username")).setValueAttribute(this.login);
+            ((HtmlInput)currentPage.getElementById("password")).setValueAttribute(this.password);
+            currentPage.getElementById("btn-login").click();
         }
     }
 
     @Test
-    public void testFacebookLogin()  {
-        Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
+    public void testFacebookLogin() throws InterruptedException, IOException {
 
         openOauth2TestPage();
 
@@ -89,8 +86,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
     }
 
     @Test
-    public void testFacebookLoginAndMergeVkontakte()  {
-        Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
+    public void testFacebookLoginAndMergeVkontakte() throws InterruptedException, IOException {
 
         openOauth2TestPage();
 
@@ -106,6 +102,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         long count = userAccountRepository.count();
 
         clickVkontakte();
+
         UserAccount userAccountFbAndVk = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
         String userAccountFbAndVkFacebookId = userAccountFbAndVk.getOauth2Identifiers().getFacebookId();
         Assertions.assertNotNull(userAccountFbAndVkFacebookId);
@@ -118,13 +115,11 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Assertions.assertEquals(userAccount.getUsername(), userAccountFbAndVk.getUsername());
     }
 
-
     @Test
     public void testVkontakteLoginAndDelete() throws Exception {
         final String vkontaktePassword = "dummy password";
 
         long countInitial = userAccountRepository.count();
-        Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
         openOauth2TestPage();
 
@@ -185,7 +180,8 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         clickLogout();
 
         // check that binding is preserved
-        Selenide.refresh();
+        currentPage.refresh();
+
         // assert that he has facebook id
         UserAccount userAccountAfterBind = userAccountRepository.findByUsername(login600).orElseThrow();
         Assertions.assertNotNull(userAccountAfterBind.getOauth2Identifiers().getFacebookId());
@@ -205,8 +201,10 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         loginPage.login();
         // try to bind him vk, but emulator returns previous vk id #1 - here backend must argue that we already have vk id #1 in our database on another user
         openOauth2TestPage();
-        clickVkontakte();
-        Assertions.assertTrue($("body").has(Condition.text("Somebody already taken this vkontakte id")));
+        webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+        final WebResponse vkLoginResponse = clickVkontakteAndReturn();
+
+        Assertions.assertTrue(vkLoginResponse.getContentAsString().contains("Somebody already taken this vkontakte id"));
     }
 
     @Test
@@ -221,6 +219,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         // bind facebook
         openOauth2TestPage();
         clickFacebook();
+
         UserAccount userAccountAfterBindFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
         // assert facebook is bound - check database
         Assertions.assertNotNull(userAccountAfterBindFacebook.getOauth2Identifiers().getFacebookId());
@@ -247,14 +246,11 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Assertions.assertNull(userAccountAfterDeleteFacebook.getOauth2Identifiers().getFacebookId());
     }
 
-
-
     @Test
     public void testGoogleLoginAndDelete() throws Exception {
         final String googlePassword = "dummy password";
 
         long countInitial = userAccountRepository.count();
-        Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
         openOauth2TestPage();
 
