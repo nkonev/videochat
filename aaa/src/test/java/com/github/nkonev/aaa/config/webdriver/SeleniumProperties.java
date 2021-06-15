@@ -12,18 +12,13 @@ import org.springframework.context.annotation.Scope;
 public class SeleniumProperties {
 
     /**
-     * in seconds
+     * in milliseconds
      */
     private int implicitlyWaitTimeout;
 
     private int windowWidth;
 
     private int windowHeight;
-
-    /**
-     * in milliseconds
-     */
-    private int selenidePollingInterval;
 
     public int getImplicitlyWaitTimeout() {
         return implicitlyWaitTimeout;
@@ -47,13 +42,5 @@ public class SeleniumProperties {
 
     public void setWindowHeight(int windowHeight) {
         this.windowHeight = windowHeight;
-    }
-
-    public int getSelenidePollingInterval() {
-        return selenidePollingInterval;
-    }
-
-    public void setSelenidePollingInterval(int selenidePollingInterval) {
-        this.selenidePollingInterval = selenidePollingInterval;
     }
 }

@@ -10,8 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.test.web.servlet.htmlunit.MockMvcWebClientBuilder;
-import org.springframework.web.context.WebApplicationContext;
 
 public class AbstractSeleniumRunner extends OAuth2EmulatorTests {
 
@@ -20,21 +18,18 @@ public class AbstractSeleniumRunner extends OAuth2EmulatorTests {
     protected WebClient webClient;
 
     @Autowired
-    private WebApplicationContext wac;
-
-    @Autowired
     private SeleniumProperties seleniumProperties;
 
     @BeforeEach
     public void beforeSelenium() {
         LOGGER.debug("Executing before");
-        webClient = MockMvcWebClientBuilder
-                .webAppContextSetup(wac).build();
+        webClient = new WebClient();
         webClient.getOptions().setCssEnabled(true);
         webClient.getOptions().setJavaScriptEnabled(true);
         webClient.getOptions().setScreenHeight(seleniumProperties.getWindowHeight());
         webClient.getOptions().setScreenWidth(seleniumProperties.getWindowWidth());
         webClient.getOptions().setTimeout(seleniumProperties.getImplicitlyWaitTimeout());
+        webClient.getOptions().setRedirectEnabled(true);
     }
 
     @AfterEach
