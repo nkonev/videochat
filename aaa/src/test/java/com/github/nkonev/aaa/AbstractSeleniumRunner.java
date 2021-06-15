@@ -1,36 +1,47 @@
 package com.github.nkonev.aaa;
 
-import com.codeborne.selenide.Condition;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.github.nkonev.aaa.config.webdriver.SeleniumProperties;
 import com.github.nkonev.aaa.it.OAuth2EmulatorTests;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.htmlunit.MockMvcWebClientBuilder;
+import org.springframework.web.context.WebApplicationContext;
 
-import static com.codeborne.selenide.Selenide.clearBrowserCookies;
-import static com.github.nkonev.aaa.config.webdriver.SeleniumFactory.CUSTOM_SELENIUM_ENABLE;
-
-@TestPropertySource(properties = {CUSTOM_SELENIUM_ENABLE+"=true"})
 public class AbstractSeleniumRunner extends OAuth2EmulatorTests {
 
     private Logger LOGGER = LoggerFactory.getLogger(AbstractSeleniumRunner.class);
 
-    // http://www.seleniumhq.org/docs/04_webdriver_advanced.jsp#expected-conditions
-    // clickable https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/support/ui/ExpectedConditions.html#elementToBeClickable-org.openqa.selenium.By-
-    public static final Condition[] CLICKABLE = {Condition.exist, Condition.enabled, Condition.visible};
-
-    @BeforeEach
-    public void before() {
-        LOGGER.debug("Executing before");
-        clearBrowserCookies();
-    }
+    protected WebClient webClient;
 
     @Autowired
-    protected WebDriver driver;
+    private WebApplicationContext wac;
+
+    @Autowired
+    private SeleniumProperties seleniumProperties;
+
+    @BeforeEach
+    public void beforeSelenium() {
+        LOGGER.debug("Executing before");
+        webClient = MockMvcWebClientBuilder
+                .webAppContextSetup(wac).build();
+        webClient.getOptions().setCssEnabled(true);
+        webClient.getOptions().setJavaScriptEnabled(true);
+        webClient.getOptions().setScreenHeight(seleniumProperties.getWindowHeight());
+        webClient.getOptions().setScreenWidth(seleniumProperties.getWindowWidth());
+        webClient.getOptions().setTimeout(seleniumProperties.getImplicitlyWaitTimeout());
+    }
+
+    @AfterEach
+    public void afterSelenium() {
+        LOGGER.debug("Executing after");
+        webClient.close();
+    }
 
     @Autowired
     protected TestRestTemplate testRestTemplate;

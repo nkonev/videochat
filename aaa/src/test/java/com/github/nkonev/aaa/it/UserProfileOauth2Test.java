@@ -1,60 +1,53 @@
 package com.github.nkonev.aaa.it;
 
-import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.Selenide;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.github.nkonev.aaa.AbstractSeleniumRunner;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.FailoverUtils;
-import com.github.nkonev.aaa.config.webdriver.Browser;
-import com.github.nkonev.aaa.config.webdriver.SeleniumProperties;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.security.OAuth2Providers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.io.IOException;
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
-
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.open;
 import static com.github.nkonev.aaa.CommonTestConstants.COMMON_PASSWORD;
 import static com.github.nkonev.aaa.CommonTestConstants.HEADER_XSRF_TOKEN;
 import static com.github.nkonev.aaa.Constants.Urls.API;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
-@Disabled // TODO think about HtmlUnit
 public class UserProfileOauth2Test extends AbstractSeleniumRunner {
-
-    @Autowired
-    private SeleniumProperties seleniumConfiguration;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private void openOauth2TestPage() {
-        open(urlPrefix+"/oauth2.html");
+    private HtmlPage currentPage;
+
+//    final protected String urlPrefix = "http://localhost";
+
+    private void openOauth2TestPage() throws IOException {
+        currentPage = webClient.getPage(urlPrefix+"/oauth2.html");
     }
 
-    private void clickFacebook() throws InterruptedException {
-        $("#a-facebook").click();
+    private void clickFacebook() throws InterruptedException, IOException {
+        currentPage.getElementById("a-facebook").click();
     }
 
-    private void clickVkontakte() throws InterruptedException {
-        $("#a-vkontakte").click();
+    private void clickVkontakte() throws InterruptedException, IOException {
+        currentPage.getElementById("a-vkontakte").click();
     }
 
-    private void clickGoogle() throws InterruptedException {
-        $("#a-google").click();
+    private void clickGoogle() throws InterruptedException, IOException {
+        currentPage.getElementById("a-google").click();
     }
 
-    private void clickLogout() throws InterruptedException {
-        $("#btn-logout").click();
+    private void clickLogout() throws InterruptedException, IOException {
+        currentPage.getElementById("btn-logout").click();
     }
 
     private class LoginPage {
@@ -63,20 +56,20 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
             this.password = password;
         }
 
-        private void openLoginPage() {
-            open(urlPrefix+"/login.html");
+        private void openLoginPage() throws IOException {
+            currentPage = webClient.getPage(urlPrefix+"/login.html");
         }
 
         private String login;
         private String password;
 
-        private void login() {
-            $("input#username").setValue(this.login);
-            $("input#password").setValue(this.password);
-            $("#btn-login").click();
+        private void login() throws IOException {
+            currentPage.getElementById("username").setNodeValue(this.login);
+            currentPage.getElementById("password").setNodeValue(this.password);
+            currentPage.getElementById("btn-login").click();
         }
     }
-
+/*
     @Test
     public void testFacebookLogin() throws InterruptedException {
         Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
@@ -251,14 +244,13 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         Assertions.assertNull(userAccountAfterDeleteFacebook.getOauth2Identifiers().getFacebookId());
     }
 
-
+*/
 
     @Test
     public void testGoogleLoginAndDelete() throws Exception {
         final String googlePassword = "dummy password";
 
         long countInitial = userAccountRepository.count();
-        Assumptions.assumeTrue(Browser.CHROME.equals(seleniumConfiguration.getBrowser()), "Browser must be chrome");
 
         openOauth2TestPage();
 
