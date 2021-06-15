@@ -34,22 +34,19 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
     }
 
     private void clickFacebook() throws InterruptedException, IOException {
-        currentPage.getElementById("a-facebook").click();
-        openOauth2TestPage(); // refresh page's csrf after redirects
+        currentPage = currentPage.getElementById("a-facebook").click();
     }
 
     private void clickVkontakte() throws InterruptedException, IOException {
-        currentPage.getElementById("a-vkontakte").click();
-        openOauth2TestPage(); // refresh page's csrf after redirects
+        currentPage = currentPage.getElementById("a-vkontakte").click();
     }
 
-    private WebResponse clickVkontakteClear() throws InterruptedException, IOException {
+    private WebResponse clickVkontakteAndReturn() throws InterruptedException, IOException {
         return currentPage.getElementById("a-vkontakte").click().getWebResponse();
     }
 
     private void clickGoogle() throws InterruptedException, IOException {
-        currentPage.getElementById("a-google").click();
-        openOauth2TestPage(); // refresh page's csrf after redirects
+        currentPage = currentPage.getElementById("a-google").click();
     }
 
     private void clickLogout() throws InterruptedException, IOException {
@@ -205,7 +202,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         // try to bind him vk, but emulator returns previous vk id #1 - here backend must argue that we already have vk id #1 in our database on another user
         openOauth2TestPage();
         webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-        final WebResponse vkLoginResponse = clickVkontakteClear();
+        final WebResponse vkLoginResponse = clickVkontakteAndReturn();
 
         Assertions.assertTrue(vkLoginResponse.getContentAsString().contains("Somebody already taken this vkontakte id"));
     }
