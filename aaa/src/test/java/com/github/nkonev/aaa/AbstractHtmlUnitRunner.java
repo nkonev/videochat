@@ -2,7 +2,7 @@ package com.github.nkonev.aaa;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gargoylesoftware.htmlunit.WebClient;
-import com.github.nkonev.aaa.config.webdriver.HtmlUnitProperties;
+import com.github.nkonev.aaa.config.HtmlUnitProperties;
 import com.github.nkonev.aaa.it.OAuth2EmulatorTests;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
