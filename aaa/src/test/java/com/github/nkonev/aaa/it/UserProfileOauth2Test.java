@@ -1,5 +1,6 @@
 package com.github.nkonev.aaa.it;
 
+import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.github.nkonev.aaa.AbstractSeleniumRunner;
 import com.github.nkonev.aaa.Constants;
@@ -28,22 +29,23 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
 
     private HtmlPage currentPage;
 
-//    final protected String urlPrefix = "http://localhost";
-
     private void openOauth2TestPage() throws IOException {
         currentPage = webClient.getPage(urlPrefix+"/oauth2.html");
     }
 
     private void clickFacebook() throws InterruptedException, IOException {
         currentPage.getElementById("a-facebook").click();
+        openOauth2TestPage(); // refresh page's csrf after redirects
     }
 
     private void clickVkontakte() throws InterruptedException, IOException {
         currentPage.getElementById("a-vkontakte").click();
+        openOauth2TestPage(); // refresh page's csrf after redirects
     }
 
     private void clickGoogle() throws InterruptedException, IOException {
         currentPage.getElementById("a-google").click();
+        openOauth2TestPage(); // refresh page's csrf after redirects
     }
 
     private void clickLogout() throws InterruptedException, IOException {
@@ -64,8 +66,8 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         private String password;
 
         private void login() throws IOException {
-            currentPage.getElementById("username").setNodeValue(this.login);
-            currentPage.getElementById("password").setNodeValue(this.password);
+            ((HtmlInput)currentPage.getElementById("username")).setValueAttribute(this.login);
+            ((HtmlInput)currentPage.getElementById("password")).setValueAttribute(this.password);
             currentPage.getElementById("btn-login").click();
         }
     }
@@ -159,7 +161,7 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
             return null;
         });
     }
-
+*/
     @Test
     public void testBindIdToAccountAndConflict() throws Exception {
         long countInitial = userAccountRepository.count();
@@ -181,7 +183,8 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         clickLogout();
 
         // check that binding is preserved
-        Selenide.refresh();
+        currentPage.refresh();
+
         // assert that he has facebook id
         UserAccount userAccountAfterBind = userAccountRepository.findByUsername(login600).orElseThrow();
         Assertions.assertNotNull(userAccountAfterBind.getOauth2Identifiers().getFacebookId());
@@ -202,7 +205,8 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         // try to bind him vk, but emulator returns previous vk id #1 - here backend must argue that we already have vk id #1 in our database on another user
         openOauth2TestPage();
         clickVkontakte();
-        Assertions.assertTrue($("body").has(Condition.text("Somebody already taken this vkontakte id")));
+
+        Assertions.assertTrue(currentPage.getBody().getTextContent().contains("Somebody already taken this vkontakte id"));
     }
 
     @Test
@@ -243,8 +247,6 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         UserAccount userAccountAfterDeleteFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
         Assertions.assertNull(userAccountAfterDeleteFacebook.getOauth2Identifiers().getFacebookId());
     }
-
-*/
 
     @Test
     public void testGoogleLoginAndDelete() throws Exception {
