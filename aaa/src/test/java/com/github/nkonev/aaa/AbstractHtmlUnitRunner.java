@@ -2,7 +2,7 @@ package com.github.nkonev.aaa;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gargoylesoftware.htmlunit.WebClient;
-import com.github.nkonev.aaa.config.webdriver.SeleniumProperties;
+import com.github.nkonev.aaa.config.webdriver.HtmlUnitProperties;
 import com.github.nkonev.aaa.it.OAuth2EmulatorTests;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,14 +11,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 
-public class AbstractSeleniumRunner extends OAuth2EmulatorTests {
+public class AbstractHtmlUnitRunner extends OAuth2EmulatorTests {
 
-    private Logger LOGGER = LoggerFactory.getLogger(AbstractSeleniumRunner.class);
+    private Logger LOGGER = LoggerFactory.getLogger(AbstractHtmlUnitRunner.class);
 
     protected WebClient webClient;
 
     @Autowired
-    private SeleniumProperties seleniumProperties;
+    private HtmlUnitProperties htmlUnitProperties;
 
     @BeforeEach
     public void beforeSelenium() {
@@ -26,9 +26,9 @@ public class AbstractSeleniumRunner extends OAuth2EmulatorTests {
         webClient = new WebClient();
         webClient.getOptions().setCssEnabled(true);
         webClient.getOptions().setJavaScriptEnabled(true);
-        webClient.getOptions().setScreenHeight(seleniumProperties.getWindowHeight());
-        webClient.getOptions().setScreenWidth(seleniumProperties.getWindowWidth());
-        webClient.getOptions().setTimeout(seleniumProperties.getImplicitlyWaitTimeout());
+        webClient.getOptions().setScreenHeight(htmlUnitProperties.getWindowHeight());
+        webClient.getOptions().setScreenWidth(htmlUnitProperties.getWindowWidth());
+        webClient.getOptions().setTimeout(htmlUnitProperties.getImplicitlyWaitTimeout());
         webClient.getOptions().setRedirectEnabled(true);
     }
 

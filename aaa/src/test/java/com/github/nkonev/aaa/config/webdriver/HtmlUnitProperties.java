@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Scope;
 /**
  * Created by nik on 04.10.16.
  */
-@ConfigurationProperties(prefix = "custom.selenium")
-public class SeleniumProperties {
+@ConfigurationProperties(prefix = "custom.htmlunit")
+public class HtmlUnitProperties {
 
     /**
      * in milliseconds

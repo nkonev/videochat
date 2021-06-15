@@ -3,7 +3,7 @@ package com.github.nkonev.aaa.it;
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.github.nkonev.aaa.AbstractSeleniumRunner;
+import com.github.nkonev.aaa.AbstractHtmlUnitRunner;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.FailoverUtils;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
@@ -22,7 +22,7 @@ import static com.github.nkonev.aaa.CommonTestConstants.HEADER_XSRF_TOKEN;
 import static com.github.nkonev.aaa.Constants.Urls.API;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
-public class UserProfileOauth2Test extends AbstractSeleniumRunner {
+public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -33,23 +33,23 @@ public class UserProfileOauth2Test extends AbstractSeleniumRunner {
         currentPage = webClient.getPage(urlPrefix+"/oauth2.html");
     }
 
-    private void clickFacebook() throws InterruptedException, IOException {
+    private void clickFacebook() throws IOException {
         currentPage = currentPage.getElementById("a-facebook").click();
     }
 
-    private void clickVkontakte() throws InterruptedException, IOException {
+    private void clickVkontakte() throws IOException {
         currentPage = currentPage.getElementById("a-vkontakte").click();
     }
 
-    private WebResponse clickVkontakteAndReturn() throws InterruptedException, IOException {
+    private WebResponse clickVkontakteAndReturn() throws IOException {
         return currentPage.getElementById("a-vkontakte").click().getWebResponse();
     }
 
-    private void clickGoogle() throws InterruptedException, IOException {
+    private void clickGoogle() throws IOException {
         currentPage = currentPage.getElementById("a-google").click();
     }
 
-    private void clickLogout() throws InterruptedException, IOException {
+    private void clickLogout() throws IOException {
         currentPage.getElementById("btn-logout").click();
     }
 
