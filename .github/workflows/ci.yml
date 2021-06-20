@@ -66,7 +66,7 @@ jobs:
         run: |
           (cd frontend; npm install && npm run build)
       - name: Deploy
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/update-pion'
+        if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
@@ -166,7 +166,7 @@ jobs:
       - name: Build & test video
         run: (cd video; make check-env download generate test package)
       - name: Deploy video
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/update-pion'
+        if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
