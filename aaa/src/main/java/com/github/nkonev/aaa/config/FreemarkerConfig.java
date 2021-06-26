@@ -1,11 +1,8 @@
 package com.github.nkonev.aaa.config;
 
-import freemarker.ext.jsp.TaglibFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
-
 import javax.annotation.PostConstruct;
 import java.util.Arrays;
 
@@ -22,13 +19,6 @@ public class FreemarkerConfig {
     public void postConstruct() {
         freeMarkerConfigurer.getTaglibFactory().setClasspathTlds(Arrays.asList("/META-INF/security.tld", "/META-INF/spring-form.tld"));
         freeMarkerConfigurer.setPreferFileSystemAccess(false);
-    }
-
-    @Bean
-    public TaglibFactory taglibFactory() {
-        TaglibFactory taglibFactory = freeMarkerConfigurer.getTaglibFactory();
-        taglibFactory.setObjectWrapper(freemarker.template.Configuration.getDefaultObjectWrapper(freemarker.template.Configuration.getVersion()));
-        return taglibFactory;
     }
 
 }
