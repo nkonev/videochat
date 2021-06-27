@@ -10,16 +10,14 @@
             </v-list-item-avatar>
         </router-link>
 
-        <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" class="pb-0">
+        <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
                 <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item)}}</router-link><span class="with-space"> at </span>{{getDate(item)}}
-                <v-icon class="mx-1 ml-2" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
+                <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item.fileItemUuid)" small>mdi-file-download</v-icon>
+                <v-icon class="mx-1" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
             </v-container>
             <v-list-item-content class="pre-formatted pa-0 ma-0 mt-1 message-item-text" v-html="item.text"></v-list-item-content>
-            <v-container class="pa-0 mt-1" v-if="item.fileItemUuid">
-                <v-btn icon tile small @click="onFilesClicked(item.fileItemUuid)"><v-icon small>mdi-file-download</v-icon></v-btn>
-            </v-container>
         </v-list-item-content>
     </v-list-item>
 </template>
@@ -88,10 +86,6 @@
       display inline-block
       word-wrap break-word
       overflow-wrap break-word
-
-      p {
-          margin-bottom 0
-      }
   }
   .with-space {
       white-space: pre;
