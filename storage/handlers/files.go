@@ -199,6 +199,11 @@ func getDotExtension(file *multipart.FileHeader) string {
 	}
 }
 
+func getFileItemUuid(fileId string) string {
+	split := strings.Split(fileId, "/")
+	return split[2]
+}
+
 func (h *FilesHandler) checkUserLimit(bucketName string, userPrincipalDto *auth.AuthResult, file *multipart.FileHeader) (bool, error) {
 	consumption := h.calcUserFilesConsumption(bucketName)
 	maxAllowed, err := h.getMaxAllowedConsumption(userPrincipalDto)
@@ -351,11 +356,6 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
 	}
-	fileItemUuid := c.Param("fileItemUuid")
-	if fileItemUuid == "" {
-		Logger.Errorf("fileItemUuid is required")
-		return c.NoContent(http.StatusBadRequest)
-	}
 
 	bucketName, err := EnsureAndGetFilesBucket(h.minio)
 	if err != nil {
@@ -379,6 +379,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	}
 	// end check
 
+	fileItemUuid := getFileItemUuid(bindTo.Id)
 	var filenameChatPrefix string = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 
 	err = h.minio.RemoveObject(context.Background(), bucketName, bindTo.Id, minio.RemoveObjectOptions{})

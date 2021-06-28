@@ -112,7 +112,7 @@ func configureEcho(
 	e.POST("/storage/:chatId/file", fh.UploadHandler)
 	e.POST("/storage/:chatId/file/:fileItemUuid", fh.UploadHandler)
 	e.GET("/storage/:chatId", fh.ListChatFilesHandler)
-	e.DELETE("/storage/:chatId/file/:fileItemUuid", fh.DeleteHandler)
+	e.DELETE("/storage/:chatId/file", fh.DeleteHandler)
 	e.GET("/storage/download", fh.DownloadHandler)
 
 	lc.Append(fx.Hook{

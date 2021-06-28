@@ -435,5 +435,5 @@ func (mc MessageHandler) RemoveFileItem(c echo.Context) error {
 	}
 	mc.notificator.NotifyAboutEditMessage(c, ids, chatId, message)
 
-	return c.NoContent(http.StatusAccepted)
+	return c.NoContent(http.StatusOK)
 }
