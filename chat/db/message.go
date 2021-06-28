@@ -117,7 +117,7 @@ func (tx *Tx) EditMessage(m *Message) error {
 		return errors.New("id required")
 	}
 
-	if _, err := tx.Exec(`UPDATE message SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2, WHERE owner_id = $3 AND id = $4`, m.Text, m.FileItemUuid, m.OwnerId, m.Id); err != nil {
+	if _, err := tx.Exec(`UPDATE message SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2 WHERE owner_id = $3 AND id = $4`, m.Text, m.FileItemUuid, m.OwnerId, m.Id); err != nil {
 		Logger.Errorf("Error during editing message id %v", err)
 		return err
 	}
@@ -130,6 +130,22 @@ func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error 
 		return err
 	}
 	return nil
+}
+
+func (dbR *DB) SetFileItemUuidToNull(ownerId, chatId int64, uuid string) (int64, error) {
+	res := dbR.QueryRow(`UPDATE message SET file_item_uuid = NULL WHERE file_item_uuid = $1 AND owner_id = $2 AND chat_id = $3 RETURNING id`, uuid, ownerId, chatId)
+
+	if res.Err() != nil {
+		Logger.Errorf("Error during nulling file_item_uuid message id %v", res.Err())
+		return 0, res.Err()
+	}
+	var messageId int64
+	err := res.Scan(&messageId)
+	if err != nil {
+		return 0, err
+	} else {
+		return messageId, nil
+	}
 }
 
 func getUnreadMessagesCountCommon(co CommonOperations, chatId int64, userId int64) (int64, error) {

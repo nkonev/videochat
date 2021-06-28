@@ -37,6 +37,7 @@ type FileInfoDto struct {
 	Url       string `json:"url"`
 	PublicUrl string `json:"publicUrl"`
 	Size      int64  `json:"size"`
+	CanRemove bool   `json:"canRemove"`
 }
 
 const filenameKey = "filename"
@@ -62,13 +63,17 @@ func serializeTags(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult
 	return userMetadata
 }
 
-func deserializeTags(userMetadata minio.StringMap) (int64, int64, string, error) {
+func deserializeTags(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, error) {
 	const xAmzMetaPrefix = "X-Amz-Meta-"
-	filename, ok := userMetadata[xAmzMetaPrefix+strings.Title(filenameKey)]
+	var prefix = ""
+	if hasAmzPrefix {
+		prefix = xAmzMetaPrefix
+	}
+	filename, ok := userMetadata[prefix+strings.Title(filenameKey)]
 	if ! ok {
 		return 0, 0, "", errors.New("Unable to get filename")
 	}
-	ownerIdString, ok := userMetadata[xAmzMetaPrefix+strings.Title(ownerIdKey)]
+	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
 	if ! ok {
 		return 0, 0, "", errors.New("Unable to get owner id")
 	}
@@ -77,7 +82,7 @@ func deserializeTags(userMetadata minio.StringMap) (int64, int64, string, error)
 		return 0, 0, "", err
 	}
 
-	chatIdString, ok := userMetadata[xAmzMetaPrefix+strings.Title(chatIdKey)]
+	chatIdString, ok := userMetadata[prefix+strings.Title(chatIdKey)]
 	if ! ok {
 		return 0, 0, "", errors.New("Unable to get chat id")
 	}
@@ -118,27 +123,12 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 
 	// check this fileItem belongs to user
 	filenameChatPrefix := fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
-		WithMetadata: true,
-		Prefix:       filenameChatPrefix,
-		Recursive: true,
-	})
-	for objInfo := range objects {
-		gotChatId, gotOwnerId, _, err := deserializeTags(objInfo.UserMetadata)
-		if err != nil {
-			Logger.Errorf("Error deserializeTags: %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-
-		if gotChatId != chatId {
-			Logger.Errorf("Wrong chatId: expected %v but got %v", chatId, gotChatId)
-			return c.NoContent(http.StatusUnauthorized)
-		}
-
-		if gotOwnerId != userPrincipalDto.UserId {
-			Logger.Errorf("Wrong ownerId: expected %v but got %v", userPrincipalDto.UserId, gotOwnerId)
-			return c.NoContent(http.StatusUnauthorized)
-		}
+	belongs, err := h.checkFileItemBelongsToUser(filenameChatPrefix, c, chatId, bucketName, userPrincipalDto)
+	if err != nil {
+		return err
+	}
+	if !belongs {
+		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
 
@@ -180,9 +170,15 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	}
 
 	// get count
+	count := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
+
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid, "count": count})
+}
+
+func (h *FilesHandler) getCountFilesInFileItem(bucketName string, filenameChatPrefix string) int {
 	var count = 0
 	var objectsNew <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
-		Prefix:       filenameChatPrefix,
+		Prefix:    filenameChatPrefix,
 		Recursive: true,
 	})
 	count = len(objectsNew)
@@ -190,8 +186,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		Logger.Debugf("Processing %v", oi.Key)
 		count++
 	}
-
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid, "count": count})
+	return count
 }
 
 func getDotExtension(file *multipart.FileHeader) string {
@@ -279,6 +274,15 @@ func (h *FilesHandler) ListChatFilesHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
+	list, err2 := h.getListFilesInFileItem(userPrincipalDto.UserId, bucket, filenameChatPrefix, chatId)
+	if err2 != nil {
+		return err2
+	}
+
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list})
+}
+
+func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filenameChatPrefix string, chatId int64) ([]FileInfoDto, error) {
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
@@ -292,21 +296,20 @@ func (h *FilesHandler) ListChatFilesHandler(c echo.Context) error {
 		downloadUrl, err := h.getChatPrivateUrlFromObject(objInfo, chatId)
 		if err != nil {
 			Logger.Errorf("Error get private url: %v", err)
-			return err
+			return nil, err
 		}
 		metadata := objInfo.UserMetadata
 
-		_, _, fileName, err := deserializeTags(metadata)
+		_, fileOwnerId, fileName, err := deserializeTags(metadata, true)
 		if err != nil {
-			Logger.Errorf("Error get file name url: %v", err)
-			fileName = objInfo.Key
+			Logger.Errorf("Error get file name url: %v, skipping", err)
+			continue
 		}
 
-		info := FileInfoDto{Id: objInfo.Key, Filename: fileName, Url: *downloadUrl, Size: objInfo.Size}
+		info := FileInfoDto{Id: objInfo.Key, Filename: fileName, Url: *downloadUrl, Size: objInfo.Size, CanRemove: fileOwnerId == behalfUserId}
 		list = append(list, info)
 	}
-
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list})
+	return list, nil
 }
 
 func (h *FilesHandler) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, chatId int64) (*string, error) {
@@ -320,4 +323,114 @@ func (h *FilesHandler) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, cha
 	downloadUrl.Path += filenameChatPrefix + objInfo.Key
 	str := downloadUrl.String()
 	return &str, nil
+}
+
+type DeleteObjectDto struct {
+	Id     string     `json:"id"` // file id
+}
+
+func (h *FilesHandler) DeleteHandler(c echo.Context) error {
+	var bindTo = new(DeleteObjectDto)
+	if err := c.Bind(bindTo); err != nil {
+		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := utils.ParseInt64(c.Param("chatId"))
+	if err != nil {
+		return err
+	}
+	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	fileItemUuid := c.Param("fileItemUuid")
+	if fileItemUuid == "" {
+		Logger.Errorf("fileItemUuid is required")
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	bucketName, err := EnsureAndGetFilesBucket(h.minio)
+	if err != nil {
+		return err
+	}
+
+	// check this fileItem belongs to user
+	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, bindTo.Id, minio.StatObjectOptions{})
+	if err != nil {
+		Logger.Errorf("Error during getting object %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	belongs, err := h.checkFileBelongsToUser(objectInfo, chatId, userPrincipalDto, false)
+	if err != nil {
+		Logger.Errorf("Error during checking belong object %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !belongs {
+		Logger.Errorf("Object '%v' is not belongs to user %v", objectInfo.Key, userPrincipalDto.UserId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	var filenameChatPrefix string = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
+
+	err = h.minio.RemoveObject(context.Background(), bucketName, bindTo.Id, minio.RemoveObjectOptions{})
+	if err != nil {
+		Logger.Errorf("Error during removing object %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	list, err2 := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId)
+	if err2 != nil {
+		return err2
+	}
+
+	if len(list) == 0 {
+		h.chatClient.RemoveFileItem(chatId, fileItemUuid, userPrincipalDto.UserId)
+	}
+
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list})
+}
+
+func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+		WithMetadata: true,
+		Prefix:       filenameChatPrefix,
+		Recursive:    true,
+	})
+	for objInfo := range objects {
+		b, err2 := h.checkFileBelongsToUser(objInfo, chatId, userPrincipalDto, true)
+		if err2 != nil {
+			return false, err2
+		}
+		if !b {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId int64, userPrincipalDto *auth.AuthResult, hasAmzPrefix bool) (bool, error) {
+	gotChatId, gotOwnerId, _, err := deserializeTags(objInfo.UserMetadata, hasAmzPrefix)
+	if err != nil {
+		Logger.Errorf("Error deserializeTags: %v", err)
+		return false, err
+	}
+
+	if gotChatId != chatId {
+		Logger.Infof("Wrong chatId: expected %v but got %v", chatId, gotChatId)
+		return false, nil
+	}
+
+	if gotOwnerId != userPrincipalDto.UserId {
+		Logger.Infof("Wrong ownerId: expected %v but got %v", userPrincipalDto.UserId, gotOwnerId)
+		return false, nil
+	}
+	return true, nil
 }

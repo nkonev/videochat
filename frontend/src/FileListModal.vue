@@ -14,6 +14,7 @@
                                 <v-list-item-content class="ml-4">
                                     <v-list-item-title>{{item.filename}}</v-list-item-title>
                                 </v-list-item-content>
+                                <v-icon class="mx-1" v-if="item.canRemove" color="error" @click="deleteFile(item)" dark small>mdi-delete</v-icon>
                             </v-list-item>
                             <v-divider></v-divider>
                         </template>
@@ -37,6 +38,8 @@
 <script>
 
 import bus, {
+    CLOSE_SIMPLE_MODAL,
+    OPEN_SIMPLE_MODAL,
     OPEN_VIEW_FILES_DIALOG
 } from "./bus";
 import {mapGetters} from "vuex";
@@ -47,8 +50,9 @@ export default {
     data () {
         return {
             show: false,
-            dto: {files: [{name: 'a.png'}, {name: 'Файл.txt'}]},
+            dto: {files: []},
             chatId: null,
+            fileItemUuid: null,
         }
     },
     computed: {
@@ -59,8 +63,9 @@ export default {
         showModal({chatId, fileItemUuid}) {
             console.log("Opening files modal, chatId=", chatId, ", fileItemUuid=", fileItemUuid);
             this.chatId = chatId;
+            this.fileItemUuid = fileItemUuid;
             this.show = true;
-            axios.get(`/api/storage/${this.chatId}` + (fileItemUuid ? "?fileItemUuid="+fileItemUuid : ""))
+            axios.get(`/api/storage/${this.chatId}` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""))
                 .then((response) => {
                     this.dto = response.data;
                 })
@@ -68,8 +73,25 @@ export default {
         closeModal() {
             this.show = false;
             this.chatId = null;
+            this.fileItemUuid = null;
         },
-
+        deleteFile(dto) {
+            bus.$emit(OPEN_SIMPLE_MODAL, {
+                buttonName: 'Delete',
+                title: `Delete file`,
+                text: `Are you sure to delete this file '${dto.filename}' ?`,
+                actionFunction: ()=> {
+                    axios.delete(`/api/storage/${this.chatId}/file/${this.fileItemUuid}`, {data: {id: dto.id}})
+                        .then((response) => {
+                            this.dto = response.data
+                            if (this.dto.files.length == 0) {
+                                this.closeModal();
+                            }
+                            bus.$emit(CLOSE_SIMPLE_MODAL);
+                        })
+                }
+            });
+        }
     },
 
     created() {

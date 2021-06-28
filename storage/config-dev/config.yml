@@ -25,6 +25,7 @@ chat:
   url:
     base: "http://localhost:1235"
     access: "/internal/access"
+    removeFileItem: "/internal/removeFileItem"
 
 limits:
   stat:

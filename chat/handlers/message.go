@@ -394,3 +394,46 @@ func (mc MessageHandler) BroadcastMessage(c echo.Context) error {
 	mc.notificator.NotifyAboutBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, strip.StripTags(bindTo.Text))
 	return c.NoContent(http.StatusAccepted)
 }
+
+func (mc MessageHandler) RemoveFileItem(c echo.Context) error {
+	chatId, err := GetQueryParamAsInt64(c, "chatId")
+	if err != nil {
+		return err
+	}
+	userId, err := GetQueryParamAsInt64(c, "userId")
+	if err != nil {
+		return err
+	}
+	isParticipant, err := mc.db.IsParticipant(userId, chatId)
+	if err != nil {
+		return err
+	}
+	if !isParticipant {
+		msg := "user " + c.QueryParam("userId") + " is not belongs to chat " + c.QueryParam("chatId")
+		GetLogEntry(c.Request()).Warnf(msg)
+		return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
+	}
+	fileItemUuid := c.QueryParam("fileItemUuid")
+	messageId, err := mc.db.SetFileItemUuidToNull(userId, chatId, fileItemUuid)
+	if err != nil {
+		GetLogEntry(c.Request()).Errorf("Unable to set FileItemUuid to full for fileItemUuid=%v, chatId=%v", fileItemUuid, chatId)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	// notifying
+	ids, err := mc.db.GetParticipantIds(chatId)
+	if err != nil {
+		return err
+	}
+	// TODO replace with userId
+	userPrincipalDto := &auth.AuthResult{
+		UserId: userId,
+	}
+	message, err := getMessage(c, &mc.db, mc.restClient, chatId, messageId, userPrincipalDto)
+	if err != nil {
+		return err
+	}
+	mc.notificator.NotifyAboutEditMessage(c, ids, chatId, message)
+
+	return c.NoContent(http.StatusAccepted)
+}

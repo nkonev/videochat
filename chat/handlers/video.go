@@ -122,7 +122,9 @@ func (vh VideoHandler) Kick(c echo.Context) error {
 		return err
 	}
 	if !isParticipant {
-		return c.JSON(http.StatusAccepted, &utils.H{"message": "user " + c.QueryParam("userId") + " is not belongs to chat " + c.QueryParam("chatId")})
+		msg := "user " + c.QueryParam("userId") + " is not belongs to chat " + c.QueryParam("chatId")
+		logger.Logger.Warnf(msg)
+		return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
 	}
 
 	admin, err := vh.db.IsAdmin(userPrincipalDto.UserId, chatId)

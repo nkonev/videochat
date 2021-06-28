@@ -112,6 +112,7 @@ func configureEcho(
 	e.POST("/storage/:chatId/file", fh.UploadHandler)
 	e.POST("/storage/:chatId/file/:fileItemUuid", fh.UploadHandler)
 	e.GET("/storage/:chatId", fh.ListChatFilesHandler)
+	e.DELETE("/storage/:chatId/file/:fileItemUuid", fh.DeleteHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
