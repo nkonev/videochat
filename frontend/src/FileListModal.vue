@@ -15,7 +15,7 @@
                                     <v-list-item-content class="ml-4">
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
                                     </v-list-item-content>
-                                    <v-icon class="mx-1" v-if="item.canRemove" color="error" @click="deleteFile(item)" dark small>mdi-delete</v-icon>
+                                    <v-icon class="mx-1" v-if="item.canRemove" color="error" @click="deleteFile(item)" dark>mdi-delete</v-icon>
                                 </v-list-item>
                                 <v-divider></v-divider>
                             </template>
