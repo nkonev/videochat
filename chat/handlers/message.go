@@ -73,7 +73,7 @@ func (mc MessageHandler) GetMessages(c echo.Context) error {
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 		messageDtos := make([]*dto.DisplayMessageDto, 0)
 		for _, c := range messages {
-			messageDtos = append(messageDtos, convertToMessageDto(c, owners, userPrincipalDto))
+			messageDtos = append(messageDtos, convertToMessageDto(c, owners, userPrincipalDto.UserId))
 		}
 
 		GetLogEntry(c.Request()).Infof("Successfully returning %v messages", len(messageDtos))
@@ -81,8 +81,8 @@ func (mc MessageHandler) GetMessages(c echo.Context) error {
 	}
 }
 
-func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestClient, chatId int64, messageId int64, userPrincipalDto *auth.AuthResult) (*dto.DisplayMessageDto, error) {
-	if message, err := co.GetMessage(chatId, userPrincipalDto.UserId, messageId); err != nil {
+func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {
+	if message, err := co.GetMessage(chatId, behalfUserId, messageId); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
 		return nil, err
 	} else {
@@ -90,9 +90,9 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestCl
 			return nil, nil
 		}
 		var ownersSet = map[int64]bool{}
-		ownersSet[userPrincipalDto.UserId] = true
+		ownersSet[behalfUserId] = true
 		var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
-		return convertToMessageDto(message, owners, userPrincipalDto), nil
+		return convertToMessageDto(message, owners, behalfUserId), nil
 	}
 }
 
@@ -113,7 +113,7 @@ func (mc MessageHandler) GetMessage(c echo.Context) error {
 		return err
 	}
 
-	message, err := getMessage(c, &mc.db, mc.restClient, chatId, messageId, userPrincipalDto)
+	message, err := getMessage(c, &mc.db, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func (mc MessageHandler) GetMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, message)
 }
 
-func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, userPrincipalDto *auth.AuthResult) *dto.DisplayMessageDto {
+func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, behalfUserId int64) *dto.DisplayMessageDto {
 	user := owners[dbMessage.OwnerId]
 	return &dto.DisplayMessageDto{
 		Id:             dbMessage.Id,
@@ -134,7 +134,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, user
 		CreateDateTime: dbMessage.CreateDateTime,
 		EditDateTime:   dbMessage.EditDateTime,
 		Owner:          user,
-		CanEdit:        dbMessage.OwnerId == userPrincipalDto.UserId,
+		CanEdit:        dbMessage.OwnerId == behalfUserId,
 		FileItemUuid: dbMessage.FileItemUuid,
 	}
 }
@@ -202,7 +202,7 @@ func (mc MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		message, err := getMessage(c, tx, mc.restClient, chatId, id, userPrincipalDto)
+		message, err := getMessage(c, tx, mc.restClient, chatId, id, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -266,7 +266,7 @@ func (mc MessageHandler) EditMessage(c echo.Context) error {
 			return err
 		}
 
-		message, err := getMessage(c, tx, mc.restClient, chatId, bindTo.Id, userPrincipalDto)
+		message, err := getMessage(c, tx, mc.restClient, chatId, bindTo.Id, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -425,11 +425,7 @@ func (mc MessageHandler) RemoveFileItem(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	// TODO replace with userId
-	userPrincipalDto := &auth.AuthResult{
-		UserId: userId,
-	}
-	message, err := getMessage(c, &mc.db, mc.restClient, chatId, messageId, userPrincipalDto)
+	message, err := getMessage(c, &mc.db, mc.restClient, chatId, messageId, userId)
 	if err != nil {
 		return err
 	}
