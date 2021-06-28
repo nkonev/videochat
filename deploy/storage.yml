@@ -29,7 +29,7 @@ chat:
 
 limits:
   stat:
-    dir: "."
+    dir: "/data"
   default:
     per:
       user:

@@ -34,6 +34,8 @@ services:
         tag: chat-storage
     volumes:
       - ./storage.yml:/etc/storage.yml
+      - /mnt/chat-minio/data:/data
+
     command: ["-config=/etc/storage.yml"]
 
 networks:
