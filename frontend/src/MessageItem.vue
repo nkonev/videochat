@@ -51,7 +51,7 @@
                 });
             },
             editMessage(dto){
-                const editMessageDto = {id: dto.id, text: dto.text};
+                const editMessageDto = {id: dto.id, text: dto.text, fileItemUuid: dto.fileItemUuid};
                 bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
             },
             getOwner(item) {

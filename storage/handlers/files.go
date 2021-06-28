@@ -15,6 +15,7 @@ import (
 	"nkonev.name/storage/client"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -313,14 +314,14 @@ func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filena
 }
 
 func (h *FilesHandler) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, chatId int64) (*string, error) {
-	downloadUrl, err := url.Parse(h.serverUrl)
+	downloadUrl, err := url.Parse(h.serverUrl + viper.GetString("server.contextPath") + "/storage/download")
 	if err != nil {
 		return nil, err
 	}
 
-	filenameChatPrefix := fmt.Sprintf("chat/%v/", chatId) // TODO revise
-
-	downloadUrl.Path += filenameChatPrefix + objInfo.Key
+	query := downloadUrl.Query()
+	query.Add("file", objInfo.Key)
+	downloadUrl.RawQuery = query.Encode()
 	str := downloadUrl.String()
 	return &str, nil
 }
@@ -433,4 +434,55 @@ func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId i
 		return false, nil
 	}
 	return true, nil
+}
+
+
+func (h *FilesHandler) DownloadHandler(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	bucketName, err := EnsureAndGetFilesBucket(h.minio)
+	if err != nil {
+		return err
+	}
+
+	// check user belongs to chat
+	fileId := c.QueryParam("file")
+	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	if err != nil {
+		Logger.Errorf("Error during getting object %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	chatId, _, fileName, err := deserializeTags(objectInfo.UserMetadata, false)
+	if err != nil {
+		Logger.Errorf("Error during deserializing object metadata %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		Logger.Errorf("Error during checking user auth to chat %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !belongs {
+		Logger.Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+
+	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
+	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
+	c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+fileName+"\"")
+
+	object, e := h.minio.GetObject(context.Background(), bucketName, fileId, minio.GetObjectOptions{})
+	if e != nil {
+		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
+	}
+	defer object.Close()
+
+	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
