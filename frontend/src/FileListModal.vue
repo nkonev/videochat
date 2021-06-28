@@ -5,18 +5,23 @@
                 <v-card-title>Attached files</v-card-title>
 
                 <v-container fluid>
-                    <v-list v-if="dto.files.length > 0">
-                        <template v-for="(item, index) in dto.files">
-                            <v-list-item class="pl-0 ml-1 pr-0 mr-1 mb-1 mt-1">
-                                <v-list-item-avatar class="ma-0 pa-0">
-                                    <v-icon>mdi-file</v-icon>
-                                </v-list-item-avatar>
-                                <v-list-item-content class="ml-4">
-                                    <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
-                                </v-list-item-content>
-                                <v-icon class="mx-1" v-if="item.canRemove" color="error" @click="deleteFile(item)" dark small>mdi-delete</v-icon>
-                            </v-list-item>
-                            <v-divider></v-divider>
+                    <v-list v-if="!loading">
+                        <template v-if="dto.files.length > 0">
+                            <template v-for="(item, index) in dto.files">
+                                <v-list-item class="pl-0 ml-1 pr-0 mr-1 mb-1 mt-1">
+                                    <v-list-item-avatar class="ma-0 pa-0">
+                                        <v-icon>mdi-file</v-icon>
+                                    </v-list-item-avatar>
+                                    <v-list-item-content class="ml-4">
+                                        <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
+                                    </v-list-item-content>
+                                    <v-icon class="mx-1" v-if="item.canRemove" color="error" @click="deleteFile(item)" dark small>mdi-delete</v-icon>
+                                </v-list-item>
+                                <v-divider></v-divider>
+                            </template>
+                        </template>
+                        <template v-else>
+                            <v-card-text>No files</v-card-text>
                         </template>
                     </v-list>
                     <v-progress-circular
@@ -53,6 +58,7 @@ export default {
             dto: {files: []},
             chatId: null,
             fileItemUuid: null,
+            loading: false,
         }
     },
     computed: {
@@ -65,9 +71,13 @@ export default {
             this.chatId = chatId;
             this.fileItemUuid = fileItemUuid;
             this.show = true;
+            this.loading = true;
             axios.get(`/api/storage/${this.chatId}` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""))
                 .then((response) => {
                     this.dto = response.data;
+                })
+                .finally(() => {
+                    this.loading = false;
                 })
         },
         closeModal() {
