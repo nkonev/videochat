@@ -15,9 +15,11 @@ import (
 	"nkonev.name/storage/client"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 )
 
 type FilesHandler struct {
@@ -39,6 +41,7 @@ type FileInfoDto struct {
 	PublicUrl string `json:"publicUrl"`
 	Size      int64  `json:"size"`
 	CanRemove bool   `json:"canRemove"`
+	LastModified time.Time `json:"lastModified"`
 }
 
 const filenameKey = "filename"
@@ -312,9 +315,12 @@ func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filena
 			continue
 		}
 
-		info := FileInfoDto{Id: objInfo.Key, Filename: fileName, Url: *downloadUrl, Size: objInfo.Size, CanRemove: fileOwnerId == behalfUserId}
+		info := FileInfoDto{Id: objInfo.Key, Filename: fileName, Url: *downloadUrl, Size: objInfo.Size, CanRemove: fileOwnerId == behalfUserId, LastModified: objInfo.LastModified}
 		list = append(list, info)
 	}
+	sort.SliceStable(list, func(i, j int) bool {
+		return list[i].LastModified.Unix() < list[j].LastModified.Unix()
+	})
 	return list, nil
 }
 
