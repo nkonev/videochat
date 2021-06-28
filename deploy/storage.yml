@@ -3,6 +3,7 @@ server:
   shutdown.timeout: "10s"
   body.limit: "100G"
   contextPath: "/api"
+  url: http://api.site.local:8080
 
 auth:
   exclude:
@@ -18,3 +19,19 @@ minio:
   location: "europe-east"
   bucket:
     avatar: "avatar"
+    files: "files"
+
+chat:
+  url:
+    base: "http://chat:1235"
+    access: "/internal/access"
+    removeFileItem: "/internal/removeFileItem"
+
+limits:
+  stat:
+    dir: "."
+  default:
+    per:
+      user:
+        # 512 megabytes
+        max: 536870912
