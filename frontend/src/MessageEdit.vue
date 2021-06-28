@@ -110,7 +110,6 @@
               this.fileCount = null;
             },
             onSetMessage(dto) {
-                console.log("Setting editMessageDto", dto);
                 this.editMessageDto = dto;
                 this.$refs.quillEditorInstance.setHtml(this.editMessageDto.text);
             },
