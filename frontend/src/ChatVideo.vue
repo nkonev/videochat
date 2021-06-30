@@ -104,7 +104,9 @@
 
                 this.peerId = uuidv4();
                 this.signalLocal.onopen = () => {
+                    console.info("Signal opened, joining to session...")
                     this.clientLocal.join(`chat${this.chatId}`, this.peerId).then(()=>{
+                        console.info("Joined to session, gathering media devices")
                         this.getAndPublishCamera()
                             .then(()=>{
                               this.notifyAboutJoining();
@@ -301,7 +303,9 @@
                   this.$refs.localVideoComponent.setStreamMuted(true);
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
                   this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
+                  console.log("Publishing camera");
                   this.clientLocal.publish(media);
+                  console.log("Camera successfully published");
                   this.$store.commit(SET_SHARE_SCREEN, false);
                   this.setLocalMuteDefaults();
                   this.insideSwitchingCameraScreen = false;
@@ -316,7 +320,9 @@
                     this.$refs.localVideoComponent.setStreamMuted(true);
                     this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
                     this.$refs.localVideoComponent.setUserName(this.myUserName);
+                    console.log("Publishing screen");
                     this.clientLocal.publish(media);
+                    console.log("Screen successfully published");
                     this.$store.commit(SET_SHARE_SCREEN, true);
                     this.setLocalMuteDefaults();
                     this.insideSwitchingCameraScreen = false;
@@ -332,7 +338,7 @@
             startVideoProcess() {
                 this.getConfig()
                     .then(config => {
-                        console.info("Joining to session...")
+                        console.info("Config fetched, initializing to session...")
                         return this.joinSession(config);
                     })
                     .catch(reason => {
