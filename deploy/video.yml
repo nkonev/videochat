@@ -74,6 +74,7 @@ webrtc:
 # if the sfu is deployed in a DMZ between two 1-1 NAT for internal and
 # external users.
     nat1to1: ["1.2.3.4"]
+    # https://stackoverflow.com/questions/35488252/ice-lite-on-android-webrtc/35566654#35566654
     icelite: true
 
 turn:
