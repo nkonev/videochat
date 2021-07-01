@@ -19,10 +19,9 @@
                     <v-progress-linear
                         class="mt-2"
                         v-if="uploading"
-                        v-model="totalProgress"
+                        v-model="progress"
                         color="success"
                         buffer-value="0"
-                        value="20"
                         stream
                     >
                     </v-progress-linear>
@@ -41,6 +40,7 @@
 <script>
 import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL, SET_FILE_ITEM_UUID} from "./bus";
 import axios from "axios";
+import debounce from "lodash/debounce";
 
 export default {
     data () {
@@ -48,7 +48,8 @@ export default {
             uploading: false,
             show: false,
             files: [],
-            fileItemUuid: null, // null at first upload, non-nul when user adds files
+            fileItemUuid: null, // null at first upload, non-nul when user adds files,
+            progress: 0
         }
     },
     methods: {
@@ -59,11 +60,16 @@ export default {
         hideModal() {
             this.$data.show = false;
             this.files = [];
+            this.progress = 0;
+        },
+        onProgressFunction(event) {
+            this.progress = Math.round((100 * event.loaded) / event.total);
         },
         upload() {
             this.uploading = true;
             const config = {
-                headers: { 'content-type': 'multipart/form-data' }
+                headers: { 'content-type': 'multipart/form-data' },
+                onUploadProgress: this.onProgressFunction
             }
             console.log("Sending file to storage");
             const formData = new FormData();
@@ -83,9 +89,6 @@ export default {
         }
     },
     computed: {
-        totalProgress() {
-            return 25;
-        },
         chatId() {
             return this.$route.params.id
         },
@@ -93,6 +96,7 @@ export default {
     created() {
         bus.$on(OPEN_FILE_UPLOAD_MODAL, this.showModal);
         bus.$on(CLOSE_FILE_UPLOAD_MODAL, this.hideModal);
+        this.onProgressFunction = debounce(this.onProgressFunction, 700);
     },
     destroyed() {
         bus.$off(OPEN_FILE_UPLOAD_MODAL, this.showModal);
