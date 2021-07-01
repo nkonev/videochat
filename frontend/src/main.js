@@ -110,7 +110,9 @@ axios.interceptors.response.use((response) => {
 }, (error) => {
   // https://github.com/axios/axios/issues/932#issuecomment-307390761
   // console.log("Catch error", error, error.request, error.response, error.config);
-  if (error && error.response && error.response.status == 401 && error.config.url != '/api/profile') {
+  if (axios.isCancel(error)) {
+      return Promise.reject(error)
+  } else if (error && error.response && error.response.status == 401 && error.config.url != '/api/profile') {
     console.log("Catch 401 Unauthorized, emitting ", LOGGED_OUT);
     store.commit(UNSET_USER);
     bus.$emit(LOGGED_OUT, null);
