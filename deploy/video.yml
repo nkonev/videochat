@@ -59,7 +59,7 @@ webrtc:
 # "unified-plan"
 # "plan-b"
 # "unified-plan-with-fallback"
-  sdpsemantics: "unified-plan"
+  sdpsemantics: "unified-plan-with-fallback"
 # toggle multicast dns support: https://tools.ietf.org/html/draft-mdns-ice-candidates-00
   mdns: true
 
@@ -74,7 +74,8 @@ webrtc:
 # if the sfu is deployed in a DMZ between two 1-1 NAT for internal and
 # external users.
     nat1to1: ["1.2.3.4"]
-#    icelite: true
+    # https://stackoverflow.com/questions/35488252/ice-lite-on-android-webrtc/35566654#35566654
+    icelite: true
 
 turn:
 # Enables embeded turn server
