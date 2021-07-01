@@ -40,7 +40,7 @@
 <script>
 import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL, SET_FILE_ITEM_UUID} from "./bus";
 import axios from "axios";
-import debounce from "lodash/debounce";
+import throttle from "lodash/throttle";
 
 export default {
     data () {
@@ -96,7 +96,7 @@ export default {
     created() {
         bus.$on(OPEN_FILE_UPLOAD_MODAL, this.showModal);
         bus.$on(CLOSE_FILE_UPLOAD_MODAL, this.hideModal);
-        this.onProgressFunction = debounce(this.onProgressFunction, 700);
+        this.onProgressFunction = throttle(this.onProgressFunction, 200);
     },
     destroyed() {
         bus.$off(OPEN_FILE_UPLOAD_MODAL, this.showModal);
