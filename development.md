@@ -1,4 +1,4 @@
-# Misc
+# Development
 
 ## Firewalld help
 [Solve no route to host whe invoke host from container by add firewalld rich rule](https://forums.docker.com/t/no-route-to-host-network-request-from-container-to-host-ip-port-published-from-other-container/39063/6)
@@ -8,7 +8,36 @@ firewall-cmd --permanent --zone=public --list-rich-rules
 firewall-cmd --get-default-zone
 ```
 
-# Development
+# Add firewall exception on dev
+```bash
+firewall-cmd --zone=public --add-port=8081/tcp
+```
+
+# Add firewall exception on prod (not working, not need)
+[link](https://www.digitalocean.com/community/tutorials/how-to-configure-the-linux-firewall-for-docker-swarm-on-centos-7)
+```
+firewall-cmd --zone=public --add-port=3478/tcp  --permanent
+firewall-cmd --zone=public --add-port=3478/udp  --permanent
+firewall-cmd --zone=public --add-port=40000-40020/udp  --permanent
+firewall-cmd --zone=public --add-port=40000-40020/tcp  --permanent
+firewall-cmd --zone=public --add-port=57001-57021/tcp  --permanent
+firewall-cmd --zone=public --add-port=57001-57021/udp  --permanent
+
+firewall-cmd --reload
+
+systemctl restart docker
+
+firewall-cmd --list-all-zones
+```
+
+# Temporarily allow firewalld ports for usage in local network (not necessary in Fedora)
+```
+firewall-cmd --zone=public --add-port=8081/tcp
+firewall-cmd --zone=public --add-port=3478/tcp
+firewall-cmd --zone=public --add-port=3478/udp
+firewall-cmd --zone=public --add-port=5000-5100/udp
+```
+
 [node check updates](https://www.npmjs.com/package/npm-check-updates)
 
 [Error:java: invalid source release: 8](https://stackoverflow.com/a/26009627)
@@ -51,18 +80,6 @@ go get -u -t ./...
 ```
 
 
-## (Re)generate go protobufs
-```bash
-rm -rf ./chat/proto
-mkdir ./chat/proto || true
-docker run -it --rm -v $PWD:/ws -w /ws znly/protoc:0.4.0 --go_out=plugins=grpc:chat/proto -I./protobuf ./protobuf/*.proto
-```
-
-# Openvidu
-```
-docker run -p 4443:4443 --rm -e OPENVIDU_SECRET=MY_SECRET openvidu/openvidu-server-kms:2.16.0
-```
-
 # Firefox enable video on non-localhost
 https://lists.mozilla.org/pipermail/dev-platform/2019-February/023590.html
 about:config
@@ -72,17 +89,16 @@ media.devices.insecure.enabled
 ![](./.markdown/mobile-ff-1.jpg)
 ![](./.markdown/mobile-ff-2.jpg)
 
-# Validate turn server
-Firstly uncomment `TURN_USERNAME_PASSWORD=guest:somepassword` in `openvidu-server` in `docker-compose-infra.template`
+# Validate turn server installation
 
 Then install on client machine (your PC)
 ```bash
 dnf install coturn-utils
 ```
 
-Test
+Test (Actual value for InternalUserNamE and SeCrEt see in video.yml under turn.auth.credentials key)
 ```bash
-turnutils_uclient -T -u guest -w somepassword <your.public.ip.address>
+turnutils_uclient -v -u InternalUserNamE -w SeCrEt your.public.ip.address
 ```
 
 Correct output
@@ -99,38 +115,11 @@ Correct output
 2: Average jitter 0.800000 ms; min = 0 ms, max = 2 ms
 ```
 
-# Example of usage openvidu api
-https://docs.openvidu.io/en/2.16.0/reference-docs/REST-API/#get-openviduapisessionsltsession_idgt
-```
-curl s -u"OPENVIDUAPP:MY_SECRET" http://localhost:5443/openvidu/api/sessions/chat1 | jq '.'
-```
-
 # Run one test
 ```bash
 go test ./... -count=1 -test.v -test.timeout=20s -p 1 -run TestExtractAuth
 ```
 
-# Add firewall exception on dev
-```bash
-firewall-cmd --zone=public --add-port=8081/tcp
-```
-
-# Add firewall exception on prod (not working, not need)
-[link](https://www.digitalocean.com/community/tutorials/how-to-configure-the-linux-firewall-for-docker-swarm-on-centos-7)
-```
-firewall-cmd --zone=public --add-port=3478/tcp  --permanent
-firewall-cmd --zone=public --add-port=3478/udp  --permanent
-firewall-cmd --zone=public --add-port=40000-40020/udp  --permanent
-firewall-cmd --zone=public --add-port=40000-40020/tcp  --permanent
-firewall-cmd --zone=public --add-port=57001-57021/tcp  --permanent
-firewall-cmd --zone=public --add-port=57001-57021/udp  --permanent
-
-firewall-cmd --reload
-
-systemctl restart docker
-
-firewall-cmd --list-all-zones
-```
 
 # For Github CI
 ```
@@ -145,15 +134,6 @@ for x in range(5200, 5301):
         published: %d
         protocol: udp
         mode: host""" % (x, x))
-```
-
-
-# Temporarily allow firewalld ports for usage in local network (not necessary in Fedora)
-```
-firewall-cmd --zone=public --add-port=8081/tcp
-firewall-cmd --zone=public --add-port=3478/tcp
-firewall-cmd --zone=public --add-port=3478/udp
-firewall-cmd --zone=public --add-port=5000-5100/udp
 ```
 
 # Fixing fibers issue
