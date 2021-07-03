@@ -142,11 +142,10 @@ func ParseInt64(s string) (int64, error) {
 	}
 }
 
-func (h *ExtendedService) getSessionWithoutCreatingAnew(chatId int64) *sfu.SessionLocal {
+func (h *ExtendedService) getSessionWithoutCreatingAnew(chatId int64) sfu.Session {
 	sessionName := fmt.Sprintf("chat%v", chatId)
 	if session, ok := h.sfu.GetSessions()[sessionName]; ok {
-		local := session.(*sfu.SessionLocal)
-		return local
+		return session
 	} else {
 		return nil
 	}
