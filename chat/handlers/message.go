@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/google/uuid"
 	strip "github.com/grokify/html-strip-tags-go"
@@ -126,6 +127,9 @@ func (mc MessageHandler) GetMessage(c echo.Context) error {
 
 func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, behalfUserId int64) *dto.DisplayMessageDto {
 	user := owners[dbMessage.OwnerId]
+	if user == nil {
+		user = &dto.User{Login: fmt.Sprintf("user%v", dbMessage.OwnerId), Id: dbMessage.OwnerId}
+	}
 	return &dto.DisplayMessageDto{
 		Id:             dbMessage.Id,
 		Text:           dbMessage.Text,
