@@ -222,9 +222,9 @@ func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 			Credential: s.ICEServerConfig.Credential,
 		}
 		if s.LongTermCredentialDuration != 0 {
-			username, password, err2 := turn.GenerateLongTermCredentials(h.conf.Turn.Auth.Secret, s.LongTermCredentialDuration)
-			if err2 != nil {
-				logger.Error(err2, "Error during GenerateLongTermCredentials")
+			username, password, err := turn.GenerateLongTermCredentials(h.conf.Turn.Auth.Secret, s.LongTermCredentialDuration)
+			if err != nil {
+				logger.Error(err, "Error during GenerateLongTermCredentials")
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -276,15 +276,15 @@ func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 }
 
 func parseChatIdAndUserId(chatId, userId string) (int64, int64, error) {
-	chatIdInt64, err2 := service.ParseInt64(chatId)
-	if err2 != nil {
-		logger.Error(err2, "Failed during parse chat id")
-		return -1, -1, err2
+	chatIdInt64, err := service.ParseInt64(chatId)
+	if err != nil {
+		logger.Error(err, "Failed during parse chat id")
+		return -1, -1, err
 	}
-	userId64, err2 := service.ParseInt64(userId)
-	if err2 != nil {
-		logger.Error(err2, "Failed during parse user id")
-		return -1, -1, err2
+	userId64, err := service.ParseInt64(userId)
+	if err != nil {
+		logger.Error(err, "Failed during parse user id")
+		return -1, -1, err
 	}
 	return chatIdInt64, userId64, nil
 }

@@ -283,9 +283,9 @@ func (h *FilesHandler) ListChatFilesHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, err2 := h.getListFilesInFileItem(userPrincipalDto.UserId, bucket, filenameChatPrefix, chatId)
-	if err2 != nil {
-		return err2
+	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucket, filenameChatPrefix, chatId)
+	if err != nil {
+		return err
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list})
@@ -394,9 +394,9 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	list, err2 := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId)
-	if err2 != nil {
-		return err2
+	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId)
+	if err != nil {
+		return err
 	}
 
 	if len(list) == 0 {
@@ -413,9 +413,9 @@ func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c e
 		Recursive:    true,
 	})
 	for objInfo := range objects {
-		b, err2 := h.checkFileBelongsToUser(objInfo, chatId, userPrincipalDto, true)
-		if err2 != nil {
-			return false, err2
+		b, err := h.checkFileBelongsToUser(objInfo, chatId, userPrincipalDto, true)
+		if err != nil {
+			return false, err
 		}
 		if !b {
 			return false, nil

@@ -110,8 +110,8 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 			Payload:   copied,
 			EventType: eventType,
 		}
-		if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err2)
+		if marshalledBytes, err := json.Marshal(notification); err != nil {
+			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err)
 		} else {
 			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
 			if err != nil {
@@ -146,8 +146,8 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 			Payload:   payload,
 			EventType: "unread_messages_changed",
 		}
-		if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err2)
+		if marshalledBytes, err := json.Marshal(notification); err != nil {
+			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err)
 		} else {
 			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
 			if err != nil {
@@ -198,8 +198,8 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				Payload:   dn,
 				EventType: eventType,
 			}
-			if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-				GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err2)
+			if marshalledBytes, err := json.Marshal(notification); err != nil {
+				GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err)
 			} else {
 				_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
 				if err != nil {
@@ -242,8 +242,8 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 		EventType: "user_typing",
 	}
 
-	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-		GetLogEntry(c.Request()).Errorf("error during marshalling chat created UserTypingNotification: %s", err2)
+	if marshalledBytes, err := json.Marshal(notification); err != nil {
+		GetLogEntry(c.Request()).Errorf("error during marshalling chat created UserTypingNotification: %s", err)
 	} else {
 		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
 		if err != nil {
@@ -263,8 +263,8 @@ func (not *notifictionsImpl) NotifyAboutVideoCallChanged(cn dto.ChatNotifyDto, p
 			EventType: "video_call_changed",
 		}
 
-		if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-			Logger.Errorf("error during marshalling chat created VideoCallChanged: %s", err2)
+		if marshalledBytes, err := json.Marshal(notification); err != nil {
+			Logger.Errorf("error during marshalling chat created VideoCallChanged: %s", err)
 		} else {
 			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
 			if err != nil {
@@ -290,8 +290,8 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 			Payload:   user,
 			EventType: "user_profile_changed",
 		}
-		if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-			Logger.Errorf("error during marshalling user_profile_changed notification: %s", err2)
+		if marshalledBytes, err := json.Marshal(notification); err != nil {
+			Logger.Errorf("error during marshalling user_profile_changed notification: %s", err)
 		} else {
 			participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
 			Logger.Infof("Sending notification about user_profile_changed to participantChannel: %v", participantChannel)
@@ -314,8 +314,8 @@ func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId in
 
 	participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(userId))
 
-	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-		GetLogEntry(c.Request()).Errorf("error during marshalling VideoCallInvitation: %s", err2)
+	if marshalledBytes, err := json.Marshal(notification); err != nil {
+		GetLogEntry(c.Request()).Errorf("error during marshalling VideoCallInvitation: %s", err)
 	} else {
 		Logger.Infof("Sending notification about video_call_invitation to participantChannel: %v", participantChannel)
 		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
@@ -335,8 +335,8 @@ func (not *notifictionsImpl) NotifyAboutKick(c echo.Context, chatId int64, userI
 
 	participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(userId))
 
-	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-		GetLogEntry(c.Request()).Errorf("error during marshalling VideoKick: %s", err2)
+	if marshalledBytes, err := json.Marshal(notification); err != nil {
+		GetLogEntry(c.Request()).Errorf("error during marshalling VideoKick: %s", err)
 	} else {
 		Logger.Infof("Sending notification about video_call_invitation to participantChannel: %v", participantChannel)
 		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
@@ -367,8 +367,8 @@ func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId
 		EventType: "user_broadcast",
 	}
 
-	if marshalledBytes, err2 := json.Marshal(notification); err2 != nil {
-		GetLogEntry(c.Request()).Errorf("error during marshalling chat created UserBroadcastNotification: %s", err2)
+	if marshalledBytes, err := json.Marshal(notification); err != nil {
+		GetLogEntry(c.Request()).Errorf("error during marshalling chat created UserBroadcastNotification: %s", err)
 	} else {
 		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
 		if err != nil {

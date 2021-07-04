@@ -398,8 +398,8 @@ func periodicNotifyAboutOnline(node *centrifuge.Node, onlineStorage redis.Online
 		alreadySent[userId] = true
 		participantChannel := node.PersonalChannel(utils.Int64ToString(userId))
 
-		subscribedUsersIds, err2 := subscriptionService.GetUserOnlineSubscribedUsers(subscriptionId)
-		if err2 != nil {
+		subscribedUsersIds, err := subscriptionService.GetUserOnlineSubscribedUsers(subscriptionId)
+		if err != nil {
 			Logger.Errorf("Error during getting usersIds")
 			continue
 		}

@@ -401,9 +401,9 @@ func (ch ChatHandler) LeaveChat(c echo.Context) error {
 			return err
 		}
 
-		firstUser, err2 := tx.GetFirstParticipant(chatId)
-		if err2 != nil {
-			return err2
+		firstUser, err := tx.GetFirstParticipant(chatId)
+		if err != nil {
+			return err
 		}
 		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, nil); err != nil {
 			return err
@@ -658,10 +658,10 @@ func (ch ChatHandler) TetATet(c echo.Context) error {
 		}
 
 		// create tet-a-tet chat
-		chatId2, err2 := tx.CreateTetATetChat(userPrincipalDto.UserId, toParticipantId)
-		if err2 != nil {
-			GetLogEntry(c.Request()).Errorf("Error during creating tet-a-tet chat %v", err2)
-			return err2
+		chatId2, err := tx.CreateTetATetChat(userPrincipalDto.UserId, toParticipantId)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("Error during creating tet-a-tet chat %v", err)
+			return err
 		}
 
 		if err := tx.AddParticipant(userPrincipalDto.UserId, chatId2, true); err != nil {
@@ -671,9 +671,9 @@ func (ch ChatHandler) TetATet(c echo.Context) error {
 			return err
 		}
 
-		responseDto, err3 := getChat(tx, ch.restClient, c, chatId2, userPrincipalDto.UserId, userPrincipalDto)
-		if err3 != nil {
-			return err3
+		responseDto, err := getChat(tx, ch.restClient, c, chatId2, userPrincipalDto.UserId, userPrincipalDto)
+		if err != nil {
+			return err
 		}
 
 		ch.notificator.NotifyAboutNewChat(c, responseDto, responseDto.ParticipantIds, tx)

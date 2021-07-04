@@ -177,10 +177,10 @@ func (h *ExtendedService) Notify(chatId int64, data *dto.StoreNotifyDto) error {
 	chatNotifyDto.UsersCount = usersCount
 	chatNotifyDto.ChatId = chatId
 
-	marshal, err2 := json.Marshal(chatNotifyDto)
-	if err2 != nil {
-		logger.Error(err2, "Failed during marshal chatNotifyDto")
-		return err2
+	marshal, err := json.Marshal(chatNotifyDto)
+	if err != nil {
+		logger.Error(err, "Failed during marshal chatNotifyDto")
+		return err
 	}
 
 	return h.rabbitMqPublisher.Publish(marshal)

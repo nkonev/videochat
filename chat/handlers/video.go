@@ -79,9 +79,9 @@ func (vh VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, &utils.H{"message": "User have no access to this chat"})
 	}
 
-	chat, err2 := vh.db.GetChat(userPrincipalDto.UserId, chatId)
-	if err2 != nil {
-		return err2
+	chat, err := vh.db.GetChat(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
 	}
 
 	meAsUser := dto.User{Id: userPrincipalDto.UserId, Login: userPrincipalDto.UserLogin}
