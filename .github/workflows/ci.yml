@@ -61,7 +61,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: ${{ runner.os }}-mycache-v1-${{ hashFiles('**/lockfiles') }}
+          key: ${{ runner.os }}-mycache-v2-${{ hashFiles('**/lockfiles') }}
       - name: Build with npm run
         run: |
           (cd frontend; npm install && npm run build)
