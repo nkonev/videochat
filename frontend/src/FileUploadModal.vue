@@ -14,7 +14,7 @@
                         small-chips
                         truncate-length="15"
                         @change="updateFiles"
-                        :error-messages="error"
+                        :error-messages="limitError"
                     ></v-file-input>
 
                     <v-progress-linear
@@ -29,8 +29,10 @@
                 </v-container>
 
                 <v-card-actions class="pa-4">
-                    <v-btn color="primary" v-if="!uploading" @click="upload()">Upload</v-btn>
-                    <v-btn v-else @click="cancel()">Cancel</v-btn>
+                    <template v-if="!limitError && files.length > 0">
+                        <v-btn color="primary" v-if="!uploading" @click="upload()">Upload</v-btn>
+                        <v-btn v-else @click="cancel()">Cancel</v-btn>
+                    </template>
                     <v-btn class="mr-4" @click="hideModal()" :disabled="uploading">Close</v-btn>
                     <v-spacer/>
                 </v-card-actions>
@@ -68,7 +70,7 @@ export default {
             fileItemUuid: null, // null at first upload, non-nul when user adds files,
             progress: 0,
             cancelSource: null,
-            error: null,
+            limitError: null,
         }
     },
     methods: {
@@ -82,10 +84,23 @@ export default {
             this.progress = 0;
             this.cancelSource = null;
             this.uploading = false;
-            this.error = null;
+            this.limitError = null;
         },
         onProgressFunction(event) {
             this.progress = Math.round((100 * event.loaded) / event.total);
+        },
+        checkLimits(totalSize) {
+            return axios.get(`/api/storage/${this.chatId}/file`, { params: {
+                    desiredSize: totalSize,
+                }}).then(value => {
+                if (value.data.status != "ok") {
+                    this.limitError = [`Too large, ${formatSize(value.data.available)} available`];
+                    return Promise.reject(this.limitError);
+                } else {
+                    this.limitError = null;
+                    return Promise.resolve();
+                }
+            });
         },
         upload() {
             this.uploading = true;
@@ -102,30 +117,25 @@ export default {
                 totalSize += file.size;
                 formData.append('files', file);
             }
-            return axios.get(`/api/storage/${this.chatId}/file`, { params: {
-                    desiredSize: totalSize,
-                    }}).then(value => {
-                        if (value.data.status != "ok") {
-                            this.error = [`Too large, ${formatSize(value.data.available)} available`];
-                            this.uploading = false;
-                            return Promise.resolve();
+            return this.checkLimits(totalSize).then(()=>{
+                return axios.post(`/api/storage/${this.chatId}/file`+(this.fileItemUuid ? `/${this.fileItemUuid}` : ''), formData, config)
+                    .then(response => {
+                        bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: response.data.count});
+                        this.uploading = false;
+                    })
+                    .catch((thrown) => {
+                        if (axios.isCancel(thrown)) {
+                            console.log('Request canceled', thrown.message);
+                            this.hideModal();
                         } else {
-                            return axios.post(`/api/storage/${this.chatId}/file`+(this.fileItemUuid ? `/${this.fileItemUuid}` : ''), formData, config)
-                                .then(response => {
-                                    bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: response.data.count});
-                                    this.uploading = false;
-                                })
-                                .catch((thrown) => {
-                                    if (axios.isCancel(thrown)) {
-                                        console.log('Request canceled', thrown.message);
-                                        this.hideModal();
-                                    } else {
-                                        throw thrown
-                                    }
-                                })
-                                .then(()=>{this.hideModal();})
+                            throw thrown
                         }
                     })
+                    .then(()=>{this.hideModal();})
+            }).catch(ex =>{
+                this.uploading = false;
+                return Promise.reject(ex);
+            });
         },
         cancel() {
             this.cancelSource.cancel()
@@ -133,7 +143,14 @@ export default {
         updateFiles(files) {
             console.log("updateFiles", files);
             this.files = [...files];
-            this.error = null;
+            this.limitError = null;
+            let totalSize = 0;
+            for (const file of this.files) {
+                totalSize += file.size;
+            }
+            if (totalSize > 0) {
+                this.checkLimits(totalSize);
+            }
         }
     },
     computed: {
