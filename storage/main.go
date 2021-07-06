@@ -114,6 +114,7 @@ func configureEcho(
 	e.GET("/storage/:chatId", fh.ListChatFilesHandler)
 	e.DELETE("/storage/:chatId/file", fh.DeleteHandler)
 	e.GET("/storage/download", fh.DownloadHandler)
+	e.GET("/storage/:chatId/file", fh.Limits)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

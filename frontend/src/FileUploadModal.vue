@@ -14,6 +14,7 @@
                         small-chips
                         truncate-length="15"
                         @change="updateFiles"
+                        :error-messages="error"
                     ></v-file-input>
 
                     <v-progress-linear
@@ -44,6 +45,20 @@ import axios from "axios";
 import throttle from "lodash/throttle";
 const CancelToken = axios.CancelToken;
 
+const formatSize = (size) => {
+    const operableSize = Math.abs(size);
+    if (operableSize > 1024 * 1024 * 1024 * 1024) {
+        return (size / 1024 / 1024 / 1024 / 1024).toFixed(2) + ' TB'
+    } else if (operableSize > 1024 * 1024 * 1024) {
+        return (size / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+    } else if (operableSize > 1024 * 1024) {
+        return (size / 1024 / 1024).toFixed(2) + ' MB'
+    } else if (operableSize > 1024) {
+        return (size / 1024).toFixed(2) + ' KB'
+    }
+    return size.toString() + ' B'
+};
+
 export default {
     data () {
         return {
@@ -53,6 +68,7 @@ export default {
             fileItemUuid: null, // null at first upload, non-nul when user adds files,
             progress: 0,
             cancelSource: null,
+            error: null,
         }
     },
     methods: {
@@ -66,6 +82,7 @@ export default {
             this.progress = 0;
             this.cancelSource = null;
             this.uploading = false;
+            this.error = null;
         },
         onProgressFunction(event) {
             this.progress = Math.round((100 * event.loaded) / event.total);
@@ -80,23 +97,35 @@ export default {
             }
             console.log("Sending file to storage");
             const formData = new FormData();
+            let totalSize = 0;
             for (const file of this.files) {
+                totalSize += file.size;
                 formData.append('files', file);
             }
-            return axios.post(`/api/storage/${this.chatId}/file`+(this.fileItemUuid ? `/${this.fileItemUuid}` : ''), formData, config)
-                .then(response => {
-                    bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: response.data.count});
-                    this.uploading = false;
-                })
-                .catch((thrown) => {
-                    if (axios.isCancel(thrown)) {
-                        console.log('Request canceled', thrown.message);
-                        this.hideModal();
-                    } else {
-                        throw thrown
-                    }
-                })
-                .then(()=>{this.hideModal();})
+            return axios.get(`/api/storage/${this.chatId}/file`, { params: {
+                    desiredSize: totalSize,
+                    }}).then(value => {
+                        if (value.data.status != "ok") {
+                            this.error = [`Too large, ${formatSize(value.data.available)} available`];
+                            this.uploading = false;
+                            return Promise.resolve();
+                        } else {
+                            return axios.post(`/api/storage/${this.chatId}/file`+(this.fileItemUuid ? `/${this.fileItemUuid}` : ''), formData, config)
+                                .then(response => {
+                                    bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: response.data.count});
+                                    this.uploading = false;
+                                })
+                                .catch((thrown) => {
+                                    if (axios.isCancel(thrown)) {
+                                        console.log('Request canceled', thrown.message);
+                                        this.hideModal();
+                                    } else {
+                                        throw thrown
+                                    }
+                                })
+                                .then(()=>{this.hideModal();})
+                        }
+                    })
         },
         cancel() {
             this.cancelSource.cancel()
@@ -104,6 +133,7 @@ export default {
         updateFiles(files) {
             console.log("updateFiles", files);
             this.files = [...files];
+            this.error = null;
         }
     },
     computed: {

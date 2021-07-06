@@ -493,3 +493,42 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 
 	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
+
+func (h *FilesHandler) Limits(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := utils.ParseInt64(c.Param("chatId"))
+	if err != nil {
+		return err
+	}
+	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	bucketName, err := EnsureAndGetFilesBucket(h.minio)
+	if err != nil {
+		return err
+	}
+
+	max, e := h.getMaxAllowedConsumption(userPrincipalDto)
+	if e != nil {
+		return e
+	}
+	consumption := h.calcUserFilesConsumption(bucketName)
+
+	desiredSize, err := utils.ParseInt64(c.QueryParam("desiredSize"))
+	if err != nil {
+		return err
+	}
+	available := max - consumption
+	if desiredSize > available {
+		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": h.calcUserFilesConsumption(bucketName), "available": available})
+	} else {
+		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "used": h.calcUserFilesConsumption(bucketName), "available": available})
+	}
+}
