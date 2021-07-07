@@ -33,12 +33,15 @@
                                 :hide-selected="true"
                                 hide-details
                                 :search-input.sync="search"
+                                dense
+                                outlined
                         >
                             <template v-slot:selection="data">
                                 <v-chip
                                         v-bind="data.attrs"
                                         :input-value="data.selected"
                                         close
+                                        small
                                         @click="data.select"
                                         @click:close="removeSelected(data.item)"
                                 >

@@ -1,13 +1,13 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" persistent>
+        <v-dialog v-model="show" fullscreen scrollable>
             <v-card>
                 <v-card-title>Participants</v-card-title>
 
-                <v-container fluid>
+                <v-card-text  class="ma-0 pa-0">
                     <v-list v-if="dto.participants.length > 0">
                         <template v-for="(item, index) in dto.participants">
-                            <v-list-item class="pl-0 ml-1 pr-0 mr-1 mb-1 mt-1">
+                            <v-list-item class="pl-2 ml-1 pr-0 mr-1 mb-1 mt-1">
                                 <v-badge
                                     v-if="item.avatar"
                                     color="success accent-4"
@@ -26,22 +26,29 @@
                                 <v-list-item-content class="ml-4">
                                     <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> (you)</template></v-list-item-title>
                                 </v-list-item-content>
-                                <v-tooltip bottom v-if="item.admin">
-                                  <template v-slot:activator="{ on, attrs }">
+                                <v-tooltip bottom v-if="item.admin || dto.canChangeChatAdmins">
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <template v-if="!dto.canChangeChatAdmins">
                                           <span class="pl-1 pr-1">
                                               <v-icon v-bind="attrs" v-on="on">mdi-crown</v-icon>
                                           </span>
-                                  </template>
-                                  <span>Admin</span>
+                                        </template>
+                                        <template v-else-if="item.id != currentUser.id">
+                                            <v-btn
+                                                v-bind="attrs" v-on="on"
+                                                :color="item.admin ? 'primary' : 'disabled'"
+                                                :loading="item.adminLoading ? true : false"
+                                                @click="changeChatAdmin(item)"
+                                                icon
+                                            >
+                                                <v-icon>mdi-crown</v-icon>
+                                            </v-btn>
+                                        </template>
+                                    </template>
+                                    <span>Admin</span>
                                 </v-tooltip>
+
                                 <v-btn v-if="dto.canEdit && item.id != currentUser.id" icon @click="deleteParticipant(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
-                                <v-switch v-if="dto.canChangeChatAdmins && item.id != currentUser.id"
-                                    class="ml-2"
-                                    inset
-                                    v-model="item.adminChange"
-                                    :loading="item.adminLoading ? 'primary' : false"
-                                    @change="changeChatAdmin(item)"
-                                ></v-switch>
                                 <v-tooltip bottom v-if="dto.canVideoKick && item.id != currentUser.id">
                                     <template v-slot:activator="{ on, attrs }">
                                         <v-btn v-bind="attrs" v-on="on" icon @click="kickFromVideoCall(item.id)"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
@@ -58,7 +65,9 @@
                         indeterminate
                         color="primary"
                     ></v-progress-circular>
+                </v-card-text>
 
+                <v-card-actions class="pa-4">
                     <v-autocomplete
                         v-if="dto.canEdit"
                         v-model="newParticipantIds"
@@ -74,34 +83,35 @@
                         :hide-selected="true"
                         hide-details
                         :search-input.sync="search"
+                        dense
+                        outlined
                     >
-                      <template v-slot:selection="data">
-                        <v-chip
-                            v-bind="data.attrs"
-                            :input-value="data.selected"
-                            close
-                            @click="data.select"
-                            @click:close="removeNewSelected(data.item)"
-                        >
-                          <v-avatar left v-if="data.item.avatar">
-                            <v-img :src="data.item.avatar"></v-img>
-                          </v-avatar>
-                          {{ data.item.login }}
-                        </v-chip>
-                      </template>
-                      <template v-slot:item="data">
-                        <v-list-item-avatar v-if="data.item.avatar">
-                          <img :src="data.item.avatar">
-                        </v-list-item-avatar>
-                        <v-list-item-content>
-                          <v-list-item-title v-html="data.item.login"></v-list-item-title>
-                        </v-list-item-content>
-                      </template>
+                        <template v-slot:selection="data">
+                            <v-chip
+                                v-bind="data.attrs"
+                                :input-value="data.selected"
+                                close
+                                small
+                                @click="data.select"
+                                @click:close="removeNewSelected(data.item)"
+                            >
+                                <v-avatar left v-if="data.item.avatar">
+                                    <v-img :src="data.item.avatar"></v-img>
+                                </v-avatar>
+                                {{ data.item.login }}
+                            </v-chip>
+                        </template>
+                        <template v-slot:item="data">
+                            <v-list-item-avatar v-if="data.item.avatar">
+                                <img :src="data.item.avatar">
+                            </v-list-item-avatar>
+                            <v-list-item-content>
+                                <v-list-item-title v-html="data.item.login"></v-list-item-title>
+                            </v-list-item-content>
+                        </template>
                     </v-autocomplete>
-                </v-container>
 
-                <v-card-actions class="pa-4">
-                    <v-btn v-if="dto.canEdit" :disabled="newParticipantIds.length == 0" color="primary" class="mr-4" @click="addSelectedParticipants()">Add participants</v-btn>
+                    <v-btn v-if="dto.canEdit" :disabled="newParticipantIds.length == 0" color="primary" class="ml-4" @click="addSelectedParticipants()">Add participants</v-btn>
                     <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
                 </v-card-actions>
             </v-card>
@@ -176,7 +186,6 @@
                         this.dto = response.data;
                         this.dto.participants.forEach(item => {
                             item.adminLoading = false;
-                            item.adminChange = item.admin;
                             item.online = false;
                         })
                     }).then(() => {
@@ -186,7 +195,7 @@
             changeChatAdmin(item) {
                 item.adminLoading = true;
                 this.$forceUpdate();
-                axios.put(`/api/chat/${this.dto.id}/user/${item.id}?admin=${item.adminChange}`);
+                axios.put(`/api/chat/${this.dto.id}/user/${item.id}?admin=${!item.admin}`);
             },
             inviteToVideoCall(userId) {
                 axios.put(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`).then(value => {
