@@ -69,7 +69,6 @@
 
                 <v-card-actions class="pa-4">
                     <v-autocomplete
-                        reverse
                         allow-overflow="false"
                         v-if="dto.canEdit"
                         v-model="newParticipantIds"
