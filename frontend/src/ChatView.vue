@@ -277,7 +277,7 @@
             },
             getInfo() {
                 return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
-                    console.log("Got info about chat", data);
+                    console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
                     this.$store.commit(SET_TITLE, data.name);
                     this.$store.commit(SET_CHAT_USERS_COUNT, data.participants.length);
                     this.$store.commit(SET_SHOW_SEARCH, false);
@@ -303,7 +303,7 @@
             },
             onChatChange(dto) {
                 if (dto.id == this.chatId) {
-                    this.getInfo()
+                    this.chatDto = dto;
                 }
             },
             onChatDelete(dto) {

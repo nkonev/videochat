@@ -14,9 +14,9 @@ import (
 )
 
 type Notifications interface {
-	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userIds []int64, tx *db.Tx)
-	NotifyAboutDeleteChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64, tx *db.Tx)
-	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64, tx *db.Tx)
+	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
+	NotifyAboutDeleteChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
+	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
 	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
@@ -52,7 +52,7 @@ type UserTypingNotification struct {
 }
 
 type VideoCallInvitation struct {
-	ChatId int64 `json:"chatId"`
+	ChatId   int64  `json:"chatId"`
 	ChatName string `json:"chatName"`
 }
 
@@ -60,24 +60,24 @@ type VideoKick struct {
 	ChatId int64 `json:"chatId"`
 }
 
-func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDto, userIds []int64, tx *db.Tx) {
+func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
 	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", tx)
 }
 
-func (not *notifictionsImpl) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64, tx *db.Tx) {
+func (not *notifictionsImpl) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
 	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", tx)
 }
 
-func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatDto *dto.ChatDto, userIds []int64, tx *db.Tx) {
+func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
 	chatNotifyCommon(userIds, not, c, chatDto, "chat_deleted", tx)
 }
 
-func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDto, eventType string, tx *db.Tx) {
+func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, tx *db.Tx) {
 	for _, participantId := range userIds {
 		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
 		GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
 
-		var copied *dto.ChatDto = &dto.ChatDto{}
+		var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
 		if err := deepcopy.Copy(copied, newChatDto); err != nil {
 			GetLogEntry(c.Request()).Errorf("error during performing deep copy: %s", err)
 			continue
@@ -306,7 +306,7 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64, chatName string) {
 	notification := dto.CentrifugeNotification{
 		Payload: VideoCallInvitation{
-			ChatId: chatId,
+			ChatId:   chatId,
 			ChatName: chatName,
 		},
 		EventType: "video_call_invitation",
@@ -347,9 +347,9 @@ func (not *notifictionsImpl) NotifyAboutKick(c echo.Context, chatId int64, userI
 }
 
 type UserBroadcastNotification struct {
-	Login         string `json:"login"`
+	Login  string `json:"login"`
 	UserId int64  `json:"userId"`
-	Text string `json:"text"`
+	Text   string `json:"text"`
 }
 
 func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string) {
@@ -357,9 +357,9 @@ func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId
 	channelName := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
 
 	ut := UserBroadcastNotification{
-		Login:         login,
+		Login:  login,
 		UserId: userId,
-		Text: text,
+		Text:   text,
 	}
 
 	notification := dto.CentrifugeNotification{

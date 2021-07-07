@@ -2,8 +2,8 @@
     <v-row justify="center">
         <v-dialog v-model="show" fullscreen scrollable>
             <v-card>
-                <v-card-title>
-                  <v-btn class="mr-4" icon @click="closeModal()"><v-icon>mdi-arrow-left</v-icon></v-btn>
+                <v-card-title class="pl-0 ml-0">
+                  <v-btn class="mx-2" icon @click="closeModal()"><v-icon>mdi-arrow-left</v-icon></v-btn>
                   Participants
                   <v-autocomplete
                       class="ml-4"
@@ -48,7 +48,7 @@
                       </v-list-item-content>
                     </template>
                   </v-autocomplete>
-                  <v-btn v-if="dto.canEdit" :disabled="newParticipantIds.length == 0" color="primary" class="ml-4" @click="addSelectedParticipants()">Add participants</v-btn>
+                  <v-btn v-if="dto.canEdit" :disabled="newParticipantIds.length == 0" color="primary" class="ma-2 ml-4" @click="addSelectedParticipants()">Add</v-btn>
                 </v-card-title>
 
                 <v-card-text  class="ma-0 pa-0">
@@ -178,17 +178,19 @@
                     this.processSubscriptionResponse(value);
                 })
             },
+            transformParticipants(tmp) {
+                tmp.participants.forEach(item => {
+                    item.adminLoading = false;
+                    item.online = false;
+                });
+            },
             loadData() {
-                console.log("Getting info about chat id", this.chatId);
+                console.log("Getting info about chat id in modal, chatId=", this.chatId);
                 axios.get('/api/chat/' + this.chatId)
                     .then((response) => {
-                        this.dto = response.data;
-                        this.dto.participants.forEach(item => {
-                            item.adminLoading = false;
-                            item.online = false;
-                        })
-                    }).then(() => {
-                        this.subscribeToOnline();
+                        const tmp = response.data;
+                        this.transformParticipants(tmp);
+                        this.dto = tmp;
                     })
             },
             changeChatAdmin(item) {
@@ -209,7 +211,9 @@
             },
             onChatChange(dto) {
                 if (this.show && dto.id == this.chatId) {
-                    this.loadData();
+                    const tmp  = dto;
+                    this.transformParticipants(tmp);
+                    this.dto = tmp;
                 }
             },
             deleteParticipant(participant) {

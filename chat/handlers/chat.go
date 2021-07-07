@@ -28,7 +28,7 @@ type EditChatDto struct {
 }
 
 type CreateChatDto struct {
-	Name           string  `json:"name"`
+	Name           string   `json:"name"`
 	ParticipantIds *[]int64 `json:"participantIds"`
 }
 
@@ -156,29 +156,10 @@ func (ch ChatHandler) GetChat(c echo.Context) error {
 		if chat == nil {
 			return c.NoContent(http.StatusNotFound)
 		} else {
-			var copiedChat = &dto.ChatDtoWithAdmin{}
-			err := deepcopy.Copy(copiedChat, chat)
-			if err!= nil {
-				GetLogEntry(c.Request()).Errorf("error during performing deep copy chat: %s", err)
+			copiedChat, err := ch.getChatWithAdminedUsers(c, chat, &ch.db)
+			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-
-			var adminedUsers []*dto.UserWithAdmin
-			for _, participant := range copiedChat.Participants {
-				var copied  = &dto.UserWithAdmin{}
-				if err := deepcopy.Copy(copied, participant); err != nil {
-					GetLogEntry(c.Request()).Errorf("error during performing deep copy user: %s", err)
-				} else {
-					if admin, err := ch.db.IsAdmin(participant.Id, copiedChat.Id); err != nil {
-						GetLogEntry(c.Request()).Warnf("Unable to get IsAdmin for user %v in chat %v from db", participant.Id, copiedChat.Id)
-					} else {
-						copied.Admin = admin
-					}
-
-					adminedUsers = append(adminedUsers, copied)
-				}
-			}
-			copiedChat.Participants = adminedUsers
 
 			GetLogEntry(c.Request()).Infof("Successfully returning %v chat", copiedChat)
 			return c.JSON(http.StatusOK, copiedChat)
@@ -186,19 +167,46 @@ func (ch ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
+func (ch ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto, commonDbOperations db.CommonOperations) (*dto.ChatDtoWithAdmin, error) {
+	var copiedChat = &dto.ChatDtoWithAdmin{}
+	err := deepcopy.Copy(copiedChat, chat)
+	if err != nil {
+		GetLogEntry(c.Request()).Errorf("error during performing deep copy chat: %s", err)
+		return nil, err
+	}
+
+	var adminedUsers []*dto.UserWithAdmin
+	for _, participant := range copiedChat.Participants {
+		var copied = &dto.UserWithAdmin{}
+		if err := deepcopy.Copy(copied, participant); err != nil {
+			GetLogEntry(c.Request()).Errorf("error during performing deep copy user: %s", err)
+		} else {
+			if admin, err := commonDbOperations.IsAdmin(participant.Id, copiedChat.Id); err != nil {
+				GetLogEntry(c.Request()).Warnf("Unable to get IsAdmin for user %v in chat %v from db", participant.Id, copiedChat.Id)
+			} else {
+				copied.Admin = admin
+			}
+
+			adminedUsers = append(adminedUsers, copied)
+		}
+	}
+	copiedChat.Participants = adminedUsers
+	return copiedChat, nil
+}
+
 func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64) *dto.ChatDto {
 	return &dto.ChatDto{
-		Id:                 c.Id,
-		Name:               c.Title,
-		ParticipantIds:     c.ParticipantsIds,
-		Participants:       users,
-		CanEdit:            null.BoolFrom(c.IsAdmin && !c.TetATet),
-		CanDelete:          null.BoolFrom(c.IsAdmin),
-		LastUpdateDateTime: c.LastUpdateDateTime,
-		CanLeave:           null.BoolFrom(!c.IsAdmin && !c.TetATet),
-		UnreadMessages:     unreadMessages,
-		IsTetATet: 			c.TetATet,
-		CanVideoKick: c.IsAdmin,
+		Id:                  c.Id,
+		Name:                c.Title,
+		ParticipantIds:      c.ParticipantsIds,
+		Participants:        users,
+		CanEdit:             null.BoolFrom(c.IsAdmin && !c.TetATet),
+		CanDelete:           null.BoolFrom(c.IsAdmin),
+		LastUpdateDateTime:  c.LastUpdateDateTime,
+		CanLeave:            null.BoolFrom(!c.IsAdmin && !c.TetATet),
+		UnreadMessages:      unreadMessages,
+		IsTetATet:           c.TetATet,
+		CanVideoKick:        c.IsAdmin,
 		CanChangeChatAdmins: c.IsAdmin && !c.TetATet,
 	}
 }
@@ -246,8 +254,12 @@ func (ch ChatHandler) CreateChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+		copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+		if err != nil {
+			return c.NoContent(http.StatusInternalServerError)
+		}
 
-		ch.notificator.NotifyAboutNewChat(c, responseDto, responseDto.ParticipantIds, tx)
+		ch.notificator.NotifyAboutNewChat(c, copiedChat, responseDto.ParticipantIds, tx)
 		return c.JSON(http.StatusCreated, responseDto)
 	})
 	if errOuter != nil {
@@ -287,7 +299,7 @@ func (ch ChatHandler) DeleteChat(c echo.Context) error {
 		if err := tx.DeleteChat(chatId); err != nil {
 			return err
 		}
-		cd := &dto.ChatDto{
+		cd := &dto.ChatDtoWithAdmin{
 			Id: chatId,
 		}
 		ch.notificator.NotifyAboutDeleteChat(c, cd, ids, tx)
@@ -372,9 +384,13 @@ func (ch ChatHandler) EditChat(c echo.Context) error {
 		if responseDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, userPrincipalDto); err != nil {
 			return err
 		} else {
-			ch.notificator.NotifyAboutNewChat(c, responseDto, userIdsToNotifyAboutChatCreated, tx)
-			ch.notificator.NotifyAboutDeleteChat(c, responseDto, userIdsToNotifyAboutChatDeleted, tx)
-			ch.notificator.NotifyAboutChangeChat(c, responseDto, userIdsToNotifyAboutChatChanged, tx)
+			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+			if err != nil {
+				return c.NoContent(http.StatusInternalServerError)
+			}
+			ch.notificator.NotifyAboutNewChat(c, copiedChat, userIdsToNotifyAboutChatCreated, tx)
+			ch.notificator.NotifyAboutDeleteChat(c, copiedChat, userIdsToNotifyAboutChatDeleted, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})
@@ -408,8 +424,12 @@ func (ch ChatHandler) LeaveChat(c echo.Context) error {
 		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, nil); err != nil {
 			return err
 		} else {
-			ch.notificator.NotifyAboutChangeChat(c, responseDto, responseDto.ParticipantIds, tx)
-			ch.notificator.NotifyAboutDeleteChat(c, responseDto, []int64{userPrincipalDto.UserId}, tx)
+			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+			if err != nil {
+				return c.NoContent(http.StatusInternalServerError)
+			}
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, tx)
+			ch.notificator.NotifyAboutDeleteChat(c, copiedChat, []int64{userPrincipalDto.UserId}, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})
@@ -478,10 +498,15 @@ func (ch ChatHandler) ChangeParticipant(c echo.Context) error {
 		for _, participantIdFromRequest := range participantIds {
 			userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, participantIdFromRequest)
 		}
+
 		if responseDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto); err != nil {
 			return err
 		} else {
-			ch.notificator.NotifyAboutChangeChat(c, responseDto, userIdsToNotifyAboutChatChanged, tx)
+			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+			if err != nil {
+				return c.NoContent(http.StatusInternalServerError)
+			}
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
 		}
 		responseDto := ChangeAdminResponseDto{Admin: isAdmin}
 
@@ -535,8 +560,13 @@ func (ch ChatHandler) DeleteParticipant(c echo.Context) error {
 		if chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto); err != nil {
 			return err
 		} else {
-			ch.notificator.NotifyAboutChangeChat(c, chatDto, userIdsToNotifyAboutChatChanged, tx)
-			ch.notificator.NotifyAboutDeleteChat(c, chatDto, []int64{interestingUserId}, tx)
+			copiedChat, err := ch.getChatWithAdminedUsers(c, chatDto, tx)
+			if err != nil {
+				return c.NoContent(http.StatusInternalServerError)
+			}
+
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
+			ch.notificator.NotifyAboutDeleteChat(c, copiedChat, []int64{interestingUserId}, tx)
 		}
 
 		return c.NoContent(http.StatusAccepted)
@@ -548,7 +578,7 @@ func (ch ChatHandler) DeleteParticipant(c echo.Context) error {
 }
 
 type AddParticipantsDto struct {
-	ParticipantIds     []int64   `json:"addParticipantIds"`
+	ParticipantIds []int64 `json:"addParticipantIds"`
 }
 
 func (ch ChatHandler) AddParticipants(c echo.Context) error {
@@ -599,7 +629,11 @@ func (ch ChatHandler) AddParticipants(c echo.Context) error {
 		if chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto); err != nil {
 			return err
 		} else {
-			ch.notificator.NotifyAboutChangeChat(c, chatDto, userIdsToNotifyAboutChatChanged, tx)
+			copiedChat, err := ch.getChatWithAdminedUsers(c, chatDto, tx)
+			if err != nil {
+				return c.NoContent(http.StatusInternalServerError)
+			}
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
 		}
 
 		return c.NoContent(http.StatusAccepted)
@@ -675,8 +709,12 @@ func (ch ChatHandler) TetATet(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+		copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+		if err != nil {
+			return c.NoContent(http.StatusInternalServerError)
+		}
 
-		ch.notificator.NotifyAboutNewChat(c, responseDto, responseDto.ParticipantIds, tx)
+		ch.notificator.NotifyAboutNewChat(c, copiedChat, responseDto.ParticipantIds, tx)
 
 		return c.JSON(http.StatusCreated, TetATetResponse{Id: chatId2})
 	})
