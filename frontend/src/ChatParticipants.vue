@@ -2,7 +2,54 @@
     <v-row justify="center">
         <v-dialog v-model="show" fullscreen scrollable>
             <v-card>
-                <v-card-title>Participants</v-card-title>
+                <v-card-title>
+                  <v-btn class="mr-4" icon @click="closeModal()"><v-icon>mdi-arrow-left</v-icon></v-btn>
+                  Participants
+                  <v-autocomplete
+                      class="ml-4"
+                      v-if="dto.canEdit"
+                      v-model="newParticipantIds"
+                      :disabled="newParticipantIdsIsLoading"
+                      :items="people"
+                      filled
+                      chips
+                      color="blue-grey lighten-2"
+                      label="Select users for add to chat"
+                      item-text="login"
+                      item-value="id"
+                      multiple
+                      :hide-selected="true"
+                      hide-details
+                      :search-input.sync="search"
+                      dense
+                      outlined
+                  >
+                    <template v-slot:selection="data">
+                      <v-chip
+                          v-bind="data.attrs"
+                          :input-value="data.selected"
+                          close
+                          small
+                          @click="data.select"
+                          @click:close="removeNewSelected(data.item)"
+                      >
+                        <v-avatar left v-if="data.item.avatar">
+                          <v-img :src="data.item.avatar"></v-img>
+                        </v-avatar>
+                        {{ data.item.login }}
+                      </v-chip>
+                    </template>
+                    <template v-slot:item="data">
+                      <v-list-item-avatar v-if="data.item.avatar">
+                        <img :src="data.item.avatar">
+                      </v-list-item-avatar>
+                      <v-list-item-content>
+                        <v-list-item-title v-html="data.item.login"></v-list-item-title>
+                      </v-list-item-content>
+                    </template>
+                  </v-autocomplete>
+                  <v-btn v-if="dto.canEdit" :disabled="newParticipantIds.length == 0" color="primary" class="ml-4" @click="addSelectedParticipants()">Add participants</v-btn>
+                </v-card-title>
 
                 <v-card-text  class="ma-0 pa-0">
                     <v-list v-if="dto.participants.length > 0">
@@ -66,55 +113,6 @@
                         color="primary"
                     ></v-progress-circular>
                 </v-card-text>
-
-                <v-card-actions class="pa-4">
-                    <v-autocomplete
-                        :allow-overflow="false"
-                        v-if="dto.canEdit"
-                        v-model="newParticipantIds"
-                        :disabled="newParticipantIdsIsLoading"
-                        :items="people"
-                        filled
-                        chips
-                        color="blue-grey lighten-2"
-                        label="Select users for add to chat"
-                        item-text="login"
-                        item-value="id"
-                        multiple
-                        :hide-selected="true"
-                        hide-details
-                        :search-input.sync="search"
-                        dense
-                        outlined
-                    >
-                        <template v-slot:selection="data">
-                            <v-chip
-                                v-bind="data.attrs"
-                                :input-value="data.selected"
-                                close
-                                small
-                                @click="data.select"
-                                @click:close="removeNewSelected(data.item)"
-                            >
-                                <v-avatar left v-if="data.item.avatar">
-                                    <v-img :src="data.item.avatar"></v-img>
-                                </v-avatar>
-                                {{ data.item.login }}
-                            </v-chip>
-                        </template>
-                        <template v-slot:item="data">
-                            <v-list-item-avatar v-if="data.item.avatar">
-                                <img :src="data.item.avatar">
-                            </v-list-item-avatar>
-                            <v-list-item-content>
-                                <v-list-item-title v-html="data.item.login"></v-list-item-title>
-                            </v-list-item-content>
-                        </template>
-                    </v-autocomplete>
-
-                    <v-btn v-if="dto.canEdit" :disabled="newParticipantIds.length == 0" color="primary" class="ml-4" @click="addSelectedParticipants()">Add participants</v-btn>
-                    <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
-                </v-card-actions>
             </v-card>
         </v-dialog>
     </v-row>
