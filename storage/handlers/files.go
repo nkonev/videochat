@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
+	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
 	"sort"
@@ -25,7 +26,7 @@ import (
 type FilesHandler struct {
 	serverUrl          string
 	minio              *minio.Client
-	chatClient *client.ChatAccessClient
+	chatClient *client.RestClient
 }
 
 type RenameDto struct {
@@ -35,13 +36,15 @@ type RenameDto struct {
 const filesMultipartKey = "files";
 
 type FileInfoDto struct {
-	Id        string `json:"id"`
-	Filename  string `json:"filename"`
-	Url       string `json:"url"`
-	PublicUrl string `json:"publicUrl"`
-	Size      int64  `json:"size"`
-	CanRemove bool   `json:"canRemove"`
+	Id           string    `json:"id"`
+	Filename     string    `json:"filename"`
+	Url          string    `json:"url"`
+	PublicUrl    string    `json:"publicUrl"`
+	Size         int64     `json:"size"`
+	CanRemove    bool      `json:"canRemove"`
 	LastModified time.Time `json:"lastModified"`
+	OwnerId      int64     `json:"ownerId"`
+	Owner        *dto.User `json:"owner"`
 }
 
 const filenameKey = "filename"
@@ -50,7 +53,7 @@ const chatIdKey = "chatid"
 
 func NewFilesHandler(
 	minio *minio.Client,
-	chatClient *client.ChatAccessClient,
+	chatClient *client.RestClient,
 ) *FilesHandler {
 	return &FilesHandler{
 		minio:              minio,
@@ -251,7 +254,7 @@ func (h *FilesHandler) getMaxAllowedConsumption(userPrincipalDto *auth.AuthResul
 	}
 }
 
-func (h *FilesHandler) ListChatFilesHandler(c echo.Context) error {
+func (h *FilesHandler) ListHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -288,17 +291,56 @@ func (h *FilesHandler) ListChatFilesHandler(c echo.Context) error {
 		return err
 	}
 
+	var participantIdSet = map[int64]bool{}
+	for _, fileDto := range list {
+		participantIdSet[fileDto.OwnerId] = true
+	}
+	var users = getUsersRemotelyOrEmpty(participantIdSet, h.chatClient, c)
+	for _, fileDto := range list {
+		user := users[fileDto.OwnerId]
+		if user != nil {
+			fileDto.Owner = user
+		}
+	}
+
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list})
 }
 
-func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filenameChatPrefix string, chatId int64) ([]FileInfoDto, error) {
+func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) map[int64]*dto.User {
+	if remoteUsers, err := getUsersRemotely(userIdSet, restClient, c); err != nil {
+		GetLogEntry(c.Request()).Warn("Error during getting users from aaa")
+		return map[int64]*dto.User{}
+	} else {
+		return remoteUsers
+	}
+}
+
+func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) (map[int64]*dto.User, error) {
+	var userIds = utils.SetToArray(userIdSet)
+	length := len(userIds)
+	Logger.Infof("Requested user length is %v", length)
+	if length == 0 {
+		return map[int64]*dto.User{}, nil
+	}
+	users, err := restClient.GetUsers(userIds)
+	if err != nil {
+		return nil, err
+	}
+	var ownersObjects = map[int64]*dto.User{}
+	for _, u := range users {
+		ownersObjects[u.Id] = u
+	}
+	return ownersObjects, nil
+}
+
+func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filenameChatPrefix string, chatId int64) ([]*FileInfoDto, error) {
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
 		Recursive: true,
 	})
 
-	var list []FileInfoDto = make([]FileInfoDto, 0)
+	var list []*FileInfoDto = make([]*FileInfoDto, 0)
 	for objInfo := range objects {
 		Logger.Debugf("Object '%v'", objInfo.Key)
 
@@ -315,7 +357,15 @@ func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filena
 			continue
 		}
 
-		info := FileInfoDto{Id: objInfo.Key, Filename: fileName, Url: *downloadUrl, Size: objInfo.Size, CanRemove: fileOwnerId == behalfUserId, LastModified: objInfo.LastModified}
+		info := &FileInfoDto{
+			Id: objInfo.Key,
+			Filename: fileName,
+			Url: *downloadUrl,
+			Size: objInfo.Size,
+			CanRemove: fileOwnerId == behalfUserId,
+			LastModified: objInfo.LastModified,
+			OwnerId: fileOwnerId,
+		}
 		list = append(list, info)
 	}
 	sort.SliceStable(list, func(i, j int) bool {
@@ -494,7 +544,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
 
-func (h *FilesHandler) Limits(c echo.Context) error {
+func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")

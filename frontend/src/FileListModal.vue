@@ -1,19 +1,20 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" persistent>
+        <v-dialog v-model="show" max-width="640" persistent scrollable>
             <v-card>
                 <v-card-title>Attached files</v-card-title>
 
-                <v-container fluid>
+                <v-card-text class="ma-0 pa-0">
                     <v-list v-if="!loading">
                         <template v-if="dto.files.length > 0">
                             <template v-for="(item, index) in dto.files">
-                                <v-list-item class="pl-0 ml-1 pr-0 mr-1 mb-1 mt-1">
+                                <v-list-item>
                                     <v-list-item-avatar class="ma-0 pa-0">
                                         <v-icon>mdi-file</v-icon>
                                     </v-list-item-avatar>
                                     <v-list-item-content class="ml-4">
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
+                                        <v-list-item-subtitle v-if="item.owner">by {{item.owner.login}}</v-list-item-subtitle>
                                     </v-list-item-content>
                                     <v-icon class="mx-1" v-if="item.canRemove" color="error" @click="deleteFile(item)" dark>mdi-delete</v-icon>
                                 </v-list-item>
@@ -30,7 +31,7 @@
                         color="primary"
                     ></v-progress-circular>
 
-                </v-container>
+                </v-card-text>
 
                 <v-card-actions class="pa-4">
                     <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>

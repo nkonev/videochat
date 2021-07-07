@@ -26,6 +26,10 @@ chat:
     base: "http://localhost:1235"
     access: "/internal/access"
     removeFileItem: "/internal/removeFileItem"
+aaa:
+  url:
+    base: "http://localhost:8060"
+    getUsers: "/internal/user/list"
 
 limits:
   stat:

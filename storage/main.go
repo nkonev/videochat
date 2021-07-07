@@ -111,10 +111,10 @@ func configureEcho(
 	e.GET(fmt.Sprintf("%v/:filename", handlers.UrlStorageGetAvatar), ch.Download)
 	e.POST("/storage/:chatId/file", fh.UploadHandler)
 	e.POST("/storage/:chatId/file/:fileItemUuid", fh.UploadHandler)
-	e.GET("/storage/:chatId", fh.ListChatFilesHandler)
+	e.GET("/storage/:chatId", fh.ListHandler)
 	e.DELETE("/storage/:chatId/file", fh.DeleteHandler)
 	e.GET("/storage/download", fh.DownloadHandler)
-	e.GET("/storage/:chatId/file", fh.Limits)
+	e.GET("/storage/:chatId/file", fh.LimitsHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
