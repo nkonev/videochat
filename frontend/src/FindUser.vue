@@ -4,27 +4,29 @@
             <v-card>
                 <v-card-title>Find user</v-card-title>
 
-                <v-autocomplete
-                    :disabled="isLoading"
-                    :items="people"
-                    filled
-                    color="blue-grey lighten-2"
-                    label="Select user"
-                    item-text="login"
-                    item-value="id"
-                    :hide-selected="true"
-                    hide-details
-                    :search-input.sync="search"
-                >
-                    <template v-slot:item="data">
-                        <v-list-item-avatar v-if="data.item.avatar" @click="onUserClicked(data.item)">
-                            <img :src="data.item.avatar">
-                        </v-list-item-avatar>
-                        <v-list-item-content @click="onUserClicked(data.item)">
-                            <v-list-item-title v-html="data.item.login"></v-list-item-title>
-                        </v-list-item-content>
-                    </template>
-                </v-autocomplete>
+                <v-card-text class="px-4 py-0">
+                    <v-autocomplete
+                        :disabled="isLoading"
+                        :items="people"
+                        filled
+                        color="blue-grey lighten-2"
+                        label="Type to search"
+                        item-text="login"
+                        item-value="id"
+                        :hide-selected="true"
+                        hide-details
+                        :search-input.sync="search"
+                    >
+                        <template v-slot:item="data">
+                            <v-list-item-avatar v-if="data.item.avatar" @click="onUserClicked(data.item)">
+                                <img :src="data.item.avatar">
+                            </v-list-item-avatar>
+                            <v-list-item-content @click="onUserClicked(data.item)">
+                                <v-list-item-title v-html="data.item.login"></v-list-item-title>
+                            </v-list-item-content>
+                        </template>
+                    </v-autocomplete>
+                </v-card-text>
 
                 <v-card-actions class="pa-4">
                     <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
