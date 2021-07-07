@@ -69,6 +69,7 @@
 
                 <v-card-actions class="pa-4">
                     <v-autocomplete
+                        reverse
                         v-if="dto.canEdit"
                         v-model="newParticipantIds"
                         :disabled="newParticipantIdsIsLoading"
