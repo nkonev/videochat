@@ -291,31 +291,19 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 		return err
 	}
 
-	var participantIdSet = map[int64]bool{}
-	for _, fileDto := range list {
-		participantIdSet[fileDto.OwnerId] = true
-	}
-	var users = getUsersRemotelyOrEmpty(participantIdSet, h.chatClient, c)
-	for _, fileDto := range list {
-		user := users[fileDto.OwnerId]
-		if user != nil {
-			fileDto.Owner = user
-		}
-	}
-
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list})
 }
 
-func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) map[int64]*dto.User {
-	if remoteUsers, err := getUsersRemotely(userIdSet, restClient, c); err != nil {
-		GetLogEntry(c.Request()).Warn("Error during getting users from aaa")
+func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.User {
+	if remoteUsers, err := getUsersRemotely(userIdSet, restClient); err != nil {
+		Logger.Warn("Error during getting users from aaa")
 		return map[int64]*dto.User{}
 	} else {
 		return remoteUsers
 	}
 }
 
-func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) (map[int64]*dto.User, error) {
+func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.User, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
 	Logger.Infof("Requested user length is %v", length)
@@ -371,6 +359,19 @@ func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filena
 	sort.SliceStable(list, func(i, j int) bool {
 		return list[i].LastModified.Unix() < list[j].LastModified.Unix()
 	})
+
+	var participantIdSet = map[int64]bool{}
+	for _, fileDto := range list {
+		participantIdSet[fileDto.OwnerId] = true
+	}
+	var users = getUsersRemotelyOrEmpty(participantIdSet, h.chatClient)
+	for _, fileDto := range list {
+		user := users[fileDto.OwnerId]
+		if user != nil {
+			fileDto.Owner = user
+		}
+	}
+
 	return list, nil
 }
 
