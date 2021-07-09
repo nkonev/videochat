@@ -435,13 +435,18 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	}
 	// end check
 
-	fileItemUuid := getFileItemUuid(bindTo.Id)
-	var filenameChatPrefix string = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
-
 	err = h.minio.RemoveObject(context.Background(), bucketName, bindTo.Id, minio.RemoveObjectOptions{})
 	if err != nil {
 		Logger.Errorf("Error during removing object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	fileItemUuid := c.QueryParam("fileItemUuid")
+	var filenameChatPrefix string
+	if fileItemUuid == "" {
+		filenameChatPrefix = fmt.Sprintf("chat/%v/", chatId)
+	} else {
+		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
 	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId)
