@@ -60,7 +60,6 @@
                 streams: {},
                 remotesDiv: null,
                 signalLocal: null,
-                dataChannel: null,
                 localMedia: null,
                 localPublisherKey: 1,
                 closingStarted: false,
@@ -108,7 +107,7 @@
                     console.info("Signal opened, joining to session...")
                     this.clientLocal.join(`chat${this.chatId}`, this.peerId).then(()=>{
                         console.info("Joined to session, gathering media devices")
-                        this.getAndPublishCamera()
+                        this.getAndPublishLocalMediaStream({})
                             .then(()=>{
                               this.notifyAboutJoining();
                             }).then(value => {
@@ -135,7 +134,7 @@
                             this.streams[stream.id] = {stream, component};
 
                             stream.onremovetrack = () => {
-                                this.removeTrack(stream.id, track.id, component)
+                                this.removeStream(stream.id, track.id, component)
                             };
 
                             this.askUserNameWithRetries(stream.id);
@@ -143,7 +142,7 @@
                     }
                 };
             },
-            removeTrack(streamId, trackId, component) {
+            removeStream(streamId, trackId, component) {
               console.log("removed track", trackId, "for stream", streamId);
               try {
                 this.remotesDiv.removeChild(component.$el);
@@ -166,7 +165,7 @@
                 for (const streamId in this.streams) {
                     console.log("Cleaning stream " + streamId);
                     const component = this.streams[streamId].component;
-                    this.removeTrack(streamId, '_not_set', component);
+                    this.removeStream(streamId, '_not_set', component);
                 }
                 if (this.localMedia) {
                     this.localMedia.getTracks().forEach(t => t.stop());
@@ -264,13 +263,19 @@
                 }
             },
             onStartScreenSharing() {
+                return this.onSwitchMediaStream({screen: true});
+            },
+            onStopScreenSharing() {
+                return this.onSwitchMediaStream({screen: false});
+            },
+            onSwitchMediaStream({screen = false}) {
                 this.localMedia.unpublish();
                 if (this.localMedia) {
                   this.localMedia.getTracks().forEach(t => t.stop());
                 }
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
-                this.getAndPublishScreen()
+                this.getAndPublishLocalMediaStream({screen})
                     .catch(reason => {
                       console.error("Error during publishing screen stream, won't restart...", reason);
                       this.$refs.localVideoComponent.setUserName('Error get getDisplayMedia');
@@ -279,54 +284,34 @@
                         this.notifyWithData();
                     });
             },
-            onStopScreenSharing() {
-                this.localMedia.unpublish();
-                if (this.localMedia) {
-                  this.localMedia.getTracks().forEach(t => t.stop());
-                }
-                this.$refs.localVideoComponent.setSource(null);
-                this.localPublisherKey++;
-                this.getAndPublishCamera()
-                    .then(value => {
-                        this.notifyWithData();
-                    });
-            },
-            getAndPublishCamera() {
+            getAndPublishLocalMediaStream({screen = false}) {
                 this.insideSwitchingCameraScreen = true;
                 const resolution = this.getVideoResolution();
                 bus.$emit(VIDEO_RESOLUTION_CHANGED, resolution);
-                return LocalStream.getUserMedia({
-                  resolution: resolution,
-                  audio: true,
-                }).then((media) => {
+
+                const localStream = screen ?
+                    LocalStream.getDisplayMedia({ }) :
+                    LocalStream.getUserMedia({
+                        resolution: resolution,
+                        audio: true,
+                    });
+
+                return localStream.then((media) => {
                   this.localMedia = media;
                   this.$refs.localVideoComponent.setSource(media);
                   this.$refs.localVideoComponent.setStreamMuted(true);
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
                   this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
-                  console.log("Publishing camera");
+                  console.log("Publishing " + (screen ? "screen" : "camera"));
                   this.clientLocal.publish(media);
-                  console.log("Camera successfully published");
-                  this.$store.commit(SET_SHARE_SCREEN, false);
+                  console.log("Successfully published " + (screen ? "screen" : "camera"));
+                  if (screen) {
+                      this.$store.commit(SET_SHARE_SCREEN, true);
+                  } else {
+                      this.$store.commit(SET_SHARE_SCREEN, false);
+                  }
                   this.setLocalMuteDefaults();
                   this.insideSwitchingCameraScreen = false;
-                });
-            },
-            getAndPublishScreen() {
-                this.insideSwitchingCameraScreen = true;
-                return LocalStream.getDisplayMedia({ }).then((media) => {
-                    this.localMedia = media;
-                    //this.localMedia.unmute("audio");
-                    this.$refs.localVideoComponent.setSource(media);
-                    this.$refs.localVideoComponent.setStreamMuted(true);
-                    this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
-                    this.$refs.localVideoComponent.setUserName(this.myUserName);
-                    console.log("Publishing screen");
-                    this.clientLocal.publish(media);
-                    console.log("Screen successfully published");
-                    this.$store.commit(SET_SHARE_SCREEN, true);
-                    this.setLocalMuteDefaults();
-                    this.insideSwitchingCameraScreen = false;
                 });
             },
             setLocalMuteDefaults() {
