@@ -60,7 +60,7 @@
                 streams: {},
                 remotesDiv: null,
                 signalLocal: null,
-                localMedia: null,
+                localMediaStream: null,
                 localPublisherKey: 1,
                 closingStarted: false,
                 chatId: null,
@@ -167,8 +167,8 @@
                     const component = this.streams[streamId].component;
                     this.removeStream(streamId, '_not_set', component);
                 }
-                if (this.localMedia) {
-                    this.localMedia.getTracks().forEach(t => t.stop());
+                if (this.localMediaStream) {
+                    this.localMediaStream.getTracks().forEach(t => t.stop());
                 }
                 if (this.clientLocal) {
                     this.clientLocal.close();
@@ -177,7 +177,7 @@
                 this.signalLocal = null;
                 this.streams = {};
                 this.remotesDiv = null;
-                this.localMedia = null;
+                this.localMediaStream = null;
                 this.insideSwitchingCameraScreen = false;
                 this.peerId = null;
 
@@ -269,9 +269,9 @@
                 return this.onSwitchMediaStream({screen: false});
             },
             onSwitchMediaStream({screen = false}) {
-                this.localMedia.unpublish();
-                if (this.localMedia) {
-                  this.localMedia.getTracks().forEach(t => t.stop());
+                this.localMediaStream.unpublish();
+                if (this.localMediaStream) {
+                  this.localMediaStream.getTracks().forEach(t => t.stop());
                 }
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
@@ -297,7 +297,7 @@
                     });
 
                 return localStream.then((media) => {
-                  this.localMedia = media;
+                  this.localMediaStream = media;
                   this.$refs.localVideoComponent.setSource(media);
                   this.$refs.localVideoComponent.setStreamMuted(true);
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
@@ -316,9 +316,9 @@
             },
             setLocalMuteDefaults() {
                 if (this.audioMuted) {
-                    this.localMedia.mute("audio");
+                    this.localMediaStream.mute("audio");
                 } else {
-                    this.localMedia.unmute("audio");
+                    this.localMediaStream.unmute("audio");
                 }
             },
             startVideoProcess() {
@@ -357,11 +357,11 @@
             },
             onStartVideoMuting(requestedState) {
                 if (requestedState) {
-                    this.localMedia.mute("video");
+                    this.localMediaStream.mute("video");
                     this.$store.commit(SET_MUTE_VIDEO, requestedState);
                     this.notifyWithData();
                 } else {
-                    this.localMedia.unmute("video").then(value => {
+                    this.localMediaStream.unmute("video").then(value => {
                         this.$store.commit(SET_MUTE_VIDEO, requestedState);
                         this.notifyWithData();
                     })
@@ -370,12 +370,12 @@
             onStartAudioMuting(requestedState) {
                 this.ensureAudioIsEnabledAccordingBrowserPolicies();
                 if (requestedState) {
-                    this.localMedia.mute("audio");
+                    this.localMediaStream.mute("audio");
                     this.$store.commit(SET_MUTE_AUDIO, requestedState);
                     this.$refs.localVideoComponent.setDisplayAudioMute(requestedState);
                     this.notifyWithData();
                 } else {
-                    this.localMedia.unmute("audio").then(value => {
+                    this.localMediaStream.unmute("audio").then(value => {
                         this.$store.commit(SET_MUTE_AUDIO, requestedState);
                         this.$refs.localVideoComponent.setDisplayAudioMute(requestedState);
                         this.notifyWithData();

@@ -8,7 +8,7 @@
             </pane>
             <pane v-bind:size="messagesSize">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%">
-                    <v-list>
+                    <v-list  v-if="currentUser">
                         <template v-for="(item, index) in items">
                             <MessageItem :key="item.id" :item="item" :chatId="chatId" :highlight="item.owner.id === currentUser.id"></MessageItem>
                             <v-divider :dark="item.owner.id === currentUser.id"></v-divider>
