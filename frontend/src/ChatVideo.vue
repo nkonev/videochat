@@ -51,6 +51,7 @@
     const videoProcessRestartInterval = 1000;
     const askUserNameInterval = 1000;
     const defaultResolution = 'hd';
+    const RESOLUTION_KEY = 'videoResolution';
 
     export default {
         data() {
@@ -420,10 +421,10 @@
                 return got;
             },
             getStoredVideoResolution() {
-                return localStorage.getItem('videoResolution');
+                return localStorage.getItem(RESOLUTION_KEY);
             },
             storeVideoResolution(newVideoResolution) {
-                localStorage.setItem('videoResolution', newVideoResolution);
+                localStorage.setItem(RESOLUTION_KEY, newVideoResolution);
             },
         },
         mounted() {
