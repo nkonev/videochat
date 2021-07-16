@@ -46,7 +46,12 @@ firewall-cmd --zone=public --add-port=5000-5100/udp
 
 # AAA Login
 ```
-curl -v 'http://localhost:8060/api/login' -H 'Accept: application/json, text/plain, */*' -H 'Content-Type: application/x-www-form-urlencoded' --data 'username=admin&password=admin'
+curl -i 'http://localhost:8060/api/login' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'x-xsrf-token: aa0a1b63-7b5f-480d-9487-d62a48a32899' \
+  -H 'content-type: application/x-www-form-urlencoded;charset=UTF-8' \
+  -H 'cookie: XSRF-TOKEN=aa0a1b63-7b5f-480d-9487-d62a48a32899' \
+  --data-raw 'username=admin&password=admin'
 ```
 
 
