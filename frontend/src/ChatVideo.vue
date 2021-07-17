@@ -133,8 +133,11 @@
                             component.setSource(stream);
                             this.streams[stream.id] = {stream, component};
 
-                            stream.onremovetrack = () => {
-                                this.removeStream(stream.id, track.id, component)
+                            stream.onremovetrack = (e) => {
+                                console.log("onremovetrack", e);
+                                if (e.track && e.track.kind === 'video') {
+                                    this.removeStream(stream.id, component)
+                                }
                             };
 
                             this.askUserNameWithRetries(stream.id);
@@ -142,13 +145,13 @@
                     }
                 };
             },
-            removeStream(streamId, trackId, component) {
-              console.log("removed track", trackId, "for stream", streamId);
+            removeStream(streamId, component) {
+              console.log("Removing stream streamId=", streamId);
               try {
                 this.remotesDiv.removeChild(component.$el);
                 component.$destroy();
               } catch (e) {
-                console.debug("Something wrong on removing child", e, component.$el, this.remotesDiv);
+                console.error("Something wrong on removing child", e, component.$el, this.remotesDiv);
               }
               delete this.streams[streamId];
             },
@@ -165,7 +168,7 @@
                 for (const streamId in this.streams) {
                     console.log("Cleaning stream " + streamId);
                     const component = this.streams[streamId].component;
-                    this.removeStream(streamId, '_not_set', component);
+                    this.removeStream(streamId, component);
                 }
                 if (this.localMediaStream) {
                     this.localMediaStream.getTracks().forEach(t => t.stop());

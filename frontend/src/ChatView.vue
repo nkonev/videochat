@@ -48,7 +48,6 @@
         VIDEO_CALL_KICKED,
         MESSAGE_BROADCAST,
         REFRESH_ON_WEBSOCKET_RESTORED,
-        USER_ONLINE_CHANGED
     } from "./bus";
     import MessageEdit from "./MessageEdit";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
