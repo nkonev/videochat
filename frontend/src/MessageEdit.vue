@@ -19,7 +19,7 @@
                     <button class="ql-clean"></button>
                 </div>
                 <div class="custom-toolbar-send">
-                    <v-btn icon tile class="mr-4" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
+                    <v-btn icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : 'mr-2'" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
                     <template v-if="this.editMessageDto.fileItemUuid">
                         <v-badge
                             :value="fileCount"
@@ -28,7 +28,7 @@
                             overlap
                             left
                         >
-                            <v-btn icon tile class="mr-4" @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
+                            <v-btn icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : ''" @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
                         </v-badge>
                     </template>
                     <v-switch v-if="canBroadcast && $vuetify.breakpoint.smAndUp" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
@@ -170,6 +170,9 @@
             onFileItemUuid({fileItemUuid, count}) {
                 this.editMessageDto.fileItemUuid = fileItemUuid;
                 this.fileCount = count;
+                if (this.fileCount === 0) {
+                    this.editMessageDto.fileItemUuid = null;
+                }
             },
         },
         computed: {

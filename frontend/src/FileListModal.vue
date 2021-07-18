@@ -47,7 +47,7 @@
 import bus, {
     CLOSE_SIMPLE_MODAL,
     OPEN_SIMPLE_MODAL,
-    OPEN_VIEW_FILES_DIALOG
+    OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID
 } from "./bus";
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
@@ -95,7 +95,8 @@ export default {
                 actionFunction: ()=> {
                     axios.delete(`/api/storage/${this.chatId}/file` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""), {data: {id: dto.id}})
                         .then((response) => {
-                            this.dto = response.data
+                            this.dto = response.data;
+                            bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: this.fileItemUuid, count: response.data.files.length});
                             if (this.dto.files.length == 0) {
                                 this.closeModal();
                             }
