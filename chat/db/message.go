@@ -20,12 +20,14 @@ type Message struct {
 	FileItemUuid *uuid.UUID
 }
 
-func (db *DB) GetMessages(chatId int64, userId int64, limit int, offset int, reverse bool) ([]*Message, error) {
+func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
 	order := "asc"
+	nonEquality := "m.id > $3"
 	if reverse {
 		order = "desc"
+		nonEquality = "m.id < $3"
 	}
-	if rows, err := db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.chat_id, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message m WHERE chat_id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) ORDER BY id %s LIMIT $2 OFFSET $3`, order), userId, limit, offset, chatId); err != nil {
+	if rows, err := db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.chat_id, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message m WHERE chat_id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) AND %s ORDER BY id %s LIMIT $2`, nonEquality, order), userId, limit, startingFromItemId, chatId); err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
 	} else {

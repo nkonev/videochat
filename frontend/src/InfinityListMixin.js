@@ -38,6 +38,7 @@ export default () => {
         data () {
             return {
                 page: 0,
+                startingFromItemId: null,
                 items: [],
                 itemsTotal: 0,
                 infiniteId: +new Date(),
@@ -53,15 +54,10 @@ export default () => {
                 console.log("Resetting infinite loader", this.infiniteId);
             },
 
-            isLastPage() {
-                const pagesTotal = Math.ceil(this.itemsTotal / pageSize);
-                console.log("isLastPage pagesTotal=", pagesTotal, "this.page=", this.page, "this.itemsTotal=", this.itemsTotal);
-                return this.page === pagesTotal;
-            },
-
             searchStringChanged() {
                 this.items = [];
                 this.page = 0;
+                this.startingFromItemId = null;
                 this.reloadItems();
             },
         },

@@ -9,6 +9,7 @@ import (
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/microcosm-cc/bluemonday"
+	"math"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -52,10 +53,19 @@ func (mc MessageHandler) GetMessages(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	page := utils.FixPageString(c.QueryParam("page"))
+	var startingFromItemId int64
+	startingFromItemIdString := c.QueryParam("startingFromItemId")
+	if startingFromItemIdString == "" {
+		startingFromItemId = math.MaxInt64
+	} else {
+		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
+		if err != nil {
+			return err
+		}
+		startingFromItemId = startingFromItemId2
+	}
 	size := utils.FixSizeString(c.QueryParam("size"))
 	reverse := utils.GetBoolean(c.QueryParam("reverse"))
-	offset := utils.GetOffset(page, size)
 
 	chatIdString := c.Param("id")
 	chatId, err := utils.ParseInt64(chatIdString)
@@ -63,7 +73,7 @@ func (mc MessageHandler) GetMessages(c echo.Context) error {
 		return err
 	}
 
-	if messages, err := mc.db.GetMessages(chatId, userPrincipalDto.UserId, size, offset, reverse); err != nil {
+	if messages, err := mc.db.GetMessages(chatId, userPrincipalDto.UserId, size, startingFromItemId, reverse); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
 		return err
 	} else {

@@ -599,7 +599,7 @@ func interfaceToString(inter interface{}) string {
 
 func TestGetMessagesPaginated(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
-		c, b, _ := request("GET", "/chat/1/message?page=2&size=3", nil, e)
+		c, b, _ := request("GET", "/chat/1/message?startingFromItemId=6&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, b)
 
