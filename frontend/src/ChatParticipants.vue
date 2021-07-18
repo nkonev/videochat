@@ -126,13 +126,12 @@
         CLOSE_SIMPLE_MODAL,
         OPEN_PARTICIPANTS_DIALOG,
         OPEN_SIMPLE_MODAL,
-        USER_ONLINE_CHANGED
     } from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import {videochat_name} from "./routes";
     import debounce from "lodash/debounce";
-    import subscriptionMixin from "./subscriptionMixin";
+    import userOnlinePollingMixin from "./userOnlinePollingMixin";
 
     const dtoFactory = ()=>{
         return {
@@ -144,7 +143,7 @@
     };
 
     export default {
-        mixins: [subscriptionMixin()],
+        mixins: [userOnlinePollingMixin()],
         data () {
             return {
                 show: false,
@@ -171,12 +170,6 @@
                 } else {
                     this.dto = dtoFactory();
                 }
-                this.initSubscription(this.subscribeToOnline)
-            },
-            subscribeToOnline() {
-                return axios.put('/api/chat/subscription/online', {userIds: this.dto.participantIds}).then(value => {
-                    this.processSubscriptionResponse(value);
-                })
             },
             transformParticipants(tmp) {
                 tmp.participants.forEach(item => {
@@ -191,6 +184,11 @@
                         const tmp = response.data;
                         this.transformParticipants(tmp);
                         this.dto = tmp;
+                    }).then(value => {
+                        this.startPolling(
+                            ()=>{ return this.dto.participantIds},
+                            (v) => this.onUserOnlineChanged(v)
+                        );
                     })
             },
             changeChatAdmin(item) {
@@ -230,7 +228,6 @@
                 });
             },
             closeModal() {
-                this.closeSubscription();
                 this.show = false;
                 this.chatId = null;
                 this.newParticipantIds = [];
@@ -238,7 +235,7 @@
                 this.dto = dtoFactory();
                 this.newParticipantIdsIsLoading = false;
                 this.search = null;
-                axios.put('/api/chat/subscription/online', {userIds: []})
+                this.stopPolling();
             },
             removeNewSelected (item) {
                 console.debug("Removing", item, this.newParticipantIds);
@@ -299,13 +296,11 @@
             bus.$on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
             bus.$on(CHAT_EDITED, this.onChatChange);
             bus.$on(CHAT_DELETED, this.onChatDelete);
-            bus.$on(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
         },
         destroyed() {
             bus.$off(OPEN_PARTICIPANTS_DIALOG, this.showModal);
             bus.$off(CHAT_EDITED, this.onChatChange);
             bus.$off(CHAT_DELETED, this.onChatDelete);
-            bus.$off(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
         },
     }
 </script>

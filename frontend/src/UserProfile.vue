@@ -81,11 +81,10 @@ import axios from "axios";
 import {getCorrectUserAvatar} from "./utils";
 import {chat_name} from "./routes";
 import {mapGetters} from "vuex";
-import bus, {USER_ONLINE_CHANGED} from "./bus";
-import subscriptionMixin from "./subscriptionMixin";
+import userOnlinePollingMixin from "./userOnlinePollingMixin";
 
 export default {
-    mixins: [subscriptionMixin()],
+    mixins: [userOnlinePollingMixin()],
     data() {
         return {
             viewableUser: null,
@@ -111,17 +110,15 @@ export default {
         isNotMyself() {
             return this.currentUser && this.currentUser.id != this.viewableUser.id
         },
-        subscribeToOnline() {
-            return axios.put('/api/chat/subscription/online', {userIds: [this.viewableUser.id]}).then(value => {
-                this.processSubscriptionResponse(value);
-            })
-        },
         loadUser() {
             this.viewableUser = null;
             axios.get(`/api/user/${this.userId}`).then((response) => {
                 this.viewableUser = response.data;
             }).then(() => {
-                this.subscribeToOnline()
+                this.startPolling(
+                    ()=>{ return [this.userId]},
+                    (v) => this.onUserOnlineChanged(v)
+                );
             })
         },
         tetATet(withUserId) {
@@ -135,7 +132,7 @@ export default {
                     this.online = dtoItem.online;
                 }
             })
-        }
+        },
     },
     mounted() {
         this.$store.commit(SET_TITLE, `User profile`);
@@ -146,14 +143,12 @@ export default {
 
         this.loadUser();
     },
+    beforeMount() {
+        this.stopPolling();
+    },
     created() {
-        bus.$on(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
-        this.initSubscription(this.subscribeToOnline)
     },
     destroyed() {
-        this.closeSubscription();
-        axios.put('/api/chat/subscription/online', {userIds: []})
-        bus.$off(USER_ONLINE_CHANGED, this.onUserOnlineChanged);
     }
 }
 </script>

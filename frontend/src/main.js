@@ -18,7 +18,6 @@ import bus, {
   VIDEO_CALL_INVITED,
   VIDEO_CALL_KICKED,
   VIDEO_CALL_CHANGED,
-  USER_ONLINE_CHANGED
 } from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
@@ -94,9 +93,6 @@ const vm = new Vue({
       } else if (getData(ctx).type === "video_call_changed") {
         const d = getProperData(ctx);
         bus.$emit(VIDEO_CALL_CHANGED, d);
-      } else if (getData(ctx).type === "user_online_changed") {
-        const d = getProperData(ctx);
-        bus.$emit(USER_ONLINE_CHANGED, d);
       }
 
     });

@@ -13,7 +13,6 @@ import (
 	"go.uber.org/fx"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/db"
-	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/redis"
 	"nkonev.name/chat/utils"
@@ -89,7 +88,7 @@ func modifyMessage(msg []byte, originatorUserId string, originatorClientId strin
 	return json.Marshal(v)
 }
 
-func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineStorage, subscriptionService SubscribeHandler) *centrifuge.Node {
+func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineStorage) *centrifuge.Node {
 	// We use default config here as starting point. Default config contains
 	// reasonable values for available options.
 	cfg := centrifuge.DefaultConfig
@@ -171,7 +170,6 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 		}
 
 		onlineStorage.PutUserOnline(userId)
-		notifyAboutOnlineInChat(node, userId, true)
 
 		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
 			clientInfo, presenceDuration, err := createPresence(creds, client)
@@ -232,7 +230,6 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 		client.On().Disconnect(func(e centrifuge.DisconnectEvent) centrifuge.DisconnectReply {
 			Logger.Printf("Centrifuge user %v disconnected", creds.UserID)
 			onlineStorage.RemoveUserOnline(userId)
-			notifyAboutOnlineInChat(node, userId, false)
 			return centrifuge.DisconnectReply{}
 		})
 
@@ -344,109 +341,3 @@ type UserOnlineChanged struct {
 	UserId int64 `json:"userId"`
 	Online bool `json:"online"`
 }
-
-const userOnlineChangedType = "user_online_changed"
-func notifyAboutOnlineInChat(node *centrifuge.Node, userId int64, online bool) {
-	channels, err := node.Channels()
-	if err != nil {
-		Logger.Errorf("Error during getting channels")
-		return
-	}
-	for _, ch := range channels {
-		_, _, err := getChatId(ch)
-		if err == nil {
-			notification := dto.CentrifugeNotification{
-				Payload: []UserOnlineChanged{UserOnlineChanged{
-						UserId: userId,
-						Online: online,
-					},
-				},
-				EventType: userOnlineChangedType,
-			}
-			if marshalledBytes, err := json.Marshal(notification); err != nil {
-				Logger.Errorf("error during marshalling user_online_changed notification: %s", err)
-			} else {
-				_, err := node.Publish(ch, marshalledBytes)
-				if err != nil {
-					Logger.Errorf("error publishing to personal channel: %s", err)
-				}
-			}
-		}
-	}
-}
-
-func periodicNotifyAboutOnline(node *centrifuge.Node, onlineStorage redis.OnlineStorage, subscriptionService SubscribeHandler) {
-	subscriptions, err := subscriptionService.GetAllUserOnlineSubscriptions()
-	if err != nil {
-		Logger.Errorf("Error during getting subscriptions: %v", err)
-		return
-	}
-	Logger.Debugf("Found %v user online subscriptions", len(subscriptions))
-
-	var alreadySent map[int64]bool = map[int64]bool{}
-
-	for _, subscriptionId := range subscriptions {
-		userId, err := GetUserIdFromSubscriptionId(subscriptionId)
-		if err != nil {
-			Logger.Errorf("Error during parsing user id")
-			continue
-		}
-		if alreadySent[userId] == true {
-			Logger.Debugf("Skipping already sent")
-			continue
-		}
-		alreadySent[userId] = true
-		participantChannel := node.PersonalChannel(utils.Int64ToString(userId))
-
-		subscribedUsersIds, err := subscriptionService.GetUserOnlineSubscribedUsers(subscriptionId)
-		if err != nil {
-			Logger.Errorf("Error during getting usersIds")
-			continue
-		}
-
-		var arr []UserOnlineChanged = make([]UserOnlineChanged, 0)
-		for _, participantId := range subscribedUsersIds {
-			online, err := onlineStorage.GetUserOnline(participantId)
-			if err != nil {
-				continue
-			}
-			arr = append(arr, UserOnlineChanged{
-				UserId: participantId,
-				Online: online,
-			})
-		}
-
-		notification := dto.CentrifugeNotification{
-			Payload:   arr,
-			EventType: userOnlineChangedType,
-		}
-
-		if marshalledBytes, err := json.Marshal(notification); err != nil {
-			Logger.Errorf("error during marshalling user_online_changed notification: %s", err)
-		} else {
-			_, err := node.Publish(participantChannel, marshalledBytes)
-			if err != nil {
-				Logger.Errorf("error publishing to personal channel: %s", err)
-			}
-		}
-
-	}
-}
-
-func ScheduleNotifications(node *centrifuge.Node, onlineStorage redis.OnlineStorage, subscriptionService SubscribeHandler) *chan struct{} {
-	ticker := time.NewTicker(viper.GetDuration("online.notification.period"))
-	quit := make(chan struct{})
-	go func() {
-		for {
-			select {
-			case <- ticker.C:
-				periodicNotifyAboutOnline(node, onlineStorage, subscriptionService)
-			case <- quit:
-				ticker.Stop()
-				return
-			}
-		}
-	}()
-	return &quit
-}
-
