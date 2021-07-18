@@ -274,6 +274,10 @@
                 const myDiv = document.getElementById("messagesScroller");
                 return myDiv.scrollHeight - myDiv.scrollTop === myDiv.clientHeight
             },
+            isScrolledToTop() {
+                const myDiv = document.getElementById("messagesScroller");
+                return myDiv.scrollTop === 0
+            },
             getInfo() {
                 return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
                     console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
