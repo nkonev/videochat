@@ -31,7 +31,7 @@
                             <v-btn icon tile class="mr-4" @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
                         </v-badge>
                     </template>
-                    <v-switch v-if="canBroadcast" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
+                    <v-switch v-if="canBroadcast && $vuetify.breakpoint.smAndUp" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                         :label="$vuetify.breakpoint.smAndUp ? `Broadcast` : null"
                     ></v-switch>
                     <v-btn color="primary" @click="sendMessageToChat" small><v-icon color="white">mdi-send</v-icon></v-btn>
