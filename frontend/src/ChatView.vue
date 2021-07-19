@@ -7,7 +7,7 @@
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane v-bind:size="messagesSize">
-                <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll="onScroll">
+                <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll">
                     <v-list  v-if="currentUser">
                         <template v-for="(item, index) in items">
                             <MessageItem :key="item.id" :item="item" :chatId="chatId" :highlight="item.owner.id === currentUser.id"></MessageItem>
@@ -74,8 +74,8 @@
     const directionTop = 'top';
     const directionBottom = 'bottom';
 
-    const maxItemsLength = 200;
-    const reduceToLength = 100;
+    const maxItemsLength = 100;
+    const reduceToLength = 60;
 
     const calcSplitpanesHeight = () => {
         const appBarHeight = parseInt(document.getElementById("myAppBar").style.height.replace('px', ''));
