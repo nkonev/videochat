@@ -16,7 +16,7 @@
                     </v-list>
                     <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
                         <template slot="no-more"><span/></template>
-                        <template slot="no-results">No more messages</template>
+                        <template slot="no-results"><span/></template>
                     </infinite-loading>
                 </div>
             </pane>
@@ -74,8 +74,8 @@
     const directionTop = 'top';
     const directionBottom = 'bottom';
 
-    const maxItemsLength = 100;
-    const reduceToLength = 60;
+    const maxItemsLength = 200;
+    const reduceToLength = 100;
 
     const calcSplitpanesHeight = () => {
         const appBarHeight = parseInt(document.getElementById("myAppBar").style.height.replace('px', ''));
@@ -100,6 +100,7 @@
                 scrollerDiv: null,
                 scrollerProbeCurrent: 0,
                 scrollerProbePrevious: 0,
+                scrollerProbePreviousPrevious: 0,
                 forbidChangeScrollDirection: false
             }
         },
@@ -154,9 +155,10 @@
         },
         methods: {
             onScroll(e) {
+                this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
                 this.scrollerProbePrevious = this.scrollerProbeCurrent;
                 this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
-                console.log("onScroll prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
+                console.log("onScroll scrollerProbePreviousPrevious=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
                 if (!this.forbidChangeScrollDirection) {
                     Vue.nextTick(() => {
@@ -168,11 +170,11 @@
                 return this.aDirection === directionTop
             },
             switchDirection() {
-                if (this.scrollerProbeCurrent > this.scrollerProbePrevious && this.isTopDirection()) {
+                if (this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
                     this.aDirection = directionBottom;
                     this.infinityKey++;
                     console.log("Infinity scrolling direction has been changed to bottom");
-                } else if (this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
+                } else if (this.scrollerProbePreviousPrevious > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
                     this.aDirection = directionTop;
                     this.infinityKey++;
                     console.log("Infinity scrolling direction has been changed to top");
@@ -261,6 +263,9 @@
                     }
                     console.log("this.startingFromItemId set to", this.startingFromItemId);
                 }
+
+                this.forbidChangeScrollDirection = true;
+
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
                         startingFromItemId: this.startingFromItemId,
@@ -286,6 +291,8 @@
                     } else {
                         $state?.complete();
                     }
+                }).finally(()=>{
+                    this.forbidChangeScrollDirection = false;
                 })
             },
             reduceListIfNeed() {
