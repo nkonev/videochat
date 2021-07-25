@@ -31,7 +31,7 @@ export const moveToFirstPosition = (array, element) => {
     }
 }
 
-export const pageSize = 20;
+export const pageSize = 40;
 
 export default () => {
     return  {

@@ -158,7 +158,7 @@
                 this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
                 this.scrollerProbePrevious = this.scrollerProbeCurrent;
                 this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
-                console.log("onScroll scrollerProbePreviousPrevious=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
+                console.log("onScroll prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
                 if (!this.forbidChangeScrollDirection) {
                     Vue.nextTick(() => {
@@ -437,7 +437,7 @@
         },
         created() {
             this.onResizedListener = debounce(this.onResizedListener, 200, {leading:true, trailing:true});
-            this.onScroll = throttle(this.onScroll, 200);
+            this.onScroll = throttle(this.onScroll, 400, {leading:false, trailing:true});
         },
         mounted() {
             this.splitpanesHeight = calcSplitpanesHeight();

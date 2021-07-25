@@ -2,7 +2,6 @@
     <v-list-item
         dense
         class="pr-1 mr-1 pl-4"
-        :class="{ highlight: highlight }"
     >
         <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">
             <v-list-item-avatar v-if="item.owner && item.owner.avatar">
@@ -17,7 +16,7 @@
                 <v-icon class="mx-1" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
             </v-container>
-            <v-list-item-content class="pre-formatted pa-0 ma-0 mt-1 message-item-text" v-html="item.text"></v-list-item-content>
+            <v-list-item-content class="pre-formatted pa-0 ma-0 mt-1 message-item-text" :class="{ highlight: highlight }" v-html="item.text"></v-list-item-content>
         </v-list-item-content>
     </v-list-item>
 </template>
@@ -91,6 +90,7 @@
       white-space: pre;
   }
   .highlight {
-      background #cde3ff
+      border-radius 10px
+      background #e4efff
   }
 </style>
