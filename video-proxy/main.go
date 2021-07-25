@@ -14,6 +14,7 @@ import (
 	"os"
 	"strings"
 	"sync/atomic"
+	"time"
 )
 
 var Logger = log.New()
@@ -28,16 +29,29 @@ type VideoReplicasProvider interface {
 	Refresh()
 }
 
-type FileVideoReplicasProvider struct {
+type AbstractReplicasProvider struct {
 	hashring *hashring.HashRing
 	cachedUrls atomic.Value
 }
 
-func (f *FileVideoReplicasProvider) getCachedUrls() []ReplicaAndProxy {
+type FileVideoReplicasProvider struct {
+	AbstractReplicasProvider
+}
+
+func (f *AbstractReplicasProvider) getCachedUrls() []ReplicaAndProxy {
 	return f.cachedUrls.Load().([]ReplicaAndProxy)
 }
 
+func (f *AbstractReplicasProvider) setCachedUrls(slice []ReplicaAndProxy) {
+	f.cachedUrls.Store(slice)
+}
+
 func (r *FileVideoReplicasProvider) Refresh() {
+	if err := viper.ReadInConfig(); err != nil {
+		Logger.Errorf("Fatal error config file: %s \n", err)
+		return
+	}
+
 	urls := viper.GetStringSlice("urls")
 	var ret = []ReplicaAndProxy{}
 	for _, u := range urls {
@@ -52,12 +66,12 @@ func (r *FileVideoReplicasProvider) Refresh() {
 			})
 		}
 	}
-	r.cachedUrls.Store(ret)
+	r.setCachedUrls(ret)
 	r.hashring = hashring.New(urls)
 }
 
 
-func (r *FileVideoReplicasProvider) GetReplicaByUrl(url0 *url.URL) *ReplicaAndProxy {
+func (r *AbstractReplicasProvider) GetReplicaByUrl(url0 *url.URL) *ReplicaAndProxy {
 	ring := r.hashring
 	path := url0.Path
 	// "/video/{chatId}/ws"
@@ -83,7 +97,7 @@ func (r *FileVideoReplicasProvider) GetReplicaByUrl(url0 *url.URL) *ReplicaAndPr
 	return nil
 }
 
-func (r *FileVideoReplicasProvider) getDefaultReplica() *ReplicaAndProxy{
+func (r *AbstractReplicasProvider) getDefaultReplica() *ReplicaAndProxy{
 	if len(r.getCachedUrls()) == 0 {
 		Logger.Warnf("Unable to get default replica")
 		return nil
@@ -109,8 +123,14 @@ func main() {
 
 	address := viper.GetString("listenAddress")
 	Logger.Printf("Starting on address %v", address)
+
 	provider := &FileVideoReplicasProvider{}
 	provider.Refresh()
+
+	refreshInterval := viper.GetDuration("refreshInterval")
+	if refreshInterval != 0 {
+		scheduleCachedUrlsRefreshing(refreshInterval, provider)
+	}
 
 	http.Handle("/git.json", Static())
 	http.HandleFunc("/", handleRequestAndRedirect(provider))
@@ -118,6 +138,26 @@ func main() {
 		panic(err)
 	}
 }
+
+func scheduleCachedUrlsRefreshing(refreshInterval time.Duration, provider VideoReplicasProvider) *chan struct{} {
+	ticker := time.NewTicker(refreshInterval)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <- ticker.C:
+				Logger.Info("Refreshing config")
+				provider.Refresh()
+			case <- quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+	return &quit
+}
+
+
 
 // Given a request send it to the appropriate url
 func handleRequestAndRedirect(r VideoReplicasProvider) func (res http.ResponseWriter, req *http.Request) {
