@@ -5,14 +5,15 @@ import (
 	"flag"
 	"fmt"
 	"github.com/serialx/hashring"
-	"github.com/spf13/viper"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"io/fs"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
+	"sync/atomic"
 )
 
 var Logger = log.New()
@@ -24,16 +25,21 @@ type ReplicaAndProxy struct {
 
 type VideoReplicasProvider interface {
 	GetReplicaByUrl(url0 *url.URL) *ReplicaAndProxy
+	Refresh()
 }
 
 type FileVideoReplicasProvider struct {
-	Hashring *hashring.HashRing
-	CachedUrls []ReplicaAndProxy
+	hashring *hashring.HashRing
+	cachedUrls atomic.Value
 }
 
-func (r *FileVideoReplicasProvider) Init() {
+func (f *FileVideoReplicasProvider) getCachedUrls() []ReplicaAndProxy {
+	return f.cachedUrls.Load().([]ReplicaAndProxy)
+}
+
+func (r *FileVideoReplicasProvider) Refresh() {
 	urls := viper.GetStringSlice("urls")
-	var ret []ReplicaAndProxy
+	var ret = []ReplicaAndProxy{}
 	for _, u := range urls {
 		url0, err := url.Parse(u)
 		if err != nil {
@@ -46,13 +52,13 @@ func (r *FileVideoReplicasProvider) Init() {
 			})
 		}
 	}
-	r.CachedUrls = ret
-	r.Hashring = hashring.New(urls)
+	r.cachedUrls.Store(ret)
+	r.hashring = hashring.New(urls)
 }
 
 
 func (r *FileVideoReplicasProvider) GetReplicaByUrl(url0 *url.URL) *ReplicaAndProxy {
-	ring := r.Hashring
+	ring := r.hashring
 	path := url0.Path
 	// "/video/{chatId}/ws"
 	split := strings.Split(path, "/")
@@ -67,7 +73,7 @@ func (r *FileVideoReplicasProvider) GetReplicaByUrl(url0 *url.URL) *ReplicaAndPr
 		return r.getDefaultReplica()
 	}
 
-	for _, existing := range r.CachedUrls {
+	for _, existing := range r.getCachedUrls() {
 		if existing.Url.String() == node {
 			Logger.Printf("Balancing url %v - selecting %v for %v", url0, node, chatId)
 			return &existing
@@ -78,11 +84,11 @@ func (r *FileVideoReplicasProvider) GetReplicaByUrl(url0 *url.URL) *ReplicaAndPr
 }
 
 func (r *FileVideoReplicasProvider) getDefaultReplica() *ReplicaAndProxy{
-	if len(r.CachedUrls) == 0 {
+	if len(r.getCachedUrls()) == 0 {
 		Logger.Warnf("Unable to get default replica")
 		return nil
 	}
-	return &r.CachedUrls[0]
+	return &r.getCachedUrls()[0]
 }
 
 func main() {
@@ -104,7 +110,7 @@ func main() {
 	address := viper.GetString("listenAddress")
 	Logger.Printf("Starting on address %v", address)
 	provider := &FileVideoReplicasProvider{}
-	provider.Init()
+	provider.Refresh()
 
 	http.Handle("/git.json", Static())
 	http.HandleFunc("/", handleRequestAndRedirect(provider))
