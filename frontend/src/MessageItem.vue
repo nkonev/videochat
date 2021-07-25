@@ -17,7 +17,7 @@
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
             </v-container>
             <v-list-item-content class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ highlight: highlight }" >
-                <v-container v-html="item.text" class="pre-formatted message-item-text"></v-container>
+                <v-container v-html="item.text" class="ma-0 pre-formatted message-item-text"></v-container>
             </v-list-item-content>
         </v-list-item-content>
     </v-list-item>
