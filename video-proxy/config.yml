@@ -1,3 +1,11 @@
-urls: ["http://localhost:7001"]
 listenAddress: ":7000"
 refreshInterval: 5s
+urlsSource:
+  # "file" or "dnsA"
+  type: file
+  file:
+    urls: ["http://localhost:7001"]
+  dnsA:
+    nameToLookup: video.local
+    protocol: http
+    port: 7001

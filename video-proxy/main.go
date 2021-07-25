@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io/fs"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -29,21 +30,25 @@ type VideoReplicasProvider interface {
 	Refresh()
 }
 
-type AbstractReplicasProvider struct {
+type urlsAndHashRing struct {
 	hashring *hashring.HashRing
-	cachedUrls atomic.Value
+	cachedUrls []ReplicaAndProxy
+}
+
+type AbstractReplicasProvider struct {
+	cachedUrlsAndHashRing atomic.Value
 }
 
 type FileVideoReplicasProvider struct {
 	AbstractReplicasProvider
 }
 
-func (f *AbstractReplicasProvider) getCachedUrls() []ReplicaAndProxy {
-	return f.cachedUrls.Load().([]ReplicaAndProxy)
+func (f *AbstractReplicasProvider) getUrlsAndHashRing() *urlsAndHashRing {
+	return f.cachedUrlsAndHashRing.Load().(*urlsAndHashRing)
 }
 
-func (f *AbstractReplicasProvider) setCachedUrls(slice []ReplicaAndProxy) {
-	f.cachedUrls.Store(slice)
+func (f *AbstractReplicasProvider) setUrlsAndHashRing(slice *urlsAndHashRing) {
+	f.cachedUrlsAndHashRing.Store(slice)
 }
 
 func (r *FileVideoReplicasProvider) Refresh() {
@@ -52,7 +57,7 @@ func (r *FileVideoReplicasProvider) Refresh() {
 		return
 	}
 
-	urls := viper.GetStringSlice("urls")
+	urls := viper.GetStringSlice("urlsSource.file.urls")
 	var ret = []ReplicaAndProxy{}
 	for _, u := range urls {
 		url0, err := url.Parse(u)
@@ -66,28 +71,69 @@ func (r *FileVideoReplicasProvider) Refresh() {
 			})
 		}
 	}
-	r.setCachedUrls(ret)
-	r.hashring = hashring.New(urls)
+	r.setUrlsAndHashRing(&urlsAndHashRing{
+		hashring:   hashring.New(urls),
+		cachedUrls: ret,
+	})
+}
+
+type DnsAVideoReplicasProvider struct {
+	AbstractReplicasProvider
+}
+
+func (r *DnsAVideoReplicasProvider) Refresh() {
+	nameToLookup := viper.GetString("urlsSource.dnsA.nameToLookup")
+	ips, err := net.LookupIP(nameToLookup)
+	if err != nil {
+		Logger.Warnf("Could not get IPs for name %v: %v\n", nameToLookup, err)
+		return
+	}
+	protocolVar := viper.GetString("urlsSource.dnsA.protocol")
+	portVar := viper.GetString("urlsSource.dnsA.port")
+
+	var ret = []ReplicaAndProxy{}
+	var urls []string = []string{}
+	for _, u := range ips {
+		urlStr := protocolVar + "://" + u.String() + ":" + portVar
+		Logger.Infof("Built url with resolving ip from DNS: %v", urlStr)
+		url0, err := url.Parse(urlStr)
+		if err != nil {
+			Logger.Warnf("unable to parse %v, skipping", u)
+			continue
+		} else {
+			urls = append(urls, url0.String())
+			ret = append(ret, ReplicaAndProxy{
+				Url:          url0,
+				Proxy: httputil.NewSingleHostReverseProxy(url0),
+			})
+		}
+	}
+	r.setUrlsAndHashRing(&urlsAndHashRing{
+		hashring:   hashring.New(urls),
+		cachedUrls: ret,
+	})
+
 }
 
 
 func (r *AbstractReplicasProvider) GetReplicaByUrl(url0 *url.URL) *ReplicaAndProxy {
-	ring := r.hashring
+	urlsAndHashRing := r.getUrlsAndHashRing()
+	ring := urlsAndHashRing.hashring
 	path := url0.Path
 	// "/video/{chatId}/ws"
 	split := strings.Split(path, "/")
 	if len(split) < 3 {
 		Logger.Warnf("Unable to get chatId from url, returning default replica")
-		return r.getDefaultReplica()
+		return getDefaultReplica(urlsAndHashRing)
 	}
 	chatId := split[2]
 	node, ok := ring.GetNode(chatId)
 	if !ok {
 		Logger.Warnf("Unable to get node from hashring, returning replica")
-		return r.getDefaultReplica()
+		return getDefaultReplica(urlsAndHashRing)
 	}
 
-	for _, existing := range r.getCachedUrls() {
+	for _, existing := range urlsAndHashRing.cachedUrls {
 		if existing.Url.String() == node {
 			Logger.Printf("Balancing url %v - selecting %v for %v", url0, node, chatId)
 			return &existing
@@ -97,12 +143,12 @@ func (r *AbstractReplicasProvider) GetReplicaByUrl(url0 *url.URL) *ReplicaAndPro
 	return nil
 }
 
-func (r *AbstractReplicasProvider) getDefaultReplica() *ReplicaAndProxy{
-	if len(r.getCachedUrls()) == 0 {
+func getDefaultReplica(urlsAndHashRing *urlsAndHashRing) *ReplicaAndProxy{
+	if len(urlsAndHashRing.cachedUrls) == 0 {
 		Logger.Warnf("Unable to get default replica")
 		return nil
 	}
-	return &r.getCachedUrls()[0]
+	return &urlsAndHashRing.cachedUrls[0]
 }
 
 func main() {
@@ -124,7 +170,18 @@ func main() {
 	address := viper.GetString("listenAddress")
 	Logger.Printf("Starting on address %v", address)
 
-	provider := &FileVideoReplicasProvider{}
+	var provider VideoReplicasProvider
+	urlSourceType := viper.GetString("urlsSource.type")
+	Logger.Infof("urlSourceType: %v", urlSourceType)
+	switch urlSourceType {
+	case "file":
+		provider = &FileVideoReplicasProvider{}
+	case "dnsA":
+		provider = &DnsAVideoReplicasProvider{}
+	default:
+		panic("Unknown urlsSource.type " + urlSourceType)
+	}
+
 	provider.Refresh()
 
 	refreshInterval := viper.GetDuration("refreshInterval")
