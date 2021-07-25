@@ -23,6 +23,7 @@
                       :search-input.sync="search"
                       dense
                       outlined
+                      autofocus
                   >
                     <template v-slot:selection="data">
                       <v-chip

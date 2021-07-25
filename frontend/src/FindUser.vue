@@ -18,6 +18,7 @@
                         :search-input.sync="search"
                         dense
                         outlined
+                        autofocus
                     >
                         <template v-slot:item="data">
                             <v-list-item-avatar v-if="data.item.avatar" @click="onUserClicked(data.item)">
