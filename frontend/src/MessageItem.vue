@@ -16,7 +16,9 @@
                 <v-icon class="mx-1" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
             </v-container>
-            <v-list-item-content class="pre-formatted pa-0 ma-0 mt-1 message-item-text" :class="{ highlight: highlight }" v-html="item.text"></v-list-item-content>
+            <v-list-item-content class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ highlight: highlight }" >
+                <v-container v-html="item.text" class="pre-formatted message-item-text"></v-container>
+            </v-list-item-content>
         </v-list-item-content>
     </v-list-item>
 </template>
@@ -81,16 +83,23 @@
     font-weight: 500;
     line-height: 1rem;
   }
+  .message-item-wrapper {
+      border-radius 10px
+      background #efefef
+  }
   .message-item-text {
       display inline-block
       word-wrap break-word
       overflow-wrap break-word
+      p {
+          margin-bottom unset
+      }
   }
   .with-space {
       white-space: pre;
   }
   .highlight {
-      border-radius 10px
       background #e4efff
   }
+
 </style>

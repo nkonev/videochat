@@ -11,7 +11,6 @@
                     <v-list  v-if="currentUser">
                         <template v-for="(item, index) in items">
                             <MessageItem :key="item.id" :item="item" :chatId="chatId" :highlight="item.owner.id === currentUser.id"></MessageItem>
-                            <v-divider :dark="item.owner.id === currentUser.id"></v-divider>
                         </template>
                     </v-list>
                     <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
@@ -106,7 +105,7 @@
         },
         computed: {
             aDistance() {
-                return this.isTopDirection() ? 0 : 100;
+                return this.isTopDirection() ? 40 : 100;
             },
             chatId() {
                 return this.$route.params.id
