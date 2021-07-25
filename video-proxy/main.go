@@ -60,6 +60,7 @@ func (r *FileVideoReplicasProvider) Refresh() {
 	urls := viper.GetStringSlice("urlsSource.file.urls")
 	var ret = []ReplicaAndProxy{}
 	for _, u := range urls {
+		Logger.Debugf("Processing url from config: %v", u)
 		url0, err := url.Parse(u)
 		if err != nil {
 			Logger.Warnf("unable to parse %v, skipping", u)
@@ -95,7 +96,7 @@ func (r *DnsAVideoReplicasProvider) Refresh() {
 	var urls []string = []string{}
 	for _, u := range ips {
 		urlStr := protocolVar + "://" + u.String() + ":" + portVar
-		Logger.Infof("Built url with resolving ip from DNS: %v", urlStr)
+		Logger.Debugf("Built url with resolving ip from DNS: %v", urlStr)
 		url0, err := url.Parse(urlStr)
 		if err != nil {
 			Logger.Warnf("unable to parse %v, skipping", u)
@@ -167,6 +168,14 @@ func main() {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 
+	logLevel := viper.GetString("log.level")
+	level, err := log.ParseLevel(logLevel)
+	if err != nil {
+		Logger.Errorf("Unable to parse log level from %v", logLevel)
+	} else {
+		Logger.SetLevel(level)
+	}
+
 	address := viper.GetString("listenAddress")
 	Logger.Printf("Starting on address %v", address)
 
@@ -203,7 +212,7 @@ func scheduleCachedUrlsRefreshing(refreshInterval time.Duration, provider VideoR
 		for {
 			select {
 			case <- ticker.C:
-				Logger.Info("Refreshing config")
+				Logger.Debugf("Refreshing config")
 				provider.Refresh()
 			case <- quit:
 				ticker.Stop()
