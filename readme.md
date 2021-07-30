@@ -11,9 +11,6 @@
 docker-compose up -d
 ```
 
-## Build static
-Before development, you need to build static (html, sql). Please see `.travis.yml`
-
 # Test in browser
 Open `http://localhost:8081/chat` in Firefox main and an Anonymous window;
 Login as `admin:admin` in main window and as `nikita:password` in the Anonymous window.
