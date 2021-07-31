@@ -13,7 +13,7 @@
                             <MessageItem :key="item.id" :item="item" :chatId="chatId" :highlight="item.owner.id === currentUser.id"></MessageItem>
                         </template>
                     </v-list>
-                    <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
+                    <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="100">
                         <template slot="no-more"><span/></template>
                         <template slot="no-results"><span/></template>
                     </infinite-loading>
@@ -104,9 +104,6 @@
             }
         },
         computed: {
-            aDistance() {
-                return this.isTopDirection() ? 40 : 100;
-            },
             chatId() {
                 return this.$route.params.id
             },
