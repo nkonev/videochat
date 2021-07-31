@@ -23,34 +23,6 @@
             <v-divider></v-divider>
 
             <v-list dense>
-                <v-list-item v-if="isVideoRoute()">
-                    <v-menu
-                        bottom
-                        offset-y
-                        absolute
-                    >
-                        <template v-slot:activator="{ on, attrs }">
-                            <v-list-item-icon v-bind="attrs" v-on="on">
-                                <v-icon>mdi-cog</v-icon>
-                            </v-list-item-icon>
-
-                            <v-list-item-content v-bind="attrs" v-on="on">
-                                <v-list-item-title>Video: {{videoResolution}}</v-list-item-title>
-                            </v-list-item-content>
-                        </template>
-                        <v-list>
-                            <!-- https://github.com/pion/ion-sdk-js/blob/master/src/stream.ts#L10 -->
-                            <v-list-item
-                                v-for="(item, i) in ['qvga', 'vga', 'shd', 'hd', 'fhd', 'qhd']"
-                                :disabled="item == videoResolution"
-                                :key="i"
-                                @click="saveVideoResolution(item)"
-                            >
-                                <v-list-item-title>{{ item }}</v-list-item-title>
-                            </v-list-item>
-                        </v-list>
-                    </v-menu>
-                </v-list-item>
                 <v-list-item
                         v-for="item in getAppBarItems()"
                         :key="item.title"
@@ -160,6 +132,7 @@
                 <FindUser/>
                 <FileUploadModal/>
                 <FileListModal/>
+                <VideoSettings/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -199,7 +172,7 @@
         REFRESH_ON_WEBSOCKET_RESTORED,
         REQUEST_CHANGE_VIDEO_RESOLUTION,
         VIDEO_RESOLUTION_CHANGED,
-        OPEN_FIND_USER, OPEN_VIEW_FILES_DIALOG,
+        OPEN_FIND_USER, OPEN_VIEW_FILES_DIALOG, OPEN_VIDEO_SETTINGS,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -211,6 +184,7 @@
     import FindUser from "./FindUser";
     import FileUploadModal from './FileUploadModal';
     import FileListModal from "./FileListModal";
+    import VideoSettings from './VideoSettings';
 
     const audio = new Audio("/call.mp3");
 
@@ -229,6 +203,9 @@
                     { title: 'New chat', icon: 'mdi-plus-circle-outline', clickFunction: this.createChat, requireAuthenticated: true},
                     { title: 'Edit chat', icon: 'mdi-lead-pencil', clickFunction: this.editChat, requireAuthenticated: true, displayCondition: this.shouldDisplayEditChat},
                     { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
+
+                    { title: 'Video settings', icon: 'mdi-cog', clickFunction: this.openVideoSettings, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoSettings},
+
                     { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
                 ],
                 drawer: this.$vuetify.breakpoint.lgAndUp,
@@ -240,7 +217,6 @@
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
                 showWebsocketRestored: false,
-                videoResolution: null,
             }
         },
         components:{
@@ -253,6 +229,7 @@
             FindUser,
             FileUploadModal,
             FileListModal,
+            VideoSettings,
         },
         methods:{
             toggleLeftNavigation() {
@@ -366,20 +343,19 @@
             shouldDisplayEditChat() {
                 return this.showChatEditButton;
             },
+            shouldDisplayVideoSettings() {
+                return true;
+            },
             onPressWebsocketRestored() {
                 this.showWebsocketRestored = false;
                 bus.$emit(REFRESH_ON_WEBSOCKET_RESTORED);
             },
-            saveVideoResolution(newResolution) {
-                console.log("Saving new video resolution", newResolution);
-                bus.$emit(REQUEST_CHANGE_VIDEO_RESOLUTION, newResolution);
-            },
-            onVideoResolutionChanged(res) {
-                this.videoResolution = res;
-            },
             displayChatFiles() {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId});
             },
+            openVideoSettings() {
+                bus.$emit(OPEN_VIDEO_SETTINGS);
+            }
         },
         computed: {
             ...mapGetters({
@@ -405,7 +381,6 @@
         created() {
             bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
-            bus.$on(VIDEO_RESOLUTION_CHANGED, this.onVideoResolutionChanged)
         },
 
     }
