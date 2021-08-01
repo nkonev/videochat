@@ -103,8 +103,6 @@
             },
             videoQuality: {
                 get() {
-                    return localStorage.getItem(KEY_RESOLUTION);
-
                     let got = localStorage.getItem(KEY_RESOLUTION);
                     if (!got) {
                         localStorage.setItem(KEY_RESOLUTION, defaultResolution);
