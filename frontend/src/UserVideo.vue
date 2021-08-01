@@ -65,6 +65,10 @@ export default {
         background #d5fdd5;
     }
 
+    .video-container-element:nth-child(odd) {
+        background #e4efff;
+    }
+
     video {
         height 100% !important
     }
