@@ -5,7 +5,6 @@ on:
 
 jobs:
   aaa:
-    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -50,7 +49,6 @@ jobs:
           ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.AaaUpdateCommand }}
 
   frontend:
-    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -85,7 +83,6 @@ jobs:
           ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.FrontendUpdateCommand }}
 
   chat:
-    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -120,7 +117,6 @@ jobs:
           (cd chat; make push-docker && echo "Will deploy chat" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.ChatUpdateCommand }} )
 
   storage:
-    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -154,7 +150,6 @@ jobs:
           (cd storage; make push-docker && echo "Will deploy storage" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.StorageUpdateCommand }} )
 
   video:
-    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -180,7 +175,6 @@ jobs:
           (cd video; make push-docker && echo "Will deploy video" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.VideoUpdateCommand }} )
 
   video-proxy:
-    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -212,13 +206,13 @@ jobs:
       - name: Convert drawio file to png image
         uses: rlespinasse/drawio-export-action@v1.x
         with:
-          path: .markdown
+          path: .drawio
           format: png
           output: exported
           transparent: true
       - name: show after
-        run: ls -lah .markdown/exported
+        run: ls -lah .drawio/exported
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          file_pattern: .markdown/exported/*.png
-          commit_message: skip build
+          file_pattern: .drawio/exported/*.png
+          commit_message: Convert drawio to png
