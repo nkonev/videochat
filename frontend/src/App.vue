@@ -176,7 +176,7 @@
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
     import SimpleModal from "./SimpleModal";
     import ChooseAvatar from "./ChooseAvatar";
-    import {getCorrectUserAvatar} from "./utils";
+    import {getCorrectUserAvatar, getStoredAudioPresents} from "./utils";
     import ChatParticipants from "./ChatParticipants";
     import PermissionsWarning from "./PermissionsWarning";
     import FindUser from "./FindUser";
@@ -324,10 +324,10 @@
                 bus.$emit(VIDEO_START_MUTING, !this.videoMuted)
             },
             shouldDisplayAudioUnmute() {
-                return this.isVideoRoute() && this.audioMuted && this.currentUser != null;
+                return getStoredAudioPresents() && this.isVideoRoute() && this.audioMuted && this.currentUser != null;
             },
             shouldDisplayAudioMute() {
-                return this.isVideoRoute() && !this.audioMuted && this.currentUser != null;
+                return getStoredAudioPresents() && this.isVideoRoute() && !this.audioMuted && this.currentUser != null;
             },
             shouldDisplayVideoUnmute() {
                 return !this.shareScreen && this.isVideoRoute() && this.videoMuted;
