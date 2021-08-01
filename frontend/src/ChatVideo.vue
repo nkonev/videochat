@@ -166,7 +166,7 @@
                 this.remotesDiv.removeChild(component.$el);
                 component.$destroy();
               } catch (e) {
-                console.error("Something wrong on removing child", e, component.$el, this.remotesDiv);
+                console.debug("Something wrong on removing child", e, component.$el, this.remotesDiv);
               }
               delete this.streams[streamId];
             },
