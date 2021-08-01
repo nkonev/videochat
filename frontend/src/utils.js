@@ -21,3 +21,5 @@ export const getWebsocketUrlPrefix = () => {
 }
 
 export const audioMuteDefault = true;
+
+export const KEY_RESOLUTION = 'videoResolution';

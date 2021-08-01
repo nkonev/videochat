@@ -31,7 +31,7 @@
                         label="Quality"
                         dense
                         solo
-                        @change="saveSettings"
+                        @change="changeVideoResolution"
                         :value="videoQuality"
                     ></v-select>
 
@@ -62,6 +62,9 @@
         REQUEST_CHANGE_VIDEO_RESOLUTION,
         VIDEO_RESOLUTION_CHANGED,
     } from "./bus";
+    import {KEY_RESOLUTION} from "./utils";
+
+    const defaultResolution = 'hd';
 
     export default {
         data () {
@@ -70,7 +73,6 @@
                 show: false,
                 audioPresents: true,
                 videoPresents: true,
-                videoQuality: null,
             }
         },
         methods: {
@@ -81,22 +83,40 @@
                 this.show = false;
             },
 
-            saveSettings(videoResolution) {
-                this.changing = true;
-                bus.$emit(REQUEST_CHANGE_VIDEO_RESOLUTION, videoResolution);
-            },
-
             onVideoResolutionChanged(res) {
                 console.log("onVideoResolutionChanged", res);
                 this.videoQuality = res;
                 this.changing = false;
             },
+
+            changeVideoResolution(newVideoResolution) {
+                console.log("Setting new video resolution", newVideoResolution);
+                this.changing = true;
+                localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
+                bus.$emit(REQUEST_CHANGE_VIDEO_RESOLUTION, newVideoResolution);
+            }
         },
         computed: {
             qualityItems() {
                 // https://github.com/pion/ion-sdk-js/blob/master/src/stream.ts#L10
                 return ['qvga', 'vga', 'shd', 'hd', 'fhd', 'qhd']
             },
+            videoQuality: {
+                get() {
+                    return localStorage.getItem(KEY_RESOLUTION);
+
+                    let got = localStorage.getItem(KEY_RESOLUTION);
+                    if (!got) {
+                        localStorage.setItem(KEY_RESOLUTION, defaultResolution);
+                        got = localStorage.getItem(KEY_RESOLUTION);
+                    }
+                    return got;
+
+                },
+                set(newVideoResolution) {
+                    localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
+                }
+            }
         },
         created() {
             bus.$on(OPEN_VIDEO_SETTINGS, this.showModal);

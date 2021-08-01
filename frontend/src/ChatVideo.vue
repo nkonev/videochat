@@ -40,7 +40,7 @@
     import { Client, LocalStream } from 'ion-sdk-js';
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
-    import {audioMuteDefault, getWebsocketUrlPrefix} from "./utils";
+    import {audioMuteDefault, getWebsocketUrlPrefix, KEY_RESOLUTION} from "./utils";
     import { v4 as uuidv4 } from 'uuid';
     import vuetify from './plugins/vuetify'
 
@@ -50,8 +50,6 @@
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
     const askUserNameInterval = 1000;
-    const defaultResolution = 'hd';
-    const RESOLUTION_KEY = 'videoResolution';
 
     export default {
         data() {
@@ -398,22 +396,10 @@
                 }
             },
             onVideoResolutionChanged(newResolution) {
-                this.storeVideoResolution(newResolution);
                 this.tryRestartWithResetOncloseHandler();
             },
             getVideoResolution() {
-                let got = this.getStoredVideoResolution();
-                if (!got) {
-                    this.storeVideoResolution(defaultResolution);
-                    got = this.getStoredVideoResolution();
-                }
-                return got;
-            },
-            getStoredVideoResolution() {
-                return localStorage.getItem(RESOLUTION_KEY);
-            },
-            storeVideoResolution(newVideoResolution) {
-                localStorage.setItem(RESOLUTION_KEY, newVideoResolution);
+                return localStorage.getItem(KEY_RESOLUTION);
             },
         },
         mounted() {
