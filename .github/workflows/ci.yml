@@ -216,6 +216,7 @@ jobs:
         with:
           path: .markdown
           format: png
+          output: .markdown
           transparent: true
       - name: show after
         run: ls -lah .markdown
