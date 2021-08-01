@@ -210,16 +210,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: show before
-        run: ls -lah .markdown
+        run: ls -lah .markdown && ls -lah .drawio
       - name: Convert drawio file to png image
         uses: rlespinasse/drawio-export-action@v1.x
         with:
-          path: .markdown
+          path: .drawio
           format: png
           output: .markdown
           transparent: true
       - name: show after
-        run: ls -lah .markdown
+        run: ls -lah .markdown && ls -lah .drawio
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: .markdown/*.drawio
