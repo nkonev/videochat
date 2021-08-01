@@ -311,7 +311,7 @@
                 const localStream = screen ?
                     LocalStream.getDisplayMedia({
                         audio: getStoredAudioPresents(),
-                        video: getStoredVideoPresents()
+                        video: true
                     }) :
                     LocalStream.getUserMedia({
                         resolution: resolution,
