@@ -134,7 +134,7 @@ const store = new Vuex.Store({
             return state.chatId;
         },
         [GET_SHOW_BROWSER_AUTOPLAY_PERMISSION](state) {
-            console.log("returning GET_SHOW_BROWSER_AUTOPLAY_PERMISSION", state.showBrowserAutoplayPermission);
+
             return state.showBrowserAutoplayPermission;
         },
     },
