@@ -3,7 +3,7 @@
 
 # Architecture:
 
-![Architecture](./.drawio/exported/auth-Page-1.png "Title")
+![Architecture](./.drawio/exported/app-Page-1.png "Title")
 
 
 ## Start docker-compose
