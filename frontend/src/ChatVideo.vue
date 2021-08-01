@@ -187,8 +187,8 @@
                 }
                 if (this.localMediaStream) {
                     this.localMediaStream.getTracks().forEach(t => t.stop());
+                    this.localMediaStream.unpublish();
                 }
-                this.localMediaStream.unpublish();
                 if (this.clientLocal) {
                     this.clientLocal.close();
                 }
