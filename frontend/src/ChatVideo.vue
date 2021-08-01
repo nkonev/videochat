@@ -288,9 +288,9 @@
                 return this.onSwitchMediaStream({screen: false});
             },
             onSwitchMediaStream({screen = false}) {
-                this.localMediaStream.unpublish();
                 if (this.localMediaStream) {
-                  this.localMediaStream.getTracks().forEach(t => t.stop());
+                    this.localMediaStream.unpublish();
+                    this.localMediaStream.getTracks().forEach(t => t.stop());
                 }
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
@@ -308,15 +308,34 @@
                 const resolution = getVideoResolution();
                 bus.$emit(VIDEO_PARAMETERS_CHANGED);
 
+                const audio = getStoredAudioPresents();
+                const video = getStoredVideoPresents();
+
+                if (!audio && !video && !screen) {
+                    console.info("Not able to build local media stream, returning a successful promise");
+                    Vue.nextTick(() => {
+                        this.$refs.localVideoComponent.setUserName('No media configured');
+                    });
+
+                    if (screen) {
+                        this.$store.commit(SET_SHARE_SCREEN, true);
+                    } else {
+                        this.$store.commit(SET_SHARE_SCREEN, false);
+                    }
+                    // this.insideSwitchingCameraScreen = false;
+
+                    return Promise.resolve(true);
+                }
+
                 const localStream = screen ?
                     LocalStream.getDisplayMedia({
-                        audio: getStoredAudioPresents(),
+                        audio: audio,
                         video: true
                     }) :
                     LocalStream.getUserMedia({
                         resolution: resolution,
-                        audio: getStoredAudioPresents(),
-                        video: getStoredVideoPresents()
+                        audio: audio,
+                        video: video
                     });
 
                 return localStream.then((media) => {
