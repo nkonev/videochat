@@ -62,10 +62,8 @@
         REQUEST_CHANGE_VIDEO_RESOLUTION,
         VIDEO_RESOLUTION_CHANGED,
     } from "./bus";
-    import {KEY_RESOLUTION} from "./utils";
+    import {getVideoResolution, KEY_RESOLUTION, setVideoResolution} from "./utils";
     import {videochat_name} from "./routes";
-
-    const defaultResolution = 'hd';
 
     export default {
         data () {
@@ -109,16 +107,10 @@
             },
             videoQuality: {
                 get() {
-                    let got = localStorage.getItem(KEY_RESOLUTION);
-                    if (!got) {
-                        localStorage.setItem(KEY_RESOLUTION, defaultResolution);
-                        got = localStorage.getItem(KEY_RESOLUTION);
-                    }
-                    return got;
-
+                    return getVideoResolution();
                 },
                 set(newVideoResolution) {
-                    localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
+                    setVideoResolution(newVideoResolution);
                 }
             }
         },

@@ -40,7 +40,7 @@
     import { Client, LocalStream } from 'ion-sdk-js';
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
-    import {audioMuteDefault, getWebsocketUrlPrefix, KEY_RESOLUTION} from "./utils";
+    import {audioMuteDefault, getVideoResolution, getWebsocketUrlPrefix} from "./utils";
     import { v4 as uuidv4 } from 'uuid';
     import vuetify from './plugins/vuetify'
 
@@ -299,7 +299,7 @@
             },
             getAndPublishLocalMediaStream({screen = false}) {
                 this.insideSwitchingCameraScreen = true;
-                const resolution = this.getVideoResolution();
+                const resolution = getVideoResolution();
                 bus.$emit(VIDEO_RESOLUTION_CHANGED, resolution);
 
                 const localStream = screen ?
@@ -408,9 +408,6 @@
             },
             onVideoResolutionChanged(newResolution) {
                 this.tryRestartWithResetOncloseHandler();
-            },
-            getVideoResolution() {
-                return localStorage.getItem(KEY_RESOLUTION);
             },
         },
         mounted() {
