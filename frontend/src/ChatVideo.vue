@@ -20,13 +20,13 @@
 
 <script>
     import Vue from 'vue';
-    import {mapGetters} from "vuex";
+    import {mapGetters, mapMutations} from "vuex";
     import {
         GET_MUTE_AUDIO,
-        GET_MUTE_VIDEO,
+        GET_MUTE_VIDEO, GET_SHOW_BROWSER_AUTOPLAY_PERMISSION,
         GET_USER,
         SET_MUTE_AUDIO,
-        SET_MUTE_VIDEO, SET_SHARE_SCREEN,
+        SET_MUTE_VIDEO, SET_SHARE_SCREEN, SET_SHOW_BROWSER_AUTOPLAY_PERMISSION,
         SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON,
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
@@ -63,7 +63,6 @@
                 closingStarted: false,
                 chatId: null,
                 remoteVideoIsMuted: true,
-                showPermissionAsk: true,
                 peerId: null,
                 insideSwitchingCameraScreen: false,
                 restartingStarted: false,
@@ -71,12 +70,24 @@
         },
         props: ['chatDto'],
         computed: {
-            ...mapGetters({currentUser: GET_USER, videoMuted: GET_MUTE_VIDEO, audioMuted: GET_MUTE_AUDIO}),
+            ...mapGetters({
+                currentUser: GET_USER,
+                videoMuted: GET_MUTE_VIDEO,
+                audioMuted: GET_MUTE_AUDIO,
+            }),
             myUserName() {
                 return this.currentUser.login
             },
             initialMuted() {
                 return audioMuteDefault;
+            },
+            showPermissionAsk: {
+                get() {
+                    return this.$store.getters[GET_SHOW_BROWSER_AUTOPLAY_PERMISSION]
+                },
+                set(v) {
+                    this.$store.commit(SET_SHOW_BROWSER_AUTOPLAY_PERMISSION, v)
+                }
             }
         },
         methods: {

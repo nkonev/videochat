@@ -32,6 +32,8 @@ export const GET_SHARE_SCREEN = 'getShareScreenButton';
 export const SET_SHARE_SCREEN = 'setShareScreenButton';
 export const GET_SHOW_CHAT_EDIT_BUTTON = 'getChatEditButton';
 export const SET_SHOW_CHAT_EDIT_BUTTON = 'setChatEditButton';
+export const GET_SHOW_BROWSER_AUTOPLAY_PERMISSION = 'getShowBrowserPermission';
+export const SET_SHOW_BROWSER_AUTOPLAY_PERMISSION = 'setShowBrowserPermission';
 
 const store = new Vuex.Store({
     state: {
@@ -48,6 +50,7 @@ const store = new Vuex.Store({
         showHangButton: false,
         shareScreen: false,
         showChatEditButton: false,
+        showBrowserAutoplayPermission: true
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -89,6 +92,9 @@ const store = new Vuex.Store({
         [SET_CHAT_ID](state, payload) {
             state.chatId = payload;
         },
+        [SET_SHOW_BROWSER_AUTOPLAY_PERMISSION](state, payload) {
+            state.showBrowserAutoplayPermission = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -126,6 +132,10 @@ const store = new Vuex.Store({
         },
         [GET_CHAT_ID](state) {
             return state.chatId;
+        },
+        [GET_SHOW_BROWSER_AUTOPLAY_PERMISSION](state) {
+            console.log("returning GET_SHOW_BROWSER_AUTOPLAY_PERMISSION", state.showBrowserAutoplayPermission);
+            return state.showBrowserAutoplayPermission;
         },
     },
     actions: {
