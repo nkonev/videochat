@@ -150,7 +150,7 @@
 
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
-                                if (e.track && e.track.kind === 'video') {
+                                if (e.track) {
                                     this.removeStream(stream.id, component)
                                 }
                             };
