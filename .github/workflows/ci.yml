@@ -5,7 +5,7 @@ on:
 
 jobs:
   aaa:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -50,7 +50,7 @@ jobs:
           ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.AaaUpdateCommand }}
 
   frontend:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -85,7 +85,7 @@ jobs:
           ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.FrontendUpdateCommand }}
 
   chat:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -120,7 +120,7 @@ jobs:
           (cd chat; make push-docker && echo "Will deploy chat" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.ChatUpdateCommand }} )
 
   storage:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -154,7 +154,7 @@ jobs:
           (cd storage; make push-docker && echo "Will deploy storage" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.StorageUpdateCommand }} )
 
   video:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -180,7 +180,7 @@ jobs:
           (cd video; make push-docker && echo "Will deploy video" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.VideoUpdateCommand }} )
 
   video-proxy:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    if: "!contains(github.event.head_commit.message, 'skip build')"
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -210,11 +210,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Convert drawio file to png image
-        uses: Burnett01/actions-drawio@1.1
+        uses: rlespinasse/drawio-export-action@v1.x
         with:
-          src: .markdown/auth.drawio
-          dest: .markdown/auth.png
+          path: .markdown
+          format: png
+          transparent: true
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: .markdown/*.drawio
-          commit_message: skip ci
+          commit_message: skip build
