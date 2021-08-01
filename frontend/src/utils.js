@@ -22,7 +22,22 @@ export const getWebsocketUrlPrefix = () => {
 
 export const audioMuteDefault = true;
 
+const defaultResolution = 'hd';
+
 export const KEY_RESOLUTION = 'videoResolution';
+
+export const getVideoResolution = () => {
+    let got = localStorage.getItem(KEY_RESOLUTION);
+    if (!got) {
+        localStorage.setItem(KEY_RESOLUTION, defaultResolution);
+        got = localStorage.getItem(KEY_RESOLUTION);
+    }
+    return got;
+}
+
+export const setVideoResolution = (newVideoResolution) => {
+    localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
+}
 
 export const KEY_VIDEO_PRESENTS = 'videoPresents';
 export const KEY_AUDIO_PRESENTS = 'audioPresents';

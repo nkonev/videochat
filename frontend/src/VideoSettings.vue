@@ -63,24 +63,12 @@
         VIDEO_RESOLUTION_CHANGED,
     } from "./bus";
     import {
-        KEY_RESOLUTION,
-        KEY_VIDEO_PRESENTS,
-        KEY_AUDIO_PRESENTS,
+        getVideoResolution,
+        setVideoResolution,
         getStoredAudioPresents,
         setStoredAudioPresents, getStoredVideoPresents, setStoredVideoPresents
     } from "./utils";
     import {videochat_name} from "./routes";
-
-    const defaultResolution = 'hd';
-
-    const getOrDefault = (key, defaultValue) => {
-        let got = localStorage.getItem(key);
-        if (!got) {
-            localStorage.setItem(key, defaultValue);
-            got = localStorage.getItem(key);
-        }
-        return got;
-    }
 
     export default {
         data () {
@@ -108,7 +96,7 @@
                 if (this.isVideoRoute()) {
                     this.changing = true;
                 }
-                localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
+                setVideoResolution(newVideoResolution);
                 bus.$emit(REQUEST_CHANGE_VIDEO_RESOLUTION, newVideoResolution);
             },
             isVideoRoute() {
@@ -122,16 +110,10 @@
             },
             videoQuality: {
                 get() {
-                    let got = localStorage.getItem(KEY_RESOLUTION);
-                    if (!got) {
-                        localStorage.setItem(KEY_RESOLUTION, defaultResolution);
-                        got = localStorage.getItem(KEY_RESOLUTION);
-                    }
-                    return got;
-
+                    return getVideoResolution();
                 },
                 set(newVideoResolution) {
-                    localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
+                    setVideoResolution(newVideoResolution);
                 }
             },
             audioPresents: {
