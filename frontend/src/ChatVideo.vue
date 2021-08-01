@@ -40,7 +40,13 @@
     import { Client, LocalStream } from 'ion-sdk-js';
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
-    import {audioMuteDefault, getWebsocketUrlPrefix, KEY_RESOLUTION} from "./utils";
+    import {
+        audioMuteDefault,
+        getStoredAudioPresents,
+        getStoredVideoPresents,
+        getWebsocketUrlPrefix,
+        KEY_RESOLUTION
+    } from "./utils";
     import { v4 as uuidv4 } from 'uuid';
     import vuetify from './plugins/vuetify'
 
@@ -303,10 +309,14 @@
                 bus.$emit(VIDEO_RESOLUTION_CHANGED, resolution);
 
                 const localStream = screen ?
-                    LocalStream.getDisplayMedia({ }) :
+                    LocalStream.getDisplayMedia({
+                        audio: getStoredAudioPresents(),
+                        video: getStoredVideoPresents()
+                    }) :
                     LocalStream.getUserMedia({
                         resolution: resolution,
-                        audio: true,
+                        audio: getStoredAudioPresents(),
+                        video: getStoredVideoPresents()
                     });
 
                 return localStream.then((media) => {

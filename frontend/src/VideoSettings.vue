@@ -1,16 +1,16 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" max-width="440" persistent>
-            <v-card :disabled="changing" :loading="changing">
+            <v-card v-if="show" :disabled="changing" :loading="changing">
                 <v-card-title>Video settings</v-card-title>
 
                 <v-card-text class="px-4 py-0">
-                    <!--<v-row no-gutters>
+                    <v-row no-gutters>
                         <v-col
                         >
                             <v-checkbox
                                 dense
-                                :model="audioPresents"
+                                v-model="audioPresents"
                                 :label="`I have a microphone`"
                             ></v-checkbox>
                         </v-col>
@@ -19,11 +19,11 @@
                         >
                             <v-checkbox
                                 dense
-                                :model="videoPresents"
+                                v-model="videoPresents"
                                 :label="`I have a videocamera`"
                             ></v-checkbox>
                         </v-col>
-                    </v-row>-->
+                    </v-row>
 
                     <v-select
                         messages="Quality"
@@ -62,18 +62,31 @@
         REQUEST_CHANGE_VIDEO_RESOLUTION,
         VIDEO_RESOLUTION_CHANGED,
     } from "./bus";
-    import {KEY_RESOLUTION} from "./utils";
+    import {
+        KEY_RESOLUTION,
+        KEY_VIDEO_PRESENTS,
+        KEY_AUDIO_PRESENTS,
+        getStoredAudioPresents,
+        setStoredAudioPresents, getStoredVideoPresents, setStoredVideoPresents
+    } from "./utils";
     import {videochat_name} from "./routes";
 
     const defaultResolution = 'hd';
+
+    const getOrDefault = (key, defaultValue) => {
+        let got = localStorage.getItem(key);
+        if (!got) {
+            localStorage.setItem(key, defaultValue);
+            got = localStorage.getItem(key);
+        }
+        return got;
+    }
 
     export default {
         data () {
             return {
                 changing: false,
                 show: false,
-                audioPresents: true,
-                videoPresents: true,
             }
         },
         methods: {
@@ -119,6 +132,22 @@
                 },
                 set(newVideoResolution) {
                     localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
+                }
+            },
+            audioPresents: {
+                get() {
+                    return getStoredAudioPresents();
+                },
+                set(v) {
+                    setStoredAudioPresents(v);
+                }
+            },
+            videoPresents: {
+                get() {
+                    return getStoredVideoPresents();
+                },
+                set(v) {
+                    setStoredVideoPresents(v);
                 }
             }
         },
