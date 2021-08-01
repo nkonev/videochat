@@ -3,7 +3,7 @@
 
 # Architecture:
 
-![Architecture](./.markdown/auth.png "Title")
+![Architecture](./.markdown/exported/auth.png "Title")
 
 
 ## Start docker-compose

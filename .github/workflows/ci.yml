@@ -209,18 +209,16 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: show before
-        run: ls -lah .markdown && ls -lah .drawio
       - name: Convert drawio file to png image
         uses: rlespinasse/drawio-export-action@v1.x
         with:
-          path: .drawio
+          path: .markdown
           format: png
-          output: .markdown
+          output: exported
           transparent: true
       - name: show after
-        run: ls -lah .markdown && ls -lah .drawio
+        run: ls -lah .markdown/exported
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          file_pattern: .markdown/*.drawio
+          file_pattern: .markdown/exported/*.png
           commit_message: skip build
