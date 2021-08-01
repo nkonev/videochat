@@ -63,6 +63,7 @@
         VIDEO_RESOLUTION_CHANGED,
     } from "./bus";
     import {KEY_RESOLUTION} from "./utils";
+    import {videochat_name} from "./routes";
 
     const defaultResolution = 'hd';
 
@@ -91,10 +92,15 @@
 
             changeVideoResolution(newVideoResolution) {
                 console.log("Setting new video resolution", newVideoResolution);
-                this.changing = true;
+                if (this.isVideoRoute()) {
+                    this.changing = true;
+                }
                 localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
                 bus.$emit(REQUEST_CHANGE_VIDEO_RESOLUTION, newVideoResolution);
-            }
+            },
+            isVideoRoute() {
+                return this.$route.name == videochat_name
+            },
         },
         computed: {
             qualityItems() {
