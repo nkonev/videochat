@@ -45,6 +45,7 @@ export const KEY_AUDIO_PRESENTS = 'audioPresents';
 export const getStoredVideoPresents = () => {
     let v = JSON.parse(localStorage.getItem(KEY_VIDEO_PRESENTS));
     if (v === null) {
+        console.log("Resetting video presents to default");
         setStoredVideoPresents(true);
         v = JSON.parse(localStorage.getItem(KEY_VIDEO_PRESENTS));
     }
@@ -58,6 +59,7 @@ export const setStoredVideoPresents = (v) => {
 export const getStoredAudioPresents = () => {
     let v = JSON.parse(localStorage.getItem(KEY_AUDIO_PRESENTS));
     if (v === null) {
+        console.log("Resetting audio presents to default");
         setStoredAudioPresents(true);
         v = JSON.parse(localStorage.getItem(KEY_AUDIO_PRESENTS));
     }

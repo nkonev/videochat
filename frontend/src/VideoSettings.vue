@@ -11,6 +11,7 @@
                             <v-checkbox
                                 dense
                                 v-model="audioPresents"
+                                @change="changeAudioPresents"
                                 :label="`I have a microphone`"
                             ></v-checkbox>
                         </v-col>
@@ -20,6 +21,7 @@
                             <v-checkbox
                                 dense
                                 v-model="videoPresents"
+                                @change="changeVideoPresents"
                                 :label="`I have a videocamera`"
                             ></v-checkbox>
                         </v-col>
@@ -66,7 +68,9 @@
         getVideoResolution,
         setVideoResolution,
         getStoredAudioPresents,
-        setStoredAudioPresents, getStoredVideoPresents, setStoredVideoPresents
+        setStoredAudioPresents,
+        getStoredVideoPresents,
+        setStoredVideoPresents
     } from "./utils";
     import {videochat_name} from "./routes";
 
@@ -75,22 +79,30 @@
             return {
                 changing: false,
                 show: false,
+
+                audioPresents: null,
+                videoPresents: null,
+                videoQuality: null,
             }
         },
         methods: {
             showModal() {
-                this.$data.show = true;
+                this.audioPresents = getStoredAudioPresents();
+                this.videoPresents = getStoredVideoPresents();
+                this.videoQuality = getVideoResolution();
+                this.show = true;
             },
             closeModal() {
                 this.show = false;
             },
-
+            isVideoRoute() {
+                return this.$route.name == videochat_name
+            },
             onVideoResolutionChanged(res) {
                 console.log("onVideoResolutionChanged", res);
                 this.videoQuality = res;
                 this.changing = false;
             },
-
             changeVideoResolution(newVideoResolution) {
                 console.log("Setting new video resolution", newVideoResolution);
                 if (this.isVideoRoute()) {
@@ -99,8 +111,11 @@
                 setVideoResolution(newVideoResolution);
                 bus.$emit(REQUEST_CHANGE_VIDEO_RESOLUTION, newVideoResolution);
             },
-            isVideoRoute() {
-                return this.$route.name == videochat_name
+            changeAudioPresents(v) {
+                setStoredAudioPresents(v);
+            },
+            changeVideoPresents(v) {
+                setStoredVideoPresents(v);
             },
         },
         computed: {
@@ -108,30 +123,6 @@
                 // https://github.com/pion/ion-sdk-js/blob/master/src/stream.ts#L10
                 return ['qvga', 'vga', 'shd', 'hd', 'fhd', 'qhd']
             },
-            videoQuality: {
-                get() {
-                    return getVideoResolution();
-                },
-                set(newVideoResolution) {
-                    setVideoResolution(newVideoResolution);
-                }
-            },
-            audioPresents: {
-                get() {
-                    return getStoredAudioPresents();
-                },
-                set(v) {
-                    setStoredAudioPresents(v);
-                }
-            },
-            videoPresents: {
-                get() {
-                    return getStoredVideoPresents();
-                },
-                set(v) {
-                    setStoredVideoPresents(v);
-                }
-            }
         },
         created() {
             bus.$on(OPEN_VIDEO_SETTINGS, this.showModal);
