@@ -31,9 +31,9 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import bus, {
-        AUDIO_START_MUTING, REQUEST_CHANGE_VIDEO_RESOLUTION,
+        AUDIO_START_MUTING, REQUEST_CHANGE_VIDEO_PARAMETERS,
         SHARE_SCREEN_START,
-        SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED, VIDEO_RESOLUTION_CHANGED,
+        SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
         VIDEO_START_MUTING
     } from "./bus";
     import axios from "axios";
@@ -306,7 +306,7 @@
             getAndPublishLocalMediaStream({screen = false}) {
                 this.insideSwitchingCameraScreen = true;
                 const resolution = getVideoResolution();
-                bus.$emit(VIDEO_RESOLUTION_CHANGED, resolution);
+                bus.$emit(VIDEO_PARAMETERS_CHANGED);
 
                 const localStream = screen ?
                     LocalStream.getDisplayMedia({
@@ -416,7 +416,7 @@
                     }
                 }
             },
-            onVideoResolutionChanged(newResolution) {
+            onVideoParametersChanged() {
                 this.tryRestartWithResetOncloseHandler();
             },
         },
@@ -445,7 +445,7 @@
             bus.$on(VIDEO_START_MUTING, this.onStartVideoMuting);
             bus.$on(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
-            bus.$on(REQUEST_CHANGE_VIDEO_RESOLUTION, this.onVideoResolutionChanged);
+            bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
         },
         destroyed() {
             bus.$off(SHARE_SCREEN_START, this.onStartScreenSharing);
@@ -453,7 +453,7 @@
             bus.$off(VIDEO_START_MUTING, this.onStartVideoMuting);
             bus.$off(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
-            bus.$off(REQUEST_CHANGE_VIDEO_RESOLUTION, this.onVideoResolutionChanged);
+            bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
         },
         components: {
             UserVideo

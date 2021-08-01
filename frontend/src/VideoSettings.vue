@@ -34,7 +34,7 @@
                         dense
                         solo
                         @change="changeVideoResolution"
-                        :value="videoQuality"
+                        v-model="videoQuality"
                     ></v-select>
 
                     <!--
@@ -61,8 +61,8 @@
 <script>
     import bus, {
         OPEN_VIDEO_SETTINGS,
-        REQUEST_CHANGE_VIDEO_RESOLUTION,
-        VIDEO_RESOLUTION_CHANGED,
+        REQUEST_CHANGE_VIDEO_PARAMETERS,
+        VIDEO_PARAMETERS_CHANGED,
     } from "./bus";
     import {
         getVideoResolution,
@@ -98,24 +98,29 @@
             isVideoRoute() {
                 return this.$route.name == videochat_name
             },
-            onVideoResolutionChanged(res) {
-                console.log("onVideoResolutionChanged", res);
-                this.videoQuality = res;
+            onVideoParametersChanged() {
                 this.changing = false;
             },
             changeVideoResolution(newVideoResolution) {
-                console.log("Setting new video resolution", newVideoResolution);
                 if (this.isVideoRoute()) {
                     this.changing = true;
                 }
                 setVideoResolution(newVideoResolution);
-                bus.$emit(REQUEST_CHANGE_VIDEO_RESOLUTION, newVideoResolution);
+                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeAudioPresents(v) {
+                if (this.isVideoRoute()) {
+                    this.changing = true;
+                }
                 setStoredAudioPresents(v);
+                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeVideoPresents(v) {
+                if (this.isVideoRoute()) {
+                    this.changing = true;
+                }
                 setStoredVideoPresents(v);
+                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
         },
         computed: {
@@ -126,11 +131,11 @@
         },
         created() {
             bus.$on(OPEN_VIDEO_SETTINGS, this.showModal);
-            bus.$on(VIDEO_RESOLUTION_CHANGED, this.onVideoResolutionChanged)
+            bus.$on(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged)
         },
         destroyed() {
             bus.$off(OPEN_VIDEO_SETTINGS, this.showModal);
-            bus.$off(VIDEO_RESOLUTION_CHANGED, this.onVideoResolutionChanged)
+            bus.$off(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged)
         },
     }
 </script>
