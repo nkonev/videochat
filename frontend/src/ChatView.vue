@@ -70,6 +70,9 @@
     const default2 = [80, 20];
     const default3 = [30, 50, 20];
 
+    const KEY_3_PANELS = '3panels';
+    const KEY_2_PANELS = '2panels'
+
     const directionTop = 'top';
     const directionBottom = 'bottom';
 
@@ -177,7 +180,7 @@
                 }
             },
             getStored() {
-                const mbItem = this.isAllowedVideo() ? localStorage.getItem('3panels') : localStorage.getItem('2panels');
+                const mbItem = this.isAllowedVideo() ? localStorage.getItem(KEY_3_PANELS) : localStorage.getItem(KEY_2_PANELS);
                 if (!mbItem) {
                     return null;
                 } else {
@@ -186,9 +189,9 @@
             },
             saveToStored(arr) {
                 if (this.isAllowedVideo()) {
-                    localStorage.setItem('3panels', JSON.stringify(arr));
+                    localStorage.setItem(KEY_3_PANELS, JSON.stringify(arr));
                 } else {
-                    localStorage.setItem('2panels', JSON.stringify(arr));
+                    localStorage.setItem(KEY_2_PANELS, JSON.stringify(arr));
                 }
             },
             onPanelAdd(wasScrolled) {
