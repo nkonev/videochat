@@ -27,6 +27,8 @@ services:
       driver: "journald"
       options:
         tag: chat-video-proxy
+#    environment:
+#      - GODEBUG=netdns=2
     volumes:
       - ./video-proxy.yml:/etc/video-proxy.yml
     command: ["-config=/etc/video-proxy.yml"]
