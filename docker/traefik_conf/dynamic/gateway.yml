@@ -46,7 +46,7 @@ http:
         - "auth-middleware"
         - "api-strip-prefix-middleware"
         - "retry-middleware"
-    viedo-router:
+    video-router:
       rule: "PathPrefix(`/api/video`)"
       service: video-proxy-service
       middlewares:
