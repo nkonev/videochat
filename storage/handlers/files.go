@@ -34,7 +34,9 @@ type RenameDto struct {
 	Newname string `json:"newname"`
 }
 
-const filesMultipartKey = "files";
+const filesMultipartKey = "files"
+const UrlStorageGetFile = "/storage/public/download"
+
 
 type FileInfoDto struct {
 	Id           string    `json:"id"`
