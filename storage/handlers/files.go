@@ -36,15 +36,17 @@ type RenameDto struct {
 
 const filesMultipartKey = "files"
 const UrlStorageGetFile = "/storage/public/download"
+const UrlStorageGetFilePublicExternal = "/public/download"
 
 
 type FileInfoDto struct {
 	Id           string    `json:"id"`
 	Filename     string    `json:"filename"`
 	Url          string    `json:"url"`
-	PublicUrl    string    `json:"publicUrl"`
+	PublicUrl    *string    `json:"publicUrl"`
 	Size         int64     `json:"size"`
 	CanRemove    bool      `json:"canRemove"`
+	CanShare     bool      `json:"canShare"`
 	LastModified time.Time `json:"lastModified"`
 	OwnerId      int64     `json:"ownerId"`
 	Owner        *dto.User `json:"owner"`
@@ -111,10 +113,15 @@ func serializeTags(public bool) map[string]string {
 	return userTags
 }
 
-func deserializeTags(tags map[string]string) (bool, error) {
-	publicString, ok := tags[strings.Title(publicKey)]
+func deserializeTags(tagging *tags.Tags) (bool, error) {
+	if tagging == nil {
+		return false, nil
+	}
+
+	var tagsMap map[string]string = tagging.ToMap()
+	publicString, ok := tagsMap[publicKey]
 	if !ok {
-		return false, errors.New("Unable to get public")
+		return false, nil
 	}
 	return utils.ParseBoolean(publicString)
 }
@@ -345,29 +352,18 @@ func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filena
 	var list []*FileInfoDto = make([]*FileInfoDto, 0)
 	for objInfo := range objects {
 		Logger.Debugf("Object '%v'", objInfo.Key)
-
-		downloadUrl, err := h.getChatPrivateUrlFromObject(objInfo, chatId)
+		tagging, err := h.minio.GetObjectTagging(context.Background(), bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
 		if err != nil {
-			Logger.Errorf("Error get private url: %v", err)
+			Logger.Errorf("Error during getting tags %v", err)
 			return nil, err
 		}
-		metadata := objInfo.UserMetadata
 
-		_, fileOwnerId, fileName, err := deserializeMetadata(metadata, true)
+		info, err := h.getFileInfo(behalfUserId, objInfo, chatId, tagging, true)
 		if err != nil {
-			Logger.Errorf("Error get file name url: %v, skipping", err)
+			Logger.Errorf("Error get file info: %v, skipping", err)
 			continue
 		}
 
-		info := &FileInfoDto{
-			Id: objInfo.Key,
-			Filename: fileName,
-			Url: *downloadUrl,
-			Size: objInfo.Size,
-			CanRemove: fileOwnerId == behalfUserId,
-			LastModified: objInfo.LastModified,
-			OwnerId: fileOwnerId,
-		}
 		list = append(list, info)
 	}
 	sort.SliceStable(list, func(i, j int) bool {
@@ -389,8 +385,69 @@ func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filena
 	return list, nil
 }
 
+func (h *FilesHandler) getFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool) (*FileInfoDto, error) {
+	downloadUrl, err := h.getChatPrivateUrlFromObject(objInfo, chatId)
+	if err != nil {
+		Logger.Errorf("Error get private url: %v", err)
+		return nil, err
+	}
+	metadata := objInfo.UserMetadata
+
+	_, fileOwnerId, fileName, err := deserializeMetadata(metadata, hasAmzPrefix)
+	if err != nil {
+		Logger.Errorf("Error get metadata: %v", err)
+		return nil, err
+	}
+
+	public, err := deserializeTags(tagging)
+	if err != nil {
+		Logger.Errorf("Error get tags: %v", err)
+		return nil, err
+	}
+
+	publicUrl, err := h.getPublicUrl(public, objInfo.Key)
+	if err != nil {
+		Logger.Errorf("Error get public url: %v", err)
+		return nil, err
+	}
+
+	info := &FileInfoDto{
+		Id:           objInfo.Key,
+		Filename:     fileName,
+		Url:          *downloadUrl,
+		Size:         objInfo.Size,
+		CanRemove:    fileOwnerId == behalfUserId,
+		CanShare:     fileOwnerId == behalfUserId,
+		LastModified: objInfo.LastModified,
+		OwnerId:      fileOwnerId,
+		PublicUrl:    publicUrl,
+	}
+	return info, nil
+}
+
+func (h *FilesHandler) getPublicUrl(public bool, fileName string) (*string, error) {
+	if !public {
+		return nil, nil
+	}
+
+	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + UrlStorageGetFilePublicExternal)
+	if err != nil {
+		return nil, err
+	}
+
+	query := downloadUrl.Query()
+	query.Add("file", fileName)
+	downloadUrl.RawQuery = query.Encode()
+	str := downloadUrl.String()
+	return &str, nil
+}
+
+func (h *FilesHandler) getBaseUrlForDownload() string {
+	return h.serverUrl + viper.GetString("server.contextPath") + "/storage"
+}
+
 func (h *FilesHandler) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, chatId int64) (*string, error) {
-	downloadUrl, err := url.Parse(h.serverUrl + viper.GetString("server.contextPath") + "/storage/download")
+	downloadUrl, err := url.Parse(h.getBaseUrlForDownload()+"/download")
 	if err != nil {
 		return nil, err
 	}
@@ -564,6 +621,11 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
 
+type PublishRequest struct {
+	Public bool `json:"public"`
+	Id string `json:"id"`
+}
+
 func (h *FilesHandler) SetPublic(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -576,14 +638,20 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return err
 	}
 
+	var bindTo = new(PublishRequest)
+	if err := c.Bind(bindTo); err != nil {
+		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+
 	// check user is owner
-	fileId := c.QueryParam("file")
+	fileId := bindTo.Id
 	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
 	if err != nil {
 		Logger.Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	_, ownerId, _, err := deserializeMetadata(objectInfo.UserMetadata, false)
+	chatId, ownerId, _, err := deserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
 		Logger.Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -595,14 +663,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 	}
 	// end check
 
-	publicStr := c.QueryParam("public")
-	public, err := utils.ParseBoolean(publicStr)
-	if err != nil {
-		Logger.Errorf("Error during deserializing request param %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	tagsMap := serializeTags(public)
+	tagsMap := serializeTags(bindTo.Public)
 	objectTags, err := tags.MapToObjectTags(tagsMap)
 	if err != nil {
 		Logger.Errorf("Error during mapping tags %v", err)
@@ -615,7 +676,32 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.NoContent(http.StatusOK)
+	objectInfo, err = h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	if err != nil {
+		Logger.Errorf("Error during stat %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	tagging, err := h.minio.GetObjectTagging(context.Background(), bucketName, fileId, minio.GetObjectTaggingOptions{})
+	if err != nil {
+		Logger.Errorf("Error during getting tags %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+
+	info, err := h.getFileInfo(userPrincipalDto.UserId, objectInfo, chatId, tagging, false)
+	if err != nil {
+		Logger.Errorf("Error during getFileInfo %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	var participantIdSet = map[int64]bool{}
+	participantIdSet[userPrincipalDto.UserId] = true
+	var users = getUsersRemotelyOrEmpty(participantIdSet, h.chatClient)
+	user, ok := users[userPrincipalDto.UserId]
+	if ok {
+		info.Owner = user
+	}
+
+	return c.JSON(http.StatusOK, info)
 }
 
 func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
@@ -637,7 +723,13 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	isPublic, err := deserializeTags(objectInfo.UserTags)
+	tagging, err := h.minio.GetObjectTagging(context.Background(), bucketName, fileId, minio.GetObjectTaggingOptions{})
+	if err != nil {
+		Logger.Errorf("Error during deserializing object tags %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	isPublic, err := deserializeTags(tagging)
 	if err != nil {
 		Logger.Errorf("Error during deserializing object tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)

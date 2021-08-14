@@ -14,8 +14,10 @@
                                     </v-list-item-avatar>
                                     <v-list-item-content class="ml-4">
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
-                                        <v-list-item-subtitle v-if="item.owner">by {{item.owner.login}}</v-list-item-subtitle>
+                                        <v-list-item-subtitle><span v-if="item.owner">by {{item.owner.login}}</span> <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">Public url</a></v-list-item-subtitle>
                                     </v-list-item-content>
+                                    <v-icon class="mx-1" v-if="item.canShare && !item.publicUrl" color="primary" @click="shareFile(item, true)" dark>mdi-export</v-icon>
+                                    <v-icon class="mx-1" v-if="item.canShare && item.publicUrl" color="primary" @click="shareFile(item, false)" dark>mdi-lock</v-icon>
                                     <v-icon class="mx-1" v-if="item.canRemove" color="error" @click="deleteFile(item)" dark>mdi-delete</v-icon>
                                 </v-list-item>
                                 <v-divider></v-divider>
@@ -52,6 +54,7 @@ import bus, {
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
 import axios from "axios";
+import {replaceInArray} from "./InfinityListMixin";
 
 export default {
     data () {
@@ -104,7 +107,14 @@ export default {
                         })
                 }
             });
-        }
+        },
+        shareFile(dto, share) {
+            axios.put(`/api/storage/publish/file`, {id: dto.id, public: share})
+                .then((response) => {
+                  replaceInArray(this.dto.files, response.data);
+                  this.$forceUpdate();
+                })
+        },
     },
 
     created() {
