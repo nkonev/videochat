@@ -28,9 +28,10 @@
                             overlap
                             left
                         >
-                            <v-btn icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : ''" @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
+                            <v-btn icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : 'mr-2'" @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
                         </v-badge>
                     </template>
+                    <v-btn icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : 'mr-2'" @click="resetInput()"><v-icon>mdi-delete</v-icon></v-btn>
                     <v-switch v-if="canBroadcast && $vuetify.breakpoint.smAndUp" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                         :label="$vuetify.breakpoint.smAndUp ? `Broadcast` : null"
                     ></v-switch>
