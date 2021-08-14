@@ -121,6 +121,9 @@ func InterfaceToString(i interface{}) string {
 	return fmt.Sprintf("%v", i)
 }
 
+func ParseBoolean(str string) (bool, error) {
+	return strconv.ParseBool(str)
+}
 
 func SetToArray(set map[int64]bool) []int64 {
 	var ownerIds []int64

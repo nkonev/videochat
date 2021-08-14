@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
 	"mime/multipart"
 	"net/http"
@@ -51,6 +52,8 @@ const filenameKey = "filename"
 const ownerIdKey = "ownerid"
 const chatIdKey = "chatid"
 
+const publicKey = "public"
+
 func NewFilesHandler(
 	minio *minio.Client,
 	chatClient *client.RestClient,
@@ -62,7 +65,7 @@ func NewFilesHandler(
 	}
 }
 
-func serializeTags(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult, chatId int64) map[string]string {
+func serializeMetadata(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult, chatId int64) map[string]string {
 	var userMetadata = map[string]string{}
 	userMetadata[filenameKey] = file.Filename
 	userMetadata[ownerIdKey] = utils.Int64ToString(userPrincipalDto.UserId)
@@ -70,7 +73,7 @@ func serializeTags(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult
 	return userMetadata
 }
 
-func deserializeTags(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, error) {
+func deserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, error) {
 	const xAmzMetaPrefix = "X-Amz-Meta-"
 	var prefix = ""
 	if hasAmzPrefix {
@@ -98,6 +101,20 @@ func deserializeTags(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, in
 		return 0, 0, "", err
 	}
 	return chatId, ownerId, filename, nil
+}
+
+func serializeTags(public bool) map[string]string {
+	var userTags = map[string]string{}
+	userTags[publicKey] = fmt.Sprintf("%v", public)
+	return userTags
+}
+
+func deserializeTags(tags map[string]string) (bool, error) {
+	publicString, ok := tags[strings.Title(publicKey)]
+	if !ok {
+		return false, errors.New("Unable to get public")
+	}
+	return utils.ParseBoolean(publicString)
 }
 
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
@@ -168,7 +185,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		fileUuid := uuid.New().String()
 		filename := fmt.Sprintf("chat/%v/%v/%v%v", chatId, fileItemUuid, fileUuid, dotExt)
 
-		var userMetadata = serializeTags(file, userPrincipalDto, chatId)
+		var userMetadata = serializeMetadata(file, userPrincipalDto, chatId)
 
 		if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, file.Size, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 			Logger.Errorf("Error during upload object: %v", err)
@@ -203,11 +220,6 @@ func getDotExtension(file *multipart.FileHeader) string {
 	} else {
 		return ""
 	}
-}
-
-func getFileItemUuid(fileId string) string {
-	split := strings.Split(fileId, "/")
-	return split[2]
 }
 
 func (h *FilesHandler) checkUserLimit(bucketName string, userPrincipalDto *auth.AuthResult, file *multipart.FileHeader) (bool, error) {
@@ -339,7 +351,7 @@ func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filena
 		}
 		metadata := objInfo.UserMetadata
 
-		_, fileOwnerId, fileName, err := deserializeTags(metadata, true)
+		_, fileOwnerId, fileName, err := deserializeMetadata(metadata, true)
 		if err != nil {
 			Logger.Errorf("Error get file name url: %v, skipping", err)
 			continue
@@ -481,9 +493,9 @@ func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c e
 }
 
 func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId int64, userPrincipalDto *auth.AuthResult, hasAmzPrefix bool) (bool, error) {
-	gotChatId, gotOwnerId, _, err := deserializeTags(objInfo.UserMetadata, hasAmzPrefix)
+	gotChatId, gotOwnerId, _, err := deserializeMetadata(objInfo.UserMetadata, hasAmzPrefix)
 	if err != nil {
-		Logger.Errorf("Error deserializeTags: %v", err)
+		Logger.Errorf("Error deserializeMetadata: %v", err)
 		return false, err
 	}
 
@@ -519,7 +531,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 		Logger.Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	chatId, _, fileName, err := deserializeTags(objectInfo.UserMetadata, false)
+	chatId, _, fileName, err := deserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
 		Logger.Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -532,6 +544,105 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	}
 	if !belongs {
 		Logger.Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+
+	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
+	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
+	c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+fileName+"\"")
+
+	object, e := h.minio.GetObject(context.Background(), bucketName, fileId, minio.GetObjectOptions{})
+	if e != nil {
+		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
+	}
+	defer object.Close()
+
+	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
+}
+
+func (h *FilesHandler) SetPublic(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	bucketName, err := EnsureAndGetFilesBucket(h.minio)
+	if err != nil {
+		return err
+	}
+
+	// check user is owner
+	fileId := c.QueryParam("file")
+	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	if err != nil {
+		Logger.Errorf("Error during getting object %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	_, ownerId, _, err := deserializeMetadata(objectInfo.UserMetadata, false)
+	if err != nil {
+		Logger.Errorf("Error during deserializing object metadata %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	if ownerId != userPrincipalDto.UserId {
+		Logger.Errorf("User %v is not owner of file %v", userPrincipalDto.UserId, fileId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	publicStr := c.QueryParam("public")
+	public, err := utils.ParseBoolean(publicStr)
+	if err != nil {
+		Logger.Errorf("Error during deserializing request param %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	tagsMap := serializeTags(public)
+	objectTags, err := tags.MapToObjectTags(tagsMap)
+	if err != nil {
+		Logger.Errorf("Error during mapping tags %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	err = h.minio.PutObjectTagging(context.Background(), bucketName, fileId, objectTags, minio.PutObjectTaggingOptions{})
+	if err != nil {
+		Logger.Errorf("Error during saving tags %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
+	bucketName, err := EnsureAndGetFilesBucket(h.minio)
+	if err != nil {
+		return err
+	}
+
+	// check file is public
+	fileId := c.QueryParam("file")
+	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	if err != nil {
+		Logger.Errorf("Error during getting object %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	_, _, fileName, err := deserializeMetadata(objectInfo.UserMetadata, false)
+	if err != nil {
+		Logger.Errorf("Error during deserializing object metadata %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	isPublic, err := deserializeTags(objectInfo.UserTags)
+	if err != nil {
+		Logger.Errorf("Error during deserializing object tags %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	if !isPublic {
+		Logger.Errorf("File %v is not public", fileId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
