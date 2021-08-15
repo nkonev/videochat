@@ -50,7 +50,7 @@
 import bus, {
   CLOSE_SIMPLE_MODAL, OPEN_FILE_UPLOAD_MODAL,
   OPEN_SIMPLE_MODAL,
-  OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID
+  OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, UPDATE_VIEW_FILES_DIALOG
 } from "./bus";
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
@@ -80,12 +80,22 @@ export default {
             this.show = true;
             this.loading = true;
             this.messageEditing = messageEditing;
+            this.updateFiles(()=> {
+                this.loading = false;
+            })
+        },
+        updateFiles(callback) {
+            if (!this.show) {
+                return
+            }
             axios.get(`/api/storage/${this.chatId}` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""))
                 .then((response) => {
                     this.dto = response.data;
                 })
                 .finally(() => {
-                    this.loading = false;
+                    if (callback) {
+                      callback();
+                    }
                 })
         },
         closeModal() {
@@ -128,9 +138,11 @@ export default {
 
     created() {
         bus.$on(OPEN_VIEW_FILES_DIALOG, this.showModal);
+        bus.$on(UPDATE_VIEW_FILES_DIALOG, this.updateFiles);
     },
     destroyed() {
         bus.$off(OPEN_VIEW_FILES_DIALOG, this.showModal);
+        bus.$off(UPDATE_VIEW_FILES_DIALOG, this.updateFiles);
     },
 }
 </script>

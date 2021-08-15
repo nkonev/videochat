@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL, SET_FILE_ITEM_UUID, OPEN_VIEW_FILES_DIALOG} from "./bus";
+import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL, SET_FILE_ITEM_UUID, UPDATE_VIEW_FILES_DIALOG} from "./bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
 const CancelToken = axios.CancelToken;
@@ -132,7 +132,7 @@ export default {
                         }
                         this.uploading = false;
                         if (this.$data.shouldUpdateFileList) {
-                            bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.fileItemUuid});
+                            bus.$emit(UPDATE_VIEW_FILES_DIALOG);
                         }
                     })
                     .catch((thrown) => {
