@@ -857,8 +857,8 @@ func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 	}
 	available := max - consumption
 	if desiredSize > available {
-		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": h.calcUserFilesConsumption(bucketName), "available": available})
+		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
 	} else {
-		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "used": h.calcUserFilesConsumption(bucketName), "available": available})
+		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "used": consumption, "available": available})
 	}
 }
