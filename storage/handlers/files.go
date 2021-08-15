@@ -515,9 +515,13 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		Logger.Errorf("Object '%v' is not belongs to user %v", objectInfo.Key, userPrincipalDto.UserId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
+	if bindTo.FileItemUuid != getFileItemUuid(objectInfo.Key) {
+		Logger.Errorf("FileItemUuid '%v' is not belongs to Id %v", bindTo.FileItemUuid, objectInfo.Key)
+		return c.NoContent(http.StatusUnauthorized)
+	}
 	// end check
 
-	err = h.minio.RemoveObject(context.Background(), bucketName, bindTo.Id, minio.RemoveObjectOptions{})
+	err = h.minio.RemoveObject(context.Background(), bucketName, objectInfo.Key, minio.RemoveObjectOptions{})
 	if err != nil {
 		Logger.Errorf("Error during removing object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
