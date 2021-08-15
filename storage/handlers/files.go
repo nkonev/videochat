@@ -50,7 +50,6 @@ type FileInfoDto struct {
 	LastModified time.Time `json:"lastModified"`
 	OwnerId      int64     `json:"ownerId"`
 	Owner        *dto.User `json:"owner"`
-	FileItemUuid string    `json:"fileItemUuid"`
 }
 
 const filenameKey = "filename"
@@ -417,8 +416,6 @@ func (h *FilesHandler) getFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		return nil, err
 	}
 
-	itemUuid := getFileItemUuid(objInfo.Key)
-
 	info := &FileInfoDto{
 		Id:           objInfo.Key,
 		Filename:     fileName,
@@ -429,7 +426,6 @@ func (h *FilesHandler) getFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		LastModified: objInfo.LastModified,
 		OwnerId:      fileOwnerId,
 		PublicUrl:    publicUrl,
-		FileItemUuid: itemUuid,
 	}
 	return info, nil
 }
@@ -470,7 +466,6 @@ func (h *FilesHandler) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, cha
 
 type DeleteObjectDto struct {
 	Id     string     `json:"id"` // file id
-	FileItemUuid string    `json:"fileItemUuid"`
 }
 
 func (h *FilesHandler) DeleteHandler(c echo.Context) error {
@@ -515,11 +510,9 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		Logger.Errorf("Object '%v' is not belongs to user %v", objectInfo.Key, userPrincipalDto.UserId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
-	if bindTo.FileItemUuid != getFileItemUuid(objectInfo.Key) {
-		Logger.Errorf("FileItemUuid '%v' is not belongs to Id %v", bindTo.FileItemUuid, objectInfo.Key)
-		return c.NoContent(http.StatusUnauthorized)
-	}
 	// end check
+
+	formerFileItemUuid := getFileItemUuid(objectInfo.Key)
 
 	err = h.minio.RemoveObject(context.Background(), bucketName, objectInfo.Key, minio.RemoveObjectOptions{})
 	if err != nil {
@@ -542,8 +535,8 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	}
 
 	// this fileItemUuid used for remove orphans
-	if h.countFilesUnderFileUuid(chatId, bindTo.FileItemUuid, bucketName) == 0 {
-		h.chatClient.RemoveFileItem(chatId, bindTo.FileItemUuid, userPrincipalDto.UserId)
+	if h.countFilesUnderFileUuid(chatId, formerFileItemUuid, bucketName) == 0 {
+		h.chatClient.RemoveFileItem(chatId, formerFileItemUuid, userPrincipalDto.UserId)
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list})
