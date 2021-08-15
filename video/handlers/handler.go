@@ -133,7 +133,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CountUsers(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId, userId, err := parseChatIdAndUserId(vars["chatId"], r.Header.Get("X-Auth-UserId"))
 	if err != nil {
@@ -148,8 +148,38 @@ func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := UsersResponse{}
+	response := CountUsersResponse{}
 	response.UsersCount = h.service.CountPeers(chatId)
+
+	w.Header().Set("Content-Type", "application/json")
+	marshal, err := json.Marshal(response)
+	if err != nil {
+		logger.Error(err, "Error during marshalling UsersResponse to json")
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		_, err := w.Write(marshal)
+		if err != nil {
+			logger.Error(err, "Error during sending json")
+		}
+	}
+}
+
+func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	chatId, err := utils.ParseInt64(vars["chatId"])
+	if err != nil {
+		logger.Error(err, "Failed during parse chat id")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	response, err := h.service.GetPeersByChatId(chatId)
+	if err != nil {
+		logger.Error(err, "Failed during getting peers by chat id")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	marshal, err := json.Marshal(response)
@@ -249,7 +279,7 @@ func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type UsersResponse struct {
+type CountUsersResponse struct {
 	UsersCount int64 `json:"usersCount"`
 }
 
@@ -283,12 +313,12 @@ func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 }
 
 func parseChatIdAndUserId(chatId, userId string) (int64, int64, error) {
-	chatIdInt64, err := service.ParseInt64(chatId)
+	chatIdInt64, err := utils.ParseInt64(chatId)
 	if err != nil {
 		logger.Error(err, "Failed during parse chat id")
 		return -1, -1, err
 	}
-	userId64, err := service.ParseInt64(userId)
+	userId64, err := utils.ParseInt64(userId)
 	if err != nil {
 		logger.Error(err, "Failed during parse user id")
 		return -1, -1, err

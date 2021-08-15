@@ -152,3 +152,8 @@ $ /usr/bin/node /home/nkonev/go_1_11/videochat/frontend/node_modules/fibers/buil
 ```
 mc stat local/files/chat/111/e4a37493-c6ff-4bd7-9d81-ffc9558af447/0a583bad-23c0-4c3d-8e8d-3a0591653603.jpg
 ```
+
+# Get peers of video chat
+```
+curl -s 'http:/localhost:7001/internal/111/users' | jq '.'
+``` 

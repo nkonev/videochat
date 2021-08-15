@@ -4,17 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/websocket"
+	log "github.com/pion/ion-sfu/pkg/logger"
 	"github.com/pion/ion-sfu/pkg/sfu"
 	"github.com/pion/webrtc/v3"
 	"net/http"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
 	"nkonev.name/video/producer"
-	"strconv"
 	"sync"
-	"github.com/gorilla/websocket"
 	"time"
-	log "github.com/pion/ion-sfu/pkg/logger"
 )
 
 var logger = log.New()
@@ -124,6 +123,7 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 							Login:     eci.login,
 							VideoMute: eci.videoMute,
 							AudioMute: eci.audioMute,
+							UserId:	   eci.userId,
 						}
 					} else {
 						otherStreamIds = append(otherStreamIds, eci.streamId)
@@ -140,14 +140,6 @@ type chatNotifyDto struct {
 	Data       *dto.StoreNotifyDto `json:"data"`
 	UsersCount int64           `json:"usersCount"`
 	ChatId     int64           `json:"chatId"`
-}
-
-func ParseInt64(s string) (int64, error) {
-	if i, err := strconv.ParseInt(s, 10, 64); err != nil {
-		return 0, err
-	} else {
-		return i, nil
-	}
 }
 
 func (h *ExtendedService) getSessionWithoutCreatingAnew(chatId int64) sfu.Session {
@@ -223,13 +215,45 @@ func (h *ExtendedService) CheckAccess(userId int64, chatId int64) (bool, error) 
 	}
 }
 
+func (h *ExtendedService) GetPeersByChatId(chatId int64) ([]*dto.StoreNotifyDto, error) {
+	var result []*dto.StoreNotifyDto = []*dto.StoreNotifyDto{}
+
+	metadatas := h.getPeerMetadatas(chatId)
+	for _, md := range metadatas {
+		result = append(result, &dto.StoreNotifyDto{
+			PeerId: md.peerId,
+			StreamId: md.streamId,
+			Login: md.login,
+			VideoMute: md.videoMute,
+			AudioMute: md.audioMute,
+			UserId: md.userId,
+		})
+	}
+
+	return result, nil
+}
+
+func (h *ExtendedService) getPeerMetadatas(chatId int64) []*ExtendedPeerInfo {
+	session := h.getSessionWithoutCreatingAnew(chatId)
+	var result []*ExtendedPeerInfo = []*ExtendedPeerInfo{}
+	if session == nil {
+		return result
+	}
+	for _, peerF := range session.Peers() {
+		if eci := h.getExtendedConnectionInfo(peerF); eci != nil {
+			result = append(result, eci)
+		}
+	}
+	return result
+}
+
 type peerWithMetadata struct {
 	sfu.Peer
 	*ExtendedPeerInfo
 	sfu.Session
 }
 
-func (h *ExtendedService) getPeerMetadatas(chatId, userId int64) []peerWithMetadata {
+func (h *ExtendedService) getPeerMetadatasForKick(chatId, userId int64) []peerWithMetadata {
 	session := h.getSessionWithoutCreatingAnew(chatId)
 	var result []peerWithMetadata
 	if session == nil {
@@ -263,7 +287,7 @@ func (h *ExtendedService) GetPeerByPeerId(chatId int64, peerId string) sfu.Peer 
 func (h *ExtendedService) KickUser(chatId, userId int64, silent bool) error {
 	logger.Info("Invoked kick", "chat_id", chatId, "user_id", userId)
 
-	metadatas := h.getPeerMetadatas(chatId, userId)
+	metadatas := h.getPeerMetadatasForKick(chatId, userId)
 	for _, metadata := range metadatas {
 		metadata.Peer.Close()
 		metadata.Session.RemovePeer(metadata.Peer)
