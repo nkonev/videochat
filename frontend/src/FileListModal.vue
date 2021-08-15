@@ -103,7 +103,7 @@ export default {
                 title: `Delete file`,
                 text: `Are you sure to delete this file '${dto.filename}' ?`,
                 actionFunction: ()=> {
-                    axios.delete(`/api/storage/${this.chatId}/file` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""), {data: {id: dto.id}})
+                    axios.delete(`/api/storage/${this.chatId}/file` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""), {data: {id: dto.id, fileItemUuid: dto.fileItemUuid}})
                         .then((response) => {
                             this.dto = response.data;
                             bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: this.fileItemUuid, count: response.data.files.length});

@@ -50,6 +50,7 @@ type FileInfoDto struct {
 	LastModified time.Time `json:"lastModified"`
 	OwnerId      int64     `json:"ownerId"`
 	Owner        *dto.User `json:"owner"`
+	FileItemUuid string    `json:"fileItemUuid"`
 }
 
 const filenameKey = "filename"
@@ -220,6 +221,11 @@ func (h *FilesHandler) getCountFilesInFileItem(bucketName string, filenameChatPr
 		count++
 	}
 	return count
+}
+
+func getFileItemUuid(fileId string) string {
+	split := strings.Split(fileId, "/")
+	return split[2]
 }
 
 func getDotExtension(file *multipart.FileHeader) string {
@@ -411,6 +417,8 @@ func (h *FilesHandler) getFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		return nil, err
 	}
 
+	itemUuid := getFileItemUuid(objInfo.Key)
+
 	info := &FileInfoDto{
 		Id:           objInfo.Key,
 		Filename:     fileName,
@@ -421,6 +429,7 @@ func (h *FilesHandler) getFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		LastModified: objInfo.LastModified,
 		OwnerId:      fileOwnerId,
 		PublicUrl:    publicUrl,
+		FileItemUuid: itemUuid,
 	}
 	return info, nil
 }
@@ -461,6 +470,7 @@ func (h *FilesHandler) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, cha
 
 type DeleteObjectDto struct {
 	Id     string     `json:"id"` // file id
+	FileItemUuid string    `json:"fileItemUuid"`
 }
 
 func (h *FilesHandler) DeleteHandler(c echo.Context) error {
@@ -513,6 +523,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	// this fileItemUuid used for display list in response
 	fileItemUuid := c.QueryParam("fileItemUuid")
 	var filenameChatPrefix string
 	if fileItemUuid == "" {
@@ -526,8 +537,9 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		return err
 	}
 
-	if len(list) == 0 {
-		h.chatClient.RemoveFileItem(chatId, fileItemUuid, userPrincipalDto.UserId)
+	// this fileItemUuid used for remove orphans
+	if h.countFilesUnderFileUuid(chatId, bindTo.FileItemUuid, bucketName) == 0 {
+		h.chatClient.RemoveFileItem(chatId, bindTo.FileItemUuid, userPrincipalDto.UserId)
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list})
@@ -740,23 +752,28 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	}
 	// end check
 
+	counter := h.countFilesUnderFileUuid(chatId, fileItemUuid, bucketName)
+
+	var countDto = CountResponse{
+		Count: counter,
+	}
+
+	return c.JSON(http.StatusOK, countDto)
+}
+
+func (h *FilesHandler) countFilesUnderFileUuid(chatId int64, fileItemUuid string, bucketName string) int {
 	var filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
 		WithMetadata: false,
 		Prefix:       filenameChatPrefix,
-		Recursive: true,
+		Recursive:    true,
 	})
 
 	var counter = 0
 	for _ = range objects {
 		counter++
 	}
-
-	var countDto = CountResponse {
-		Count: counter,
-	}
-
-	return c.JSON(http.StatusOK, countDto)
+	return counter
 }
 
 func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
