@@ -346,7 +346,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			break
 		}
 		if sfuPeer := p.service.GetPeerByPeerId(fromContext.chatId, bodyStruct.PeerId); sfuPeer != nil {
-			p.service.StoreToIndex(sfuPeer, fromContext.chatId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+			p.service.StoreToIndex(sfuPeer, fromContext.userId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
 			if err := p.service.Notify(fromContext.chatId, &bodyStruct); err != nil {
 				p.Logger.Error(err, "error during sending notification")
 			}
