@@ -26,7 +26,10 @@
             </v-list-item>
             </v-list-item-group>
         </v-list>
-        <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId"></infinite-loading>
+        <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
+            <template slot="no-more"><span/></template>
+            <template slot="no-results"><span/></template>
+        </infinite-loading>
 
     </v-card>
 
