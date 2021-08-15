@@ -106,7 +106,9 @@ export default {
                     axios.delete(`/api/storage/${this.chatId}/file` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""), {data: {id: dto.id}})
                         .then((response) => {
                             this.dto = response.data;
-                            bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: this.fileItemUuid, count: response.data.files.length});
+                            if (this.$data.messageEditing) {
+                                bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: this.fileItemUuid, count: response.data.files.length});
+                            }
                             if (this.dto.files.length == 0) {
                                 this.closeModal();
                             }
