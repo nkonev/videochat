@@ -24,7 +24,7 @@ func createVideoListener(h *service.ExtendedService) myRabbitmq.VideoListenerFun
 			return err
 		}
 		logger.Info("Deserialized kick message", "chatId", bindTo.ChatId, "userId", bindTo.UserId)
-		if err := h.KickUser(bindTo.ChatId, bindTo.UserId); err != nil {
+		if err := h.KickUser(bindTo.ChatId, bindTo.UserId, false); err != nil {
 			logger.Error(err, "Error during kicking user", "chatId", bindTo.ChatId, "userId", bindTo.UserId)
 			return err
 		}

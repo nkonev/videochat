@@ -19,6 +19,7 @@ import (
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
 	"nkonev.name/video/service"
+	"nkonev.name/video/utils"
 	"strings"
 )
 
@@ -172,7 +173,7 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userDto, err := h.service.UserByStreamId(chatId, streamId, userId)
+	userDto, otherStreamIds, err := h.service.UserByStreamId(chatId, streamId, userId)
 	if err != nil {
 		if errors.Is(err, &service.ErrorNoAccess{}) {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -182,11 +183,13 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if userDto == nil{
-		w.WriteHeader(http.StatusNoContent)
-		return
+	resp := UserDtoWrapper{}
+	if userDto != nil {
+		resp.Found = true
+		resp.UserDto = userDto
 	}
-	marshal, err := json.Marshal(userDto)
+	resp.OtherStreamIds = otherStreamIds
+	marshal, err := json.Marshal(resp)
 	if err != nil {
 		logger.Error(err, "Error during marshalling peerWithMetadata to json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -268,9 +271,13 @@ func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	silent, err := utils.ParseBoolean(r.URL.Query().Get("silent"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-
-	if h.service.KickUser(chatId, userToKickId) != nil {
+	if h.service.KickUser(chatId, userToKickId, silent) != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -292,6 +299,7 @@ func parseChatIdAndUserId(chatId, userId string) (int64, int64, error) {
 type UserDtoWrapper struct {
 	UserDto *dto.StoreNotifyDto `json:"userDto"`
 	Found bool              `json:"found"`
+	OtherStreamIds []string `json:"otherStreamIds"`
 }
 
 func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
@@ -326,7 +334,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			replyError(err)
 			break
 		}
-		userDto, err := p.service.UserByStreamId(fromContext.chatId, userByStreamId.StreamId, fromContext.userId)
+		userDto, otherStreamIds, err := p.service.UserByStreamId(fromContext.chatId, userByStreamId.StreamId, fromContext.userId)
 		if err != nil {
 			replyError(err)
 			break
@@ -336,6 +344,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			resp.Found = true
 			resp.UserDto = userDto
 		}
+		resp.OtherStreamIds = otherStreamIds
 		_ = conn.Reply(ctx, req.ID, resp)
 
 	case "putUserData": {
