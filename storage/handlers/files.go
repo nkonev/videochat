@@ -741,13 +741,19 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	// end check
 
 	var filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
-	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId)
-	if err != nil {
-		return err
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+		WithMetadata: false,
+		Prefix:       filenameChatPrefix,
+		Recursive: true,
+	})
+
+	var counter = 0
+	for _ = range objects {
+		counter++
 	}
 
 	var countDto = CountResponse {
-		Count: len(list),
+		Count: counter,
 	}
 
 	return c.JSON(http.StatusOK, countDto)
