@@ -172,7 +172,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	files := form.File[filesMultipartKey]
 
 	for _, file := range files {
-		userLimitOk, err := h.checkUserLimit(bucketName, userPrincipalDto, file)
+		userLimitOk, _, _, err := h.checkUserLimit(bucketName, userPrincipalDto, file.Size)
 		if err != nil {
 			return err
 		}
@@ -236,21 +236,25 @@ func getDotExtension(file *multipart.FileHeader) string {
 	}
 }
 
-func (h *FilesHandler) checkUserLimit(bucketName string, userPrincipalDto *auth.AuthResult, file *multipart.FileHeader) (bool, error) {
-	consumption := h.calcUserFilesConsumption(bucketName)
+func (h *FilesHandler) checkUserLimit(bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64) (bool, int64, int64, error) {
+	consumption := h.calcUserFilesConsumption(bucketName, userPrincipalDto.UserId)
 	maxAllowed, err := h.getMaxAllowedConsumption(userPrincipalDto)
 	if err != nil {
 		Logger.Errorf("Error during calculating max allowed %v", err)
-		return false, err
+		return false, 0, 0, err
 	}
-	if consumption+file.Size > maxAllowed {
-		Logger.Infof("Upload too large %v+%v>%v bytes", consumption, file.Size, maxAllowed)
-		return false, nil
+	available := maxAllowed - consumption
+
+	if desiredSize > available {
+		Logger.Infof("Upload too large %v+%v>%v bytes", consumption, desiredSize, maxAllowed)
+		return false, consumption, available, nil
 	}
-	return true, nil
+	return true, consumption, available, nil
 }
 
-func (h *FilesHandler) calcUserFilesConsumption(bucketName string) int64 {
+func (h *FilesHandler) calcUserFilesConsumption(bucketName string, userId int64) int64 {
+	// TODO take on account userId
+
 	var totalBucketConsumption int64
 
 	doneCh := make(chan struct{})
@@ -845,18 +849,16 @@ func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 		return err
 	}
 
-	max, e := h.getMaxAllowedConsumption(userPrincipalDto)
-	if e != nil {
-		return e
-	}
-	consumption := h.calcUserFilesConsumption(bucketName)
-
 	desiredSize, err := utils.ParseInt64(c.QueryParam("desiredSize"))
 	if err != nil {
 		return err
 	}
-	available := max - consumption
-	if desiredSize > available {
+	ok, consumption, available, err := h.checkUserLimit(bucketName, userPrincipalDto, desiredSize)
+	if err != nil {
+		return err
+	}
+
+	if !ok {
 		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
 	} else {
 		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "used": consumption, "available": available})
