@@ -116,6 +116,7 @@ func configureEcho(
 	e.GET("/storage/download", fh.DownloadHandler)
 	e.GET(handlers.UrlStorageGetFile, fh.PublicDownloadHandler)
 	e.PUT("/storage/publish/file", fh.SetPublic)
+	e.GET("/storage/:chatId/file/count/:fileItemUuid", fh.CountHandler)
 
 	e.GET("/storage/:chatId/file", fh.LimitsHandler)
 

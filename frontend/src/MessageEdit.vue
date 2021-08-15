@@ -113,6 +113,12 @@
             onSetMessage(dto) {
                 this.editMessageDto = dto;
                 this.$refs.quillEditorInstance.setHtml(this.editMessageDto.text);
+                if (this.editMessageDto.fileItemUuid) {
+                    axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
+                        .then((response) => {
+                            this.onFileItemUuid({fileItemUuid: this.editMessageDto.fileItemUuid, count: response.data.count})
+                        });
+                }
             },
             notifyAboutBroadcast(clear) {
                 if (clear) {

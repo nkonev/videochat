@@ -704,6 +704,55 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 	return c.JSON(http.StatusOK, info)
 }
 
+type CountResponse struct {
+	Count int `json:"count"`
+}
+
+func (h *FilesHandler) CountHandler(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	bucketName, err := EnsureAndGetFilesBucket(h.minio)
+	if err != nil {
+		return err
+	}
+
+	// check user belongs to chat
+	fileItemUuid := c.Param("fileItemUuid")
+	chatIdString := c.Param("chatId")
+	chatId, err := utils.ParseInt64(chatIdString)
+	if err != nil {
+		Logger.Errorf("Error during parsing chatId %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		Logger.Errorf("Error during checking user auth to chat %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !belongs {
+		Logger.Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	var filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
+	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId)
+	if err != nil {
+		return err
+	}
+
+	var countDto = CountResponse {
+		Count: len(list),
+	}
+
+	return c.JSON(http.StatusOK, countDto)
+}
+
 func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	bucketName, err := EnsureAndGetFilesBucket(h.minio)
 	if err != nil {
