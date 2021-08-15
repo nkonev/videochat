@@ -37,7 +37,8 @@
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
-                    <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
+                  <v-btn color="primary" class="mr-4" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>Upload</v-btn>
+                  <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -47,9 +48,9 @@
 <script>
 
 import bus, {
-    CLOSE_SIMPLE_MODAL,
-    OPEN_SIMPLE_MODAL,
-    OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID
+  CLOSE_SIMPLE_MODAL, OPEN_FILE_UPLOAD_MODAL,
+  OPEN_SIMPLE_MODAL,
+  OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID
 } from "./bus";
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
@@ -64,6 +65,7 @@ export default {
             chatId: null,
             fileItemUuid: null,
             loading: false,
+            messageEditing: false
         }
     },
     computed: {
@@ -71,12 +73,13 @@ export default {
     },
 
     methods: {
-        showModal({chatId, fileItemUuid}) {
+        showModal({chatId, fileItemUuid, messageEditing}) {
             console.log("Opening files modal, chatId=", chatId, ", fileItemUuid=", fileItemUuid);
             this.chatId = chatId;
             this.fileItemUuid = fileItemUuid;
             this.show = true;
             this.loading = true;
+            this.messageEditing = messageEditing;
             axios.get(`/api/storage/${this.chatId}` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""))
                 .then((response) => {
                     this.dto = response.data;
@@ -89,6 +92,10 @@ export default {
             this.show = false;
             this.chatId = null;
             this.fileItemUuid = null;
+            this.messageEditing = false;
+        },
+        openUploadModal() {
+            bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.fileItemUuid, this.messageEditing, true);
         },
         deleteFile(dto) {
             bus.$emit(OPEN_SIMPLE_MODAL, {

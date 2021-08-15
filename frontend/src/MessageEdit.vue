@@ -169,10 +169,10 @@
                 this.editMessageDto.text = html;
             },
             openFileUpload() {
-                bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.editMessageDto.fileItemUuid);
+                bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.editMessageDto.fileItemUuid, true, false);
             },
             onFilesClicked() {
-                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid});
+                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true});
             },
             onFileItemUuid({fileItemUuid, count}) {
                 this.editMessageDto.fileItemUuid = fileItemUuid;

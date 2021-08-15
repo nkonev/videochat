@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL, SET_FILE_ITEM_UUID} from "./bus";
+import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL, SET_FILE_ITEM_UUID, OPEN_VIEW_FILES_DIALOG} from "./bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
 const CancelToken = axios.CancelToken;
@@ -71,12 +71,16 @@ export default {
             progress: 0,
             cancelSource: null,
             limitError: null,
+            shouldSetFileUuidToMessage: false,
+            shouldUpdateFileList: false,
         }
     },
     methods: {
-        showModal(fileItemUuid) {
+        showModal(fileItemUuid, shouldSetFileUuidToMessage, shouldUpdateFileList) {
             this.$data.show = true;
             this.$data.fileItemUuid = fileItemUuid;
+            this.$data.shouldSetFileUuidToMessage = shouldSetFileUuidToMessage;
+            this.$data.shouldUpdateFileList = shouldUpdateFileList;
         },
         hideModal() {
             this.$data.show = false;
@@ -85,6 +89,9 @@ export default {
             this.cancelSource = null;
             this.uploading = false;
             this.limitError = null;
+            this.$data.fileItemUuid = null;
+            this.$data.shouldSetFileUuidToMessage = false;
+            this.$data.shouldUpdateFileList = false;
         },
         onProgressFunction(event) {
             this.progress = Math.round((100 * event.loaded) / event.total);
@@ -120,8 +127,13 @@ export default {
             return this.checkLimits(totalSize).then(()=>{
                 return axios.post(`/api/storage/${this.chatId}/file`+(this.fileItemUuid ? `/${this.fileItemUuid}` : ''), formData, config)
                     .then(response => {
-                        bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: response.data.count});
+                        if (this.$data.shouldSetFileUuidToMessage) {
+                            bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: response.data.count});
+                        }
                         this.uploading = false;
+                        if (this.$data.shouldUpdateFileList) {
+                            bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.fileItemUuid});
+                        }
                     })
                     .catch((thrown) => {
                         if (axios.isCancel(thrown)) {
