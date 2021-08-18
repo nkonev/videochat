@@ -144,12 +144,11 @@ type chatNotifyDto struct {
 
 func (h *ExtendedService) getSessionWithoutCreatingAnew(chatId int64) sfu.Session {
 	sessionName := fmt.Sprintf("chat%v", chatId)
-	for _, aSession := range h.sfu.GetSessions() {
-		if aSession.ID() == sessionName {
-			return aSession
-		}
+	if session, ok := h.sfu.GetSessions()[sessionName]; ok {
+		return session
+	} else {
+		return nil
 	}
-	return nil
 }
 
 
@@ -309,8 +308,7 @@ func (h *ExtendedService) NotifyAboutLeaving(chatId int64) {
 }
 
 func (h *ExtendedService) notifyAllChats() {
-	for _, session := range h.sfu.GetSessions() {
-		sessionName := session.ID()
+	for sessionName, _ := range h.sfu.GetSessions() {
 		var chatId int64
 		if _, err := fmt.Sscanf(sessionName, "chat%d", &chatId); err != nil {
 			logger.Error(err, "error during reading chat id from session", "sessionName", sessionName)
