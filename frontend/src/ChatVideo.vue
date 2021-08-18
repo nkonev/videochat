@@ -53,9 +53,12 @@
     const UserVideoClass = Vue.extend(UserVideo);
 
     let pingTimerId;
+    const PUT_USER_DATA_METHOD = "putUserData";
+    const USER_BY_STREAM_ID_METHOD = "userByStreamId";
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
     const askUserNameInterval = 1000;
+    const MAX_MISSED_FAILURES = 5;
 
     export default {
         data() {
@@ -66,12 +69,17 @@
                 signalLocal: null,
                 localMediaStream: null,
                 localPublisherKey: 1,
-                closingStarted: false,
                 chatId: null,
                 remoteVideoIsMuted: true,
                 peerId: null,
+
+                // this one is about skipping ping checks during changing media stream
                 insideSwitchingCameraScreen: false,
+
+                // this two are about restart process
                 restartingStarted: false,
+                closingStarted: false,
+
                 showPermissionAsk: true
             }
         },
@@ -139,7 +147,7 @@
                             component.$mount();
                             this.remotesDiv.appendChild(component.$el);
                             component.setSource(stream);
-                            this.streams[stream.id] = {stream, component};
+                            this.streams[stream.id] = {stream, component, failureCount: 0};
 
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
@@ -202,12 +210,30 @@
                     if (!this.insideSwitchingCameraScreen) {
                         const localStreamId = this.$refs.localVideoComponent.getStreamId();
                         console.debug("Checking self user", "streamId", localStreamId);
-                        this.signalLocal.call("userByStreamId", {streamId: localStreamId}).then(value => {
+                        this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: localStreamId, includeOtherStreamIds: true}).then(value => {
                             if (!value.found) {
                                 console.warn("Detected absence of self user on server, restarting...", "streamId", localStreamId);
                                 this.tryRestartWithResetOncloseHandler();
                             } else {
                                 console.debug("Successfully checked self user", "streamId", localStreamId, value);
+
+                                // check other
+                                for (const streamId in this.streams) {
+                                    console.debug("Checking other streamId", streamId);
+                                    const streamHolder = this.streams[streamId];
+                                    const component = streamHolder.component;
+                                    if (value.otherStreamIds.filter(v => v == streamId).length == 0) {
+                                        streamHolder.failureCount++;
+                                        console.debug("Other streamId", streamId, "is not present, failureCount icreased to", streamHolder.failureCount);
+                                        if (streamHolder.failureCount > MAX_MISSED_FAILURES) {
+                                            console.debug("Other streamId", streamId, "subsequently is not present, removing...");
+                                            this.removeStream(streamId, component);
+                                        }
+                                    } else {
+                                        console.debug("Other streamId", streamId, "is present, resetting failureCount");
+                                        streamHolder.failureCount = 0;
+                                    }
+                                }
                             }
                         })
                     } else {
@@ -217,7 +243,7 @@
             },
             askUserNameWithRetries(streamId) {
                 // request-response with signalLocal and error handling
-                this.signalLocal.call("userByStreamId", {streamId: streamId}).then(value => {
+                this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: streamId}).then(value => {
                     if (!value.found) {
                         if (!this.closingStarted) {
                             console.log("Rescheduling asking for userName");
@@ -251,7 +277,7 @@
                     videoMute: this.videoMuted, // from store
                     audioMute: this.audioMuted
                 };
-                this.signalLocal.notify("putUserData", toSend)
+                this.signalLocal.notify(PUT_USER_DATA_METHOD, toSend)
             },
             notifyAboutJoining() {
                 if (this.chatId) {
@@ -263,8 +289,8 @@
             ensureAudioIsEnabledAccordingBrowserPolicies() {
                 if (this.remoteVideoIsMuted) {
                     // Unmute all the current videoElements.
-                    for (const streamInfo of Object.values(this.streams)) {
-                        let { component } = streamInfo;
+                    for (const streamHolder of Object.values(this.streams)) {
+                        let { component } = streamHolder;
                         const videoElement = component.getVideoElement();
                         videoElement.pause();
                         videoElement.muted = false;

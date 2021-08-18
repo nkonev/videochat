@@ -67,6 +67,7 @@ func FromContext(ctx context.Context) (*ContextData, bool) {
 
 type UserByStreamId struct {
 	StreamId string `json:"streamId"`
+	IncludeOtherStreamIds bool `json:"includeOtherStreamIds"`
 }
 
 func NewHandler(
@@ -203,7 +204,7 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userDto, otherStreamIds, err := h.service.UserByStreamId(chatId, streamId, userId)
+	userDto, otherStreamIds, err := h.service.UserByStreamId(chatId, streamId, true, userId)
 	if err != nil {
 		if errors.Is(err, &service.ErrorNoAccess{}) {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -364,7 +365,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			replyError(err)
 			break
 		}
-		userDto, otherStreamIds, err := p.service.UserByStreamId(fromContext.chatId, userByStreamId.StreamId, fromContext.userId)
+		userDto, otherStreamIds, err := p.service.UserByStreamId(fromContext.chatId, userByStreamId.StreamId, userByStreamId.IncludeOtherStreamIds, fromContext.userId)
 		if err != nil {
 			replyError(err)
 			break

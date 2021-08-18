@@ -99,7 +99,7 @@ func (e *ErrorNoAccess) Error() string { return "No access" }
 type errorInternal struct {}
 func (e *errorInternal) Error() string { return "Internal error" }
 
-func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId string, behalfUserId int64) (*dto.StoreNotifyDto, []string, error) {
+func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId string, includeOtherStreamIds bool, behalfUserId int64) (*dto.StoreNotifyDto, []string, error) {
 	if ok, err := h.CheckAccess(behalfUserId, chatId); err != nil {
 		return nil, nil, &errorInternal{}
 	} else if !ok {
@@ -125,7 +125,7 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 							AudioMute: eci.audioMute,
 							UserId:	   eci.userId,
 						}
-					} else {
+					} else if includeOtherStreamIds {
 						otherStreamIds = append(otherStreamIds, eci.streamId)
 					}
 				}

@@ -157,3 +157,8 @@ mc stat local/files/chat/111/e4a37493-c6ff-4bd7-9d81-ffc9558af447/0a583bad-23c0-
 ```
 curl -s 'http:/localhost:7001/internal/111/users' | jq '.'
 ``` 
+
+# Kick user
+```
+curl -i -X PUT 'http:/localhost:7001/internal/108/kick?silent=true&chatId=108&userId=1'
+```
