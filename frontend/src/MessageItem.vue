@@ -27,13 +27,15 @@
     import axios from "axios";
     import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL, SET_EDIT_MESSAGE, OPEN_VIEW_FILES_DIALOG} from "./bus";
     import debounce from "lodash/debounce";
-    import { format, parseISO, differenceInDays } from 'date-fns'
+    import { format, parseISO, differenceInDays } from 'date-fns';
+
+    const TYPE_MESSAGE_READ = "message_read";
 
     export default {
         props: ['item', 'chatId', 'highlight'],
         methods: {
             onMessageClick(dto) {
-                this.centrifuge.send({payload: { chatId: this.chatId, messageId: dto.id}, "type": "message_read"})
+                this.centrifuge.send({payload: { chatId: this.chatId, messageId: dto.id}, "type": TYPE_MESSAGE_READ})
             },
             onMessageMouseMove(item) {
                 this.onMessageClick(item);
