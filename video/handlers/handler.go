@@ -351,9 +351,9 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 	fromContext, b := FromContext(ctx)
 	if !b {
 		err := errors.New("unable to extract data from context")
-		p.Logger.Error(err, "problem with getting tata from context")
+		p.Logger.Error(err, "problem with getting data from context")
 		replyError(err)
-
+		return
 	}
 
 	switch req.Method {
