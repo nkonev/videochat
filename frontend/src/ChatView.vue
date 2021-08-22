@@ -28,10 +28,7 @@
 
 <script>
     import axios from "axios";
-    import infinityListMixin, {
-        findIndex,
-        pageSize, replaceInArray
-    } from "./InfinityListMixin";
+    import infinityListMixin, { pageSize } from "./InfinityListMixin";
     import Vue from 'vue'
     import bus, {
         CHAT_DELETED,
@@ -60,7 +57,7 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
-    import {getCorrectUserAvatar} from "./utils";
+    import { getCorrectUserAvatar, findIndex, replaceInArray } from "./utils";
     import MessageItem from "./MessageItem";
     // import 'splitpanes/dist/splitpanes.css';
     import debounce from "lodash/debounce";

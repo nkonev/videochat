@@ -55,7 +55,7 @@ import bus, {
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
 import axios from "axios";
-import {replaceInArray} from "./InfinityListMixin";
+import {replaceInArray} from "./utils";
 
 export default {
     data () {

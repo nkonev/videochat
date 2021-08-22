@@ -1,36 +1,5 @@
 import InfiniteLoading from 'vue-infinite-loading';
 
-export const findIndex = (array, element) => {
-    return array.findIndex(value => value.id === element.id);
-};
-
-export const replaceInArray = (array, element) => {
-    const foundIndex = findIndex(array, element);
-    if (foundIndex === -1) {
-        return false;
-    } else {
-        array[foundIndex] = element;
-        return true;
-    }
-};
-
-export const replaceOrAppend = (array, newArray) => {
-    newArray.forEach((element, index) => {
-        const replaced = replaceInArray(array, element);
-        if (!replaced) {
-            array.push(element);
-        }
-    });
-};
-
-export const moveToFirstPosition = (array, element) => {
-    const idx = findIndex(array, element);
-    if (idx > 0) {
-        array.splice(idx, 1);
-        array.unshift(element);
-    }
-}
-
 export const pageSize = 40;
 
 export default () => {

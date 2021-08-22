@@ -69,3 +69,35 @@ export const getStoredAudioPresents = () => {
 export const setStoredAudioPresents = (v) => {
     localStorage.setItem(KEY_AUDIO_PRESENTS, JSON.stringify(v));
 }
+
+export const findIndex = (array, element) => {
+    return array.findIndex(value => value.id === element.id);
+};
+
+export const replaceInArray = (array, element) => {
+    const foundIndex = findIndex(array, element);
+    if (foundIndex === -1) {
+        return false;
+    } else {
+        array[foundIndex] = element;
+        return true;
+    }
+};
+
+export const replaceOrAppend = (array, newArray) => {
+    newArray.forEach((element, index) => {
+        const replaced = replaceInArray(array, element);
+        if (!replaced) {
+            array.push(element);
+        }
+    });
+};
+
+export const moveToFirstPosition = (array, element) => {
+    const idx = findIndex(array, element);
+    if (idx > 0) {
+        array.splice(idx, 1);
+        array.unshift(element);
+    }
+}
+

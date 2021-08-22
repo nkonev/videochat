@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" persistent>
+        <v-dialog v-model="show" max-width="640" :persistent="isNew">
             <v-card>
                 <v-card-title v-if="!isNew">Edit chat #{{editChatId}}</v-card-title>
                 <v-card-title v-else>Create chat</v-card-title>

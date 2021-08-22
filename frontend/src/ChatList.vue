@@ -50,13 +50,8 @@
         VIDEO_CALL_CHANGED
     } from "./bus";
     import {chat_name} from "./routes";
-    import infinityListMixin, {
-        findIndex,
-        pageSize,
-        replaceOrAppend,
-        replaceInArray,
-        moveToFirstPosition
-    } from "./InfinityListMixin";
+    import infinityListMixin, { pageSize } from "./InfinityListMixin";
+    import { findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition } from "./utils";
     import axios from "axios";
     import {
         SET_CHAT_ID,

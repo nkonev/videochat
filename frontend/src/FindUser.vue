@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" persistent>
+        <v-dialog v-model="show" max-width="640">
             <v-card>
                 <v-card-title>Find user</v-card-title>
 
