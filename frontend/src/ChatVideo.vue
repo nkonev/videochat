@@ -114,19 +114,15 @@
 
                 this.clientLocal.onspeaker = (messageEvent) => {
                     console.debug("Speaking event", messageEvent);
-                    for (const streamId in this.streams) {
+                    this.enumerateAllStreams((component, streamId) => {
                         console.debug("Resetting speaking", streamId);
-                        const streamHolder = this.streams[streamId];
-                        if (streamHolder) {
-                            streamHolder.component.setSpeaking(false);
-                        }
-                    }
+                        component.setSpeaking(false);
+                    })
                     for (const speakingStreamId of messageEvent) {
                         console.debug("Setting speaking", speakingStreamId);
-                        const streamHolder = this.streams[speakingStreamId];
-                        if (streamHolder) {
-                            streamHolder.component.setSpeaking(true);
-                        }
+                        this.applyCallbackToStreamId(speakingStreamId, (component) => {
+                            component.setSpeaking(true);
+                        });
                     }
                 }
 
@@ -474,6 +470,27 @@
             },
             onVideoParametersChanged() {
                 this.tryRestartWithResetOncloseHandler();
+            },
+            enumerateAllStreams(callback) {
+                if (this.localMediaStream && this.$refs.localVideoComponent) {
+                    callback(this.$refs.localVideoComponent, this.$refs.localVideoComponent.getStreamId());
+                }
+                for (const streamId in this.streams) {
+                    const streamHolder = this.streams[streamId];
+                    if (streamHolder) {
+                        callback(streamHolder.component, streamId);
+                    }
+                }
+            },
+            applyCallbackToStreamId(streamId, callback) {
+                if (this.localMediaStream && this.$refs.localVideoComponent && this.$refs.localVideoComponent.getStreamId() == streamId) {
+                    callback(this.$refs.localVideoComponent, this.$refs.localVideoComponent.getStreamId());
+                    return;
+                }
+                const streamHolder = this.streams[streamId];
+                if (streamHolder) {
+                    callback(streamHolder.component);
+                }
             },
         },
         mounted() {
