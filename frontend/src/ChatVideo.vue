@@ -112,6 +112,24 @@
 
                 this.clientLocal = new Client(this.signalLocal, configObj);
 
+                this.clientLocal.onspeaker = (messageEvent) => {
+                    console.debug("Speaking event", messageEvent);
+                    for (const streamId in this.streams) {
+                        console.debug("Resetting speaking", streamId);
+                        const streamHolder = this.streams[streamId];
+                        if (streamHolder) {
+                            streamHolder.component.setSpeaking(false);
+                        }
+                    }
+                    for (const speakingStreamId of messageEvent) {
+                        console.debug("Setting speaking", speakingStreamId);
+                        const streamHolder = this.streams[speakingStreamId];
+                        if (streamHolder) {
+                            streamHolder.component.setSpeaking(true);
+                        }
+                    }
+                }
+
                 this.signalLocal.onerror = (e) => { console.error("Error in signal", e); }
                 this.signalLocal.onclose = () => {
                   console.info("Signal is closed, something gonna happen");
@@ -255,10 +273,10 @@
                         console.debug("Successfully got data by streamId", streamId);
                         const data = value.userDto;
                         if (data) {
-                            const component = this.streams[data.streamId];
-                            if (component) {
-                                component.component.setUserName(data.login);
-                                component.component.setDisplayAudioMute(data.audioMute);
+                            const streamHolder = this.streams[data.streamId];
+                            if (streamHolder) {
+                                streamHolder.component.setUserName(data.login);
+                                streamHolder.component.setDisplayAudioMute(data.audioMute);
                             }
                         }
                     }

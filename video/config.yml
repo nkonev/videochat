@@ -27,12 +27,12 @@ router:
 # Sets the interval in which the SFU will check the audio level
 # in [ms]. If the active speaker has changed, the sfu will
 # emit an event to clients.
-  audiolevelinterval: 1000
+  audiolevelinterval: 200
 # Sets minimum percentage of events required to fire an audio level
 # according to the expected events from the audiolevelinterval,
 # calculated as audiolevelinterval/packetization time (20ms for 8kHz)
 # Values from [0-100]
-  audiolevelfilter: 20
+  audiolevelfilter: 10
 
   simulcast:
 # Prefer best quality initially

@@ -1,7 +1,7 @@
 <template>
     <div class="video-container-element">
         <video autoPlay playsInline ref="videoRef" :muted="initialMuted" v-on:dblclick="onDoubleClick"/>
-        <p class="video-container-element-caption">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon></p>
+        <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon> <v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
 
@@ -13,7 +13,8 @@ export default {
     data()  {
 	    return {
             userName: 'loading...',
-            audioMute: false
+            audioMute: false,
+            speaking: false,
         }
     },
 
@@ -51,6 +52,9 @@ export default {
                 elem.webkitRequestFullscreen();
             }
         },
+        setSpeaking(speaking) {
+            this.speaking = speaking;
+        }
     },
 };
 </script>
@@ -82,5 +86,9 @@ export default {
         position: relative
         width initial
         white-space nowrap
+    }
+
+    .video-container-element-caption-speaking {
+        text-shadow: -2px 0 #9cffa1, 0 2px #9cffa1, 2px 0 #9cffa1, 0 -2px #9cffa1;
     }
 </style>
