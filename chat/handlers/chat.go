@@ -7,6 +7,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
+	"github.com/microcosm-cc/bluemonday"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -36,10 +37,11 @@ type ChatHandler struct {
 	db          db.DB
 	notificator notifications.Notifications
 	restClient  client.RestClient
+	policy      *bluemonday.Policy
 }
 
-func NewChatHandler(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient) ChatHandler {
-	return ChatHandler{db: dbR, notificator: notificator, restClient: restClient}
+func NewChatHandler(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient, policy *bluemonday.Policy) ChatHandler {
+	return ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
 }
 
 func (a *CreateChatDto) Validate() error {
@@ -228,7 +230,7 @@ func (ch ChatHandler) CreateChat(c echo.Context) error {
 	}
 
 	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
-		id, _, err := tx.CreateChat(convertToCreatableChat(bindTo))
+		id, _, err := tx.CreateChat(convertToCreatableChat(bindTo, ch.policy))
 		if err != nil {
 			return err
 		}
@@ -268,9 +270,9 @@ func (ch ChatHandler) CreateChat(c echo.Context) error {
 	return errOuter
 }
 
-func convertToCreatableChat(d *CreateChatDto) *db.Chat {
+func convertToCreatableChat(d *CreateChatDto, policy *bluemonday.Policy) *db.Chat {
 	return &db.Chat{
-		Title: d.Name,
+		Title: TrimAmdSanitize(policy, d.Name),
 	}
 }
 
@@ -337,7 +339,7 @@ func (ch ChatHandler) EditChat(c echo.Context) error {
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
 		}
-		_, err := tx.EditChat(bindTo.Id, bindTo.Name)
+		_, err := tx.EditChat(bindTo.Id, TrimAmdSanitize(ch.policy, bindTo.Name))
 		if err != nil {
 			return err
 		}

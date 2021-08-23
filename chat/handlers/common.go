@@ -7,6 +7,7 @@ import (
 	"github.com/araddon/dateparse"
 	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
@@ -14,6 +15,7 @@ import (
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
+	"strings"
 	"time"
 )
 
@@ -166,4 +168,16 @@ func Convert(h http.Handler) echo.HandlerFunc {
 		h.ServeHTTP(c.Response().Writer, c.Request())
 		return nil
 	}
+}
+
+func SanitizeMessage(policy *bluemonday.Policy, input string) string {
+	return policy.Sanitize(input)
+}
+
+func Trim(str string) string {
+	return strings.TrimSpace(str)
+}
+
+func TrimAmdSanitize(policy *bluemonday.Policy, input string) string {
+	return Trim(SanitizeMessage(policy, input))
 }

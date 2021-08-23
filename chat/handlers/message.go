@@ -18,7 +18,6 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
-	"strings"
 	"time"
 )
 
@@ -230,13 +229,9 @@ func (mc MessageHandler) PostMessage(c echo.Context) error {
 	return errOuter
 }
 
-func sanitizeMessage(policy *bluemonday.Policy, input string) string {
-	return policy.Sanitize(input)
-}
-
 func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *bluemonday.Policy) *db.Message {
 	return &db.Message{
-		Text:    trim(sanitizeMessage(policy, dto.Text)),
+		Text:    TrimAmdSanitize(policy, dto.Text),
 		ChatId:  chatId,
 		OwnerId: authPrincipal.UserId,
 		FileItemUuid: dto.FileItemUuid,
@@ -297,16 +292,12 @@ func (mc MessageHandler) EditMessage(c echo.Context) error {
 func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *bluemonday.Policy) *db.Message {
 	return &db.Message{
 		Id:           dto.Id,
-		Text:         trim(sanitizeMessage(policy, dto.Text)),
+		Text:         TrimAmdSanitize(policy, dto.Text),
 		ChatId:       chatId,
 		OwnerId:      authPrincipal.UserId,
 		EditDateTime: null.TimeFrom(time.Now()),
 		FileItemUuid: dto.FileItemUuid,
 	}
-}
-
-func trim(str string) string {
-	return strings.TrimSpace(str)
 }
 
 func (mc MessageHandler) DeleteMessage(c echo.Context) error {
