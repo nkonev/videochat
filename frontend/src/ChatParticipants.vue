@@ -130,7 +130,7 @@
     } from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import {videochat_name} from "./routes";
+    import {chat_name, videochat_name} from "./routes";
     import debounce from "lodash/debounce";
     import userOnlinePollingMixin from "./userOnlinePollingMixin";
 
@@ -289,7 +289,10 @@
               this.doNewSearch(searchString);
             },
             '$route' (to, from) {
-                this.closeModal();
+                console.debug("Listening route from", from, "to", to);
+                if (from.name == chat_name || from.name == videochat_name) {
+                    this.closeModal();
+                }
             }
         },
 
