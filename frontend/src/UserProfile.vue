@@ -143,7 +143,7 @@ export default {
 
         this.loadUser();
     },
-    beforeMount() {
+    beforeDestroy() {
         this.stopPolling();
     },
     created() {

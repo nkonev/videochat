@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640">
+        <v-dialog v-model="show" max-width="640" @click:outside="closeModal()">
             <v-card>
                 <v-card-title>Find user</v-card-title>
 
@@ -86,6 +86,7 @@
                 this.closeModal();
             },
             closeModal() {
+                console.debug("Closing FindUser");
                 this.show = false;
                 this.search = null;
                 this.isLoading = false;

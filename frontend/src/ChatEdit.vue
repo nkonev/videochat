@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" :persistent="isNew">
+        <v-dialog v-model="show" max-width="640" :persistent="isNew" @click:outside="closeModal()">
             <v-card>
                 <v-card-title v-if="!isNew">Edit chat #{{editChatId}}</v-card-title>
                 <v-card-title v-else>Create chat</v-card-title>
@@ -171,6 +171,7 @@
                 return this.$refs.form.validate()
             },
             closeModal() {
+                console.debug("Closing ChatEdit");
                 this.show = false;
                 // this.editChatId = null;
                 this.search = null;
