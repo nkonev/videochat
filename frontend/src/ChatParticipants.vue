@@ -76,12 +76,7 @@
                                 </v-list-item-content>
                                 <v-tooltip bottom v-if="item.admin || dto.canChangeChatAdmins">
                                     <template v-slot:activator="{ on, attrs }">
-                                        <template v-if="!dto.canChangeChatAdmins">
-                                          <span class="pl-1 pr-1">
-                                              <v-icon v-bind="attrs" v-on="on">mdi-crown</v-icon>
-                                          </span>
-                                        </template>
-                                        <template v-else-if="item.id != currentUser.id">
+                                        <template v-if="dto.canChangeChatAdmins && (item.id != currentUser.id)">
                                             <v-btn
                                                 v-bind="attrs" v-on="on"
                                                 :color="item.admin ? 'primary' : 'disabled'"
@@ -91,6 +86,11 @@
                                             >
                                                 <v-icon>mdi-crown</v-icon>
                                             </v-btn>
+                                        </template>
+                                        <template v-else-if="item.admin">
+                                          <span class="pl-1 pr-1">
+                                              <v-icon v-bind="attrs" v-on="on">mdi-crown</v-icon>
+                                          </span>
                                         </template>
                                     </template>
                                     <span>Admin</span>
@@ -210,9 +210,12 @@
             },
             onChatChange(dto) {
                 if (this.show && dto.id == this.chatId) {
-                    const tmp  = dto;
-                    this.transformParticipants(tmp);
-                    this.dto = tmp;
+                    this.dto = dtoFactory();
+                    this.$nextTick(()=> {
+                        const tmp = dto;
+                        this.transformParticipants(tmp);
+                        this.dto = tmp;
+                    });
                 }
             },
             deleteParticipant(participant) {

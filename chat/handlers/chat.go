@@ -202,6 +202,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		Name:                c.Title,
 		ParticipantIds:      c.ParticipantsIds,
 		Participants:        users,
+		// see also notifications/notifications.go:75 chatNotifyCommon()
 		CanEdit:             null.BoolFrom(c.IsAdmin && !c.TetATet),
 		CanDelete:           null.BoolFrom(c.IsAdmin),
 		LastUpdateDateTime:  c.LastUpdateDateTime,

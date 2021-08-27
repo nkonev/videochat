@@ -96,10 +96,14 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 		}
 
 		// TODO move to better place
+		// see also handlers/chat.go:199 convertToDto()
 		copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
 		copied.CanDelete = null.BoolFrom(admin)
 		copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet)
 		copied.UnreadMessages = unreadMessages
+		copied.CanVideoKick = admin
+		copied.CanChangeChatAdmins = admin && !copied.IsTetATet
+		//copied.CanBroadcast = admin
 		for _, participant := range copied.Participants {
 			if copied.IsTetATet && participant.Id != participantId {
 				copied.Name = participant.Login
