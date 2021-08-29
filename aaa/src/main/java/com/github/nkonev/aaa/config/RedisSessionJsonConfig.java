@@ -21,6 +21,8 @@ public class RedisSessionJsonConfig implements BeanClassLoaderAware {
 
         return mapper;
     }
+
+    // bean name used from RedisHttpSessionConfiguration#setDefaultRedisSerializer
     @Bean(name = "springSessionDefaultRedisSerializer")
     public RedisSerializer<Object> redisSerializer() {
         return new GenericJackson2JsonRedisSerializer(objectMapper());
