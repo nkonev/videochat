@@ -16,7 +16,6 @@ Open `http://localhost:8081/chat` in Firefox main and an Anonymous window;
 Login as `admin:admin` in main window and as `nikita:password` in the Anonymous window.
 Create chat in main window and add `nikita` there.
 
-
 ## Generating password
 ```bash
 sudo yum install -y httpd-tools
