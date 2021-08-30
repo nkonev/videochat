@@ -272,7 +272,7 @@
                 })
             },
             onChatDelete(dto) {
-                if (dto.id == this.chatId) {
+                if (this.show && dto.id == this.chatId) {
                     this.closeModal();
                 }
             },

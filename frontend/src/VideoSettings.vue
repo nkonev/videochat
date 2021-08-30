@@ -99,6 +99,9 @@
                 return this.$route.name == videochat_name
             },
             onVideoParametersChanged() {
+                if (!this.show) {
+                    return
+                }
                 this.changing = false;
             },
             changeVideoResolution(newVideoResolution) {
