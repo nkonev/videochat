@@ -292,9 +292,11 @@
               this.doNewSearch(searchString);
             },
             '$route' (to, from) {
-                console.debug("Listening route from", from, "to", to);
-                if (from.name == chat_name || from.name == videochat_name) {
-                    this.closeModal();
+                if (this.show) {
+                    console.debug("Listening route from", from, "to", to);
+                    if (from.name == chat_name || from.name == videochat_name) {
+                        this.closeModal();
+                    }
                 }
             }
         },
