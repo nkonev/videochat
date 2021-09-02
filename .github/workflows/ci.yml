@@ -73,8 +73,9 @@ jobs:
           BUILDDIR=./build;
           WORKDIR=./frontend;
           IMAGE=nkonev/chat-frontend:latest;
+          GIT_HASH=$(git rev-list -1 HEAD);
           cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp -r ../frontend-nginx/* $BUILDDIR && cp ../docker/nginx/frontend.conf $BUILDDIR &&
-          docker build -t $IMAGE $BUILDDIR &&
+          docker build -t $IMAGE --build-arg GIT_HASH=$GIT_HASH $BUILDDIR &&
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" &&
           echo "Will push docker image" &&
