@@ -26,7 +26,7 @@ services:
         - "traefik.http.routers.chat-public-router.middlewares=chat-stripprefix-middleware,chat-retry-middleware"
         - "traefik.http.routers.chat-version-router.rule=Path(`/chat/git.json`)"
         - "traefik.http.routers.chat-version-router.entrypoints=http"
-        - "traefik.http.routers.chat-version-router.middlewares=chat-auth-middleware,chat-stripprefix-middleware,chat-retry-middleware"
+        - "traefik.http.routers.chat-version-router.middlewares=chat-stripprefix-middleware"
     logging:
       driver: "journald"
       options:

@@ -20,7 +20,7 @@ services:
         - "traefik.http.middlewares.video-stripprefix-middleware.stripprefix.prefixes=/api,/video"
         - "traefik.http.routers.video-version-router.rule=Path(`/video/git.json`)"
         - "traefik.http.routers.video-version-router.entrypoints=http"
-        - "traefik.http.routers.video-version-router.middlewares=video-auth-middleware,video-stripprefix-middleware"
+        - "traefik.http.routers.video-version-router.middlewares=video-stripprefix-middleware"
     ports:
       # turn port
       - target: 3478

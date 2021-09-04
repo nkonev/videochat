@@ -22,7 +22,7 @@ services:
         - "traefik.http.routers.video-proxy-router.middlewares=video-proxy-auth-middleware,video-proxy-stripprefix-middleware"
         - "traefik.http.routers.video-proxy-version-router.rule=Path(`/video-proxy/git.json`)"
         - "traefik.http.routers.video-proxy-version-router.entrypoints=http"
-        - "traefik.http.routers.video-proxy-version-router.middlewares=video-proxy-auth-middleware,video-proxy-stripprefix-middleware"
+        - "traefik.http.routers.video-proxy-version-router.middlewares=video-proxy-stripprefix-middleware"
     logging:
       driver: "journald"
       options:

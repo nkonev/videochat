@@ -26,7 +26,7 @@ services:
         - "traefik.http.routers.storage-public-router.middlewares=storage-stripprefix-middleware,storage-retry-middleware"
         - "traefik.http.routers.storage-version-router.rule=Path(`/storage/git.json`)"
         - "traefik.http.routers.storage-version-router.entrypoints=http"
-        - "traefik.http.routers.storage-version-router.middlewares=storage-auth-middleware,storage-stripprefix-middleware,storage-retry-middleware"
+        - "traefik.http.routers.storage-version-router.middlewares=storage-stripprefix-middleware"
 
     logging:
       driver: "journald"
