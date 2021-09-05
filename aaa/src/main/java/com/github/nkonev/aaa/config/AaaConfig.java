@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.IOException;
 
 @Configuration
@@ -45,5 +46,10 @@ public class AaaConfig {
             String text = ResourceUtils.stringFromResource(resource);
             LOGGER.info("Version {}", text);
         }
+    }
+
+    @PreDestroy
+    public void preDestroy() {
+        LOGGER.info("Destroying aaa");
     }
 }
