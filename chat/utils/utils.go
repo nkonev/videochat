@@ -10,6 +10,7 @@ import (
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
+const PersonalChannelPrefix = "#"
 
 type H map[string]interface{}
 

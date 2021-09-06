@@ -3,13 +3,13 @@ module nkonev.name/chat
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.0
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
-	github.com/centrifugal/centrifuge v0.9.1
-	github.com/centrifugal/protocol v0.3.3
+	github.com/centrifugal/centrifuge v0.18.4
+	github.com/centrifugal/protocol v0.7.3
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang-migrate/migrate/v4 v4.11.0
-	github.com/gomodule/redigo v1.8.4 // indirect
-	github.com/google/uuid v1.2.0 // indirect
+	github.com/gomodule/redigo v1.8.5
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/guregu/null v4.0.0+incompatible
@@ -23,7 +23,7 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/viper v1.7.0
 	github.com/streadway/amqp v1.0.0
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	go.opencensus.io v0.22.4
 	go.uber.org/fx v1.12.0
 )

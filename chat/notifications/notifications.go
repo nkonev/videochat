@@ -72,9 +72,10 @@ func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatDto *dto.
 	chatNotifyCommon(userIds, not, c, chatDto, "chat_deleted", tx)
 }
 
+
 func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, tx *db.Tx) {
 	for _, participantId := range userIds {
-		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
+		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 		GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
 
 		var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
@@ -132,7 +133,7 @@ type ChatUnreadMessageChanged struct {
 
 func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx) {
 	for _, participantId := range userIds {
-		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
+		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 		GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
 
 		unreadMessages, err := tx.GetUnreadMessagesCount(chatId, participantId)
@@ -171,8 +172,8 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 		GetLogEntry(c.Request()).Errorf("error during get chat presence for participantId : %s", err)
 		return
 	}
-	for _, ci := range presence {
-		if parseInt64, err := utils.ParseInt64(ci.User); err != nil {
+	for _, ci := range presence.Presence {
+		if parseInt64, err := utils.ParseInt64(ci.UserID); err != nil {
 			GetLogEntry(c.Request()).Errorf("error during parse participantId : %s", err)
 		} else {
 			activeChatUsers = append(activeChatUsers, parseInt64)
@@ -182,7 +183,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 	for _, participantId := range userIds {
 		if utils.Contains(activeChatUsers, participantId) {
 
-			participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
+			participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 			GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
 
 			var copied *dto.DisplayMessageDto = &dto.DisplayMessageDto{}
@@ -259,7 +260,7 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 func (not *notifictionsImpl) NotifyAboutVideoCallChanged(cn dto.ChatNotifyDto, participantIds []int64) {
 	// TODO potential bad performance on frontend, consider batching
 	for _, participantId := range participantIds {
-		participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
+		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 		Logger.Infof("Sending notification about change video chat the chat to participantChannel: %v", participantChannel)
 
 		notification := dto.CentrifugeNotification{
@@ -297,7 +298,7 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 		if marshalledBytes, err := json.Marshal(notification); err != nil {
 			Logger.Errorf("error during marshalling user_profile_changed notification: %s", err)
 		} else {
-			participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(participantId))
+			participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 			Logger.Infof("Sending notification about user_profile_changed to participantChannel: %v", participantChannel)
 			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
 			if err != nil {
@@ -316,7 +317,8 @@ func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId in
 		EventType: "video_call_invitation",
 	}
 
-	participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(userId))
+	participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(userId)
+
 
 	if marshalledBytes, err := json.Marshal(notification); err != nil {
 		GetLogEntry(c.Request()).Errorf("error during marshalling VideoCallInvitation: %s", err)
@@ -337,7 +339,7 @@ func (not *notifictionsImpl) NotifyAboutKick(c echo.Context, chatId int64, userI
 		EventType: "video_kick",
 	}
 
-	participantChannel := not.centrifuge.PersonalChannel(utils.Int64ToString(userId))
+	participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(userId)
 
 	if marshalledBytes, err := json.Marshal(notification); err != nil {
 		GetLogEntry(c.Request()).Errorf("error during marshalling VideoKick: %s", err)

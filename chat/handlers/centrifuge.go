@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/araddon/dateparse"
 	"github.com/centrifugal/centrifuge"
-	"github.com/centrifugal/protocol"
 	"github.com/m7shapan/njson"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
@@ -24,7 +22,7 @@ func handleLog(e centrifuge.LogEntry) {
 	Logger.Printf("%s: %v", e.Message, e.Fields)
 }
 
-func getChanPresenceStats(engine centrifuge.Engine, client *centrifuge.Client, e interface{}) *centrifuge.PresenceStats {
+func getChanPresenceStats(presenceManager centrifuge.PresenceManager, client *centrifuge.Client, e interface{}) *centrifuge.PresenceStats {
 	var channel string
 	switch v := e.(type) {
 	case centrifuge.SubscribeEvent:
@@ -37,30 +35,12 @@ func getChanPresenceStats(engine centrifuge.Engine, client *centrifuge.Client, e
 		Logger.Errorf("Unknown type of event")
 		return nil
 	}
-	stats, err := engine.PresenceStats(channel)
+	stats, err := presenceManager.PresenceStats(channel)
 	if err != nil {
 		Logger.Errorf("Error during get stats %v", err)
 	}
 	Logger.Printf("client id=%v, userId=%v acting with channel %s, channelStats.NumUsers %v", client.ID(), client.UserID(), channel, stats.NumUsers)
 	return &stats
-}
-
-func createPresence(credso *centrifuge.Credentials, client *centrifuge.Client) (*protocol.ClientInfo, time.Duration, error) {
-	expiresInString := utils.SecondsToStringMilliseconds(credso.ExpireAt) // to milliseconds for put into dateparse.ParseLocal
-	t, err0 := dateparse.ParseLocal(expiresInString)
-	if err0 != nil {
-		return nil, 0, err0
-	}
-
-	presenceDuration := t.Sub(time.Now())
-	Logger.Debugf("Calculated session duration %v for credentials %v", presenceDuration, credso)
-
-	clientInfo := &protocol.ClientInfo{
-		User:   client.UserID(),
-		Client: client.ID(),
-	}
-	Logger.Infof("Created ClientInfo(Client: %v, UserId: %v)", client.ID(), client.UserID())
-	return clientInfo, presenceDuration, nil
 }
 
 type PassData struct {
@@ -92,29 +72,17 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 	// We use default config here as starting point. Default config contains
 	// reasonable values for available options.
 	cfg := centrifuge.DefaultConfig
-	// In this example we want client to do all possible actions with server
-	// without any authentication and authorization. Insecure flag DISABLES
-	// many security related checks in library. This is only to make example
-	// short. In real app you most probably want authenticate and authorize
-	// access to server. See godoc and examples in repo for more details.
-	cfg.ClientInsecure = false
-	// By default clients can not publish messages into channels. Setting this
-	// option to true we allow them to publish.
-	cfg.Publish = true
 
 	// Centrifuge library exposes logs with different log level. In your app
 	// you can set special function to handle these log entries in a way you want.
 	cfg.LogLevel = centrifuge.LogLevelDebug
 	cfg.LogHandler = handleLog
 
-	cfg.UserSubscribeToPersonal = true
-
 	// Node is the core object in Centrifuge library responsible for many useful
 	// things. Here we initialize new Node instance and pass config to it.
 	node, _ := centrifuge.New(cfg)
 
-	redisHost := viper.GetString("centrifuge.redis.host")
-	redisPort := viper.GetInt("centrifuge.redis.port")
+	redisAddress := viper.GetString("centrifuge.redis.address")
 	redisPassword := viper.GetString("centrifuge.redis.password")
 	redisDB := viper.GetInt("centrifuge.redis.db")
 	readTimeout := viper.GetDuration("centrifuge.redis.readTimeout")
@@ -122,36 +90,51 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 	connectTimeout := viper.GetDuration("centrifuge.redis.connectTimeout")
 	idleTimeout := viper.GetDuration("centrifuge.redis.idleTimeout")
 
-	redisConf := centrifuge.RedisShardConfig{
-		Host:           redisHost,
-		Port:           redisPort,
-		DB:             redisDB,
-		Password:       redisPassword,
-		Prefix:         "centrifuge",
-		ReadTimeout:    readTimeout,
-		WriteTimeout:   writeTimeout,
-		ConnectTimeout: connectTimeout,
-		IdleTimeout:    idleTimeout,
-	}
-	rec := centrifuge.RedisEngineConfig{
-		UseStreams:          false,
-		PublishOnHistoryAdd: true,
-		HistoryMetaTTL:      300 * time.Second,
-		Shards:              []centrifuge.RedisShardConfig{redisConf},
-	}
-	engine, _ := centrifuge.NewRedisEngine(node, rec)
-	node.SetEngine(engine)
 
-	// ClientConnected node event handler is a point where you generally create a
-	// binding between Centrifuge and your app business logic. Callback function you
-	// pass here will be called every time new connection established with server.
-	// Inside this callback function you can set various event handlers for connection.
-	node.On().ClientConnected(func(ctx context.Context, client *centrifuge.Client) {
+	redisShardConfigs := []centrifuge.RedisShardConfig{
+		{Address: redisAddress, DB: redisDB, Password: redisPassword, IdleTimeout: idleTimeout, ReadTimeout: readTimeout, ConnectTimeout: connectTimeout, WriteTimeout: writeTimeout},
+	}
+	var redisShards []*centrifuge.RedisShard
+	for _, redisConf := range redisShardConfigs {
+		redisShard, err := centrifuge.NewRedisShard(node, redisConf)
+		if err != nil {
+			Logger.Fatal(err)
+		}
+		redisShards = append(redisShards, redisShard)
+	}
+
+	broker, err := centrifuge.NewRedisBroker(node, centrifuge.RedisBrokerConfig{
+		// Use reasonably large expiration interval for stream meta key,
+		// much bigger than maximum HistoryLifetime value in Node config.
+		// This way stream meta data will expire, in some cases you may want
+		// to prevent its expiration setting this to zero value.
+		HistoryMetaTTL: 24 * time.Hour,
+
+		// And configure a couple of shards to use.
+		Shards: redisShards,
+		Prefix: "centrifuge",
+	})
+	if err != nil {
+		Logger.Fatal(err)
+	}
+	node.SetBroker(broker)
+
+
+	presenceManager, err := centrifuge.NewRedisPresenceManager(node, centrifuge.RedisPresenceManagerConfig{
+		Shards: redisShards,
+	})
+	if err != nil {
+		Logger.Fatal(err)
+	}
+	node.SetPresenceManager(presenceManager)
+
+	node.OnConnect(func(client *centrifuge.Client) {
 		// Set Subscribe Handler to react on every channel subscription attempt
 		// initiated by client. Here you can theoretically return an error or
 		// disconnect client from server if needed. But now we just accept
 		// all subscriptions.
-		var creds, ok = centrifuge.GetCredentials(ctx)
+
+		var creds, ok = centrifuge.GetCredentials(client.Context())
 		if !ok {
 			Logger.Infof("Cannot extract credentials")
 			return
@@ -171,114 +154,133 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 
 		onlineStorage.PutUserOnline(userId)
 
-		client.On().Subscribe(func(e centrifuge.SubscribeEvent) centrifuge.SubscribeReply {
-			clientInfo, presenceDuration, err := createPresence(creds, client)
-			if err != nil {
-				Logger.Errorf("Error during creating presence %v", err)
-				return centrifuge.SubscribeReply{Error: centrifuge.ErrorInternal}
-			}
+		client.OnSubscribe(func(e centrifuge.SubscribeEvent, cb centrifuge.SubscribeCallback) {
 			chatId, channelName, err := getChatId(e.Channel)
 			if err != nil {
 				Logger.Errorf("Error getting channel id %v", err)
-				return centrifuge.SubscribeReply{Error: centrifuge.ErrorInternal}
+				cb(centrifuge.SubscribeReply{}, centrifuge.ErrorInternal)
+				return
 			}
 			Logger.Infof("Get channel id %v, channel name %v", chatId, channelName)
 
 			err = checkPermissions(dbs, creds.UserID, chatId, channelName)
 			if err != nil {
 				Logger.Errorf("Error during checking permissions userId %v, channelId %v, channelName %v,", creds.UserID, chatId, channelName)
-				return centrifuge.SubscribeReply{Error: centrifuge.ErrorPermissionDenied}
+				cb(centrifuge.SubscribeReply{}, centrifuge.ErrorPermissionDenied)
+				return
 			}
 
-			// TODO think about potentially infinite session in aaa
-			err = engine.AddPresence(e.Channel, client.UserID(), clientInfo, presenceDuration)
-			if err != nil {
-				Logger.Errorf("Error during AddPresence %v", err)
-			}
-			Logger.Infof("Added presence for userId %v", client.UserID())
-			getChanPresenceStats(engine, client, e)
-
-			return centrifuge.SubscribeReply{}
+			Logger.Printf("user %s subscribes on %s", client.UserID(), e.Channel)
+			cb(centrifuge.SubscribeReply{
+				Options: centrifuge.SubscribeOptions{
+					Presence:  true,
+					JoinLeave: true,
+					Recover:   true,
+				},
+			}, nil)
 		})
 
-		client.On().Unsubscribe(func(e centrifuge.UnsubscribeEvent) centrifuge.UnsubscribeReply {
-			err := engine.RemovePresence(e.Channel, client.UserID())
-			if err != nil {
-				Logger.Errorf("Error during RemovePresence %v", err)
-			}
-			Logger.Infof("Removed presence for userId %v", client.UserID())
-			getChanPresenceStats(engine, client, e)
-
-			return centrifuge.UnsubscribeReply{}
+		client.OnUnsubscribe(func(e centrifuge.UnsubscribeEvent) {
+			Logger.Infof("user %s unsubscribed from %s", client.UserID(), e.Channel)
+			getChanPresenceStats(presenceManager, client, e)
+			return
 		})
 
 		// Set Publish Handler to react on every channel Publication sent by client.
 		// Inside this method you can validate client permissions to publish into
 		// channel. But in our simple chat app we allow everyone to publish into
 		// any channel.
-		client.On().Publish(func(e centrifuge.PublishEvent) centrifuge.PublishReply {
+		client.OnPublish(func(e centrifuge.PublishEvent, cb centrifuge.PublishCallback)  {
 			Logger.Printf("User %v publishes into channel %s: %s", creds.UserID, e.Channel, string(e.Data))
-			message, err := modifyMessage(e.Data, e.Info.GetUser(), e.Info.GetClient())
+			message, err := modifyMessage(e.Data, e.ClientInfo.UserID, e.ClientInfo.ClientID)
 			if err != nil {
 				Logger.Errorf("Error during modifyMessage %v", err)
-				return centrifuge.PublishReply{Error: centrifuge.ErrorInternal}
+				cb(centrifuge.PublishReply{}, centrifuge.ErrorInternal)
+				return
 			}
-			return centrifuge.PublishReply{Data: message}
+			result, err := node.Publish(
+				e.Channel, message,
+				centrifuge.WithHistory(300, time.Minute),
+				centrifuge.WithClientInfo(e.ClientInfo),
+			)
+			if err != nil {
+				Logger.Errorf("Error during publishing modified message %v", err)
+			}
+
+			cb(centrifuge.PublishReply{Result: &result}, err)
+		})
+
+		client.OnPresence(func(e centrifuge.PresenceEvent, cb centrifuge.PresenceCallback) {
+			cb(centrifuge.PresenceReply{}, nil)
 		})
 
 		// Set Disconnect Handler to react on client disconnect events.
-		client.On().Disconnect(func(e centrifuge.DisconnectEvent) centrifuge.DisconnectReply {
+		client.OnDisconnect(func(e centrifuge.DisconnectEvent) {
 			Logger.Printf("Centrifuge user %v disconnected", creds.UserID)
 			onlineStorage.RemoveUserOnline(userId)
-			return centrifuge.DisconnectReply{}
 		})
 
-		client.On().Refresh(func(event centrifuge.RefreshEvent) centrifuge.RefreshReply {
+		client.OnRefresh(func(event centrifuge.RefreshEvent, cb centrifuge.RefreshCallback) {
 			onlineStorage.PutUserOnline(userId)
 			Logger.Infof("Refreshing centrifuge session for user %v", userId)
-			return centrifuge.RefreshReply{}
+			cb(centrifuge.RefreshReply{
+				ExpireAt: time.Now().Unix() + 10*60,
+			}, nil)
 		})
 
-		client.On().SubRefresh(func(event centrifuge.SubRefreshEvent) centrifuge.SubRefreshReply {
+		client.OnSubRefresh(func(event centrifuge.SubRefreshEvent, cb centrifuge.SubRefreshCallback) {
 			onlineStorage.PutUserOnline(userId)
-			Logger.Infof("SubRefreshing centrifuge session for user %v", userId)
-			return centrifuge.SubRefreshReply{}
+			Logger.Infof("SubRefreshing centrifuge subscription for user %v", userId)
+			cb(centrifuge.SubRefreshReply{
+				ExpireAt: time.Now().Unix() + 10*60,
+			}, nil)
 		})
 
-		client.On().Message(func(event centrifuge.MessageEvent) centrifuge.MessageReply {
+		client.OnMessage(func(event centrifuge.MessageEvent) {
 			var v = &TypedMessage{}
 
 			if err := json.Unmarshal(event.Data, v); err != nil {
 				Logger.Errorf("client %v sent non-parseable message - cannot extract type", creds.UserID)
-				return centrifuge.MessageReply{}
+				return
 			}
 
 			if v.Type == "message_read" {
 				mr := MessageRead{}
 				if njson.Unmarshal(event.Data, &mr) != nil {
 					Logger.Errorf("client %v sent non-parseable message - cannot unmarshall payload", creds.UserID)
-					return centrifuge.MessageReply{}
+					return
 				} else {
 					// TODO to separated centrifuge messages handler
 					Logger.Infof("Putting message read messageId=%v, chatId=%v, userId=%v", mr.MessageId, mr.ChatId, userId)
 					err = markMessageAsRead(dbs, userId, mr.ChatId, mr.MessageId)
 					if err != nil {
 						Logger.Errorf("Error during putting message read messageId=%v, chatId=%v, userId=%v: err=%v", mr.MessageId, mr.ChatId, userId, err)
-						return centrifuge.MessageReply{}
+						return
 					}
 				}
 			} else {
 				Logger.Errorf("client %v sent message with unknown type %v", creds.UserID, v.Type)
 			}
 
-			return centrifuge.MessageReply{}
+			return
 		})
 
 		// In our example transport will always be Websocket but it can also be SockJS.
 		transportName := client.Transport().Name()
 		// In our example clients connect with JSON protocol but it can also be Protobuf.
-		transportEncoding := client.Transport().Encoding()
-		Logger.Printf("Centrifuge user %v connected via %s (%s)", creds.UserID, transportName, transportEncoding)
+		transportProtocol := client.Transport().Protocol()
+		Logger.Printf("Centrifuge user %v connected via %s (%s)", creds.UserID, transportName, transportProtocol)
+	})
+	
+	node.OnConnecting(func(ctx context.Context, event centrifuge.ConnectEvent) (centrifuge.ConnectReply, error) {
+		cred, _ := centrifuge.GetCredentials(ctx)
+		return centrifuge.ConnectReply{
+			Data: []byte(`{}`),
+			// Subscribe to personal several server-side channel.
+			Subscriptions: map[string]centrifuge.SubscribeOptions{
+				utils.PersonalChannelPrefix + cred.UserID: {Recover: true, Presence: true, JoinLeave: true},
+			},
+		}, nil
 	})
 
 	lc.Append(fx.Hook{

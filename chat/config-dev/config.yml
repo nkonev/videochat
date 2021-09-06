@@ -23,8 +23,7 @@ postgresql:
 
 centrifuge:
   redis:
-    host: localhost
-    port: 36379
+    address: "localhost:36379"
     password: ""
     db: 1
     connectTimeout: 5s

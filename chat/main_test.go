@@ -391,8 +391,8 @@ func newRealConnJSON(b testing.TB, channel string, url string, requestHeader htt
 	connectRequest := &protocol.ConnectRequest{}
 	params, _ := json.Marshal(connectRequest)
 	cmd := &protocol.Command{
-		ID:     1,
-		Method: protocol.MethodTypeConnect,
+		Id:     1,
+		Method: protocol.Command_CONNECT,
 		Params: params,
 	}
 	cmdBytes, _ := json.Marshal(cmd)
@@ -401,17 +401,17 @@ func newRealConnJSON(b testing.TB, channel string, url string, requestHeader htt
 	_, _, err = conn.ReadMessage()
 	assert.NoError(b, err)
 
-	subscribeRequest := &protocol.SubscribeRequest{
-		Channel: channel,
-	}
-	params, _ = json.Marshal(subscribeRequest)
-	cmd = &protocol.Command{
-		ID:     2,
-		Method: protocol.MethodTypeSubscribe,
-		Params: params,
-	}
-	cmdBytes, _ = json.Marshal(cmd)
-	_ = conn.WriteMessage(websocket.TextMessage, cmdBytes)
+	//subscribeRequest := &protocol.SubscribeRequest{
+	//	Channel: channel,
+	//}
+	//params, _ = json.Marshal(subscribeRequest)
+	//cmd = &protocol.Command{
+	//	Id:     2,
+	//	Method: protocol.Command_SUBSCRIBE,
+	//	Params: params,
+	//}
+	//cmdBytes, _ = json.Marshal(cmd)
+	//_ = conn.WriteMessage(websocket.TextMessage, cmdBytes)
 	_, _, err = conn.ReadMessage()
 	assert.NoError(b, err)
 	return conn
