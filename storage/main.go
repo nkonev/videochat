@@ -111,6 +111,7 @@ func configureEcho(
 	e.GET(fmt.Sprintf("%v/:filename", handlers.UrlStorageGetAvatar), ch.Download)
 	e.POST("/storage/:chatId/file", fh.UploadHandler)
 	e.POST("/storage/:chatId/file/:fileItemUuid", fh.UploadHandler)
+	e.PUT("/storage/:chatId/replace/file", fh.ReplaceHandler)
 	e.GET("/storage/:chatId", fh.ListHandler)
 	e.DELETE("/storage/:chatId/file", fh.DeleteHandler)
 	e.GET("/storage/download", fh.DownloadHandler)

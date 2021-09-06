@@ -37,3 +37,5 @@ export const OPEN_VIEW_FILES_DIALOG = "openViewFiles";
 export const UPDATE_VIEW_FILES_DIALOG = "updateFilesList";
 export const SET_FILE_ITEM_UUID = "setFileItemUuid";
 export const OPEN_VIDEO_SETTINGS = "openVideoSettings";
+export const OPEN_TEXT_EDIT_MODAL = "openTextEditModal";
+export const CLOSE_TEXT_EDIT_MODAL = "closeTextEditModal";

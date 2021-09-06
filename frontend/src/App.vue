@@ -133,6 +133,7 @@
                 <FileUploadModal/>
                 <FileListModal/>
                 <VideoSettings/>
+                <TextEditModal/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -183,6 +184,7 @@
     import FileUploadModal from './FileUploadModal';
     import FileListModal from "./FileListModal";
     import VideoSettings from './VideoSettings';
+    import TextEditModal from "./TextEditModal";
 
     const audio = new Audio("/call.mp3");
 
@@ -228,6 +230,7 @@
             FileUploadModal,
             FileListModal,
             VideoSettings,
+            TextEditModal,
         },
         methods:{
             toggleLeftNavigation() {

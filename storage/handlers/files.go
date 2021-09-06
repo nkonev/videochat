@@ -70,12 +70,17 @@ func NewFilesHandler(
 }
 
 func serializeMetadata(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult, chatId int64) map[string]string {
+	return serializeMetadataByArgs(file.Filename, userPrincipalDto, chatId)
+}
+
+func serializeMetadataByArgs(filename string, userPrincipalDto *auth.AuthResult, chatId int64) map[string]string {
 	var userMetadata = map[string]string{}
-	userMetadata[filenameKey] = file.Filename
+	userMetadata[filenameKey] = filename
 	userMetadata[ownerIdKey] = utils.Int64ToString(userPrincipalDto.UserId)
 	userMetadata[chatIdKey] = utils.Int64ToString(chatId)
 	return userMetadata
 }
+
 
 func deserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, error) {
 	const xAmzMetaPrefix = "X-Amz-Meta-"
@@ -208,6 +213,84 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid, "count": count})
 }
 
+type ReplaceTextFileDto struct {
+	Id     string     `json:"id"` // file id
+	Text   string     `json:"text"`
+	ContentType   string     `json:"contentType"`
+	Filename   string     `json:"filename"`
+
+}
+
+func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := utils.ParseInt64(c.Param("chatId"))
+	if err != nil {
+		return err
+	}
+	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	var bindTo = new(ReplaceTextFileDto)
+	if err := c.Bind(bindTo); err != nil {
+		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+
+	bucketName, err := EnsureAndGetFilesBucket(h.minio)
+	if err != nil {
+		return err
+	}
+
+	fileItemUuid := getFileItemUuid(bindTo.Id)
+
+	// check this fileItem belongs to user
+	filenameChatPrefix := fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
+	belongs, err := h.checkFileItemBelongsToUser(filenameChatPrefix, c, chatId, bucketName, userPrincipalDto)
+	if err != nil {
+		return err
+	}
+	if !belongs {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	fileSize := int64(len(bindTo.Text))
+	userLimitOk, _, _, err := h.checkUserLimit(bucketName, userPrincipalDto, fileSize)
+	if err != nil {
+		return err
+	}
+	if !userLimitOk {
+		return c.JSON(http.StatusRequestEntityTooLarge, &utils.H{"status": "fail"})
+	}
+
+	contentType := bindTo.ContentType
+	dotExt := getDotExtensionStr(bindTo.Filename)
+
+	Logger.Debugf("Determined content type: %v", contentType)
+
+	src := strings.NewReader(bindTo.Text)
+
+	fileUuid := getFileId(bindTo.Id)
+	filename := fmt.Sprintf("chat/%v/%v/%v%v", chatId, fileItemUuid, fileUuid, dotExt)
+
+	var userMetadata = serializeMetadataByArgs(bindTo.Filename, userPrincipalDto, chatId)
+
+	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
+		Logger.Errorf("Error during upload object: %v", err)
+		return err
+	}
+
+
+	return c.NoContent(http.StatusOK)
+}
+
 func (h *FilesHandler) getCountFilesInFileItem(bucketName string, filenameChatPrefix string) int {
 	var count = 0
 	var objectsNew <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
@@ -227,14 +310,26 @@ func getFileItemUuid(fileId string) string {
 	return split[2]
 }
 
+func getFileId(fileId string) string {
+	split := strings.Split(fileId, "/")
+	filenameWithExt := split[3]
+	splitFn := strings.Split(filenameWithExt, ".")
+	return splitFn[0]
+}
+
 func getDotExtension(file *multipart.FileHeader) string {
-	split := strings.Split(file.Filename, ".")
+	return getDotExtensionStr(file.Filename)
+}
+
+func getDotExtensionStr(fileName string) string {
+	split := strings.Split(fileName, ".")
 	if len(split) > 1 {
 		return "."+split[len(split)-1]
 	} else {
 		return ""
 	}
 }
+
 
 func (h *FilesHandler) checkUserLimit(bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64) (bool, int64, int64, error) {
 	consumption := h.calcUserFilesConsumption(bucketName, userPrincipalDto.UserId)

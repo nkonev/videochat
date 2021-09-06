@@ -10,7 +10,8 @@
                             <template v-for="(item, index) in dto.files">
                                 <v-list-item>
                                     <v-list-item-avatar class="ma-0 pa-0">
-                                        <v-icon>mdi-file</v-icon>
+                                        <v-btn icon v-if="canEdit(item)" @click="fireEdit(item)"><v-icon>mdi-pencil</v-icon></v-btn>
+                                        <v-icon v-else>mdi-file</v-icon>
                                     </v-list-item-avatar>
                                     <v-list-item-content class="ml-4">
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
@@ -48,9 +49,9 @@
 <script>
 
 import bus, {
-  CLOSE_SIMPLE_MODAL, OPEN_FILE_UPLOAD_MODAL,
-  OPEN_SIMPLE_MODAL,
-  OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, UPDATE_VIEW_FILES_DIALOG
+    CLOSE_SIMPLE_MODAL, OPEN_FILE_UPLOAD_MODAL,
+    OPEN_SIMPLE_MODAL, OPEN_TEXT_EDIT_MODAL,
+    OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, UPDATE_VIEW_FILES_DIALOG
 } from "./bus";
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
@@ -134,6 +135,12 @@ export default {
                   this.$forceUpdate();
                 })
         },
+        canEdit(dto) {
+            return dto.filename.endsWith('.txt');
+        },
+        fireEdit(dto) {
+            bus.$emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});
+        }
     },
 
     created() {
