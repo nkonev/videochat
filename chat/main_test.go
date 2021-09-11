@@ -110,16 +110,7 @@ func (receiver ProtobufAaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Req
 	resp.Write(out)
 }
 
-func startAaaEmu() *http.Server {
-	s := &http.Server{
-		Addr:    ":" + aaaEmuPort,
-		Handler: ProtobufAaaEmu{},
-	}
-
-	go func() {
-		Logger.Info(s.ListenAndServe())
-	}()
-
+func waitForAaaEmu() {
 	restClient := client.NewRestClient()
 	i := 0
 	for ; i <= 30; i++ {
@@ -137,6 +128,59 @@ func startAaaEmu() *http.Server {
 	}
 	Logger.Infof("Aaa emu have started")
 	restClient.CloseIdleConnections()
+}
+
+// it's requires to call this method every time when we create real app with startAppFull()
+func waitForChatServer() {
+	restClient := client.NewRestClient()
+	i := 0
+	for ; i <= 30; i++ {
+		expirationTime := utils.SecondsToStringMilliseconds(time.Now().Add(4 * time.Hour).Unix())
+		contentType := "application/json;charset=UTF-8"
+		requestHeaders1 := map[string][]string{
+			"Accept":           {contentType},
+			"Content-Type":     {contentType},
+			"X-Auth-Expiresin": {expirationTime},
+			"X-Auth-Username":  {"dGVzdGVy"},
+			"X-Auth-Userid":    {"1"},
+		}
+		getChatRequest := &http.Request{
+			Method: "GET",
+			Header: requestHeaders1,
+			URL:    stringToUrl("http://localhost:1235/chat"),
+		}
+		getChatResponse, err := restClient.Do(getChatRequest)
+		if err != nil {
+			Logger.Infof("Awaiting while chat have been started - transport error")
+			time.Sleep(time.Second * 1)
+			continue
+		} else if !(getChatResponse.StatusCode >= 200 && getChatResponse.StatusCode < 300) {
+			Logger.Infof("Awaiting while chat have been started - non-2xx code")
+			time.Sleep(time.Second * 1)
+			continue
+		} else {
+			break
+		}
+	}
+	if i == 30 {
+		Logger.Panicf("Cannot await for chat will be started")
+	}
+	Logger.Infof("chat have started")
+	restClient.CloseIdleConnections()
+}
+
+
+func startAaaEmu() *http.Server {
+	s := &http.Server{
+		Addr:    ":" + aaaEmuPort,
+		Handler: ProtobufAaaEmu{},
+	}
+
+	go func() {
+		Logger.Info(s.ListenAndServe())
+	}()
+
+	waitForAaaEmu()
 
 	return s
 }
@@ -227,6 +271,7 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 			initJaeger,
 		),
 	)
+	waitForChatServer()
 	return app, s
 }
 
