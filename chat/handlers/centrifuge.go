@@ -139,7 +139,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 			Logger.Infof("Cannot extract credentials")
 			return
 		}
-		Logger.Infof("Connected websocket centrifuge client hasCredentials %v, credentials %v", ok, creds)
+		Logger.Infof("Connected websocket centrifuge client hasCredentials %v, credentials.userId=%v, credentials.expireAt=%v", ok, creds.UserID, creds.ExpireAt)
 		userId, err := utils.ParseInt64(creds.UserID)
 		if err != nil {
 			Logger.Errorf("Unable to parse userId from %v", creds.UserID)
