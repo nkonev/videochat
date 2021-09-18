@@ -8,7 +8,11 @@ export const setupCentrifuge = (centrifugeSessionFunction, onDisconnected) => {
     var centrifuge = new Centrifuge(url, {
         onRefresh: (ctx)=>{
             console.debug("Dummy refresh");
-        }
+        },
+        // debug: true,
+        minRetry: 1000,
+        maxRetry: 1000,
+        pingInterval: 5000
     });
     centrifuge.on('connect', (ctx)=>{
         console.log("Connected response", ctx);
