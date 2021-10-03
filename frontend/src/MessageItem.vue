@@ -9,17 +9,17 @@
             </v-list-item-avatar>
         </router-link>
 
-        <v-list-item-content @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
+        <div @click="onMessageClick(item)" class="mt-4 message-item-with-buttons-wrapper" @mousemove="onMessageMouseMove(item)">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
                 <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item)}}</router-link><span class="with-space"> at </span>{{getDate(item)}}
                 <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item.fileItemUuid)" small>mdi-file-download</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
             </v-container>
-            <v-list-item-content class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ highlight: highlight }" >
+            <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ highlight: highlight }" >
                 <v-container v-html="item.text" class="ma-0 pre-formatted message-item-text"></v-container>
-            </v-list-item-content>
-        </v-list-item-content>
+            </div>
+        </div>
     </v-list-item>
 </template>
 
@@ -85,6 +85,9 @@
     font-weight: 500;
     line-height: 1rem;
   }
+  .message-item-with-buttons-wrapper {
+      flex 1 1
+  }
   .message-item-wrapper {
       border-radius 10px
       background #efefef
@@ -93,6 +96,9 @@
       display inline-block
       word-wrap break-word
       overflow-wrap break-word
+      line-height: 1.1;
+      flex: 1 0 100%;
+      padding: 12px;
       p {
           margin-bottom unset
       }
