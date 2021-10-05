@@ -19,7 +19,7 @@
                     <button class="ql-clean"></button>
                 </div>
                 <div class="custom-toolbar-send">
-                    <v-btn v-if="!this.editMessageDto.fileItemUuid || $vuetify.breakpoint.smAndUp" icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : ''" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
+                    <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : ''" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
                     <template v-if="this.editMessageDto.fileItemUuid">
                         <v-badge
                             :value="fileCount"
