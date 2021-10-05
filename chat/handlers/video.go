@@ -117,16 +117,6 @@ func (vh VideoHandler) Kick(c echo.Context) error {
 		return err
 	}
 
-	isParticipant, err := vh.db.IsParticipant(userId, chatId)
-	if err != nil {
-		return err
-	}
-	if !isParticipant {
-		msg := "user " + c.QueryParam("userId") + " is not belongs to chat " + c.QueryParam("chatId")
-		logger.Logger.Warnf(msg)
-		return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
-	}
-
 	admin, err := vh.db.IsAdmin(userPrincipalDto.UserId, chatId)
 	if err != nil {
 		return err
@@ -172,4 +162,34 @@ func (vh VideoHandler) kickVideoStream(chatId, userId int64) {
 	if err = vh.producer.Publish(marshal); err != nil {
 		logger.Logger.Warnf("Non-successful invoking video kick %v", err)
 	}
+}
+
+func (vh VideoHandler) ForceMute(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		logger.Logger.Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	userId, err := utils.ParseInt64(c.QueryParam("userId"))
+	if err != nil {
+		return err
+	}
+
+	admin, err := vh.db.IsAdmin(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
+	}
+	if !admin {
+		return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You have no access to this chat"})
+	}
+
+	vh.notificator.NotifyAboutForceMute(c, chatId, userId)
+
+	return c.NoContent(http.StatusOK)
 }

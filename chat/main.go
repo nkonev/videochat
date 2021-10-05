@@ -171,6 +171,7 @@ func configureEcho(
 
 	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
 	e.PUT("/chat/:id/video/kick", vh.Kick)
+	e.PUT("/chat/:id/video/mute", vh.ForceMute)
 
 	e.GET("/chat/online", sh.GetOnlineUsers)
 

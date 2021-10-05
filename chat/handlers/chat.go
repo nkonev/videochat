@@ -210,6 +210,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		UnreadMessages:      unreadMessages,
 		IsTetATet:           c.TetATet,
 		CanVideoKick:        c.IsAdmin,
+		CanAudioMute:        c.IsAdmin,
 		CanChangeChatAdmins: c.IsAdmin && !c.TetATet,
 	}
 }

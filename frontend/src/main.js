@@ -17,7 +17,7 @@ import bus, {
   LOGGED_IN,
   VIDEO_CALL_INVITED,
   VIDEO_CALL_KICKED,
-  VIDEO_CALL_CHANGED,
+  VIDEO_CALL_CHANGED, FORCE_MUTE,
 } from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
@@ -116,6 +116,9 @@ vm = new Vue({
       } else if (getData(ctx).type === "video_call_changed") {
         const d = getProperData(ctx);
         bus.$emit(VIDEO_CALL_CHANGED, d);
+      } else if (getData(ctx).type === 'force_mute') {
+        const d = getProperData(ctx);
+        bus.$emit(FORCE_MUTE, d);
       }
 
     });

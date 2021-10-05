@@ -33,10 +33,10 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import bus, {
-        AUDIO_START_MUTING, REQUEST_CHANGE_VIDEO_PARAMETERS,
-        SHARE_SCREEN_START,
-        SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
-        VIDEO_START_MUTING
+      AUDIO_START_MUTING, FORCE_MUTE, REQUEST_CHANGE_VIDEO_PARAMETERS,
+      SHARE_SCREEN_START,
+      SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
+      VIDEO_START_MUTING
     } from "./bus";
     import axios from "axios";
     import { Client, LocalStream } from 'ion-sdk-js';
@@ -461,6 +461,11 @@
                     })
                 }
             },
+            onForceMuteByAdmin(dto) {
+                if(dto.chatId == this.chatId) {
+                    this.onStartAudioMuting(true);
+                }
+            },
             onVideoCallChanged(dto) {
                 if (dto) {
                     const data = dto.data;
@@ -523,6 +528,7 @@
             bus.$on(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
+            bus.$on(FORCE_MUTE, this.onForceMuteByAdmin);
         },
         destroyed() {
             bus.$off(SHARE_SCREEN_START, this.onStartScreenSharing);
@@ -531,6 +537,7 @@
             bus.$off(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
+            bus.$off(FORCE_MUTE, this.onForceMuteByAdmin);
         },
         components: {
             UserVideo

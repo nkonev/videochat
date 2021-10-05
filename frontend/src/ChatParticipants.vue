@@ -103,6 +103,13 @@
                                     </template>
                                     <span>Kick</span>
                                 </v-tooltip>
+                                <v-tooltip bottom v-if="dto.canAudioMute && item.id != currentUser.id">
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-btn v-bind="attrs" v-on="on" icon @click="forceMute(item.id)"><v-icon color="error">mdi-microphone-off</v-icon></v-btn>
+                                    </template>
+                                    <span>Force mute</span>
+                                </v-tooltip>
+
                                 <v-btn v-if="item.id != currentUser.id" icon @click="inviteToVideoCall(item.id)"><v-icon color="success">mdi-phone</v-icon></v-btn>
                             </v-list-item>
                             <v-divider></v-divider>
@@ -207,6 +214,9 @@
             },
             kickFromVideoCall(userId) {
                 axios.put(`/api/chat/${this.dto.id}/video/kick?userId=${userId}`)
+            },
+            forceMute(userId) {
+                axios.put(`/api/chat/${this.dto.id}/video/mute?userId=${userId}`)
             },
             onChatChange(dto) {
                 if (this.show && dto.id == this.chatId) {
