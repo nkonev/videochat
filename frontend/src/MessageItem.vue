@@ -101,14 +101,23 @@
   .message-item-wrapper {
       border-radius 10px
       background #efefef
-  }
-  .message-item-text {
       display inline-block
       word-wrap break-word
       overflow-wrap break-word
+  }
+  .message-item-text {
       line-height: 1.1;
-      flex: 1 0 100%;
-      padding: 12px;
+      -ms-word-break: break-all;
+      /* This is the dangerous one in WebKit, as it breaks things wherever */
+      word-break: break-all;
+      /* Instead use this non-standard one: */
+      word-break: break-word;
+
+      /* Adds a hyphen where the word breaks, if supported (No Blink) */
+      -ms-hyphens: auto;
+      -moz-hyphens: auto;
+      -webkit-hyphens: auto;
+      hyphens: auto;
       p {
           margin-bottom unset
       }
