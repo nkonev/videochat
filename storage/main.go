@@ -36,6 +36,7 @@ func main() {
 			handlers.ConfigureAuthMiddleware,
 			handlers.NewAvatarHandler,
 			handlers.NewFilesHandler,
+			handlers.NewEmbedHandler,
 		),
 		fx.Invoke(
 			initJaeger,
@@ -84,6 +85,7 @@ func configureEcho(
 	lc fx.Lifecycle,
 	ch *handlers.AvatarHandler,
 	fh *handlers.FilesHandler,
+	eh *handlers.EmbedHandler,
 ) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")
@@ -118,8 +120,9 @@ func configureEcho(
 	e.GET(handlers.UrlStorageGetFile, fh.PublicDownloadHandler)
 	e.PUT("/storage/publish/file", fh.SetPublic)
 	e.GET("/storage/:chatId/file/count/:fileItemUuid", fh.CountHandler)
-
 	e.GET("/storage/:chatId/file", fh.LimitsHandler)
+	e.POST("/storage/:chatId/embed", eh.UploadHandler)
+	e.GET("/storage/:chatId/embed/:file", eh.DownloadHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

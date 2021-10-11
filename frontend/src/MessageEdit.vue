@@ -6,6 +6,8 @@
                 @keyup.native.esc="resetInput"
                 ref="quillEditorInstance"
                 v-model="editMessageDto.text"
+                useCustomImageHandler
+                @imageAdded="handleImageAdded"
             />
             <div id="custom-toolbar">
                 <div class="custom-toolbar-format">
@@ -16,6 +18,7 @@
                     <select class="ql-color"></select>
                     <select class="ql-background"></select>
                     <button class="ql-link"></button>
+                    <button class="ql-image"></button>
                     <button class="ql-clean"></button>
                 </div>
                 <div class="custom-toolbar-send">
@@ -108,6 +111,9 @@
               this.editMessageDto.id = null;
               this.editMessageDto.fileItemUuid = null;
               this.fileCount = null;
+              this.$nextTick(() => {
+                  this.$refs.quillEditorInstance.$data.editor.innerHTML = "";
+              })
             },
             onSetMessage(dto) {
                 this.editMessageDto = dto;
@@ -179,6 +185,20 @@
                     this.editMessageDto.fileItemUuid = null;
                 }
             },
+            handleImageAdded(file, Editor, cursorLocation) {
+                const formData = new FormData();
+                formData.append('embed_file_header', file);
+
+                axios.post('/api/storage/'+this.chatId+'/embed', formData)
+                    .then((result) => {
+                        let url = result.data.relativeUrl; // Get url from response
+                        console.log("got url", url);
+                        Editor.insertEmbed(cursorLocation, 'image', url);
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    })
+            },
         },
         computed: {
             ...mapGetters({currentUser: GET_USER})
@@ -239,7 +259,11 @@ $mobileWidth = 800px
 }
 
 .ql-editor {
-  padding 10px 8px
+    padding 10px 8px
+    img {
+        max-width 40% !important
+        max-height 40% !important
+    }
 }
 
 .ql-toolbar.ql-snow {

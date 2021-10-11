@@ -20,6 +20,7 @@ minio:
   bucket:
     avatar: "avatar"
     files: "files"
+    embedded: "embedded"
 
 chat:
   url:

@@ -121,6 +121,11 @@
       p {
           margin-bottom unset
       }
+
+      img {
+          max-width 40%
+          max-height 40%
+      }
   }
   .with-space {
       white-space: pre;
