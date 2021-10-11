@@ -1,11 +1,11 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid style="height: 100%">
             <quill-editor
-                @input="updateModel"
-                :options="editorOption"
+                :editorOptions="editorOption"
                 @keyup.native.ctrl.enter="sendMessageToChat"
                 @keyup.native.esc="resetInput"
                 ref="quillEditorInstance"
+                v-model="editMessageDto.text"
             />
             <div id="custom-toolbar">
                 <div class="custom-toolbar-format">
@@ -107,12 +107,10 @@
               this.editMessageDto.text = "";
               this.editMessageDto.id = null;
               this.editMessageDto.fileItemUuid = null;
-              this.$refs.quillEditorInstance.clear();
               this.fileCount = null;
             },
             onSetMessage(dto) {
                 this.editMessageDto = dto;
-                this.$refs.quillEditorInstance.setHtml(this.editMessageDto.text);
                 if (this.editMessageDto.fileItemUuid) {
                     axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
                         .then((response) => {
@@ -235,7 +233,7 @@ $mobileWidth = 800px
     min-height 25%
 }
 
-.quill-editor {
+.quillWrapper {
     height 100%
     overflow-y auto
 }
