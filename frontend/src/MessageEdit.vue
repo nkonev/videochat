@@ -88,7 +88,30 @@
                         // https://quilljs.com/docs/modules/toolbar/
                         toolbar: '#custom-toolbar',
                     },
-                    placeholder: 'Press Ctrl + Enter to send, Esc to clear'
+                    placeholder: 'Press Ctrl + Enter to send, Esc to clear',
+                    formats: [
+                      'background',
+                      'bold',
+                      'color',
+                      //'font',
+                      //'code',
+                      'italic',
+                      'link',
+                      //'size',
+                      'strike',
+                      //'script',
+                      'underline',
+                      //'blockquote',
+                      //'header',
+                      //'indent',
+                      //'list',
+                      //'align',
+                      //'direction',
+                      //'code-block',
+                      //'formula'
+                      // 'image'
+                      // 'video'
+                    ]
                 },
                 showTooltip: true,
                 sendBroadcast: false,
