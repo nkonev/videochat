@@ -119,6 +119,10 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 		GetLogEntry(c.Request()).Errorf("Error during parsing chatId")
 		return err
 	}
+
+	originalString := c.QueryParam("original")
+	original, _ := utils.ParseBoolean(originalString)
+
 	fileId := fmt.Sprintf("chat/%v/%v", chatId, fileWithExt)
 
 	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId)
@@ -137,15 +141,18 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 		Logger.Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	//_, _, fileName, err := deserializeMetadata(objectInfo.UserMetadata, false)
-	//if err != nil {
-	//	Logger.Errorf("Error during deserializing object metadata %v", err)
-	//	return c.NoContent(http.StatusInternalServerError)
-	//}
+	_, _, fileName, err := deserializeMetadata(objectInfo.UserMetadata, false)
+	if err != nil {
+		Logger.Errorf("Error during deserializing object metadata %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
 	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
 	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
-	//c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+fileName+"\"")
+
+	if(original) {
+		c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+fileName+"\"")
+	}
 
 	object, e := h.minio.GetObject(context.Background(), bucketName, fileId, minio.GetObjectOptions{})
 	if e != nil {
