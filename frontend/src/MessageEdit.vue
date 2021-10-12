@@ -109,7 +109,7 @@
                       //'direction',
                       //'code-block',
                       //'formula'
-                      // 'image'
+                      'image'
                       // 'video'
                     ]
                 },
@@ -284,8 +284,8 @@ $mobileWidth = 800px
 .ql-editor {
     padding 10px 8px
     img {
-        max-width 40% !important
-        max-height 40% !important
+        max-width 100% !important
+        max-height 100% !important
     }
 }
 

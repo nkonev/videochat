@@ -123,8 +123,8 @@
       }
 
       img {
-          max-width 40%
-          max-height 40%
+          max-width 100%
+          max-height 100%
       }
   }
   .with-space {
