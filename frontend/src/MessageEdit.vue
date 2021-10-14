@@ -151,7 +151,7 @@
         },
         methods: {
             sendMessageToChat() {
-                if (this.editMessageDto.text && this.editMessageDto.text !== "") {
+                if (this.messageTextIsPresent()) {
                     (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto)).then(response => {
                         this.resetInput();
                     })
@@ -164,6 +164,9 @@
               this.$nextTick(() => {
                   this.$refs.quillEditorInstance.$data.editor.innerHTML = "";
               })
+            },
+            messageTextIsPresent() {
+                return this.editMessageDto.text && this.editMessageDto.text !== "" && this.editMessageDto.text !== '<p><br></p>'
             },
             onSetMessage(dto) {
                 this.editMessageDto = dto;
