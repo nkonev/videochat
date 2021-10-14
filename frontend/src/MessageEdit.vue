@@ -66,10 +66,11 @@
     import Editor from "./Editor";
     const DragAndDropModule = require('quill-drag-and-drop-module');
 
-    const dtoFactory = ()=>{
+    const dtoFactory = () => {
         return {
             id: null,
             text: "",
+            fileItemUuid: null,
         }
     };
 
@@ -158,9 +159,7 @@
             },
             resetInput() {
               console.log("Resetting text input");
-              this.editMessageDto.text = "";
-              this.editMessageDto.id = null;
-              this.editMessageDto.fileItemUuid = null;
+              this.editMessageDto = dtoFactory();
               this.fileCount = null;
               this.$nextTick(() => {
                   this.$refs.quillEditorInstance.$data.editor.innerHTML = "";
