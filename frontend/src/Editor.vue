@@ -1,6 +1,6 @@
 <template>
     <div class="quillWrapper">
-        <div ref="quillContainer" :id="id"></div>
+        <div ref="quillContainer" :id="id" ondragover="return false;" ondrop="return false;"></div>
         <input v-if="useCustomImageHandler" @change="emitImageInfo($event)" ref="fileInput" id="file-upload" type="file" style="display:none;">
     </div>
 </template>
