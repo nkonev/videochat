@@ -180,12 +180,14 @@
             notifyAboutBroadcast(clear) {
                 if (clear) {
                     axios.put(`/api/chat/`+this.chatId+'/broadcast', {text: null});
-                } else {
+                } else if (this.messageTextIsPresent()) {
                     axios.put(`/api/chat/`+this.chatId+'/broadcast', {text: this.editMessageDto.text});
                 }
             },
             notifyAboutTyping() {
-                axios.put(`/api/chat/` + this.chatId + '/typing');
+                if (this.messageTextIsPresent()) {
+                    axios.put(`/api/chat/` + this.chatId + '/typing');
+                }
             },
             sendNotification() {
                 if (this.sendBroadcast) {
