@@ -13,6 +13,11 @@ firewall-cmd --get-default-zone
 firewall-cmd --zone=public --add-port=8081/tcp
 ```
 
+# Open firewall on macOS
+```
+https://www.macworld.co.uk/how-to/how-open-specific-ports-in-os-x-1010-firewall-3616405/
+```
+
 # Add firewall exception on prod (not working, not need)
 [link](https://www.digitalocean.com/community/tutorials/how-to-configure-the-linux-firewall-for-docker-swarm-on-centos-7)
 ```
