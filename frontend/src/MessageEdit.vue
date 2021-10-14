@@ -64,6 +64,7 @@
     import 'quill/dist/quill.core.css'
     import 'quill/dist/quill.snow.css'
     import Editor from "./Editor";
+    const DragAndDropModule = require('quill-drag-and-drop-module');
 
     const dtoFactory = ()=>{
         return {
@@ -72,11 +73,23 @@
         }
     };
 
+    const embedUploadFunction = (chatId, fileObj) => {
+        const formData = new FormData();
+        formData.append('embed_file_header', fileObj);
+        return axios.post('/api/storage/'+chatId+'/embed', formData)
+            .then((result) => {
+              let url = result.data.relativeUrl; // Get url from response
+              console.log("got url", url);
+              return url;
+            })
+    }
+
     let timerId;
 
     export default {
         props:['chatId', 'canBroadcast'],
         data() {
+            const chatIdRef = this.$props.chatId;
             return {
                 editMessageDto: dtoFactory(),
                 writingUsers: [],
@@ -87,6 +100,21 @@
                     modules: {
                         // https://quilljs.com/docs/modules/toolbar/
                         toolbar: '#custom-toolbar',
+
+                        // https://www.npmjs.com/package/quill-drag-and-drop-module
+                        // https://immense.js.org/quill-drag-and-drop-module/
+                        dragAndDrop: {
+                          draggables: [
+                            {
+                              content_type_pattern: DragAndDropModule.default.image_content_type_pattern,
+                              tag: 'img',
+                              attr: 'src'
+                            }
+                          ],
+                          onDrop(file) {
+                              return embedUploadFunction(chatIdRef, file).catch(function(err) {return false;});
+                          },
+                        }
                     },
                     placeholder: 'Press Ctrl + Enter to send, Esc to clear',
                     formats: [
@@ -209,18 +237,11 @@
                 }
             },
             handleImageAdded(file, Editor, cursorLocation) {
-                const formData = new FormData();
-                formData.append('embed_file_header', file);
-
-                axios.post('/api/storage/'+this.chatId+'/embed', formData)
-                    .then((result) => {
-                        let url = result.data.relativeUrl; // Get url from response
-                        console.log("got url", url);
-                        Editor.insertEmbed(cursorLocation, 'image', url);
-                    })
+                embedUploadFunction(this.chatId, file)
+                    .then(url => Editor.insertEmbed(cursorLocation, 'image', url))
                     .catch((err) => {
-                        console.log(err);
-                    })
+                    console.log(err);
+                  })
             },
         },
         computed: {

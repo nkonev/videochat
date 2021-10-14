@@ -1,11 +1,12 @@
 <template>
     <div class="quillWrapper">
-        <div ref="quillContainer" :id="id" ondragover="return false;" ondrop="return false;"></div>
+        <div ref="quillContainer" :id="id"></div>
         <input v-if="useCustomImageHandler" @change="emitImageInfo($event)" ref="fileInput" id="file-upload" type="file" style="display:none;">
     </div>
 </template>
 
 <script>
+// https://github.com/davidroyer/vue2-editor/blob/master/src/components/VueEditor.vue
 import VQuill from 'quill'
 import merge from 'lodash/merge'
 const Quill = VQuill;
