@@ -145,7 +145,8 @@
                             })
                             .catch(reason => {
                               console.error("Error during publishing camera stream, won't restart...", reason);
-                              this.$refs.localVideoComponent.setUserName('Error get getUserMedia');
+                              this.$refs.localVideoComponent.setUserName('WebRTC error');
+                              this.$refs.localVideoComponent.setErrorDescription(reason);
                             });
                     })
                 }
