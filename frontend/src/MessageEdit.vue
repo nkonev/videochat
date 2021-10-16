@@ -308,10 +308,6 @@ $mobileWidth = 800px
 
 .ql-editor {
     padding 10px 8px
-    img {
-        max-width 100% !important
-        max-height 100% !important
-    }
 }
 
 .ql-toolbar.ql-snow {
