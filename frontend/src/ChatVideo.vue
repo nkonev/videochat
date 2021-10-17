@@ -14,6 +14,8 @@
             </template>
         </v-snackbar>
 
+        <p v-if="errorDescription" class="error">{{ errorDescription }}</p>
+
         <UserVideo ref="localVideoComponent" :key="localPublisherKey" :initial-muted="initialMuted"/>
     </v-col>
 </template>
@@ -80,7 +82,9 @@
                 restartingStarted: false,
                 closingStarted: false,
 
-                showPermissionAsk: true
+                showPermissionAsk: true,
+
+                errorDescription: null
             }
         },
         props: ['chatDto'],
@@ -145,8 +149,7 @@
                             })
                             .catch(reason => {
                               console.error("Error during publishing camera stream, won't restart...", reason);
-                              this.$refs.localVideoComponent.setUserName('Mediadevices error');
-                              this.$refs.localVideoComponent.setErrorDescription(reason);
+                              this.errorDescription = reason;
                             });
                     })
                 }

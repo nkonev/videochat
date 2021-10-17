@@ -1,6 +1,5 @@
 <template>
     <div class="video-container-element">
-        <p v-if="errorDescription" class="video-container-element-caption-error">{{ errorDescription }}</p>
         <video autoPlay playsInline ref="videoRef" :muted="initialMuted" v-on:dblclick="onDoubleClick"/>
         <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon> <v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
@@ -57,9 +56,6 @@ export default {
         setSpeaking(speaking) {
             this.speaking = speaking;
         },
-        setErrorDescription(reason) {
-            this.errorDescription = reason;
-        }
     },
 };
 </script>
@@ -91,13 +87,6 @@ export default {
         position: relative
         width initial
         white-space nowrap
-    }
-
-    .video-container-element-caption-error {
-      text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
-      position: absolute
-      word-wrap break-word
-      overflow-wrap break-word
     }
 
     .video-container-element-caption-speaking {
