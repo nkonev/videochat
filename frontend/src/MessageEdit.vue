@@ -8,6 +8,7 @@
                 v-model="editMessageDto.text"
                 useCustomImageHandler
                 @imageAdded="handleImageAdded"
+                :customModules="customModules"
             />
             <div id="custom-toolbar">
                 <div class="custom-toolbar-format">
@@ -63,8 +64,8 @@
     import {GET_USER} from "./store";
     import 'quill/dist/quill.core.css'
     import 'quill/dist/quill.snow.css'
+    import { ImageDrop } from 'quill-image-drop-module/src/ImageDrop';
     import Editor from "./Editor";
-    const DragAndDropModule = require('quill-drag-and-drop-module');
 
     const dtoFactory = () => {
         return {
@@ -102,20 +103,7 @@
                         // https://quilljs.com/docs/modules/toolbar/
                         toolbar: '#custom-toolbar',
 
-                        // https://www.npmjs.com/package/quill-drag-and-drop-module
-                        // https://immense.js.org/quill-drag-and-drop-module/
-                        dragAndDrop: {
-                          draggables: [
-                            {
-                              content_type_pattern: DragAndDropModule.default.image_content_type_pattern,
-                              tag: 'img',
-                              attr: 'src'
-                            }
-                          ],
-                          onDrop(file) {
-                              return embedUploadFunction(chatIdRef, file).catch(function(err) {return false;});
-                          },
-                        }
+                        imageDrop: true
                     },
                     placeholder: 'Press Ctrl + Enter to send, Esc to clear',
                     formats: [
@@ -142,6 +130,28 @@
                       // 'video'
                     ]
                 },
+                customModules: [
+                  { alias: 'imageDrop', module: class UploadableImageDrop extends ImageDrop {
+                      readFiles(files, callback) {
+                        [].forEach.call(files, file => {
+                          if (!file.type.match(/^image\/(gif|jpe?g|a?png|svg|webp|bmp|vnd\.microsoft\.icon)/i)) {
+                            return;
+                          }
+                          const blob = file.getAsFile ? file.getAsFile() : file;
+                          embedUploadFunction(chatIdRef, blob).then(url => callback(url))
+                        });
+                      }
+                      handlePaste(evt) {
+                        if (evt.clipboardData && evt.clipboardData.items && evt.clipboardData.items.length) {
+                          evt.preventDefault();
+                          this.readFiles(evt.clipboardData.items, url => {
+                            setTimeout(() => this.insert(url), 0);
+                          });
+                        }
+                      }
+                    }}
+                ],
+
                 showTooltip: true,
                 sendBroadcast: false,
                 broadcastMessage: null,
