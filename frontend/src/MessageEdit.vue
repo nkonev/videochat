@@ -64,7 +64,7 @@
     import {GET_USER} from "./store";
     import 'quill/dist/quill.core.css'
     import 'quill/dist/quill.snow.css'
-    import { ImageDrop } from 'quill-image-drop-module/src/ImageDrop';
+    import imageDropFunction from './ImageDrop';
     import Editor from "./Editor";
 
     const dtoFactory = () => {
@@ -80,9 +80,9 @@
         formData.append('embed_file_header', fileObj);
         return axios.post('/api/storage/'+chatId+'/embed', formData)
             .then((result) => {
-              let url = result.data.relativeUrl; // Get url from response
-              console.log("got url", url);
-              return url;
+                let url = result.data.relativeUrl; // Get url from response
+                console.debug("got embed url", url);
+                return url;
             })
     }
 
@@ -131,29 +131,7 @@
                     ]
                 },
                 customModules: [
-                  { alias: 'imageDrop', module: class UploadableImageDrop extends ImageDrop {
-                      imageRegex = /^image\/(gif|jpe?g|a?png|svg|webp|bmp|vnd\.microsoft\.icon)/i;
-                      readFiles(files, callback) {
-                        [].forEach.call(files, file => {
-                          if (!file.type.match(this.imageRegex)) {
-                            return;
-                          }
-                          const blob = file.getAsFile ? file.getAsFile() : file;
-                          embedUploadFunction(chatIdRef, blob).then(url => callback(url))
-                        });
-                      }
-                      handlePaste(evt) {
-                        if (evt.clipboardData && evt.clipboardData.items && evt.clipboardData.items.length) {
-                          // console.log("evt", evt);
-                          if (evt.clipboardData.items[0].type.match(this.imageRegex)) {
-                            evt.preventDefault();
-                            this.readFiles(evt.clipboardData.items, url => {
-                              setTimeout(() => this.insert(url), 0);
-                            });
-                          }
-                        }
-                      }
-                    }}
+                  { alias: 'imageDrop', module: imageDropFunction(embedUploadFunction, chatIdRef)}
                 ],
 
                 showTooltip: true,
