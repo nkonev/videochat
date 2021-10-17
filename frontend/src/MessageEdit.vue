@@ -65,6 +65,18 @@
     import 'quill/dist/quill.core.css'
     import 'quill/dist/quill.snow.css'
     import imageDropFunction from './ImageDrop';
+    import VQuill from 'quill'
+    const Quill = VQuill;
+    // We need use Quill.import https://github.com/quilljs/quill/pull/2939/files
+    const Image = Quill.import('formats/image');
+    class SizedImage extends Image {
+      static create(value) {
+        let node = super.create(value);
+        node.setAttribute('style', 'width: 600px; height: 480px;');
+        return node;
+      }
+    }
+    Quill.register({'formats/image': SizedImage});
     import Editor from "./Editor";
 
     const dtoFactory = () => {
