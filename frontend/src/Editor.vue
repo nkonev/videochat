@@ -10,6 +10,16 @@
 import VQuill from 'quill'
 import merge from 'lodash/merge'
 const Quill = VQuill;
+// We need use Quill.import https://github.com/quilljs/quill/pull/2939/files
+const Image = Quill.import('formats/image');
+
+class SizedImage extends Image {
+  static create(value) {
+    let node = super.create(value);
+    node.setAttribute('style', 'width: 600px; height: 480px;');
+    return node;
+  }
+}
 
 export default {
     name: 'vue-editor',
@@ -107,6 +117,7 @@ export default {
 
         prepareModules() {
             this.registerCustomModules();
+            Quill.register({'formats/image': SizedImage});
         },
 
         registerCustomModules() {
