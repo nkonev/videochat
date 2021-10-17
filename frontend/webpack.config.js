@@ -17,7 +17,14 @@ module.exports = (env, argv) => {
     const pluginsArray = [
         // new BundleAnalyzerPlugin({defaultSizes: "parsed"}),
         new HtmlWebpackPlugin({
-            livereload: argv.mode === DEVELOPMENT_MODE ? `<script src="http://localhost:${LIVE_RELOAD_PORT}/livereload.js"></script>` : "",
+            livereload: argv.mode === DEVELOPMENT_MODE ? `
+                <script type="application/javascript">
+                    const livereloadProtocolHost = window.location.protocol + "//" + window.location.hostname;
+                    const scriptTag = document.createElement('script');
+                    scriptTag.src = livereloadProtocolHost + ":${LIVE_RELOAD_PORT}/livereload.js";
+                    document.head.appendChild(scriptTag);
+                </script>
+                ` : "",
             // Load a custom template (lodash by default)
             template: './src/index.template.html',
             inject: false
