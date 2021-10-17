@@ -132,9 +132,10 @@
                 },
                 customModules: [
                   { alias: 'imageDrop', module: class UploadableImageDrop extends ImageDrop {
+                      imageRegex = /^image\/(gif|jpe?g|a?png|svg|webp|bmp|vnd\.microsoft\.icon)/i;
                       readFiles(files, callback) {
                         [].forEach.call(files, file => {
-                          if (!file.type.match(/^image\/(gif|jpe?g|a?png|svg|webp|bmp|vnd\.microsoft\.icon)/i)) {
+                          if (!file.type.match(this.imageRegex)) {
                             return;
                           }
                           const blob = file.getAsFile ? file.getAsFile() : file;
@@ -143,10 +144,13 @@
                       }
                       handlePaste(evt) {
                         if (evt.clipboardData && evt.clipboardData.items && evt.clipboardData.items.length) {
-                          evt.preventDefault();
-                          this.readFiles(evt.clipboardData.items, url => {
-                            setTimeout(() => this.insert(url), 0);
-                          });
+                          // console.log("evt", evt);
+                          if (evt.clipboardData.items[0].type.match(this.imageRegex)) {
+                            evt.preventDefault();
+                            this.readFiles(evt.clipboardData.items, url => {
+                              setTimeout(() => this.insert(url), 0);
+                            });
+                          }
                         }
                       }
                     }}
