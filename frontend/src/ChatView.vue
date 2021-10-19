@@ -161,11 +161,6 @@
               this.infiniteId += 1;
               console.log("Resetting infinite loader", this.infiniteId);
             },
-            searchStringChanged() {
-              this.items = [];
-              this.startingFromItemId = null;
-              this.reloadItems();
-            },
 
             onScroll(e) {
                 this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
@@ -407,7 +402,6 @@
             onLoggedIn() {
                 this.getInfo();
                 this.subscribe();
-                this.reloadItems();
             },
             onLoggedOut() {
                 this.unsubscribe();
@@ -442,7 +436,9 @@
             },
             resetVariables() {
                 this.aDirection = directionTop;
-                this.searchStringChanged();
+                this.items = [];
+                this.startingFromItemId = null;
+                this.reloadItems();
             },
             onVideoCallChanged(dto) {
                 if (dto.chatId == this.chatId) {
