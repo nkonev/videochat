@@ -248,6 +248,7 @@
             addItem(dto) {
                 console.log("Adding item", dto);
                 this.items.push(dto);
+                this.reduceListIfNeed();
                 this.$forceUpdate();
             },
             changeItem(dto) {
