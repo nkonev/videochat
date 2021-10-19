@@ -28,7 +28,7 @@
 
 <script>
     import axios from "axios";
-    import infinityListMixin, { pageSize } from "./InfinityListMixin";
+    import InfiniteLoading from 'vue-infinite-loading';
     import Vue from 'vue'
     import bus, {
         CHAT_DELETED,
@@ -76,6 +76,8 @@
     const maxItemsLength = 200;
     const reduceToLength = 100;
 
+    const pageSize = 40;
+
     const calcSplitpanesHeight = () => {
         const appBarHeight = parseInt(document.getElementById("myAppBar").style.height.replace('px', ''));
         const displayableWindowHeight = window.innerHeight;
@@ -85,9 +87,13 @@
     }
 
     export default {
-        mixins: [infinityListMixin()],
         data() {
             return {
+                startingFromItemId: null,
+                items: [],
+                itemsTotal: 0,
+                infiniteId: +new Date(),
+
                 chatMessagesSubscription: null,
                 chatDto: {
                     participantIds:[],
@@ -150,6 +156,17 @@
             },
         },
         methods: {
+            // not working until you will change this.items list
+            reloadItems() {
+              this.infiniteId += 1;
+              console.log("Resetting infinite loader", this.infiniteId);
+            },
+            searchStringChanged() {
+              this.items = [];
+              this.startingFromItemId = null;
+              this.reloadItems();
+            },
+
             onScroll(e) {
                 this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
                 this.scrollerProbePrevious = this.scrollerProbeCurrent;
@@ -495,6 +512,7 @@
             this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
         },
         components: {
+            InfiniteLoading,
             MessageEdit,
             ChatVideo,
             Splitpanes, Pane,

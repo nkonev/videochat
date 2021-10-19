@@ -50,7 +50,7 @@
         VIDEO_CALL_CHANGED
     } from "./bus";
     import {chat_name} from "./routes";
-    import infinityListMixin, { pageSize } from "./InfinityListMixin";
+    import InfiniteLoading from 'vue-infinite-loading';
     import { findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition } from "./utils";
     import axios from "axios";
     import {
@@ -61,8 +61,9 @@
         SET_TITLE
     } from "./store";
 
+    const pageSize = 40;
+
     export default {
-        mixins: [infinityListMixin()],
         computed: {
             chatRoute() {
                 return chat_name;
@@ -70,10 +71,29 @@
         },
         data() {
             return {
+                page: 0,
+                items: [],
+                itemsTotal: 0,
+                infiniteId: +new Date(),
+
                 group: -1
             }
         },
+        components:{
+            InfiniteLoading,
+        },
         methods:{
+            // not working until you will change this.items list
+            reloadItems() {
+                this.infiniteId += 1;
+                console.log("Resetting infinite loader", this.infiniteId);
+            },
+            searchStringChanged() {
+                this.items = [];
+                this.page = 0;
+                this.reloadItems();
+            },
+
             addItem(dto) {
                 console.log("Adding item", dto);
                 this.items.unshift(dto);
