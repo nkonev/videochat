@@ -16,8 +16,8 @@
                     <button class="ql-italic"></button>
                     <button class="ql-underline"></button>
                     <button class="ql-strike"></button>
-                    <select class="ql-color"></select>
-                    <select class="ql-background"></select>
+                    <select class="ql-color" v-if="$vuetify.breakpoint.smAndUp"></select>
+                    <select class="ql-background" v-if="$vuetify.breakpoint.smAndUp"></select>
                     <button class="ql-link"></button>
                     <button class="ql-image"></button>
                     <button class="ql-clean"></button>
