@@ -5,12 +5,11 @@ import (
 	"time"
 )
 
-type ChatDto struct {
+type BaseChatDto struct {
 	Id                  int64     `json:"id"`
 	Name                string    `json:"name"`
 	LastUpdateDateTime  time.Time `json:"lastUpdateDateTime"`
 	ParticipantIds      []int64   `json:"participantIds"`
-	Participants        []*User   `json:"participants"`
 	CanEdit             null.Bool `json:"canEdit"`
 	CanDelete           null.Bool `json:"canDelete"`
 	CanLeave            null.Bool `json:"canLeave"`
@@ -20,6 +19,11 @@ type ChatDto struct {
 	CanChangeChatAdmins bool      `json:"canChangeChatAdmins"`
 	IsTetATet           bool      `json:"tetATet"`
 	CanAudioMute        bool      `json:"canAudioMute"`
+}
+
+type ChatDto struct {
+	BaseChatDto
+	Participants        []*User   `json:"participants"`
 }
 
 type ChatDtoWithTetATet interface {
@@ -47,18 +51,6 @@ func (r *ChatDto) GetIsTetATet() bool {
 
 // copied view for GET /chat/:id
 type ChatDtoWithAdmin struct {
-	Id                  int64            `json:"id"`
-	Name                string           `json:"name"`
-	LastUpdateDateTime  time.Time        `json:"lastUpdateDateTime"`
-	ParticipantIds      []int64          `json:"participantIds"`
+	BaseChatDto
 	Participants        []*UserWithAdmin `json:"participants"`
-	CanEdit             null.Bool        `json:"canEdit"`
-	CanDelete           null.Bool        `json:"canDelete"`
-	CanLeave            null.Bool        `json:"canLeave"`
-	UnreadMessages      int64            `json:"unreadMessages"`
-	CanBroadcast        bool             `json:"canBroadcast"`
-	CanVideoKick        bool             `json:"canVideoKick"`
-	CanChangeChatAdmins bool             `json:"canChangeChatAdmins"`
-	IsTetATet           bool             `json:"tetATet"`
-	CanAudioMute        bool		 	 `json:"canAudioMute"`
 }

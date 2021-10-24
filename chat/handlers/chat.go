@@ -197,11 +197,10 @@ func (ch ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto,
 }
 
 func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64) *dto.ChatDto {
-	return &dto.ChatDto{
+	b := dto.BaseChatDto {
 		Id:                  c.Id,
 		Name:                c.Title,
 		ParticipantIds:      c.ParticipantsIds,
-		Participants:        users,
 		// see also notifications/notifications.go:75 chatNotifyCommon()
 		CanEdit:             null.BoolFrom(c.IsAdmin && !c.TetATet),
 		CanDelete:           null.BoolFrom(c.IsAdmin),
@@ -212,6 +211,10 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		CanVideoKick:        c.IsAdmin,
 		CanAudioMute:        c.IsAdmin,
 		CanChangeChatAdmins: c.IsAdmin && !c.TetATet,
+	}
+	return &dto.ChatDto{
+		BaseChatDto: b,
+		Participants:        users,
 	}
 }
 
@@ -303,10 +306,7 @@ func (ch ChatHandler) DeleteChat(c echo.Context) error {
 		if err := tx.DeleteChat(chatId); err != nil {
 			return err
 		}
-		cd := &dto.ChatDtoWithAdmin{
-			Id: chatId,
-		}
-		ch.notificator.NotifyAboutDeleteChat(c, cd, ids, tx)
+		ch.notificator.NotifyAboutDeleteChat(c, chatId, ids, tx)
 		return c.JSON(http.StatusAccepted, &utils.H{"id": chatId})
 	})
 	if errOuter != nil {
@@ -393,7 +393,7 @@ func (ch ChatHandler) EditChat(c echo.Context) error {
 				return c.NoContent(http.StatusInternalServerError)
 			}
 			ch.notificator.NotifyAboutNewChat(c, copiedChat, userIdsToNotifyAboutChatCreated, tx)
-			ch.notificator.NotifyAboutDeleteChat(c, copiedChat, userIdsToNotifyAboutChatDeleted, tx)
+			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, userIdsToNotifyAboutChatDeleted, tx)
 			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
@@ -433,7 +433,7 @@ func (ch ChatHandler) LeaveChat(c echo.Context) error {
 				return c.NoContent(http.StatusInternalServerError)
 			}
 			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, tx)
-			ch.notificator.NotifyAboutDeleteChat(c, copiedChat, []int64{userPrincipalDto.UserId}, tx)
+			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})
@@ -570,7 +570,7 @@ func (ch ChatHandler) DeleteParticipant(c echo.Context) error {
 			}
 
 			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
-			ch.notificator.NotifyAboutDeleteChat(c, copiedChat, []int64{interestingUserId}, tx)
+			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{interestingUserId}, tx)
 		}
 
 		return c.NoContent(http.StatusAccepted)
