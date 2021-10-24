@@ -16,8 +16,8 @@ services:
       # works on Docker for Mac 3.4.0 or Linux Docker 20.10.4
       - "host.docker.internal:host-gateway"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./docker/traefik_conf:/traefik_conf
+      - /var/run/docker.sock:/var/run/docker.sock:z
+      - ./docker/traefik_conf:/traefik_conf:z
     logging:
       driver: "json-file"
       options:
@@ -31,8 +31,8 @@ services:
     ports:
       - 8082:8082
     volumes:
-      - ./frontend-nginx:/usr/share/nginx/html:ro
-      - ./docker/nginx/frontend.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend-nginx:/usr/share/nginx/html:z
+      - ./docker/nginx/frontend.conf:/etc/nginx/conf.d/default.conf:z
     logging:
       driver: "json-file"
       options:
@@ -44,8 +44,8 @@ services:
     ports:
       - 35432:5432
     volumes:
-      - ./docker/postgresql_dev/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgresql_dev/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:z
+      - postgres_data:/var/lib/postgresql/data:z
     environment:
       - POSTGRES_PASSWORD=postgresqlPassword
     networks:
@@ -63,7 +63,7 @@ services:
     ports:
       - 36379:6379
     volumes:
-      - redis_data_dir:/data
+      - redis_data_dir:/data:z
     networks:
       backend:
     logging:
@@ -84,7 +84,7 @@ services:
       - MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
       - MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
     volumes:
-      - minio_data:/data
+      - minio_data:/data:z
     logging:
       driver: "json-file"
       options:
@@ -102,7 +102,7 @@ services:
       - RABBITMQ_DEFAULT_USER=videoChat
       - RABBITMQ_DEFAULT_PASS=videoChatPazZw0rd
     volumes:
-      - rabbitmq_data_dir:/var/lib/rabbitmq/mnesia
+      - rabbitmq_data_dir:/var/lib/rabbitmq/mnesia:z
     networks:
       backend:
     logging:
