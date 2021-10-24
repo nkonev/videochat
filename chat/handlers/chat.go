@@ -89,7 +89,7 @@ func (ch ChatHandler) GetChats(c echo.Context) error {
 				user := users[participantId]
 				if user != nil {
 					chatDto.Participants = append(chatDto.Participants, user)
-					ReplaceChatNameToLoginForTetATet(chatDto, user, userPrincipalDto.UserId)
+					utils.ReplaceChatNameToLoginForTetATet(chatDto, user, userPrincipalDto.UserId)
 				}
 			}
 		}
@@ -127,16 +127,10 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 		}
 
 		for _, participant := range users {
-			ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
+			utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
 		}
 
 		return chatDto, nil
-	}
-}
-
-func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participant *dto.User, behalfParticipantId int64) {
-	if chatDto.GetIsTetATet() && participant.Id != behalfParticipantId {
-		chatDto.SetName(participant.Login)
 	}
 }
 

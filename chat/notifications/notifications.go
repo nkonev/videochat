@@ -117,9 +117,7 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 		copied.CanChangeChatAdmins = admin && !copied.IsTetATet
 		//copied.CanBroadcast = admin
 		for _, participant := range copied.Participants {
-			if copied.IsTetATet && participant.Id != participantId {
-				copied.Name = participant.Login
-			}
+			utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)
 		}
 
 		notification := dto.CentrifugeNotification{

@@ -90,7 +90,7 @@ func (vh VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
 		Name: chat.Title,
 		IsTetATet: chat.TetATet,
 	}
-	ReplaceChatNameToLoginForTetATet(
+	utils.ReplaceChatNameToLoginForTetATet(
 		sch,
 		&meAsUser,
 		userId,

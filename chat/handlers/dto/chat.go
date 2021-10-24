@@ -49,6 +49,23 @@ func (r *ChatDto) GetIsTetATet() bool {
 	return r.IsTetATet
 }
 
+func (r *BaseChatDto) GetId() int64 {
+	return r.Id
+}
+
+func (r *BaseChatDto) GetName() string {
+	return r.Name
+}
+
+func (r *BaseChatDto) SetName(s string) {
+	r.Name = s
+}
+
+func (r *BaseChatDto) GetIsTetATet() bool {
+	return r.IsTetATet
+}
+
+
 // copied view for GET /chat/:id
 type ChatDtoWithAdmin struct {
 	BaseChatDto
