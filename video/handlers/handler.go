@@ -122,7 +122,8 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	peer0 := sfu.NewPeer(h.sfu)
-	h.service.StoreToIndex(peer0, userId, "", "", false, false)
+	// we can't store it here because peer0.Id is not initialized yet
+	// h.service.StoreToIndex(peer0, userId, "", "", false, false)
 	defer h.service.RemoveFromIndex(peer0, userId, c)
 	defer h.service.NotifyAboutLeaving(chatId)
 	p := server.NewJSONSignal(peer0, logger)
