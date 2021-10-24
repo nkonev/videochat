@@ -104,7 +104,7 @@ func load() bool {
 }
 
 func parse() bool {
-	flag.StringVar(&file, "config", "video/config.yml", "config file")
+	flag.StringVar(&file, "config", "./config.yml", "config file")
 	help := flag.Bool("h", false, "help info")
 	flag.Parse()
 	if !load() {

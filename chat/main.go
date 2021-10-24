@@ -27,7 +27,7 @@ import (
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
 
 func main() {
-	configFile := utils.InitFlags("./chat/config-dev/config.yml")
+	configFile := utils.InitFlags("./config-dev/config.yml")
 	utils.InitViper(configFile, "CHAT")
 
 	app := fx.New(

@@ -23,7 +23,7 @@ import (
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
 
 func main() {
-	configFile := utils.InitFlags("./storage/config-dev/config.yml")
+	configFile := utils.InitFlags("./config-dev/config.yml")
 	utils.InitViper(configFile, "STORAGE")
 
 	app := fx.New(

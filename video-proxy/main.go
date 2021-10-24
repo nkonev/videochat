@@ -157,7 +157,7 @@ func main() {
 	Logger.SetFormatter(&log.TextFormatter{ForceColors: true, FullTimestamp: true})
 	Logger.SetOutput(os.Stdout)
 
-	configFile := flag.String("config", "./video-proxy/config.yml", "Path to config file")
+	configFile := flag.String("config", "./config.yml", "Path to config file")
 	flag.Parse()
 	viper.SetConfigFile(*configFile)
 	// call multiple times to add many search paths
