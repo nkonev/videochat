@@ -122,7 +122,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	peer0 := sfu.NewPeer(h.sfu)
-	h.service.StoreToIndex(peer0, userId, "", "", "", false, false)
+	h.service.StoreToIndex(peer0, userId, "", "", false, false)
 	defer h.service.RemoveFromIndex(peer0, userId, c)
 	defer h.service.NotifyAboutLeaving(chatId)
 	p := server.NewJSONSignal(peer0, logger)
@@ -386,7 +386,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			break
 		}
 		if sfuPeer := p.service.GetPeerByPeerId(fromContext.chatId, bodyStruct.PeerId); sfuPeer != nil {
-			p.service.StoreToIndex(sfuPeer, fromContext.userId, bodyStruct.PeerId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+			p.service.StoreToIndex(sfuPeer, fromContext.userId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
 			if err := p.service.Notify(fromContext.chatId, &bodyStruct); err != nil {
 				p.Logger.Error(err, "error during sending notification")
 			}
