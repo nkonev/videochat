@@ -16,20 +16,14 @@ public record UserAccountDTOExtended (
 
     boolean canChangeRole
 ) {
-//
-//    public UserAccountDTOExtended() {
-//        this(
-//               new UserAccountDTO(),
-//               null
-//        )
-//    }
 
     public UserAccountDTOExtended(Long id, String login, String avatar, String avatarBig, DataDTO managementData, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauthIdentifiers, boolean canLock, boolean canDelete, boolean canChangeRole) {
-        this(new UserAccountDTO(id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers),
-        managementData,
-        canDelete,
-        canLock,
-        canChangeRole
+        this(
+            new UserAccountDTO(id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers),
+            managementData,
+            canDelete,
+            canLock,
+            canChangeRole
         );
     }
 

@@ -12,7 +12,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -38,10 +37,6 @@ public record UserAccountDetailsDTO (
     Collection<GrantedAuthority> roles,
     String email
 ) implements UserDetails, OAuth2User, OidcUser {
-
-    public UserAccountDetailsDTO() {
-        this(new UserAccountDTO(), new HashMap<>(), null, null, null, false, false, true, new HashSet<>(), null);
-    }
 
     public UserAccountDetailsDTO(
             Long id,
@@ -72,7 +67,7 @@ public record UserAccountDetailsDTO (
 
     @Override
     public String getUsername() {
-        return this.userAccountDTO.getLogin();
+        return this.userAccountDTO.login();
     }
 
     @Override
@@ -107,7 +102,7 @@ public record UserAccountDetailsDTO (
 
     @Override
     public String getName() {
-        return this.userAccountDTO.getLogin();
+        return this.userAccountDTO.login();
     }
 
     public boolean isExpired() {
@@ -142,26 +137,39 @@ public record UserAccountDetailsDTO (
     }
 
     public Long getId() {
-        return userAccountDTO.getId();
+        return userAccountDTO.id();
     }
 
     public String getAvatar() {
-        return userAccountDTO.getAvatar();
+        return userAccountDTO.avatar();
     }
 
     public String getAvatarBig() {
-        return userAccountDTO.getAvatarBig();
+        return userAccountDTO.avatarBig();
     }
 
     public OAuth2IdentifiersDTO getOauth2Identifiers() {
-        return userAccountDTO.getOauth2Identifiers();
+        return userAccountDTO.oauth2Identifiers();
     }
 
     public LocalDateTime getLastLoginDateTime() {
-        return userAccountDTO.getLastLoginDateTime();
+        return userAccountDTO.lastLoginDateTime();
     }
 
-    public void setOauth2Identifiers(OAuth2IdentifiersDTO newOa) {
-        this.userAccountDTO.setOauth2Identifiers(newOa);
+    public UserAccountDetailsDTO withOauth2Identifiers(OAuth2IdentifiersDTO newOauth2Identifiers) {
+        return new UserAccountDetailsDTO(
+                new UserAccountDTO(
+                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.lastLoginDateTime(), newOauth2Identifiers
+                ),
+                oauth2Attributes,
+                idToken,
+                userInfo,
+                password,
+                expired,
+                locked,
+                enabled,
+                roles,
+                email
+        );
     }
 }

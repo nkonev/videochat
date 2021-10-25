@@ -117,7 +117,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         }
         Assertions.assertEquals(1, receiver.size());
         final UserAccountDTO userAccountEvent = receiver.getLast();
-        Assertions.assertEquals(newLogin, userAccountEvent.getLogin());
+        Assertions.assertEquals(newLogin, userAccountEvent.login());
     }
 
     @WithUserDetails(TestConstants.USER_ALICE)

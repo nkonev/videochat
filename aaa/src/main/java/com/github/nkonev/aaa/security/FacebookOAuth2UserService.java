@@ -99,8 +99,8 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
     }
 
     @Override
-    protected void setOauthIdToPrincipal(UserAccountDetailsDTO principal, String oauthId) {
-        principal.setOauth2Identifiers(principal.getOauth2Identifiers().withFacebookId(oauthId));
+    protected UserAccountDetailsDTO setOauthIdToPrincipal(UserAccountDetailsDTO principal, String oauthId) {
+        return principal.withOauth2Identifiers(principal.getOauth2Identifiers().withFacebookId(oauthId));
     }
 
     @Override

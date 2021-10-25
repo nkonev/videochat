@@ -40,6 +40,6 @@ public record UserSelfProfileDTO(
     }
 
     public String login() {
-        return userAccountDTO.getLogin();
+        return userAccountDTO.login();
     }
 }
