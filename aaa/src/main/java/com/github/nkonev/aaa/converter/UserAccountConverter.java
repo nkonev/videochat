@@ -159,7 +159,8 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 newUserRole,
-                userAccountDTO.getEmail()
+                userAccountDTO.getEmail(),
+                null
         );
     }
 

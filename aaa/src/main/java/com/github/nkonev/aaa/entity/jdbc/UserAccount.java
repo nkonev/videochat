@@ -46,12 +46,6 @@ public record UserAccount(
         this(null, username, password, avatar, avatarBig, expired, locked, enabled, email, creationType, role, null, oauth2Identifiers);
     }
 
-    public UserAccount(CreationType creationType, String username, String password, String avatar, String avatarBig,
-                       boolean expired, boolean locked, boolean enabled,
-                       UserRole role, String email) {
-        this(null, username, password, avatar, avatarBig, expired, locked, enabled, email, creationType, role, null, new OAuth2Identifiers(null, null, null));
-    }
-
     public UserAccount withPassword(String newPassword) {
         return new UserAccount(
                 id,
