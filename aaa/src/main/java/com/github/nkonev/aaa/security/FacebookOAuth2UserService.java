@@ -106,7 +106,7 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
     @Override
     protected void setOauthIdToEntity(Long id, String oauthId) {
         UserAccount userAccount = userAccountRepository.findById(id).orElseThrow();
-        userAccount.getOauth2Identifiers().setFacebookId(oauthId);
+        userAccount = userAccount.withOauthIdentifiers(userAccount.oauth2Identifiers().withFacebookId(oauthId));
         userAccount = userAccountRepository.save(userAccount);
     }
 

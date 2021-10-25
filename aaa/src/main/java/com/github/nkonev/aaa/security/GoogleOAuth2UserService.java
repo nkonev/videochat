@@ -105,7 +105,7 @@ public class GoogleOAuth2UserService extends AbstractOAuth2UserService implement
     @Override
     protected void setOauthIdToEntity(Long id, String oauthId) {
         UserAccount userAccount = userAccountRepository.findById(id).orElseThrow();
-        userAccount.getOauth2Identifiers().setGoogleId(oauthId);
+        userAccount = userAccount.withOauthIdentifiers(userAccount.oauth2Identifiers().withGoogleId(oauthId));
         userAccount = userAccountRepository.save(userAccount);
     }
 

@@ -75,7 +75,7 @@ public class AaaUserDetailsService implements UserDetailsService {
     }
 
     public void killSessions(long userId){
-        String userName = getUserAccount(userId).getUsername();
+        String userName = getUserAccount(userId).username();
         Map<String, Session> sessionMap = getSessions(userName);
         sessionMap.keySet().forEach(session -> redisOperationsSessionRepository.deleteById(session));
     }
@@ -87,6 +87,6 @@ public class AaaUserDetailsService implements UserDetailsService {
 
     public Map<String, Session> getSessions(long userId) {
         UserAccount userAccount = getUserAccount(userId);
-        return getSessions(userAccount.getUsername());
+        return getSessions(userAccount.username());
     }
 }

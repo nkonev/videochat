@@ -46,8 +46,8 @@ public abstract class AbstractOAuth2UserService {
             logger().info("Will merge {}Id to exists user '{}', id={}", getOauthName(), principal.getUsername(), principal.getId());
 
             Optional<UserAccount> maybeUserAccount = findByOauthId(oauthId);
-            if (maybeUserAccount.isPresent() && !maybeUserAccount.get().getId().equals(principal.getId())){
-                logger().error("With {}Id={} already present another user '{}', id={}", getOauthName(), oauthId, maybeUserAccount.get().getUsername(), maybeUserAccount.get().getId());
+            if (maybeUserAccount.isPresent() && !maybeUserAccount.get().id().equals(principal.getId())){
+                logger().error("With {}Id={} already present another user '{}', id={}", getOauthName(), oauthId, maybeUserAccount.get().username(), maybeUserAccount.get().id());
                 throw new OAuth2IdConflictException("Somebody already taken this "+getOauthName()+" id="+oauthId+". " +
                         "If this is you and you want to merge your profiles please delete another profile and bind "+getOauthName()+" to this. If not please contact administrator.");
             }

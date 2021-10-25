@@ -101,7 +101,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
                 );
 
         userAccountRepository.findByUsername(facebookLogin).ifPresent(userAccount -> {
-            userAccount.setLocked(false);
+            userAccount = userAccount.withLocked(false);
             userAccount = userAccountRepository.save(userAccount);
         });
 
@@ -146,7 +146,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
                 );
 
         userAccountRepository.findByUsername(vkontakteLogin).ifPresent(userAccount -> {
-            userAccount.setLocked(false);
+            userAccount = userAccount.withLocked(false);
             userAccountRepository.save(userAccount);
         });
     }
@@ -179,7 +179,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
                 });
 
         userAccountRepository.findByUsername(googleLogin).ifPresent(userAccount -> {
-            userAccount.setLocked(false);
+            userAccount = userAccount.withLocked(false);
             userAccountRepository.save(userAccount);
         });
     }

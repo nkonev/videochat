@@ -140,8 +140,8 @@ public class UserProfileController {
         }
         List<com.github.nkonev.aaa.dto.UserAccountDTO> result = new ArrayList<>();
         for (UserAccount userAccountEntity: userAccountRepository.findByIdInOrderById(userIds)) {
-            if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.getId())) {
-                result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.getLastLoginDateTime(), null));
+            if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.id())) {
+                result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null));
             } else {
                 result.add(userAccountConverter.convertToUserAccountDTO(userAccountEntity));
             }
@@ -155,8 +155,8 @@ public class UserProfileController {
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
         final UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
-        if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.getId())) {
-            return UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.getLastLoginDateTime(), null);
+        if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.id())) {
+            return UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null);
         } else {
             return userAccountConverter.convertToUserAccountDTO(userAccountEntity);
         }
@@ -191,7 +191,7 @@ public class UserProfileController {
         // check login already present
         userService.checkLoginIsFree(userAccountDTO, exists);
 
-        UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
+        exists = UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
 
         aaaUserDetailsService.refreshUserDetails(exists);
@@ -223,7 +223,7 @@ public class UserProfileController {
         // check login already present
         userService.checkLoginIsFree(userAccountDTO, exists);
 
-        UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
+        exists = UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
 
         aaaUserDetailsService.refreshUserDetails(exists);
@@ -258,7 +258,7 @@ public class UserProfileController {
         if (lockDTO.isLock()){
             aaaUserDetailsService.killSessions(lockDTO.getUserId());
         }
-        userAccount.setLocked(lockDTO.isLock());
+        userAccount = userAccount.withLocked(lockDTO.isLock());
         userAccount = userAccountRepository.save(userAccount);
 
         return userAccountConverter.convertToUserAccountDTOExtended(userAccountDetailsDTO, userAccount);
@@ -274,7 +274,7 @@ public class UserProfileController {
     @PostMapping(Constants.Urls.API+Constants.Urls.USER + Constants.Urls.ROLE)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam long userId, @RequestParam UserRole role){
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
-        userAccount.setRole(role);
+        userAccount = userAccount.withRole(role);
         userAccount = userAccountRepository.save(userAccount);
         return userAccountConverter.convertToUserAccountDTOExtended(userAccountDetailsDTO, userAccount);
     }
@@ -291,20 +291,21 @@ public class UserProfileController {
     public void selfDeleteBindingOauth2Provider(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @PathVariable("provider") String provider){
         long userId = userAccountDetailsDTO.getId();
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
+        UserAccount.OAuth2Identifiers oAuth2Identifiers = userAccount.oauth2Identifiers();
         switch (provider) {
             case OAuth2Providers.FACEBOOK:
-                userAccount.getOauth2Identifiers().setFacebookId(null);
+                oAuth2Identifiers = oAuth2Identifiers.withoutFacebookId();
                 break;
             case OAuth2Providers.VKONTAKTE:
-                userAccount.getOauth2Identifiers().setVkontakteId(null);
+                oAuth2Identifiers = oAuth2Identifiers.withoutVkontakteId();
                 break;
             case OAuth2Providers.GOOGLE:
-                userAccount.getOauth2Identifiers().setGoogleId(null);
+                oAuth2Identifiers = oAuth2Identifiers.withoutGoogleId();
                 break;
             default:
                 throw new RuntimeException("Wrong OAuth2 provider: " + provider);
         }
-
+        userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);
         userAccount = userAccountRepository.save(userAccount);
         aaaUserDetailsService.refreshUserDetails(userAccount);
     }

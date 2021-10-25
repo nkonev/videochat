@@ -64,44 +64,21 @@ public class PasswordResetController {
 
         Duration ttl = Duration.ofMinutes(passwordResetTokenTtlMinutes);
 
-        PasswordResetToken passwordResetToken = new PasswordResetToken(uuid, userAccount.getId(), ttl.getSeconds());
+        PasswordResetToken passwordResetToken = new PasswordResetToken(uuid, userAccount.id(), ttl.getSeconds());
 
         passwordResetToken = passwordResetTokenRepository.save(passwordResetToken);
 
-        emailService.sendPasswordResetToken(userAccount.getEmail(), passwordResetToken, userAccount.getUsername());
+        emailService.sendPasswordResetToken(userAccount.email(), passwordResetToken, userAccount.username());
     }
 
-    public static class PasswordResetDto {
+    record PasswordResetDto(
         @NotNull
-        private UUID passwordResetToken;
+        UUID passwordResetToken,
 
         @Size(min = Constants.MIN_PASSWORD_LENGTH, max = Constants.MAX_PASSWORD_LENGTH)
         @NotEmpty
-        private String newPassword;
-
-        public PasswordResetDto() { }
-
-        public PasswordResetDto(UUID passwordResetToken, String newPassword) {
-            this.passwordResetToken = passwordResetToken;
-            this.newPassword = newPassword;
-        }
-
-        public UUID getPasswordResetToken() {
-            return passwordResetToken;
-        }
-
-        public void setPasswordResetToken(UUID passwordResetToken) {
-            this.passwordResetToken = passwordResetToken;
-        }
-
-        public String getNewPassword() {
-            return newPassword;
-        }
-
-        public void setNewPassword(String newPassword) {
-            this.newPassword = newPassword;
-        }
-    }
+        String newPassword
+    ) {}
 
     @PostMapping(value = Constants.Urls.API + Constants.Urls.PASSWORD_RESET_SET_NEW)
     public void resetPassword(@RequestBody @Valid PasswordResetDto passwordResetDto) {
@@ -109,7 +86,7 @@ public class PasswordResetController {
         // webpage parses token uuid from URL
         // .. and js sends this request
 
-        Optional<PasswordResetToken> passwordResetTokenOptional = passwordResetTokenRepository.findById(passwordResetDto.getPasswordResetToken());
+        Optional<PasswordResetToken> passwordResetTokenOptional = passwordResetTokenRepository.findById(passwordResetDto.passwordResetToken());
         if (!passwordResetTokenOptional.isPresent()) {
             throw new PasswordResetTokenNotFoundException("password reset token not found or expired");
         }
@@ -121,7 +98,7 @@ public class PasswordResetController {
 
         UserAccount userAccount = userAccountOptional.get();
 
-        userAccount.setPassword(passwordEncoder.encode(passwordResetDto.getNewPassword()));
+        userAccount = userAccount.withPassword(passwordEncoder.encode(passwordResetDto.newPassword()));
         userAccount = userAccountRepository.save(userAccount);
         return;
     }

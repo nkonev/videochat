@@ -81,8 +81,8 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
         clickFacebook();
 
         UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
-        Assertions.assertNotNull(userAccount.getId());
-        Assertions.assertEquals(facebookLogin, userAccount.getUsername());
+        Assertions.assertNotNull(userAccount.id());
+        Assertions.assertEquals(facebookLogin, userAccount.username());
     }
 
     @Test
@@ -93,26 +93,26 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
         clickFacebook();
 
         UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
-        Long facebookLoggedId = userAccount.getId();
+        Long facebookLoggedId = userAccount.id();
         Assertions.assertNotNull(facebookLoggedId);
-        Assertions.assertEquals(facebookLogin, userAccount.getUsername());
-        String facebookId = userAccount.getOauth2Identifiers().getFacebookId();
+        Assertions.assertEquals(facebookLogin, userAccount.username());
+        String facebookId = userAccount.oauth2Identifiers().facebookId();
         Assertions.assertNotNull(facebookId);
-        Assertions.assertNull(userAccount.getOauth2Identifiers().getVkontakteId());
+        Assertions.assertNull(userAccount.oauth2Identifiers().vkontakteId());
         long count = userAccountRepository.count();
 
         clickVkontakte();
 
         UserAccount userAccountFbAndVk = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
-        String userAccountFbAndVkFacebookId = userAccountFbAndVk.getOauth2Identifiers().getFacebookId();
+        String userAccountFbAndVkFacebookId = userAccountFbAndVk.oauth2Identifiers().facebookId();
         Assertions.assertNotNull(userAccountFbAndVkFacebookId);
-        Assertions.assertNotNull(userAccountFbAndVk.getOauth2Identifiers().getVkontakteId());
+        Assertions.assertNotNull(userAccountFbAndVk.oauth2Identifiers().vkontakteId());
         long countAfterVk = userAccountRepository.count();
 
 
         Assertions.assertEquals(facebookId, userAccountFbAndVkFacebookId);
         Assertions.assertEquals(count, countAfterVk);
-        Assertions.assertEquals(userAccount.getUsername(), userAccountFbAndVk.getUsername());
+        Assertions.assertEquals(userAccount.username(), userAccountFbAndVk.username());
     }
 
     @Test
@@ -135,11 +135,11 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         UserAccount userAccount = userAccountRepository.findByUsername(vkontakteLogin).orElseThrow();
 
-        Assertions.assertNotNull(userAccount.getId());
-        Assertions.assertNull(userAccount.getAvatar());
-        Assertions.assertEquals(vkontakteLogin, userAccount.getUsername());
+        Assertions.assertNotNull(userAccount.id());
+        Assertions.assertNull(userAccount.avatar());
+        Assertions.assertEquals(vkontakteLogin, userAccount.username());
 
-        userAccount.setPassword(passwordEncoder.encode(vkontaktePassword));
+        userAccount = userAccount.withPassword(passwordEncoder.encode(vkontaktePassword));
         userAccountRepository.save(userAccount);
 
 
@@ -184,7 +184,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         // assert that he has facebook id
         UserAccount userAccountAfterBind = userAccountRepository.findByUsername(login600).orElseThrow();
-        Assertions.assertNotNull(userAccountAfterBind.getOauth2Identifiers().getFacebookId());
+        Assertions.assertNotNull(userAccountAfterBind.oauth2Identifiers().facebookId());
 
         // login as another user to vk - vk id #1 save to database
         {
@@ -222,7 +222,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         UserAccount userAccountAfterBindFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
         // assert facebook is bound - check database
-        Assertions.assertNotNull(userAccountAfterBindFacebook.getOauth2Identifiers().getFacebookId());
+        Assertions.assertNotNull(userAccountAfterBindFacebook.oauth2Identifiers().facebookId());
 
         // logout
         clickLogout();
@@ -243,7 +243,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         // assert facebook is unbound - check database
         UserAccount userAccountAfterDeleteFacebook = userAccountRepository.findByUsername(loginModal600.login).orElseThrow();
-        Assertions.assertNull(userAccountAfterDeleteFacebook.getOauth2Identifiers().getFacebookId());
+        Assertions.assertNull(userAccountAfterDeleteFacebook.oauth2Identifiers().facebookId());
     }
 
     @Test
@@ -266,12 +266,12 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         UserAccount userAccount = userAccountRepository.findByUsername(googleLogin).orElseThrow();
 
-        Assertions.assertNotNull(userAccount.getId());
-        Assertions.assertNull(userAccount.getAvatar());
-        Assertions.assertEquals(googleLogin, userAccount.getUsername());
-        Assertions.assertEquals(googleId, userAccount.getOauth2Identifiers().getGoogleId());
+        Assertions.assertNotNull(userAccount.id());
+        Assertions.assertNull(userAccount.avatar());
+        Assertions.assertEquals(googleLogin, userAccount.username());
+        Assertions.assertEquals(googleId, userAccount.oauth2Identifiers().googleId());
 
-        userAccount.setPassword(passwordEncoder.encode(googlePassword));
+        userAccount = userAccount.withPassword(passwordEncoder.encode(googlePassword));
         userAccountRepository.save(userAccount);
 
 

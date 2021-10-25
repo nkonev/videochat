@@ -23,7 +23,7 @@ public class UserService {
     private AaaUserDetailsService aaaUserDetailsService;
 
     public void checkLoginIsFree(EditUserDTO userAccountDTO, UserAccount exists) {
-        if (!exists.getUsername().equals(userAccountDTO.getLogin()) && userAccountRepository.findByUsername(userAccountDTO.getLogin()).isPresent()) {
+        if (!exists.username().equals(userAccountDTO.getLogin()) && userAccountRepository.findByUsername(userAccountDTO.getLogin()).isPresent()) {
             throw new UserAlreadyPresentException("User with login '" + userAccountDTO.getLogin() + "' is already present");
         }
     }
@@ -35,8 +35,8 @@ public class UserService {
     }
 
     public boolean checkEmailIsFree(EditUserDTO userAccountDTO, UserAccount exists) {
-        if (exists.getEmail() != null && !exists.getEmail().equals(userAccountDTO.getEmail()) && userAccountDTO.getEmail() != null && userAccountRepository.findByEmail(userAccountDTO.getEmail()).isPresent()) {
-            LOGGER.error("user with email '{}' already present. exiting...", exists.getEmail());
+        if (exists.email() != null && !exists.email().equals(userAccountDTO.getEmail()) && userAccountDTO.getEmail() != null && userAccountRepository.findByEmail(userAccountDTO.getEmail()).isPresent()) {
+            LOGGER.error("user with email '{}' already present. exiting...", exists.email());
             return false;
         } else {
             return true;

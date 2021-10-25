@@ -78,7 +78,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     public void fullyAuthenticatedUserCanChangeHerProfile() throws Exception {
         receiver.clear();
         UserAccount userAccount = getUserFromBd(TestConstants.USER_ALICE);
-        final String initialPassword = userAccount.getPassword();
+        final String initialPassword = userAccount.password();
 
         final String newLogin = "new_alice";
 
@@ -98,7 +98,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         LOGGER.info(mvcResult.getResponse().getContentAsString());
 
-        Assertions.assertEquals(initialPassword, getUserFromBd(newLogin).getPassword(), "password shouldn't be affected if there isn't set explicitly");
+        Assertions.assertEquals(initialPassword, getUserFromBd(newLogin).password(), "password shouldn't be affected if there isn't set explicitly");
 
         MvcResult getPostsRequest = mockMvc.perform(
                 get(Constants.Urls.API+ Constants.Urls.PROFILE)
@@ -124,7 +124,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @org.junit.jupiter.api.Test
     public void fullyAuthenticatedUserCanChangeHerProfileAndPassword() throws Exception {
         UserAccount userAccount = getUserFromBd(TestConstants.USER_ALICE);
-        final String initialPassword = userAccount.getPassword();
+        final String initialPassword = userAccount.password();
         final String newLogin = "new_alice12";
         final String newPassword = "new_alice_password";
 
@@ -146,8 +146,8 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         LOGGER.info(mvcResult.getResponse().getContentAsString());
 
         UserAccount afterChange = getUserFromBd(newLogin);
-        Assertions.assertNotEquals(initialPassword, afterChange.getPassword(), "password should be changed if there is set explicitly");
-        Assertions.assertTrue( passwordEncoder.matches(newPassword, afterChange.getPassword()), "password should be changed if there is set explicitly");
+        Assertions.assertNotEquals(initialPassword, afterChange.password(), "password should be changed if there is set explicitly");
+        Assertions.assertTrue( passwordEncoder.matches(newPassword, afterChange.password()), "password should be changed if there is set explicitly");
     }
 
     @WithUserDetails(TestConstants.USER_ALICE)
@@ -183,13 +183,13 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @WithUserDetails(TestConstants.USER_BOB)
     public void fullyAuthenticatedUserCannotChangeForeignProfile() throws Exception {
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_ALICE);
-        String foreignUserAccountLogin = foreignUserAccount.getUsername();
+        String foreignUserAccountLogin = foreignUserAccount.username();
         EditUserDTO edit = UserAccountConverter.convertToEditUserDto(foreignUserAccount);
 
         final String badLogin = "stolen";
         edit.setLogin(badLogin);
         Map<String, Object> userMap = objectMapper.readValue(objectMapper.writeValueAsString(edit), new TypeReference<Map<String, Object>>(){} );
-        userMap.put("id", foreignUserAccount.getId());
+        userMap.put("id", foreignUserAccount.id());
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.API+ Constants.Urls.PROFILE)
@@ -202,7 +202,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         LOGGER.info(mvcResult.getResponse().getContentAsString());
 
         UserAccount foreignPotentiallyAffectedUserAccount = getUserFromBd(TestConstants.USER_ALICE);
-        Assertions.assertEquals(foreignUserAccountLogin, foreignPotentiallyAffectedUserAccount.getUsername());
+        Assertions.assertEquals(foreignUserAccountLogin, foreignPotentiallyAffectedUserAccount.username());
     }
 
     @WithUserDetails(TestConstants.USER_ALICE)
@@ -237,9 +237,9 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         final String newEmail = TestConstants.USER_BOB+"@example.com";
         final Optional<UserAccount> foreignBobAccountOptional = userAccountRepository.findByEmail(newEmail);
         final UserAccount foreignBobAccount = foreignBobAccountOptional.orElseThrow(()->new RuntimeException("foreign email '"+newEmail+"' must be present"));
-        final long foreingId = foreignBobAccount.getId();
-        final String foreignPassword = foreignBobAccount.getPassword();
-        final String foreignEmail = foreignBobAccount.getEmail();
+        final long foreingId = foreignBobAccount.id();
+        final String foreignPassword = foreignBobAccount.password();
+        final String foreignEmail = foreignBobAccount.email();
 
         EditUserDTO edit = UserAccountConverter.convertToEditUserDto(userAccount);
         edit.setEmail(newEmail);
@@ -256,9 +256,9 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         LOGGER.info(mvcResult.getResponse().getContentAsString());
 
         UserAccount foreignAccountAfter = getUserFromBd(TestConstants.USER_BOB);
-        Assertions.assertEquals(foreingId, foreignAccountAfter.getId().longValue());
-        Assertions.assertEquals(foreignEmail, foreignAccountAfter.getEmail());
-        Assertions.assertEquals(foreignPassword, foreignAccountAfter.getPassword());
+        Assertions.assertEquals(foreingId, foreignAccountAfter.id().longValue());
+        Assertions.assertEquals(foreignEmail, foreignAccountAfter.email());
+        Assertions.assertEquals(foreignPassword, foreignAccountAfter.password());
 
     }
 
@@ -276,10 +276,10 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @org.junit.jupiter.api.Test
     public void userCannotSeeAnybodyProfileEmail() throws Exception {
         UserAccount bob = getUserFromBd(TestConstants.USER_BOB);
-        String bobEmail = bob.getEmail();
+        String bobEmail = bob.email();
 
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.getId())
+                get(Constants.Urls.API+ Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.id())
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].email").doesNotExist())
@@ -295,10 +295,10 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         UserAccount bob = getUserFromBd(TestConstants.USER_BOB);
         UserAccount alice = getUserFromBd(TestConstants.USER_ALICE);
 
-        String bobEmail = bob.getEmail();
+        String bobEmail = bob.email();
 
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.getId()+"&userId="+alice.getId())
+                get(Constants.Urls.API+ Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.id()+"&userId="+alice.id())
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].login").value(TestConstants.USER_ALICE))
@@ -409,7 +409,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         // check that user 10 is locked
         UserAccount userAccountFound = userAccountRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        Assertions.assertTrue(userAccountFound.isLocked());
+        Assertions.assertTrue(userAccountFound.locked());
     }
 
     @WithUserDetails(TestConstants.USER_ALICE)
@@ -467,7 +467,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 UserRole.ROLE_USER, login+"@example.com", null);
         userAccount = userAccountRepository.save(userAccount);
 
-        return userAccount.getId();
+        return userAccount.id();
     }
 
     @WithUserDetails(TestConstants.USER_ADMIN)

@@ -38,24 +38,24 @@ public class UserAccountConverter {
 
     private static OAuth2IdentifiersDTO convertOauth(UserAccount.OAuth2Identifiers oAuth2Identifiers){
         if (oAuth2Identifiers ==null) return null;
-        return new OAuth2IdentifiersDTO(oAuth2Identifiers.getFacebookId(), oAuth2Identifiers.getVkontakteId(), oAuth2Identifiers.getGoogleId());
+        return new OAuth2IdentifiersDTO(oAuth2Identifiers.facebookId(), oAuth2Identifiers.vkontakteId(), oAuth2Identifiers.googleId());
     }
 
     public static UserAccountDetailsDTO convertToUserAccountDetailsDTO(UserAccount userAccount) {
         if (userAccount == null) { return null; }
         return new UserAccountDetailsDTO(
-                userAccount.getId(),
-                userAccount.getUsername(),
-                userAccount.getAvatar(),
-                userAccount.getAvatarBig(),
-                userAccount.getPassword(),
-                userAccount.isExpired(),
-                userAccount.isLocked(),
-                userAccount.isEnabled(),
-                Collections.singletonList(convertRole(userAccount.getRole())),
-                userAccount.getEmail(),
-                userAccount.getLastLoginDateTime(),
-                convertOauth(userAccount.getOauth2Identifiers())
+                userAccount.id(),
+                userAccount.username(),
+                userAccount.avatar(),
+                userAccount.avatarBig(),
+                userAccount.password(),
+                userAccount.expired(),
+                userAccount.locked(),
+                userAccount.enabled(),
+                Collections.singletonList(convertRole(userAccount.role())),
+                userAccount.email(),
+                userAccount.lastLoginDateTime(),
+                convertOauth(userAccount.oauth2Identifiers())
         );
     }
 
@@ -95,12 +95,12 @@ public class UserAccountConverter {
     public static com.github.nkonev.aaa.dto.UserAccountDTO convertToUserAccountDTO(UserAccount userAccount) {
         if (userAccount == null) { return null; }
         return new com.github.nkonev.aaa.dto.UserAccountDTO(
-                userAccount.getId(),
-                userAccount.getUsername(),
-                userAccount.getAvatar(),
-                userAccount.getAvatarBig(),
-                userAccount.getLastLoginDateTime(),
-                convertOauth(userAccount.getOauth2Identifiers())
+                userAccount.id(),
+                userAccount.username(),
+                userAccount.avatar(),
+                userAccount.avatarBig(),
+                userAccount.lastLoginDateTime(),
+                convertOauth(userAccount.oauth2Identifiers())
         );
     }
 
@@ -108,18 +108,18 @@ public class UserAccountConverter {
         if (userAccount == null) { return null; }
         com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO;
         if (aaaSecurityService.hasSessionManagementPermission(currentUser)){
-            dataDTO = new com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.isEnabled(), userAccount.isExpired(), userAccount.isLocked(), userAccount.getRole());
+            dataDTO = new com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.role());
         } else {
             dataDTO = null;
         }
         return new UserAccountDTOExtended(
-                userAccount.getId(),
-                userAccount.getUsername(),
-                userAccount.getAvatar(),
-                userAccount.getAvatarBig(),
+                userAccount.id(),
+                userAccount.username(),
+                userAccount.avatar(),
+                userAccount.avatarBig(),
                 dataDTO,
-                userAccount.getLastLoginDateTime(),
-                convertOauth(userAccount.getOauth2Identifiers()),
+                userAccount.lastLoginDateTime(),
+                convertOauth(userAccount.oauth2Identifiers()),
                 aaaSecurityService.canLock(currentUser, userAccount),
                 aaaSecurityService.canDelete(currentUser, userAccount),
                 aaaSecurityService.canChangeRole(currentUser, userAccount)
@@ -159,8 +159,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 newUserRole,
-                userAccountDTO.getEmail(),
-                null
+                userAccountDTO.getEmail()
         );
     }
 
@@ -251,59 +250,61 @@ public class UserAccountConverter {
         Assert.hasLength(userAccountDTO.getEmail(), "email should have length");
     }
 
-    public static void updateUserAccountEntity(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
+    public static UserAccount updateUserAccountEntity(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
         Assert.hasLength(userAccountDTO.getLogin(), "login should have length");
         validateAndTrimLogin(userAccountDTO);
         String password = userAccountDTO.getPassword();
         if (!StringUtils.isEmpty(password)) {
             validateUserPassword(password);
-            userAccount.setPassword(passwordEncoder.encode(password));
+            userAccount = userAccount.withPassword(passwordEncoder.encode(password));
         }
-        userAccount.setUsername(userAccountDTO.getLogin());
+        userAccount = userAccount.withUsername(userAccountDTO.getLogin());
         if (Boolean.TRUE.equals(userAccountDTO.getRemoveAvatar())){
-            userAccount.setAvatar(null);
-            userAccount.setAvatarBig(null);
+            userAccount = userAccount.withAvatar(null);
+            userAccount = userAccount.withAvatarBig(null);
         } else {
-            userAccount.setAvatar(userAccountDTO.getAvatar());
-            userAccount.setAvatarBig(userAccountDTO.getAvatarBig());
+            userAccount = userAccount.withAvatar(userAccountDTO.getAvatar());
+            userAccount = userAccount.withAvatarBig(userAccountDTO.getAvatarBig());
         }
         if (!StringUtils.isEmpty(userAccountDTO.getEmail())) {
             String email = userAccountDTO.getEmail();
             email = email.trim();
-            userAccount.setEmail(email);
+            userAccount = userAccount.withEmail(email);
         }
+        return userAccount;
     }
 
-    public static void updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
+    public static UserAccount updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
         if (!StringUtils.isEmpty(userAccountDTO.getLogin())) {
             validateAndTrimLogin(userAccountDTO);
-            userAccount.setUsername(userAccountDTO.getLogin());
+            userAccount = userAccount.withUsername(userAccountDTO.getLogin());
         }
         String password = userAccountDTO.getPassword();
         if (!StringUtils.isEmpty(password)) {
             validateUserPassword(password);
-            userAccount.setPassword(passwordEncoder.encode(password));
+            userAccount = userAccount.withPassword(passwordEncoder.encode(password));
         }
         if (Boolean.TRUE.equals(userAccountDTO.getRemoveAvatar())){
-            userAccount.setAvatar(null);
-            userAccount.setAvatarBig(null);
+            userAccount = userAccount.withAvatar(null);
+            userAccount = userAccount.withAvatarBig(null);
         } else if (!StringUtils.isEmpty(userAccountDTO.getAvatar())) {
-            userAccount.setAvatar(userAccountDTO.getAvatar());
-            userAccount.setAvatarBig(userAccountDTO.getAvatarBig());
+            userAccount = userAccount.withAvatar(userAccountDTO.getAvatar());
+            userAccount = userAccount.withAvatarBig(userAccountDTO.getAvatarBig());
         }
         if (!StringUtils.isEmpty(userAccountDTO.getEmail())) {
             String email = userAccountDTO.getEmail();
             email = email.trim();
-            userAccount.setEmail(email);
+            userAccount = userAccount.withEmail(email);
         }
+        return userAccount;
     }
 
     public static com.github.nkonev.aaa.dto.EditUserDTO convertToEditUserDto(UserAccount userAccount) {
         com.github.nkonev.aaa.dto.EditUserDTO e = new com.github.nkonev.aaa.dto.EditUserDTO();
-        e.setAvatar(userAccount.getAvatar());
-        e.setAvatarBig(userAccount.getAvatarBig());
-        e.setEmail(userAccount.getEmail());
-        e.setLogin(userAccount.getUsername());
+        e.setAvatar(userAccount.avatar());
+        e.setAvatarBig(userAccount.avatarBig());
+        e.setEmail(userAccount.email());
+        e.setLogin(userAccount.username());
         return e;
     }
 
