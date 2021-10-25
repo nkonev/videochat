@@ -254,11 +254,11 @@ public class UserProfileController {
     @PreAuthorize("@aaaSecurityService.canLock(#userAccountDetailsDTO, #lockDTO)")
     @PostMapping(Constants.Urls.API+Constants.Urls.USER + Constants.Urls.LOCK)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.LockDTO lockDTO){
-        UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.getUserId());
-        if (lockDTO.isLock()){
-            aaaUserDetailsService.killSessions(lockDTO.getUserId());
+        UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.userId());
+        if (lockDTO.lock()){
+            aaaUserDetailsService.killSessions(lockDTO.userId());
         }
-        userAccount = userAccount.withLocked(lockDTO.isLock());
+        userAccount = userAccount.withLocked(lockDTO.lock());
         userAccount = userAccountRepository.save(userAccount);
 
         return userAccountConverter.convertToUserAccountDTOExtended(userAccountDetailsDTO, userAccount);

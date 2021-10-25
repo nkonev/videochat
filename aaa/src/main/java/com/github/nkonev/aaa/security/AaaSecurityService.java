@@ -35,7 +35,7 @@ public class AaaSecurityService {
         if (userAccount==null){
             return false;
         }
-        if (lockDTO!=null && userAccount.getId().equals(lockDTO.getUserId())){
+        if (lockDTO!=null && userAccount.getId().equals(lockDTO.userId())){
             return false;
         }
         if (roleHierarchy.getReachableGrantedAuthorities(userAccount.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()))){
