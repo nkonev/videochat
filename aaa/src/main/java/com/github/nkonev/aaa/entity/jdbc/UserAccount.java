@@ -2,6 +2,7 @@ package com.github.nkonev.aaa.entity.jdbc;
 
 import com.github.nkonev.aaa.dto.UserRole;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.relational.core.mapping.Embedded;
 import org.springframework.data.relational.core.mapping.Table;
 import javax.validation.constraints.NotNull;
@@ -33,6 +34,13 @@ public record UserAccount(
 ) {
     public UserAccount() {
         this(null, null, null, null, null, false, false, false, null, null, null, null, new OAuth2Identifiers(null, null, null));
+    }
+
+    @PersistenceConstructor
+    public UserAccount(Long id, CreationType creationType, String username, String password, String avatar, String avatarBig,
+                       boolean expired, boolean locked, boolean enabled,
+                       UserRole role, String email, LocalDateTime lastLoginDateTime, OAuth2Identifiers oauth2Identifiers) {
+        this(id, username, password, avatar, avatarBig, expired, locked, enabled, email, creationType, role, lastLoginDateTime, oauth2Identifiers);
     }
 
     public UserAccount(CreationType creationType, String username, String password, String avatar, String avatarBig,
