@@ -69,7 +69,7 @@ public class EmailService {
         msg.setSubject(passwordResetSubject);
         msg.setTo(email);
 
-        final var passwordResetLink = customConfig.getBaseUrl() + Constants.Urls.PASSWORD_RESET+ "?"+ Constants.Urls.UUID +"=" + passwordResetToken.getUuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
+        final var passwordResetLink = customConfig.getBaseUrl() + Constants.Urls.PASSWORD_RESET+ "?"+ Constants.Urls.UUID +"=" + passwordResetToken.uuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
         final var text = renderTemplate("password-reset.ftlh",
                 Map.of(PASSWORD_RESET_LINK_PLACEHOLDER, passwordResetLink, LOGIN_PLACEHOLDER, login));
 

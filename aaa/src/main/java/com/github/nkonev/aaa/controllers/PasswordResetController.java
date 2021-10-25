@@ -91,7 +91,7 @@ public class PasswordResetController {
             throw new PasswordResetTokenNotFoundException("password reset token not found or expired");
         }
         PasswordResetToken passwordResetToken = passwordResetTokenOptional.get();
-        Optional<UserAccount> userAccountOptional = userAccountRepository.findById(passwordResetToken.getUserId());
+        Optional<UserAccount> userAccountOptional = userAccountRepository.findById(passwordResetToken.userId());
         if(!userAccountOptional.isPresent()) {
             return;
         }
