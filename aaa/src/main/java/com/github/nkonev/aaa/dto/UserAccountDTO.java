@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
  * Created by nik on 22.06.17.
  * Contains public information
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public class UserAccountDTO implements Serializable {
     private static final long serialVersionUID = -5796134399691582320L;
 

@@ -92,7 +92,7 @@ public class UserProfileController {
         Long expiresAt = getExpiresAt(session);
         var dto = checkAuthenticated(userAccount, session);
         HttpHeaders headers = new HttpHeaders();
-        headers.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.getLogin().getBytes()));
+        headers.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.login().getBytes()));
         headers.set(X_AUTH_USER_ID, ""+userAccount.getId());
         headers.set(X_AUTH_EXPIRESIN, ""+expiresAt);
         headers.set(X_AUTH_SESSION_ID, session.getId());
@@ -128,7 +128,7 @@ public class UserProfileController {
     }
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.LIST)
-    public List<com.github.nkonev.aaa.dto.UserAccountDTO> getUsers(
+    public List<Object> getUsers(
             @RequestParam(value = "userId") List<Long> userIds,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
         ) {
@@ -138,7 +138,7 @@ public class UserProfileController {
         if (userIds.size() > MAX_USERS_RESPONSE_LENGTH) {
             throw new BadRequestException("Cannot be greater than " + MAX_USERS_RESPONSE_LENGTH);
         }
-        List<com.github.nkonev.aaa.dto.UserAccountDTO> result = new ArrayList<>();
+        List<Object> result = new ArrayList<>();
         for (UserAccount userAccountEntity: userAccountRepository.findByIdInOrderById(userIds)) {
             if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.id())) {
                 result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null));
@@ -150,7 +150,7 @@ public class UserProfileController {
     }
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.USER_ID)
-    public com.github.nkonev.aaa.dto.UserAccountDTO getUser(
+    public Object getUser(
             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
@@ -163,7 +163,7 @@ public class UserProfileController {
     }
 
     @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST)
-    public List<com.github.nkonev.aaa.dto.UserAccountDTO> getUserInternal(
+    public List<Object> getUserInternal(
             @RequestParam(value = "userId") List<Long> userIds,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
