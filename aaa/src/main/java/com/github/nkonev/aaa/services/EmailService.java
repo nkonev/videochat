@@ -55,7 +55,7 @@ public class EmailService {
         msg.setSubject(registrationSubject);
         msg.setTo(email);
 
-        final var regLink = customConfig.getBaseUrl() + Constants.Urls.CONFIRM+ "?"+ Constants.Urls.UUID +"=" + userConfirmationToken.getUuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
+        final var regLink = customConfig.getBaseUrl() + Constants.Urls.CONFIRM+ "?"+ Constants.Urls.UUID +"=" + userConfirmationToken.uuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
         final var text = renderTemplate("confirm-registration.ftlh",
                 Map.of(REG_LINK_PLACEHOLDER, regLink, LOGIN_PLACEHOLDER, login));
 

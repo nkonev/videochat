@@ -91,7 +91,7 @@ public class RegistrationController {
             return "redirect:/confirm/registration/token-not-found";
         }
         UserConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
-        Optional<UserAccount> userAccountOptional = userAccountRepository.findById(userConfirmationToken.getUserId());
+        Optional<UserAccount> userAccountOptional = userAccountRepository.findById(userConfirmationToken.userId());
         if (!userAccountOptional.isPresent()) {
             return "redirect:/confirm/registration/user-not-found";
         }
