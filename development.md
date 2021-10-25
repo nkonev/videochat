@@ -1,3 +1,7 @@
+# WebRTC
+[In plain English](https://forasoft.com/blog/article/what-is-webrtc-156)
+[In plain Russian](http://forasoft.github.io/webrtc-in-plain-russian/)
+
 # Development
 
 ## Firewalld help
