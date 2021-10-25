@@ -104,7 +104,7 @@ public class UserProfileController {
 
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER)
-    public com.github.nkonev.aaa.dto.Wrapper<Object> getUsers(
+    public com.github.nkonev.aaa.dto.Wrapper<Record> getUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestParam(value = "page", required=false, defaultValue = "0") int page,
             @RequestParam(value = "size", required=false, defaultValue = "0") int size,
@@ -117,18 +117,18 @@ public class UserProfileController {
         List<UserAccount> resultPage = userAccountRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
         long resultPageCount = userAccountRepository.findByUsernameContainsIgnoreCaseCount(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
 
-        return new com.github.nkonev.aaa.dto.Wrapper<Object>(
+        return new com.github.nkonev.aaa.dto.Wrapper<Record>(
                 resultPageCount,
                 resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList())
         );
     }
 
-    private Function<UserAccount, Object> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
+    private Function<UserAccount, Record> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(currentUser, userAccount);
     }
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.LIST)
-    public List<Object> getUsers(
+    public List<Record> getUsers(
             @RequestParam(value = "userId") List<Long> userIds,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
         ) {
@@ -138,7 +138,7 @@ public class UserProfileController {
         if (userIds.size() > MAX_USERS_RESPONSE_LENGTH) {
             throw new BadRequestException("Cannot be greater than " + MAX_USERS_RESPONSE_LENGTH);
         }
-        List<Object> result = new ArrayList<>();
+        List<Record> result = new ArrayList<>();
         for (UserAccount userAccountEntity: userAccountRepository.findByIdInOrderById(userIds)) {
             if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.id())) {
                 result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null));
@@ -150,7 +150,7 @@ public class UserProfileController {
     }
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.USER_ID)
-    public Object getUser(
+    public Record getUser(
             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
@@ -163,7 +163,7 @@ public class UserProfileController {
     }
 
     @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST)
-    public List<Object> getUserInternal(
+    public List<Record> getUserInternal(
             @RequestParam(value = "userId") List<Long> userIds,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
