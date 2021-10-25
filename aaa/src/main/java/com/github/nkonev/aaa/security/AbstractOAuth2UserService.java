@@ -52,6 +52,7 @@ public abstract class AbstractOAuth2UserService {
                         "If this is you and you want to merge your profiles please delete another profile and bind "+getOauthName()+" to this. If not please contact administrator.");
             }
 
+            // TODO get here new principal then put it to SecurityContext
             setOauthIdToPrincipal(principal, oauthId);
 
             setOauthIdToEntity(principal.getId(), oauthId);

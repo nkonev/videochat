@@ -20,8 +20,10 @@ import java.util.Map;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE)
-public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails, OAuth2User, OidcUser {
+public class UserAccountDetailsDTO implements UserDetails, OAuth2User, OidcUser {
     private static final long serialVersionUID = -3271989114498135073L;
+
+    private UserAccountDTO userAccountDTO = new UserAccountDTO();
 
     // OAuth2 specific Facebook and Vkontakte
     private Map<String, Object> oauth2Attributes = new HashMap<>();
@@ -53,13 +55,23 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
             LocalDateTime lastLoginDateTime,
             OAuth2IdentifiersDTO oauthIdentifiers
     ) {
-        super(id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers);
+        this.userAccountDTO = new UserAccountDTO(
+                id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers
+        );
         this.password = password;
         this.expired = expired;
         this.locked = locked;
         this.enabled = enabled;
         this.roles = roles;
         this.email = email;
+    }
+
+    public UserAccountDTO getUserAccountDTO() {
+        return userAccountDTO;
+    }
+
+    public void setUserAccountDTO(UserAccountDTO userAccountDTO) {
+        this.userAccountDTO = userAccountDTO;
     }
 
     @Override
@@ -69,7 +81,7 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
 
     @Override
     public String getUsername() {
-        return super.getLogin();
+        return this.userAccountDTO.getLogin();
     }
 
     @Override
@@ -104,7 +116,7 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
 
     @Override
     public String getName() {
-        return login;
+        return this.userAccountDTO.getLogin();
     }
 
     public void setPassword(String password) {
@@ -176,5 +188,29 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
 
     public void setUserInfo(OidcUserInfo userInfo) {
         this.userInfo = userInfo;
+    }
+
+    public Long getId() {
+        return userAccountDTO.getId();
+    }
+
+    public String getAvatar() {
+        return userAccountDTO.getAvatar();
+    }
+
+    public String getAvatarBig() {
+        return userAccountDTO.getAvatarBig();
+    }
+
+    public OAuth2IdentifiersDTO getOauth2Identifiers() {
+        return userAccountDTO.getOauth2Identifiers();
+    }
+
+    public LocalDateTime getLastLoginDateTime() {
+        return userAccountDTO.getLastLoginDateTime();
+    }
+
+    public void setOauth2Identifiers(OAuth2IdentifiersDTO newOa) {
+        this.userAccountDTO.setOauth2Identifiers(newOa);
     }
 }
