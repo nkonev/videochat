@@ -1,5 +1,7 @@
 package com.github.nkonev.aaa.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -8,8 +10,32 @@ public record AaaError(
         String error,
         String message,
         String timeStamp,
-        Collection<com.github.nkonev.aaa.dto.ValidationError> validationErrors
+        Collection<ValidationError> validationErrors,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        String exception,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        String trace
 ) {
+
+    public AaaError(
+            int status,
+            String error,
+            String message,
+            String timeStamp,
+            String exception,
+            String trace
+    ) {
+        this(
+                status,
+                error,
+                message,
+                timeStamp,
+                new ArrayList<>(),
+                exception,
+                trace
+        );
+    }
+
     public AaaError(
             int status,
             String error,
@@ -21,7 +47,27 @@ public record AaaError(
                 error,
                 message,
                 timeStamp,
-                new ArrayList<>()
+                new ArrayList<>(),
+                null,
+                null
+        );
+    }
+
+    public AaaError(
+            int status,
+            String error,
+            String message,
+            String timeStamp,
+            Collection<ValidationError> validationErrors
+    ) {
+        this(
+                status,
+                error,
+                message,
+                timeStamp,
+                validationErrors,
+                null,
+                null
         );
     }
 }

@@ -2,7 +2,6 @@ package com.github.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nkonev.aaa.dto.AaaError;
-import com.github.nkonev.aaa.dto.AaaErrorWithDebug;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +55,7 @@ public class AaaErrorController extends AbstractErrorController {
             response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
             try {
                 if (debug) {
-                    objectMapper.writeValue(response.getWriter(), new AaaErrorWithDebug(
+                    objectMapper.writeValue(response.getWriter(), new AaaError(
                             response.getStatus(),
                             (String) errorAttributes.get("error"),
                             (String) errorAttributes.get("message"),
