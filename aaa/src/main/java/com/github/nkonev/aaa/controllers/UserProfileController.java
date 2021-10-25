@@ -294,13 +294,13 @@ public class UserProfileController {
         UserAccount.OAuth2Identifiers oAuth2Identifiers = userAccount.oauth2Identifiers();
         switch (provider) {
             case OAuth2Providers.FACEBOOK:
-                oAuth2Identifiers = oAuth2Identifiers.withoutFacebookId();
+                oAuth2Identifiers = oAuth2Identifiers.withFacebookId(null);
                 break;
             case OAuth2Providers.VKONTAKTE:
-                oAuth2Identifiers = oAuth2Identifiers.withoutVkontakteId();
+                oAuth2Identifiers = oAuth2Identifiers.withVkontakteId(null);
                 break;
             case OAuth2Providers.GOOGLE:
-                oAuth2Identifiers = oAuth2Identifiers.withoutGoogleId();
+                oAuth2Identifiers = oAuth2Identifiers.withGoogleId(null);
                 break;
             default:
                 throw new RuntimeException("Wrong OAuth2 provider: " + provider);

@@ -198,32 +198,6 @@ public record UserAccount(
         String vkontakteId,
         String googleId
     ) {
-        public OAuth2Identifiers withoutFacebookId() {
-            return new OAuth2Identifiers(
-                    null,
-                    vkontakteId,
-                    googleId
-            );
-        }
-
-        public OAuth2Identifiers withoutVkontakteId() {
-            return new OAuth2Identifiers(
-                    facebookId,
-                    null,
-                    googleId
-            );
-        }
-
-        public OAuth2Identifiers withoutGoogleId() {
-            return new OAuth2Identifiers(
-                    facebookId,
-                    vkontakteId,
-                    null
-            );
-        }
-
-
-
         public OAuth2Identifiers withFacebookId(String newFbId) {
             return new OAuth2Identifiers(
                     newFbId,
