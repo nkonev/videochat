@@ -32,9 +32,6 @@ public record UserAccount(
     @Embedded(onEmpty = Embedded.OnEmpty.USE_EMPTY)
     OAuth2Identifiers oauth2Identifiers
 ) {
-    public UserAccount() {
-        this(null, null, null, null, null, false, false, false, null, null, null, null, new OAuth2Identifiers(null, null, null));
-    }
 
     @PersistenceConstructor
     public UserAccount(Long id, CreationType creationType, String username, String password, String avatar, String avatarBig,
@@ -215,6 +212,10 @@ public record UserAccount(
                 lastLoginDateTime,
                 newOauthIdentifiers
         );
+    }
+
+    public OAuth2Identifiers oauth2Identifiers() {
+        return oauth2Identifiers != null ? oauth2Identifiers : new OAuth2Identifiers(null, null, null);
     }
 
     public record OAuth2Identifiers (
