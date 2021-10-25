@@ -141,8 +141,8 @@ public class UserAccountConverter {
         final UserRole newUserRole = getDefaultUserRole();
 
         validateLoginAndEmail(userAccountDTO);
-        validateAndTrimLogin(userAccountDTO);
-        String password = userAccountDTO.getPassword();
+        userAccountDTO = validateAndTrimLogin(userAccountDTO);
+        String password = userAccountDTO.password();
         try {
             validateUserPassword(password);
         } catch (IllegalArgumentException e) {
@@ -152,15 +152,15 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.REGISTRATION,
-                userAccountDTO.getLogin(),
+                userAccountDTO.login(),
                 passwordEncoder.encode(password),
-                userAccountDTO.getAvatar(),
-                userAccountDTO.getAvatarBig(),
+                userAccountDTO.avatar(),
+                userAccountDTO.avatarBig(),
                 expired,
                 locked,
                 enabled,
                 newUserRole,
-                userAccountDTO.getEmail(),
+                userAccountDTO.email(),
                 null,
                 null
         );
@@ -177,8 +177,8 @@ public class UserAccountConverter {
     }
 
 
-    private static void validateAndTrimLogin(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO) {
-        userAccountDTO.setLogin(validateAndTrimLogin(userAccountDTO.getLogin()));
+    private static com.github.nkonev.aaa.dto.EditUserDTO validateAndTrimLogin(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO) {
+        return userAccountDTO.withLogin(validateAndTrimLogin(userAccountDTO.login()));
     }
 
     // used for just get user id
@@ -255,28 +255,28 @@ public class UserAccountConverter {
     }
 
     private static void validateLoginAndEmail(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO){
-        Assert.hasLength(userAccountDTO.getLogin(), "login should have length");
-        Assert.hasLength(userAccountDTO.getEmail(), "email should have length");
+        Assert.hasLength(userAccountDTO.login(), "login should have length");
+        Assert.hasLength(userAccountDTO.email(), "email should have length");
     }
 
     public static UserAccount updateUserAccountEntity(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
-        Assert.hasLength(userAccountDTO.getLogin(), "login should have length");
-        validateAndTrimLogin(userAccountDTO);
-        String password = userAccountDTO.getPassword();
+        Assert.hasLength(userAccountDTO.login(), "login should have length");
+        userAccountDTO = validateAndTrimLogin(userAccountDTO);
+        String password = userAccountDTO.password();
         if (!StringUtils.isEmpty(password)) {
             validateUserPassword(password);
             userAccount = userAccount.withPassword(passwordEncoder.encode(password));
         }
-        userAccount = userAccount.withUsername(userAccountDTO.getLogin());
-        if (Boolean.TRUE.equals(userAccountDTO.getRemoveAvatar())){
+        userAccount = userAccount.withUsername(userAccountDTO.login());
+        if (Boolean.TRUE.equals(userAccountDTO.removeAvatar())){
             userAccount = userAccount.withAvatar(null);
             userAccount = userAccount.withAvatarBig(null);
         } else {
-            userAccount = userAccount.withAvatar(userAccountDTO.getAvatar());
-            userAccount = userAccount.withAvatarBig(userAccountDTO.getAvatarBig());
+            userAccount = userAccount.withAvatar(userAccountDTO.avatar());
+            userAccount = userAccount.withAvatarBig(userAccountDTO.avatarBig());
         }
-        if (!StringUtils.isEmpty(userAccountDTO.getEmail())) {
-            String email = userAccountDTO.getEmail();
+        if (!StringUtils.isEmpty(userAccountDTO.email())) {
+            String email = userAccountDTO.email();
             email = email.trim();
             userAccount = userAccount.withEmail(email);
         }
@@ -284,24 +284,24 @@ public class UserAccountConverter {
     }
 
     public static UserAccount updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
-        if (!StringUtils.isEmpty(userAccountDTO.getLogin())) {
-            validateAndTrimLogin(userAccountDTO);
-            userAccount = userAccount.withUsername(userAccountDTO.getLogin());
+        if (!StringUtils.isEmpty(userAccountDTO.login())) {
+            userAccountDTO = validateAndTrimLogin(userAccountDTO);
+            userAccount = userAccount.withUsername(userAccountDTO.login());
         }
-        String password = userAccountDTO.getPassword();
+        String password = userAccountDTO.password();
         if (!StringUtils.isEmpty(password)) {
             validateUserPassword(password);
             userAccount = userAccount.withPassword(passwordEncoder.encode(password));
         }
-        if (Boolean.TRUE.equals(userAccountDTO.getRemoveAvatar())){
+        if (Boolean.TRUE.equals(userAccountDTO.removeAvatar())){
             userAccount = userAccount.withAvatar(null);
             userAccount = userAccount.withAvatarBig(null);
-        } else if (!StringUtils.isEmpty(userAccountDTO.getAvatar())) {
-            userAccount = userAccount.withAvatar(userAccountDTO.getAvatar());
-            userAccount = userAccount.withAvatarBig(userAccountDTO.getAvatarBig());
+        } else if (!StringUtils.isEmpty(userAccountDTO.avatar())) {
+            userAccount = userAccount.withAvatar(userAccountDTO.avatar());
+            userAccount = userAccount.withAvatarBig(userAccountDTO.avatarBig());
         }
-        if (!StringUtils.isEmpty(userAccountDTO.getEmail())) {
-            String email = userAccountDTO.getEmail();
+        if (!StringUtils.isEmpty(userAccountDTO.email())) {
+            String email = userAccountDTO.email();
             email = email.trim();
             userAccount = userAccount.withEmail(email);
         }
@@ -309,12 +309,14 @@ public class UserAccountConverter {
     }
 
     public static com.github.nkonev.aaa.dto.EditUserDTO convertToEditUserDto(UserAccount userAccount) {
-        com.github.nkonev.aaa.dto.EditUserDTO e = new com.github.nkonev.aaa.dto.EditUserDTO();
-        e.setAvatar(userAccount.avatar());
-        e.setAvatarBig(userAccount.avatarBig());
-        e.setEmail(userAccount.email());
-        e.setLogin(userAccount.username());
-        return e;
+        return new com.github.nkonev.aaa.dto.EditUserDTO(
+                userAccount.username(),
+                userAccount.avatar(),
+                null,
+                null,
+                userAccount.email(),
+                userAccount.avatarBig()
+        );
     }
 
 }

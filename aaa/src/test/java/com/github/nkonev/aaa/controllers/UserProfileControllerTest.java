@@ -83,7 +83,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         final String newLogin = "new_alice";
 
         EditUserDTO edit = UserAccountConverter.convertToEditUserDto(userAccount);
-        edit.setLogin(newLogin);
+        edit = edit.withLogin(newLogin);
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.API+ Constants.Urls.PROFILE)
@@ -129,8 +129,8 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         final String newPassword = "new_alice_password";
 
         EditUserDTO edit = UserAccountConverter.convertToEditUserDto(userAccount);
-        edit.setLogin(newLogin);
-        edit.setPassword(newPassword);
+        edit = edit.withLogin(newLogin);
+        edit = edit.withPassword(newPassword);
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.API+ Constants.Urls.PROFILE)
@@ -157,8 +157,8 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         final String newPassword = "new_alice_password";
 
         EditUserDTO edit = UserAccountConverter.convertToEditUserDto(userAccount);
-        edit.setLogin(null);
-        edit.setPassword(newPassword);
+        edit = edit.withLogin(null);
+        edit = edit.withPassword(newPassword);
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.API+ Constants.Urls.PROFILE)
@@ -187,7 +187,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         EditUserDTO edit = UserAccountConverter.convertToEditUserDto(foreignUserAccount);
 
         final String badLogin = "stolen";
-        edit.setLogin(badLogin);
+        edit = edit.withLogin(badLogin);
         Map<String, Object> userMap = objectMapper.readValue(objectMapper.writeValueAsString(edit), new TypeReference<Map<String, Object>>(){} );
         userMap.put("id", foreignUserAccount.id());
 
@@ -213,7 +213,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         final String newLogin = TestConstants.USER_BOB;
 
         EditUserDTO edit = UserAccountConverter.convertToEditUserDto(userAccount);
-        edit.setLogin(newLogin);
+        edit = edit.withLogin(newLogin);
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.API+ Constants.Urls.PROFILE)
@@ -242,7 +242,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         final String foreignEmail = foreignBobAccount.email();
 
         EditUserDTO edit = UserAccountConverter.convertToEditUserDto(userAccount);
-        edit.setEmail(newEmail);
+        edit = edit.withEmail(newEmail);
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.API+ Constants.Urls.PROFILE)
