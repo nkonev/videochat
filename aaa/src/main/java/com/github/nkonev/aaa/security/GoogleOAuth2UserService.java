@@ -99,7 +99,7 @@ public class GoogleOAuth2UserService extends AbstractOAuth2UserService implement
 
     @Override
     protected void setOauthIdToPrincipal(UserAccountDetailsDTO principal, String oauthId) {
-        principal.getOauth2Identifiers().setGoogleId(oauthId);
+        principal.setOauth2Identifiers(principal.getOauth2Identifiers().withGoogleId(oauthId));
     }
 
     @Override

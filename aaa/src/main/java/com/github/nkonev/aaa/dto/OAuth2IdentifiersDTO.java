@@ -7,41 +7,36 @@ import java.io.Serializable;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE)
-public class OAuth2IdentifiersDTO implements Serializable {
-    private String facebookId;
-    private String vkontakteId;
-    private String googleId;
-
+public record OAuth2IdentifiersDTO  (
+    String facebookId,
+    String vkontakteId,
+    String googleId
+) implements Serializable {
     public OAuth2IdentifiersDTO() {
+        this(null, null, null);
     }
 
-    public OAuth2IdentifiersDTO(String facebookId, String vkontakteId, String googleId) {
-        this.facebookId = facebookId;
-        this.vkontakteId = vkontakteId;
-        this.googleId = googleId;
+    public OAuth2IdentifiersDTO withGoogleId(String newGoogleId) {
+        return new OAuth2IdentifiersDTO(
+                facebookId,
+                vkontakteId,
+                newGoogleId
+        );
     }
 
-    public String getFacebookId() {
-        return facebookId;
+    public OAuth2IdentifiersDTO withVkontakteId(String newVkontakteId) {
+        return new OAuth2IdentifiersDTO(
+                facebookId,
+                newVkontakteId,
+                googleId
+        );
     }
 
-    public void setFacebookId(String facebookId) {
-        this.facebookId = facebookId;
-    }
-
-    public String getVkontakteId() {
-        return vkontakteId;
-    }
-
-    public void setVkontakteId(String vkontakteId) {
-        this.vkontakteId = vkontakteId;
-    }
-
-    public String getGoogleId() {
-        return googleId;
-    }
-
-    public void setGoogleId(String googleId) {
-        this.googleId = googleId;
+    public OAuth2IdentifiersDTO withFacebookId(String newFacebookId) {
+        return new OAuth2IdentifiersDTO(
+                newFacebookId,
+                vkontakteId,
+                googleId
+        );
     }
 }
