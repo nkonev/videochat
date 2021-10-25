@@ -291,20 +291,12 @@ public class UserProfileController {
     public void selfDeleteBindingOauth2Provider(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @PathVariable("provider") String provider){
         long userId = userAccountDetailsDTO.getId();
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
-        UserAccount.OAuth2Identifiers oAuth2Identifiers = userAccount.oauth2Identifiers();
-        switch (provider) {
-            case OAuth2Providers.FACEBOOK:
-                oAuth2Identifiers = oAuth2Identifiers.withFacebookId(null);
-                break;
-            case OAuth2Providers.VKONTAKTE:
-                oAuth2Identifiers = oAuth2Identifiers.withVkontakteId(null);
-                break;
-            case OAuth2Providers.GOOGLE:
-                oAuth2Identifiers = oAuth2Identifiers.withGoogleId(null);
-                break;
-            default:
-                throw new RuntimeException("Wrong OAuth2 provider: " + provider);
-        }
+        UserAccount.OAuth2Identifiers oAuth2Identifiers = switch (provider) {
+            case OAuth2Providers.FACEBOOK -> userAccount.oauth2Identifiers().withFacebookId(null);
+            case OAuth2Providers.VKONTAKTE -> userAccount.oauth2Identifiers().withVkontakteId(null);
+            case OAuth2Providers.GOOGLE -> userAccount.oauth2Identifiers().withGoogleId(null);
+            default -> throw new RuntimeException("Wrong OAuth2 provider: " + provider);
+        };
         userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);
         userAccount = userAccountRepository.save(userAccount);
         aaaUserDetailsService.refreshUserDetails(userAccount);
