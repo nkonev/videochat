@@ -118,8 +118,8 @@ public class UserProfileController {
         long resultPageCount = userAccountRepository.findByUsernameContainsIgnoreCaseCount(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
 
         return new com.github.nkonev.aaa.dto.Wrapper<com.github.nkonev.aaa.dto.UserAccountDTO>(
-                resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList()),
-                resultPageCount
+                resultPageCount,
+                resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList())
         );
     }
 
