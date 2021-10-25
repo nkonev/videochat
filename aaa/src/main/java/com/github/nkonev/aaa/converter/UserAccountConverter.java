@@ -150,6 +150,7 @@ public class UserAccountConverter {
         }
 
         return new UserAccount(
+                null,
                 CreationType.REGISTRATION,
                 userAccountDTO.getLogin(),
                 passwordEncoder.encode(password),
@@ -160,6 +161,7 @@ public class UserAccountConverter {
                 enabled,
                 newUserRole,
                 userAccountDTO.getEmail(),
+                null,
                 null
         );
     }
@@ -188,6 +190,7 @@ public class UserAccountConverter {
         final UserRole newUserRole = getDefaultUserRole();
 
         return new UserAccount(
+                null,
                 CreationType.FACEBOOK,
                 login,
                 null,
@@ -197,6 +200,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 newUserRole,
+                null,
                 null,
                 new UserAccount.OAuth2Identifiers(facebookId, null, null)
         );
@@ -210,6 +214,7 @@ public class UserAccountConverter {
         final UserRole newUserRole = getDefaultUserRole();
 
         return new UserAccount(
+                null,
                 CreationType.VKONTAKTE,
                 login,
                 null,
@@ -219,6 +224,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 newUserRole,
+                null,
                 null,
                 new UserAccount.OAuth2Identifiers(null, vkontakteId, null)
         );
@@ -232,6 +238,7 @@ public class UserAccountConverter {
         final UserRole newUserRole = getDefaultUserRole();
 
         return new UserAccount(
+                null,
                 CreationType.GOOGLE,
                 login,
                 null,
@@ -241,6 +248,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 newUserRole,
+                null,
                 null,
                 new UserAccount.OAuth2Identifiers(null, null, googleId)
         );

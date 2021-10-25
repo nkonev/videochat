@@ -10,45 +10,27 @@ import java.time.LocalDateTime;
 
 @Table("users")
 public record UserAccount(
-    @Id
-    Long id,
+
+    @Id Long id,
+    @NotNull CreationType creationType,
     String username,
     String password, // hash
     String avatar, // avatar url
     String avatarBig, // avatar url
+
     boolean expired,
     boolean locked,
     boolean enabled, // synonym to "confirmed"
+    @NotNull UserRole role, // synonym to "authority"
     String email,
-
-    @NotNull
-    CreationType creationType,
-
-    @NotNull
-    UserRole role, // synonym to "authority"
-
     LocalDateTime lastLoginDateTime,
-
-    @Embedded(onEmpty = Embedded.OnEmpty.USE_EMPTY)
-    OAuth2Identifiers oauth2Identifiers
+    @Embedded(onEmpty = Embedded.OnEmpty.USE_EMPTY) OAuth2Identifiers oauth2Identifiers
 ) {
-
-    @PersistenceConstructor
-    public UserAccount(Long id, CreationType creationType, String username, String password, String avatar, String avatarBig,
-                       boolean expired, boolean locked, boolean enabled,
-                       UserRole role, String email, LocalDateTime lastLoginDateTime, OAuth2Identifiers oauth2Identifiers) {
-        this(id, username, password, avatar, avatarBig, expired, locked, enabled, email, creationType, role, lastLoginDateTime, oauth2Identifiers);
-    }
-
-    public UserAccount(CreationType creationType, String username, String password, String avatar, String avatarBig,
-                       boolean expired, boolean locked, boolean enabled,
-                       UserRole role, String email, OAuth2Identifiers oauth2Identifiers) {
-        this(null, username, password, avatar, avatarBig, expired, locked, enabled, email, creationType, role, null, oauth2Identifiers);
-    }
 
     public UserAccount withPassword(String newPassword) {
         return new UserAccount(
                 id,
+                creationType,
                 username,
                 newPassword,
                 avatar,
@@ -56,9 +38,8 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
-                email,
-                creationType,
                 role,
+                email,
                 lastLoginDateTime,
                 oauth2Identifiers
         );
@@ -67,6 +48,7 @@ public record UserAccount(
     public UserAccount withUsername(String newUsername) {
         return new UserAccount(
                 id,
+                creationType,
                 newUsername,
                 password,
                 avatar,
@@ -74,9 +56,8 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
-                email,
-                creationType,
                 role,
+                email,
                 lastLoginDateTime,
                 oauth2Identifiers
         );
@@ -85,6 +66,7 @@ public record UserAccount(
     public UserAccount withAvatar(String newAvatar) {
         return new UserAccount(
                 id,
+                creationType,
                 username,
                 password,
                 newAvatar,
@@ -92,9 +74,8 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
-                email,
-                creationType,
                 role,
+                email,
                 lastLoginDateTime,
                 oauth2Identifiers
         );
@@ -103,6 +84,7 @@ public record UserAccount(
     public UserAccount withAvatarBig(String newAvatarBig) {
         return new UserAccount(
                 id,
+                creationType,
                 username,
                 password,
                 avatar,
@@ -110,9 +92,8 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
-                email,
-                creationType,
                 role,
+                email,
                 lastLoginDateTime,
                 oauth2Identifiers
         );
@@ -121,6 +102,7 @@ public record UserAccount(
     public UserAccount withEmail(String newEmail) {
         return new UserAccount(
                 id,
+                creationType,
                 username,
                 password,
                 avatar,
@@ -128,9 +110,8 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
-                newEmail,
-                creationType,
                 role,
+                newEmail,
                 lastLoginDateTime,
                 oauth2Identifiers
         );
@@ -139,6 +120,7 @@ public record UserAccount(
     public UserAccount withLocked(boolean newLocked) {
         return new UserAccount(
                 id,
+                creationType,
                 username,
                 password,
                 avatar,
@@ -146,9 +128,8 @@ public record UserAccount(
                 expired,
                 newLocked,
                 enabled,
-                email,
-                creationType,
                 role,
+                email,
                 lastLoginDateTime,
                 oauth2Identifiers
         );
@@ -157,6 +138,7 @@ public record UserAccount(
     public UserAccount withEnabled(boolean newEnabled) {
         return new UserAccount(
                 id,
+                creationType,
                 username,
                 password,
                 avatar,
@@ -164,9 +146,8 @@ public record UserAccount(
                 expired,
                 locked,
                 newEnabled,
-                email,
-                creationType,
                 role,
+                email,
                 lastLoginDateTime,
                 oauth2Identifiers
         );
@@ -175,6 +156,7 @@ public record UserAccount(
     public UserAccount withRole(UserRole newRole) {
         return new UserAccount(
                 id,
+                creationType,
                 username,
                 password,
                 avatar,
@@ -182,9 +164,8 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
-                email,
-                creationType,
                 newRole,
+                email,
                 lastLoginDateTime,
                 oauth2Identifiers
         );
@@ -193,6 +174,7 @@ public record UserAccount(
     public UserAccount withOauthIdentifiers(OAuth2Identifiers newOauthIdentifiers) {
         return new UserAccount(
                 id,
+                creationType,
                 username,
                 password,
                 avatar,
@@ -200,9 +182,8 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
-                email,
-                creationType,
                 role,
+                email,
                 lastLoginDateTime,
                 newOauthIdentifiers
         );
