@@ -1,106 +1,43 @@
 package com.github.nkonev.aaa.dto;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+
 import java.time.LocalDateTime;
 
-public class UserAccountDTOExtended extends UserAccountDTO {
-    private static final long serialVersionUID = 6613889927056965939L;
+public record UserAccountDTOExtended (
+    @JsonUnwrapped
+    UserAccountDTO userAccountDTO,
 
-    private DataDTO managementData;
+    DataDTO managementData,
 
-    private boolean canLock;
+    boolean canLock,
 
-    private boolean canDelete;
+    boolean canDelete,
 
-    private boolean canChangeRole;
-
-    public UserAccountDTOExtended() { }
+    boolean canChangeRole
+) {
+//
+//    public UserAccountDTOExtended() {
+//        this(
+//               new UserAccountDTO(),
+//               null
+//        )
+//    }
 
     public UserAccountDTOExtended(Long id, String login, String avatar, String avatarBig, DataDTO managementData, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauthIdentifiers, boolean canLock, boolean canDelete, boolean canChangeRole) {
-        super(id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers);
-        this.managementData = managementData;
-        this.canDelete = canDelete;
-        this.canLock = canLock;
-        this.canChangeRole = canChangeRole;
+        this(new UserAccountDTO(id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers),
+        managementData,
+        canDelete,
+        canLock,
+        canChangeRole
+        );
     }
 
-    public DataDTO getManagementData() {
-        return managementData;
-    }
+    public record DataDTO (
+        boolean enabled,
+        boolean expired,
+        boolean locked,
+        UserRole role
+    ) { }
 
-    public void setManagementData(DataDTO managementData) {
-        this.managementData = managementData;
-    }
-
-    public boolean isCanLock() {
-        return canLock;
-    }
-
-    public void setCanLock(boolean canLock) {
-        this.canLock = canLock;
-    }
-
-    public boolean isCanDelete() {
-        return canDelete;
-    }
-
-    public void setCanDelete(boolean canDelete) {
-        this.canDelete = canDelete;
-    }
-
-    public boolean isCanChangeRole() {
-        return canChangeRole;
-    }
-
-    public void setCanChangeRole(boolean canChangeRole) {
-        this.canChangeRole = canChangeRole;
-    }
-
-
-    public static class DataDTO {
-        private boolean enabled;
-        private boolean expired;
-        private boolean locked;
-        private UserRole role;
-
-        public DataDTO(boolean enabled, boolean expired, boolean locked, UserRole role) {
-            this.enabled = enabled;
-            this.expired = expired;
-            this.locked = locked;
-            this.role = role;
-        }
-
-        public DataDTO() { }
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-
-        public boolean isExpired() {
-            return expired;
-        }
-
-        public void setExpired(boolean expired) {
-            this.expired = expired;
-        }
-
-        public boolean isLocked() {
-            return locked;
-        }
-
-        public void setLocked(boolean locked) {
-            this.locked = locked;
-        }
-
-        public UserRole getRole() {
-            return role;
-        }
-
-        public void setRole(UserRole role) {
-            this.role = role;
-        }
-    }
 }

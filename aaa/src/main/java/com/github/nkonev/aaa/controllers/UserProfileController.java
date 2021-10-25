@@ -104,7 +104,7 @@ public class UserProfileController {
 
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER)
-    public com.github.nkonev.aaa.dto.Wrapper<com.github.nkonev.aaa.dto.UserAccountDTO> getUsers(
+    public com.github.nkonev.aaa.dto.Wrapper<Object> getUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestParam(value = "page", required=false, defaultValue = "0") int page,
             @RequestParam(value = "size", required=false, defaultValue = "0") int size,
@@ -117,13 +117,13 @@ public class UserProfileController {
         List<UserAccount> resultPage = userAccountRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
         long resultPageCount = userAccountRepository.findByUsernameContainsIgnoreCaseCount(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
 
-        return new com.github.nkonev.aaa.dto.Wrapper<com.github.nkonev.aaa.dto.UserAccountDTO>(
+        return new com.github.nkonev.aaa.dto.Wrapper<Object>(
                 resultPageCount,
                 resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList())
         );
     }
 
-    private Function<UserAccount, com.github.nkonev.aaa.dto.UserAccountDTO> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
+    private Function<UserAccount, Object> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(currentUser, userAccount);
     }
 
