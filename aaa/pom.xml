@@ -17,13 +17,13 @@
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
 
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
         <flatten-maven-plugin.version>1.2.2</flatten-maven-plugin.version>
         <versions-maven-plugin.version>2.8.1</versions-maven-plugin.version>
 
-        <spring.boot.version>2.5.5</spring.boot.version>
+        <spring.boot.version>2.5.6</spring.boot.version>
         <guava.version>30.1.1-jre</guava.version>
         <greenmail.version>1.6.2</greenmail.version>
         <mockserver.version>5.11.2</mockserver.version>

@@ -1,4 +1,4 @@
-FROM adoptopenjdk:11.0.8_10-jre-hotspot-bionic
+FROM bellsoft/liberica-openjdk-alpine:17.0.1
 ARG APP_HOME=/opt/aaa
 RUN mkdir -p ${APP_HOME}
 WORKDIR ${APP_HOME}
