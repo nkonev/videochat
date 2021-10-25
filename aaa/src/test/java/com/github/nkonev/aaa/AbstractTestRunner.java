@@ -203,7 +203,7 @@ public abstract class AbstractTestRunner {
 
         Assertions.assertEquals(200, loginResponseEntity.getStatusCodeValue());
 
-        return new SessionHolder(loginResponseEntity.getBody().getId(), loginResponseEntity);
+        return new SessionHolder(loginResponseEntity.getBody().id(), loginResponseEntity);
     }
 
     protected ResponseEntity<SuccessfulLoginDTO> rawLogin(String login, String password) throws URISyntaxException {
