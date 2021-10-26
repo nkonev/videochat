@@ -5,9 +5,12 @@ import com.github.nkonev.aaa.exception.OAuth2IdConflictException;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import org.slf4j.Logger;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,7 +30,7 @@ public abstract class AbstractOAuth2UserService {
 
     protected abstract Optional<UserAccount> findByOauthId(String oauthId);
 
-    protected abstract void setOauthIdToPrincipal(UserAccountDetailsDTO principal, String oauthId);
+    protected abstract UserAccountDetailsDTO setOauthIdToPrincipal(UserAccountDetailsDTO principal, String oauthId);
 
     protected abstract void setOauthIdToEntity(Long id, String oauthId);
 
@@ -46,13 +49,14 @@ public abstract class AbstractOAuth2UserService {
             logger().info("Will merge {}Id to exists user '{}', id={}", getOauthName(), principal.getUsername(), principal.getId());
 
             Optional<UserAccount> maybeUserAccount = findByOauthId(oauthId);
-            if (maybeUserAccount.isPresent() && !maybeUserAccount.get().getId().equals(principal.getId())){
-                logger().error("With {}Id={} already present another user '{}', id={}", getOauthName(), oauthId, maybeUserAccount.get().getUsername(), maybeUserAccount.get().getId());
+            if (maybeUserAccount.isPresent() && !maybeUserAccount.get().id().equals(principal.getId())){
+                logger().error("With {}Id={} already present another user '{}', id={}", getOauthName(), oauthId, maybeUserAccount.get().username(), maybeUserAccount.get().id());
                 throw new OAuth2IdConflictException("Somebody already taken this "+getOauthName()+" id="+oauthId+". " +
                         "If this is you and you want to merge your profiles please delete another profile and bind "+getOauthName()+" to this. If not please contact administrator.");
             }
 
-            setOauthIdToPrincipal(principal, oauthId);
+            principal = setOauthIdToPrincipal(principal, oauthId);
+            SecurityContextHolder.getContext().setAuthentication(new AaaAuthenticationToken(principal));
 
             setOauthIdToEntity(principal.getId(), oauthId);
 
@@ -81,4 +85,24 @@ public abstract class AbstractOAuth2UserService {
         return UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
     }
 
+}
+
+class AaaAuthenticationToken extends AbstractAuthenticationToken {
+
+    private final UserAccountDetailsDTO userAccountDetailsDTO;
+
+    public AaaAuthenticationToken(UserAccountDetailsDTO userAccountDetailsDTO) {
+        super(userAccountDetailsDTO.getAuthorities());
+        this.userAccountDetailsDTO = userAccountDetailsDTO;
+    }
+
+    @Override
+    public Object getCredentials() {
+        return userAccountDetailsDTO.getPassword();
+    }
+
+    @Override
+    public Object getPrincipal() {
+        return userAccountDetailsDTO;
+    }
 }

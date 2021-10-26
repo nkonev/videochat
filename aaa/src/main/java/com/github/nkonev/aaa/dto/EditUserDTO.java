@@ -2,76 +2,63 @@ package com.github.nkonev.aaa.dto;
 
 
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotEmpty;
 
-public class EditUserDTO {
-    private String login;
+public record EditUserDTO (
+    String login,
 
-    private String avatar;
+    String avatar,
 
-    private String password; // password which user desires
+    String password, // password which user desires
 
-    private Boolean removeAvatar;
+    Boolean removeAvatar, // it handles 3 values: true, false, null
 
     @Email
-    private String email;
-    private String avatarBig;
+    String email,
 
-    public EditUserDTO() { }
+    String avatarBig
+) {
 
     public EditUserDTO(String login, String avatar, String avatarBig, String password, String email) {
-        this.login = login;
-        this.avatar = avatar;
-        this.avatarBig = avatarBig;
-        this.password = password;
-        this.email = email;
+        this(
+                login,
+                avatar,
+                password,
+                null,
+                email,
+                avatarBig
+        );
     }
 
-    public String getLogin() {
-        return login;
+    public EditUserDTO withLogin(String newLogin) {
+        return new EditUserDTO(
+                newLogin,
+                avatar,
+                password,
+                removeAvatar,
+                email,
+                avatarBig
+        );
     }
 
-    public void setLogin(String login) {
-        this.login = login;
+    public EditUserDTO withPassword(String newPassword) {
+        return new EditUserDTO(
+                login,
+                avatar,
+                newPassword,
+                removeAvatar,
+                email,
+                avatarBig
+        );
     }
 
-    public String getAvatar() {
-        return avatar;
-    }
-
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public Boolean getRemoveAvatar() {
-        return removeAvatar;
-    }
-
-    public void setRemoveAvatar(Boolean removeAvatar) {
-        this.removeAvatar = removeAvatar;
-    }
-
-    public String getAvatarBig() {
-        return avatarBig;
-    }
-
-    public void setAvatarBig(String avatarBig) {
-        this.avatarBig = avatarBig;
+    public EditUserDTO withEmail(String newEmail) {
+        return new EditUserDTO(
+                login,
+                avatar,
+                password,
+                removeAvatar,
+                newEmail,
+                avatarBig
+        );
     }
 }

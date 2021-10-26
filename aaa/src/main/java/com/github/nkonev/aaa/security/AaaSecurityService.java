@@ -35,7 +35,7 @@ public class AaaSecurityService {
         if (userAccount==null){
             return false;
         }
-        if (lockDTO!=null && userAccount.getId().equals(lockDTO.getUserId())){
+        if (lockDTO!=null && userAccount.getId().equals(lockDTO.userId())){
             return false;
         }
         if (roleHierarchy.getReachableGrantedAuthorities(userAccount.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()))){
@@ -55,7 +55,7 @@ public class AaaSecurityService {
 
     public boolean canDelete(UserAccountDetailsDTO userAccount, long userIdToDelete) {
         UserAccount deleted = userAccountRepository.findByUsername(Constants.DELETED).orElseThrow();
-        if (deleted.getId().equals(userIdToDelete)){
+        if (deleted.id().equals(userIdToDelete)){
             return false;
         }
         return Optional
@@ -96,10 +96,10 @@ public class AaaSecurityService {
             return  false;
         }
         UserAccount deleted = userAccountRepository.findByUsername(Constants.DELETED).orElseThrow();
-        if (deleted.getId().equals(userAccount.getId())){
+        if (deleted.id().equals(userAccount.id())){
             return false;
         }
-        if (userAccount.getId().equals(currentUser.getId())){
+        if (userAccount.id().equals(currentUser.getId())){
             return false;
         }
         return roleHierarchy.getReachableGrantedAuthorities(currentUser.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()));

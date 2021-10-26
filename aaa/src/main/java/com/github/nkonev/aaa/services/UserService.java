@@ -23,20 +23,20 @@ public class UserService {
     private AaaUserDetailsService aaaUserDetailsService;
 
     public void checkLoginIsFree(EditUserDTO userAccountDTO, UserAccount exists) {
-        if (!exists.getUsername().equals(userAccountDTO.getLogin()) && userAccountRepository.findByUsername(userAccountDTO.getLogin()).isPresent()) {
-            throw new UserAlreadyPresentException("User with login '" + userAccountDTO.getLogin() + "' is already present");
+        if (!exists.username().equals(userAccountDTO.login()) && userAccountRepository.findByUsername(userAccountDTO.login()).isPresent()) {
+            throw new UserAlreadyPresentException("User with login '" + userAccountDTO.login() + "' is already present");
         }
     }
 
     public void checkLoginIsFree(EditUserDTO userAccountDTO) {
-        if(userAccountRepository.findByUsername(userAccountDTO.getLogin()).isPresent()){
-            throw new UserAlreadyPresentException("User with login '" + userAccountDTO.getLogin() + "' is already present");
+        if(userAccountRepository.findByUsername(userAccountDTO.login()).isPresent()){
+            throw new UserAlreadyPresentException("User with login '" + userAccountDTO.login() + "' is already present");
         }
     }
 
     public boolean checkEmailIsFree(EditUserDTO userAccountDTO, UserAccount exists) {
-        if (exists.getEmail() != null && !exists.getEmail().equals(userAccountDTO.getEmail()) && userAccountDTO.getEmail() != null && userAccountRepository.findByEmail(userAccountDTO.getEmail()).isPresent()) {
-            LOGGER.error("user with email '{}' already present. exiting...", exists.getEmail());
+        if (exists.email() != null && !exists.email().equals(userAccountDTO.email()) && userAccountDTO.email() != null && userAccountRepository.findByEmail(userAccountDTO.email()).isPresent()) {
+            LOGGER.error("user with email '{}' already present. exiting...", exists.email());
             return false;
         } else {
             return true;
@@ -44,8 +44,8 @@ public class UserService {
     }
 
     public boolean checkEmailIsFree(EditUserDTO userAccountDTO) {
-        if(userAccountRepository.findByEmail(userAccountDTO.getEmail()).isPresent()){
-            LOGGER.warn("Skipping sent registration email '{}' because this user already present", userAccountDTO.getEmail());
+        if(userAccountRepository.findByEmail(userAccountDTO.email()).isPresent()){
+            LOGGER.warn("Skipping sent registration email '{}' because this user already present", userAccountDTO.email());
             return false; // we care for user email leak
         } else {
             return true;
@@ -53,7 +53,7 @@ public class UserService {
     }
 
     public void checkLoginIsCorrect(EditUserDTO userAccountDTO) {
-        if (StringUtils.isEmpty(userAccountDTO.getLogin())) {
+        if (StringUtils.isEmpty(userAccountDTO.login())) {
             throw new BadRequestException("empty login");
         }
     }

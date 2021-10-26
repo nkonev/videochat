@@ -92,7 +92,7 @@ public class UserProfileController {
         Long expiresAt = getExpiresAt(session);
         var dto = checkAuthenticated(userAccount, session);
         HttpHeaders headers = new HttpHeaders();
-        headers.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.getLogin().getBytes()));
+        headers.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.login().getBytes()));
         headers.set(X_AUTH_USER_ID, ""+userAccount.getId());
         headers.set(X_AUTH_EXPIRESIN, ""+expiresAt);
         headers.set(X_AUTH_SESSION_ID, session.getId());
@@ -104,7 +104,7 @@ public class UserProfileController {
 
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER)
-    public com.github.nkonev.aaa.dto.Wrapper<com.github.nkonev.aaa.dto.UserAccountDTO> getUsers(
+    public com.github.nkonev.aaa.dto.Wrapper<Record> getUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestParam(value = "page", required=false, defaultValue = "0") int page,
             @RequestParam(value = "size", required=false, defaultValue = "0") int size,
@@ -117,18 +117,18 @@ public class UserProfileController {
         List<UserAccount> resultPage = userAccountRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
         long resultPageCount = userAccountRepository.findByUsernameContainsIgnoreCaseCount(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
 
-        return new com.github.nkonev.aaa.dto.Wrapper<com.github.nkonev.aaa.dto.UserAccountDTO>(
-                resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList()),
-                resultPageCount
+        return new com.github.nkonev.aaa.dto.Wrapper<Record>(
+                resultPageCount,
+                resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList())
         );
     }
 
-    private Function<UserAccount, com.github.nkonev.aaa.dto.UserAccountDTO> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
+    private Function<UserAccount, Record> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(currentUser, userAccount);
     }
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.LIST)
-    public List<com.github.nkonev.aaa.dto.UserAccountDTO> getUsers(
+    public List<Record> getUsers(
             @RequestParam(value = "userId") List<Long> userIds,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
         ) {
@@ -138,10 +138,10 @@ public class UserProfileController {
         if (userIds.size() > MAX_USERS_RESPONSE_LENGTH) {
             throw new BadRequestException("Cannot be greater than " + MAX_USERS_RESPONSE_LENGTH);
         }
-        List<com.github.nkonev.aaa.dto.UserAccountDTO> result = new ArrayList<>();
+        List<Record> result = new ArrayList<>();
         for (UserAccount userAccountEntity: userAccountRepository.findByIdInOrderById(userIds)) {
-            if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.getId())) {
-                result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.getLastLoginDateTime(), null));
+            if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.id())) {
+                result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null));
             } else {
                 result.add(userAccountConverter.convertToUserAccountDTO(userAccountEntity));
             }
@@ -150,20 +150,20 @@ public class UserProfileController {
     }
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.USER_ID)
-    public com.github.nkonev.aaa.dto.UserAccountDTO getUser(
+    public Record getUser(
             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
         final UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
-        if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.getId())) {
-            return UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.getLastLoginDateTime(), null);
+        if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.id())) {
+            return UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null);
         } else {
             return userAccountConverter.convertToUserAccountDTO(userAccountEntity);
         }
     }
 
     @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST)
-    public List<com.github.nkonev.aaa.dto.UserAccountDTO> getUserInternal(
+    public List<Record> getUserInternal(
             @RequestParam(value = "userId") List<Long> userIds,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
@@ -191,7 +191,7 @@ public class UserProfileController {
         // check login already present
         userService.checkLoginIsFree(userAccountDTO, exists);
 
-        UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
+        exists = UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
 
         aaaUserDetailsService.refreshUserDetails(exists);
@@ -223,7 +223,7 @@ public class UserProfileController {
         // check login already present
         userService.checkLoginIsFree(userAccountDTO, exists);
 
-        UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
+        exists = UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
 
         aaaUserDetailsService.refreshUserDetails(exists);
@@ -254,11 +254,11 @@ public class UserProfileController {
     @PreAuthorize("@aaaSecurityService.canLock(#userAccountDetailsDTO, #lockDTO)")
     @PostMapping(Constants.Urls.API+Constants.Urls.USER + Constants.Urls.LOCK)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.LockDTO lockDTO){
-        UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.getUserId());
-        if (lockDTO.isLock()){
-            aaaUserDetailsService.killSessions(lockDTO.getUserId());
+        UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.userId());
+        if (lockDTO.lock()){
+            aaaUserDetailsService.killSessions(lockDTO.userId());
         }
-        userAccount.setLocked(lockDTO.isLock());
+        userAccount = userAccount.withLocked(lockDTO.lock());
         userAccount = userAccountRepository.save(userAccount);
 
         return userAccountConverter.convertToUserAccountDTOExtended(userAccountDetailsDTO, userAccount);
@@ -274,7 +274,7 @@ public class UserProfileController {
     @PostMapping(Constants.Urls.API+Constants.Urls.USER + Constants.Urls.ROLE)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam long userId, @RequestParam UserRole role){
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
-        userAccount.setRole(role);
+        userAccount = userAccount.withRole(role);
         userAccount = userAccountRepository.save(userAccount);
         return userAccountConverter.convertToUserAccountDTOExtended(userAccountDetailsDTO, userAccount);
     }
@@ -291,20 +291,13 @@ public class UserProfileController {
     public void selfDeleteBindingOauth2Provider(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @PathVariable("provider") String provider){
         long userId = userAccountDetailsDTO.getId();
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
-        switch (provider) {
-            case OAuth2Providers.FACEBOOK:
-                userAccount.getOauth2Identifiers().setFacebookId(null);
-                break;
-            case OAuth2Providers.VKONTAKTE:
-                userAccount.getOauth2Identifiers().setVkontakteId(null);
-                break;
-            case OAuth2Providers.GOOGLE:
-                userAccount.getOauth2Identifiers().setGoogleId(null);
-                break;
-            default:
-                throw new RuntimeException("Wrong OAuth2 provider: " + provider);
-        }
-
+        UserAccount.OAuth2Identifiers oAuth2Identifiers = switch (provider) {
+            case OAuth2Providers.FACEBOOK -> userAccount.oauth2Identifiers().withFacebookId(null);
+            case OAuth2Providers.VKONTAKTE -> userAccount.oauth2Identifiers().withVkontakteId(null);
+            case OAuth2Providers.GOOGLE -> userAccount.oauth2Identifiers().withGoogleId(null);
+            default -> throw new RuntimeException("Wrong OAuth2 provider: " + provider);
+        };
+        userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);
         userAccount = userAccountRepository.save(userAccount);
         aaaUserDetailsService.refreshUserDetails(userAccount);
     }

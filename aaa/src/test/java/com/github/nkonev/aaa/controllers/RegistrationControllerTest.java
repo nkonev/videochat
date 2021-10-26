@@ -224,12 +224,12 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         UserAccount userAccountAfter = userAccountRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("user account not found in test"));
 
         // check that initial user account is not affected
-        Assertions.assertEquals(userAccountBefore.getId(), userAccountAfter.getId());
-        Assertions.assertEquals(userAccountBefore.getAvatar(), userAccountAfter.getAvatar());
-        Assertions.assertEquals(TestConstants.USER_ALICE, userAccountBefore.getUsername());
-        Assertions.assertEquals(userAccountBefore.getUsername(), userAccountAfter.getUsername());
-        Assertions.assertEquals(userAccountBefore.getPassword(), userAccountAfter.getPassword());
-        Assertions.assertEquals(userAccountBefore.getRole(), userAccountAfter.getRole());
+        Assertions.assertEquals(userAccountBefore.id(), userAccountAfter.id());
+        Assertions.assertEquals(userAccountBefore.avatar(), userAccountAfter.avatar());
+        Assertions.assertEquals(TestConstants.USER_ALICE, userAccountBefore.username());
+        Assertions.assertEquals(userAccountBefore.username(), userAccountAfter.username());
+        Assertions.assertEquals(userAccountBefore.password(), userAccountAfter.password());
+        Assertions.assertEquals(userAccountBefore.role(), userAccountAfter.role());
     }
 
 
@@ -268,7 +268,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         String bobEmail = "bob@example.com";
         UserAccount bob = userAccountRepository.findByEmail(bobEmail).orElseThrow(()->new RuntimeException("bob not found in test"));
 
-        bob.setLocked(true);
+        bob = bob.withLocked(true);
         bob = userAccountRepository.save(bob);
 
         // attacker

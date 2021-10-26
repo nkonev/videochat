@@ -12,7 +12,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -20,24 +19,24 @@ import java.util.Map;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE)
-public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails, OAuth2User, OidcUser {
-    private static final long serialVersionUID = -3271989114498135073L;
+public record UserAccountDetailsDTO (
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+    UserAccountDTO userAccountDTO,
 
     // OAuth2 specific Facebook and Vkontakte
-    private Map<String, Object> oauth2Attributes = new HashMap<>();
+    Map<String, Object> oauth2Attributes,
     // OAuth2 specific Google
-    private OidcIdToken idToken;
-    private OidcUserInfo userInfo;
+    OidcIdToken idToken,
+    OidcUserInfo userInfo,
 
-    private String password; // password hash
-    private boolean expired;
-    private boolean locked;
-    private boolean enabled; // synonym to "confirmed"
+    String password, // password hash
+    boolean expired,
+    boolean locked,
+    boolean enabled, // synonym to "confirmed"
 
-    private Collection<GrantedAuthority> roles = new HashSet<>();
-    private String email;
-
-    public UserAccountDetailsDTO() { }
+    Collection<GrantedAuthority> roles,
+    String email
+) implements UserDetails, OAuth2User, OidcUser {
 
     public UserAccountDetailsDTO(
             Long id,
@@ -53,13 +52,12 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
             LocalDateTime lastLoginDateTime,
             OAuth2IdentifiersDTO oauthIdentifiers
     ) {
-        super(id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers);
-        this.password = password;
-        this.expired = expired;
-        this.locked = locked;
-        this.enabled = enabled;
-        this.roles = roles;
-        this.email = email;
+        this(
+                new UserAccountDTO(
+                    id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers
+                ),
+                new HashMap<>(), null, null, password, expired, locked, enabled, roles, email
+        );
     }
 
     @Override
@@ -69,7 +67,7 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
 
     @Override
     public String getUsername() {
-        return super.getLogin();
+        return this.userAccountDTO.login();
     }
 
     @Override
@@ -104,55 +102,23 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
 
     @Override
     public String getName() {
-        return login;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+        return this.userAccountDTO.login();
     }
 
     public boolean isExpired() {
         return expired;
     }
 
-    public void setExpired(boolean expired) {
-        this.expired = expired;
-    }
-
     public boolean isLocked() {
         return locked;
-    }
-
-    public void setLocked(boolean locked) {
-        this.locked = locked;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
     public Collection<GrantedAuthority> getRoles() {
         return roles;
     }
 
-    public void setRoles(Collection<GrantedAuthority> roles) {
-        this.roles = roles;
-    }
-
     public String getEmail() {
         return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public Map<String, Object> getOauth2Attributes() {
-        return oauth2Attributes;
-    }
-
-    public void setOauth2Attributes(Map<String, Object> oauth2Attributes) {
-        this.oauth2Attributes = oauth2Attributes;
     }
 
     @Override
@@ -170,11 +136,40 @@ public class UserAccountDetailsDTO extends UserAccountDTO implements UserDetails
         return idToken;
     }
 
-    public void setIdToken(OidcIdToken idToken) {
-        this.idToken = idToken;
+    public Long getId() {
+        return userAccountDTO.id();
     }
 
-    public void setUserInfo(OidcUserInfo userInfo) {
-        this.userInfo = userInfo;
+    public String getAvatar() {
+        return userAccountDTO.avatar();
+    }
+
+    public String getAvatarBig() {
+        return userAccountDTO.avatarBig();
+    }
+
+    public OAuth2IdentifiersDTO getOauth2Identifiers() {
+        return userAccountDTO.oauth2Identifiers();
+    }
+
+    public LocalDateTime getLastLoginDateTime() {
+        return userAccountDTO.lastLoginDateTime();
+    }
+
+    public UserAccountDetailsDTO withOauth2Identifiers(OAuth2IdentifiersDTO newOauth2Identifiers) {
+        return new UserAccountDetailsDTO(
+                new UserAccountDTO(
+                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.lastLoginDateTime(), newOauth2Identifiers
+                ),
+                oauth2Attributes,
+                idToken,
+                userInfo,
+                password,
+                expired,
+                locked,
+                enabled,
+                roles,
+                email
+        );
     }
 }

@@ -1,6 +1,6 @@
 package com.github.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.dto.BlogError;
+import com.github.nkonev.aaa.dto.AaaError;
 import com.github.nkonev.aaa.dto.ValidationError;
 import com.github.nkonev.aaa.exception.*;
 import org.slf4j.Logger;
@@ -28,21 +28,21 @@ public class AaaExceptionHandler {
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @org.springframework.web.bind.annotation.ExceptionHandler(BadRequestException.class)
-    public BlogError badRequest(BadRequestException e)  {
-        return new BlogError(HttpStatus.BAD_REQUEST.value(), "validation error", e.getMessage(), new Date().toString());
+    public AaaError badRequest(BadRequestException e)  {
+        return new AaaError(HttpStatus.BAD_REQUEST.value(), "validation error", e.getMessage(), new Date().toString());
     }
 
     @ResponseBody
     @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
     @org.springframework.web.bind.annotation.ExceptionHandler({PayloadTooLargeException.class})
-    public BlogError payloadTooLargeImage(PayloadTooLargeException e)  {
-        return new BlogError(HttpStatus.PAYLOAD_TOO_LARGE.value(), "payload too large", e.getMessage(), new Date().toString());
+    public AaaError payloadTooLargeImage(PayloadTooLargeException e)  {
+        return new AaaError(HttpStatus.PAYLOAD_TOO_LARGE.value(), "payload too large", e.getMessage(), new Date().toString());
     }
 
     @ResponseBody
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @org.springframework.web.bind.annotation.ExceptionHandler({org.springframework.web.multipart.MultipartException.class})
-    public BlogError springMultipartError(org.springframework.web.multipart.MultipartException e)  {
+    public AaaError springMultipartError(org.springframework.web.multipart.MultipartException e)  {
         String message = e.getMessage();
         Throwable cause0 = e.getCause();
         if (cause0!=null) {
@@ -52,35 +52,35 @@ public class AaaExceptionHandler {
                 message = cause1.getMessage();
             }
         }
-        return new BlogError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "multipart error", message, new Date().toString());
+        return new AaaError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "multipart error", message, new Date().toString());
     }
 
 
     @ResponseBody
     @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
     @org.springframework.web.bind.annotation.ExceptionHandler(UnsupportedMessageTypeException.class)
-    public BlogError unsupportedMediaType(UnsupportedMessageTypeException e)  {
-        return new BlogError(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), "unsupported media type", e.getMessage(), new Date().toString());
+    public AaaError unsupportedMediaType(UnsupportedMessageTypeException e)  {
+        return new AaaError(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), "unsupported media type", e.getMessage(), new Date().toString());
     }
 
     @ResponseBody
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @org.springframework.web.bind.annotation.ExceptionHandler(UserAlreadyPresentException.class)
-    public BlogError userAlreadyPresent(UserAlreadyPresentException e) {
-        return new BlogError(HttpStatus.FORBIDDEN.value(), "user already present", e.getMessage(), new Date().toString());
+    public AaaError userAlreadyPresent(UserAlreadyPresentException e) {
+        return new AaaError(HttpStatus.FORBIDDEN.value(), "user already present", e.getMessage(), new Date().toString());
     }
 
     @ResponseBody
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @org.springframework.web.bind.annotation.ExceptionHandler(DataNotFoundException.class)
-    public BlogError dataNotFound(DataNotFoundException e) {
-        return new BlogError(HttpStatus.NOT_FOUND.value(), "data not found", e.getMessage(), new Date().toString());
+    public AaaError dataNotFound(DataNotFoundException e) {
+        return new AaaError(HttpStatus.NOT_FOUND.value(), "data not found", e.getMessage(), new Date().toString());
     }
 
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentNotValidException.class)
-    public BlogError invalid(MethodArgumentNotValidException e) {
+    public AaaError invalid(MethodArgumentNotValidException e) {
         Collection<ValidationError> errors = new ArrayList<>();
         e.getBindingResult().getAllErrors().forEach(objectError -> {
             if (objectError instanceof FieldError){
@@ -89,15 +89,15 @@ public class AaaExceptionHandler {
             }
         });
 
-        return new BlogError(HttpStatus.BAD_REQUEST.value(), "validation error", "validation error, see validationErrors[]", new Date().toString(), errors);
+        return new AaaError(HttpStatus.BAD_REQUEST.value(), "validation error", "validation error, see validationErrors[]", new Date().toString(), errors);
     }
 
     @ResponseBody
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @org.springframework.web.bind.annotation.ExceptionHandler(PasswordResetTokenNotFoundException.class)
-    public BlogError passwordResetTokenNotFound(PasswordResetTokenNotFoundException e) {
+    public AaaError passwordResetTokenNotFound(PasswordResetTokenNotFoundException e) {
 
-        return new BlogError(HttpStatus.FORBIDDEN.value(), "password reset", e.getMessage(), new Date().toString());
+        return new AaaError(HttpStatus.FORBIDDEN.value(), "password reset", e.getMessage(), new Date().toString());
     }
 
 

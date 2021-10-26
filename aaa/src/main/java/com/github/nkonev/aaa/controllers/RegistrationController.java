@@ -48,13 +48,13 @@ public class RegistrationController {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationController.class);
 
     private UserConfirmationToken createUserConfirmationToken(UserAccount userAccount) {
-        Assert.isTrue(!userAccount.isEnabled(), "user account mustn't be enabled");
+        Assert.isTrue(!userAccount.enabled(), "user account mustn't be enabled");
 
         Duration ttl = Duration.ofMinutes(userConfirmationTokenTtlMinutes);
         long seconds = ttl.getSeconds(); // Redis requires seconds
 
         UUID tokenUuid = UUID.randomUUID();
-        UserConfirmationToken userConfirmationToken = new UserConfirmationToken(tokenUuid.toString(), userAccount.getId(), seconds);
+        UserConfirmationToken userConfirmationToken = new UserConfirmationToken(tokenUuid.toString(), userAccount.id(), seconds);
         return userConfirmationTokenRepository.save(userConfirmationToken);
     }
 
@@ -71,7 +71,7 @@ public class RegistrationController {
 
         userAccount = userAccountRepository.save(userAccount);
         UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount);
-        emailService.sendUserConfirmationToken(userAccount.getEmail(), userConfirmationToken, userAccount.getUsername());
+        emailService.sendUserConfirmationToken(userAccount.email(), userConfirmationToken, userAccount.username());
     }
 
     /**
@@ -91,17 +91,17 @@ public class RegistrationController {
             return "redirect:/confirm/registration/token-not-found";
         }
         UserConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
-        Optional<UserAccount> userAccountOptional = userAccountRepository.findById(userConfirmationToken.getUserId());
+        Optional<UserAccount> userAccountOptional = userAccountRepository.findById(userConfirmationToken.userId());
         if (!userAccountOptional.isPresent()) {
             return "redirect:/confirm/registration/user-not-found";
         }
         UserAccount userAccount = userAccountOptional.get();
-        if (userAccount.isEnabled()) {
+        if (userAccount.enabled()) {
             LOGGER.warn("Somebody attempts secondary confirm already confirmed user account with email='{}'", userAccount);
             return Constants.Urls.ROOT;  // respond static
         }
 
-        userAccount.setEnabled(true);
+        userAccount = userAccount.withEnabled(true);
         userAccount = userAccountRepository.save(userAccount);
 
         userConfirmationTokenRepository.deleteById(stringUuid);
@@ -118,14 +118,14 @@ public class RegistrationController {
             return; // we care for for email leak
         }
         UserAccount userAccount = userAccountOptional.get();
-        if (userAccount.isEnabled()) {
+        if (userAccount.enabled()) {
             // this account already confirmed
             LOGGER.warn("Skipping sent subsequent confirmation email '{}' because this user account already enabled", email);
             return; // we care for for email leak
         }
 
         UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount);
-        emailService.sendUserConfirmationToken(email, userConfirmationToken, userAccount.getUsername());
+        emailService.sendUserConfirmationToken(email, userConfirmationToken, userAccount.username());
     }
 
 }

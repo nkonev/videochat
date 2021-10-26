@@ -1,9 +1,7 @@
 package com.github.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.BlogError;
-import com.github.nkonev.aaa.dto.BlogErrorWithDebug;
+import com.github.nkonev.aaa.dto.AaaError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +10,6 @@ import org.springframework.boot.autoconfigure.web.servlet.error.AbstractErrorCon
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -23,11 +20,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static com.github.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
 
@@ -62,7 +55,7 @@ public class AaaErrorController extends AbstractErrorController {
             response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
             try {
                 if (debug) {
-                    objectMapper.writeValue(response.getWriter(), new BlogErrorWithDebug(
+                    objectMapper.writeValue(response.getWriter(), new AaaError(
                             response.getStatus(),
                             (String) errorAttributes.get("error"),
                             (String) errorAttributes.get("message"),
@@ -71,7 +64,7 @@ public class AaaErrorController extends AbstractErrorController {
                             (String) errorAttributes.get("trace"))
                     );
                 } else {
-                    objectMapper.writeValue(response.getWriter(), new BlogError(
+                    objectMapper.writeValue(response.getWriter(), new AaaError(
                             response.getStatus(),
                             (String) errorAttributes.get("error"),
                             (String) errorAttributes.get("message"),
