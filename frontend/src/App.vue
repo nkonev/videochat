@@ -32,6 +32,16 @@
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.mute_audio') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
+                <v-list-item @click="toggleMuteVideo()" v-if="shouldDisplayVideoUnmute()">
+                      <v-list-item-icon><v-icon color="error">mdi-video-off</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.unmute_video') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+                <v-list-item @click="toggleMuteVideo()" v-if="shouldDisplayVideoMute()">
+                    <v-list-item-icon><v-icon color="primary">mdi-video</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.mute_video') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
+
 
               <v-list-item @click="goHome()">
                     <v-list-item-icon><v-icon>mdi-home-city</v-icon></v-list-item-icon>
@@ -211,9 +221,6 @@
             const chatDescription = this.$vuetify.lang.t('$vuetify.chat');
             return {
                 appBarItems: [
-                    { title: 'Unmute video', icon: 'mdi-video-off', color: 'error', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoUnmute},
-                    { title: 'Mute video', icon: 'mdi-video', color: 'primary', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoMute},
-
                     { title: 'Chat files', icon: 'mdi-file-download', clickFunction: this.displayChatFiles, requireAuthenticated: true, displayCondition: this.shouldDisplayFiles },
                     { title: 'Find user', icon: 'mdi-magnify', clickFunction: this.findUser, requireAuthenticated: true},
                     { title: 'New chat', icon: 'mdi-plus-circle-outline', clickFunction: this.createChat, requireAuthenticated: true},
