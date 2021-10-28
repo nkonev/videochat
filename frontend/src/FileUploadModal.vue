@@ -24,7 +24,10 @@
                         color="success"
                         buffer-value="0"
                         stream
+                        light
+                        height="25"
                     >
+                      <strong>{{ progressLoaded | formatSizeFilter }} / {{ progressTotal | formatSizeFilter }}</strong>
                     </v-progress-linear>
                 </v-container>
 
@@ -69,11 +72,18 @@ export default {
             files: [],
             fileItemUuid: null, // null at first upload, non-nul when user adds files,
             progress: 0,
+            progressTotal: 0,
+            progressLoaded: 0,
             cancelSource: null,
             limitError: null,
             shouldSetFileUuidToMessage: false,
             shouldUpdateFileList: false,
         }
+    },
+    filters: {
+        formatSizeFilter(size) {
+            return formatSize((size))
+        },
     },
     methods: {
         showModal(fileItemUuid, shouldSetFileUuidToMessage, shouldUpdateFileList) {
@@ -86,6 +96,8 @@ export default {
             this.$data.show = false;
             this.files = [];
             this.progress = 0;
+            this.progressTotal = 0;
+            this.progressLoaded = 0;
             this.cancelSource = null;
             this.uploading = false;
             this.limitError = null;
@@ -95,6 +107,8 @@ export default {
         },
         onProgressFunction(event) {
             this.progress = Math.round((100 * event.loaded) / event.total);
+            this.progressLoaded = (event.loaded);
+            this.progressTotal = (event.total);
         },
         checkLimits(totalSize) {
             return axios.get(`/api/storage/${this.chatId}/file`, { params: {
