@@ -40,3 +40,4 @@ export const SET_FILE_ITEM_UUID = "setFileItemUuid";
 export const OPEN_VIDEO_SETTINGS = "openVideoSettings";
 export const OPEN_TEXT_EDIT_MODAL = "openTextEditModal";
 export const CLOSE_TEXT_EDIT_MODAL = "closeTextEditModal";
+export const OPEN_LANGUAGE_MODAL = "openLocaleModal";

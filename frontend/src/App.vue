@@ -23,8 +23,24 @@
             <v-divider></v-divider>
 
             <v-list dense>
+                <v-list-item @click="toggleMuteAudio()" v-if="shouldDisplayAudioUnmute()">
+                    <v-list-item-icon><v-icon color="error">mdi-microphone-off</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.unmute_audio') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+                <v-list-item @click="toggleMuteAudio()" v-if="shouldDisplayAudioMute()">
+                    <v-list-item-icon><v-icon color="primary">mdi-microphone</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.mute_audio') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
+
+              <v-list-item @click="goHome()">
+                    <v-list-item-icon><v-icon>mdi-home-city</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.chat') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
+
                 <v-list-item
-                        v-for="item in getAppBarItems()"
+                        v-for="item in gotAppBarItems"
                         :key="item.title"
                         @click="item.clickFunction"
                 >
@@ -134,6 +150,7 @@
                 <FileListModal/>
                 <VideoSettings/>
                 <FileTextEditModal/>
+                <LanguageModal/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -160,18 +177,18 @@
         UNSET_USER
     } from "./store";
     import bus, {
-        AUDIO_START_MUTING,
-        VIDEO_START_MUTING,
-        CHANGE_WEBSOCKET_STATUS,
-        LOGGED_OUT,
-        OPEN_CHAT_EDIT,
-        OPEN_PARTICIPANTS_DIALOG,
-        OPEN_PERMISSIONS_WARNING_MODAL,
-        SHARE_SCREEN_START,
-        SHARE_SCREEN_STOP,
-        VIDEO_CALL_INVITED,
-        REFRESH_ON_WEBSOCKET_RESTORED,
-        OPEN_FIND_USER, OPEN_VIEW_FILES_DIALOG, OPEN_VIDEO_SETTINGS,
+      AUDIO_START_MUTING,
+      VIDEO_START_MUTING,
+      CHANGE_WEBSOCKET_STATUS,
+      LOGGED_OUT,
+      OPEN_CHAT_EDIT,
+      OPEN_PARTICIPANTS_DIALOG,
+      OPEN_PERMISSIONS_WARNING_MODAL,
+      SHARE_SCREEN_START,
+      SHARE_SCREEN_STOP,
+      VIDEO_CALL_INVITED,
+      REFRESH_ON_WEBSOCKET_RESTORED,
+      OPEN_FIND_USER, OPEN_VIEW_FILES_DIALOG, OPEN_VIDEO_SETTINGS, OPEN_LANGUAGE_MODAL,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -185,19 +202,18 @@
     import FileListModal from "./FileListModal";
     import VideoSettings from './VideoSettings';
     import FileTextEditModal from "./FileTextEditModal";
+    import LanguageModal from "./LanguageModal";
 
     const audio = new Audio("/call.mp3");
 
     export default {
         data () {
+            const chatDescription = this.$vuetify.lang.t('$vuetify.chat');
             return {
                 appBarItems: [
-                    { title: 'Unmute audio', icon: 'mdi-microphone-off', color: 'error', clickFunction: this.toggleMuteAudio, requireAuthenticated: true, displayCondition: this.shouldDisplayAudioUnmute},
-                    { title: 'Mute audio', icon: 'mdi-microphone', color: 'primary', clickFunction: this.toggleMuteAudio, requireAuthenticated: true, displayCondition: this.shouldDisplayAudioMute},
                     { title: 'Unmute video', icon: 'mdi-video-off', color: 'error', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoUnmute},
                     { title: 'Mute video', icon: 'mdi-video', color: 'primary', clickFunction: this.toggleMuteVideo, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoMute},
 
-                    { title: 'Chats', icon: 'mdi-home-city', clickFunction: this.goHome, requireAuthenticated: false },
                     { title: 'Chat files', icon: 'mdi-file-download', clickFunction: this.displayChatFiles, requireAuthenticated: true, displayCondition: this.shouldDisplayFiles },
                     { title: 'Find user', icon: 'mdi-magnify', clickFunction: this.findUser, requireAuthenticated: true},
                     { title: 'New chat', icon: 'mdi-plus-circle-outline', clickFunction: this.createChat, requireAuthenticated: true},
@@ -205,6 +221,7 @@
                     { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
 
                     { title: 'Video settings', icon: 'mdi-cog', clickFunction: this.openVideoSettings, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoSettings},
+                    { title: 'Language', icon: 'mdi-flag', clickFunction: this.openLocale},
 
                     { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
                 ],
@@ -231,6 +248,7 @@
             FileListModal,
             VideoSettings,
             FileTextEditModal,
+            LanguageModal,
         },
         methods:{
             toggleLeftNavigation() {
@@ -258,21 +276,6 @@
             },
             editChat() {
                 bus.$emit(OPEN_CHAT_EDIT, this.chatId);
-            },
-            getAppBarItems(){
-                return this.appBarItems.filter((value, index) => {
-                    if (value.requireAuthenticated) {
-                        return this.currentUser
-                    } else {
-                        return true
-                    }
-                }).filter((value, index) => {
-                    if (value.displayCondition) {
-                        return value.displayCondition();
-                    } else {
-                        return true
-                    }
-                })
             },
             createCall() {
                 console.log("createCall");
@@ -356,7 +359,10 @@
             },
             openVideoSettings() {
                 bus.$emit(OPEN_VIDEO_SETTINGS);
-            }
+            },
+            openLocale() {
+                bus.$emit(OPEN_LANGUAGE_MODAL);
+            },
         },
         computed: {
             ...mapGetters({
@@ -374,6 +380,21 @@
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return getCorrectUserAvatar(this.currentUser.avatar);
+            },
+            gotAppBarItems(){
+              return this.appBarItems.filter((value, index) => {
+                if (value.requireAuthenticated) {
+                  return this.currentUser
+                } else {
+                  return true
+                }
+              }).filter((value, index) => {
+                if (value.displayCondition) {
+                  return value.displayCondition();
+                } else {
+                  return true
+                }
+              })
             },
         },
         mounted() {

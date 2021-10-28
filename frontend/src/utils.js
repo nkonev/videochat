@@ -70,6 +70,22 @@ export const setStoredAudioPresents = (v) => {
     localStorage.setItem(KEY_AUDIO_PRESENTS, JSON.stringify(v));
 }
 
+export const KEY_LANGUAGE= 'language';
+
+export const getStoredLanguage = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_LANGUAGE));
+    if (v === null) {
+        console.log("Resetting language to default");
+        setStoredLanguage('en');
+        v = JSON.parse(localStorage.getItem(KEY_LANGUAGE));
+    }
+    return v;
+}
+
+export const setStoredLanguage = (v) => {
+    localStorage.setItem(KEY_LANGUAGE, JSON.stringify(v));
+}
+
 export const findIndex = (array, element) => {
     return array.findIndex(value => value.id === element.id);
 };
