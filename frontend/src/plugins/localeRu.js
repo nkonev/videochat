@@ -29,4 +29,14 @@ export default {
     video_i_have_microphone: "У меня есть микрофон",
     video_i_have_videocamera: "У меня есть камера",
     quality: "Качество",
+    user_profile: "Профиль пользователя",
+    bound_oauth2_providers: "Привязанные OAuth2 провайдеры",
+    not_bound_oauth2_providers: "Доступные OAuth2 провайдеры",
+    email: "Email",
+    change_email: "Изменить email",
+    change_login: "Изменить логин",
+    change_password: "Изменить пароль",
+    required: "Требуется",
+    min_characters: "Минимум {0} символов"
+
 }

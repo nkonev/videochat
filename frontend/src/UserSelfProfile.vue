@@ -5,7 +5,7 @@
     >
         <v-list-item three-line>
             <v-list-item-content class="d-flex justify-space-around">
-                <div class="overline mb-4">User profile #{{ currentUser.id }}</div>
+                <div class="overline mb-4">{{ $vuetify.lang.t('$vuetify.user_profile') }} #{{ currentUser.id }}</div>
                 <v-img v-if="currentUser.avatarBig || currentUser.avatar"
                        :src="ava"
                        :aspect-ratio="16/9"
@@ -21,7 +21,7 @@
         </v-list-item>
 
         <v-divider class="mx-4"></v-divider>
-        <v-card-title class="title pb-0 pt-1">Bound OAuth2 providers</v-card-title>
+        <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.bound_oauth2_providers') }}</v-card-title>
         <v-card-actions class="mx-2">
             <v-chip
                 v-if="currentUser.oauth2Identifiers.vkontakteId"
@@ -64,7 +64,7 @@
         </v-card-actions>
 
         <v-divider class="mx-4"></v-divider>
-        <v-card-title class="title pb-0 pt-1">Not bound OAuth2 providers</v-card-title>
+        <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.not_bound_oauth2_providers') }}</v-card-title>
         <v-card-actions class="mx-2">
             <v-chip
                 v-if="!currentUser.oauth2Identifiers.vkontakteId"
@@ -105,9 +105,9 @@
 
 
         <v-divider class="mx-4"></v-divider>
-        <v-card-title class="title pb-0 pt-1">Login</v-card-title>
+        <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.login') }}</v-card-title>
         <v-btn v-if="!showLoginInput" class="mx-4 mb-4" color="primary" dark @click="showLoginInput = !showLoginInput; loginPrevious = currentUser.login">
-            Change login
+            {{ $vuetify.lang.t('$vuetify.change_login') }}
             <v-icon dark right>mdi-account</v-icon>
         </v-btn>
         <v-row v-if="showLoginInput" no-gutters>
@@ -117,7 +117,7 @@
                         <v-text-field
                             v-model="currentUser.login"
                             :rules="[rules.required]"
-                            label="Login"
+                            :label="$vuetify.lang.t('$vuetify.login')"
                             @keyup.native.enter="sendLogin()"
                         ></v-text-field>
                     </v-col>
@@ -133,9 +133,10 @@
 
 
         <v-divider class="mx-4"></v-divider>
-        <v-card-title class="title pb-0 pt-1">Password</v-card-title>
+        <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.password') }}</v-card-title>
         <v-btn v-if="!showPasswordInput" class="mx-4 mb-4" color="primary" dark
-               @click="showPasswordInput = !showPasswordInput">Change password
+               @click="showPasswordInput = !showPasswordInput">
+            {{ $vuetify.lang.t('$vuetify.change_password') }}
             <v-icon dark right>mdi-lock</v-icon>
         </v-btn>
         <v-row v-if="showPasswordInput" no-gutters>
@@ -148,8 +149,7 @@
                             @click:append="showInputablePassword = !showInputablePassword"
                             :type="showInputablePassword ? 'text' : 'password'"
                             :rules="[rules.required, rules.min]"
-                            label="Password"
-                            hint="At least 8 characters"
+                            :label="$vuetify.lang.t('$vuetify.password')"
                             @keyup.native.enter="sendPassword()"
                         ></v-text-field>
                     </v-col>
@@ -165,9 +165,9 @@
 
 
         <v-divider class="mx-4"></v-divider>
-        <v-card-title class="title pb-0 pt-1">Email</v-card-title>
+        <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.email') }}</v-card-title>
         <v-btn v-if="!showEmailInput" class="mx-4 mb-4" color="primary" dark @click="showEmailInput = !showEmailInput; emailPrevious = currentUser.email">
-            Change email
+            {{ $vuetify.lang.t('$vuetify.change_email') }}
             <v-icon dark right>mdi-email</v-icon>
         </v-btn>
         <v-row v-if="showEmailInput" no-gutters>
@@ -214,11 +214,14 @@ import {getCorrectUserAvatar} from "./utils";
 
 export default {
     data() {
+        const minChars = 8;
+        const requiredMessage = this.$vuetify.lang.t('$vuetify.required');
+        const minCharsMessage = this.$vuetify.lang.t('$vuetify.min_characters', minChars);
         return {
             showInputablePassword: false,
             rules: {
-                required: value => !!value || 'Required.',
-                min: v => v.length >= 8 || 'Min 8 characters',
+                required: value => !!value || requiredMessage,
+                min: v => v.length >= minChars || minCharsMessage,
                 email: value => {
                     const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
                     return pattern.test(value) || 'Invalid e-mail.'

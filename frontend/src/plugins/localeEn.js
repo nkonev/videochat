@@ -29,4 +29,13 @@ export default {
     video_i_have_microphone: "I have a microphone",
     video_i_have_videocamera: "I have a videocamera",
     quality: "Quality",
+    user_profile: "User profile",
+    bound_oauth2_providers: "Bound OAuth2 providers",
+    not_bound_oauth2_providers: "Available OAuth2 providers",
+    email: "Email",
+    change_email: "Change email",
+    change_login: "Change login",
+    change_password: "Change password",
+    required: "Required",
+    min_characters: "Min {0} characters"
 }
