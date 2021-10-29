@@ -6,7 +6,7 @@
     <v-row justify="center">
         <v-dialog persistent v-model="show" max-width="440">
             <v-card>
-                <v-card-title class="headline">Login</v-card-title>
+                <v-card-title class="headline">{{ $vuetify.lang.t('$vuetify.login_title') }}</v-card-title>
 
                 <v-card-text>
                     <v-form
@@ -18,7 +18,7 @@
                         <v-text-field
                                 v-model="username"
                                 :rules="usernameRules"
-                                label="Login"
+                                :label="$vuetify.lang.t('$vuetify.login')"
                                 required
                                 :disabled="disable"
                                 @input="hideAlert()"
@@ -29,7 +29,7 @@
                                 :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
                                 @click:append="showInputablePassword = !showInputablePassword"
                                 :rules="passwordRules"
-                                label="Password"
+                                :label="$vuetify.lang.t('$vuetify.password')"
                                 required
                                 :type="showInputablePassword ? 'text' : 'password'"
                                 :disabled="disable"
@@ -54,7 +54,7 @@
                                 min-width="80px"
                                 :loading="loadingLogin"
                         >
-                            Login
+                            {{ $vuetify.lang.t('$vuetify.login_action') }}
                         </v-btn>
                         <v-btn class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
                         <v-btn class="mr-2 mb-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>

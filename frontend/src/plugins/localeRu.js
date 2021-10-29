@@ -16,4 +16,8 @@ export default {
     language: "Язык",
     logout: "Выход",
     type_to_find_user: "Введите текст для поиска",
+    login_title: "Вход",
+    login: "Логин",
+    password: "Пароль",
+    login_action: "Войти",
 }

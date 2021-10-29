@@ -6,13 +6,23 @@
 
                 <v-card-text class="px-4 py-0">
 
-                    <v-select
-                        :items="languageItems"
-                        dense
-                        solo
-                        @change="changeLanguage"
+                    <v-btn-toggle
                         v-model="language"
-                    ></v-select>
+                        tile
+                        color="primary accent-3"
+                        group
+                        mandatory
+                        @change="changeLanguage"
+                    >
+                        <v-btn value="ru">
+                          Русский
+                        </v-btn>
+
+                        <v-btn value="en">
+                          English
+                        </v-btn>
+
+                    </v-btn-toggle>
                   
                 </v-card-text>
 
@@ -57,11 +67,6 @@
                 console.log("Setting lang", newLanguage);
                 setStoredLanguage(newLanguage);
                 this.setToVuetify(newLanguage);
-            },
-        },
-        computed: {
-            languageItems() {
-                return [{text:'USA', value: 'en'}, {text:'Russia', value: 'ru'}]
             },
         },
         created() {

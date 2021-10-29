@@ -65,7 +65,7 @@
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.edit_chat') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
-                <v-list-item @click="goProfile()">
+                <v-list-item @click="goProfile()" v-if="shouldDisplayProfile()">
                     <v-list-item-icon><v-icon>mdi-account</v-icon></v-list-item-icon>
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.profile') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
@@ -364,6 +364,9 @@
                 return this.showChatEditButton;
             },
             shouldDisplayLogout() {
+                return this.currentUser != null;
+            },
+            shouldDisplayProfile() {
                 return this.currentUser != null;
             },
             shouldDisplayVideoSettings() {

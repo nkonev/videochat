@@ -16,4 +16,8 @@ export default {
     language: "Language",
     logout: "Logout",
     type_to_find_user: "Type to search",
+    login_title: "Login",
+    login: "Login",
+    password: "Password",
+    login_action: "Login",
 }
