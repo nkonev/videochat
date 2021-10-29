@@ -64,7 +64,6 @@
             },
 
             changeLanguage(newLanguage) {
-                console.log("Setting lang", newLanguage);
                 setStoredLanguage(newLanguage);
                 this.setToVuetify(newLanguage);
             },

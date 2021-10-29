@@ -39,4 +39,5 @@ export default {
     required: "Требуется",
     min_characters: "Минимум {0} символов",
     invalid_email: "Некорректный email",
+    participants: "участника(ов)",
 }

@@ -39,4 +39,5 @@ export default {
     required: "Required",
     min_characters: "Min {0} characters",
     invalid_email: "Invalid email",
+    participants: "participants",
 }

@@ -121,7 +121,7 @@
                 <div class="d-flex flex-column">
                     <div style="text-transform: initial">{{title}}</div>
                     <div v-if="chatUsersCount" style="font-size: 0.8em !important; letter-spacing: initial; text-transform: initial; opacity: 50%">
-                        {{ chatUsersCount }} participants</div>
+                        {{ chatUsersCount }} {{ $vuetify.lang.t('$vuetify.participants') }}</div>
                 </div>
             </v-btn>
             <v-spacer></v-spacer>

@@ -236,13 +236,20 @@
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
         },
         mounted() {
-            const chats = this.$vuetify.lang.t('$vuetify.chats');
-            this.$store.commit(SET_TITLE, chats);
+            this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
             this.$store.commit(SET_CHAT_USERS_COUNT, 0);
             this.$store.commit(SET_SHOW_SEARCH, true);
             this.$store.commit(SET_CHAT_ID, null);
             this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
-        }
+        },
+        watch: {
+          '$vuetify.lang.current': {
+            handler: function (newValue, oldValue) {
+              this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
+            },
+          }
+        },
+
     }
 </script>
 
