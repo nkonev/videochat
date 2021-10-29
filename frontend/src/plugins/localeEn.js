@@ -2,7 +2,7 @@ import en from 'vuetify/lib/locale/en';
 
 export default {
     ...en,
-    chat: "Chats",
+    chats: "Chats",
     unmute_audio: "Unmute audio",
     mute_audio: "Mute audio",
     unmute_video: "Unmute video",

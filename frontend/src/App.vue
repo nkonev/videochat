@@ -42,7 +42,7 @@
 
                 <v-list-item @click="goHome()">
                     <v-list-item-icon><v-icon>mdi-home-city</v-icon></v-list-item-icon>
-                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.chat') }}</v-list-item-title></v-list-item-content>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.chats') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
                 <v-list-item @click="displayChatFiles()" v-if="shouldDisplayFiles()">
