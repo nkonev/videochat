@@ -7,4 +7,12 @@ export default {
     mute_audio: "Заглушить звук",
     unmute_video: "Включить видео",
     mute_video: "Выключить видео",
+    files: "Файлы",
+    find_user: "Найти пользователя",
+    new_chat: "Новый чат",
+    edit_chat: "Редактировать чат",
+    profile: "Профиль",
+    video_settings: "Настройки видео",
+    language: "Язык",
+    logout: "Выход",
 }

@@ -41,26 +41,49 @@
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.mute_video') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
-
-
-              <v-list-item @click="goHome()">
+                <v-list-item @click="goHome()">
                     <v-list-item-icon><v-icon>mdi-home-city</v-icon></v-list-item-icon>
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.chat') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
+                <v-list-item @click="displayChatFiles()" v-if="shouldDisplayFiles()">
+                    <v-list-item-icon><v-icon>mdi-file-download</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.files') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
 
-                <v-list-item
-                        v-for="item in gotAppBarItems"
-                        :key="item.title"
-                        @click="item.clickFunction"
-                >
-                    <v-list-item-icon>
-                        <v-icon :color="item.color">{{ item.icon }}</v-icon>
-                    </v-list-item-icon>
+                <v-list-item @click="findUser()">
+                    <v-list-item-icon><v-icon>mdi-magnify</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.find_user') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
 
-                    <v-list-item-content>
-                        <v-list-item-title>{{ item.title }}</v-list-item-title>
-                    </v-list-item-content>
+                <v-list-item @click="createChat()">
+                    <v-list-item-icon><v-icon>mdi-plus-circle-outline</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.new_chat') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
+                <v-list-item @click="editChat()" v-if="shouldDisplayEditChat()">
+                    <v-list-item-icon><v-icon>mdi-lead-pencil</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.edit_chat') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
+                <v-list-item @click="goProfile()">
+                    <v-list-item-icon><v-icon>mdi-account</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.profile') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
+                <v-list-item @click="openVideoSettings()" v-if="shouldDisplayVideoSettings()">
+                    <v-list-item-icon><v-icon>mdi-account</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.video_settings') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
+                <v-list-item @click="openLocale()">
+                    <v-list-item-icon><v-icon>mdi-flag</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.language') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
+                <v-list-item @click="logout()" v-if="shouldDisplayLogout">
+                    <v-list-item-icon><v-icon>mdi-logout</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.logout') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
             </v-list>
         </v-navigation-drawer>
@@ -218,20 +241,7 @@
 
     export default {
         data () {
-            const chatDescription = this.$vuetify.lang.t('$vuetify.chat');
             return {
-                appBarItems: [
-                    { title: 'Chat files', icon: 'mdi-file-download', clickFunction: this.displayChatFiles, requireAuthenticated: true, displayCondition: this.shouldDisplayFiles },
-                    { title: 'Find user', icon: 'mdi-magnify', clickFunction: this.findUser, requireAuthenticated: true},
-                    { title: 'New chat', icon: 'mdi-plus-circle-outline', clickFunction: this.createChat, requireAuthenticated: true},
-                    { title: 'Edit chat', icon: 'mdi-lead-pencil', clickFunction: this.editChat, requireAuthenticated: true, displayCondition: this.shouldDisplayEditChat},
-                    { title: 'My Account', icon: 'mdi-account', clickFunction: this.goProfile, requireAuthenticated: true },
-
-                    { title: 'Video settings', icon: 'mdi-cog', clickFunction: this.openVideoSettings, requireAuthenticated: true, displayCondition: this.shouldDisplayVideoSettings},
-                    { title: 'Language', icon: 'mdi-flag', clickFunction: this.openLocale},
-
-                    { title: 'Logout', icon: 'mdi-logout', clickFunction: this.logout, requireAuthenticated: true },
-                ],
                 drawer: this.$vuetify.breakpoint.lgAndUp,
                 lastError: "",
                 showAlert: false,
@@ -354,6 +364,9 @@
             shouldDisplayEditChat() {
                 return this.showChatEditButton;
             },
+            shouldDisplayLogout() {
+                return this.currentUser != null;
+            },
             shouldDisplayVideoSettings() {
                 return true;
             },
@@ -387,21 +400,6 @@
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return getCorrectUserAvatar(this.currentUser.avatar);
-            },
-            gotAppBarItems(){
-              return this.appBarItems.filter((value, index) => {
-                if (value.requireAuthenticated) {
-                  return this.currentUser
-                } else {
-                  return true
-                }
-              }).filter((value, index) => {
-                if (value.displayCondition) {
-                  return value.displayCondition();
-                } else {
-                  return true
-                }
-              })
             },
         },
         mounted() {
