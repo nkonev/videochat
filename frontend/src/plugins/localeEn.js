@@ -20,4 +20,10 @@ export default {
     login: "Login",
     password: "Password",
     login_action: "Login",
+    create_chat: "Create chat",
+    chat_name: "Chat name",
+    edit: "Edit",
+    ok: "Ok",
+    select_users_to_add_to_chat: "Select users for add to chat",
+    chat_name_required: "Chat name is required",
 }

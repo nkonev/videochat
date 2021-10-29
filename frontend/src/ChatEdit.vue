@@ -2,8 +2,8 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" persistent>
             <v-card>
-                <v-card-title v-if="!isNew">Edit chat #{{editChatId}}</v-card-title>
-                <v-card-title v-else>Create chat</v-card-title>
+                <v-card-title v-if="!isNew">{{ $vuetify.lang.t('$vuetify.edit_chat') }} #{{editChatId}}</v-card-title>
+                <v-card-title v-else>{{ $vuetify.lang.t('$vuetify.create_chat') }}</v-card-title>
 
                 <v-container fluid>
                     <v-form
@@ -13,10 +13,11 @@
                         @keydown.native.enter.prevent="saveChat"
                     >
                         <v-text-field
-                            label="Chat name"
+                            :label="$vuetify.lang.t('$vuetify.chat_name')"
                             v-model="editDto.name"
                             required
                             :rules="chatNameRules"
+                            autofocus
                         ></v-text-field>
                         <v-autocomplete
                                 v-if="isNew"
@@ -26,7 +27,7 @@
                                 filled
                                 chips
                                 color="blue-grey lighten-2"
-                                label="Select users for add to chat"
+                                :label="$vuetify.lang.t('$vuetify.select_users_to_add_to_chat')"
                                 item-text="login"
                                 item-value="id"
                                 multiple
@@ -35,7 +36,6 @@
                                 :search-input.sync="search"
                                 dense
                                 outlined
-                                autofocus
                         >
                             <template v-slot:selection="data">
                                 <v-chip
@@ -66,10 +66,9 @@
 
                 <v-card-actions class="pa-4">
                     <template>
-                        <v-btn color="primary" class="mr-4" @click="saveChat" v-if="!isNew">Edit</v-btn>
-                        <v-btn color="primary" class="mr-4" @click="saveChat" v-else>Create</v-btn>
+                        <v-btn color="primary" class="mr-4" @click="saveChat">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
                     </template>
-                    <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
+                    <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>
@@ -92,6 +91,7 @@
 
     export default {
         data () {
+            const requiredMessage = this.$vuetify.lang.t('$vuetify.chat_name_required');
             return {
                 show: false,
                 editChatId: null,
@@ -100,7 +100,7 @@
                 isLoading: false,
                 people: [  ], // available person to chat with
                 chatNameRules: [
-                    v => !!v || 'Chat name is required',
+                    v => !!v || requiredMessage,
                 ],
                 valid: true
             }
