@@ -2,14 +2,12 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="320">
             <v-card v-if="show">
-                <v-card-title>Language</v-card-title>
+                <v-card-title>{{ $vuetify.lang.t('$vuetify.language') }}</v-card-title>
 
                 <v-card-text class="px-4 py-0">
 
                     <v-select
-                        messages="Language"
                         :items="languageItems"
-                        label="Language"
                         dense
                         solo
                         @change="changeLanguage"

@@ -15,7 +15,6 @@
 
                     <v-list-item-content>
                         <v-list-item-title>{{currentUser.login}}</v-list-item-title>
-                        <v-list-item-subtitle>Logged In</v-list-item-subtitle>
                     </v-list-item-content>
                 </v-list-item>
             </template>

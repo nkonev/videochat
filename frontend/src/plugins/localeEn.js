@@ -15,4 +15,5 @@ export default {
     video_settings: "Video settings",
     language: "Language",
     logout: "Logout",
+    type_to_find_user: "Type to search",
 }

@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" @click:outside="closeModal()">
             <v-card>
-                <v-card-title>Find user</v-card-title>
+                <v-card-title>{{ $vuetify.lang.t('$vuetify.find_user') }}</v-card-title>
 
                 <v-card-text class="px-4 py-0">
                     <v-autocomplete
@@ -10,7 +10,7 @@
                         :items="people"
                         filled
                         color="blue-grey lighten-2"
-                        label="Type to search"
+                        :label="$vuetify.lang.t('$vuetify.type_to_find_user')"
                         item-text="login"
                         item-value="id"
                         :hide-selected="true"
@@ -32,7 +32,7 @@
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
-                    <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
+                    <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>
