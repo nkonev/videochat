@@ -26,4 +26,7 @@ export default {
     ok: "Ok",
     select_users_to_add_to_chat: "Select users for add to chat",
     chat_name_required: "Chat name is required",
+    video_i_have_microphone: "I have a microphone",
+    video_i_have_videocamera: "I have a videocamera",
+    quality: "Quality",
 }

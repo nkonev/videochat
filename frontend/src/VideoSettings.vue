@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="440" persistent>
             <v-card v-if="show" :disabled="changing" :loading="changing">
-                <v-card-title>Video settings</v-card-title>
+                <v-card-title>{{ $vuetify.lang.t('$vuetify.video_settings') }}</v-card-title>
 
                 <v-card-text class="px-4 py-0">
                     <v-row no-gutters>
@@ -12,7 +12,7 @@
                                 dense
                                 v-model="audioPresents"
                                 @change="changeAudioPresents"
-                                :label="`I have a microphone`"
+                                :label="$vuetify.lang.t('$vuetify.video_i_have_microphone')"
                             ></v-checkbox>
                         </v-col>
 
@@ -22,15 +22,14 @@
                                 dense
                                 v-model="videoPresents"
                                 @change="changeVideoPresents"
-                                :label="`I have a videocamera`"
+                                :label="$vuetify.lang.t('$vuetify.video_i_have_videocamera')"
                             ></v-checkbox>
                         </v-col>
                     </v-row>
 
                     <v-select
-                        messages="Quality"
+                        :messages="$vuetify.lang.t('$vuetify.quality')"
                         :items="qualityItems"
-                        label="Quality"
                         dense
                         solo
                         @change="changeVideoResolution"
@@ -48,7 +47,7 @@
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
-                    <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
+                    <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                     <v-spacer/>
                 </v-card-actions>
 

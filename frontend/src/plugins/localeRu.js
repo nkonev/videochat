@@ -26,4 +26,7 @@ export default {
     ok: "Ok",
     select_users_to_add_to_chat: "Выберите пользователей для добавления в чат",
     chat_name_required: "Нужно ввести имя чата",
+    video_i_have_microphone: "У меня есть микрофон",
+    video_i_have_videocamera: "У меня есть камера",
+    quality: "Качество",
 }
