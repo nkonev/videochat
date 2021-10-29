@@ -37,13 +37,13 @@
                     </template>
                     <v-btn icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : 'mr-2'" @click="resetInput()"><v-icon>mdi-delete</v-icon></v-btn>
                     <v-switch v-if="canBroadcast && $vuetify.breakpoint.smAndUp" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
-                        :label="$vuetify.breakpoint.smAndUp ? `Broadcast` : null"
+                        :label="$vuetify.breakpoint.smAndUp ? $vuetify.lang.t('$vuetify.message_broadcast') : null"
                     ></v-switch>
                     <v-btn color="primary" @click="sendMessageToChat" small><v-icon color="white">mdi-send</v-icon></v-btn>
                 </div>
             </div>
             <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#sendButtonContainer'" top v-model="showTooltip" :key="tooltipKey">
-                <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} is writing...</span>
+                <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} {{ $vuetify.lang.t('$vuetify.user_is_writing') }}</span>
                 <span v-else>{{broadcastMessage}}</span>
             </v-tooltip>
 
@@ -61,7 +61,7 @@
     } from "./bus";
     import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
-    import {GET_USER} from "./store";
+    import {GET_USER, SET_TITLE} from "./store";
     import 'quill/dist/quill.core.css'
     import 'quill/dist/quill.snow.css'
     import imageDropFunction from './ImageDrop';
@@ -104,6 +104,7 @@
         props:['chatId', 'canBroadcast'],
         data() {
             const chatIdRef = this.$props.chatId;
+            const messageEditPlaceholder = this.$vuetify.lang.t('$vuetify.message_edit_placeholder');
             return {
                 editMessageDto: dtoFactory(),
                 writingUsers: [],
@@ -117,7 +118,7 @@
 
                         imageDrop: true
                     },
-                    placeholder: 'Press Ctrl + Enter to send, Esc to clear',
+                    placeholder: messageEditPlaceholder,
                     formats: [
                       'background',
                       'bold',

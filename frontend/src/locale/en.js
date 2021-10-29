@@ -40,4 +40,7 @@ export default {
     min_characters: "Min {0} characters",
     invalid_email: "Invalid email",
     participants: "participants",
+    message_edit_placeholder: "Press Ctrl + Enter to send, Esc to clear",
+    message_broadcast: "Broadcast",
+    user_is_writing: "is writing...",
 }
