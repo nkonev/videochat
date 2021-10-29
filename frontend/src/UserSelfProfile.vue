@@ -217,6 +217,7 @@ export default {
         const minChars = 8;
         const requiredMessage = this.$vuetify.lang.t('$vuetify.required');
         const minCharsMessage = this.$vuetify.lang.t('$vuetify.min_characters', minChars);
+        const invalidEmailMessage = this.$vuetify.lang.t('$vuetify.invalid_email');
         return {
             showInputablePassword: false,
             rules: {
@@ -224,7 +225,7 @@ export default {
                 min: v => v.length >= minChars || minCharsMessage,
                 email: value => {
                     const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-                    return pattern.test(value) || 'Invalid e-mail.'
+                    return pattern.test(value) || invalidEmailMessage
                 },
             },
 

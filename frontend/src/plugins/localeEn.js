@@ -37,5 +37,6 @@ export default {
     change_login: "Change login",
     change_password: "Change password",
     required: "Required",
-    min_characters: "Min {0} characters"
+    min_characters: "Min {0} characters",
+    invalid_email: "Invalid email",
 }

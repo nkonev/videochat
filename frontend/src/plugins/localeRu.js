@@ -37,6 +37,6 @@ export default {
     change_login: "Изменить логин",
     change_password: "Изменить пароль",
     required: "Требуется",
-    min_characters: "Минимум {0} символов"
-
+    min_characters: "Минимум {0} символов",
+    invalid_email: "Некорректный email",
 }
