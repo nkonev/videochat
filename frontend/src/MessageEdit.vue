@@ -1,6 +1,7 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid style="height: 100%">
             <quill-editor
+                :key="editorKey"
                 :editorOptions="editorOption"
                 @keyup.native.ctrl.enter="sendMessageToChat"
                 @keyup.native.esc="resetInput"
@@ -106,6 +107,7 @@
             const chatIdRef = this.$props.chatId;
             const messageEditPlaceholder = this.$vuetify.lang.t('$vuetify.message_edit_placeholder');
             return {
+                editorKey: +new Date(),
                 editMessageDto: dtoFactory(),
                 writingUsers: [],
 
@@ -291,6 +293,12 @@
                         this.notifyAboutBroadcast();
                     }
                 }
+            },
+            '$vuetify.lang.current': {
+                handler: function (newValue, oldValue) {
+                    this.editorOption.placeholder = this.$vuetify.lang.t('$vuetify.message_edit_placeholder');
+                    this.editorKey++;
+                },
             }
         },
         components: {
