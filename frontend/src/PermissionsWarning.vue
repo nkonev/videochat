@@ -2,12 +2,14 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" persistent>
             <v-card>
-                <v-card-title>Browser permissions</v-card-title>
+                <v-card-title>{{ $vuetify.lang.t('$vuetify.audio_autoplay_permissions_title') }}</v-card-title>
 
-                <v-card-text>Please enable audio auto-play permissions for this site in your browser preferences. For Safari they resides in Safari -> Settings -> Web Sites -> Auto Play. See https://browserhow.com/how-to-allow-or-block-auto-play-sound-access-in-safari-mac/#how-to-allow-autoplay-sound-on-safari-macos for details</v-card-text>
+                <v-card-text>{{ $vuetify.lang.t('$vuetify.audio_autoplay_permissions_text') }}</v-card-text>
 
                 <v-card-actions class="pa-4">
-                    <v-btn class="mr-4" @click="show=false">Close</v-btn>
+                    <v-btn class="mr-4" @click="show=false">
+                        {{ $vuetify.lang.t('$vuetify.close') }}
+                    </v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>

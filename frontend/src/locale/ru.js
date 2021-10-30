@@ -75,4 +75,8 @@ export default {
     delete_from_chat: "Удалить из чата",
     delete_participant: "Удаление из чата #{0}",
     delete_participant_text: "Вы действительно хотите удалить участника #{0} '{1}' из этого чата ?",
+    audio_autoplay_permissions_title: "Разрешения",
+    audio_autoplay_permissions_text: "Пожалуйста разрешите автовоспроизведение аудио в настройках Вашего браузера.",
+    you_called: "Вас позвали на звонок в #{0} '{1}', нажмите трубку для входа",
+    loading: "Загрузка...",
 }

@@ -164,7 +164,7 @@
                     </template>
                 </v-snackbar>
                 <v-snackbar v-model="invitedVideoChatAlert" class="call-blink" color="success" timeout="-1" :multi-line="true" :key="callReblinkCounter" top>
-                    You are called into chat #{{invitedVideoChatId}} '{{invitedVideoChatName}}', press to join
+                    {{ $vuetify.lang.t('$vuetify.you_called', invitedVideoChatId, invitedVideoChatName) }}
                     <template v-slot:action="{ attrs }">
                         <v-btn icon v-bind="attrs" @click="onClickInvitation()"><v-icon color="white">mdi-phone</v-icon></v-btn>
                         <v-btn icon v-bind="attrs" @click="invitedVideoChatAlert = false"><v-icon color="white">mdi-close-circle</v-icon></v-btn>

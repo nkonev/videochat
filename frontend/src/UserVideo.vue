@@ -11,8 +11,9 @@ export default {
 	name: 'UserVideo',
 
     data()  {
+        const loadingMessage = this.$vuetify.lang.t('$vuetify.loading');
 	    return {
-            userName: 'loading...',
+            userName: loadingMessage,
             audioMute: false,
             speaking: false,
             errorDescription: null,

@@ -75,4 +75,8 @@ export default {
     delete_from_chat: "Delete from chat",
     delete_participant: "Remove participant #{0}",
     delete_participant_text: "Are you sure to remove user #{0} '{1}' from this chat ?",
+    audio_autoplay_permissions_title: "Browser permissions",
+    audio_autoplay_permissions_text: "Please enable audio auto-play permissions for this site in your browser preferences.",
+    you_called: "You are called into chat #{0} '{1}', press phone to join",
+    loading: "Loading...",
 }
