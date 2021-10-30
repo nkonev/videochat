@@ -56,4 +56,10 @@ export default {
     please_allow_audio_policy_bypass: "Пожалуйста, разрешите автовоспроизведение аудио. Если забыли - аудио заработает после включения микрофона.",
     allow: "Разрешить",
     user_profile_choose_avatar: "Выбор аватара",
+    upload: "Загрузить",
+    upload_files: "Загрузка файлов",
+    attached_files: "Файлы чата",
+    no_files: "Нет файлов",
+    share_file: "Поделиться ссылкой",
+    unshare_file: "Убрать публикацию",
 }

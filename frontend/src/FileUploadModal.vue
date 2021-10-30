@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="400" persistent>
             <v-card>
-                <v-card-title>Upload files</v-card-title>
+                <v-card-title>{{ $vuetify.lang.t('$vuetify.upload_files') }}</v-card-title>
 
                 <v-container>
                     <v-file-input
@@ -33,10 +33,10 @@
 
                 <v-card-actions class="pa-4">
                     <template v-if="!limitError && files.length > 0">
-                        <v-btn color="primary" v-if="!uploading" @click="upload()">Upload</v-btn>
+                        <v-btn color="primary" v-if="!uploading" @click="upload()">{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
                         <v-btn v-else @click="cancel()">Cancel</v-btn>
                     </template>
-                    <v-btn class="mr-4" @click="hideModal()" :disabled="uploading">Close</v-btn>
+                    <v-btn class="mr-4" @click="hideModal()" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>

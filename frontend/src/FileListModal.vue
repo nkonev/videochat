@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" persistent scrollable>
             <v-card>
-                <v-card-title>Attached files</v-card-title>
+                <v-card-title>{{ $vuetify.lang.t('$vuetify.attached_files') }}</v-card-title>
 
                 <v-card-text class="ma-0 pa-0">
                     <v-list v-if="!loading">
@@ -17,15 +17,30 @@
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
                                         <v-list-item-subtitle><span v-if="item.owner">by {{item.owner.login}}</span> <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">Public url</a></v-list-item-subtitle>
                                     </v-list-item-content>
-                                    <v-icon class="mx-1" v-if="item.canShare && !item.publicUrl" color="primary" @click="shareFile(item, true)" dark>mdi-export</v-icon>
-                                    <v-icon class="mx-1" v-if="item.canShare && item.publicUrl" color="primary" @click="shareFile(item, false)" dark>mdi-lock</v-icon>
+
+
+                                    <v-tooltip bottom v-if="item.canShare && !item.publicUrl">
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-icon v-bind="attrs" v-on="on" class="mx-1" v-if="item.canShare && !item.publicUrl" color="primary" @click="shareFile(item, true)" dark>mdi-export</v-icon>
+                                        </template>
+                                        <span>{{ $vuetify.lang.t('$vuetify.share_file') }}</span>
+                                    </v-tooltip>
+
+                                    <v-tooltip bottom v-if="item.canShare && item.publicUrl">
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-icon v-bind="attrs" v-on="on" class="mx-1" v-if="item.canShare && item.publicUrl" color="primary" @click="shareFile(item, false)" dark>mdi-lock</v-icon>
+                                        </template>
+                                        <span>{{ $vuetify.lang.t('$vuetify.unshare_file') }}</span>
+                                    </v-tooltip>
+
+
                                     <v-icon class="mx-1" v-if="item.canRemove" color="error" @click="deleteFile(item)" dark>mdi-delete</v-icon>
                                 </v-list-item>
                                 <v-divider></v-divider>
                             </template>
                         </template>
                         <template v-else>
-                            <v-card-text>No files</v-card-text>
+                            <v-card-text>{{ $vuetify.lang.t('$vuetify.no_files') }}</v-card-text>
                         </template>
                     </v-list>
                     <v-progress-circular
@@ -38,8 +53,8 @@
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
-                  <v-btn color="primary" class="mr-4" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>Upload</v-btn>
-                  <v-btn color="error" class="mr-4" @click="closeModal()">Close</v-btn>
+                  <v-btn color="primary" class="mr-4" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
+                  <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
