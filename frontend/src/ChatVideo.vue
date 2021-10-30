@@ -47,7 +47,7 @@
         getWebsocketUrlPrefix,
         getVideoResolution,
         getStoredAudioDevicePresents,
-        getStoredVideoDevicePresents,
+        getStoredVideoDevicePresents, getCodec,
     } from "./utils";
     import { v4 as uuidv4 } from 'uuid';
     import vuetify from './plugins/vuetify'
@@ -114,7 +114,8 @@
                 );
                 this.remotesDiv = document.getElementById("video-container");
 
-                this.clientLocal = new Client(this.signalLocal, configObj);
+                const codec = getCodec();
+                this.clientLocal = new Client(this.signalLocal, {...configObj, codec: codec});
 
                 this.clientLocal.onspeaker = (messageEvent) => {
                     console.debug("Speaking event", messageEvent);
@@ -343,7 +344,10 @@
             },
             getAndPublishLocalMediaStream({screen = false}) {
                 this.insideSwitchingCameraScreen = true;
+
                 const resolution = getVideoResolution();
+                const codec = getCodec();
+
                 bus.$emit(VIDEO_PARAMETERS_CHANGED);
 
                 const audio = getStoredAudioDevicePresents();
@@ -364,12 +368,14 @@
                 const localStream = screen ?
                     LocalStream.getDisplayMedia({
                         audio: audio,
-                        video: true
+                        video: true,
+                        codec: codec,
                     }) :
                     LocalStream.getUserMedia({
                         resolution: resolution,
                         audio: audio,
-                        video: video
+                        video: video,
+                        codec: codec,
                     });
 
                 return localStream.then((media) => {

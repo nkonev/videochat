@@ -36,6 +36,15 @@
                         v-model="videoQuality"
                     ></v-select>
 
+                    <v-select
+                        :messages="$vuetify.lang.t('$vuetify.requested_codec')"
+                        :items="codecItems"
+                        dense
+                        solo
+                        @change="changeCodec"
+                        v-model="codec"
+                    ></v-select>
+
                     <!--
                     <v-select
                         messages="Video device"
@@ -69,7 +78,7 @@
         getStoredAudioDevicePresents,
         setStoredAudioPresents,
         getStoredVideoDevicePresents,
-        setStoredVideoPresents
+        setStoredVideoPresents, setCodec, getCodec
     } from "./utils";
     import {videochat_name} from "./routes";
 
@@ -82,6 +91,7 @@
                 audioPresents: null,
                 videoPresents: null,
                 videoQuality: null,
+                codec: null,
             }
         },
         methods: {
@@ -89,6 +99,7 @@
                 this.audioPresents = getStoredAudioDevicePresents();
                 this.videoPresents = getStoredVideoDevicePresents();
                 this.videoQuality = getVideoResolution();
+                this.codec = getCodec();
                 this.show = true;
             },
             closeModal() {
@@ -108,6 +119,13 @@
                     this.changing = true;
                 }
                 setVideoResolution(newVideoResolution);
+                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+            },
+            changeCodec(newCodec) {
+                if (this.isVideoRoute()) {
+                    this.changing = true;
+                }
+                setCodec(newCodec);
                 bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeAudioPresents(v) {
@@ -130,6 +148,9 @@
                 // https://github.com/pion/ion-sdk-js/blob/master/src/stream.ts#L10
                 return ['qvga', 'vga', 'shd', 'hd', 'fhd', 'qhd']
             },
+            codecItems() {
+                return ['vp8', 'vp9', 'h264']
+            }
         },
         created() {
             bus.$on(OPEN_VIDEO_SETTINGS, this.showModal);

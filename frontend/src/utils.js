@@ -39,6 +39,23 @@ export const setVideoResolution = (newVideoResolution) => {
     localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
 }
 
+const defaultCodec = 'vp9';
+
+export const KEY_CODEC = 'codec';
+
+export const getCodec = () => {
+    let got = localStorage.getItem(KEY_CODEC);
+    if (!got) {
+        localStorage.setItem(KEY_CODEC, defaultCodec);
+        got = localStorage.getItem(KEY_CODEC);
+    }
+    return got;
+}
+
+export const setCodec = (newCodec) => {
+    localStorage.setItem(KEY_CODEC, newCodec);
+}
+
 export const KEY_VIDEO_PRESENTS = 'videoPresents';
 export const KEY_AUDIO_PRESENTS = 'audioPresents';
 

@@ -80,4 +80,5 @@ export default {
     you_called: "You are called into chat #{0} '{1}', press phone to join",
     loading: "Loading...",
     time_at: "at",
+    requested_codec: "Requested codec",
 }
