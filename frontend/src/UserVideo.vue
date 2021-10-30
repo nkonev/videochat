@@ -31,7 +31,7 @@ export default {
 
     methods: {
         setSource(d) {
-            console.log("videoRef=", this.$refs.videoRef);
+            console.log("setting source for videoRef=", this.$refs.videoRef, " source=", d);
             this.$refs.videoRef.srcObject = d;
         },
         getStreamId() {
