@@ -39,7 +39,7 @@ services:
         max-size: "50m"
         max-file: "1"
   postgresql:
-    image: postgres:13.1
+    image: postgres:14.0-alpine3.14
     restart: unless-stopped
     ports:
       - 35432:5432
@@ -57,7 +57,7 @@ services:
         max-file: "1"
 
   redis:
-    image: redis:6.0.8
+    image: redis:6.2.6
     hostname: redis
     restart: unless-stopped
     ports:
@@ -92,7 +92,7 @@ services:
         max-file: "1"
 
   rabbitmq:
-    image: rabbitmq:3.8.14-management
+    image: rabbitmq:3.9.8-management
     hostname: rabbitmq
     restart: unless-stopped
     ports:
