@@ -156,10 +156,10 @@
 
                 // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
-                    console.debug("got track", track.id, "for stream", stream.id);
+                    console.debug("Got track", track.id, "for stream", stream.id);
                     track.onunmute = () => {
                         if (!this.streams[stream.id]) {
-                            console.log("set track", track.id, "for stream", stream.id);
+                            console.log("Setting track", track.id, "for stream", stream.id);
 
                             const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: this.getNewId() }});
                             component.$mount();
