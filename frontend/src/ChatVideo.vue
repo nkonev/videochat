@@ -195,6 +195,12 @@
                 }
                 this.tryRestartVideoProcess();
             },
+            clearLocalMediaStream() {
+                if (this.localMediaStream) {
+                    this.localMediaStream.getTracks().forEach(t => t.stop());
+                    this.localMediaStream.unpublish();
+                }
+            },
             leaveSession() {
                 if (pingTimerId) {
                     clearInterval(pingTimerId);
@@ -204,10 +210,7 @@
                     const component = this.streams[streamId].component;
                     this.removeStream(streamId, component);
                 }
-                if (this.localMediaStream) {
-                    this.localMediaStream.getTracks().forEach(t => t.stop());
-                    this.localMediaStream.unpublish();
-                }
+                this.clearLocalMediaStream();
                 if (this.clientLocal) {
                     this.clientLocal.close();
                 }
@@ -326,10 +329,7 @@
                 return this.onSwitchMediaStream({screen: false});
             },
             onSwitchMediaStream({screen = false}) {
-                if (this.localMediaStream) {
-                    this.localMediaStream.unpublish();
-                    this.localMediaStream.getTracks().forEach(t => t.stop());
-                }
+                this.clearLocalMediaStream();
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
                 this.getAndPublishLocalMediaStream({screen})
