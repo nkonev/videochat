@@ -39,7 +39,7 @@ export const setVideoResolution = (newVideoResolution) => {
     localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
 }
 
-const defaultCodec = 'vp9';
+const defaultCodec = 'vp8';
 
 export const KEY_CODEC = 'codec';
 
