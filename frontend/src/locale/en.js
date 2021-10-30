@@ -79,4 +79,5 @@ export default {
     audio_autoplay_permissions_text: "Please enable audio auto-play permissions for this site in your browser preferences.",
     you_called: "You are called into chat #{0} '{1}', press phone to join",
     loading: "Loading...",
+    time_at: "at",
 }

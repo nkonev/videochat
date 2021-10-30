@@ -8,7 +8,7 @@
 
         <div @click="onMessageClick(item)" class="message-item-with-buttons-wrapper" @mousemove="onMessageMouseMove(item)">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
-                <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item)}}</router-link><span class="with-space"> at </span>{{getDate(item)}}
+                <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                 <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item.fileItemUuid)" small>mdi-file-download</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
@@ -61,7 +61,7 @@
                 const parsedDate = parseISO(item.createDateTime);
                 let formatString = 'HH:mm:ss';
                 if (differenceInDays(new Date(), parsedDate) >= 1) {
-                    formatString = 'd MMM yyyy, ' + formatString;
+                    formatString = formatString + ', d MMM yyyy';
                 }
                 return `${format(parsedDate, formatString)}`
             },
