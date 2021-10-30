@@ -98,7 +98,14 @@
                                     <span>{{ $vuetify.lang.t('$vuetify.admin') }}</span>
                                 </v-tooltip>
 
-                                <v-btn v-if="dto.canEdit && item.id != currentUser.id" icon @click="deleteParticipant(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
+                                <v-tooltip bottom v-if="dto.canEdit && item.id != currentUser.id">
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-btn v-bind="attrs" v-on="on" icon @click="deleteParticipant(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
+                                    </template>
+                                    <span>{{ $vuetify.lang.t('$vuetify.delete_from_chat') }}</span>
+                                </v-tooltip>
+
+
                                 <v-tooltip bottom v-if="dto.canVideoKick && item.id != currentUser.id">
                                     <template v-slot:activator="{ on, attrs }">
                                         <v-btn v-bind="attrs" v-on="on" icon @click="kickFromVideoCall(item.id)"><v-icon color="error">mdi-block-helper</v-icon></v-btn>

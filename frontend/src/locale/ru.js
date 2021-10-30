@@ -52,7 +52,7 @@ export default {
     you_brackets: "(вы)",
     call: "Позвать",
     force_mute: "Заглушить",
-    kick: "Выкинуть",
+    kick: "Выкинуть из звонка",
     please_allow_audio_policy_bypass: "Пожалуйста, разрешите автовоспроизведение аудио. Если забыли - аудио заработает после включения микрофона.",
     allow: "Разрешить",
     user_profile_choose_avatar: "Выбор аватара",
@@ -72,4 +72,5 @@ export default {
     delete_message_text: "Вы действительно хотите удалить это сообщение ?",
     files_by: "Владелец",
     files_public_url: "Публичная ссылка",
+    delete_from_chat: "Удалить из чата",
 }

@@ -52,7 +52,7 @@ export default {
     you_brackets: "(you)",
     call: "Call",
     force_mute: "Force mute",
-    kick: "Kick",
+    kick: "Kick from call",
     please_allow_audio_policy_bypass: "Please allow audio autoplay. If not, it will be enabled after unmute.",
     allow: "Allow",
     user_profile_choose_avatar: "Choose avatar",
@@ -72,4 +72,5 @@ export default {
     delete_message_text: "Are you sure to delete this message ?",
     files_by: "by",
     files_public_url: "Public url",
+    delete_from_chat: "Delete from chat",
 }
