@@ -73,4 +73,6 @@ export default {
     files_by: "Владелец",
     files_public_url: "Публичная ссылка",
     delete_from_chat: "Удалить из чата",
+    delete_participant: "Удаление из чата #{0}",
+    delete_participant_text: "Вы действительно хотите удалить участника #{0} '{1}' из этого чата ?",
 }

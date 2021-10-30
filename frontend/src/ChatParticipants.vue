@@ -243,9 +243,9 @@
             },
             deleteParticipant(participant) {
                 bus.$emit(OPEN_SIMPLE_MODAL, {
-                    buttonName: 'Remove',
-                    title: `Remove participant #${participant.id}`,
-                    text: `Are you sure to remove user #${participant.id} '${participant.login}' from this chat ?`,
+                    buttonName: this.$vuetify.lang.t('$vuetify.delete_btn'),
+                    title: this.$vuetify.lang.t('$vuetify.delete_participant', participant.id),
+                    text: this.$vuetify.lang.t('$vuetify.delete_participant_text', participant.id, participant.login),
                     actionFunction: ()=> {
                         axios.delete(`/api/chat/${this.dto.id}/user/${participant.id}`)
                             .then(() => {

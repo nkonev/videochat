@@ -73,4 +73,6 @@ export default {
     files_by: "by",
     files_public_url: "Public url",
     delete_from_chat: "Delete from chat",
+    delete_participant: "Remove participant #{0}",
+    delete_participant_text: "Are you sure to remove user #{0} '{1}' from this chat ?",
 }
