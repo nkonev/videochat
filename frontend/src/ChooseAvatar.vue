@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="500" persistent>
             <v-card>
-                <v-card-title>Choose avatar</v-card-title>
+                <v-card-title>{{ $vuetify.lang.t('$vuetify.user_profile_choose_avatar') }}</v-card-title>
 
                 <v-container fluid>
                     <v-row justify="center">
@@ -33,8 +33,8 @@
                 </v-container>
 
                 <v-card-actions class="pa-4">
-                    <v-btn color="primary" class="mr-4" @click="saveAvatar()" :loading="uploading" :disabled="uploading">Choose</v-btn>
-                    <v-btn color="error" class="mr-4" @click="show=false" :disabled="uploading">Close</v-btn>
+                    <v-btn color="primary" class="mr-4" @click="saveAvatar()" :loading="uploading" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
+                    <v-btn color="error" class="mr-4" @click="show=false" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>

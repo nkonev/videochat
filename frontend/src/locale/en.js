@@ -55,4 +55,5 @@ export default {
     kick: "Kick",
     please_allow_audio_policy_bypass: "Please allow audio autoplay. If not, it will be enabled after unmute.",
     allow: "Allow",
+    user_profile_choose_avatar: "Choose avatar",
 }
