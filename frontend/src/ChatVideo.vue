@@ -383,7 +383,6 @@
                   this.$refs.localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
                   this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
-                  this.setLocalMuteDefaults();
                   console.log("Publishing " + (screen ? "screen" : "camera"));
                   this.clientLocal.publish(media);
                   console.log("Successfully published " + (screen ? "screen" : "camera"));
@@ -392,6 +391,7 @@
                   } else {
                       this.$store.commit(SET_SHARE_SCREEN, false);
                   }
+                  this.setLocalMuteDefaults();
                   this.insideSwitchingCameraScreen = false;
                 });
             },
