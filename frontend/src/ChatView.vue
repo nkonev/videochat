@@ -403,6 +403,7 @@
             onLoggedIn() {
                 this.getInfo();
                 this.subscribe();
+                this.resetVariables();
             },
             onLoggedOut() {
                 this.unsubscribe();
