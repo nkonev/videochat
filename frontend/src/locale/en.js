@@ -46,4 +46,13 @@ export default {
     user_open_chat: "Open chat",
     user_online: "Online",
     user_offline: "Offline",
+    participants_modal_title: "Participants",
+    add: "Add",
+    admin: "Admin",
+    you_brackets: "(you)",
+    call: "Call",
+    force_mute: "Force mute",
+    kick: "Kick",
+    please_allow_audio_policy_bypass: "Please allow audio autoplay. If not, it will be enabled after unmute.",
+    allow: "Allow",
 }

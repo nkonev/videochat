@@ -46,4 +46,13 @@ export default {
     user_open_chat: "Открыть чат",
     user_online: "Онлайн",
     user_offline: "Оффлайн",
+    participants_modal_title: "Участники",
+    add: "Добавить",
+    admin: "Админ",
+    you_brackets: "(вы)",
+    call: "Позвать",
+    force_mute: "Заглушить",
+    kick: "Выкинуть",
+    please_allow_audio_policy_bypass: "Пожалуйста, разрешите автовоспроизведение аудио. Если забыли - аудио заработает после включения микрофона.",
+    allow: "Разрешить",
 }

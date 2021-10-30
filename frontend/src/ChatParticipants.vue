@@ -1,10 +1,10 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" scrollable @click:outside="closeModal()">
+        <v-dialog v-model="show" max-width="700" scrollable @click:outside="closeModal()">
             <v-card>
                 <v-card-title class="pl-0 ml-0">
                   <v-btn class="mx-2" icon @click="closeModal()"><v-icon>mdi-arrow-left</v-icon></v-btn>
-                  Participants
+                  {{ $vuetify.lang.t('$vuetify.participants_modal_title') }}
                   <v-autocomplete
                       class="ml-4"
                       v-if="dto.canEdit"
@@ -14,7 +14,7 @@
                       filled
                       chips
                       color="blue-grey lighten-2"
-                      label="Select users for add to chat"
+                      :label="$vuetify.lang.t('$vuetify.select_users_to_add_to_chat')"
                       item-text="login"
                       item-value="id"
                       multiple
@@ -49,7 +49,9 @@
                       </v-list-item-content>
                     </template>
                   </v-autocomplete>
-                  <v-btn v-if="dto.canEdit" :disabled="newParticipantIds.length == 0" color="primary" class="ma-2 ml-4" @click="addSelectedParticipants()">Add</v-btn>
+                  <v-btn v-if="dto.canEdit" :disabled="newParticipantIds.length == 0" color="primary" class="ma-2 ml-4" @click="addSelectedParticipants()">
+                      {{ $vuetify.lang.t('$vuetify.add') }}
+                  </v-btn>
                 </v-card-title>
 
                 <v-card-text  class="ma-0 pa-0">
@@ -72,7 +74,7 @@
                                     </router-link>
                                 </v-badge>
                                 <v-list-item-content class="ml-4">
-                                    <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> (you)</template></v-list-item-title>
+                                    <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> {{ $vuetify.lang.t('$vuetify.you_brackets') }}</template></v-list-item-title>
                                 </v-list-item-content>
                                 <v-tooltip bottom v-if="item.admin || dto.canChangeChatAdmins">
                                     <template v-slot:activator="{ on, attrs }">
@@ -93,7 +95,7 @@
                                           </span>
                                         </template>
                                     </template>
-                                    <span>Admin</span>
+                                    <span>{{ $vuetify.lang.t('$vuetify.admin') }}</span>
                                 </v-tooltip>
 
                                 <v-btn v-if="dto.canEdit && item.id != currentUser.id" icon @click="deleteParticipant(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
@@ -101,16 +103,20 @@
                                     <template v-slot:activator="{ on, attrs }">
                                         <v-btn v-bind="attrs" v-on="on" icon @click="kickFromVideoCall(item.id)"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
                                     </template>
-                                    <span>Kick</span>
+                                    <span>{{ $vuetify.lang.t('$vuetify.kick') }}</span>
                                 </v-tooltip>
                                 <v-tooltip bottom v-if="dto.canAudioMute && item.id != currentUser.id">
                                     <template v-slot:activator="{ on, attrs }">
                                         <v-btn v-bind="attrs" v-on="on" icon @click="forceMute(item.id)"><v-icon color="error">mdi-microphone-off</v-icon></v-btn>
                                     </template>
-                                    <span>Force mute</span>
+                                    <span>{{ $vuetify.lang.t('$vuetify.force_mute') }}</span>
                                 </v-tooltip>
-
-                                <v-btn v-if="item.id != currentUser.id" icon @click="inviteToVideoCall(item.id)"><v-icon color="success">mdi-phone</v-icon></v-btn>
+                                <v-tooltip bottom v-if="item.id != currentUser.id">
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-btn v-bind="attrs" v-on="on" icon @click="inviteToVideoCall(item.id)"><v-icon color="success">mdi-phone</v-icon></v-btn>
+                                    </template>
+                                    <span>{{ $vuetify.lang.t('$vuetify.call') }}</span>
+                                </v-tooltip>
                             </v-list-item>
                             <v-divider></v-divider>
                         </template>

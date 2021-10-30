@@ -1,14 +1,14 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
         <v-snackbar v-model="showPermissionAsk" color="warning" timeout="-1" :multi-line="true" top>
-            Please allow audio autoplay. If not, it will be enabled after unmute.
+            {{ $vuetify.lang.t('$vuetify.please_allow_audio_policy_bypass') }}
             <template v-slot:action="{ attrs }">
                 <v-btn
                     light
                     v-bind="attrs"
                     @click="onClickPermitted()"
                 >
-                    Allow
+                    {{ $vuetify.lang.t('$vuetify.allow') }}
                 </v-btn>
                 <v-btn icon v-bind="attrs" @click="showPermissionAsk = false"><v-icon color="white">mdi-close-circle</v-icon></v-btn>
             </template>
