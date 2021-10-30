@@ -66,9 +66,9 @@
     import {
         getVideoResolution,
         setVideoResolution,
-        getStoredAudioPresents,
+        getStoredAudioDevicePresents,
         setStoredAudioPresents,
-        getStoredVideoPresents,
+        getStoredVideoDevicePresents,
         setStoredVideoPresents
     } from "./utils";
     import {videochat_name} from "./routes";
@@ -86,8 +86,8 @@
         },
         methods: {
             showModal() {
-                this.audioPresents = getStoredAudioPresents();
-                this.videoPresents = getStoredVideoPresents();
+                this.audioPresents = getStoredAudioDevicePresents();
+                this.videoPresents = getStoredVideoDevicePresents();
                 this.videoQuality = getVideoResolution();
                 this.show = true;
             },

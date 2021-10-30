@@ -42,7 +42,7 @@ export const setVideoResolution = (newVideoResolution) => {
 export const KEY_VIDEO_PRESENTS = 'videoPresents';
 export const KEY_AUDIO_PRESENTS = 'audioPresents';
 
-export const getStoredVideoPresents = () => {
+export const getStoredVideoDevicePresents = () => {
     let v = JSON.parse(localStorage.getItem(KEY_VIDEO_PRESENTS));
     if (v === null) {
         console.log("Resetting video presents to default");
@@ -56,7 +56,7 @@ export const setStoredVideoPresents = (v) => {
     localStorage.setItem(KEY_VIDEO_PRESENTS, JSON.stringify(v));
 }
 
-export const getStoredAudioPresents = () => {
+export const getStoredAudioDevicePresents = () => {
     let v = JSON.parse(localStorage.getItem(KEY_AUDIO_PRESENTS));
     if (v === null) {
         console.log("Resetting audio presents to default");

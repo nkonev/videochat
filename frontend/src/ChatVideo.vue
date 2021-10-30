@@ -46,8 +46,8 @@
         audioMuteDefault,
         getWebsocketUrlPrefix,
         getVideoResolution,
-        getStoredAudioPresents,
-        getStoredVideoPresents,
+        getStoredAudioDevicePresents,
+        getStoredVideoDevicePresents,
     } from "./utils";
     import { v4 as uuidv4 } from 'uuid';
     import vuetify from './plugins/vuetify'
@@ -345,8 +345,8 @@
                 const resolution = getVideoResolution();
                 bus.$emit(VIDEO_PARAMETERS_CHANGED);
 
-                const audio = getStoredAudioPresents();
-                const video = getStoredVideoPresents();
+                const audio = getStoredAudioDevicePresents();
+                const video = getStoredVideoDevicePresents();
 
                 if (!audio && !video && !screen) {
                     console.info("Not able to build local media stream, returning a successful promise");
@@ -354,11 +354,7 @@
                         this.$refs.localVideoComponent.setUserName('No media configured');
                     });
 
-                    if (screen) {
-                        this.$store.commit(SET_SHARE_SCREEN, true);
-                    } else {
-                        this.$store.commit(SET_SHARE_SCREEN, false);
-                    }
+                    this.$store.commit(SET_SHARE_SCREEN, false);
                     // this.insideSwitchingCameraScreen = false;
 
                     return Promise.resolve(true);
