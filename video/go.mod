@@ -5,10 +5,10 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/lucsky/cuid v1.0.2
-	github.com/pion/ion-sfu v1.10.8
+	github.com/pion/ion-sfu v1.10.10-0.20211026031444-641234512081
 	github.com/pion/logging v0.2.2
 	github.com/pion/turn/v2 v2.0.5
-	github.com/pion/webrtc/v3 v3.0.29
+	github.com/pion/webrtc/v3 v3.1.0-beta.2.0.20210808020610-5253475ec730
 	github.com/prometheus/client_golang v1.9.0
 	github.com/sourcegraph/jsonrpc2 v0.0.0-20210201082850-366fbb520750
 	github.com/spf13/viper v1.7.1
