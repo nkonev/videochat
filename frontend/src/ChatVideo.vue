@@ -16,7 +16,7 @@
 
         <p v-if="errorDescription" class="error">{{ errorDescription }}</p>
 
-        <UserVideo ref="localVideoComponent" :key="localPublisherKey" :initial-muted="initialMuted"/>
+        <UserVideo ref="localVideoComponent" :key="localPublisherKey" :initial-muted="initialMuted" :id="getNewId()"/>
     </v-col>
 </template>
 
@@ -112,7 +112,6 @@
                 this.signalLocal = new IonSFUJSONRPCSignal(
                     getWebsocketUrlPrefix()+`/api/video/${this.chatId}/ws`
                 );
-                this.remotesDiv = document.getElementById("video-container");
 
                 const codec = getCodec();
                 this.clientLocal = new Client(this.signalLocal, {...configObj, codec: codec});
@@ -162,7 +161,7 @@
                         if (!this.streams[stream.id]) {
                             console.log("set track", track.id, "for stream", stream.id);
 
-                            const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted }});
+                            const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: this.getNewId() }});
                             component.$mount();
                             this.remotesDiv.appendChild(component.$el);
                             component.setSource(stream);
@@ -504,6 +503,9 @@
                     callback(streamHolder.component);
                 }
             },
+            getNewId() {
+                return uuidv4();
+            }
         },
         mounted() {
             this.chatId = this.$route.params.id;
@@ -512,6 +514,7 @@
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
             this.$store.commit(SET_SHOW_HANG_BUTTON, true);
             window.addEventListener('beforeunload', this.leaveSession)
+            this.remotesDiv = document.getElementById("video-container");
             this.startVideoProcess();
         },
         beforeDestroy() {

@@ -1,6 +1,6 @@
 <template>
     <div class="video-container-element">
-        <video autoPlay playsInline ref="videoRef" :muted="initialMuted" v-on:dblclick="onDoubleClick"/>
+        <video :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted" v-on:dblclick="onDoubleClick"/>
         <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon> <v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
@@ -21,6 +21,9 @@ export default {
     },
 
     props: {
+        id: {
+            type: String
+        },
         initialMuted: {
             type: Boolean
         }
