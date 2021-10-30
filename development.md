@@ -180,3 +180,19 @@ curl -i -X PUT 'http:/localhost:7001/internal/108/kick?silent=true&chatId=108&us
 brew install nvm
 nvm install v15.11.0
 ```
+
+# Alternatives (SFU servers)
+* https://github.com/versatica/mediasoup
+* https://github.com/medooze/media-server
+* https://github.com/meetecho/janus-gateway
+* https://github.com/OpenVidu/openvidu
+
+# Alternatives (standalone solutions)
+* Zoom
+* Skype
+* Jitsi
+* RocketChat
+* Discord
+* OpenMeetings
+* BigBlueButton
+* LiveKit
