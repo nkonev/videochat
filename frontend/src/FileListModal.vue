@@ -153,7 +153,7 @@ export default {
                 })
         },
         canEdit(dto) {
-            return dto.filename.endsWith('.txt');
+            return this.currentUser.id == dto.ownerId && dto.filename.endsWith('.txt');
         },
         fireEdit(dto) {
             bus.$emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});
