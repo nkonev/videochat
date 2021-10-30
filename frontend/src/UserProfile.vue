@@ -5,7 +5,7 @@
     >
         <v-list-item three-line>
             <v-list-item-content class="d-flex justify-space-around">
-                <div class="overline mb-4">User profile #{{ viewableUser.id }}</div>
+                <div class="overline mb-4">{{ $vuetify.lang.t('$vuetify.user_profile') }} #{{ viewableUser.id }}</div>
                 <v-img v-if="viewableUser.avatarBig || viewableUser.avatar"
                        :src="getAvatar(viewableUser)"
                        :aspect-ratio="16/9"
@@ -16,8 +16,8 @@
                 <v-list-item-title class="headline mb-1 mt-2">
                     {{ viewableUser.login }}
                     <template>
-                        <span v-if="online" class="grey--text"><v-icon color="success">mdi-checkbox-marked-circle</v-icon> Online</span>
-                        <span v-else class="grey--text"><v-icon color="error">mdi-checkbox-marked-circle</v-icon> Offline</span>
+                        <span v-if="online" class="grey--text"><v-icon color="success">mdi-checkbox-marked-circle</v-icon> {{ $vuetify.lang.t('$vuetify.user_online') }}</span>
+                        <span v-else class="grey--text"><v-icon color="error">mdi-checkbox-marked-circle</v-icon> {{ $vuetify.lang.t('$vuetify.user_offline') }}</span>
                     </template>
                 </v-list-item-title>
                 <v-list-item-subtitle v-if="viewableUser.email">{{ viewableUser.email }}</v-list-item-subtitle>
@@ -25,14 +25,14 @@
                 <v-container class="ma-0 pa-0">
                     <v-btn v-if="isNotMyself()" color="primary" @click="tetATet(viewableUser.id)">
                         <v-icon>mdi-message-text-outline</v-icon>
-                        Open chat
+                        {{ $vuetify.lang.t('$vuetify.user_open_chat') }}
                     </v-btn>
                 </v-container>
             </v-list-item-content>
         </v-list-item>
 
         <v-divider class="mx-4"></v-divider>
-        <v-card-title class="title pb-0 pt-1">Bound OAuth2 providers</v-card-title>
+        <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.bound_oauth2_providers') }}</v-card-title>
         <v-card-actions class="mx-2">
             <v-chip
                 v-if="viewableUser.oauth2Identifiers.vkontakteId"
@@ -135,7 +135,7 @@ export default {
         },
     },
     mounted() {
-        this.$store.commit(SET_TITLE, `User profile`);
+        this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.user_profile'));
         this.$store.commit(SET_CHAT_USERS_COUNT, 0);
         this.$store.commit(SET_SHOW_SEARCH, false);
         this.$store.commit(SET_CHAT_ID, null);
@@ -149,7 +149,14 @@ export default {
     created() {
     },
     destroyed() {
-    }
+    },
+    watch: {
+        '$vuetify.lang.current': {
+            handler: function (newValue, oldValue) {
+                this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.user_profile'));
+            },
+        }
+    },
 }
 </script>
 

@@ -43,4 +43,7 @@ export default {
     message_edit_placeholder: "Press Ctrl + Enter to send, Esc to clear",
     message_broadcast: "Broadcast",
     user_is_writing: "is writing...",
+    user_open_chat: "Open chat",
+    user_online: "Online",
+    user_offline: "Offline",
 }

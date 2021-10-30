@@ -43,4 +43,7 @@ export default {
     message_edit_placeholder: "Нажмите Ctrl + Enter для отправки сообщения, Esc для очистки",
     message_broadcast: "Показать всем",
     user_is_writing: "печатает...",
+    user_open_chat: "Открыть чат",
+    user_online: "Онлайн",
+    user_offline: "Оффлайн",
 }
