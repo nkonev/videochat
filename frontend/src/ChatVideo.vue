@@ -374,7 +374,7 @@
                 return localStream.then((media) => {
                   this.localMediaStream = media;
                   this.$refs.localVideoComponent.setSource(media);
-                  this.$refs.localVideoComponent.setStreamMuted(true);
+                  this.$refs.localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
                   this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
                   console.log("Publishing " + (screen ? "screen" : "camera"));
