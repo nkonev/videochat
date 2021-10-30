@@ -396,11 +396,11 @@
                 });
             },
             setLocalMuteDefaults() {
-                if (this.audioMuted) {
-                    this.localMediaStream.mute("audio");
-                } else {
-                    this.localMediaStream.unmute("audio");
-                }
+                // if (this.audioMuted) {
+                //     this.localMediaStream.mute("audio");
+                // } else {
+                //     this.localMediaStream.unmute("audio");
+                // }
             },
             startVideoProcess() {
                 this.getConfig()
