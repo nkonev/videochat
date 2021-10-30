@@ -156,7 +156,7 @@
 
                 // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
-                    console.debug("Got track", track.id, "for stream", stream.id);
+                    console.debug("Got track", track.id, "kind=", track.kind, " for stream", stream.id);
                     track.onunmute = () => {
                         if (!this.streams[stream.id]) {
                             console.log("Setting track", track.id, "for stream", stream.id);
