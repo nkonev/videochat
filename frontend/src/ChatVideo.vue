@@ -319,6 +319,7 @@
                 }
             },
             onStartScreenSharing() {
+                this.$store.commit(SET_MUTE_AUDIO, audioMuteDefault);
                 return this.onSwitchMediaStream({screen: true});
             },
             onStopScreenSharing() {
