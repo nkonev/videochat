@@ -53,7 +53,7 @@ export default {
     call: "Call",
     force_mute: "Force mute",
     kick: "Kick",
-    please_allow_audio_polcy_bypass: "Please allow audio autoplay. If not, it will be enabled after unmute.",
+    please_allow_audio_policy_bypass: "Please allow audio autoplay. If not, it will be enabled after unmute.",
     allow: "Allow",
     user_profile_choose_avatar: "Choose avatar",
     upload: "Upload",
@@ -70,4 +70,6 @@ export default {
     leave_chat_text: "Are you sure to leave from chat '{0}' ?",
     delete_message_title: "Delete message #{0}",
     delete_message_text: "Are you sure to delete this message ?",
+    files_by: "by",
+    files_public_url: "Public url",
 }

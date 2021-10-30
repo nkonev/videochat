@@ -15,7 +15,9 @@
                                     </v-list-item-avatar>
                                     <v-list-item-content class="ml-4">
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
-                                        <v-list-item-subtitle><span v-if="item.owner">by {{item.owner.login}}</span> <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">Public url</a></v-list-item-subtitle>
+                                        <v-list-item-subtitle><span v-if="item.owner">{{ $vuetify.lang.t('$vuetify.files_by') }} {{item.owner.login}}</span> <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">
+                                            {{ $vuetify.lang.t('$vuetify.files_public_url') }}
+                                        </a></v-list-item-subtitle>
                                     </v-list-item-content>
 
 
