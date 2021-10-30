@@ -159,9 +159,9 @@
             },
             deleteChat(chat) {
                 bus.$emit(OPEN_SIMPLE_MODAL, {
-                    buttonName: 'Delete',
-                    title: `Delete chat #${chat.id}`,
-                    text: `Are you sure to delete chat '${chat.name}' ?`,
+                    buttonName: this.$vuetify.lang.t('$vuetify.delete_btn'),
+                    title: this.$vuetify.lang.t('$vuetify.delete_chat_title', chat.id),
+                    text: this.$vuetify.lang.t('$vuetify.delete_chat_text', chat.name),
                     actionFunction: ()=> {
                         axios.delete(`/api/chat/${chat.id}`)
                             .then(() => {
@@ -172,9 +172,9 @@
             },
             leaveChat(chat) {
                 bus.$emit(OPEN_SIMPLE_MODAL, {
-                    buttonName: 'Leave',
-                    title: `Leave chat #${chat.id}`,
-                    text: `Are you sure to leave from chat '${chat.name}' ?`,
+                    buttonName: this.$vuetify.lang.t('$vuetify.leave_btn'),
+                    title: this.$vuetify.lang.t('$vuetify.leave_chat_title', chat.id),
+                    text: this.$vuetify.lang.t('$vuetify.leave_chat_text', chat.name),
                     actionFunction: ()=> {
                         axios.put(`/api/chat/${chat.id}/leave`)
                             .then(() => {

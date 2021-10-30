@@ -39,9 +39,9 @@
             },
             deleteMessage(dto){
                 bus.$emit(OPEN_SIMPLE_MODAL, {
-                    buttonName: 'Delete',
-                    title: `Delete message #${dto.id}`,
-                    text: `Are you sure to delete this message ?`,
+                    buttonName: this.$vuetify.lang.t('$vuetify.delete_btn'),
+                    title: this.$vuetify.lang.t('$vuetify.delete_message_title', dto.id),
+                    text:  this.$vuetify.lang.t('$vuetify.delete_message_text'),
                     actionFunction: ()=> {
                         axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
                             .then(() => {

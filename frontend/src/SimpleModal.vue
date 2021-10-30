@@ -8,7 +8,7 @@
 
                 <v-card-actions class="pa-4">
                     <v-btn color="error" class="mr-4" @click="actionFunction()">{{buttonName}}</v-btn>
-                    <v-btn class="mr-4" @click="lightClose()">Close</v-btn>
+                    <v-btn class="mr-4" @click="lightClose()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>
