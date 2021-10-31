@@ -212,4 +212,4 @@ When Call started in th next sequence
 * Desktop Firefox hd vp8 (3)
   then all works ok.
 
-
+Also it works good when all teh devices use the same h264.
