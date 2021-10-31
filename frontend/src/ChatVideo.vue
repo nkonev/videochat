@@ -112,6 +112,7 @@
                 this.signalLocal = new IonSFUJSONRPCSignal(
                     getWebsocketUrlPrefix()+`/api/video/${this.chatId}/ws`
                 );
+                this.remotesDiv = document.getElementById("video-container");
 
                 const codec = getCodec();
                 this.clientLocal = new Client(this.signalLocal, {...configObj, codec: codec});
@@ -510,7 +511,6 @@
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
             this.$store.commit(SET_SHOW_HANG_BUTTON, true);
             window.addEventListener('beforeunload', this.leaveSession)
-            this.remotesDiv = document.getElementById("video-container");
             this.startVideoProcess();
         },
         beforeDestroy() {
