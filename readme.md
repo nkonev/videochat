@@ -23,10 +23,3 @@ sudo yum install -y httpd-tools
 # generate password
 htpasswd -bnBC 10 "" password | tr -d ':'
 ```
-
-# Known issue
-When Call started in th next sequence
-* Firefox (1)
-* Chrome (2)
-* Firefox (3)
-then Firefox (1) won't see video from Firefox (3). If we replace Chrome (2) with Firefox client then problem will be gone.
