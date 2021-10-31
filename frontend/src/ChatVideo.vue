@@ -269,8 +269,8 @@
                 // request-response with signalLocal and error handling
                 this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: streamId}).then(value => {
                     if (!value.found) {
-                        if (!this.closingStarted) {
-                            console.log("Rescheduling asking for userName");
+                        if (!this.closingStarted && this.streams[streamId]) {
+                            console.log("Rescheduling asking for userName for streamId=", streamId);
                             setTimeout(() => {
                                 this.askUserNameWithRetries(streamId);
                             }, askUserNameInterval);
