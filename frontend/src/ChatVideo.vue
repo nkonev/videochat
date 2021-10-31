@@ -159,9 +159,10 @@
                     console.debug("Got track", track.id, "kind=", track.kind, " for stream", stream.id);
                     track.onunmute = () => {
                         if (!this.streams[stream.id]) {
-                            console.log("Setting track", track.id, "for stream", stream.id);
+                            const videoTagId = this.getNewId();
+                            console.log("Setting track", track.id, "for stream", stream.id, " into video tag id=", videoTagId);
 
-                            const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: this.getNewId() }});
+                            const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId }});
                             component.$mount();
                             this.remotesDiv.appendChild(component.$el);
                             component.setSource(stream);
@@ -392,6 +393,9 @@
                       this.$store.commit(SET_SHARE_SCREEN, false);
                   }
                   this.setLocalMuteDefaults();
+                  this.localMediaStream.getTracks().forEach(t => {
+                      console.log("localMediaStream track kind=", t.kind, " id=", t.id, " local video tag id", this.$refs.localVideoComponent.$props.id);
+                  })
                   this.insideSwitchingCameraScreen = false;
                 });
             },
