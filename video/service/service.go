@@ -171,10 +171,10 @@ func (h *ExtendedService) Notify(chatId int64, data *dto.StoreNotifyDto) error {
 	var usersCount = h.CountPeers(chatId)
 	var chatNotifyDto = chatNotifyDto{}
 	if data != nil {
-		logger.Info("Notifying with data", "chat_id", chatId, "stream_id", data.StreamId, "login", data.Login)
+		logger.V(3).Info("Notifying with data", "chat_id", chatId, "stream_id", data.StreamId, "login", data.Login)
 		chatNotifyDto.Data = data
 	} else {
-		logger.Info("Notifying without data", "chat_id", chatId)
+		logger.V(3).Info("Notifying without data", "chat_id", chatId)
 	}
 	chatNotifyDto.UsersCount = usersCount
 	chatNotifyDto.ChatId = chatId
@@ -330,7 +330,7 @@ func (h *ExtendedService) Schedule() *chan struct{} {
 		for {
 			select {
 			case <- ticker.C:
-				logger.Info("Invoked chats periodic notificator")
+				logger.V(3).Info("Invoked chats periodic notificator")
 				h.notifyAllChats()
 			case <- quit:
 				ticker.Stop()

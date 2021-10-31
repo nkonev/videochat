@@ -1,5 +1,5 @@
 log:
-  v: 0
+  v: 2
 
 server:
   addr: ":7001"

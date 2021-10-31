@@ -157,11 +157,11 @@
 
                 // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
-                    console.debug("Got track", track.id, "kind=", track.kind, " for stream", stream.id);
+                    console.info("Got track", track.id, "kind=", track.kind, " for stream", stream.id);
                     track.onunmute = () => {
                         if (!this.streams[stream.id]) {
                             const videoTagId = this.getNewId();
-                            console.log("Setting track", track.id, "for stream", stream.id, " into video tag id=", videoTagId);
+                            console.info("Setting track", track.id, "for stream", stream.id, " into video tag id=", videoTagId);
 
                             const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId }});
                             component.$mount();
@@ -387,14 +387,14 @@
                   this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
                   console.log("Publishing " + (screen ? "screen" : "camera"));
                   this.clientLocal.publish(media);
-                  console.log("Successfully published " + (screen ? "screen" : "camera"));
+                  console.log("Successfully published " + (screen ? "screen" : "camera") + " streamId=", this.$refs.localVideoComponent.getStreamId());
                   if (screen) {
                       this.$store.commit(SET_SHARE_SCREEN, true);
                   } else {
                       this.$store.commit(SET_SHARE_SCREEN, false);
                   }
                   this.localMediaStream.getTracks().forEach(t => {
-                      console.log("localMediaStream track kind=", t.kind, " id=", t.id, " local video tag id", this.$refs.localVideoComponent.$props.id);
+                      console.log("localMediaStream track kind=", t.kind, " trackId=", t.id, " local video tag id", this.$refs.localVideoComponent.$props.id, " streamId=", this.$refs.localVideoComponent.getStreamId());
                   })
                   this.insideSwitchingCameraScreen = false;
                 });
