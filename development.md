@@ -199,9 +199,17 @@ nvm install v15.11.0
 
 # Known issue
 When Call started in th next sequence
-* Firefox (1)
-* Chrome (2)
-* Firefox (3)
+* Desktop Firefox hd vp8 (1)
+* Mobile Chrome hd vp8 (2)
+* Desktop Firefox hd vp8 (3)
   then Firefox (1) won't see video from Firefox (3). If we replace Chrome (2) with Firefox client then problem will be gone.
 
 It seems that commits 22d3e00d and 7034a64a are redundant, because they don't fix it.
+
+When Call started in th next sequence
+* Desktop Firefox hd vp8 (1)
+* Mobile Chrome hd h264 (2)
+* Desktop Firefox hd vp8 (3)
+  then all works ok.
+
+
