@@ -40,7 +40,7 @@ export const setVideoResolution = (newVideoResolution) => {
     localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
 }
 
-const defaultCodec = 'vp8';
+const defaultCodec = 'h264';
 
 export const KEY_CODEC = 'codec';
 
