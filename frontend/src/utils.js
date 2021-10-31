@@ -21,6 +21,7 @@ export const getWebsocketUrlPrefix = () => {
 }
 
 export const audioMuteDefault = true;
+export const localAudioMutedDefault = false;
 
 const defaultResolution = 'hd';
 

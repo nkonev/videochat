@@ -43,7 +43,7 @@
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
     import {
-        audioMuteDefault,
+        localAudioMutedDefault,
         getWebsocketUrlPrefix,
         getVideoResolution,
         getStoredAudioDevicePresents,
@@ -98,7 +98,7 @@
                 return this.currentUser.login
             },
             initialMuted() {
-                return audioMuteDefault;
+                return localAudioMutedDefault;
             },
         },
         methods: {
@@ -224,7 +224,7 @@
                 this.peerId = null;
 
                 this.$store.commit(SET_MUTE_VIDEO, false);
-                this.$store.commit(SET_MUTE_AUDIO, audioMuteDefault);
+                this.$store.commit(SET_MUTE_AUDIO, localAudioMutedDefault);
             },
             startHealthCheckPing() {
                 console.log("Setting up ping every", pingInterval, "ms");
@@ -323,7 +323,7 @@
                 }
             },
             onStartScreenSharing() {
-                this.$store.commit(SET_MUTE_AUDIO, audioMuteDefault);
+                this.$store.commit(SET_MUTE_AUDIO, localAudioMutedDefault);
                 return this.onSwitchMediaStream({screen: true});
             },
             onStopScreenSharing() {
@@ -392,19 +392,11 @@
                   } else {
                       this.$store.commit(SET_SHARE_SCREEN, false);
                   }
-                  this.setLocalMuteDefaults();
                   this.localMediaStream.getTracks().forEach(t => {
                       console.log("localMediaStream track kind=", t.kind, " id=", t.id, " local video tag id", this.$refs.localVideoComponent.$props.id);
                   })
                   this.insideSwitchingCameraScreen = false;
                 });
-            },
-            setLocalMuteDefaults() {
-                if (this.audioMuted) {
-                    this.localMediaStream.mute("audio");
-                } else {
-                    this.localMediaStream.unmute("audio");
-                }
             },
             startVideoProcess() {
                 this.getConfig()
