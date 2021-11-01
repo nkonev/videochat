@@ -48,6 +48,7 @@ server.tomcat.basedir: ${java.io.tmpdir}/com.github.nkonev.aaa.tomcat
 spring.servlet.multipart.max-file-size: 6MB
 spring.servlet.multipart.max-request-size: 8MB
 server.servlet.encoding.force-response: true
+server.servlet.session.cookie.name: VIDEOCHAT_SESSION
 
 custom.it.user: admin
 custom.it.password: admin
