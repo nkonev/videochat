@@ -114,6 +114,11 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 	if session != nil {
 		for _, peer := range session.Peers() {
 			if h.peerIsAlive(peer) {
+				// TODO 2 we can reuse this method of getting stream id in order to check stream id's peer precense on server
+				if (peer.Publisher() != nil && len(peer.Publisher().Tracks())!=0) {
+					logger.Info("Found with stream id", "stream_id", peer.Publisher().Tracks()[0].StreamID())
+				}
+
 				eci := h.getExtendedConnectionInfo(peer)
 
 				if eci != nil && eci.streamId != "" {

@@ -116,6 +116,11 @@
 
                 const codec = getCodec();
                 this.clientLocal = new Client(this.signalLocal, {...configObj, codec: codec});
+                this.signalLocal.onnegotiate = (description) => {
+                    // TODO 1 Here we can extract the name from sdp (a?)
+                    console.log("Negotiating2", description);
+                    return this.clientLocal.negotiate.call(this.clientLocal, description);
+                }
 
                 this.clientLocal.onspeaker = (messageEvent) => {
                     console.debug("Speaking event", messageEvent);
@@ -157,7 +162,7 @@
 
                 // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
-                    console.info("Got track", track.id, "kind=", track.kind, " for stream", stream.id);
+                    console.info("Got track2", track, "kind=", track.kind, " for stream", stream);
                     if (track.kind == "video") {
                     // track.onunmute = () => {
                         if (!this.streams[stream.id]) {
@@ -407,7 +412,7 @@
                         return this.joinSession(config);
                     })
                     .catch(reason => {
-                        console.error("Error during get config, restarting...")
+                        console.error("Error during get config, restarting...", reason)
                         this.tryRestartVideoProcess();
                     })
             },
