@@ -51,6 +51,7 @@
     } from "./utils";
     import { v4 as uuidv4 } from 'uuid';
     import vuetify from './plugins/vuetify'
+    import * as sdpTransform from 'sdp-transform';
 
     const UserVideoClass = Vue.extend(UserVideo);
 
@@ -117,8 +118,7 @@
                 const codec = getCodec();
                 this.clientLocal = new Client(this.signalLocal, {...configObj, codec: codec});
                 this.signalLocal.onnegotiate = (description) => {
-                    // TODO 1 Here we can extract the name from sdp (a?)
-                    console.log("Negotiating2", description);
+                    console.log("Negotiating", sdpTransform.parse(description.sdp));
                     return this.clientLocal.negotiate.call(this.clientLocal, description);
                 }
 
