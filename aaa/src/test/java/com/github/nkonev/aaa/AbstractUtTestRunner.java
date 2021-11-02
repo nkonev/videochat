@@ -8,6 +8,7 @@ import com.github.nkonev.aaa.security.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.http.MediaType;
@@ -29,7 +30,14 @@ public abstract class AbstractUtTestRunner extends AbstractTestRunner {
     @Autowired
     protected MockMvc mockMvc;
 
+    @Autowired
+    private ServerProperties serverProperties;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractUtTestRunner.class);
+
+    protected String getAuthCookieName() {
+        return serverProperties.getServlet().getSession().getCookie().getName();
+    }
 
     /**
      * This method changes in runtime with ReflectionUtils Spring Security Csrf Filter .with(csrf()) so it ignores any CSRF token
@@ -52,7 +60,7 @@ public abstract class AbstractUtTestRunner extends AbstractTestRunner {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        return mvcResult.getResponse().getCookie(CommonTestConstants.COOKIE_SESSION).getValue();
+        return mvcResult.getResponse().getCookie(getAuthCookieName()).getValue();
     }
 
 }

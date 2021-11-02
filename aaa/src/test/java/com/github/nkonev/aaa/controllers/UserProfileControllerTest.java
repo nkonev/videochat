@@ -54,7 +54,9 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @Autowired
     private EventReceiver receiver;
 
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileControllerTest.class);
+
 
     @WithUserDetails(TestConstants.USER_ALICE)
     @org.junit.jupiter.api.Test
@@ -321,7 +323,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         String session = getSession(xsrf, TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
 
-        String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(CommonTestConstants.COOKIE_SESSION, session));
+        String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
 
         RequestEntity requestEntity = RequestEntity
                 .get(new URI(urlWithContextPath() + Constants.Urls.API + Constants.Urls.SESSIONS + "?userId=1"))
@@ -341,7 +343,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String xsrf = "xsrf";
         String session = getSession(xsrf, username, password);
 
-        String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(CommonTestConstants.COOKIE_SESSION, session));
+        String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
 
         RequestEntity requestEntity = RequestEntity
                 .get(new URI(urlWithContextPath() + Constants.Urls.API + Constants.Urls.SESSIONS + "?userId=1"))
