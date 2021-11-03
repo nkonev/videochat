@@ -142,9 +142,7 @@
                     this.clientLocal.join(`chat${this.chatId}`, peerId).then(()=>{
                         console.info("Joined to session, gathering media devices")
                         this.getAndPublishLocalMediaStream({})
-                            .then(()=>{
-                              this.notifyAboutMute();
-                            }).then(value => {
+                            .then(value => {
                                 this.startHealthCheckPing();
                             })
                             .catch(reason => {
@@ -290,13 +288,6 @@
                 };
                 this.signalLocal.notify(PUT_USER_DATA_METHOD, toSend)
             },
-            notifyAboutMute() {
-                if (this.chatId) {
-                    this.notifyWithData();
-                } else {
-                    console.warn("Unable to notify about joining")
-                }
-            },
             ensureAudioIsEnabledAccordingBrowserPolicies() {
                 if (this.remoteVideoIsMuted) {
                     // Unmute all the current videoElements.
@@ -326,9 +317,6 @@
                     .catch(reason => {
                       console.error("Error during publishing screen stream, won't restart...", reason);
                       this.$refs.localVideoComponent.setUserName('Error get getDisplayMedia');
-                    })
-                    .then(value => {
-                        this.notifyWithData();
                     });
             },
             getAndPublishLocalMediaStream({screen = false}) {

@@ -130,8 +130,8 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	peer0 := sfu.NewPeer(h.sfu)
-	// we can't store it here because peer0.Id is not initialized yet
-	// h.service.StoreToIndex(peer0, userId, "", "", false, false)
+	// we can't store it here because peer's stream is not initialized yet - TODO recheck
+	// h.service.StoreToIndex(...)
 	defer h.service.RemoveFromIndex(peer0, userId, c)
 	defer h.service.NotifyAboutLeaving(chatId)
 	p := server.NewJSONSignal(peer0, logger)
@@ -375,6 +375,8 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 		}
 
 		logger.Info("Extracted streamId from sdp", "stream_id", streamId)
+		// we need to sync mutes with front default or find the correct approach to send if after client has connected.
+		// appending to getAndPublishLocalMediaStream() Promise is too early and leads to "Not found peer metadata by"
 		p.service.StoreToIndex(streamId, fromContext.userId, fromContext.login, false, false)
 
 		p.JSONSignal.Handle(ctx, conn, req)
