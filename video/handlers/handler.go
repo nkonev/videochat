@@ -369,16 +369,15 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 	case "offer":
 		streamId, err := getStreamId(req.Params)
 		if err != nil {
-			p.Logger.Error(err, "connect: error parsing stream id")
-			replyError(err)
-			break
+			p.Logger.V(10).Info("Unable to parse stream id")
+		} else {
+			logger.Info("Extracted streamId from sdp", "stream_id", streamId)
+			// we need to sync mutes with front default or find the correct approach to send if after client has connected.
+			// appending to getAndPublishLocalMediaStream() Promise is too early and leads to "Not found peer metadata by"
+			if !p.service.ExistsPeerByStreamId(fromContext.chatId, streamId) {
+				p.service.StoreToIndex(streamId, fromContext.userId, fromContext.login, false, false, req.Method)
+			}
 		}
-
-		logger.Info("Extracted streamId from sdp", "stream_id", streamId)
-		// we need to sync mutes with front default or find the correct approach to send if after client has connected.
-		// appending to getAndPublishLocalMediaStream() Promise is too early and leads to "Not found peer metadata by"
-		p.service.StoreToIndex(streamId, fromContext.userId, fromContext.login, false, false)
-
 		p.JSONSignal.Handle(ctx, conn, req)
 
 	case "userByStreamId":
@@ -410,7 +409,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			break
 		}
 		if p.service.ExistsPeerByStreamId(fromContext.chatId, bodyStruct.StreamId) {
-			p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+			p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
 			notificationDto := &dto.StoreNotifyDto{
 				UserId:    fromContext.userId,
 				StreamId:  bodyStruct.StreamId,

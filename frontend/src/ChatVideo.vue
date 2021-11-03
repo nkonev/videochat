@@ -57,7 +57,7 @@
     let pingTimerId;
     const PUT_USER_DATA_METHOD = "putUserData";
     const USER_BY_STREAM_ID_METHOD = "userByStreamId";
-    const shouldCheckAbsence = true;
+    const shouldCheckAbsence = false;
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
     const MAX_MISSED_FAILURES = 5;
