@@ -43,6 +43,7 @@ type JsonRpcExtendedHandler struct {
 type ContextData struct {
 	userId int64
 	chatId int64
+	login string
 }
 
 // key is an unexported type for keys defined in this package.
@@ -111,7 +112,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId}))
+	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId, login: "anUser"}))
 
 	c, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -367,7 +368,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 		}
 
 		logger.Info("Extracted streamId from sdp", "stream_id", streamId)
-		// TODO p.service.StoreToIndex(sfuPeer, fromContext.userId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+		p.service.StoreToIndex(streamId, fromContext.userId, fromContext.login, false, false)
 
 		p.JSONSignal.Handle(ctx, conn, req)
 
@@ -399,13 +400,13 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			p.Logger.Error(err, "error parsing StoreNotifyDto request")
 			break
 		}
-		if sfuPeer := p.service.GetPeerByPeerId(fromContext.chatId, bodyStruct.PeerId); sfuPeer != nil {
-			p.service.StoreToIndex(sfuPeer, fromContext.userId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+		if p.service.ExistsPeerByStreamId(fromContext.chatId, bodyStruct.StreamId) {
+			p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
 			if err := p.service.Notify(fromContext.chatId, &bodyStruct); err != nil {
 				p.Logger.Error(err, "error during sending notification")
 			}
 		} else {
-			logger.Info("Not found peer metadata by", "chat_id", fromContext.chatId, "peer_id", bodyStruct.PeerId)
+			logger.Info("Not found peer metadata by", "chat_id", fromContext.chatId, "stream_id", bodyStruct.StreamId)
 		}
 	}
 	default:

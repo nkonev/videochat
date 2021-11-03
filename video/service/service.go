@@ -29,12 +29,12 @@ type ExtendedService struct {
 type ExtendedPeerInfo struct {
 	userId int64
 	// will be added after PUT /notify
-	peerId    string
 	streamId  string
 	login     string
 	videoMute bool
 	audioMute bool
 }
+// streamId:ExtendedPeerInfo
 type connectionWithData map[string]ExtendedPeerInfo
 type connectionsLockableMap struct {
 	sync.RWMutex
@@ -60,14 +60,12 @@ func NewExtendedService(
 	return handler
 }
 
-func (h *ExtendedService) StoreToIndex(peer0 sfu.Peer, userId int64, streamId, login string, videoMute, audioMute bool) {
-	var peerId string = peer0.ID()
-	logger.Info("Storing peer to map", "peer_id", peer0.ID(), "user_id", userId, "stream_id", streamId, "login", login, "video_mute", videoMute, "audio_mute", audioMute)
+func (h *ExtendedService) StoreToIndex(streamId string, userId int64, login string, videoMute, audioMute bool) {
+	logger.Info("Storing peer to map",  "stream_id", streamId, "user_id", userId, "login", login, "video_mute", videoMute, "audio_mute", audioMute)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
-	h.peerUserIdIndex.connectionWithData[peerId] = ExtendedPeerInfo{
+	h.peerUserIdIndex.connectionWithData[streamId] = ExtendedPeerInfo{
 		userId:    userId,
-		peerId:    peerId,
 		streamId:  streamId,
 		login:     login,
 		videoMute: videoMute,
@@ -79,18 +77,27 @@ func (h *ExtendedService) RemoveFromIndex(peer0 sfu.Peer, userId int64, conn *we
 	logger.Info("Removing peer from map", "peer_id", peer0.ID(), "user_id", userId)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
-	conn.Close()
-	delete(h.peerUserIdIndex.connectionWithData, peer0.ID())
+	if streamId, err := getStreamId(peer0); err != nil {
+		logger.Error(err, "Unable to get streamId", "peer_id", peer0.ID(), "user_id", userId)
+	} else {
+		delete(h.peerUserIdIndex.connectionWithData, streamId)
+	}
 }
 
 func (h *ExtendedService) getExtendedConnectionInfo(peer0 sfu.Peer) *ExtendedPeerInfo {
 	h.peerUserIdIndex.RLock()
 	defer h.peerUserIdIndex.RUnlock()
-	s, ok := h.peerUserIdIndex.connectionWithData[peer0.ID()]
-	if ok {
-		return &s
-	} else {
+
+	if streamId, err := getStreamId(peer0); err != nil {
+		logger.Error(err, "Unable to get streamId", "peer_id", peer0.ID())
 		return nil
+	} else {
+		s, ok := h.peerUserIdIndex.connectionWithData[streamId]
+		if ok {
+			return &s
+		} else {
+			return nil
+		}
 	}
 }
 
@@ -99,6 +106,14 @@ func (e *ErrorNoAccess) Error() string { return "No access" }
 
 type errorInternal struct {}
 func (e *errorInternal) Error() string { return "Internal error" }
+
+func getStreamId(peer0 sfu.Peer) (string, error) {
+	if (peer0.Publisher() != nil && len(peer0.Publisher().Tracks())!=0) {
+		return peer0.Publisher().Tracks()[0].StreamID(), nil
+	} else {
+		return "", errors.New("Peer " + peer0.ID() + " has no stream id")
+	}
+}
 
 func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId string, includeOtherStreamIds bool, behalfUserId int64) (*dto.StoreNotifyDto, []string, error) {
 	if ok, err := h.CheckAccess(behalfUserId, chatId); err != nil {
@@ -114,18 +129,12 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 	if session != nil {
 		for _, peer := range session.Peers() {
 			if h.peerIsAlive(peer) {
-				// TODO example for kick - how to find peer by stream id
-				//  we need find peer by user id indeed
-				if (peer.Publisher() != nil && len(peer.Publisher().Tracks())!=0) {
-					logger.V(100).Info("Found with stream id", "stream_id", peer.Publisher().Tracks()[0].StreamID())
-				}
 
 				eci := h.getExtendedConnectionInfo(peer)
 
-				if eci != nil && eci.streamId != "" {
+				if eci != nil {
 					if interestingStreamId == eci.streamId {
 						sessionInfoDto = &dto.StoreNotifyDto{
-							PeerId:    eci.peerId,
 							StreamId:  eci.streamId,
 							Login:     eci.login,
 							VideoMute: eci.videoMute,
@@ -229,7 +238,6 @@ func (h *ExtendedService) GetPeersByChatId(chatId int64) ([]*dto.StoreNotifyDto,
 	metadatas := h.getPeerMetadatas(chatId)
 	for _, md := range metadatas {
 		result = append(result, &dto.StoreNotifyDto{
-			PeerId: md.peerId,
 			StreamId: md.streamId,
 			Login: md.login,
 			VideoMute: md.videoMute,
@@ -279,17 +287,15 @@ func (h *ExtendedService) getPeerMetadatasForKick(chatId, userId int64) []peerWi
 	return result
 }
 
-func (h *ExtendedService) GetPeerByPeerId(chatId int64, peerId string) sfu.Peer {
+func (h *ExtendedService) ExistsPeerByStreamId(chatId int64, streamId string) bool {
 	session := h.getSessionWithoutCreatingAnew(chatId) // ChatVideo.vue
 	if session == nil {
-		return nil
+		return false
 	}
-	for _, peerF := range session.Peers() {
-		if peerF.ID() == peerId {
-			return peerF
-		}
-	}
-	return nil
+	h.peerUserIdIndex.RLock()
+	defer h.peerUserIdIndex.RUnlock()
+	_, ok := h.peerUserIdIndex.connectionWithData[streamId]
+	return ok
 }
 
 func (h *ExtendedService) KickUser(chatId, userId int64, silent bool) error {
