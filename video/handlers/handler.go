@@ -12,7 +12,6 @@ import (
 	log "github.com/pion/ion-sfu/pkg/logger"
 	"github.com/pion/ion-sfu/pkg/sfu"
 	"github.com/pion/turn/v2"
-	"github.com/pion/webrtc/v3"
 	"github.com/sourcegraph/jsonrpc2"
 	websocketjsonrpc2 "github.com/sourcegraph/jsonrpc2/websocket"
 	"io/fs"
@@ -359,58 +358,17 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 	}
 
 	switch req.Method {
-	case "join":
-		var join server.Join
-		err := json.Unmarshal(*req.Params, &join)
-		if err != nil {
-			p.Logger.Error(err, "connect: error parsing offer")
-			replyError(err)
-			break
-		}
-
-		p.OnOffer = func(offer *webrtc.SessionDescription) {
-			// send modified ofer with data get from store by streamId = offer.SDP[a=msid:]
-			unmarshalledSdp, _ := offer.Unmarshal()
-			// unmarshalledSdp.MediaDescriptions[0].
-			p.Logger.Info("sending down offer id", "offer", unmarshalledSdp)
-			if err := conn.Notify(ctx, "offer", offer); err != nil {
-				p.Logger.Error(err, "error sending offer")
-			}
-
-		}
-		p.OnIceCandidate = func(candidate *webrtc.ICECandidateInit, target int) {
-			if err := conn.Notify(ctx, "trickle", server.Trickle{
-				Candidate: *candidate,
-				Target:    target,
-			}); err != nil {
-				p.Logger.Error(err, "error sending ice candidate")
-			}
-		}
-
-		err = p.Join(join.SID, join.UID, join.Config)
-		if err != nil {
-			replyError(err)
-			break
-		}
-
-		answer, err := p.Answer(join.Offer)
-		if err != nil {
-			replyError(err)
-			break
-		}
-
-		_ = conn.Reply(ctx, req.ID, answer)
-
-
 	case "offer":
-		var negotiation server.Negotiation
-		err := json.Unmarshal(*req.Params, &negotiation)
+		streamId, err := getStreamId(req.Params)
 		if err != nil {
-			p.Logger.Error(err, "connect: error parsing offer")
+			p.Logger.Error(err, "connect: error parsing stream id")
 			replyError(err)
 			break
 		}
-		// get stream id from negotiation.Desc, userId from context and put metadata to store
+
+		logger.Info("Extracted streamId from sdp", "stream_id", streamId)
+		// TODO p.service.StoreToIndex(sfuPeer, fromContext.userId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+
 		p.JSONSignal.Handle(ctx, conn, req)
 
 	case "userByStreamId":
@@ -453,4 +411,34 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 	default:
 		p.JSONSignal.Handle(ctx, conn, req)
 	}
+}
+
+func getStreamId(params *json.RawMessage) (string, error) {
+	var negotiation server.Negotiation
+	err := json.Unmarshal(*params, &negotiation)
+	if err != nil {
+		return "", errors.New("error parsing offer from jsonrpc params")
+	}
+	// get stream id from negotiation.Desc, userId from context and put metadata to store
+	unmarshalledSdp, err := negotiation.Desc.Unmarshal()
+	if err != nil {
+		return "", errors.New("error parsing sdp from negotiation")
+	}
+
+	if unmarshalledSdp == nil {
+		return "", errors.New("Missed SDP")
+	}
+	for _, mediaDescription := range unmarshalledSdp.MediaDescriptions {
+		for _, attribute := range mediaDescription.Attributes {
+			if attribute.Key == "msid" {
+				split := strings.Split(attribute.Value, " ")
+				if len(split) < 1 {
+					return "", errors.New("Invalid msid " + attribute.Value)
+				}
+				msid := split[0]
+				return msid, nil
+			}
+		}
+	}
+	return "", errors.New("Unable to find at least one media attribute")
 }

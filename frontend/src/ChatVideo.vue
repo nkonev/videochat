@@ -51,16 +51,15 @@
     } from "./utils";
     import { v4 as uuidv4 } from 'uuid';
     import vuetify from './plugins/vuetify'
-    import * as sdpTransform from 'sdp-transform';
 
     const UserVideoClass = Vue.extend(UserVideo);
 
     let pingTimerId;
     const PUT_USER_DATA_METHOD = "putUserData";
     const USER_BY_STREAM_ID_METHOD = "userByStreamId";
+    const shouldCheckAbsence = false; // TODO restore true
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
-    const askUserNameInterval = 1000;
     const MAX_MISSED_FAILURES = 5;
 
     export default {
@@ -117,10 +116,6 @@
 
                 const codec = getCodec();
                 this.clientLocal = new Client(this.signalLocal, {...configObj, codec: codec});
-                this.signalLocal.onnegotiate = (description) => {
-                    console.log("Negotiating", sdpTransform.parse(description.sdp));
-                    return this.clientLocal.negotiate.call(this.clientLocal, description);
-                }
 
                 this.clientLocal.onspeaker = (messageEvent) => {
                     console.debug("Speaking event", messageEvent);
@@ -162,27 +157,38 @@
 
                 // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
-                    console.info("Got track2", track, "kind=", track.kind, " for stream", stream);
-                    if (track.kind == "video") {
-                    // track.onunmute = () => {
-                        if (!this.streams[stream.id]) {
+                    console.info("Got track", track, "kind=", track.kind, " for stream", stream);
+                    track.onunmute = () => {
+                        const streamId = stream.id;
+                        if (!this.streams[streamId]) {
                             const videoTagId = this.getNewId();
-                            console.info("Setting track", track.id, "for stream", stream.id, " into video tag id=", videoTagId);
+                            console.info("Setting track", track.id, "for stream", streamId, " into video tag id=", videoTagId);
 
                             const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId }});
                             component.$mount();
                             this.remotesDiv.appendChild(component.$el);
                             component.setSource(stream);
-                            this.streams[stream.id] = {stream, component, failureCount: 0};
+                            const streamHolder = {stream, component, failureCount: 0}
+                            this.streams[streamId] = streamHolder;
 
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
                                 if (e.track) {
-                                    this.removeStream(stream.id, component)
+                                    this.removeStream(streamId, component)
                                 }
                             };
 
-                            this.askUserNameWithRetries(stream.id);
+                            // here we (asynchronously) get metadata by streamId from app server
+                            this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: streamId}).then(value => {
+                                if (!value.found || !value.userDto) {
+                                    console.error("Metadata by streamId=", streamId, " is not found on server");
+                                } else {
+                                    console.debug("Successfully got data by streamId", streamId);
+                                    const data = value.userDto;
+                                    streamHolder.component.setUserName(data.login);
+                                    streamHolder.component.setDisplayAudioMute(data.audioMute);
+                                }
+                            })
                         }
                     }
                 };
@@ -234,6 +240,9 @@
                 this.$store.commit(SET_MUTE_AUDIO, localAudioMutedDefault);
             },
             startHealthCheckPing() {
+                if (!shouldCheckAbsence) {
+                    return
+                }
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
                     if (!this.insideSwitchingCameraScreen) {
@@ -270,29 +279,6 @@
                     }
                 }, pingInterval)
             },
-            askUserNameWithRetries(streamId) {
-                // request-response with signalLocal and error handling
-                this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: streamId}).then(value => {
-                    if (!value.found) {
-                        if (!this.closingStarted && this.streams[streamId]) {
-                            console.log("Rescheduling asking for userName for streamId=", streamId);
-                            setTimeout(() => {
-                                this.askUserNameWithRetries(streamId);
-                            }, askUserNameInterval);
-                        }
-                    } else {
-                        console.debug("Successfully got data by streamId", streamId);
-                        const data = value.userDto;
-                        if (data) {
-                            const streamHolder = this.streams[data.streamId];
-                            if (streamHolder) {
-                                streamHolder.component.setUserName(data.login);
-                                streamHolder.component.setDisplayAudioMute(data.audioMute);
-                            }
-                        }
-                    }
-                })
-            },
             getConfig() {
                 return axios
                     .get(`/api/video/${this.chatId}/config`)
@@ -300,7 +286,6 @@
             },
             notifyWithData() {
                 const toSend = {
-                    peerId: this.peerId,
                     streamId: this.$refs.localVideoComponent.getStreamId(),
                     login: this.myUserName,
                     videoMute: this.videoMuted, // from store
