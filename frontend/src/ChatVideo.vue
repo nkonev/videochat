@@ -143,7 +143,7 @@
                         console.info("Joined to session, gathering media devices")
                         this.getAndPublishLocalMediaStream({})
                             .then(()=>{
-                              //this.notifyAboutJoining();
+                              this.notifyAboutMute();
                             }).then(value => {
                                 this.startHealthCheckPing();
                             })
@@ -285,13 +285,12 @@
             notifyWithData() {
                 const toSend = {
                     streamId: this.$refs.localVideoComponent.getStreamId(),
-                    login: this.myUserName,
                     videoMute: this.videoMuted, // from store
                     audioMute: this.audioMuted
                 };
                 this.signalLocal.notify(PUT_USER_DATA_METHOD, toSend)
             },
-            notifyAboutJoining() {
+            notifyAboutMute() {
                 if (this.chatId) {
                     this.notifyWithData();
                 } else {

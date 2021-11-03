@@ -61,7 +61,7 @@ func NewExtendedService(
 }
 
 func (h *ExtendedService) StoreToIndex(streamId string, userId int64, login string, videoMute, audioMute bool) {
-	logger.Info("Storing peer to map",  "stream_id", streamId, "user_id", userId, "login", login, "video_mute", videoMute, "audio_mute", audioMute)
+	logger.Info("Storing peer metadata to map",  "stream_id", streamId, "user_id", userId, "login", login, "video_mute", videoMute, "audio_mute", audioMute)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
 	h.peerUserIdIndex.connectionWithData[streamId] = ExtendedPeerInfo{
@@ -81,6 +81,7 @@ func (h *ExtendedService) RemoveFromIndex(peer0 sfu.Peer, userId int64, conn *we
 		logger.Error(err, "Unable to get streamId in RemoveFromIndex", "peer_id", peer0.ID(), "user_id", userId)
 	} else {
 		delete(h.peerUserIdIndex.connectionWithData, streamId)
+		logger.Info("Peer has been removed from map", "peer_id", peer0.ID(), "user_id", userId, "stream_id", streamId)
 	}
 }
 

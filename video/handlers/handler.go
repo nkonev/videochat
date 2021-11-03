@@ -401,15 +401,22 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 		_ = conn.Reply(ctx, req.ID, resp)
 
 	case "putUserData": {
-		var bodyStruct dto.StoreNotifyDto
+		var bodyStruct dto.UserInputDto
 		err := json.Unmarshal(*req.Params, &bodyStruct)
 		if err != nil {
 			p.Logger.Error(err, "error parsing StoreNotifyDto request")
 			break
 		}
 		if p.service.ExistsPeerByStreamId(fromContext.chatId, bodyStruct.StreamId) {
-			p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
-			if err := p.service.Notify(fromContext.chatId, &bodyStruct); err != nil {
+			p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.VideoMute, bodyStruct.AudioMute)
+			notificationDto := &dto.StoreNotifyDto{
+				UserId:    fromContext.userId,
+				StreamId:  bodyStruct.StreamId,
+				Login:     fromContext.login,
+				VideoMute: bodyStruct.VideoMute,
+				AudioMute: bodyStruct.AudioMute,
+			}
+			if err := p.service.Notify(fromContext.chatId, notificationDto); err != nil {
 				p.Logger.Error(err, "error during sending notification")
 			}
 		} else {

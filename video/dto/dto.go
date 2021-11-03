@@ -1,6 +1,12 @@
 package dto
 
 // input Dto
+type UserInputDto struct {
+	StreamId  string `json:"streamId"`
+	VideoMute bool   `json:"videoMute"`
+	AudioMute bool   `json:"audioMute"`
+}
+
 type StoreNotifyDto struct {
 	UserId    int64 `json:"userId"`
 	StreamId  string `json:"streamId"`
