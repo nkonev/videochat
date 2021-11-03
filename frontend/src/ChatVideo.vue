@@ -158,8 +158,7 @@
                 // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
                     console.info("Got track", track.id, "kind=", track.kind, " for stream", stream.id);
-                    if (track.kind == "video") {
-                    // track.onunmute = () => {
+                    track.onunmute = () => {
                         if (!this.streams[stream.id]) {
                             const videoTagId = this.getNewId();
                             console.info("Setting track", track.id, "for stream", stream.id, " into video tag id=", videoTagId);
