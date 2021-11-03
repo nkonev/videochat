@@ -143,7 +143,7 @@
                         console.info("Joined to session, gathering media devices")
                         this.getAndPublishLocalMediaStream({})
                             .then(()=>{
-                              this.notifyAboutJoining();
+                              //this.notifyAboutJoining();
                             }).then(value => {
                                 this.startHealthCheckPing();
                             })

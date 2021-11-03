@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"embed"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -103,6 +104,12 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	decodedString, err := base64.StdEncoding.DecodeString(r.Header.Get("X-Auth-Username"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	userLogin := string(decodedString)
 
 	if ok, err := h.service.CheckAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -112,7 +119,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId, login: "anUser"}))
+	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId, login: userLogin}))
 
 	c, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
