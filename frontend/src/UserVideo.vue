@@ -1,7 +1,7 @@
 <template>
     <div class="video-container-element">
         <video :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted" v-on:dblclick="onDoubleClick"/>
-        <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon> <v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
+        <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
 
@@ -68,6 +68,7 @@ export default {
     .video-container-element {
         height 100%
         width min-content
+        overflow-wrap anywhere
     }
 
     .video-container-element:nth-child(even) {
@@ -85,12 +86,10 @@ export default {
     .video-container-element-caption {
         display inherit
         margin: 0;
-        top -2.5em
-        right -1.2em
+        top -2em
+        right -0.4em
         text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
         position: relative
-        width initial
-        white-space nowrap
     }
 
     .video-container-element-caption-speaking {
