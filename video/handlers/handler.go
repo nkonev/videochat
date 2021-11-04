@@ -366,6 +366,20 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 	}
 
 	switch req.Method {
+	case "offer":
+		streamId, err := getStreamId(req.Params)
+		if err != nil {
+			p.Logger.V(10).Info("Unable to parse stream id")
+		} else {
+			logger.Info("Extracted streamId from sdp", "stream_id", streamId)
+			// we need to sync mutes with front default or find the correct approach to send if after client has connected.
+			// appending to getAndPublishLocalMediaStream() Promise is too early and leads to "Not found peer metadata by"
+			if !p.service.ExistsPeerByStreamId(fromContext.chatId, streamId) {
+				p.service.StoreToIndex(streamId, fromContext.userId, fromContext.login, false, false, req.Method)
+			}
+		}
+		p.JSONSignal.Handle(ctx, conn, req)
+
 	case "userByStreamId":
 		var userByStreamId UserByStreamId
 		err := json.Unmarshal(*req.Params, &userByStreamId)
@@ -394,25 +408,53 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			p.Logger.Error(err, "error parsing StoreNotifyDto request")
 			break
 		}
-
-		if !p.service.ExistsPeerByStreamId(fromContext.chatId, bodyStruct.StreamId) {
-			logger.Info("Not found peer metadata by streamId, putting it in advance", "chat_id", fromContext.chatId, "stream_id", bodyStruct.StreamId)
-		}
-		// TODO write map cleanup mechanism
-
-		p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
-		notificationDto := &dto.StoreNotifyDto{
-			UserId:    fromContext.userId,
-			StreamId:  bodyStruct.StreamId,
-			Login:     fromContext.login,
-			VideoMute: bodyStruct.VideoMute,
-			AudioMute: bodyStruct.AudioMute,
-		}
-		if err := p.service.Notify(fromContext.chatId, notificationDto); err != nil {
-			p.Logger.Error(err, "error during sending notification")
+		if p.service.ExistsPeerByStreamId(fromContext.chatId, bodyStruct.StreamId) {
+			p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
+			notificationDto := &dto.StoreNotifyDto{
+				UserId:    fromContext.userId,
+				StreamId:  bodyStruct.StreamId,
+				Login:     fromContext.login,
+				VideoMute: bodyStruct.VideoMute,
+				AudioMute: bodyStruct.AudioMute,
+			}
+			if err := p.service.Notify(fromContext.chatId, notificationDto); err != nil {
+				p.Logger.Error(err, "error during sending notification")
+			}
+		} else {
+			logger.Info("Not found peer metadata by", "chat_id", fromContext.chatId, "stream_id", bodyStruct.StreamId)
 		}
 	}
 	default:
 		p.JSONSignal.Handle(ctx, conn, req)
 	}
+}
+
+func getStreamId(params *json.RawMessage) (string, error) {
+	var negotiation server.Negotiation
+	err := json.Unmarshal(*params, &negotiation)
+	if err != nil {
+		return "", errors.New("error parsing offer from jsonrpc params")
+	}
+	// get stream id from negotiation.Desc, userId from context and put metadata to store
+	unmarshalledSdp, err := negotiation.Desc.Unmarshal()
+	if err != nil {
+		return "", errors.New("error parsing sdp from negotiation")
+	}
+
+	if unmarshalledSdp == nil {
+		return "", errors.New("Missed SDP")
+	}
+	for _, mediaDescription := range unmarshalledSdp.MediaDescriptions {
+		for _, attribute := range mediaDescription.Attributes {
+			if attribute.Key == "msid" {
+				split := strings.Split(attribute.Value, " ")
+				if len(split) < 1 {
+					return "", errors.New("Invalid msid " + attribute.Value)
+				}
+				msid := split[0]
+				return msid, nil
+			}
+		}
+	}
+	return "", errors.New("Unable to find at least one media attribute")
 }
