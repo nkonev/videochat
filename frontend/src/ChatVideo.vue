@@ -16,7 +16,7 @@
 
         <p v-if="errorDescription" class="error">{{ errorDescription }}</p>
 
-        <UserVideo ref="localVideoComponent" :key="localPublisherKey" :initial-muted="initialMuted" :id="getNewId()"/>
+        <UserVideo ref="localVideoComponent" :key="localPublisherKey" :initial-muted="true" :id="getNewId()"/>
     </v-col>
 </template>
 
@@ -43,7 +43,6 @@
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
     import {
-        localAudioMutedDefault,
         getWebsocketUrlPrefix,
         getVideoResolution,
         getStoredAudioDevicePresents,
@@ -57,10 +56,11 @@
     let pingTimerId;
     const PUT_USER_DATA_METHOD = "putUserData";
     const USER_BY_STREAM_ID_METHOD = "userByStreamId";
+    const shouldCheckAbsence = true;
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
-    const askUserNameInterval = 1000;
     const MAX_MISSED_FAILURES = 5;
+    const localAudioMutedInitial = false; // actually works only with camera, screen sharing always started without audio stream
 
     export default {
         data() {
@@ -96,9 +96,6 @@
             }),
             myUserName() {
                 return this.currentUser.login
-            },
-            initialMuted() {
-                return localAudioMutedDefault;
             },
         },
         methods: {
@@ -143,9 +140,7 @@
                     this.clientLocal.join(`chat${this.chatId}`, this.peerId).then(()=>{
                         console.info("Joined to session, gathering media devices")
                         this.getAndPublishLocalMediaStream({})
-                            .then(()=>{
-                              this.notifyAboutJoining();
-                            }).then(value => {
+                            .then(value => {
                                 this.startHealthCheckPing();
                             })
                             .catch(reason => {
@@ -157,26 +152,38 @@
 
                 // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
-                    console.info("Got track", track.id, "kind=", track.kind, " for stream", stream.id);
+                    console.info("Got track", track, "kind=", track.kind, " for stream", stream);
                     track.onunmute = () => {
-                        if (!this.streams[stream.id]) {
+                        const streamId = stream.id;
+                        if (!this.streams[streamId]) {
                             const videoTagId = this.getNewId();
-                            console.info("Setting track", track.id, "for stream", stream.id, " into video tag id=", videoTagId);
+                            console.info("Setting track", track.id, "for stream", streamId, " into video tag id=", videoTagId);
 
                             const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId }});
                             component.$mount();
                             this.remotesDiv.appendChild(component.$el);
                             component.setSource(stream);
-                            this.streams[stream.id] = {stream, component, failureCount: 0};
+                            const streamHolder = {stream, component, failureCount: 0}
+                            this.streams[streamId] = streamHolder;
 
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
                                 if (e.track) {
-                                    this.removeStream(stream.id, component)
+                                    this.removeStream(streamId, component)
                                 }
                             };
 
-                            this.askUserNameWithRetries(stream.id);
+                            // here we (asynchronously) get metadata by streamId from app server
+                            this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: streamId}).then(value => {
+                                if (!value.found || !value.userDto) {
+                                    console.error("Metadata by streamId=", streamId, " is not found on server");
+                                } else {
+                                    console.debug("Successfully got data by streamId", streamId);
+                                    const data = value.userDto;
+                                    streamHolder.component.setUserName(data.login);
+                                    streamHolder.component.setDisplayAudioMute(data.audioMute);
+                                }
+                            })
                         }
                     }
                 };
@@ -222,12 +229,14 @@
                 this.remotesDiv = null;
                 this.localMediaStream = null;
                 this.insideSwitchingCameraScreen = false;
-                this.peerId = null;
 
                 this.$store.commit(SET_MUTE_VIDEO, false);
-                this.$store.commit(SET_MUTE_AUDIO, localAudioMutedDefault);
+                this.$store.commit(SET_MUTE_AUDIO, localAudioMutedInitial);
             },
             startHealthCheckPing() {
+                if (!shouldCheckAbsence) {
+                    return
+                }
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
                     if (!this.insideSwitchingCameraScreen) {
@@ -247,7 +256,7 @@
                                     const component = streamHolder.component;
                                     if (value.otherStreamIds.filter(v => v == streamId).length == 0) {
                                         streamHolder.failureCount++;
-                                        console.debug("Other streamId", streamId, "is not present, failureCount icreased to", streamHolder.failureCount);
+                                        console.info("Other streamId", streamId, "is not present, failureCount icreased to", streamHolder.failureCount);
                                         if (streamHolder.failureCount > MAX_MISSED_FAILURES) {
                                             console.debug("Other streamId", streamId, "subsequently is not present, removing...");
                                             this.removeStream(streamId, component);
@@ -264,29 +273,6 @@
                     }
                 }, pingInterval)
             },
-            askUserNameWithRetries(streamId) {
-                // request-response with signalLocal and error handling
-                this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: streamId}).then(value => {
-                    if (!value.found) {
-                        if (!this.closingStarted && this.streams[streamId]) {
-                            console.log("Rescheduling asking for userName for streamId=", streamId);
-                            setTimeout(() => {
-                                this.askUserNameWithRetries(streamId);
-                            }, askUserNameInterval);
-                        }
-                    } else {
-                        console.debug("Successfully got data by streamId", streamId);
-                        const data = value.userDto;
-                        if (data) {
-                            const streamHolder = this.streams[data.streamId];
-                            if (streamHolder) {
-                                streamHolder.component.setUserName(data.login);
-                                streamHolder.component.setDisplayAudioMute(data.audioMute);
-                            }
-                        }
-                    }
-                })
-            },
             getConfig() {
                 return axios
                     .get(`/api/video/${this.chatId}/config`)
@@ -296,18 +282,10 @@
                 const toSend = {
                     peerId: this.peerId,
                     streamId: this.$refs.localVideoComponent.getStreamId(),
-                    login: this.myUserName,
                     videoMute: this.videoMuted, // from store
                     audioMute: this.audioMuted
                 };
                 this.signalLocal.notify(PUT_USER_DATA_METHOD, toSend)
-            },
-            notifyAboutJoining() {
-                if (this.chatId) {
-                    this.notifyWithData();
-                } else {
-                    console.warn("Unable to notify about joining")
-                }
             },
             ensureAudioIsEnabledAccordingBrowserPolicies() {
                 if (this.remoteVideoIsMuted) {
@@ -324,7 +302,6 @@
                 }
             },
             onStartScreenSharing() {
-                this.$store.commit(SET_MUTE_AUDIO, localAudioMutedDefault);
                 return this.onSwitchMediaStream({screen: true});
             },
             onStopScreenSharing() {
@@ -338,9 +315,6 @@
                     .catch(reason => {
                       console.error("Error during publishing screen stream, won't restart...", reason);
                       this.$refs.localVideoComponent.setUserName('Error get getDisplayMedia');
-                    })
-                    .then(value => {
-                        this.notifyWithData();
                     });
             },
             getAndPublishLocalMediaStream({screen = false}) {
@@ -384,7 +358,7 @@
                   this.$refs.localVideoComponent.setSource(media);
                   this.$refs.localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
-                  this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
+
                   console.log("Publishing " + (screen ? "screen" : "camera"));
                   this.clientLocal.publish(media);
                   console.log("Successfully published " + (screen ? "screen" : "camera") + " streamId=", this.$refs.localVideoComponent.getStreamId());
@@ -393,11 +367,19 @@
                   } else {
                       this.$store.commit(SET_SHARE_SCREEN, false);
                   }
+
+                  // actually during screen sharing there is no audio track - we calculate the actual audio muting state
+                  let actualAudioMuted = true;
                   this.localMediaStream.getTracks().forEach(t => {
                       console.log("localMediaStream track kind=", t.kind, " trackId=", t.id, " local video tag id", this.$refs.localVideoComponent.$props.id, " streamId=", this.$refs.localVideoComponent.getStreamId());
-                  })
+                      if (t.kind === "audio") {
+                          actualAudioMuted = t.muted;
+                      }
+                  });
+                  this.$store.commit(SET_MUTE_AUDIO, actualAudioMuted);
+                  this.$refs.localVideoComponent.setDisplayAudioMute(actualAudioMuted);
                   this.insideSwitchingCameraScreen = false;
-                });
+                }).then(() => {this.notifyWithData(); return Promise.resolve(true)});
             },
             startVideoProcess() {
                 this.getConfig()
@@ -406,7 +388,7 @@
                         return this.joinSession(config);
                     })
                     .catch(reason => {
-                        console.error("Error during get config, restarting...")
+                        console.error("Error during get config, restarting...", reason)
                         this.tryRestartVideoProcess();
                     })
             },

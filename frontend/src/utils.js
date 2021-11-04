@@ -20,9 +20,6 @@ export const getWebsocketUrlPrefix = () => {
     return ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host
 }
 
-export const audioMuteDefault = true;
-export const localAudioMutedDefault = false;
-
 const defaultResolution = 'hd';
 
 export const KEY_RESOLUTION = 'videoResolution';

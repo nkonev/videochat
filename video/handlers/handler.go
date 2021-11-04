@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"embed"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -43,6 +44,7 @@ type JsonRpcExtendedHandler struct {
 type ContextData struct {
 	userId int64
 	chatId int64
+	login string
 }
 
 // key is an unexported type for keys defined in this package.
@@ -102,6 +104,12 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	decodedString, err := base64.StdEncoding.DecodeString(r.Header.Get("X-Auth-Username"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	userLogin := string(decodedString)
 
 	if ok, err := h.service.CheckAccess(userId, chatId); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -111,7 +119,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId}))
+	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId, login: userLogin}))
 
 	c, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -122,8 +130,8 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	peer0 := sfu.NewPeer(h.sfu)
-	// we can't store it here because peer0.Id is not initialized yet
-	// h.service.StoreToIndex(peer0, userId, "", "", false, false)
+	// we can't store it here because peer's stream is not initialized yet - TODO recheck
+	// h.service.StoreToIndex(...)
 	defer h.service.RemoveFromIndex(peer0, userId, c)
 	defer h.service.NotifyAboutLeaving(chatId)
 	p := server.NewJSONSignal(peer0, logger)
@@ -380,19 +388,28 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 		_ = conn.Reply(ctx, req.ID, resp)
 
 	case "putUserData": {
-		var bodyStruct dto.StoreNotifyDto
+		var bodyStruct dto.UserInputDto
 		err := json.Unmarshal(*req.Params, &bodyStruct)
 		if err != nil {
 			p.Logger.Error(err, "error parsing StoreNotifyDto request")
 			break
 		}
-		if sfuPeer := p.service.GetPeerByPeerId(fromContext.chatId, bodyStruct.PeerId); sfuPeer != nil {
-			p.service.StoreToIndex(sfuPeer, fromContext.userId, bodyStruct.StreamId, bodyStruct.Login, bodyStruct.VideoMute, bodyStruct.AudioMute)
-			if err := p.service.Notify(fromContext.chatId, &bodyStruct); err != nil {
-				p.Logger.Error(err, "error during sending notification")
-			}
-		} else {
-			logger.Info("Not found peer metadata by", "chat_id", fromContext.chatId, "peer_id", bodyStruct.PeerId)
+
+		if !p.service.ExistsPeerByStreamId(fromContext.chatId, bodyStruct.StreamId) {
+			logger.Info("Not found peer metadata by streamId, putting it in advance", "chat_id", fromContext.chatId, "stream_id", bodyStruct.StreamId)
+		}
+		// TODO write map cleanup mechanism
+
+		p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.PeerId, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
+		notificationDto := &dto.StoreNotifyDto{
+			UserId:    fromContext.userId,
+			StreamId:  bodyStruct.StreamId,
+			Login:     fromContext.login,
+			VideoMute: bodyStruct.VideoMute,
+			AudioMute: bodyStruct.AudioMute,
+		}
+		if err := p.service.Notify(fromContext.chatId, notificationDto); err != nil {
+			p.Logger.Error(err, "error during sending notification")
 		}
 	}
 	default:
