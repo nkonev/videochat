@@ -255,7 +255,7 @@
                                     const component = streamHolder.component;
                                     if (value.otherStreamIds.filter(v => v == streamId).length == 0) {
                                         streamHolder.failureCount++;
-                                        console.debug("Other streamId", streamId, "is not present, failureCount icreased to", streamHolder.failureCount);
+                                        console.info("Other streamId", streamId, "is not present, failureCount icreased to", streamHolder.failureCount);
                                         if (streamHolder.failureCount > MAX_MISSED_FAILURES) {
                                             console.debug("Other streamId", streamId, "subsequently is not present, removing...");
                                             this.removeStream(streamId, component);

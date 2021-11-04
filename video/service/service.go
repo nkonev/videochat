@@ -34,6 +34,7 @@ type ExtendedPeerInfo struct {
 	videoMute bool
 	audioMute bool
 }
+// indeed peer can have several stream id. to reproduce - start sharing the screen
 // streamId:ExtendedPeerInfo
 type connectionWithData map[string]ExtendedPeerInfo
 type connectionsLockableMap struct {
@@ -77,29 +78,26 @@ func (h *ExtendedService) RemoveFromIndex(peer0 sfu.Peer, userId int64, conn *we
 	logger.Info("Removing peer from map", "peer_id", peer0.ID(), "user_id", userId)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
-	if streamId, err := getStreamId(peer0); err != nil {
-		logger.Error(err, "Unable to get streamId in RemoveFromIndex", "peer_id", peer0.ID(), "user_id", userId)
-	} else {
+	for _, streamId := range getStreamIds(peer0) {
 		delete(h.peerUserIdIndex.connectionWithData, streamId)
 		logger.Info("Peer has been removed from map", "peer_id", peer0.ID(), "user_id", userId, "stream_id", streamId)
 	}
 }
 
-func (h *ExtendedService) getExtendedConnectionInfo(peer0 sfu.Peer) *ExtendedPeerInfo {
+func (h *ExtendedService) getExtendedConnectionInfo(peer0 sfu.Peer) []ExtendedPeerInfo {
 	h.peerUserIdIndex.RLock()
 	defer h.peerUserIdIndex.RUnlock()
 
-	if streamId, err := getStreamId(peer0); err != nil {
-		logger.Info("Unable to get streamId in getExtendedConnectionInfo", "peer_id", peer0.ID())
-		return nil
-	} else {
+	var resultArray = []ExtendedPeerInfo{}
+
+	for _, streamId := range getStreamIds(peer0) {
 		s, ok := h.peerUserIdIndex.connectionWithData[streamId]
 		if ok {
-			return &s
-		} else {
-			return nil
+			resultArray = append(resultArray, s)
 		}
 	}
+
+	return resultArray
 }
 
 type ErrorNoAccess struct {}
@@ -108,11 +106,24 @@ func (e *ErrorNoAccess) Error() string { return "No access" }
 type errorInternal struct {}
 func (e *errorInternal) Error() string { return "Internal error" }
 
-func getStreamId(peer0 sfu.Peer) (string, error) {
+func getStreamIds(peer0 sfu.Peer) []string {
+	var returnMap = map[string]bool{}
+	var returnArray = []string{}
+
 	if (peer0.Publisher() != nil && len(peer0.Publisher().Tracks())!=0) {
-		return peer0.Publisher().Tracks()[0].StreamID(), nil
+		for _, track := range peer0.Publisher().Tracks() {
+			if (track.StreamID() != "") {
+				returnMap[track.StreamID()] = true
+			}
+		}
+		for k, v := range returnMap {
+			if v {
+				returnArray = append(returnArray, k)
+			}
+		}
+		return returnArray
 	} else {
-		return "", errors.New("Peer " + peer0.ID() + " has no stream id")
+		return returnArray
 	}
 }
 
@@ -145,9 +156,10 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 		if session != nil {
 			for _, peer := range session.Peers() {
 				if h.peerIsAlive(peer) {
-					eci := h.getExtendedConnectionInfo(peer)
-					if eci != nil && eci.streamId != interestingStreamId {
-						otherStreamIds = append(otherStreamIds, eci.streamId)
+					for _, eci := range h.getExtendedConnectionInfo(peer) {
+						if eci.streamId != interestingStreamId { // will return stalled self stream id as otherStreamIds. TODO deal with it
+							otherStreamIds = append(otherStreamIds, eci.streamId)
+						}
 					}
 				}
 			}
@@ -261,8 +273,8 @@ func (h *ExtendedService) getPeerMetadatas(chatId int64) []*ExtendedPeerInfo {
 		return result
 	}
 	for _, peerF := range session.Peers() {
-		if eci := h.getExtendedConnectionInfo(peerF); eci != nil {
-			result = append(result, eci)
+		for _, eci := range h.getExtendedConnectionInfo(peerF) {
+			result = append(result, &eci)
 		}
 	}
 	return result
@@ -281,12 +293,14 @@ func (h *ExtendedService) getPeerMetadatasForKick(chatId, userId int64) []peerWi
 		return result
 	}
 	for _, peerF := range session.Peers() {
-		if eci := h.getExtendedConnectionInfo(peerF); eci != nil && eci.userId == userId {
-			result = append(result, peerWithMetadata{
-				peerF,
-				eci,
-				session,
-			})
+		for _, eci := range h.getExtendedConnectionInfo(peerF) {
+			if eci.userId == userId {
+				result = append(result, peerWithMetadata{
+					peerF,
+					&eci,
+					session,
+				})
+			}
 		}
 	}
 	return result
