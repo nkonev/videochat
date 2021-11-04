@@ -31,6 +31,7 @@ type ExtendedPeerInfo struct {
 	// will be added after PUT /notify
 	streamId  string
 	login     string
+	peerId string
 	videoMute bool
 	audioMute bool
 }
@@ -61,14 +62,15 @@ func NewExtendedService(
 	return handler
 }
 
-func (h *ExtendedService) StoreToIndex(streamId string, userId int64, login string, videoMute, audioMute bool, method string) {
-	logger.Info("Storing peer metadata to map",  "stream_id", streamId, "user_id", userId, "login", login, "video_mute", videoMute, "audio_mute", audioMute, "from_method", method)
+func (h *ExtendedService) StoreToIndex(streamId string, userId int64, login, peerId string, videoMute, audioMute bool, method string) {
+	logger.Info("Storing peer metadata to map",  "stream_id", streamId, "user_id", userId, "login", login, "peerId", peerId, "video_mute", videoMute, "audio_mute", audioMute, "from_method", method)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
 	h.peerUserIdIndex.connectionWithData[streamId] = ExtendedPeerInfo{
 		userId:    userId,
 		streamId:  streamId,
 		login:     login,
+		peerId: peerId,
 		videoMute: videoMute,
 		audioMute: audioMute,
 	}
@@ -139,27 +141,32 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 
 	h.peerUserIdIndex.RLock()
 	defer h.peerUserIdIndex.RUnlock()
-	extendedPeerInfo, ok := h.peerUserIdIndex.connectionWithData[interestingStreamId]
+	selfExtendedPeerInfo, ok := h.peerUserIdIndex.connectionWithData[interestingStreamId]
 	if !ok {
 		return nil, otherStreamIds, nil
 	}
 	sessionInfoDto = &dto.StoreNotifyDto{
-		StreamId:  extendedPeerInfo.streamId,
-		Login:     extendedPeerInfo.login,
-		VideoMute: extendedPeerInfo.videoMute,
-		AudioMute: extendedPeerInfo.audioMute,
-		UserId:	   extendedPeerInfo.userId,
+		StreamId:  selfExtendedPeerInfo.streamId,
+		Login:     selfExtendedPeerInfo.login,
+		VideoMute: selfExtendedPeerInfo.videoMute,
+		AudioMute: selfExtendedPeerInfo.audioMute,
+		UserId:    selfExtendedPeerInfo.userId,
 	}
 
 	if includeOtherStreamIds {
 		session := h.getSessionWithoutCreatingAnew(chatId)
 		if session != nil {
 			for _, peer := range session.Peers() {
-				if h.peerIsAlive(peer) {
+				var skipPeer = false
+				for _, streamId := range getStreamIds(peer) {
+					if streamId == interestingStreamId {
+						skipPeer = true
+					}
+				}
+				if !skipPeer && h.peerIsAlive(peer) {
 					for _, eci := range h.getExtendedConnectionInfo(peer) {
-						if eci.streamId != interestingStreamId { // will return stalled self stream id as otherStreamIds. TODO deal with it
-							otherStreamIds = append(otherStreamIds, eci.streamId)
-						}
+						// will return stalled self stream id as otherStreamIds.
+						otherStreamIds = append(otherStreamIds, eci.streamId)
 					}
 				}
 			}

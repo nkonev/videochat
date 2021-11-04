@@ -73,6 +73,7 @@
                 localPublisherKey: 1,
                 chatId: null,
                 remoteVideoIsMuted: true,
+                peerId: null,
 
                 // this one is about skipping ping checks during changing media stream
                 insideSwitchingCameraScreen: false,
@@ -133,10 +134,10 @@
                   this.tryRestartVideoProcess();
                 }
 
-                const peerId = uuidv4();
+                this.peerId = uuidv4();
                 this.signalLocal.onopen = () => {
                     console.info("Signal opened, joining to session...")
-                    this.clientLocal.join(`chat${this.chatId}`, peerId).then(()=>{
+                    this.clientLocal.join(`chat${this.chatId}`, this.peerId).then(()=>{
                         console.info("Joined to session, gathering media devices")
                         this.getAndPublishLocalMediaStream({})
                             .then(value => {
@@ -279,6 +280,7 @@
             },
             notifyWithData() {
                 const toSend = {
+                    peerId: this.peerId,
                     streamId: this.$refs.localVideoComponent.getStreamId(),
                     videoMute: this.videoMuted, // from store
                     audioMute: this.audioMuted
@@ -377,7 +379,7 @@
                   this.$store.commit(SET_MUTE_AUDIO, actualAudioMuted);
                   this.$refs.localVideoComponent.setDisplayAudioMute(actualAudioMuted);
                   this.insideSwitchingCameraScreen = false;
-                }).then(() => {this.notifyWithData(); return Promise.resolve()});
+                }).then(() => {this.notifyWithData(); return Promise.resolve(true)});
             },
             startVideoProcess() {
                 this.getConfig()

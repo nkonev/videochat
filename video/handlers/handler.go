@@ -400,7 +400,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 		}
 		// TODO write map cleanup mechanism
 
-		p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
+		p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.PeerId, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
 		notificationDto := &dto.StoreNotifyDto{
 			UserId:    fromContext.userId,
 			StreamId:  bodyStruct.StreamId,
