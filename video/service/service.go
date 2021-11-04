@@ -128,7 +128,10 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 
 	h.peerUserIdIndex.RLock()
 	defer h.peerUserIdIndex.RUnlock()
-	extendedPeerInfo := h.peerUserIdIndex.connectionWithData[interestingStreamId]
+	extendedPeerInfo, ok := h.peerUserIdIndex.connectionWithData[interestingStreamId]
+	if !ok {
+		return nil, otherStreamIds, nil
+	}
 	sessionInfoDto = &dto.StoreNotifyDto{
 		StreamId:  extendedPeerInfo.streamId,
 		Login:     extendedPeerInfo.login,
