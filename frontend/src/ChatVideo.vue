@@ -16,7 +16,7 @@
 
         <p v-if="errorDescription" class="error">{{ errorDescription }}</p>
 
-        <UserVideo ref="localVideoComponent" :key="localPublisherKey" :initial-muted="initialMuted" :id="getNewId()"/>
+        <UserVideo ref="localVideoComponent" :key="localPublisherKey" :initial-muted="true" :id="getNewId()"/>
     </v-col>
 </template>
 
@@ -43,7 +43,6 @@
     import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
     import {
-        localAudioMutedDefault,
         getWebsocketUrlPrefix,
         getVideoResolution,
         getStoredAudioDevicePresents,
@@ -57,10 +56,11 @@
     let pingTimerId;
     const PUT_USER_DATA_METHOD = "putUserData";
     const USER_BY_STREAM_ID_METHOD = "userByStreamId";
-    const shouldCheckAbsence = false;
+    const shouldCheckAbsence = true;
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
     const MAX_MISSED_FAILURES = 5;
+    const localAudioMutedInitial = false; // actually works only with camera, screen sharing always started without audio stream
 
     export default {
         data() {
@@ -95,9 +95,6 @@
             }),
             myUserName() {
                 return this.currentUser.login
-            },
-            initialMuted() {
-                return localAudioMutedDefault;
             },
         },
         methods: {
@@ -233,7 +230,7 @@
                 this.insideSwitchingCameraScreen = false;
 
                 this.$store.commit(SET_MUTE_VIDEO, false);
-                this.$store.commit(SET_MUTE_AUDIO, localAudioMutedDefault);
+                this.$store.commit(SET_MUTE_AUDIO, localAudioMutedInitial);
             },
             startHealthCheckPing() {
                 if (!shouldCheckAbsence) {
@@ -303,7 +300,6 @@
                 }
             },
             onStartScreenSharing() {
-                this.$store.commit(SET_MUTE_AUDIO, localAudioMutedDefault);
                 return this.onSwitchMediaStream({screen: true});
             },
             onStopScreenSharing() {
@@ -360,7 +356,7 @@
                   this.$refs.localVideoComponent.setSource(media);
                   this.$refs.localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
                   this.$refs.localVideoComponent.setUserName(this.myUserName);
-                  this.$refs.localVideoComponent.setDisplayAudioMute(this.audioMuted);
+
                   console.log("Publishing " + (screen ? "screen" : "camera"));
                   this.clientLocal.publish(media);
                   console.log("Successfully published " + (screen ? "screen" : "camera") + " streamId=", this.$refs.localVideoComponent.getStreamId());
@@ -369,11 +365,19 @@
                   } else {
                       this.$store.commit(SET_SHARE_SCREEN, false);
                   }
+
+                  // actually during screen sharing there is no audio track - we calculate the actual audio muting state
+                  let actualAudioMuted = true;
                   this.localMediaStream.getTracks().forEach(t => {
                       console.log("localMediaStream track kind=", t.kind, " trackId=", t.id, " local video tag id", this.$refs.localVideoComponent.$props.id, " streamId=", this.$refs.localVideoComponent.getStreamId());
-                  })
+                      if (t.kind === "audio") {
+                          actualAudioMuted = t.muted;
+                      }
+                  });
+                  this.$store.commit(SET_MUTE_AUDIO, actualAudioMuted);
+                  this.$refs.localVideoComponent.setDisplayAudioMute(actualAudioMuted);
                   this.insideSwitchingCameraScreen = false;
-                });
+                }).then(() => {this.notifyWithData(); return Promise.resolve()});
             },
             startVideoProcess() {
                 this.getConfig()

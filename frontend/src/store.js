@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from "axios";
-import {localAudioMutedDefault} from "./utils";
 
 Vue.use(Vuex);
 
@@ -37,7 +36,7 @@ const store = new Vuex.Store({
     state: {
         currentUser: null,
         muteVideo: false,
-        muteAudio: localAudioMutedDefault,
+        muteAudio: false,
         title: "",
         isShowSearch: true,
         chatId: null,
