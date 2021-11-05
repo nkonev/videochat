@@ -208,8 +208,7 @@ func deserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 	return chatId, ownerId, filename, nil
 }
 
-func getMaxAllowedConsumption(userPrincipalDto *auth.AuthResult) (int64, error) {
-	isUnlimited := userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN")
+func getMaxAllowedConsumption(isUnlimited bool) (int64, error) {
 	if isUnlimited {
 		var stat syscall.Statfs_t
 		wd := viper.GetString("limits.stat.dir")
@@ -241,11 +240,11 @@ func calcUserFilesConsumption(minioClient *minio.Client, bucketName string, user
 }
 
 func checkUserLimit(minioClient *minio.Client, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64) (bool, int64, int64, error) {
-	if !viper.GetBool("limits.enabled") {
-		return true, 0, 0, nil
-	}
+	limitsEnabled := viper.GetBool("limits.enabled")
 	consumption := calcUserFilesConsumption(minioClient, bucketName, userPrincipalDto.UserId)
-	maxAllowed, err := getMaxAllowedConsumption(userPrincipalDto)
+	isUnlimited := (userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN")) || !limitsEnabled
+
+	maxAllowed, err := getMaxAllowedConsumption(isUnlimited)
 	if err != nil {
 		Logger.Errorf("Error during calculating max allowed %v", err)
 		return false, 0, 0, err
