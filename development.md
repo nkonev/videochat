@@ -197,7 +197,9 @@ nvm install v15.11.0
 * BigBlueButton
 * LiveKit
 
-# Known issue
+# Known issues
+
+## Codecs
 When Call started in th next sequence
 * Desktop Firefox hd vp8 (1)
 * Mobile Chrome hd vp8 (2)
@@ -217,3 +219,6 @@ then all works ok.
 
 
 Also it works good when all the devices use the same h264.
+
+## IceLite
+When one of participants has the public IP (it's possible) there are no video. I turned on IceLite in config in order to fix it.
