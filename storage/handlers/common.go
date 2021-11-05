@@ -224,11 +224,8 @@ func getMaxAllowedConsumption(isUnlimited bool) (int64, error) {
 	}
 }
 
-func calcUserFilesConsumption(minioClient *minio.Client, bucketName string, userId int64) int64 {
-	// TODO take on account userId
-
+func calcUserFilesConsumption(minioClient *minio.Client, bucketName string) int64 {
 	var totalBucketConsumption int64
-
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 
@@ -241,7 +238,8 @@ func calcUserFilesConsumption(minioClient *minio.Client, bucketName string, user
 
 func checkUserLimit(minioClient *minio.Client, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64) (bool, int64, int64, error) {
 	limitsEnabled := viper.GetBool("limits.enabled")
-	consumption := calcUserFilesConsumption(minioClient, bucketName, userPrincipalDto.UserId)
+	// TODO take on account userId
+	consumption := calcUserFilesConsumption(minioClient, bucketName)
 	isUnlimited := (userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN")) || !limitsEnabled
 
 	maxAllowed, err := getMaxAllowedConsumption(isUnlimited)
