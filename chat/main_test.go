@@ -578,6 +578,23 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 	var countUnreadMessage int64 = int64(countUnreadMessageFloat.(float64))
 	assert.Equal(t, int64(1), countUnreadMessage)
 
+
+
+	_, data, err = websocketConnection.ReadMessage()
+	if err != nil {
+		assert.Fail(t, err.Error())
+	}
+	strDataAboutUnreadMessage2 := string(data)
+
+	typeStringUnreadMessage2 := interfaceToString(getJsonPathResult(t, strDataAboutUnreadMessage2, "$.result.data.data.type").(interface{}))
+	assert.Equal(t, "all_unread_messages_changed", typeStringUnreadMessage2)
+
+	countUnreadMessageFloat2 := getJsonPathResult(t, strDataAboutUnreadMessage2, "$.result.data.data.payload.allUnreadMessages").(interface{})
+	var countUnreadMessage2 int64 = int64(countUnreadMessageFloat2.(float64))
+	assert.Equal(t, int64(1), countUnreadMessage2)
+
+
+
 	// send message to chat again
 	messageRequest2 := &http.Request{
 		Method: "POST",
@@ -594,14 +611,14 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 	if err != nil {
 		assert.Fail(t, err.Error())
 	}
-	strDataAboutUnreadMessage2 := string(data)
+	strDataAboutUnreadMessage3 := string(data)
 
-	typeStringUnreadMessage2 := interfaceToString(getJsonPathResult(t, strDataAboutUnreadMessage2, "$.result.data.data.type").(interface{}))
-	assert.Equal(t, "unread_messages_changed", typeStringUnreadMessage2)
+	typeStringUnreadMessage3 := interfaceToString(getJsonPathResult(t, strDataAboutUnreadMessage3, "$.result.data.data.type").(interface{}))
+	assert.Equal(t, "unread_messages_changed", typeStringUnreadMessage3)
 
-	countUnreadMessageFloat2 := getJsonPathResult(t, strDataAboutUnreadMessage2, "$.result.data.data.payload.unreadMessages").(interface{})
-	var countUnreadMessage2 int64 = int64(countUnreadMessageFloat2.(float64))
-	assert.Equal(t, int64(2), countUnreadMessage2)
+	countUnreadMessageFloat3 := getJsonPathResult(t, strDataAboutUnreadMessage3, "$.result.data.data.payload.unreadMessages").(interface{})
+	var countUnreadMessage3 int64 = int64(countUnreadMessageFloat3.(float64))
+	assert.Equal(t, int64(2), countUnreadMessage3)
 
 	assert.NoError(t, s.Shutdown(), "error in app shutdown")
 }
