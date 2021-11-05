@@ -37,6 +37,7 @@
                     ></v-select>
 
                     <v-select
+                        :disabled="serverPreferredConfig"
                         :messages="$vuetify.lang.t('$vuetify.requested_codec')"
                         :items="codecItems"
                         dense
@@ -78,8 +79,9 @@
         getStoredAudioDevicePresents,
         setStoredAudioPresents,
         getStoredVideoDevicePresents,
-        setStoredVideoPresents, setCodec, getCodec
+        setStoredVideoPresents, setCodec, getCodec, hasLength
     } from "./utils";
+    import axios from "axios";
     import {videochat_name} from "./routes";
 
     export default {
@@ -87,6 +89,7 @@
             return {
                 changing: false,
                 show: false,
+                serverPreferredConfig: false,
 
                 audioPresents: null,
                 videoPresents: null,
@@ -100,7 +103,18 @@
                 this.videoPresents = getStoredVideoDevicePresents();
                 this.videoQuality = getVideoResolution();
                 this.codec = getCodec();
+                this.serverPreferredConfig = false;
                 this.show = true;
+                axios
+                    .get(`/api/video/${this.chatId}/config`)
+                    .then(response => response.data)
+                    .then(respData => {
+                        if (hasLength(respData.codec)) {
+                            this.serverPreferredConfig = true;
+                            this.codec = respData.codec;
+                        }
+                    })
+
             },
             closeModal() {
                 this.show = false;
@@ -150,7 +164,10 @@
             },
             codecItems() {
                 return ['vp8', 'vp9', 'h264']
-            }
+            },
+            chatId() {
+                return this.$route.params.id
+            },
         },
         created() {
             bus.$on(OPEN_VIDEO_SETTINGS, this.showModal);

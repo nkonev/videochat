@@ -251,6 +251,7 @@ type ICEServerConfigDto struct {
 
 type FrontendConfigDto struct {
 	ICEServers []ICEServerConfigDto `json:"iceServers"`
+	PreferredCodec string `json:"codec"`
 }
 
 func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
@@ -276,6 +277,7 @@ func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 		}
 		responseSliceFrontendConfig.ICEServers = append(responseSliceFrontendConfig.ICEServers, newElement)
 	}
+	responseSliceFrontendConfig.PreferredCodec = frontendConfig.PreferredCodec
 
 	marshal, err := json.Marshal(responseSliceFrontendConfig)
 	if err != nil {

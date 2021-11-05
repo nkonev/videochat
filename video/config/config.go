@@ -18,7 +18,8 @@ type ExtendedICEServerConfig struct {
 }
 
 type FrontendConfig struct {
-	ICEServers []ExtendedICEServerConfig `mapstructure:"iceserver"`
+	ICEServers     []ExtendedICEServerConfig `mapstructure:"iceserver"`
+	PreferredCodec string `mapstructure:"preferredCodec"`
 }
 
 type RabbitMqConfig struct {

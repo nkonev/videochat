@@ -370,7 +370,7 @@
                 return this.currentUser != null;
             },
             shouldDisplayVideoSettings() {
-                return true;
+                return this.chatId;
             },
             onPressWebsocketRestored() {
                 this.showWebsocketRestored = false;

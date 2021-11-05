@@ -46,7 +46,7 @@
         getWebsocketUrlPrefix,
         getVideoResolution,
         getStoredAudioDevicePresents,
-        getStoredVideoDevicePresents, getCodec,
+        getStoredVideoDevicePresents, getCodec, hasLength,
     } from "./utils";
     import { v4 as uuidv4 } from 'uuid';
     import vuetify from './plugins/vuetify'
@@ -111,8 +111,14 @@
                 );
                 this.remotesDiv = document.getElementById("video-container");
 
-                const codec = getCodec();
-                this.clientLocal = new Client(this.signalLocal, {...configObj, codec: codec});
+                if (hasLength(configObj.codec)) {
+                    console.log("Server overrided codec to", configObj.codec)
+                    this.preferredCodec = configObj.codec;
+                } else {
+                    this.preferredCodec = getCodec();
+                    console.log("Used codec from localstorage", this.preferredCodec)
+                }
+                this.clientLocal = new Client(this.signalLocal, {...configObj, codec: this.preferredCodec});
 
                 this.clientLocal.onspeaker = (messageEvent) => {
                     console.debug("Speaking event", messageEvent);
@@ -321,7 +327,6 @@
                 this.insideSwitchingCameraScreen = true;
 
                 const resolution = getVideoResolution();
-                const codec = getCodec();
 
                 const audio = getStoredAudioDevicePresents();
                 const video = getStoredVideoDevicePresents();
@@ -344,13 +349,13 @@
                     LocalStream.getDisplayMedia({
                         audio: audio,
                         video: true,
-                        codec: codec,
+                        codec: this.preferredCodec,
                     }) :
                     LocalStream.getUserMedia({
                         resolution: resolution,
                         audio: audio,
                         video: video,
-                        codec: codec,
+                        codec: this.preferredCodec,
                     });
 
                 return localStream.then((media) => {

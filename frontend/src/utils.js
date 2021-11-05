@@ -132,3 +132,10 @@ export const moveToFirstPosition = (array, element) => {
     }
 }
 
+export const hasLength = (str) => {
+    if (!str) {
+        return false
+    } else {
+        return str.length
+    }
+}

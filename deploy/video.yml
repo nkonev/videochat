@@ -109,6 +109,8 @@ http:
   disableCompression: false
 
 frontend:
+  # in ion-sdk-js vp8 is default
+  preferredCodec: h264
   iceserver:
     - server:
         urls: ["turn:api.site.local:3478"]
