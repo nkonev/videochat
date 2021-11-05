@@ -323,10 +323,10 @@
                 const resolution = getVideoResolution();
                 const codec = getCodec();
 
-                bus.$emit(VIDEO_PARAMETERS_CHANGED);
-
                 const audio = getStoredAudioDevicePresents();
                 const video = getStoredVideoDevicePresents();
+
+                bus.$emit(VIDEO_PARAMETERS_CHANGED);
 
                 if (!audio && !video && !screen) {
                     console.info("Not able to build local media stream, returning a successful promise");
@@ -379,7 +379,10 @@
                   this.$store.commit(SET_MUTE_AUDIO, actualAudioMuted);
                   this.$refs.localVideoComponent.setDisplayAudioMute(actualAudioMuted);
                   this.insideSwitchingCameraScreen = false;
-                }).then(() => {this.notifyWithData(); return Promise.resolve(true)});
+                }).then(() => {
+                    this.notifyWithData();
+                    return Promise.resolve(true)
+                });
             },
             startVideoProcess() {
                 this.getConfig()
