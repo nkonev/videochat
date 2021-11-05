@@ -277,7 +277,7 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 					callback(reply, err)
 				}
 			} else {
-				Logger.Error("Unknown method %v", event.Method)
+				Logger.Errorf("Unknown method %v", event.Method)
 				callback(reply, errors.New("Unknown method"))
 			}
 		})
