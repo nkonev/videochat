@@ -21,6 +21,7 @@ type Notifications interface {
 	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
+	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutVideoCallChanged(dto dto.ChatNotifyDto, participantIds []int64)
 	NotifyAboutProfileChanged(user *dto.User)
@@ -143,7 +144,7 @@ type ChatUnreadMessageChanged struct {
 func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx) {
 	for _, participantId := range userIds {
 		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-		GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
+		GetLogEntry(c.Request()).Infof("Sending notification about unread messages to participantChannel: %v", participantChannel)
 
 		unreadMessages, err := tx.GetUnreadMessagesCount(chatId, participantId)
 		if err != nil {
@@ -170,6 +171,37 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 		}
 	}
 }
+
+func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx){
+	for _, participantId := range userIds {
+		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
+		GetLogEntry(c.Request()).Infof("Sending notification about all unread messages to participantChannel: %v", participantChannel)
+
+		unreadMessages, err := tx.GetAllUnreadMessagesCount(participantId)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("error during get all unread messages for userId=%v: %s", participantId, err)
+			continue
+		}
+
+		payload := &dto.AllUnreadMessages{
+			MessagesCount: unreadMessages,
+		}
+
+		notification := dto.CentrifugeNotification{
+			Payload:   payload,
+			EventType: "all_unread_messages_changed",
+		}
+		if marshalledBytes, err := json.Marshal(notification); err != nil {
+			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err)
+		} else {
+			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
+			if err != nil {
+				GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
+			}
+		}
+	}
+}
+
 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
 	// we send a notification only to those people who are currently reading the chat

@@ -25,6 +25,8 @@
     import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL, SET_EDIT_MESSAGE, OPEN_VIEW_FILES_DIALOG} from "./bus";
     import debounce from "lodash/debounce";
     import { format, parseISO, differenceInDays } from 'date-fns';
+    import {getData} from "@/centrifugeConnection";
+    import {setIcon} from "@/utils";
 
     const TYPE_MESSAGE_READ = "message_read";
 
@@ -32,7 +34,13 @@
         props: ['item', 'chatId', 'highlight'],
         methods: {
             onMessageClick(dto) {
-                this.centrifuge.send({payload: { chatId: this.chatId, messageId: dto.id}, "type": TYPE_MESSAGE_READ})
+                this.centrifuge.namedRPC(TYPE_MESSAGE_READ, { chatId: parseInt(this.chatId), messageId: dto.id}).then(value => {
+                    console.debug("New messages response", value);
+                    if (getData(value)) {
+                        const currentNewMessages = getData(value).allUnreadMessages > 0;
+                        setIcon(currentNewMessages)
+                    }
+                })
             },
             onMessageMouseMove(item) {
                 this.onMessageClick(item);

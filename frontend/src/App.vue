@@ -226,7 +226,7 @@
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
     import SimpleModal from "./SimpleModal";
     import ChooseAvatar from "./ChooseAvatar";
-    import {getCorrectUserAvatar, getStoredAudioDevicePresents} from "./utils";
+    import {getCorrectUserAvatar, getStoredAudioDevicePresents, setIcon} from "./utils";
     import ChatParticipants from "./ChatParticipants";
     import PermissionsWarning from "./PermissionsWarning";
     import FindUser from "./FindUser";
@@ -235,6 +235,7 @@
     import VideoSettings from './VideoSettings';
     import FileTextEditModal from "./FileTextEditModal";
     import LanguageModal from "./LanguageModal";
+    import {getData} from "@/centrifugeConnection";
 
     const audio = new Audio("/call.mp3");
 
@@ -313,6 +314,13 @@
                 if (connected && wasInitialized) {
                     this.showWebsocketRestored = true;
                 }
+                this.centrifuge.namedRPC("check_for_new_messages").then(value => {
+                    console.debug("New messages response", value);
+                    if (getData(value)) {
+                        const currentNewMessages = getData(value).allUnreadMessages > 0;
+                        setIcon(currentNewMessages)
+                    }
+                })
             },
             onInfoClicked() {
                 bus.$emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);

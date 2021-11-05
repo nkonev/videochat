@@ -221,6 +221,7 @@ func (mc MessageHandler) PostMessage(c echo.Context) error {
 		}
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
+		mc.notificator.ChatNotifyAllUnreadMessageCount(participantIds, c, tx)
 		return c.JSON(http.StatusCreated, message)
 	})
 	if errOuter != nil {

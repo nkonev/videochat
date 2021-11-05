@@ -4,24 +4,25 @@ import vuetify from './plugins/vuetify'
 import {setupCentrifuge} from "./centrifugeConnection"
 import axios from "axios";
 import bus, {
-  CHAT_ADD,
-  CHAT_DELETED,
-  CHAT_EDITED,
-  MESSAGE_ADD,
-  MESSAGE_DELETED,
-  MESSAGE_EDITED,
-  UNREAD_MESSAGES_CHANGED,
-  USER_PROFILE_CHANGED,
-  CHANGE_WEBSOCKET_STATUS,
-  LOGGED_OUT,
-  LOGGED_IN,
-  VIDEO_CALL_INVITED,
-  VIDEO_CALL_KICKED,
-  VIDEO_CALL_CHANGED, FORCE_MUTE,
+    CHAT_ADD,
+    CHAT_DELETED,
+    CHAT_EDITED,
+    MESSAGE_ADD,
+    MESSAGE_DELETED,
+    MESSAGE_EDITED,
+    UNREAD_MESSAGES_CHANGED,
+    USER_PROFILE_CHANGED,
+    CHANGE_WEBSOCKET_STATUS,
+    LOGGED_OUT,
+    LOGGED_IN,
+    VIDEO_CALL_INVITED,
+    VIDEO_CALL_KICKED,
+    VIDEO_CALL_CHANGED, FORCE_MUTE,
 } from './bus';
 import store, {UNSET_USER} from './store'
 import router from './router.js'
 import {getData, getProperData} from "./centrifugeConnection";
+import {setIcon} from "@/utils";
 
 let vm;
 
@@ -104,6 +105,10 @@ vm = new Vue({
       } else if (getData(ctx).type === 'unread_messages_changed') {
         const d = getProperData(ctx);
         bus.$emit(UNREAD_MESSAGES_CHANGED, d);
+      } else if (getData(ctx).type === 'all_unread_messages_changed') {
+          const d = getProperData(ctx);
+          const currentNewMessages = d.allUnreadMessages > 0;
+          setIcon(currentNewMessages)
       } else if (getData(ctx).type === 'user_profile_changed') {
         const d = getProperData(ctx);
         bus.$emit(USER_PROFILE_CHANGED, d);
@@ -122,33 +127,6 @@ vm = new Vue({
       }
 
     });
-
-    let prevNewMessages = false;
-    setInterval(()=>{
-        if (this.centrifugeSessionId) {
-            this.centrifuge.namedRPC("check_for_new_messages").then(value => {
-                console.debug("New messages response", value);
-                if (getData(value)) {
-                    var link = document.querySelector("link[rel~='icon']");
-                    if (!link) {
-                        link = document.createElement('link');
-                        link.rel = 'icon';
-                        document.getElementsByTagName('head')[0].appendChild(link);
-                    }
-                    const currentNewMessages = getData(value).messagesCount > 0;
-                    if (currentNewMessages !== prevNewMessages) {
-                        prevNewMessages = currentNewMessages;
-                        console.log("Changing new messages=", currentNewMessages);
-                        if (currentNewMessages) {
-                            link.href = '/favicon_new.svg';
-                        } else {
-                            link.href = '/favicon.svg';
-                        }
-                    }
-                }
-            })
-        }
-    }, 2000)
   },
   // https://ru.vuejs.org/v2/guide/render-function.html
   render: h => h(App, {ref: 'appRef'})

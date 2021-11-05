@@ -5,3 +5,6 @@ type CentrifugeNotification struct {
 	EventType string      `json:"type"`
 }
 
+type AllUnreadMessages struct {
+	MessagesCount     int64      `json:"allUnreadMessages"`
+}
