@@ -78,6 +78,8 @@
 
     const pageSize = 40;
 
+    const scrollingThreshold = 100; // px
+
     const calcSplitpanesHeight = () => {
         const appBarHeight = parseInt(document.getElementById("myAppBar").style.height.replace('px', ''));
         const displayableWindowHeight = window.innerHeight;
@@ -350,10 +352,7 @@
                 });
             },
             isScrolledToBottom() {
-                return this.scrollerDiv.scrollHeight - this.scrollerDiv.scrollTop === this.scrollerDiv.clientHeight
-            },
-            isScrolledToTop() {
-                return this.scrollerDiv.scrollTop === 0
+                return this.scrollerDiv.scrollHeight - this.scrollerDiv.scrollTop - this.scrollerDiv.clientHeight < scrollingThreshold
             },
             getInfo() {
                 return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
