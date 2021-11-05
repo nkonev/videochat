@@ -122,6 +122,33 @@ vm = new Vue({
       }
 
     });
+
+    let prevNewMessages = false;
+    setInterval(()=>{
+        if (this.centrifugeSessionId) {
+            this.centrifuge.namedRPC("check_for_new_messages").then(value => {
+                console.debug("New messages response", value);
+                if (getData(value)) {
+                    var link = document.querySelector("link[rel~='icon']");
+                    if (!link) {
+                        link = document.createElement('link');
+                        link.rel = 'icon';
+                        document.getElementsByTagName('head')[0].appendChild(link);
+                    }
+                    const currentNewMessages = getData(value).messagesCount > 0;
+                    if (currentNewMessages !== prevNewMessages) {
+                        prevNewMessages = currentNewMessages;
+                        console.log("Changing new messages=", currentNewMessages);
+                        if (currentNewMessages) {
+                            link.href = '/favicon_new.svg';
+                        } else {
+                            link.href = '/favicon.svg';
+                        }
+                    }
+                }
+            })
+        }
+    }, 2000)
   },
   // https://ru.vuejs.org/v2/guide/render-function.html
   render: h => h(App, {ref: 'appRef'})
