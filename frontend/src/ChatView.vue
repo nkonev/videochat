@@ -402,10 +402,14 @@
             onLoggedIn() {
                 this.getInfo();
                 this.subscribe();
-                this.resetVariables();
+                // seems it need in order to mitigate bug with last login message
+                if (this.items.length === 0) {
+                    this.reloadItems();
+                }
             },
             onLoggedOut() {
                 this.unsubscribe();
+                this.resetVariables();
             },
             subscribe() {
                 const channel = "chatMessages" + this.chatId;
@@ -434,12 +438,12 @@
             onWsRestoredRefresh() {
                 this.resetVariables();
                 // Reset direction in order to fix bug when user relogin and after press button "update" all messages disappears due to non-initial direction.
+                this.reloadItems();
             },
             resetVariables() {
                 this.aDirection = directionTop;
                 this.items = [];
                 this.startingFromItemId = null;
-                this.reloadItems();
             },
             onVideoCallChanged(dto) {
                 if (dto.chatId == this.chatId) {
