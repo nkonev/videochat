@@ -221,7 +221,7 @@ func getMaxAllowedConsumption(userPrincipalDto *auth.AuthResult) (int64, error) 
 		u := int64(stat.Bavail * uint64(stat.Bsize))
 		return u, nil
 	} else {
-		return viper.GetInt64("limits.default.per.user.max"), nil
+		return viper.GetInt64("limits.default.all.users.limit"), nil
 	}
 }
 
@@ -241,6 +241,9 @@ func calcUserFilesConsumption(minioClient *minio.Client, bucketName string, user
 }
 
 func checkUserLimit(minioClient *minio.Client, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64) (bool, int64, int64, error) {
+	if !viper.GetBool("limits.enabled") {
+		return true, 0, 0, nil
+	}
 	consumption := calcUserFilesConsumption(minioClient, bucketName, userPrincipalDto.UserId)
 	maxAllowed, err := getMaxAllowedConsumption(userPrincipalDto)
 	if err != nil {
