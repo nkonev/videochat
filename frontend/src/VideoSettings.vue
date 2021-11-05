@@ -37,7 +37,7 @@
                     ></v-select>
 
                     <v-select
-                        :disabled="serverPreferredConfig"
+                        :disabled="serverPreferredCodec"
                         :messages="$vuetify.lang.t('$vuetify.requested_codec')"
                         :items="codecItems"
                         dense
@@ -89,7 +89,7 @@
             return {
                 changing: false,
                 show: false,
-                serverPreferredConfig: false,
+                serverPreferredCodec: false,
 
                 audioPresents: null,
                 videoPresents: null,
@@ -103,14 +103,14 @@
                 this.videoPresents = getStoredVideoDevicePresents();
                 this.videoQuality = getVideoResolution();
                 this.codec = getCodec();
-                this.serverPreferredConfig = false;
+                this.serverPreferredCodec = false;
                 this.show = true;
                 axios
                     .get(`/api/video/${this.chatId}/config`)
                     .then(response => response.data)
                     .then(respData => {
                         if (hasLength(respData.codec)) {
-                            this.serverPreferredConfig = true;
+                            this.serverPreferredCodec = true;
                             this.codec = respData.codec;
                         }
                     })
