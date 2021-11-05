@@ -164,11 +164,14 @@ func getUnreadMessagesCountCommon(co CommonOperations, chatId int64, userId int6
 func getAllUnreadMessagesCountCommon(co CommonOperations, userId int64) (int64, error) {
 	var count int64
 	row := co.QueryRow(`
-SELECT SUM(unread) FROM (
-	SELECT chp.chat_id, (
-		SELECT COUNT(*) FROM message WHERE chat_id = chp.chat_id AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = $1 AND chat_id = chp.chat_id), 0)
-		) AS unread FROM chat_participant chp WHERE chp.user_id = $1
-) AS alias_ignored;
+SELECT COALESCE(
+	(SELECT SUM(unread) FROM (
+		SELECT chp.chat_id, (
+			SELECT COUNT(*) FROM message WHERE chat_id = chp.chat_id AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = $1 AND chat_id = chp.chat_id), 0)
+			) AS unread FROM chat_participant chp WHERE chp.user_id = $1
+	) AS alias_ignored),
+	0
+)
 `, userId)
 	err := row.Scan(&count)
 	if err != nil {
