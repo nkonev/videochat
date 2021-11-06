@@ -197,6 +197,9 @@ nvm install v15.11.0
 * BigBlueButton
 * LiveKit
 
+# SDP specification
+https://datatracker.ietf.org/doc/html/rfc4566#section-5
+
 # Known issues
 
 ## Codecs
