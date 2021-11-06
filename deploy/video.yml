@@ -43,9 +43,10 @@ router:
     enabletemporallayer: false
 
 webrtc:
+  singleport: 5000
 # Range of ports that ion accepts WebRTC traffic on
 # Format: [min, max]   and max - min >= 100
-  portrange: [5000, 5100]
+#  portrange: [5000, 5100]
 # if sfu behind nat, set iceserver
 # iceserver:
 #   urls: ["stun:stun.stunprotocol.org:3478"]
