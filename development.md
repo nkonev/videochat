@@ -200,6 +200,13 @@ nvm install v15.11.0
 # SDP specification
 https://datatracker.ietf.org/doc/html/rfc4566#section-5
 
+https://webrtchacks.com/limit-webrtc-bandwidth-sdp/
+https://habr.com/en/company/Voximplant/blog/316840/
+
+
+# ion-SFU FAQ
+https://github.com/pion/ion-sfu/pull/496/files
+
 # Known issues
 
 ## Codecs
