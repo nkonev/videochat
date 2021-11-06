@@ -100,8 +100,6 @@ chat:
   url:
     base: "http://chat:1235"
     access: "/internal/access"
-    notify: "/internal/video/notify"
-    kick: "/internal/video/kick"
 
 # Rest client
 http:

@@ -15,8 +15,7 @@ providers:
     swarmMode: true
     watch: true
     exposedByDefault: false
-  file:
-    directory: /traefik_conf/dynamic
+
 api:
   insecure: true
   dashboard: true
