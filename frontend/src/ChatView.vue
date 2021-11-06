@@ -80,12 +80,12 @@
 
     const scrollingThreshold = 100; // px
 
-    const splitpanesThreshhold = 1; // px
+    const splitpanesThreshold = 1; // px
 
     const calcSplitpanesHeight = () => {
         const appBarHeight = parseInt(document.getElementById("myAppBar").style.height.replace('px', ''));
         const displayableWindowHeight = window.innerHeight;
-        const ret = displayableWindowHeight - appBarHeight - splitpanesThreshhold;
+        const ret = displayableWindowHeight - appBarHeight - splitpanesThreshold;
         console.log("splitpanesHeight", ret);
         return ret;
     }
