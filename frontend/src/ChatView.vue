@@ -440,6 +440,7 @@
             onWsRestoredRefresh() {
                 this.resetVariables();
                 // Reset direction in order to fix bug when user relogin and after press button "update" all messages disappears due to non-initial direction.
+                this.getInfo();
                 this.reloadItems();
             },
             resetVariables() {
