@@ -22,6 +22,7 @@ import (
 	"nkonev.name/video/service"
 	"nkonev.name/video/utils"
 	"strings"
+	"time"
 )
 
 //go:embed static
@@ -139,6 +140,9 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	defer p.Close()
 
 	jc := jsonrpc2.NewConn(r.Context(), websocketjsonrpc2.NewObjectStream(c), je)
+	h.service.AddToJsonRpcIndex(userId, jc)
+	defer h.service.RemoveFromJsonRpcIndex(userId, jc)
+
 	<-jc.DisconnectNotify()
 }
 
@@ -313,14 +317,62 @@ func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	silent, err := utils.ParseBoolean(r.URL.Query().Get("silent"))
+	silent, _ := utils.ParseBoolean(r.URL.Query().Get("silent"))
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		logger.Info("Unable to read silent param, assuming false")
 	}
 
 	if h.service.KickUser(chatId, userToKickId, silent) != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (h *Handler) ForceMute(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	chatId, behalfUserId, err := parseChatIdAndUserId(vars["chatId"], r.Header.Get("X-Auth-UserId")) // behalf this userId
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	userToMuteId, err := utils.ParseInt64(r.URL.Query().Get("userId"))
+	if err != nil {
+		logger.Error(err, "Failed during parse chat id")
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	admin, err := h.service.IsAdmin(behalfUserId, chatId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if !admin {
+		logger.Info("You have no access to this chat", "user_id", behalfUserId, "chat_id", chatId)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	h.service.NotifyUserAboutForceMute(r.Context(), chatId, userToMuteId)
+}
+
+func (h *Handler) PublicKick(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	chatId, userToKickId, err := parseChatIdAndUserId(vars["chatId"], r.URL.Query().Get("userId"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	h.service.SendKickMessage(r.Context(), chatId, userToKickId)
+
+	go h.forceKickAfterDelay(chatId, userToKickId)
+}
+
+func (h *Handler) forceKickAfterDelay(chatId, userToKickId int64) {
+	duration := h.conf.FrontendConfig.ForceKickAfter
+	if duration > 0 {
+		time.Sleep(duration)
+		if err := h.service.KickUser(chatId, userToKickId, false); err != nil {
+			logger.Error(err, "Error during force kick")
+		}
 	}
 }
 

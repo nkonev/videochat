@@ -187,6 +187,8 @@ func main() {
 	r.Handle("/video/{chatId}/ws", http.HandlerFunc(handler.SfuHandler)).Methods("GET")
 	r.Handle("/video/{chatId}/users", http.HandlerFunc(handler.CountUsers)).Methods("GET")
 	r.Handle("/video/{chatId}/config", http.HandlerFunc(handler.Config)).Methods("GET")
+	r.Handle("/video/{chatId}/mute", http.HandlerFunc(handler.ForceMute)).Methods("PUT")
+	r.Handle("/video/{chatId}/kick", http.HandlerFunc(handler.PublicKick)).Methods("PUT")
 
 	r.Handle("/internal/{chatId}/kick", http.HandlerFunc(handler.Kick)).Methods("PUT")
 	r.Handle("/internal/{chatId}/user", http.HandlerFunc(handler.UserByStreamId)).Methods("GET")

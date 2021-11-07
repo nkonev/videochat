@@ -100,6 +100,7 @@ chat:
   url:
     base: "http://chat:1235"
     access: "/internal/access"
+    isChatAdmin: "/internal/is-admin"
 
 # Rest client
 http:
@@ -110,6 +111,7 @@ http:
 frontend:
   # in ion-sdk-js vp8 is default
   preferredCodec: h264
+  forceKickAfter: 5s
   iceserver:
     - server:
         urls: ["turn:api.site.local:3478"]

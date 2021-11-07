@@ -33,7 +33,7 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import bus, {
-      AUDIO_START_MUTING, FORCE_MUTE, REQUEST_CHANGE_VIDEO_PARAMETERS,
+      AUDIO_START_MUTING, REQUEST_CHANGE_VIDEO_PARAMETERS,
       SHARE_SCREEN_START,
       SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
       VIDEO_START_MUTING
@@ -50,6 +50,7 @@
     } from "./utils";
     import { v4 as uuidv4 } from 'uuid';
     import vuetify from './plugins/vuetify'
+    import {chat_name, videochat_name} from "@/routes";
 
     const UserVideoClass = Vue.extend(UserVideo);
 
@@ -139,6 +140,14 @@
                   console.info("Signal is closed, something gonna happen");
                   this.tryRestartVideoProcess();
                 }
+                this.signalLocal.on_notify("force_mute", dto => {
+                    console.log("Got force mute", dto);
+                    this.onForceMuteByAdmin(dto);
+                });
+                this.signalLocal.on_notify("kick", dto => {
+                    console.log("Got kick", dto);
+                    this.onVideoCallKicked(dto);
+                });
 
                 this.peerId = uuidv4();
                 this.signalLocal.onopen = () => {
@@ -492,7 +501,13 @@
             },
             getNewId() {
                 return uuidv4();
-            }
+            },
+            onVideoCallKicked(e) {
+                if (this.$route.name == videochat_name && e.chatId == this.chatId) {
+                    console.log("kicked");
+                    this.$router.push({name: chat_name});
+                }
+            },
         },
         mounted() {
             this.chatId = this.$route.params.id;
@@ -520,7 +535,6 @@
             bus.$on(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
-            bus.$on(FORCE_MUTE, this.onForceMuteByAdmin);
         },
         destroyed() {
             bus.$off(SHARE_SCREEN_START, this.onStartScreenSharing);
@@ -529,7 +543,6 @@
             bus.$off(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
-            bus.$off(FORCE_MUTE, this.onForceMuteByAdmin);
         },
         components: {
             UserVideo

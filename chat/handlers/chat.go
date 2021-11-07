@@ -662,6 +662,26 @@ func (ch ChatHandler) CheckAccess(c echo.Context) error {
 	}
 }
 
+func (ch ChatHandler) IsAdmin(c echo.Context) error {
+	chatId, err := GetQueryParamAsInt64(c, "chatId")
+	if err != nil {
+		return err
+	}
+	userId, err := GetQueryParamAsInt64(c, "userId")
+	if err != nil {
+		return err
+	}
+	isAdmin, err := ch.db.IsAdmin(userId, chatId)
+	if err != nil {
+		return err
+	}
+	if isAdmin {
+		return c.NoContent(http.StatusOK)
+	} else {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+}
+
 type TetATetResponse struct {
 	Id int64 `json:"id"`
 }

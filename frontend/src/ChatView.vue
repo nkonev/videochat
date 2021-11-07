@@ -41,7 +41,6 @@
         LOGGED_IN,
         LOGGED_OUT,
         VIDEO_CALL_CHANGED,
-        VIDEO_CALL_KICKED,
         MESSAGE_BROADCAST,
         REFRESH_ON_WEBSOCKET_RESTORED,
     } from "./bus";
@@ -430,12 +429,6 @@
             unsubscribe() {
                 this.chatMessagesSubscription.unsubscribe();
             },
-            onVideoCallKicked(e) {
-                if (this.$route.name == videochat_name && e.chatId == this.chatId) {
-                    console.log("kicked");
-                    this.$router.push({name: chat_name});
-                }
-            },
             onWsRestoredRefresh() {
                 this.resetVariables();
                 // Reset direction in order to fix bug when user relogin and after press button "update" all messages disappears due to non-initial direction.
@@ -486,7 +479,6 @@
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(LOGGED_IN, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
-            bus.$on(VIDEO_CALL_KICKED, this.onVideoCallKicked);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
 
@@ -503,7 +495,6 @@
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(LOGGED_IN, this.onLoggedIn);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
-            bus.$off(VIDEO_CALL_KICKED, this.onVideoCallKicked);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
 

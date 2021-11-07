@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	log "github.com/pion/ion-sfu/pkg/logger"
 	"github.com/pion/ion-sfu/pkg/sfu"
 	"github.com/pion/webrtc/v3"
+	"github.com/sourcegraph/jsonrpc2"
 	"net/http"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
@@ -21,6 +23,7 @@ var logger = log.New()
 type ExtendedService struct {
 	sfu             *sfu.SFU
 	peerUserIdIndex connectionsLockableMap
+	userConnectionsIndex userConnectionsMap
 	rabbitMqPublisher *producer.RabbitPublisher
 	conf            *config.ExtendedConfig
 	client          *http.Client
@@ -43,6 +46,13 @@ type connectionsLockableMap struct {
 	connectionWithData
 }
 
+type userConnectionsList []*jsonrpc2.Conn
+type mapUserConnectionsList map[int64]userConnectionsList
+type userConnectionsMap struct {
+	sync.RWMutex
+	mapUserConnectionsList
+}
+
 func NewExtendedService(
 	sfu *sfu.SFU,
 	conf *config.ExtendedConfig,
@@ -55,6 +65,10 @@ func NewExtendedService(
 		peerUserIdIndex: connectionsLockableMap{
 			RWMutex:            sync.RWMutex{},
 			connectionWithData: connectionWithData{},
+		},
+		userConnectionsIndex: userConnectionsMap {
+			RWMutex:            sync.RWMutex{},
+			mapUserConnectionsList: mapUserConnectionsList{},
 		},
 		rabbitMqPublisher: rabbitMqPublisher,
 		client:   client,
@@ -227,6 +241,27 @@ func (h *ExtendedService) Notify(chatId int64, data *dto.StoreNotifyDto) error {
 	return h.rabbitMqPublisher.Publish(marshal)
 }
 
+type forceMuteDto struct {
+	ChatId int64 `json:"chatId"`
+}
+
+func (h *ExtendedService) NotifyUserAboutForceMute(context context.Context, chatId int64, userToMuteId int64) {
+	h.userConnectionsIndex.RLock()
+	defer h.userConnectionsIndex.RUnlock()
+	if list, ok := h.userConnectionsIndex.mapUserConnectionsList[userToMuteId]; ok {
+		for _, conn := range list {
+			parms := forceMuteDto{
+				ChatId: chatId,
+			}
+			logger.Info("Sending force mute notification", "chat_id", chatId, "to_user_id", userToMuteId)
+			err := conn.Notify(context, "force_mute", parms)
+			if err!= nil {
+				logger.Error(err, "Error during sent force mute notification", "chat_id", chatId, "to_user_id", userToMuteId)
+			}
+		}
+	}
+}
+
 func (h *ExtendedService) peerIsAlive(peer sfu.Peer) bool {
 	if peer == nil {
 		return false
@@ -252,6 +287,28 @@ func (h *ExtendedService) CheckAccess(userId int64, chatId int64) (bool, error) 
 	} else {
 		err := errors.New("Unexpected status on checkAccess")
 		logger.Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
+		return false, err
+	}
+}
+
+func (h *ExtendedService) IsAdmin(userId int64, chatId int64) (bool, error) {
+	url0 := h.conf.ChatConfig.ChatUrlConfig.Base
+	url1 := h.conf.ChatConfig.ChatUrlConfig.IsChatAdmin
+
+	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", url0, url1, userId, chatId)
+	response, err := h.client.Get(url)
+	if err != nil {
+		logger.Error(err, "Transport error during checking access")
+		return false, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode == http.StatusOK {
+		return true, nil
+	} else if response.StatusCode == http.StatusUnauthorized {
+		return false, nil
+	} else {
+		err := errors.New("Unexpected status on isAdmin")
+		logger.Error(err, "Unexpected status on isAdmin", "httpCode", response.StatusCode)
 		return false, err
 	}
 }
@@ -339,6 +396,28 @@ func (h *ExtendedService) KickUser(chatId, userId int64, silent bool) error {
 	return nil
 }
 
+type forceKickDto struct {
+	ChatId int64 `json:"chatId"`
+}
+
+func (h *ExtendedService) SendKickMessage(ctx context.Context, chatId, userToLickId int64) {
+	h.userConnectionsIndex.RLock()
+	defer h.userConnectionsIndex.RUnlock()
+
+	if conns, ok := h.userConnectionsIndex.mapUserConnectionsList[userToLickId]; ok {
+		for _, conn := range conns {
+			parms := forceKickDto{
+				ChatId: chatId,
+			}
+			logger.Info("Sending kick notification", "chat_id", chatId, "to_user_id", userToLickId)
+			err := conn.Notify(ctx, "kick", parms)
+			if err!= nil {
+				logger.Error(err, "Error during sent kick notification", "chat_id", chatId, "to_user_id", userToLickId)
+			}
+		}
+	}
+}
+
 func (h *ExtendedService) NotifyAboutLeaving(chatId int64) {
 	if err := h.Notify(chatId, nil); err != nil {
 		logger.Error(err, "error during sending leave notification")
@@ -379,3 +458,38 @@ func (h *ExtendedService) Schedule() *chan struct{} {
 	return &quit
 }
 
+func (h *ExtendedService) AddToJsonRpcIndex(userId int64, jc *jsonrpc2.Conn) {
+	h.userConnectionsIndex.Lock()
+	defer h.userConnectionsIndex.Unlock()
+	var list = []*jsonrpc2.Conn{}
+	existing, ok := h.userConnectionsIndex.mapUserConnectionsList[userId]
+	if ok {
+		list = existing
+	}
+	logger.Info("Adding user connection to map", "user_id", userId)
+	list = append(list, jc)
+	h.userConnectionsIndex.mapUserConnectionsList[userId] = list
+}
+
+func (h *ExtendedService) RemoveFromJsonRpcIndex(userId int64, jc *jsonrpc2.Conn) {
+	h.userConnectionsIndex.Lock()
+	defer h.userConnectionsIndex.Unlock()
+	existing, ok := h.userConnectionsIndex.mapUserConnectionsList[userId]
+	if ok {
+		for idx, conn := range existing {
+			if conn == jc {
+				existing = append(existing[:idx], existing[idx+1:]...)
+				if len(existing) == 0 {
+					// delete from map
+					logger.Info("Deleting entire user connections list from map", "user_id", userId)
+					delete(h.userConnectionsIndex.mapUserConnectionsList, userId);
+				} else {
+					logger.Info("Deleting user connection from list", "user_id", userId)
+					h.userConnectionsIndex.mapUserConnectionsList[userId] = existing
+				}
+				break
+			}
+		}
+	}
+
+}

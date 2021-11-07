@@ -39,9 +39,6 @@ aaa:
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672"
 
-video:
-  kickVideoAfter: 10s
-
 jaeger:
   endpoint: "jaeger:6831"
 

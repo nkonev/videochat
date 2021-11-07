@@ -226,10 +226,10 @@
                 })
             },
             kickFromVideoCall(userId) {
-                axios.put(`/api/chat/${this.dto.id}/video/kick?userId=${userId}`)
+                axios.put(`/api/video/${this.dto.id}/kick?userId=${userId}`)
             },
             forceMute(userId) {
-                axios.put(`/api/chat/${this.dto.id}/video/mute?userId=${userId}`)
+                axios.put(`/api/video/${this.dto.id}/mute?userId=${userId}`)
             },
             onChatChange(dto) {
                 if (this.show && dto.id == this.chatId) {

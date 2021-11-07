@@ -26,8 +26,6 @@ type Notifications interface {
 	NotifyAboutVideoCallChanged(dto dto.ChatNotifyDto, participantIds []int64)
 	NotifyAboutProfileChanged(user *dto.User)
 	NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64, chatName string)
-	NotifyAboutKick(c echo.Context, chatId int64, userId int64)
-	NotifyAboutForceMute(c echo.Context, chatId int64, userId int64)
 	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
 }
 
@@ -372,27 +370,6 @@ func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId in
 	}
 }
 
-func (not *notifictionsImpl) NotifyAboutKick(c echo.Context, chatId int64, userId int64) {
-	notification := dto.CentrifugeNotification{
-		Payload: VideoKick{
-			ChatId: chatId,
-		},
-		EventType: "video_kick",
-	}
-
-	participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(userId)
-
-	if marshalledBytes, err := json.Marshal(notification); err != nil {
-		GetLogEntry(c.Request()).Errorf("error during marshalling VideoKick: %s", err)
-	} else {
-		Logger.Infof("Sending notification about video_kick to participantChannel: %v", participantChannel)
-		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
-		if err != nil {
-			Logger.Errorf("error publishing to personal channel: %s", err)
-		}
-	}
-}
-
 type UserBroadcastNotification struct {
 	Login  string `json:"login"`
 	UserId int64  `json:"userId"`
@@ -423,25 +400,4 @@ func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId
 		}
 	}
 
-}
-
-func (not *notifictionsImpl) NotifyAboutForceMute(c echo.Context, chatId int64, userId int64) {
-	notification := dto.CentrifugeNotification{
-		Payload: ForceMute{
-			ChatId: chatId,
-		},
-		EventType: "force_mute",
-	}
-
-	participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(userId)
-
-	if marshalledBytes, err := json.Marshal(notification); err != nil {
-		GetLogEntry(c.Request()).Errorf("error during marshalling ForceMute: %s", err)
-	} else {
-		Logger.Infof("Sending notification about force_mute to participantChannel: %v", participantChannel)
-		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
-		if err != nil {
-			Logger.Errorf("error publishing to personal channel: %s", err)
-		}
-	}
 }

@@ -20,6 +20,7 @@ type ExtendedICEServerConfig struct {
 type FrontendConfig struct {
 	ICEServers     []ExtendedICEServerConfig `mapstructure:"iceserver"`
 	PreferredCodec string `mapstructure:"preferredCodec"`
+	ForceKickAfter time.Duration `mapstructure:"forceKickAfter"`
 }
 
 type RabbitMqConfig struct {
@@ -32,7 +33,8 @@ type ChatConfig struct {
 
 type ChatUrlConfig struct {
 	Base string `mapstructure:"base"`
-	Access string `mapstructure:"access"`
+	Access      string `mapstructure:"access"`
+	IsChatAdmin string `mapstructure:"isChatAdmin"`
 }
 
 type HttpServerConfig struct {
