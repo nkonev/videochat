@@ -29,7 +29,7 @@
         <mockserver.version>5.11.2</mockserver.version>
         <skipTests>false</skipTests>
         <opentracing-spring-jaeger-web-starter.version>3.1.2</opentracing-spring-jaeger-web-starter.version>
-
+        <flyway.version>8.0.3</flyway.version>
         <git-json>git.json</git-json>
     </properties>
 
@@ -287,6 +287,7 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
         </dependency>
 
         <dependency>
