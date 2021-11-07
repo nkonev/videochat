@@ -58,7 +58,7 @@ func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int
 	res := tx.QueryRow("select b.chat_id from (select a.count >= 2 as exists, a.chat_id from ( (select cp.chat_id, count(cp.user_id) from chat_participant cp join chat ch on ch.id = cp.chat_id where ch.tet_a_tet = true and (cp.user_id = $1 or cp.user_id = $2) group by cp.chat_id)) a) b where b.exists is true;", participant1, participant2)
 	var chatId int64
 	if err := res.Scan(&chatId); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			// there were no rows, but otherwise no error occurred
 			return false, 0, nil
 		}
@@ -188,14 +188,13 @@ func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, err
 	row := co.QueryRow(`SELECT id, title, last_update_date_time, tet_a_tet FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
 	chat := Chat{}
 	err := row.Scan(&chat.Id, &chat.Title, &chat.LastUpdateDateTime, &chat.TetATet)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return nil, nil
+	}
 	if err != nil {
-		if err == sql.ErrNoRows {
-			// there were no rows, but otherwise no error occurred
-			return nil, nil
-		} else {
-			Logger.Errorf("Error during get chat row %v", err)
-			return nil, err
-		}
+		Logger.Errorf("Error during get chat row %v", err)
+		return nil, err
 	} else {
 		return &chat, nil
 	}

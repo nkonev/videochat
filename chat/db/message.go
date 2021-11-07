@@ -76,14 +76,13 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
 	row := co.QueryRow(`SELECT m.id, m.text, m.chat_id, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message m WHERE m.id = $1 AND chat_id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
 	message := Message{}
 	err := row.Scan(&message.Id, &message.Text, &message.ChatId, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return nil, nil
+	}
 	if err != nil {
-		if err == sql.ErrNoRows {
-			// there were no rows, but otherwise no error occurred
-			return nil, nil
-		} else {
-			Logger.Errorf("Error during get message row %v", err)
-			return nil, err
-		}
+		Logger.Errorf("Error during get message row %v", err)
+		return nil, err
 	} else {
 		return &message, nil
 	}
