@@ -14,13 +14,11 @@ services:
         # it's loadbalancing enabled only for getting git.json. You should balance through video-proxy for the proper websocket balancing !
         - "traefik.enable=true"
         - "traefik.http.services.video-service.loadbalancer.server.port=7001"
-        - "traefik.http.middlewares.video-auth-middleware.forwardauth.address=http://aaa:8060/internal/profile"
-        - "traefik.http.middlewares.video-auth-middleware.forwardauth.authRequestHeaders=Cookie"
-        - "traefik.http.middlewares.video-auth-middleware.forwardauth.authResponseHeadersRegex=^X-Auth-"
         - "traefik.http.middlewares.video-stripprefix-middleware.stripprefix.prefixes=/api,/video"
         - "traefik.http.routers.video-version-router.rule=Path(`/video/git.json`)"
         - "traefik.http.routers.video-version-router.entrypoints=http"
         - "traefik.http.routers.video-version-router.middlewares=video-stripprefix-middleware"
+
     ports:
       # turn port
       - target: 3478

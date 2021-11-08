@@ -87,7 +87,6 @@ services:
       options:
         tag: chat-jaeger
 
-
 volumes:
   postgres_data:
   redis_data_dir:

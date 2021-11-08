@@ -15,18 +15,17 @@ services:
         - "traefik.http.services.chat-service.loadbalancer.server.port=1235"
         - "traefik.http.routers.chat-router.rule=PathPrefix(`/api/chat`)"
         - "traefik.http.routers.chat-router.entrypoints=http"
-        - "traefik.http.middlewares.chat-auth-middleware.forwardauth.address=http://aaa:8060/internal/profile"
-        - "traefik.http.middlewares.chat-auth-middleware.forwardauth.authRequestHeaders=Cookie"
-        - "traefik.http.middlewares.chat-auth-middleware.forwardauth.authResponseHeadersRegex=^X-Auth-"
-        - "traefik.http.middlewares.chat-stripprefix-middleware.stripprefix.prefixes=/api,/chat"
-        - "traefik.http.middlewares.chat-retry-middleware.retry.attempts=4"
-        - "traefik.http.routers.chat-router.middlewares=chat-auth-middleware,chat-stripprefix-middleware,chat-retry-middleware"
+        - "traefik.http.routers.chat-router.middlewares=auth-middleware@file,api-strip-prefix-middleware@file,retry-middleware@file"
+
         - "traefik.http.routers.chat-public-router.rule=PathPrefix(`/api/chat/public`)"
         - "traefik.http.routers.chat-public-router.entrypoints=http"
-        - "traefik.http.routers.chat-public-router.middlewares=chat-stripprefix-middleware,chat-retry-middleware"
+        - "traefik.http.routers.chat-public-router.middlewares=api-strip-prefix-middleware@file,retry-middleware@file"
+
+        - "traefik.http.middlewares.chat-stripprefix-middleware.stripprefix.prefixes=/chat"
         - "traefik.http.routers.chat-version-router.rule=Path(`/chat/git.json`)"
         - "traefik.http.routers.chat-version-router.entrypoints=http"
         - "traefik.http.routers.chat-version-router.middlewares=chat-stripprefix-middleware"
+
     logging:
       driver: "journald"
       options:

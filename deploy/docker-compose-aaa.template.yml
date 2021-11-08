@@ -15,12 +15,12 @@ services:
         - "traefik.http.services.aaa-service.loadbalancer.server.port=8060"
         - "traefik.http.routers.aaa-router.rule=PathPrefix(`/api/login`) || Path(`/api/logout`) || PathPrefix(`/api/profile`) || PathPrefix(`/api/user`)"
         - "traefik.http.routers.aaa-router.entrypoints=http"
-        - "traefik.http.middlewares.aaa-retry-middleware.retry.attempts=4"
-        - "traefik.http.routers.aaa-router.middlewares=aaa-retry-middleware"
+        - "traefik.http.routers.aaa-router.middlewares=retry-middleware@file"
+
         - "traefik.http.middlewares.aaa-stripprefix-middleware.stripprefix.prefixes=/aaa"
         - "traefik.http.routers.aaa-version-router.rule=Path(`/aaa/git.json`)"
         - "traefik.http.routers.aaa-version-router.entrypoints=http"
-        - "traefik.http.routers.aaa-version-router.middlewares=aaa-stripprefix-middleware,aaa-retry-middleware"
+        - "traefik.http.routers.aaa-version-router.middlewares=aaa-stripprefix-middleware,retry-middleware@file"
 
     environment:
       - _JAVA_OPTIONS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx512m -XX:MetaspaceSize=128M -XX:MaxMetaspaceSize=256M -XX:OnOutOfMemoryError="kill -9 %p" -Dnetworkaddress.cache.ttl=0 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/aaa
@@ -38,6 +38,7 @@ services:
       - CSRF_COOKIE_SECURE=true
       - CSRF_COOKIE_HTTP-ONLY=true
       - COOKIE_SAME-SITE=Strict
+
     logging:
       driver: "journald"
       options:

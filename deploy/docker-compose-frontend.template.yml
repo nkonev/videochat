@@ -15,8 +15,7 @@ services:
         - "traefik.http.services.frontend-service.loadbalancer.server.port=8082"
         - "traefik.http.routers.frontend-router.rule=PathPrefix(`/`)"
         - "traefik.http.routers.frontend-router.entrypoints=http"
-        - "traefik.http.middlewares.frontend-retry-middleware.retry.attempts=4"
-        - "traefik.http.routers.frontend-router.middlewares=frontend-retry-middleware"
+        - "traefik.http.routers.frontend-router.middlewares=retry-middleware@file"
     logging:
       driver: "journald"
       options:

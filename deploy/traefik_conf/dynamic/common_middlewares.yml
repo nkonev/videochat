@@ -1,0 +1,16 @@
+http:
+  middlewares:
+    api-strip-prefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/api"
+    retry-middleware:
+      retry:
+        attempts: 4
+    auth-middleware:
+      forwardAuth:
+        address: "http://aaa:8060/internal/profile"
+        authRequestHeaders:
+          - "Cookie"
+        authResponseHeadersRegex: "^X-Auth-"
+
