@@ -3,9 +3,9 @@ import Router from 'vue-router'
 import {chat_list_name, root, chat_name, profile_self_name, videochat_name, profile_name} from "./routes";
 import Error404 from "./Error404";
 import ChatList from "./ChatList";
+import ChatView from "./ChatView.vue";
 const UserSelfProfile = () => import("./UserSelfProfile");
 const UserProfile = () => import("./UserProfile");
-const ChatView = () => import('./ChatView.vue')
 
 // This installs <router-view> and <router-link>,
 // and injects $router and $route to all router-enabled child components

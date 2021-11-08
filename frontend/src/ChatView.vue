@@ -45,7 +45,6 @@
         MESSAGE_BROADCAST,
         REFRESH_ON_WEBSOCKET_RESTORED,
     } from "./bus";
-    import MessageEdit from "./MessageEdit";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
     import {getData, getProperData} from "./centrifugeConnection";
@@ -517,7 +516,7 @@
         },
         components: {
             InfiniteLoading,
-            MessageEdit,
+            MessageEdit: () => import("./MessageEdit"),
             ChatVideo,
             Splitpanes, Pane,
             MessageItem
