@@ -121,6 +121,9 @@ spring.rabbitmq:
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
 management:
+  health:
+    mail:
+      enabled: false
   server:
     port: 3005
     ssl:
