@@ -181,6 +181,13 @@ brew install nvm
 nvm install v15.11.0
 ```
 
+# Update node
+```
+nvm install v16.13.0
+nvm use v16.13.0
+```
+Then restart (sic!) PC.
+
 # Alternatives (SFU servers)
 * https://github.com/versatica/mediasoup
 * https://github.com/medooze/media-server
