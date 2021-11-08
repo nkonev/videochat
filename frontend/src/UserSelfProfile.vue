@@ -1,6 +1,6 @@
 <template>
     <v-card v-if="currentUser"
-            class="mr-auto"
+            class="mr-auto user-self-profile"
             max-width="640"
     >
         <v-list-item three-line>
@@ -334,4 +334,10 @@ export default {
 
 <style lang="stylus">
 @import "OAuth2.styl"
+</style>
+
+<style lang="stylus">
+    .user-self-profile .v-chip__content .v-icon.v-chip__close.mdi-delete::before {
+        color rgb(255, 82, 82)
+    }
 </style>
