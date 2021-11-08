@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory;
@@ -92,6 +93,9 @@ public abstract class AbstractTestRunner {
 
     @Value("${custom.base-url}")
     protected String urlPrefix;
+
+    @Autowired
+    private ServerProperties serverProperties;
 
     @Autowired
     protected AbstractServletWebServerFactory abstractConfigurableEmbeddedServletContainer;
@@ -227,5 +231,9 @@ public abstract class AbstractTestRunner {
         return testRestTemplate.exchange(loginRequest, SuccessfulLoginDTO.class);
     }
 
+
+    protected String getAuthCookieName() {
+        return serverProperties.getServlet().getSession().getCookie().getName();
+    }
 
 }

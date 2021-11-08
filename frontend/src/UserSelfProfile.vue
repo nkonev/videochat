@@ -24,7 +24,7 @@
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.bound_oauth2_providers') }}</v-card-title>
         <v-card-actions class="mx-2">
             <v-chip
-                v-if="currentUser.oauth2Identifiers.vkontakteId"
+                v-if="currentUser.oauth2Identifiers.vkontakteIdv && providers.includes('vkontakte')"
                 min-width="80px"
                 label
                 close
@@ -37,7 +37,7 @@
             </v-chip>
 
             <v-chip
-                v-if="currentUser.oauth2Identifiers.facebookId"
+                v-if="currentUser.oauth2Identifiers.facebookId && providers.includes('facebook')"
                 min-width="80px"
                 label
                 close
@@ -50,7 +50,7 @@
             </v-chip>
 
             <v-chip
-                v-if="currentUser.oauth2Identifiers.googleId"
+                v-if="currentUser.oauth2Identifiers.googleId && providers.includes('google')"
                 min-width="80px"
                 label
                 close
@@ -61,13 +61,27 @@
             >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google'}" :size="'2x'"></font-awesome-icon>
             </v-chip>
+
+            <v-chip
+                v-if="currentUser.oauth2Identifiers.keycloakId && providers.includes('keycloak')"
+                min-width="80px"
+                label
+                close
+                class="c-btn-keycloak py-5 mr-2"
+                text-color="white"
+                close-icon="mdi-delete"
+                @click:close="removeKeycloak"
+            >
+                <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'key'}" :size="'2x'"></font-awesome-icon>
+            </v-chip>
+
         </v-card-actions>
 
         <v-divider class="mx-4"></v-divider>
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.not_bound_oauth2_providers') }}</v-card-title>
         <v-card-actions class="mx-2">
             <v-chip
-                v-if="!currentUser.oauth2Identifiers.vkontakteId"
+                v-if="!currentUser.oauth2Identifiers.vkontakteId && providers.includes('vkontakte')"
                 @click="submitOauthVkontakte"
                 min-width="80px"
                 label
@@ -79,7 +93,7 @@
             </v-chip>
 
             <v-chip
-                v-if="!currentUser.oauth2Identifiers.facebookId"
+                v-if="!currentUser.oauth2Identifiers.facebookId && providers.includes('facebook')"
                 @click="submitOauthFacebook"
                 min-width="80px"
                 label
@@ -91,7 +105,7 @@
             </v-chip>
 
             <v-chip
-                v-if="!currentUser.oauth2Identifiers.googleId"
+                v-if="!currentUser.oauth2Identifiers.googleId && providers.includes('google')"
                 @click="submitOauthGoogle"
                 min-width="80px"
                 label
@@ -101,6 +115,19 @@
             >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google'}" :size="'2x'"></font-awesome-icon>
             </v-chip>
+
+            <v-chip
+                v-if="!currentUser.oauth2Identifiers.keycloakId && providers.includes('keycloak')"
+                @click="submitOauthKeycloak"
+                min-width="80px"
+                label
+                class="c-btn-keycloak py-5 mr-2"
+                text-color="white"
+                close-icon="mdi-delete"
+            >
+                <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'key'}" :size="'2x'"></font-awesome-icon>
+            </v-chip>
+
         </v-card-actions>
 
 
@@ -200,7 +227,7 @@
 <script>
 import {mapGetters} from "vuex";
 import {
-    FETCH_USER_PROFILE,
+    FETCH_USER_PROFILE, GET_AVAILABLE_OAUTH2_PROVIDERS,
     GET_USER,
     SET_CHAT_ID,
     SET_CHAT_USERS_COUNT,
@@ -239,7 +266,10 @@ export default {
         }
     },
     computed: {
-        ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
+        ...mapGetters({
+            currentUser: GET_USER, // currentUser is here, 'getUser' -- in store.js
+            providers: GET_AVAILABLE_OAUTH2_PROVIDERS
+        }),
         ava() {
             const maybeUser = this.$store.getters[GET_USER];
             if (maybeUser) {
@@ -262,6 +292,9 @@ export default {
         },
         submitOauthGoogle() {
             window.location.href = '/api/login/oauth2/google';
+        },
+        submitOauthKeycloak() {
+            window.location.href = '/api/login/oauth2/keycloak';
         },
 
         sendLogin() {
@@ -298,6 +331,12 @@ export default {
         },
         removeGoogle() {
             axios.delete('/api/profile/google')
+                .then((response) => {
+                    this.$store.dispatch(FETCH_USER_PROFILE);
+                })
+        },
+        removeKeycloak() {
+            axios.delete('/api/profile/keycloak')
                 .then((response) => {
                     this.$store.dispatch(FETCH_USER_PROFILE);
                 })

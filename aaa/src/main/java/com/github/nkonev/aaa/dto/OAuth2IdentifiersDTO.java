@@ -10,17 +10,19 @@ import java.io.Serializable;
 public record OAuth2IdentifiersDTO  (
     String facebookId,
     String vkontakteId,
-    String googleId
+    String googleId,
+    String keycloakId
 ) implements Serializable {
     public OAuth2IdentifiersDTO() {
-        this(null, null, null);
+        this(null, null, null, null);
     }
 
     public OAuth2IdentifiersDTO withGoogleId(String newGoogleId) {
         return new OAuth2IdentifiersDTO(
                 facebookId,
                 vkontakteId,
-                newGoogleId
+                newGoogleId,
+                keycloakId
         );
     }
 
@@ -28,7 +30,8 @@ public record OAuth2IdentifiersDTO  (
         return new OAuth2IdentifiersDTO(
                 facebookId,
                 newVkontakteId,
-                googleId
+                googleId,
+                keycloakId
         );
     }
 
@@ -36,7 +39,17 @@ public record OAuth2IdentifiersDTO  (
         return new OAuth2IdentifiersDTO(
                 newFacebookId,
                 vkontakteId,
-                googleId
+                googleId,
+                keycloakId
+        );
+    }
+
+    public OAuth2IdentifiersDTO withKeycloakId(String newKeycloakId) {
+        return new OAuth2IdentifiersDTO(
+                facebookId,
+                vkontakteId,
+                googleId,
+                newKeycloakId
         );
     }
 }

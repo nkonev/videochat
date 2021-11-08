@@ -62,6 +62,9 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     public static final String vkontakteId = "1212";
     public static final String googleLogin = "NIKITA KONEV";
     public static final String googleId = "1234567890";
+    public static final String keycloakLogin = "user1";
+    public static final String keycloakPassword = "user_password";
+    public static final String keycloakId = "b5d67207-0996-4af0-bcb5-eee814687b30";
 
     @BeforeEach
     public void configureFacebookEmulator() throws InterruptedException {

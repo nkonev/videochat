@@ -38,7 +38,7 @@ public class UserAccountConverter {
 
     private static OAuth2IdentifiersDTO convertOauth(UserAccount.OAuth2Identifiers oAuth2Identifiers){
         if (oAuth2Identifiers ==null) return null;
-        return new OAuth2IdentifiersDTO(oAuth2Identifiers.facebookId(), oAuth2Identifiers.vkontakteId(), oAuth2Identifiers.googleId());
+        return new OAuth2IdentifiersDTO(oAuth2Identifiers.facebookId(), oAuth2Identifiers.vkontakteId(), oAuth2Identifiers.googleId(), oAuth2Identifiers.keycloakId());
     }
 
     public static UserAccountDetailsDTO convertToUserAccountDetailsDTO(UserAccount userAccount) {
@@ -202,7 +202,7 @@ public class UserAccountConverter {
                 newUserRole,
                 null,
                 null,
-                new UserAccount.OAuth2Identifiers(facebookId, null, null)
+                new UserAccount.OAuth2Identifiers(facebookId, null, null, null)
         );
     }
 
@@ -226,7 +226,7 @@ public class UserAccountConverter {
                 newUserRole,
                 null,
                 null,
-                new UserAccount.OAuth2Identifiers(null, vkontakteId, null)
+                new UserAccount.OAuth2Identifiers(null, vkontakteId, null, null)
         );
     }
 
@@ -250,9 +250,34 @@ public class UserAccountConverter {
                 newUserRole,
                 null,
                 null,
-                new UserAccount.OAuth2Identifiers(null, null, googleId)
+                new UserAccount.OAuth2Identifiers(null, null, googleId, null)
         );
     }
+
+    public static UserAccount buildUserAccountEntityForKeycloakInsert(String keycloakId, String login, String maybeImageUrl) {
+        final boolean expired = false;
+        final boolean locked = false;
+        final boolean enabled = true;
+
+        final UserRole newUserRole = getDefaultUserRole();
+
+        return new UserAccount(
+                null,
+                CreationType.KEYCLOAK,
+                login,
+                null,
+                maybeImageUrl,
+                null,
+                expired,
+                locked,
+                enabled,
+                newUserRole,
+                null,
+                null,
+                new UserAccount.OAuth2Identifiers(null, null, null, keycloakId)
+        );
+    }
+
 
     private static void validateLoginAndEmail(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO){
         Assert.hasLength(userAccountDTO.login(), "login should have length");

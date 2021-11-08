@@ -35,7 +35,7 @@
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.bound_oauth2_providers') }}</v-card-title>
         <v-card-actions class="mx-2">
             <v-chip
-                v-if="viewableUser.oauth2Identifiers.vkontakteId"
+                v-if="viewableUser.oauth2Identifiers.vkontakteId && providers.includes('vkontakte')"
                 min-width="80px"
                 label
                 class="c-btn-vk py-5 mr-2"
@@ -45,7 +45,7 @@
             </v-chip>
 
             <v-chip
-                v-if="viewableUser.oauth2Identifiers.facebookId"
+                v-if="viewableUser.oauth2Identifiers.facebookId && providers.includes('facebook')"
                 min-width="80px"
                 label
                 class="c-btn-fb py-5 mr-2"
@@ -55,7 +55,7 @@
             </v-chip>
 
             <v-chip
-                v-if="viewableUser.oauth2Identifiers.googleId"
+                v-if="viewableUser.oauth2Identifiers.googleId && providers.includes('google')"
                 min-width="80px"
                 label
                 class="c-btn-google py-5 mr-2"
@@ -63,6 +63,17 @@
             >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google'}" :size="'2x'"></font-awesome-icon>
             </v-chip>
+
+            <v-chip
+                v-if="viewableUser.oauth2Identifiers.keycloakId && providers.includes('keycloak')"
+                min-width="80px"
+                label
+                class="c-btn-keycloak py-5 mr-2"
+                text-color="white"
+            >
+                <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'key'}" :size="'2x'"></font-awesome-icon>
+            </v-chip>
+
         </v-card-actions>
     </v-card>
 </template>
@@ -70,6 +81,7 @@
 <script>
 
 import {
+    GET_AVAILABLE_OAUTH2_PROVIDERS,
     GET_USER,
     SET_CHAT_ID,
     SET_CHAT_USERS_COUNT,
@@ -95,7 +107,10 @@ export default {
         userId() {
             return this.$route.params.id
         },
-        ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
+        ...mapGetters({
+            currentUser: GET_USER, // currentUser is here, 'getUser' -- in store.js
+            providers: GET_AVAILABLE_OAUTH2_PROVIDERS
+        }),
     },
     methods: {
         getAvatar(u) {

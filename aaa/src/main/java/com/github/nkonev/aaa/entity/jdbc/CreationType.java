@@ -4,5 +4,7 @@ public enum CreationType {
     REGISTRATION,
     FACEBOOK,
     VKONTAKTE,
-    GOOGLE;
+    GOOGLE,
+    KEYCLOAK
+    ;
 }

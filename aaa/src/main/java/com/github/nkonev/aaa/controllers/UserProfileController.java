@@ -2,7 +2,6 @@ package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.UserAccountDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
@@ -17,6 +16,7 @@ import com.github.nkonev.aaa.utils.PageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
@@ -33,10 +33,12 @@ import javax.validation.Valid;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.github.nkonev.aaa.Constants.Headers.*;
 import static com.github.nkonev.aaa.Constants.MAX_USERS_RESPONSE_LENGTH;
 import static com.github.nkonev.aaa.converter.UserAccountConverter.convertRolesToStringList;
+import static java.util.stream.Stream.ofNullable;
 
 /**
  * Created by nik on 08.06.17.
@@ -62,6 +64,9 @@ public class UserProfileController {
 
     @Autowired
     private NotifierService notifier;
+
+    @Autowired
+    private OAuth2ClientProperties oAuth2ClientProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
@@ -295,11 +300,19 @@ public class UserProfileController {
             case OAuth2Providers.FACEBOOK -> userAccount.oauth2Identifiers().withFacebookId(null);
             case OAuth2Providers.VKONTAKTE -> userAccount.oauth2Identifiers().withVkontakteId(null);
             case OAuth2Providers.GOOGLE -> userAccount.oauth2Identifiers().withGoogleId(null);
+            case OAuth2Providers.KEYCLOAK -> userAccount.oauth2Identifiers().withKeycloakId(null);
             default -> throw new RuntimeException("Wrong OAuth2 provider: " + provider);
         };
         userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);
         userAccount = userAccountRepository.save(userAccount);
         aaaUserDetailsService.refreshUserDetails(userAccount);
+    }
+
+    @GetMapping(Constants.Urls.API + "/oauth2/providers")
+    public Set<String> availableOauth2Providers() {
+        return ofNullable(oAuth2ClientProperties.getRegistration())
+                .flatMap(stringRegistrationMap -> stringRegistrationMap.keySet().stream())
+                .collect(Collectors.toSet());
     }
 
 }

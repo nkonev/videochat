@@ -56,9 +56,10 @@
                         >
                             {{ $vuetify.lang.t('$vuetify.login_action') }}
                         </v-btn>
-                        <v-btn class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn class="mr-2 mb-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn class="mr-2 mb-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google' }" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn v-if="providers.includes('vkontakte')" class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn v-if="providers.includes('facebook')" class="mr-2 mb-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn v-if="providers.includes('google')" class="mr-2 mb-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google' }" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn v-if="providers.includes('keycloak')" class="mr-2 mb-2 c-btn-keycloak" :disabled="disable" :loading="loadingKeycloak" min-width="80px" @click="loginKeycloak()"><font-awesome-icon :icon="{ prefix: 'fa', iconName: 'key' }" :size="'2x'"></font-awesome-icon></v-btn>
                     </v-form>
                 </v-card-text>
 
@@ -70,7 +71,8 @@
 <script>
     import bus, {LOGGED_IN, LOGGED_OUT} from "./bus";
     import axios from "axios";
-    import {FETCH_USER_PROFILE} from "./store";
+    import {FETCH_USER_PROFILE, GET_AVAILABLE_OAUTH2_PROVIDERS, GET_USER} from "./store";
+    import {mapGetters} from "vuex";
 
     export default {
         data() {
@@ -86,6 +88,7 @@
                 loadingVk: false,
                 loadingFb: false,
                 loadingGoogle: false,
+                loadingKeycloak: false,
 
                 valid: true,
                 username: '',
@@ -104,6 +107,9 @@
         },
         destroyed() {
             bus.$off(LOGGED_OUT, this.showLoginModal);
+        },
+        computed: {
+            ...mapGetters({providers: GET_AVAILABLE_OAUTH2_PROVIDERS})
         },
         methods: {
             showLoginModal() {
@@ -128,7 +134,11 @@
                 this.disable = true;
                 window.location.href = '/api/login/oauth2/google';
             },
-
+            loginKeycloak() {
+                this.loadingKeycloak = true;
+                this.disable = true;
+                window.location.href = '/api/login/oauth2/keycloak';
+            },
             validate () {
                 return this.$refs.form.validate()
             },

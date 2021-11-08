@@ -16,14 +16,19 @@ public class AaaOAuth2LoginUserService implements OAuth2UserService<OAuth2UserRe
     @Autowired
     private VkontakteOAuth2UserService vkontakteOAuth2UserService;
 
+    @Autowired
+    private KeycloakOAuth2UserService keycloakOAuth2UserService;
+
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        String clientName = userRequest.getClientRegistration().getClientName();
+        String clientName = userRequest.getClientRegistration().getRegistrationId();
         switch (clientName) {
             case OAuth2Providers.VKONTAKTE:
                 return vkontakteOAuth2UserService.loadUser(userRequest);
             case OAuth2Providers.FACEBOOK:
                 return facebookOAuth2UserService.loadUser(userRequest);
+            case OAuth2Providers.KEYCLOAK:
+                return keycloakOAuth2UserService.loadUser(userRequest);
         }
         throw new RuntimeException("Unknown clientName '" + clientName + "'");
     }

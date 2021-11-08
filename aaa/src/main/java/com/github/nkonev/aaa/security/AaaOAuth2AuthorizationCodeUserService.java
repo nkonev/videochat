@@ -17,7 +17,7 @@ public class AaaOAuth2AuthorizationCodeUserService implements OAuth2UserService<
 
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
-        String clientName = userRequest.getClientRegistration().getClientName();
+        String clientName = userRequest.getClientRegistration().getRegistrationId();
         switch (clientName) {
             case OAuth2Providers.GOOGLE:
                 return googleOAuth2UserService.loadUser(userRequest);

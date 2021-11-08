@@ -31,6 +31,8 @@ public interface UserAccountRepository extends CrudRepository<UserAccount, Long>
 
     Optional<UserAccount> findByOauth2IdentifiersGoogleId(String googleId);
 
+    Optional<UserAccount> findByOauth2IdentifiersKeycloakId(String keycloakId);
+
     @Modifying
     @Query("update users set last_login_date_time = :newLastLoginDateTime where username = :userName")
     void updateLastLogin(@Param("userName") String username, @Param("newLastLoginDateTime") LocalDateTime localDateTime);

@@ -13,7 +13,7 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.services.aaa-service.loadbalancer.server.port=8060"
-        - "traefik.http.routers.aaa-router.rule=PathPrefix(`/api/login`) || Path(`/api/logout`) || PathPrefix(`/api/profile`) || PathPrefix(`/api/user`)"
+        - "traefik.http.routers.aaa-router.rule=PathPrefix(`/api/login`) || Path(`/api/logout`) || PathPrefix(`/api/profile`) || PathPrefix(`/api/user`) || PathPrefix(`/api/oauth2`)"
         - "traefik.http.routers.aaa-router.entrypoints=http"
         - "traefik.http.routers.aaa-router.middlewares=retry-middleware@file"
 

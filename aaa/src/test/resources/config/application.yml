@@ -121,14 +121,15 @@ spring.security:
           redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
           client-authentication-method: post
         facebook:
-          client-name: "facebook" # use in BlogOAuth2UserService
           client-id: 1684113965162824
           client-secret: your-app-client-secret
           redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
         google:
-          client-name: "google" # use in BlogOAuth2UserService
           client-id: 987654321
           client-secret: your-app-client-secret
+          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+        keycloak:
+          client-id: my_client
           redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
       provider:
         vkontakte:
@@ -144,3 +145,5 @@ spring.security:
         google:
           authorization-uri: http://127.0.0.1:10082/mock/google/o/oauth2/v2/auth
           token-uri: http://127.0.0.1:10082/mock/google/oauth2/v4/token
+        keycloak:
+          issuer-uri: http://localhost:8484/auth/realms/my_realm

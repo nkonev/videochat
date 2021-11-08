@@ -189,20 +189,23 @@ public record UserAccount(
         );
     }
 
+    @Override
     public OAuth2Identifiers oauth2Identifiers() {
-        return oauth2Identifiers != null ? oauth2Identifiers : new OAuth2Identifiers(null, null, null);
+        return oauth2Identifiers != null ? oauth2Identifiers : new OAuth2Identifiers(null, null, null, null);
     }
 
     public record OAuth2Identifiers (
         String facebookId,
         String vkontakteId,
-        String googleId
+        String googleId,
+        String keycloakId
     ) {
         public OAuth2Identifiers withFacebookId(String newFbId) {
             return new OAuth2Identifiers(
                     newFbId,
                     vkontakteId,
-                    googleId
+                    googleId,
+                    keycloakId
             );
         }
 
@@ -210,7 +213,8 @@ public record UserAccount(
             return new OAuth2Identifiers(
                     facebookId,
                     newVkId,
-                    googleId
+                    googleId,
+                    keycloakId
             );
         }
 
@@ -218,9 +222,20 @@ public record UserAccount(
             return new OAuth2Identifiers(
                     facebookId,
                     vkontakteId,
-                    newGid
+                    newGid,
+                    keycloakId
             );
         }
+
+        public OAuth2Identifiers withKeycloakId(String newKid) {
+            return new OAuth2Identifiers(
+                    facebookId,
+                    vkontakteId,
+                    googleId,
+                    newKid
+            );
+        }
+
     }
 
 }

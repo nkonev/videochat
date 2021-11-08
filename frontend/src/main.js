@@ -19,7 +19,7 @@ import bus, {
     VIDEO_CALL_KICKED,
     VIDEO_CALL_CHANGED, FORCE_MUTE,
 } from './bus';
-import store, {UNSET_USER} from './store'
+import store, {FETCH_AVAILABLE_OAUTH2_PROVIDERS, FETCH_USER_PROFILE, UNSET_USER} from './store'
 import router from './router.js'
 import {getData, getProperData} from "./centrifugeConnection";
 import {setIcon} from "@/utils";
@@ -127,6 +127,8 @@ vm = new Vue({
       }
 
     });
+
+    this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS);
   },
   // https://ru.vuejs.org/v2/guide/render-function.html
   render: h => h(App, {ref: 'appRef'})

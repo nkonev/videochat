@@ -125,6 +125,32 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  keycloak-postgresql:
+    image: library/postgres:14.0
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: keycloak_db
+    ports:
+      - "5420:5432"
+    restart: unless-stopped
+
+  keycloak:
+    image: jboss/keycloak:15.0.2
+    volumes:
+      - ./docker/keycloak/realm-export.json:/opt/jboss/keycloak/imports/realm-export.json:ro,z
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak-postgresql
+      DB_DATABASE: keycloak_db
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      KEYCLOAK_USER: keycloak_admin
+      KEYCLOAK_PASSWORD: admin_password
+      KEYCLOAK_IMPORT: /opt/jboss/keycloak/imports/realm-export.json
+    ports:
+      - "8484:8080"
+
 volumes:
   postgres_data:
   redis_data_dir:

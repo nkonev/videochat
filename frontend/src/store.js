@@ -8,6 +8,9 @@ export const GET_USER = 'getUser';
 export const SET_USER = 'setUser';
 export const UNSET_USER = 'unsetUser';
 export const FETCH_USER_PROFILE = 'fetchUserProfile';
+export const FETCH_AVAILABLE_OAUTH2_PROVIDERS = 'fetchAvailableOauth2';
+export const GET_AVAILABLE_OAUTH2_PROVIDERS = 'getAvailableOauth2';
+export const SET_AVAILABLE_OAUTH2_PROVIDERS = 'setAvailableOauth2';
 export const GET_MUTE_VIDEO = 'getMuteVideo';
 export const SET_MUTE_VIDEO = 'setMuteVideo';
 export const GET_MUTE_AUDIO = 'getMuteAudio';
@@ -47,6 +50,7 @@ const store = new Vuex.Store({
         showHangButton: false,
         shareScreen: false,
         showChatEditButton: false,
+        availableOAuth2Providers: []
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -88,6 +92,9 @@ const store = new Vuex.Store({
         [SET_CHAT_ID](state, payload) {
             state.chatId = payload;
         },
+        [SET_AVAILABLE_OAUTH2_PROVIDERS](state, payload) {
+            state.availableOAuth2Providers = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -126,12 +133,21 @@ const store = new Vuex.Store({
         [GET_CHAT_ID](state) {
             return state.chatId;
         },
+        [GET_AVAILABLE_OAUTH2_PROVIDERS](state) {
+            return state.availableOAuth2Providers;
+        },
     },
     actions: {
         [FETCH_USER_PROFILE](context) {
             axios.get(`/api/profile`).then(( {data} ) => {
                 console.debug("fetched profile =", data);
                 context.commit(SET_USER, data);
+            });
+        },
+        [FETCH_AVAILABLE_OAUTH2_PROVIDERS](context) {
+            axios.get(`/api/oauth2/providers`).then(( {data} ) => {
+                console.debug("fetched oauth2 providers =", data);
+                context.commit(SET_AVAILABLE_OAUTH2_PROVIDERS, data);
             });
         },
     }
