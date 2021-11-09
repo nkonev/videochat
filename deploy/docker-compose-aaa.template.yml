@@ -35,6 +35,23 @@ services:
       - SPRING_MAIL_PASSWORD=password
       - CUSTOM_BASE-URL=http://api.site.local:8080
       - MANAGEMENT_HEALTH_MAIL_ENABLED=false
+      - spring.security.oauth2.client.registration.vkontakte.client-id=6805077
+      - spring.security.oauth2.client.registration.vkontakte.client-secret=your-app-client-secret
+      - spring.security.oauth2.client.registration.vkontakte.redirect-uri="{baseUrl}/api/login/oauth2/code/{registrationId}"
+      - spring.security.oauth2.client.registration.vkontakte.authorization-grant-type=authorization_code
+      - spring.security.oauth2.client.registration.vkontakte.client-authentication-method=post
+      - spring.security.oauth2.client.registration.facebook.client-id=1684113965162824
+      - spring.security.oauth2.client.registration.facebook.client-secret=your-app-client-secret
+      - spring.security.oauth2.client.registration.facebook.redirect-uri="{baseUrl}/api/login/oauth2/code/{registrationId}"
+      - spring.security.oauth2.client.registration.google.client-id=987654321
+      - spring.security.oauth2.client.registration.google.client-secret=your-app-client-secret
+      - spring.security.oauth2.client.registration.google.redirect-uri="{baseUrl}/api/login/oauth2/code/{registrationId}"
+      - spring.security.oauth2.client.provider.vkontakte.authorization-uri=https://oauth.vk.com/authorize
+      - spring.security.oauth2.client.provider.vkontakte.token-uri=https://oauth.vk.com/access_token
+      - spring.security.oauth2.client.provider.vkontakte.user-info-uri=https://api.vk.com/method/users.get?v=5.92
+      - spring.security.oauth2.client.provider.vkontakte.user-info-authentication-method=form
+      - spring.security.oauth2.client.provider.vkontakte.user-name-attribute=response
+      - spring.security.oauth2.client.provider.facebook.user-info-uri=https://graph.facebook.com/me?fields=id,name,picture
       - CSRF_COOKIE_SECURE=true
       - CSRF_COOKIE_HTTP-ONLY=true
       - COOKIE_SAME-SITE=Strict
