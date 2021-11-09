@@ -24,7 +24,7 @@
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.bound_oauth2_providers') }}</v-card-title>
         <v-card-actions class="mx-2">
             <v-chip
-                v-if="currentUser.oauth2Identifiers.vkontakteIdv && providers.includes('vkontakte')"
+                v-if="currentUser.oauth2Identifiers.vkontakteId && providers.includes('vkontakte')"
                 min-width="80px"
                 label
                 close
