@@ -314,13 +314,15 @@
                 if (connected && wasInitialized) {
                     this.showWebsocketRestored = true;
                 }
-                this.centrifuge.namedRPC("check_for_new_messages").then(value => {
-                    console.debug("New messages response", value);
-                    if (getData(value)) {
-                        const currentNewMessages = getData(value).allUnreadMessages > 0;
-                        setIcon(currentNewMessages)
-                    }
-                })
+                if (connected) {
+                    this.centrifuge.namedRPC("check_for_new_messages").then(value => {
+                        console.debug("New messages response", value);
+                        if (getData(value)) {
+                            const currentNewMessages = getData(value).allUnreadMessages > 0;
+                            setIcon(currentNewMessages)
+                        }
+                    })
+                }
             },
             onInfoClicked() {
                 bus.$emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
