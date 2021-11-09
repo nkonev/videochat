@@ -15,6 +15,7 @@ import com.github.nkonev.aaa.services.UserService;
 import com.github.nkonev.aaa.utils.PageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.data.domain.PageRequest;
@@ -66,7 +67,7 @@ public class UserProfileController {
     private NotifierService notifier;
 
     @Autowired
-    private OAuth2ClientProperties oAuth2ClientProperties;
+    private ObjectProvider<OAuth2ClientProperties> oAuth2ClientProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
@@ -310,7 +311,8 @@ public class UserProfileController {
 
     @GetMapping(Constants.Urls.API + "/oauth2/providers")
     public Set<String> availableOauth2Providers() {
-        return ofNullable(oAuth2ClientProperties.getRegistration())
+        return ofNullable(oAuth2ClientProperties.getIfAvailable())
+                .map(OAuth2ClientProperties::getRegistration)
                 .flatMap(stringRegistrationMap -> stringRegistrationMap.keySet().stream())
                 .collect(Collectors.toSet());
     }

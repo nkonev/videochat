@@ -6,6 +6,8 @@ import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import com.github.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
 import com.github.nkonev.aaa.dto.UserRole;
+import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
@@ -32,6 +34,7 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * http://websystique.com/springmvc/spring-mvc-4-and-spring-security-4-integration-example/
@@ -76,7 +79,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private AaaOAuth2AuthorizationCodeUserService aaaOAuth2AuthorizationCodeUserService;
 
     @Autowired
-    InMemoryClientRegistrationRepository clientRegistrationRepository;
+    ObjectProvider<InMemoryClientRegistrationRepository> clientRegistrationRepositoryProvider;
 
     @Autowired
     private OAuth2ExceptionHandler OAuth2ExceptionHandler;
@@ -135,25 +138,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         .and().logout().logoutUrl(API_LOGOUT_URL).logoutSuccessHandler(authenticationLogoutSuccessHandler).permitAll();
 
-        http.oauth2Login(oauth2Login ->
-                oauth2Login
-                        .authorizedClientRepository(noOpAuthorizedClientRepository)
-                        .userInfoEndpoint(userInfoEndpoint ->
-                                userInfoEndpoint.userService(aaaOAuth2LoginUserService)
-                                        .oidcUserService(aaaOAuth2AuthorizationCodeUserService)
-                        )
-                        .authorizationEndpoint(authorizationEndpointConfig -> {
-                            authorizationEndpointConfig.authorizationRequestResolver(oAuth2AuthorizationRequestResolver());
-                            authorizationEndpointConfig.baseUri(API_LOGIN_OAUTH);
-                        })
+        if (clientRegistrationRepositoryProvider.getIfAvailable() != null) {
+            http.oauth2Login(oauth2Login ->
+                    oauth2Login
+                            .authorizedClientRepository(noOpAuthorizedClientRepository)
+                            .userInfoEndpoint(userInfoEndpoint ->
+                                    userInfoEndpoint.userService(aaaOAuth2LoginUserService)
+                                            .oidcUserService(aaaOAuth2AuthorizationCodeUserService)
+                            )
+                            .authorizationEndpoint(authorizationEndpointConfig -> {
+                                oAuth2AuthorizationRequestResolver().ifPresent(authorizationEndpointConfig::authorizationRequestResolver);
+                                authorizationEndpointConfig.baseUri(API_LOGIN_OAUTH);
+                            })
 
-                        .successHandler(new OAuth2AuthenticationSuccessHandler())
-                        .failureHandler(OAuth2ExceptionHandler)
-                        .redirectionEndpoint(redirectionEndpointConfig -> redirectionEndpointConfig.baseUri(AUTHORIZATION_RESPONSE_BASE_URI))
-                        .tokenEndpoint(tokenEndpointConfig -> {
-                            tokenEndpointConfig.accessTokenResponseClient(this.accessTokenResponseClient());
-                        })
-        );
+                            .successHandler(new OAuth2AuthenticationSuccessHandler())
+                            .failureHandler(OAuth2ExceptionHandler)
+                            .redirectionEndpoint(redirectionEndpointConfig -> redirectionEndpointConfig.baseUri(AUTHORIZATION_RESPONSE_BASE_URI))
+                            .tokenEndpoint(tokenEndpointConfig -> {
+                                tokenEndpointConfig.accessTokenResponseClient(this.accessTokenResponseClient());
+                            })
+            );
+        }
 
         http.headers().frameOptions().deny();
         http.headers().cacheControl().disable(); // see also AbstractImageUploadController#shouldReturnLikeCache
@@ -174,9 +179,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver() {
-        DefaultOAuth2AuthorizationRequestResolver defaultOAuth2AuthorizationRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, API_LOGIN_OAUTH);
-        return new WithRefererInStateOAuth2AuthorizationRequestResolver(defaultOAuth2AuthorizationRequestResolver);
+    Optional<OAuth2AuthorizationRequestResolver> oAuth2AuthorizationRequestResolver() {
+        InMemoryClientRegistrationRepository object = clientRegistrationRepositoryProvider.getIfAvailable();
+        if (object != null) {
+            DefaultOAuth2AuthorizationRequestResolver defaultOAuth2AuthorizationRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(object, API_LOGIN_OAUTH);
+            return Optional.of(new WithRefererInStateOAuth2AuthorizationRequestResolver(defaultOAuth2AuthorizationRequestResolver));
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Bean
