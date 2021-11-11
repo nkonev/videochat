@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -21,9 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 @Transactional
@@ -61,7 +60,7 @@ public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implem
             // ok
         } else {
             String login = getLogin(m);
-            resultPrincipal = createOrGetExistsUser(vkontakteId, login, map);
+            resultPrincipal = createOrGetExistsUser(vkontakteId, login, map, null);
         }
 
         aaaPreAuthenticationChecks.check(resultPrincipal);
@@ -120,7 +119,7 @@ public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implem
     }
 
     @Override
-    protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> oauthResourceServerResponse) {
+    protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> oauthResourceServerResponse, Set<String> roles) {
         UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForVkontakteInsert(oauthId, login);
         userAccount = userAccountRepository.save(userAccount);
         LOGGER.info("Created {} user id={} login='{}'", getOauthName(), oauthId, login);

@@ -6,11 +6,15 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
+import com.nimbusds.jose.shaded.json.JSONArray;
+import com.nimbusds.jwt.JWTParser;
+import com.nimbusds.jwt.SignedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -19,8 +23,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.util.Map;
-import java.util.Optional;
+import java.text.ParseException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Transactional
@@ -52,13 +57,20 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
         String keycloakId = getId(map);
         Assert.notNull(keycloakId, "keycloakId cannot be null");
 
+        Set<String> roles = new HashSet<>();
+        try {
+            roles = ((JSONArray) (JWTParser.parse(userRequest.getAccessToken().getTokenValue())).getJWTClaimsSet().getJSONObjectClaim("realm_access").get("roles")).stream().map(Object::toString).collect(Collectors.toSet());
+        } catch (ParseException e) {
+            LOGGER.error("Unable to parse roles", e);
+        }
 
         UserAccountDetailsDTO resultPrincipal = mergeOauthIdToExistsUser(keycloakId);
         if (resultPrincipal != null) {
             // ok
         } else {
             String login = getLogin(map);
-            resultPrincipal = createOrGetExistsUser(keycloakId, login, map);
+            userRequest.getAccessToken().getTokenValue();
+            resultPrincipal = createOrGetExistsUser(keycloakId, login, map, roles);
         }
 
         aaaPreAuthenticationChecks.check(resultPrincipal);
@@ -110,9 +122,10 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
     }
 
     @Override
-    protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> map) {
+    protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
         String maybeImageUrl = getAvatarUrl(map);
-        UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForKeycloakInsert(oauthId, login, maybeImageUrl);
+        boolean hasAdminRole = Optional.ofNullable(roles).orElse(new HashSet<>()).stream().anyMatch(s -> "ROLE_ADMIN".equalsIgnoreCase(s) || "ADMIN".equalsIgnoreCase(s));
+        UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForKeycloakInsert(oauthId, login, maybeImageUrl, hasAdminRole);
         userAccount = userAccountRepository.save(userAccount);
         LOGGER.info("Created {} user id={} login='{}'", getOauthName(), oauthId, login);
 

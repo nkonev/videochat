@@ -8,11 +8,11 @@ import org.slf4j.Logger;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public abstract class AbstractOAuth2UserService {
 
@@ -34,7 +34,7 @@ public abstract class AbstractOAuth2UserService {
 
     protected abstract void setOauthIdToEntity(Long id, String oauthId);
 
-    protected abstract UserAccount insertEntity(String oauthId, String login, Map<String, Object> oauthResourceServerResponse);
+    protected abstract UserAccount insertEntity(String oauthId, String login, Map<String, Object> oauthResourceServerResponse, Set<String> roles);
 
     protected abstract String getLoginPrefix();
 
@@ -67,7 +67,7 @@ public abstract class AbstractOAuth2UserService {
         }
     }
 
-    protected UserAccountDetailsDTO createOrGetExistsUser(String oauthId, String login, Map<String, Object> oauthResourceServerResponse) {
+    protected UserAccountDetailsDTO createOrGetExistsUser(String oauthId, String login, Map<String, Object> attributes, Set<String> roles) {
         UserAccount userAccount;
         Optional<UserAccount> userAccountOpt = findByOauthId(oauthId);
         if (!userAccountOpt.isPresent()){
@@ -77,7 +77,7 @@ public abstract class AbstractOAuth2UserService {
                 login = getLoginPrefix()+oauthId;
             }
 
-            userAccount = insertEntity(oauthId, login, oauthResourceServerResponse);
+            userAccount = insertEntity(oauthId, login, attributes, roles);
         } else {
             userAccount = userAccountOpt.get();
         }

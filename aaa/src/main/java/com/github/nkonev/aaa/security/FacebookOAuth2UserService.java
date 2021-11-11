@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -19,8 +20,11 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 
 @Transactional
@@ -58,7 +62,7 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
             // ok
         } else {
             String login = getLogin(map);
-            resultPrincipal = createOrGetExistsUser(facebookId, login, map);
+            resultPrincipal = createOrGetExistsUser(facebookId, login, map, null);
         }
 
         aaaPreAuthenticationChecks.check(resultPrincipal);
@@ -111,7 +115,7 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
     }
 
     @Override
-    protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> map) {
+    protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
         String maybeImageUrl = getAvatarUrl(map);
         UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForFacebookInsert(oauthId, login, maybeImageUrl);
         userAccount = userAccountRepository.save(userAccount);

@@ -254,12 +254,12 @@ public class UserAccountConverter {
         );
     }
 
-    public static UserAccount buildUserAccountEntityForKeycloakInsert(String keycloakId, String login, String maybeImageUrl) {
+    public static UserAccount buildUserAccountEntityForKeycloakInsert(String keycloakId, String login, String maybeImageUrl, boolean hasAdminRole) {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
 
-        final UserRole newUserRole = getDefaultUserRole();
+        final UserRole newUserRole = hasAdminRole ? UserRole.ROLE_ADMIN : getDefaultUserRole();
 
         return new UserAccount(
                 null,
