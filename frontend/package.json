@@ -11,7 +11,7 @@
     "axios": "^0.21.1",
     "centrifuge": "^2.8.0",
     "date-fns": "^2.23.0",
-    "ion-sdk-js": "^1.7.2",
+    "ion-sdk-js": "1.8.0",
     "lodash": "^4.17.21",
     "quill": "1.3.7",
     "splitpanes": "^2.3.8",
