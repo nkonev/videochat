@@ -168,7 +168,7 @@ func configureEcho(
 	e.DELETE("/chat/:id/message/:messageId", mc.DeleteMessage)
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
 	e.PUT("/chat/:id/broadcast", mc.BroadcastMessage)
-	e.DELETE("/internal/removeFileItem", mc.RemoveFileItem)
+	e.DELETE("/internal/remove-file-item", mc.RemoveFileItem)
 
 	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
 
