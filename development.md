@@ -297,3 +297,10 @@ docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/export.json ./ex
 Problem: Keycloak renders 'Invalid parameter: redirect_uri'
 Solution: Set proper [redirect url](https://stackoverflow.com/questions/45352880/keycloak-invalid-parameter-redirect-uri)
 
+# Testing with Keycloak
+To test add 3 environment varianbles:
+```
+spring.security.oauth2.client.registration.keycloak.client-id=my_client
+spring.security.oauth2.client.registration.keycloak.redirect-uri={baseUrl}/api/login/oauth2/code/{registrationId}
+spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484/auth/realms/my_realm
+```
