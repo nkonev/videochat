@@ -507,4 +507,12 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 .andExpect(status().isForbidden())
                 .andReturn();
     }
+
+    @Test
+    public void ldapLoginTest() throws Exception {
+        String xsrf = "xsrf";
+        // https://spring.io/guides/gs/authenticating-ldap/
+        String session = getSession(xsrf, "bob", "bobspassword");
+
+    }
 }
