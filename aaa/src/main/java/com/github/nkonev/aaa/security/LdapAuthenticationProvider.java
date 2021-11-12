@@ -19,9 +19,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
 import java.util.Optional;
 
 @Transactional
@@ -40,6 +42,12 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
     @Value("${custom.ldap.auth.filter:}")
     private String filter;
 
+    @Value("${custom.ldap.auth.password-encoding.type:}")
+    private String passwordEncodingType;
+
+    @Value("${custom.ldap.auth.password-encoding.strength:10}")
+    private int passwordEncodingStrength;
+
     @Value("${custom.ldap.auth.enabled:false}")
     private boolean enabled;
 
@@ -52,9 +60,11 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
             var user = usernamePasswordAuthenticationToken.getPrincipal().toString();
             var password = usernamePasswordAuthenticationToken.getCredentials().toString();
 
+            var encodedPassword = encodePassword(password);
+
             try {
                 var lq = LdapQueryBuilder.query().base(base).filter(filter, user);
-                ldapOperations.authenticate(lq, password);
+                ldapOperations.authenticate(lq, encodedPassword);
                 UserAccount byUsername = userAccountRepository
                         .findByUsername(user)
                         .orElseGet(() -> userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(user)));
@@ -67,6 +77,14 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
             }
         }
         return null;
+    }
+
+    private String encodePassword(String password) {
+        switch (passwordEncodingType.toLowerCase()){
+            case "bcrypt":
+                return new BCryptPasswordEncoder(passwordEncodingStrength).encode(password);
+        }
+        return password;
     }
 
     @Override

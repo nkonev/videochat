@@ -58,7 +58,7 @@ public class AaaUserDetailsService implements UserDetailsService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
-    private Map<String, Session> getSessions(String userName){
+    public Map<String, Session> getSessions(String userName){
         Object o = redisOperationsSessionRepository.findByIndexNameAndIndexValue(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME, userName);
         return (Map<String, Session>)o;
     }

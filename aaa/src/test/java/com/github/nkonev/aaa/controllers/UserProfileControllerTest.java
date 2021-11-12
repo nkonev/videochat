@@ -28,6 +28,7 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.session.Session;
 import org.springframework.test.web.servlet.MvcResult;
 import java.net.HttpCookie;
 import java.net.URI;
@@ -513,6 +514,9 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String xsrf = "xsrf";
         // https://spring.io/guides/gs/authenticating-ldap/
         String session = getSession(xsrf, "bob", "bobspassword");
-
+        Optional<UserAccount> bob = userAccountRepository.findByUsername("bob");
+        Assertions.assertTrue(bob.isPresent());
+        Map<String, Session> bobRedisSessions = aaaUserDetailsService.getSessions("bob");
+        Assertions.assertEquals(1, bobRedisSessions.size());
     }
 }
