@@ -6,7 +6,6 @@ import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import com.github.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
 import com.github.nkonev.aaa.dto.UserRole;
-import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +13,7 @@ import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointR
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -67,6 +67,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private AaaUserDetailsService aaaUserDetailsService;
 
     @Autowired
+    private AuthenticationProvider ldapAuthenticationProvider;
+
+    @Autowired
     private AaaPreAuthenticationChecks aaaPreAuthenticationChecks;
 
     @Autowired
@@ -110,7 +113,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         // https://dzone.com/articles/spring-security-4-authenticate-and-authorize-users
         // http://www.programming-free.com/2015/09/spring-security-password-encryption.html
-        auth.authenticationProvider(authenticationProvider());
+        auth.authenticationProvider(ldapAuthenticationProvider);
+        auth.authenticationProvider(dbAuthenticationProvider());
     }
 
     @Bean
@@ -190,7 +194,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider dbAuthenticationProvider() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
         authenticationProvider.setUserDetailsService(aaaUserDetailsService);
         authenticationProvider.setPasswordEncoder(passwordEncoder());
