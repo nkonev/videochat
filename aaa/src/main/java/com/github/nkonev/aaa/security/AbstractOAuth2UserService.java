@@ -87,22 +87,3 @@ public abstract class AbstractOAuth2UserService {
 
 }
 
-class AaaAuthenticationToken extends AbstractAuthenticationToken {
-
-    private final UserAccountDetailsDTO userAccountDetailsDTO;
-
-    public AaaAuthenticationToken(UserAccountDetailsDTO userAccountDetailsDTO) {
-        super(userAccountDetailsDTO.getAuthorities());
-        this.userAccountDetailsDTO = userAccountDetailsDTO;
-    }
-
-    @Override
-    public Object getCredentials() {
-        return userAccountDetailsDTO.getPassword();
-    }
-
-    @Override
-    public Object getPrincipal() {
-        return userAccountDetailsDTO;
-    }
-}

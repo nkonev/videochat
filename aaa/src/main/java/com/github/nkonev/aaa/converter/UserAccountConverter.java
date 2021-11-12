@@ -278,6 +278,29 @@ public class UserAccountConverter {
         );
     }
 
+    public static UserAccount buildUserAccountEntityForLdapInsert(String login) {
+        final boolean expired = false;
+        final boolean locked = false;
+        final boolean enabled = true;
+
+        final UserRole newUserRole = getDefaultUserRole();
+
+        return new UserAccount(
+                null,
+                CreationType.LDAP,
+                login,
+                null,
+                null,
+                null,
+                expired,
+                locked,
+                enabled,
+                newUserRole,
+                null,
+                null,
+                new UserAccount.OAuth2Identifiers(null, null, null, null)
+        );
+    }
 
     private static void validateLoginAndEmail(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO){
         Assert.hasLength(userAccountDTO.login(), "login should have length");

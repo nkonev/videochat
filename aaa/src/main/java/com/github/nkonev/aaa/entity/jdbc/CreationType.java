@@ -5,6 +5,7 @@ public enum CreationType {
     FACEBOOK,
     VKONTAKTE,
     GOOGLE,
-    KEYCLOAK
+    KEYCLOAK,
+    LDAP
     ;
 }

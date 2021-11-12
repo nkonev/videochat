@@ -113,6 +113,10 @@ spring.ldap.embedded:
   base-dn: dc=springframework,dc=org
   ldif: classpath:test-server.ldif
 
+custom.ldap.auth:
+  enabled: true
+  filter: "uid={0}"
+
 spring.security:
   oauth2:
     client:
