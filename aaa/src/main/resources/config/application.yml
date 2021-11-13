@@ -124,6 +124,8 @@ management:
   health:
     mail:
       enabled: false
+    ldap:
+      enabled: false
   server:
     port: 3005
     ssl:
