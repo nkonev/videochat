@@ -5,17 +5,34 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+import java.util.Collection;
+
+//@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE)
-public class AaaAuthenticationToken extends AbstractAuthenticationToken {
+public class AaaAuthenticationToken implements Authentication {
 
-    private final UserAccountDetailsDTO userAccountDetailsDTO;
+    private UserAccountDetailsDTO userAccountDetailsDTO;
 
-    @JsonCreator
+//    @JsonCreator
+//    public AaaAuthenticationToken(UserAccountDetailsDTO userAccountDetailsDTO) {
+//        super(userAccountDetailsDTO.getAuthorities());
+//        setDetails(userAccountDetailsDTO);
+//        setAuthenticated(true);
+//    }
+
+    public AaaAuthenticationToken() {
+    }
+
     public AaaAuthenticationToken(UserAccountDetailsDTO userAccountDetailsDTO) {
-        super(userAccountDetailsDTO.getAuthorities());
         this.userAccountDetailsDTO = userAccountDetailsDTO;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return userAccountDetailsDTO.getAuthorities();
     }
 
     @Override
@@ -24,7 +41,27 @@ public class AaaAuthenticationToken extends AbstractAuthenticationToken {
     }
 
     @Override
-    public Object getPrincipal() {
+    public Object getDetails() {
         return userAccountDetailsDTO;
+    }
+
+    @Override
+    public Object getPrincipal() {
+        return getDetails();
+    }
+
+    @Override
+    public boolean isAuthenticated() {
+        return true;
+    }
+
+    @Override
+    public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+
+    }
+
+    @Override
+    public String getName() {
+        return userAccountDetailsDTO.getName();
     }
 }
