@@ -14,6 +14,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
+import com.github.nkonev.aaa.security.SecurityConfig;
 import com.github.nkonev.aaa.services.EventReceiver;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.hamcrest.CoreMatchers;
@@ -30,6 +31,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.session.Session;
 import org.springframework.test.web.servlet.MvcResult;
+
+import javax.servlet.http.Cookie;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.time.Duration;
@@ -37,6 +40,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.github.nkonev.aaa.security.SecurityConfig.PASSWORD_PARAMETER;
+import static com.github.nkonev.aaa.security.SecurityConfig.USERNAME_PARAMETER;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -506,6 +511,21 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                     LOGGER.info(result.getResponse().getContentAsString());
                 })
                 .andExpect(status().isForbidden())
+                .andReturn();
+    }
+
+    @Test
+    public void testMySessions() throws Exception {
+        String xsrf = "xsrf";
+        String session = getSession(xsrf, "admin", "admin");
+
+        mockMvc.perform(
+                        get(Constants.Urls.API+Constants.Urls.SESSIONS+"/my")
+                                .cookie(new Cookie(getAuthCookieName(), session))
+                ).andDo(mvcResult1 -> {
+                    LOGGER.info(mvcResult1.getResponse().getContentAsString());
+                })
+                .andExpect(status().isOk())
                 .andReturn();
     }
 
