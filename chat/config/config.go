@@ -19,8 +19,8 @@ func InitFlags() string {
 }
 
 func InitViper(configFile, envPrefix string) {
+	viper.SetConfigType("yaml")
 	if configFile == "" {
-		viper.SetConfigType("yaml")
 		if embedBytes, err := configDev.ReadFile("config-dev/config.yml"); err != nil {
 			panic(fmt.Errorf("Fatal error during reading embedded config file: %s \n", err))
 		} else if err := viper.ReadConfig(bytes.NewBuffer(embedBytes)); err != nil {

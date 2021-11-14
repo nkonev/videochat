@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"embed"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/serialx/hashring"
@@ -17,6 +19,9 @@ import (
 	"sync/atomic"
 	"time"
 )
+
+//go:embed config-dev
+var configDev embed.FS
 
 var Logger = log.New()
 
@@ -52,10 +57,7 @@ func (f *AbstractReplicasProvider) setUrlsAndHashRing(slice *urlsAndHashRing) {
 }
 
 func (r *FileVideoReplicasProvider) Refresh() {
-	if err := viper.ReadInConfig(); err != nil {
-		Logger.Errorf("Fatal error config file: %s \n", err)
-		return
-	}
+	// TODO not supported fully for file provider
 
 	urls := viper.GetStringSlice("urlsSource.file.urls")
 	var ret = []ReplicaAndProxy{}
@@ -157,16 +159,38 @@ func main() {
 	Logger.SetFormatter(&log.TextFormatter{ForceColors: true, FullTimestamp: true})
 	Logger.SetOutput(os.Stdout)
 
-	configFile := flag.String("config", "./config.yml", "Path to config file")
+	applyBaseConfig := *flag.Bool("b", true, "use base config")
+	overrideConfigPath := *flag.String("o", "", "Path to config file")
 	flag.Parse()
-	viper.SetConfigFile(*configFile)
+
+	viper.SetConfigType("yaml")
+	if applyBaseConfig {
+		log.Info( "Applying base config")
+		if embedBytes, err := configDev.ReadFile("config-dev/config.yml"); err != nil {
+			panic(fmt.Errorf("Fatal error during reading embedded config file: %s \n", err))
+		} else if err := viper.ReadConfig(bytes.NewBuffer(embedBytes)); err != nil {
+			panic(fmt.Errorf("Fatal error during viper reading embedded config file: %s \n", err))
+		}
+	} else {
+		log.Info( "Not applying base config")
+	}
+
+	viper.AddConfigPath(overrideConfigPath)
+
+	if err := viper.MergeInConfig(); err != nil {
+		if errors.As(err, &viper.ConfigFileNotFoundError{}) {
+			log.Infof( "Override config file is not found, overrideConfigPath=%v", overrideConfigPath)
+		} else {
+			// Handle errors reading the config file
+			panic(fmt.Errorf("Fatal error during reading user config file: %s \n", err))
+		}
+	} else {
+		log.Infof( "Override config file successfully merged, overrideConfigPath=%v", overrideConfigPath)
+	}
+
 	// call multiple times to add many search paths
 	viper.SetEnvPrefix("VIDEO_PROXY")
 	viper.AutomaticEnv()
-	// Find and read the config file
-	if err := viper.ReadInConfig(); err != nil { // Handle errors reading the config file
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
-	}
 
 	logLevel := viper.GetString("log.level")
 	level, err := log.ParseLevel(logLevel)
