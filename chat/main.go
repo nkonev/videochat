@@ -13,6 +13,7 @@ import (
 	"go.uber.org/fx"
 	"net/http"
 	"nkonev.name/chat/client"
+	"nkonev.name/chat/config"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers"
 	"nkonev.name/chat/listener"
@@ -21,14 +22,13 @@ import (
 	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/redis"
-	"nkonev.name/chat/utils"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
 
 func main() {
-	configFile := utils.InitFlags("./config-dev/config.yml")
-	utils.InitViper(configFile, "CHAT")
+	configFile := config.InitFlags()
+	config.InitViper(configFile, "CHAT")
 
 	app := fx.New(
 		fx.Logger(Logger),

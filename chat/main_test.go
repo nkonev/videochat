@@ -19,6 +19,7 @@ import (
 	test "net/http/httptest"
 	"net/url"
 	"nkonev.name/chat/client"
+	"nkonev.name/chat/config"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers"
 	"nkonev.name/chat/handlers/dto"
@@ -48,8 +49,8 @@ func shutdown() {
 const aaaEmuPort = "8061"
 
 func setup() {
-	configFile := utils.InitFlags("./config-dev/config.yml")
-	utils.InitViper(configFile, "")
+	configFile := config.InitFlags()
+	config.InitViper(configFile, "CHAT")
 
 	viper.Set("aaa.url.base", "http://localhost:"+aaaEmuPort)
 

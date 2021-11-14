@@ -2,8 +2,8 @@ package db
 
 import (
 	"github.com/stretchr/testify/assert"
+	"nkonev.name/chat/config"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/utils"
 	"os"
 	"testing"
 )
@@ -24,8 +24,8 @@ func shutdown() {
 var dbInstance *DB
 
 func setup() {
-	configFile := utils.InitFlags("../config-dev/config.yml")
-	utils.InitViper(configFile, "")
+	configFile := config.InitFlags()
+	config.InitViper(configFile, "CHAT")
 
 	d, err := ConfigureDb(nil)
 	dbInstance = &d
