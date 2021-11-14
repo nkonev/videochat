@@ -24,8 +24,7 @@ func shutdown() {
 var dbInstance *DB
 
 func setup() {
-	configFile := config.InitFlags()
-	config.InitViper(configFile, "CHAT")
+	config.InitViper()
 
 	d, err := ConfigureDb(nil)
 	dbInstance = &d

@@ -3,36 +3,49 @@ package config
 import (
 	"bytes"
 	"embed"
+	"errors"
 	"flag"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 //go:embed config-dev
 var configDev embed.FS
 
-func InitFlags() string {
-	configFile := flag.String("config", "", "Path to config file")
+func InitViper() {
+	overrideConfigPath := *flag.String("o", "", "Path to config file")
+	applyBaseConfig := *flag.Bool("b", true, "Use base config")
 
 	flag.Parse()
-	return *configFile
-}
 
-func InitViper(configFile, envPrefix string) {
 	viper.SetConfigType("yaml")
-	if configFile == "" {
+
+
+	if applyBaseConfig {
+		log.Info( "Applying base config")
 		if embedBytes, err := configDev.ReadFile("config-dev/config.yml"); err != nil {
 			panic(fmt.Errorf("Fatal error during reading embedded config file: %s \n", err))
 		} else if err := viper.ReadConfig(bytes.NewBuffer(embedBytes)); err != nil {
 			panic(fmt.Errorf("Fatal error during viper reading embedded config file: %s \n", err))
 		}
 	} else {
-		viper.SetConfigFile(configFile)
-		if err := viper.ReadInConfig(); err != nil { // Handle errors reading the config file
+		log.Info( "Not applying base config")
+	}
+
+	if err := viper.MergeInConfig(); err != nil {
+		if errors.As(err, &viper.ConfigFileNotFoundError{}) {
+			log.Infof( "Override config file is not found, overrideConfigPath=%v", overrideConfigPath)
+		} else {
+			// Handle errors reading the config file
 			panic(fmt.Errorf("Fatal error during reading user config file: %s \n", err))
 		}
+	} else {
+		log.Infof( "Override config file successfully merged, overrideConfigPath=%v", overrideConfigPath)
 	}
-	viper.SetEnvPrefix(envPrefix)
+
+
+	viper.SetEnvPrefix("CHAT")
 	viper.AutomaticEnv()
 	// Find and read the config file
 }

@@ -26,8 +26,7 @@ import (
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
 
 func main() {
-	configFile := config.InitFlags()
-	config.InitViper(configFile, "CHAT")
+	config.InitViper()
 
 	app := fx.New(
 		fx.Logger(Logger),

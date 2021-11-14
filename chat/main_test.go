@@ -48,8 +48,7 @@ func shutdown() {
 const aaaEmuPort = "8061"
 
 func setup() {
-	configFile := config.InitFlags()
-	config.InitViper(configFile, "CHAT")
+	config.InitViper()
 
 	viper.Set("aaa.url.base", "http://localhost:"+aaaEmuPort)
 
