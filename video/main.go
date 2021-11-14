@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
+	"embed"
 	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -30,6 +32,9 @@ var (
 	logger = log.New()
 )
 
+//go:embed config/config-dev
+var configDev embed.FS
+
 const (
 	portRangeLimit = 100
 )
@@ -41,20 +46,23 @@ func showHelp() {
 }
 
 func load() bool {
-	_, err := os.Stat(file)
-	if err != nil {
-		return false
+	if file == "" {
+		viper.SetConfigType("yaml")
+		if embedBytes, err := configDev.ReadFile("config/config-dev/config.yml"); err != nil {
+			panic(fmt.Errorf("Fatal error during reading embedded config file: %s \n", err))
+		} else if err := viper.ReadConfig(bytes.NewBuffer(embedBytes)); err != nil {
+			panic(fmt.Errorf("Fatal error during viper reading embedded config file: %s \n", err))
+		}
+	} else {
+		viper.SetConfigFile(file)
+		if err := viper.ReadInConfig(); err != nil { // Handle errors reading the config file
+			panic(fmt.Errorf("Fatal error during reading user config file: %s \n", err))
+		}
 	}
+	viper.SetEnvPrefix("VIDEO")
+	viper.AutomaticEnv()
 
-	viper.SetConfigFile(file)
-	viper.SetConfigType("yml")
-
-	err = viper.ReadInConfig()
-	if err != nil {
-		fmt.Printf("config file %s read failed. %v\n", file, err)
-		return false
-	}
-	err = viper.GetViper().Unmarshal(&conf)
+	err := viper.GetViper().Unmarshal(&conf)
 	if err != nil {
 		fmt.Printf("sfu extended config file %s loaded failed. %v\n", file, err)
 		return false
@@ -104,7 +112,7 @@ func load() bool {
 }
 
 func parse() bool {
-	flag.StringVar(&file, "config", "./config.yml", "config file")
+	flag.StringVar(&file, "config", "", "config file")
 	help := flag.Bool("h", false, "help info")
 	flag.Parse()
 	if !load() {
