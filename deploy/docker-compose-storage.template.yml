@@ -25,16 +25,21 @@ services:
         - "traefik.http.routers.storage-version-router.rule=Path(`/storage/git.json`)"
         - "traefik.http.routers.storage-version-router.entrypoints=http"
         - "traefik.http.routers.storage-version-router.middlewares=storage-stripprefix-middleware"
+    environment:
+        - STORAGE_SERVER.URL=https://chat.nkonev.name
+        - STORAGE_JAEGER.ENDPOINT=jaeger:6831
+        - STORAGE_MINIO.ENDPOINT=minio:9000
+        - STORAGE_CHAT.URL.BASE=http://chat:1235
+        - STORAGE_AAA.URL.BASE=http://aaa:8060
+        - STORAGE_LIMITS.STAT.DIR=/data
 
     logging:
       driver: "journald"
       options:
         tag: chat-storage
     volumes:
-      - ./storage.yml:/etc/storage.yml
       - /mnt/chat-minio/data:/data
 
-    command: ["-config=/etc/storage.yml"]
 
 networks:
   backend:

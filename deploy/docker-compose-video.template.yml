@@ -19,6 +19,10 @@ services:
         - "traefik.http.routers.video-version-router.entrypoints=http"
         - "traefik.http.routers.video-version-router.middlewares=video-stripprefix-middleware"
 
+    volumes:
+      - ./video.yml:/etc/video/config.yml
+    command: ["-o=/etc/video"]
+
     ports:
       # turn port
       - target: 3478
@@ -40,9 +44,6 @@ services:
       driver: "journald"
       options:
         tag: chat-video
-    volumes:
-      - ./video.yml:/etc/video.yml
-    command: ["-config=/etc/video.yml"]
 
 networks:
   backend:

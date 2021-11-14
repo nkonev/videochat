@@ -26,13 +26,18 @@ services:
         - "traefik.http.routers.chat-version-router.entrypoints=http"
         - "traefik.http.routers.chat-version-router.middlewares=chat-stripprefix-middleware"
 
+    environment:
+      - CHAT_POSTGRESQL.URL=postgres://chat:chatPazZw0rd@postgresql:5432/chat?sslmode=disable&application_name=chat-app
+      - CHAT_SERVER.BODY.LIMIT=100G
+      - CHAT_CENTRIFUGE.REDIS.ADDRESS=redis:6379
+      - CHAT_AAA.URL.BASE=http://aaa:8060
+      - CHAT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
+      - CHAT_JAEGER.ENDPOINT=jaeger:6831
+      - CHAT_REDIS.ADDRESS=redis:6379
     logging:
       driver: "journald"
       options:
         tag: chat
-    volumes:
-      - ./chat.yml:/etc/chat.yml
-    command: ["-config=/etc/chat.yml"]
 
 networks:
   backend:

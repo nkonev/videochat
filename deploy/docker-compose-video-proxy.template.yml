@@ -25,11 +25,12 @@ services:
       driver: "journald"
       options:
         tag: chat-video-proxy
-#    environment:
+    environment:
 #      - GODEBUG=netdns=2
-    volumes:
-      - ./video-proxy.yml:/etc/video-proxy.yml
-    command: ["-config=/etc/video-proxy.yml"]
+        - VIDEO_PROXY_URLSSOURCE.TYPE=dnsA
+        - VIDEO_PROXY_URLSSOURCE.DNSA.NAMETOLOOKUP=video
+        - VIDEO_PROXY_URLSSOURCE.DNSA.PROTOCOL=http
+        - VIDEO_PROXY_URLSSOURCE.DNSA.PORT=7001
 
 networks:
   backend:

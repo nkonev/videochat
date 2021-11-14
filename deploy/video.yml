@@ -28,12 +28,12 @@ router:
 # Sets the interval in which the SFU will check the audio level
 # in [ms]. If the active speaker has changed, the sfu will
 # emit an event to clients.
-  audiolevelinterval: 1000
+  audiolevelinterval: 200
 # Sets minimum percentage of events required to fire an audio level
 # according to the expected events from the audiolevelinterval,
 # calculated as audiolevelinterval/packetization time (20ms for 8kHz)
 # Values from [0-100]
-  audiolevelfilter: 20
+  audiolevelfilter: 10
 
   simulcast:
 # Prefer best quality initially
@@ -63,6 +63,14 @@ webrtc:
   sdpsemantics: "unified-plan-with-fallback"
 # toggle multicast dns support: https://tools.ietf.org/html/draft-mdns-ice-candidates-00
   mdns: true
+
+#  timeouts:
+    # The duration in [sec] without network activity before a ICE Agent is considered disconnected
+#    disconnected: 5
+    # The duration in [sec] without network activity before a ICE Agent is considered failed after disconnected
+#    failed: 25
+    # # How often in [sec] the ICE Agent sends extra traffic if there is no activity, if media is flowing no traffic will be sent
+#    keepalive: 2
 
   candidates:
 # In case you're deploying ion-sfu on a server which is configured with
@@ -99,19 +107,9 @@ turn:
 chat:
   url:
     base: "http://chat:1235"
-    access: "/internal/access"
-    isChatAdmin: "/internal/is-admin"
-
-# Rest client
-http:
-  maxIdleConns: 2
-  idleConnTimeout: '10s'
-  disableCompression: false
 
 frontend:
-  # in ion-sdk-js vp8 is default
   preferredCodec: h264
-  forceKickAfter: 5s
   iceserver:
     - server:
         urls: ["turn:api.site.local:3478"]
@@ -120,4 +118,3 @@ frontend:
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672"
 
-syncNotificationPeriod: 2s
