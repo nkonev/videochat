@@ -15,16 +15,15 @@ import (
 	"go.uber.org/fx"
 	"net/http"
 	"nkonev.name/storage/client"
+	"nkonev.name/storage/config"
 	"nkonev.name/storage/handlers"
 	. "nkonev.name/storage/logger"
-	"nkonev.name/storage/utils"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
 
 func main() {
-	configFile := utils.InitFlags("./config-dev/config.yml")
-	utils.InitViper(configFile, "STORAGE")
+	config.InitViper()
 
 	app := fx.New(
 		fx.Logger(Logger),

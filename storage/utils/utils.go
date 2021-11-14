@@ -1,10 +1,8 @@
 package utils
 
 import (
-	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"regexp"
 	"strconv"
 )
@@ -24,24 +22,6 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 		}
 	}
 	return regexps
-}
-
-func InitFlags(defaultConfigLocation string) string {
-	configFile := flag.String("config", defaultConfigLocation, "Path to config file")
-
-	flag.Parse()
-	return *configFile
-}
-
-func InitViper(configFile, envPrefix string) {
-	viper.SetConfigFile(configFile)
-	// call multiple times to add many search paths
-	viper.SetEnvPrefix(envPrefix)
-	viper.AutomaticEnv()
-	// Find and read the config file
-	if err := viper.ReadInConfig(); err != nil { // Handle errors reading the config file
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
-	}
 }
 
 func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
