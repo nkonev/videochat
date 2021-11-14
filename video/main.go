@@ -13,6 +13,7 @@ import (
 	"github.com/pion/ion-sfu/pkg/sfu"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
@@ -107,7 +108,11 @@ func load() bool {
 
 	logger.V(0).Info("Config file loaded", "file", file)
 
-	fmt.Printf("config %s load ok!\n", file)
+	d, err := yaml.Marshal(viper.AllSettings())
+	if err != nil {
+		logger.V(2).Error(err, "Unable to show yaml")
+	}
+	logger.V(2).Info("Parsed config", "config", string(d))
 	return true
 }
 
