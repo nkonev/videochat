@@ -9,18 +9,16 @@ import (
 	"nkonev.name/chat/handlers/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
-	"nkonev.name/chat/producer"
 	"nkonev.name/chat/utils"
 )
 
 type VideoHandler struct {
 	db          db.DB
 	notificator notifications.Notifications
-	producer *producer.RabbitPublisher
 }
 
-func NewVideoHandler(db db.DB, notificator notifications.Notifications, producer *producer.RabbitPublisher) VideoHandler {
-	return VideoHandler{db, notificator, producer}
+func NewVideoHandler(db db.DB, notificator notifications.Notifications) VideoHandler {
+	return VideoHandler{db, notificator}
 }
 
 type simpleChat struct {

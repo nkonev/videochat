@@ -20,7 +20,6 @@ import (
 	_ "net/http/pprof"
 	"nkonev.name/video/config"
 	"nkonev.name/video/handlers"
-	"nkonev.name/video/listener"
 	"nkonev.name/video/producer"
 	myRabbitmq "nkonev.name/video/rabbitmq"
 	"nkonev.name/video/service"
@@ -210,7 +209,6 @@ func main() {
 	publisherService := producer.NewRabbitPublisher(rabbitmqConnection)
 	extendedService := service.NewExtendedService(sfuInstance, &conf, publisherService, client)
 	handler := handlers.NewHandler(&upgrader, sfuInstance, &conf, &extendedService)
-	listener.NewVideoListener(&extendedService, rabbitmqConnection)
 
 	r := mux.NewRouter()
 	// SFU websocket endpoint

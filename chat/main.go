@@ -19,7 +19,6 @@ import (
 	"nkonev.name/chat/listener"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
-	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/redis"
 )
@@ -55,8 +54,6 @@ func main() {
 			listener.CreateVideoChannel,
 			listener.CreateAaaQueue,
 			listener.CreateVideoQueue,
-			producer.CreateVideoKickChannel,
-			producer.NewRabbitPublisher,
 		),
 		fx.Invoke(
 			initJaeger,
