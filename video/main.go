@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"embed"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -29,7 +30,8 @@ import (
 
 var (
 	conf   = config.ExtendedConfig{}
-	file   string
+	applyBaseConfig bool
+	overrideConfigPath string
 	logger = log.New()
 )
 
@@ -42,57 +44,71 @@ const (
 
 func showHelp() {
 	fmt.Printf("Usage:%s {params}\n", os.Args[0])
-	fmt.Println("      -c {config file}")
+	fmt.Println("      -o {override config file path}")
 	fmt.Println("      -h (show help info)")
 }
 
 func load() bool {
-	if file == "" {
-		viper.SetConfigType("yaml")
+	viper.SetConfigType("yaml")
+	viper.SetConfigName("config")
+
+	if applyBaseConfig {
+		logger.Info( "Applying base config")
 		if embedBytes, err := configDev.ReadFile("config/config-dev/config.yml"); err != nil {
 			panic(fmt.Errorf("Fatal error during reading embedded config file: %s \n", err))
 		} else if err := viper.ReadConfig(bytes.NewBuffer(embedBytes)); err != nil {
 			panic(fmt.Errorf("Fatal error during viper reading embedded config file: %s \n", err))
 		}
 	} else {
-		viper.SetConfigFile(file)
-		if err := viper.ReadInConfig(); err != nil { // Handle errors reading the config file
+		logger.Info( "Not applying base config")
+	}
+
+	viper.AddConfigPath(overrideConfigPath)
+
+	if err := viper.MergeInConfig(); err != nil {
+		if errors.As(err, &viper.ConfigFileNotFoundError{}) {
+			logger.Info( "Override config file is not found", "overrideConfigPath", overrideConfigPath)
+		} else {
+			// Handle errors reading the config file
 			panic(fmt.Errorf("Fatal error during reading user config file: %s \n", err))
 		}
+	} else {
+		logger.Info( "Override config file successfully merged", "overrideConfigPath", overrideConfigPath)
 	}
+
 	viper.SetEnvPrefix("VIDEO")
 	viper.AutomaticEnv()
 
 	err := viper.GetViper().Unmarshal(&conf)
 	if err != nil {
-		fmt.Printf("sfu extended config file %s loaded failed. %v\n", file, err)
+		fmt.Printf("sfu extended config file loaded failed. %v\n", err)
 		return false
 	}
 	err = viper.GetViper().Unmarshal(&conf.Config)
 	if err != nil {
-		fmt.Printf("sfu core config file %s loaded failed. %v\n", file, err)
+		fmt.Printf("sfu core config file loaded failed. %v\n", err)
 		return false
 	}
 	for _, tc := range conf.FrontendConfig.ICEServers {
 		err = viper.GetViper().Unmarshal(&tc.ICEServerConfig)
 		if err != nil {
-			fmt.Printf("sfu extended turn config %s loaded failed. %v\n", file, err)
+			fmt.Printf("sfu extended turn config loaded failed. %v\n", err)
 			return false
 		}
 	}
 
 	if len(conf.WebRTC.ICEPortRange) > 2 {
-		fmt.Printf("config file %s loaded failed. range port must be [min,max]\n", file)
+		fmt.Printf("config file loaded failed. range port must be [min,max]\n")
 		return false
 	}
 
 	if len(conf.WebRTC.ICEPortRange) != 0 && conf.WebRTC.ICEPortRange[1]-conf.WebRTC.ICEPortRange[0] < portRangeLimit {
-		fmt.Printf("config file %s loaded failed. range port must be [min, max] and max - min >= %d\n", file, portRangeLimit)
+		fmt.Printf("config file loaded failed. range port must be [min, max] and max - min >= %d\n", portRangeLimit)
 		return false
 	}
 
 	if len(conf.Turn.PortRange) > 2 {
-		logger.Error(nil, "config file loaded failed. turn port must be [min,max]", "file", file)
+		logger.Error(nil, "config file loaded failed. turn port must be [min,max]")
 		return false
 	}
 
@@ -106,7 +122,7 @@ func load() bool {
 		logger.Info("Setting default sync notification period", "syncNotificationPeriod", conf.SyncNotificationPeriod)
 	}
 
-	logger.V(0).Info("Config file loaded", "file", file)
+	logger.V(0).Info("Config loaded", "overrideConfigPath", overrideConfigPath)
 
 	d, err := yaml.Marshal(viper.AllSettings())
 	if err != nil {
@@ -117,7 +133,8 @@ func load() bool {
 }
 
 func parse() bool {
-	flag.StringVar(&file, "config", "", "config file")
+	flag.BoolVar(&applyBaseConfig, "b", true, "use base config")
+	flag.StringVar(&overrideConfigPath, "o", "", "override config file path")
 	help := flag.Bool("h", false, "help info")
 	flag.Parse()
 	if !load() {
