@@ -25,7 +25,6 @@ import (
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
-	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/redis"
 	"nkonev.name/chat/utils"
@@ -223,8 +222,6 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			db.ConfigureDb,
 			notifications.NewNotifications,
 			rabbitmq.CreateRabbitMqConnection,
-			producer.CreateVideoKickChannel,
-			producer.NewRabbitPublisher,
 		),
 		fx.Invoke(
 			runMigrations,
@@ -262,8 +259,6 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 			db.ConfigureDb,
 			notifications.NewNotifications,
 			rabbitmq.CreateRabbitMqConnection,
-			producer.CreateVideoKickChannel,
-			producer.NewRabbitPublisher,
 		),
 		fx.Invoke(
 			runMigrations,
