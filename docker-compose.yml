@@ -39,7 +39,7 @@ services:
         max-size: "50m"
         max-file: "1"
   postgresql:
-    image: postgres:14.0-alpine3.14
+    image: postgres:14.1-alpine3.14
     restart: unless-stopped
     ports:
       - 35432:5432

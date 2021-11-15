@@ -21,7 +21,7 @@ services:
         tag: chat-traefik
 
   postgresql:
-    image: postgres:14.0-alpine3.14
+    image: postgres:14.1-alpine3.14
     volumes:
       - ./postgresql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
