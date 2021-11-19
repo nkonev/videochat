@@ -53,7 +53,6 @@ services:
       - spring.security.oauth2.client.provider.vkontakte.user-name-attribute=response
       - spring.security.oauth2.client.provider.facebook.user-info-uri=https://graph.facebook.com/me?fields=id,name,picture
       - CSRF_COOKIE_SECURE=true
-      - CSRF_COOKIE_HTTP-ONLY=true
       - COOKIE_SAME-SITE=Strict
 
     logging:
