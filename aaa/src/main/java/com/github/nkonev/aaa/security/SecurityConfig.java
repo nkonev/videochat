@@ -95,9 +95,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${csrf.cookie.http-only:false}")
     private boolean cookieHttpOnly;
 
+    @Value("${csrf.cookie.name:VIDEOCHAT_XSRF_TOKEN}")
+    private String cookieName;
+
     @Bean
     public CsrfTokenRepository csrfTokenRepository() {
         final CookieCsrfTokenRepository cookieCsrfTokenRepository = new CookieCsrfTokenRepository();
+        cookieCsrfTokenRepository.setCookieName(cookieName);
         cookieCsrfTokenRepository.setSecure(cookieSecure);
         cookieCsrfTokenRepository.setCookieHttpOnly(cookieHttpOnly);
         return cookieCsrfTokenRepository;

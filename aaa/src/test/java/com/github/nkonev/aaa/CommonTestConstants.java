@@ -16,7 +16,7 @@ public class CommonTestConstants {
 
     public static final String USER_LOCKED = "generated_user_66";
     public static final String COMMON_PASSWORD = "generated_user_password";
-    public static final String COOKIE_XSRF = "XSRF-TOKEN";
+    public static final String COOKIE_XSRF = "VIDEOCHAT_XSRF_TOKEN";
     public static final String HEADER_XSRF_TOKEN = "X-XSRF-TOKEN";
     public static final String HEADER_COOKIE = "Cookie";
     public static final String HEADER_SET_COOKIE = "Set-Cookie";

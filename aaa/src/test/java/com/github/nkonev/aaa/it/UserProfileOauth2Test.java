@@ -20,8 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.IOException;
 import java.net.URI;
-import static com.github.nkonev.aaa.CommonTestConstants.COMMON_PASSWORD;
-import static com.github.nkonev.aaa.CommonTestConstants.HEADER_XSRF_TOKEN;
+
+import static com.github.nkonev.aaa.CommonTestConstants.*;
 import static com.github.nkonev.aaa.Constants.Urls.API;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
@@ -333,7 +333,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
         final String bindDeleteUrl = "/" + OAuth2Providers.KEYCLOAK;
 
         currentPage = (HtmlPage) currentPage.refresh();
-        Cookie xsrf = webClient.getCookieManager().getCookie("XSRF-TOKEN");
+        Cookie xsrf = webClient.getCookieManager().getCookie(COOKIE_XSRF);
         String xsrfValue = xsrf.getValue();
         Cookie session = webClient.getCookieManager().getCookie(getAuthCookieName());
 
