@@ -25,6 +25,19 @@ import {setIcon} from "@/utils";
 
 let vm;
 
+function getCsrfCookie(name) {
+    const value = "; " + document.cookie;
+    const parts = value.split("; " + name + "=");
+    if (parts.length === 2) return parts.pop().split(";").shift();
+}
+
+axios.interceptors.request.use(request => {
+    const cookieValue = getCsrfCookie('VIDEOCHAT_XSRF_TOKEN');
+    console.debug("Injecting xsrf token to header", cookieValue);
+    request.headers['X-XSRF-TOKEN'] = cookieValue;
+    return request
+})
+
 axios.interceptors.response.use((response) => {
   return response
 }, (error) => {
