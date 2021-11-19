@@ -65,11 +65,18 @@ public abstract class AbstractTestRunner {
     @Configuration
     public static class UtConfig {
 
+        @Autowired
+        private RedisServerCommands redisServerCommands;
+
         @Bean(destroyMethod = "close")
         public DefaultStringRedisConnection defaultStringRedisConnection(RedisConnectionFactory redisConnectionFactory){
             return new DefaultStringRedisConnection(redisConnectionFactory.getConnection());
         }
 
+        @PostConstruct
+        public void dropRedis(){
+            redisServerCommands.flushDb();
+        }
     }
 
     @Autowired

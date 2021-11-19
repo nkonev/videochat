@@ -1,5 +1,6 @@
 package com.github.nkonev.aaa.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
@@ -101,6 +102,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         cookieCsrfTokenRepository.setSecure(cookieSecure);
         cookieCsrfTokenRepository.setCookieHttpOnly(cookieHttpOnly);
         return cookieCsrfTokenRepository;
+    }
+
+    @Bean
+    public RESTAuthenticationLogoutSuccessHandler restAuthenticationLogoutSuccessHandler(ObjectMapper objectMapper) {
+        return new RESTAuthenticationLogoutSuccessHandler(csrfTokenRepository(), objectMapper);
     }
 
     @Override

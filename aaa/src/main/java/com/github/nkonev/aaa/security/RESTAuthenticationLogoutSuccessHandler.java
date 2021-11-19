@@ -4,13 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
-import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -27,19 +25,18 @@ import static com.github.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
  *
  * This listener works for both database and OAuth2 logouts
  */
-@Component
 public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHandler {
 
-    private final ObjectProvider<CsrfTokenRepository> csrfTokenRepositoryProvider;
+    private final CsrfTokenRepository csrfTokenRepository;
 
     private final ObjectMapper objectMapper;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RESTAuthenticationLogoutSuccessHandler.class);
 
-    public RESTAuthenticationLogoutSuccessHandler(ObjectProvider<CsrfTokenRepository> csrfTokenRepositoryProvider, ObjectMapper objectMapper) {
-        Assert.notNull(csrfTokenRepositoryProvider, "csrfTokenRepository cannot be null");
+    public RESTAuthenticationLogoutSuccessHandler(CsrfTokenRepository csrfTokenRepository, ObjectMapper objectMapper) {
+        Assert.notNull(csrfTokenRepository, "csrfTokenRepository cannot be null");
         Assert.notNull(objectMapper, "objectMapper cannot be null");
-        this.csrfTokenRepositoryProvider = csrfTokenRepositoryProvider;
+        this.csrfTokenRepository = csrfTokenRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -49,9 +46,8 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
         // do nothing -- it's enough to return 200 for SPA
 
         // set new csrf token for repeating logins without page reload
-        var csrfTokenRepository = csrfTokenRepositoryProvider.getObject();
         CsrfToken csrfToken = csrfTokenRepository.generateToken(request);
-        csrfTokenRepository.saveToken(csrfToken, request, response);
+        this.csrfTokenRepository.saveToken(csrfToken, request, response);
 
         UserAccountDetailsDTO userDetails = (UserAccountDetailsDTO)authentication.getPrincipal();
         LOGGER.info("User '{}' logged out", userDetails.getUsername());

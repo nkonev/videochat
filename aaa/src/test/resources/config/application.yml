@@ -24,10 +24,6 @@ spring.session.timeout: 2d
 spring:
   application:
     name: aaa
-  data:
-    ldap:
-      repositories:
-        enabled: false
 
 custom:
   email:
