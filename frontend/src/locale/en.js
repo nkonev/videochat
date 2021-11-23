@@ -65,6 +65,8 @@ export default {
     delete_btn: "Delete",
     delete_chat_title: "Delete chat #{0}",
     delete_chat_text: "Are you sure to delete chat '{0}' ?",
+    delete_file_title: "Delete file",
+    delete_file_text: "Are you sure to delete file '{0}' ?",
     leave_btn: "Leave",
     leave_chat_title: "Leave chat #{0}",
     leave_chat_text: "Are you sure to leave from chat '{0}' ?",
@@ -81,4 +83,6 @@ export default {
     loading: "Loading...",
     time_at: "at",
     requested_codec: "Requested codec",
+    websocket_restored: "Websocket connection has been restored, press button to update",
+    btn_update: "Update",
 }

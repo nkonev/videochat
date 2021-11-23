@@ -150,16 +150,16 @@
                     </template>
                 </v-snackbar>
                 <v-snackbar v-model="showWebsocketRestored" color="black" timeout="-1" :multi-line="true">
-                    Websocket connection has been restored, press to update
+                    {{ $vuetify.lang.t('$vuetify.websocket_restored') }}
                     <template v-slot:action="{ attrs }">
                         <v-btn
                             text
                             v-bind="attrs"
                             @click="onPressWebsocketRestored()"
                         >
-                            Update
+                            {{ $vuetify.lang.t('$vuetify.btn_update') }}
                         </v-btn>
-                        <v-btn text v-bind="attrs" @click="showWebsocketRestored = false">Close</v-btn>
+                        <v-btn text v-bind="attrs" @click="showWebsocketRestored = false">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
 
                     </template>
                 </v-snackbar>

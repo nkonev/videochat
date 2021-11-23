@@ -127,9 +127,9 @@ export default {
         },
         deleteFile(dto) {
             bus.$emit(OPEN_SIMPLE_MODAL, {
-                buttonName: 'Delete',
-                title: `Delete file`,
-                text: `Are you sure to delete this file '${dto.filename}' ?`,
+                buttonName: this.$vuetify.lang.t('$vuetify.delete_btn'),
+                title: this.$vuetify.lang.t('$vuetify.delete_file_title'),
+                text: this.$vuetify.lang.t('$vuetify.delete_file_text', dto.filename),
                 actionFunction: ()=> {
                     axios.delete(`/api/storage/${this.chatId}/file` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""), {data: {id: dto.id}})
                         .then((response) => {
