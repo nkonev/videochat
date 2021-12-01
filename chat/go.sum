@@ -65,6 +65,8 @@ github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dR
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/centrifugal/centrifuge v0.18.4 h1:BDSRblSQfYmNSydueaJHrJaLUVU5KVvzp+VW53ebYfE=
 github.com/centrifugal/centrifuge v0.18.4/go.mod h1:t/PkawecPuBBOhyuNbrTQSCQutmEMrQiiuRkQ7c4w0Y=
+github.com/centrifugal/centrifuge v0.18.9 h1:I0KuKvZoQ6XxrRmZjJ39wQYmNDzb0s6Y64UVJ+zvpAk=
+github.com/centrifugal/centrifuge v0.18.9/go.mod h1:cOnnHpX0CLdX9uprNPeqJCmjdm8bWW1rTDzQd+3XHic=
 github.com/centrifugal/protocol v0.7.3 h1:XEBDwfWuUWj0L/ZVKUsf0K8TKjsOTbtKIMq84+r5aTU=
 github.com/centrifugal/protocol v0.7.3/go.mod h1:qoeBHrRCi5mJ5XZfrKHnedz9UWpYbDLXr8iZUO3pTtc=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
@@ -241,6 +243,8 @@ github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpO
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/igm/sockjs-go/v3 v3.0.0 h1:4wLoB9WCnQ8RI87cmqUH778ACDFVmRpkKRCWBeuc+Ww=
 github.com/igm/sockjs-go/v3 v3.0.0/go.mod h1:UqchsOjeagIBFHvd+RZpLaVRbCwGilEC08EDHsD1jYE=
+github.com/igm/sockjs-go/v3 v3.0.1 h1:rmgEkeKqBHCFf7uIAipYrYSX8x9LBB2nOxAac2sooak=
+github.com/igm/sockjs-go/v3 v3.0.1/go.mod h1:UqchsOjeagIBFHvd+RZpLaVRbCwGilEC08EDHsD1jYE=
 github.com/isayme/go-amqp-reconnect v0.0.0-20210303120416-fc811b0bcda2 h1:PzQ5MrrM7f/PHpC0aN9hZA+nBDEuBQRX0EhQxc4W9OA=
 github.com/isayme/go-amqp-reconnect v0.0.0-20210303120416-fc811b0bcda2/go.mod h1:4IOu90sBxNtO7GtD9//Ybh2UjZ9Dl+Cd9yIMj9GPRHQ=
 github.com/jackc/chunkreader v1.0.0 h1:4s39bBR8ByfqH+DKm8rQA3E1LHZWB9XWcrz8fqaZbe0=
@@ -369,6 +373,8 @@ github.com/mitchellh/mapstructure v1.1.2 h1:fmNYVwqnSfB9mZU6OS2O6GsXM+wcskZDuKQz
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/mna/redisc v1.2.1 h1:7rI/qv2sa0OT8rsxDbKg7XPysr5AIDeXwL0T0vFOvlM=
 github.com/mna/redisc v1.2.1/go.mod h1:OxLEDNNDFOYJBo7MuSC+SEoP3k8bZY2dFW7T12TzX4c=
+github.com/mna/redisc v1.3.2 h1:sc9C+nj6qmrTFnsXb70xkjAHpXKtjjBuE6v2UcQV0ZE=
+github.com/mna/redisc v1.3.2/go.mod h1:CplIoaSTDi5h9icnj4FLbRgHoNKCHDNJDVRztWDGeSQ=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
