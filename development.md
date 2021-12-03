@@ -304,3 +304,26 @@ spring.security.oauth2.client.registration.keycloak.client-id=my_client
 spring.security.oauth2.client.registration.keycloak.redirect-uri={baseUrl}/api/login/oauth2/code/{registrationId}
 spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484/auth/realms/my_realm
 ```
+
+# Architecture:
+
+![Architecture](./.drawio/exported/app-Page-1.png "Title")
+
+
+## Start docker-compose
+```bash
+docker-compose up -d
+```
+
+# Test in browser
+Open `http://localhost:8081/chat` in Firefox main and an Anonymous window;
+Login as `admin:admin` in main window and as `nikita:password` in the Anonymous window.
+Create chat in main window and add `nikita` there.
+
+## Generating password
+```bash
+sudo yum install -y httpd-tools
+
+# generate password
+htpasswd -bnBC 10 "" password | tr -d ':'
+```
