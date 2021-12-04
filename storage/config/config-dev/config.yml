@@ -3,7 +3,6 @@ server:
   shutdown.timeout: "10s"
   body.limit: "100G"
   contextPath: "/api"
-  url: http://localhost:8081
 
 auth:
   exclude:

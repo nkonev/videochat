@@ -23,8 +23,7 @@ import (
 )
 
 type FilesHandler struct {
-	serverUrl          string
-	minio              *minio.Client
+	minio      *minio.Client
 	chatClient *client.RestClient
 }
 
@@ -36,12 +35,11 @@ const filesMultipartKey = "files"
 const UrlStorageGetFile = "/storage/public/download"
 const UrlStorageGetFilePublicExternal = "/public/download"
 
-
 type FileInfoDto struct {
 	Id           string    `json:"id"`
 	Filename     string    `json:"filename"`
 	Url          string    `json:"url"`
-	PublicUrl    *string    `json:"publicUrl"`
+	PublicUrl    *string   `json:"publicUrl"`
 	Size         int64     `json:"size"`
 	CanRemove    bool      `json:"canRemove"`
 	CanShare     bool      `json:"canShare"`
@@ -57,13 +55,10 @@ func NewFilesHandler(
 	chatClient *client.RestClient,
 ) *FilesHandler {
 	return &FilesHandler{
-		minio:              minio,
-		serverUrl:          viper.GetString("server.url"),
+		minio:      minio,
 		chatClient: chatClient,
 	}
 }
-
-
 
 func serializeTags(public bool) map[string]string {
 	var userTags = map[string]string{}
@@ -167,11 +162,10 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 }
 
 type ReplaceTextFileDto struct {
-	Id     string     `json:"id"` // file id
-	Text   string     `json:"text"`
-	ContentType   string     `json:"contentType"`
-	Filename   string     `json:"filename"`
-
+	Id          string `json:"id"` // file id
+	Text        string `json:"text"`
+	ContentType string `json:"contentType"`
+	Filename    string `json:"filename"`
 }
 
 func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
@@ -239,7 +233,6 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 		Logger.Errorf("Error during upload object: %v", err)
 		return err
 	}
-
 
 	return c.NoContent(http.StatusOK)
 }
@@ -341,7 +334,7 @@ func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filena
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
-		Recursive: true,
+		Recursive:    true,
 	})
 
 	var list []*FileInfoDto = make([]*FileInfoDto, 0)
@@ -438,11 +431,11 @@ func (h *FilesHandler) getPublicUrl(public bool, fileName string) (*string, erro
 }
 
 func (h *FilesHandler) getBaseUrlForDownload() string {
-	return h.serverUrl + viper.GetString("server.contextPath") + "/storage"
+	return viper.GetString("server.contextPath") + "/storage"
 }
 
 func (h *FilesHandler) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, chatId int64) (*string, error) {
-	downloadUrl, err := url.Parse(h.getBaseUrlForDownload()+"/download")
+	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + "/download")
 	if err != nil {
 		return nil, err
 	}
@@ -455,7 +448,7 @@ func (h *FilesHandler) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, cha
 }
 
 type DeleteObjectDto struct {
-	Id     string     `json:"id"` // file id
+	Id string `json:"id"` // file id
 }
 
 func (h *FilesHandler) DeleteHandler(c echo.Context) error {
@@ -569,7 +562,6 @@ func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId i
 	return true, nil
 }
 
-
 func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -606,7 +598,6 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	}
 	// end check
 
-
 	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
 	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
 	c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+fileName+"\"")
@@ -621,8 +612,8 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 }
 
 type PublishRequest struct {
-	Public bool `json:"public"`
-	Id string `json:"id"`
+	Public bool   `json:"public"`
+	Id     string `json:"id"`
 }
 
 func (h *FilesHandler) SetPublic(c echo.Context) error {
@@ -685,7 +676,6 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		Logger.Errorf("Error during getting tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-
 
 	info, err := h.getFileInfo(userPrincipalDto.UserId, objectInfo, chatId, tagging, false)
 	if err != nil {
@@ -799,7 +789,6 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
-
 
 	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
 	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
