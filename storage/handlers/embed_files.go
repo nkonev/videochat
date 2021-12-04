@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
-	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
@@ -17,22 +16,19 @@ import (
 )
 
 type EmbedHandler struct {
-	serverUrl          string
-	minio              *minio.Client
+	minio      *minio.Client
 	chatClient *client.RestClient
 }
 
 const embedMultipartKey = "embed_file_header"
 const RelativeEmbeddedUrl = "/api/storage/%v/embed/%v%v"
 
-
 func NewEmbedHandler(
 	minio *minio.Client,
 	chatClient *client.RestClient,
 ) *EmbedHandler {
 	return &EmbedHandler{
-		minio:              minio,
-		serverUrl:          viper.GetString("server.url"),
+		minio:      minio,
 		chatClient: chatClient,
 	}
 }
@@ -57,7 +53,6 @@ func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
 
 	formFile, err := c.FormFile(embedMultipartKey)
 	if err != nil {
@@ -150,7 +145,7 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
 	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
 
-	if(original) {
+	if original {
 		c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+fileName+"\"")
 	}
 
@@ -162,5 +157,3 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 
 	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
-
-
