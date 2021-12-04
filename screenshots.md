@@ -10,6 +10,9 @@
 # User is speaking indication (green nickname and microphone)
 ![screenshots](./.screenshots/3_speaking_indication.png)
 
+# Screen sharing
+![screenshots](./.screenshots/11_screen_sharing.png)
+
 # Pictures in chat
 ![screenshots](./.screenshots/4_pictures_and_new_message.png)
 
