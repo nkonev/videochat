@@ -8,14 +8,14 @@ Your self-hosted videoconference platform.
 # Key features:
 * Well-integrated video calls into entire platform UI, no separated video rooms, text chats, etc...
 * No installation on client PC - only modern browser with video camera or microphone required.
-* Muting, kicking video participants.
-* Calling to user to invite his or her to video conference.
-* User is speaking indication.
-* File sharing.
-* Tet-a-tet private chats for two.
+* [Muting, kicking](./screenshots.md#videoconference-and-participant-management) video participants.
+* Calling to user to [invite](./screenshots.md#inviting-user-to-videoconference) his or her to video conference.
+* User is [speaking indication](./screenshots.md#user-is-speaking-indication-green-nickname-and-microphone).
+* File [sharing](./screenshots.md#chat-files).
+* [Tet-a-tet](./screenshots.md#open-tet-a-tet-chat) private chats for two.
 * Horizontal scaling particular video rooms (chats) by servers.
 * Horizontal scaling other microservices.
-* Supports login through OpedID Connect providers: Facebook, VK.com, Google, Keycloak. Not required can be disabled.
+* Supports [login](./screenshots.md#login) through OpedID Connect providers: Facebook, VK.com, Google, Keycloak. Not required can be disabled.
 * Internationalization: English and Russian UI.
 * Firewall friendly: single port for WebRTC.
 * Simple setup with docker swarm or docker-compose.

@@ -32,3 +32,6 @@
 
 # Video settings
 ![screenshots](./.screenshots/9_video_settings.png)
+
+# Open tet-a-tet chat
+![screenshots](./.screenshots/10_tet_a_tet.png)
