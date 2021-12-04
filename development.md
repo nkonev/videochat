@@ -242,6 +242,21 @@ When one of participants has the public IP (it's possible) there are no video. I
 
 
 
+## Keycloak
+
+Problem: Keycloak renders 'Invalid parameter: redirect_uri'
+
+
+Solution: Set proper [redirect url](https://stackoverflow.com/questions/45352880/keycloak-invalid-parameter-redirect-uri)
+
+## I don't see my image from camera when I connect from mobile
+Some mobile operators impede WebRTC traffic. 
+
+Solution: try to use Wi-Fi.
+
+
+
+
 # spring-boot-keycloak
 Using spring boot and Keycloak authorization server
 https://habr.com/en/amp/post/552346/
@@ -293,9 +308,6 @@ docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/export.json ./ex
 
 ## 3. Append user's document to existing realm-export.json under "users" array.
 
-## Known issues
-Problem: Keycloak renders 'Invalid parameter: redirect_uri'
-Solution: Set proper [redirect url](https://stackoverflow.com/questions/45352880/keycloak-invalid-parameter-redirect-uri)
 
 # Testing with Keycloak
 To test add 3 environment varianbles:
