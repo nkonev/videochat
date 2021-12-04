@@ -32,4 +32,4 @@ See [screenshots](./screenshots.md)
 * Replace 1.2.3.4 in ./deploy/video.yml with public ip if your deployment should be accessible from internet else comment it
 * Configure "ingress" in deploy/traefik_conf/traefik.yml and docker-compose-infra.template.yml
 * Open ports to traefik, described in deploy/docker-compose-infra.template.yml
-* Open ports to 3478, 5000 as described in deploy/docker-compose-video.template.yml
+* Open ports :3478, :5000 as described in deploy/docker-compose-video.template.yml
