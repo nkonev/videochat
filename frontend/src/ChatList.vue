@@ -6,7 +6,7 @@
                     v-for="(item, index) in items"
                     :key="item.id"
             >
-                <v-list-item-content @click="openChat(item)">
+                <v-list-item-content @click="openChat(item)" :id="'chat-item-' + item.id">
                     <v-list-item-title>
                         <span class="min-height">
                             {{item.name}}
