@@ -339,3 +339,9 @@ sudo yum install -y httpd-tools
 # generate password
 htpasswd -bnBC 10 "" password | tr -d ':'
 ```
+
+# Migrating minio from official to bitnami
+Remove 'command' tag from `docker-compose-infra.template.yml`
+```
+chown -R 1001 /mnt/chat-minio
+```

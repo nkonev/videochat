@@ -47,14 +47,13 @@ services:
         tag: chat-redis
 
   minio:
-    image: minio/minio:RELEASE.2021-06-17T00-10-46Z
+    image: bitnami/minio:2021.11.24-debian-10-r2
     hostname: minio
     environment:
       - MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
       - MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
     volumes:
       - /mnt/chat-minio/data:/data
-    command: ["server", "/data"]
     networks:
       backend:
     logging:
