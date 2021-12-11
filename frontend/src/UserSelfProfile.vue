@@ -345,7 +345,7 @@ export default {
 
         openAvatarDialog() {
             bus.$emit(OPEN_CHOOSE_AVATAR, {
-                initialAvatar: () => {
+                initialAvatarCallback: () => {
                     const user = this.$store.getters[GET_USER];
                     if (user && user.avatarBig) {
                         return user.avatarBig

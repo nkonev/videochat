@@ -63,7 +63,7 @@
                 imageChanged: false,
                 uploading: false,
 
-                initialAvatar: null,
+                initialAvatarCallback: null,
                 uploadAvatarFileCallback: null,
                 removeAvatarUrlCallback: null,
                 storeAvatarUrlCallback: null,
@@ -72,8 +72,8 @@
         },
         computed: {
             initialImage() {
-                if (this.$data.initialAvatar) {
-                    return this.$data.initialAvatar();
+                if (this.$data.initialAvatarCallback) {
+                    return this.$data.initialAvatarCallback();
                 } else {
                     return null;
                 }
@@ -141,9 +141,9 @@
                 });
             },
 
-            showModal({initialAvatar, uploadAvatarFileCallback, removeAvatarUrlCallback, storeAvatarUrlCallback, onSuccessCallback}) {
+            showModal({initialAvatarCallback, uploadAvatarFileCallback, removeAvatarUrlCallback, storeAvatarUrlCallback, onSuccessCallback}) {
                 this.$data.show = true;
-                this.$data.initialAvatar = initialAvatar;
+                this.$data.initialAvatarCallback = initialAvatarCallback;
                 this.$data.uploadAvatarFileCallback = uploadAvatarFileCallback;
                 this.$data.removeAvatarUrlCallback = removeAvatarUrlCallback;
                 this.$data.storeAvatarUrlCallback = storeAvatarUrlCallback;
@@ -151,7 +151,7 @@
             },
             closeModal() {
                 this.$data.show=false;
-                this.$data.initialAvatar = null;
+                this.$data.initialAvatarCallback = null;
                 this.$data.uploadAvatarFileCallback = null;
                 this.$data.removeAvatarUrlCallback = null;
                 this.$data.storeAvatarUrlCallback = null;
