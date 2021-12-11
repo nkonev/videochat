@@ -395,7 +395,9 @@
                       }
                   });
                   this.$store.commit(SET_MUTE_AUDIO, actualAudioMuted);
+                  this.$store.commit(SET_MUTE_VIDEO, !video);
                   this.$refs.localVideoComponent.setDisplayAudioMute(actualAudioMuted);
+                  this.$refs.localVideoComponent.setVideoMute(!video);
                   this.insideSwitchingCameraScreen = false;
                 }).then(() => {
                     this.notifyWithData();
