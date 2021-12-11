@@ -22,6 +22,7 @@ export default {
             errorDescription: null,
             avatar: "",
             videoMute: false,
+            userId: null,
       }
     },
 
@@ -70,6 +71,12 @@ export default {
         },
         setVideoMute(newState) {
             this.videoMute = newState;
+        },
+        getUserId() {
+            return this.userId;
+        },
+        setUserId(id) {
+            this.userId = id;
         }
     },
     computed: {

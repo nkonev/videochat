@@ -13,7 +13,6 @@
                 <v-btn icon v-bind="attrs" @click="showPermissionAsk = false"><v-icon color="white">mdi-close-circle</v-icon></v-btn>
             </template>
         </v-snackbar>
-
         <p v-if="errorDescription" class="error">{{ errorDescription }}</p>
 
         <UserVideo ref="localVideoComponent" :key="localPublisherKey" :initial-muted="true" :id="getNewId()"/>
@@ -33,10 +32,10 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import bus, {
-      AUDIO_START_MUTING, REQUEST_CHANGE_VIDEO_PARAMETERS,
-      SHARE_SCREEN_START,
-      SHARE_SCREEN_STOP, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
-      VIDEO_START_MUTING
+        AUDIO_START_MUTING, REQUEST_CHANGE_VIDEO_PARAMETERS,
+        SHARE_SCREEN_START,
+        SHARE_SCREEN_STOP, USER_PROFILE_CHANGED, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
+        VIDEO_START_MUTING
     } from "./bus";
     import axios from "axios";
     import { Client, LocalStream } from 'ion-sdk-js';
@@ -193,12 +192,13 @@
                                 if (!value.found || !value.userDto) {
                                     console.error("Metadata by streamId=", streamId, " is not found on server");
                                 } else {
-                                    console.debug("Successfully got data by streamId", streamId);
                                     const data = value.userDto;
+                                    console.debug("Successfully got data by streamId", streamId, data);
                                     streamHolder.component.setUserName(data.login);
                                     streamHolder.component.setDisplayAudioMute(data.audioMute);
                                     streamHolder.component.setVideoMute(data.videoMute);
                                     streamHolder.component.setAvatar(data.avatar);
+                                    streamHolder.component.setUserId(data.userId);
                                 }
                             })
                         }
@@ -377,7 +377,7 @@
                   this.$refs.localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
                   this.$refs.localVideoComponent.setUserName(this.currentUser.login);
                   this.$refs.localVideoComponent.setAvatar(this.currentUser.avatar);
-
+                  this.$refs.localVideoComponent.setUserId(this.currentUser.id);
                   console.log("Publishing " + (screen ? "screen" : "camera"));
                   this.clientLocal.publish(media);
                   console.log("Successfully published " + (screen ? "screen" : "camera") + " streamId=", this.$refs.localVideoComponent.getStreamId());
@@ -519,6 +519,14 @@
                     this.$router.push({name: chat_name});
                 }
             },
+            onUserProfileChanged(user) {
+                this.enumerateAllStreams((component) => {
+                    const cid = component.getUserId();
+                    if (cid && cid == user.id) {
+                        component.setAvatar(user.avatar);
+                    }
+                })
+            },
         },
         mounted() {
             this.chatId = this.$route.params.id;
@@ -546,6 +554,7 @@
             bus.$on(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
+            bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
         destroyed() {
             bus.$off(SHARE_SCREEN_START, this.onStartScreenSharing);
@@ -554,6 +563,7 @@
             bus.$off(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
+            bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
         components: {
             UserVideo
