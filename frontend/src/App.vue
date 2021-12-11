@@ -226,7 +226,7 @@
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
     import SimpleModal from "./SimpleModal";
     import ChooseAvatar from "./ChooseAvatar";
-    import {getCorrectUserAvatar, getStoredAudioDevicePresents, setIcon} from "./utils";
+    import {getStoredAudioDevicePresents, setIcon} from "./utils";
     import ChatParticipants from "./ChatParticipants";
     import PermissionsWarning from "./PermissionsWarning";
     import FindUser from "./FindUser";
@@ -411,7 +411,7 @@
                 chatUsersCount: GET_CHAT_USERS_COUNT,
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
-                return getCorrectUserAvatar(this.currentUser.avatar);
+                return this.currentUser.avatar;
             },
         },
         mounted() {

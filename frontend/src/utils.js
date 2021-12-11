@@ -8,14 +8,6 @@ export const getHeight = (elementId, modifier, defaultValue) => {
     return defaultValue;
 }
 
-export const getCorrectUserAvatar = (stringExistsAvatar) => {
-    if (!stringExistsAvatar) {
-        return stringExistsAvatar;
-    }
-    const cacheKey = +new Date();
-    return stringExistsAvatar + "?" + cacheKey;
-}
-
 export const getWebsocketUrlPrefix = () => {
     return ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host
 }

@@ -98,11 +98,6 @@ chat:
     access: "/internal/access"
     isChatAdmin: "/internal/is-admin"
 
-aaa:
-  url:
-    base: "http://localhost:8060"
-    userPrefix: "/api/user"
-
 # Rest client
 http:
   maxIdleConns: 2

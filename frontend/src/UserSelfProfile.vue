@@ -237,7 +237,6 @@ import {
 } from "./store";
 import axios from "axios";
 import bus, { OPEN_CHOOSE_AVATAR} from "./bus";
-import {getCorrectUserAvatar} from "./utils";
 
 export default {
     data() {
@@ -274,9 +273,9 @@ export default {
             const maybeUser = this.$store.getters[GET_USER];
             if (maybeUser) {
                 if (maybeUser.avatarBig) {
-                    return getCorrectUserAvatar(maybeUser.avatarBig)
+                    return maybeUser.avatarBig
                 } else if (maybeUser.avatar) {
-                    return getCorrectUserAvatar(maybeUser.avatar)
+                    return maybeUser.avatar
                 } else {
                     return null
                 }

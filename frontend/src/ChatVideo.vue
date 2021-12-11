@@ -298,6 +298,7 @@
             notifyWithData() {
                 // notify another participants, they will receive VIDEO_CALL_CHANGED
                 const toSend = {
+                    avatar: this.currentUser.avatar,
                     peerId: this.peerId,
                     streamId: this.$refs.localVideoComponent.getStreamId(),
                     videoMute: this.videoMuted, // from store

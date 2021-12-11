@@ -18,7 +18,6 @@ import (
 	"time"
 )
 
-
 type AuthMiddleware echo.MiddlewareFunc
 
 func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
@@ -47,7 +46,7 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 		UserId:    i,
 		UserLogin: string(decodedString),
 		ExpiresAt: t.Unix(),
-		Roles: roles,
+		Roles:     roles,
 	}, nil
 }
 
@@ -154,7 +153,7 @@ func getDotExtension(file *multipart.FileHeader) string {
 func getDotExtensionStr(fileName string) string {
 	split := strings.Split(fileName, ".")
 	if len(split) > 1 {
-		return "."+split[len(split)-1]
+		return "." + split[len(split)-1]
 	} else {
 		return ""
 	}
@@ -163,7 +162,6 @@ func getDotExtensionStr(fileName string) string {
 const filenameKey = "filename"
 const ownerIdKey = "ownerid"
 const chatIdKey = "chatid"
-
 
 func serializeMetadata(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult, chatId int64) map[string]string {
 	return serializeMetadataByArgs(file.Filename, userPrincipalDto, chatId)
@@ -177,7 +175,6 @@ func serializeMetadataByArgs(filename string, userPrincipalDto *auth.AuthResult,
 	return userMetadata
 }
 
-
 func deserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, error) {
 	const xAmzMetaPrefix = "X-Amz-Meta-"
 	var prefix = ""
@@ -185,11 +182,11 @@ func deserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 		prefix = xAmzMetaPrefix
 	}
 	filename, ok := userMetadata[prefix+strings.Title(filenameKey)]
-	if ! ok {
+	if !ok {
 		return 0, 0, "", errors.New("Unable to get filename")
 	}
 	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
-	if ! ok {
+	if !ok {
 		return 0, 0, "", errors.New("Unable to get owner id")
 	}
 	ownerId, err := utils.ParseInt64(ownerIdString)
@@ -198,7 +195,7 @@ func deserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 	}
 
 	chatIdString, ok := userMetadata[prefix+strings.Title(chatIdKey)]
-	if ! ok {
+	if !ok {
 		return 0, 0, "", errors.New("Unable to get chat id")
 	}
 	chatId, err := utils.ParseInt64(chatIdString)

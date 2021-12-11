@@ -31,19 +31,10 @@ type ChatConfig struct {
 	ChatUrlConfig ChatUrlConfig `mapstructure:"url"`
 }
 
-type AaaConfig struct {
-	AaaUrlConfig AaaUrlConfig `mapstructure:"url"`
-}
-
 type ChatUrlConfig struct {
 	Base        string `mapstructure:"base"`
 	Access      string `mapstructure:"access"`
 	IsChatAdmin string `mapstructure:"isChatAdmin"`
-}
-
-type AaaUrlConfig struct {
-	Base          string `mapstructure:"base"`
-	GetUserPrefix string `mapstructure:"userPrefix"`
 }
 
 type HttpServerConfig struct {
@@ -58,7 +49,6 @@ type ExtendedConfig struct {
 	FrontendConfig         FrontendConfig   `mapstructure:"frontend"`
 	RestClientConfig       RestClientConfig `mapstructure:"http"`
 	ChatConfig             ChatConfig       `mapstructure:"chat"`
-	AaaConfig              AaaConfig        `mapstructure:"aaa"`
 	HttpServerConfig       HttpServerConfig `mapstructure:"server"`
 	LogC                   log.GlobalConfig `mapstructure:"log"`
 	SyncNotificationPeriod time.Duration    `mapstructure:"syncNotificationPeriod"`

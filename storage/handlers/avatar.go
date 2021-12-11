@@ -16,10 +16,11 @@ import (
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
 	"strconv"
+	"time"
 )
 
 type AvatarHandler struct {
-	minio		*minio.Client
+	minio *minio.Client
 }
 
 func NewAvatarHandler(minio *minio.Client) *AvatarHandler {
@@ -84,10 +85,11 @@ func (h *AvatarHandler) PutAvatar(c echo.Context) error {
 		return err
 	}
 
-	relativeUrl := fmt.Sprintf("%v%v/%v", viper.GetString("server.contextPath"), UrlStorageGetAvatar, filename200)
-	relativeBigUrl := fmt.Sprintf("%v%v/%v", viper.GetString("server.contextPath"), UrlStorageGetAvatar, filename640)
+	currTime := time.Now().Unix()
+	relativeUrl := fmt.Sprintf("%v%v/%v?time=%v", viper.GetString("server.contextPath"), UrlStorageGetAvatar, filename200, currTime)
+	relativeBigUrl := fmt.Sprintf("%v%v/%v?time=%v", viper.GetString("server.contextPath"), UrlStorageGetAvatar, filename640, currTime)
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "filename": filename200, "filenameBig": filename640, "relativeUrl" : relativeUrl, "relativeBigUrl": relativeBigUrl})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "filename": filename200, "filenameBig": filename640, "relativeUrl": relativeUrl, "relativeBigUrl": relativeBigUrl})
 }
 
 func (fh *AvatarHandler) putSizedFile(c echo.Context, srcImage image.Image, err error, userPrincipalDto *auth.AuthResult, bucketName string, contentType string, width, height int, avatarType AvatarType) (string, error) {
@@ -132,4 +134,3 @@ func (h *AvatarHandler) Download(c echo.Context) error {
 
 	return c.Stream(http.StatusOK, info.ContentType, object)
 }
-

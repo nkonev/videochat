@@ -55,7 +55,7 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
-    import { getCorrectUserAvatar, findIndex, replaceInArray } from "./utils";
+    import { findIndex, replaceInArray } from "./utils";
     import MessageItem from "./MessageItem";
     // import 'splitpanes/dist/splitpanes.css';
     import debounce from "lodash/debounce";
@@ -391,11 +391,9 @@
                 }
             },
             onUserProfileChanged(user) {
-                const patchedUser = user;
-                patchedUser.avatar = getCorrectUserAvatar(user.avatar);
                 this.items.forEach(item => {
                     if (item.owner.id == user.id) {
-                        item.owner = patchedUser;
+                        item.owner = user;
                     }
                 });
             },

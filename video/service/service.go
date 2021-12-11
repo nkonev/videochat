@@ -10,7 +10,6 @@ import (
 	"github.com/pion/ion-sfu/pkg/sfu"
 	"github.com/pion/webrtc/v3"
 	"github.com/sourcegraph/jsonrpc2"
-	"io/ioutil"
 	"net/http"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
@@ -316,37 +315,6 @@ func (h *ExtendedService) IsAdmin(userId int64, chatId int64) (bool, error) {
 		err := errors.New("Unexpected status on isAdmin")
 		logger.Error(err, "Unexpected status on isAdmin", "httpCode", response.StatusCode)
 		return false, err
-	}
-}
-
-func (h *ExtendedService) GetUserInfo(userId int64) (*dto.AaaUserDto, error) {
-	url0 := h.conf.AaaConfig.AaaUrlConfig.Base
-	url1 := h.conf.AaaConfig.AaaUrlConfig.GetUserPrefix
-
-	url := fmt.Sprintf("%v%v/%v", url0, url1, userId)
-	response, err := h.client.Get(url)
-	if err != nil {
-		logger.Error(err, "Transport error during checking access", "user_id", userId)
-		return nil, err
-	}
-	defer response.Body.Close()
-	if response.StatusCode == http.StatusOK {
-		bodyBytes, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			logger.Error(err, "Failed to read get user response", "user_id", userId)
-			return nil, err
-		}
-
-		user := &dto.AaaUserDto{}
-		if err := json.Unmarshal(bodyBytes, user); err != nil {
-			logger.Error(err, "Failed to unmarshall get user response", "user_id", userId)
-			return nil, err
-		}
-		return user, nil
-	} else {
-		err := errors.New("Unexpected status on get user")
-		logger.Error(err, "Unexpected status on get user", "http_code", response.StatusCode, "user_id", userId)
-		return nil, err
 	}
 }
 

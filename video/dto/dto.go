@@ -2,6 +2,7 @@ package dto
 
 // input Dto
 type UserInputDto struct {
+	Avatar    string `json:"avatar"`
 	PeerId    string `json:"peerId"`
 	StreamId  string `json:"streamId"`
 	VideoMute bool   `json:"videoMute"`

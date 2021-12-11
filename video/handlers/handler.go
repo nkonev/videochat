@@ -45,7 +45,6 @@ type ContextData struct {
 	userId int64
 	chatId int64
 	login  string
-	avatar string
 }
 
 // key is an unexported type for keys defined in this package.
@@ -113,13 +112,6 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	userLogin := string(decodedString)
 
-	info, err := h.service.GetUserInfo(userId)
-	if err != nil {
-		logger.Error(err, "Unable to get data from aaa", "user_id", userId)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	if ok, err := h.service.CheckAccess(userId, chatId); err != nil {
 		logger.Error(err, "Error during checking access to chat", "user_id", userId, "chat_id", chatId)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -130,7 +122,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId, login: userLogin, avatar: info.Avatar}))
+	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId, login: userLogin}))
 
 	c, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -463,7 +455,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			}
 			// TODO write map cleanup mechanism
 
-			p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, fromContext.avatar, bodyStruct.PeerId, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
+			p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.Avatar, bodyStruct.PeerId, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
 			notificationDto := &dto.StoreNotifyDto{
 				UserId:    fromContext.userId,
 				StreamId:  bodyStruct.StreamId,

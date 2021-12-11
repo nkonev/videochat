@@ -90,7 +90,6 @@ import {
     SET_TITLE
 } from "./store";
 import axios from "axios";
-import {getCorrectUserAvatar} from "./utils";
 import {chat_name} from "./routes";
 import {mapGetters} from "vuex";
 import userOnlinePollingMixin from "./userOnlinePollingMixin";
@@ -115,9 +114,9 @@ export default {
     methods: {
         getAvatar(u) {
             if (u.avatarBig) {
-                return getCorrectUserAvatar(u.avatarBig)
+                return u.avatarBig
             } else if (u.avatar) {
-                return getCorrectUserAvatar(u.avatar)
+                return u.avatar
             } else {
                 return null
             }
