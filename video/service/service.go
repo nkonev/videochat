@@ -10,6 +10,7 @@ import (
 	"github.com/pion/ion-sfu/pkg/sfu"
 	"github.com/pion/webrtc/v3"
 	"github.com/sourcegraph/jsonrpc2"
+	"io/ioutil"
 	"net/http"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
@@ -21,12 +22,12 @@ import (
 var logger = log.New()
 
 type ExtendedService struct {
-	sfu             *sfu.SFU
-	peerUserIdIndex connectionsLockableMap
+	sfu                  *sfu.SFU
+	peerUserIdIndex      connectionsLockableMap
 	userConnectionsIndex userConnectionsMap
-	rabbitMqPublisher *producer.RabbitPublisher
-	conf            *config.ExtendedConfig
-	client          *http.Client
+	rabbitMqPublisher    *producer.RabbitPublisher
+	conf                 *config.ExtendedConfig
+	client               *http.Client
 }
 
 type ExtendedPeerInfo struct {
@@ -34,10 +35,12 @@ type ExtendedPeerInfo struct {
 	// will be added after PUT /notify
 	streamId  string
 	login     string
-	peerId string
+	avatar    string
+	peerId    string
 	videoMute bool
 	audioMute bool
 }
+
 // indeed peer can have several stream id. to reproduce - start sharing the screen
 // streamId:ExtendedPeerInfo
 type connectionWithData map[string]ExtendedPeerInfo
@@ -60,31 +63,32 @@ func NewExtendedService(
 	client *http.Client,
 ) ExtendedService {
 	handler := ExtendedService{
-		sfu:      sfu,
-		conf:     conf,
+		sfu:  sfu,
+		conf: conf,
 		peerUserIdIndex: connectionsLockableMap{
 			RWMutex:            sync.RWMutex{},
 			connectionWithData: connectionWithData{},
 		},
-		userConnectionsIndex: userConnectionsMap {
-			RWMutex:            sync.RWMutex{},
+		userConnectionsIndex: userConnectionsMap{
+			RWMutex:                sync.RWMutex{},
 			mapUserConnectionsList: mapUserConnectionsList{},
 		},
 		rabbitMqPublisher: rabbitMqPublisher,
-		client:   client,
+		client:            client,
 	}
 	return handler
 }
 
-func (h *ExtendedService) StoreToIndex(streamId string, userId int64, login, peerId string, videoMute, audioMute bool, method string) {
-	logger.Info("Storing peer metadata to map",  "stream_id", streamId, "user_id", userId, "login", login, "peerId", peerId, "video_mute", videoMute, "audio_mute", audioMute, "from_method", method)
+func (h *ExtendedService) StoreToIndex(streamId string, userId int64, login, avatar, peerId string, videoMute, audioMute bool, method string) {
+	logger.Info("Storing peer metadata to map", "stream_id", streamId, "user_id", userId, "login", login, "peerId", peerId, "video_mute", videoMute, "audio_mute", audioMute, "from_method", method)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
 	h.peerUserIdIndex.connectionWithData[streamId] = ExtendedPeerInfo{
 		userId:    userId,
 		streamId:  streamId,
 		login:     login,
-		peerId: peerId,
+		avatar:    avatar,
+		peerId:    peerId,
 		videoMute: videoMute,
 		audioMute: audioMute,
 	}
@@ -116,19 +120,21 @@ func (h *ExtendedService) getExtendedConnectionInfo(peer0 sfu.Peer) []ExtendedPe
 	return resultArray
 }
 
-type ErrorNoAccess struct {}
+type ErrorNoAccess struct{}
+
 func (e *ErrorNoAccess) Error() string { return "No access" }
 
-type errorInternal struct {}
+type errorInternal struct{}
+
 func (e *errorInternal) Error() string { return "Internal error" }
 
 func getStreamIds(peer0 sfu.Peer) []string {
 	var returnMap = map[string]bool{}
 	var returnArray = []string{}
 
-	if (peer0.Publisher() != nil && len(peer0.Publisher().Tracks())!=0) {
+	if peer0.Publisher() != nil && len(peer0.Publisher().Tracks()) != 0 {
 		for _, track := range peer0.Publisher().Tracks() {
-			if (track.StreamID() != "") {
+			if track.StreamID() != "" {
 				returnMap[track.StreamID()] = true
 			}
 		}
@@ -162,6 +168,7 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 	sessionInfoDto = &dto.StoreNotifyDto{
 		StreamId:  selfExtendedPeerInfo.streamId,
 		Login:     selfExtendedPeerInfo.login,
+		Avatar:    selfExtendedPeerInfo.avatar,
 		VideoMute: selfExtendedPeerInfo.videoMute,
 		AudioMute: selfExtendedPeerInfo.audioMute,
 		UserId:    selfExtendedPeerInfo.userId,
@@ -192,8 +199,8 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 // sent to chat through RabbitMQ
 type chatNotifyDto struct {
 	Data       *dto.StoreNotifyDto `json:"data"`
-	UsersCount int64           `json:"usersCount"`
-	ChatId     int64           `json:"chatId"`
+	UsersCount int64               `json:"usersCount"`
+	ChatId     int64               `json:"chatId"`
 }
 
 func (h *ExtendedService) getSessionWithoutCreatingAnew(chatId int64) sfu.Session {
@@ -205,7 +212,6 @@ func (h *ExtendedService) getSessionWithoutCreatingAnew(chatId int64) sfu.Sessio
 	}
 	return nil
 }
-
 
 func (h *ExtendedService) CountPeers(chatId int64) int64 {
 	var usersCount int64 = 0
@@ -255,7 +261,7 @@ func (h *ExtendedService) NotifyUserAboutForceMute(context context.Context, chat
 			}
 			logger.Info("Sending force mute notification", "chat_id", chatId, "to_user_id", userToMuteId)
 			err := conn.Notify(context, "force_mute", parms)
-			if err!= nil {
+			if err != nil {
 				logger.Error(err, "Error during sent force mute notification", "chat_id", chatId, "to_user_id", userToMuteId)
 			}
 		}
@@ -313,17 +319,48 @@ func (h *ExtendedService) IsAdmin(userId int64, chatId int64) (bool, error) {
 	}
 }
 
+func (h *ExtendedService) GetUserInfo(userId int64) (*dto.AaaUserDto, error) {
+	url0 := h.conf.AaaConfig.AaaUrlConfig.Base
+	url1 := h.conf.AaaConfig.AaaUrlConfig.GetUserPrefix
+
+	url := fmt.Sprintf("%v%v/%v", url0, url1, userId)
+	response, err := h.client.Get(url)
+	if err != nil {
+		logger.Error(err, "Transport error during checking access", "user_id", userId)
+		return nil, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode == http.StatusOK {
+		bodyBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			logger.Error(err, "Failed to read get user response", "user_id", userId)
+			return nil, err
+		}
+
+		user := &dto.AaaUserDto{}
+		if err := json.Unmarshal(bodyBytes, user); err != nil {
+			logger.Error(err, "Failed to unmarshall get user response", "user_id", userId)
+			return nil, err
+		}
+		return user, nil
+	} else {
+		err := errors.New("Unexpected status on get user")
+		logger.Error(err, "Unexpected status on get user", "http_code", response.StatusCode, "user_id", userId)
+		return nil, err
+	}
+}
+
 func (h *ExtendedService) GetPeersByChatId(chatId int64) ([]*dto.StoreNotifyDto, error) {
 	var result []*dto.StoreNotifyDto = []*dto.StoreNotifyDto{}
 
 	metadatas := h.getPeerMetadatas(chatId)
 	for _, md := range metadatas {
 		result = append(result, &dto.StoreNotifyDto{
-			StreamId: md.streamId,
-			Login: md.login,
+			StreamId:  md.streamId,
+			Login:     md.login,
 			VideoMute: md.videoMute,
 			AudioMute: md.audioMute,
-			UserId: md.userId,
+			UserId:    md.userId,
 		})
 	}
 
@@ -411,7 +448,7 @@ func (h *ExtendedService) SendKickMessage(ctx context.Context, chatId, userToLic
 			}
 			logger.Info("Sending kick notification", "chat_id", chatId, "to_user_id", userToLickId)
 			err := conn.Notify(ctx, "kick", parms)
-			if err!= nil {
+			if err != nil {
 				logger.Error(err, "Error during sent kick notification", "chat_id", chatId, "to_user_id", userToLickId)
 			}
 		}
@@ -446,10 +483,10 @@ func (h *ExtendedService) Schedule() *chan struct{} {
 	go func() {
 		for {
 			select {
-			case <- ticker.C:
+			case <-ticker.C:
 				logger.V(3).Info("Invoked chats periodic notificator")
 				h.notifyAllChats()
-			case <- quit:
+			case <-quit:
 				ticker.Stop()
 				return
 			}
@@ -482,7 +519,7 @@ func (h *ExtendedService) RemoveFromJsonRpcIndex(userId int64, jc *jsonrpc2.Conn
 				if len(existing) == 0 {
 					// delete from map
 					logger.Info("Deleting entire user connections list from map", "user_id", userId)
-					delete(h.userConnectionsIndex.mapUserConnectionsList, userId);
+					delete(h.userConnectionsIndex.mapUserConnectionsList, userId)
 				} else {
 					logger.Info("Deleting user connection from list", "user_id", userId)
 					h.userConnectionsIndex.mapUserConnectionsList[userId] = existing

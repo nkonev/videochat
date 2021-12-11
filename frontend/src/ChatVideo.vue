@@ -57,6 +57,9 @@
     let pingTimerId;
     const PUT_USER_DATA_METHOD = "putUserData";
     const USER_BY_STREAM_ID_METHOD = "userByStreamId";
+    const KICK_NOTIFICATION = "kick";
+    const FORCE_MUTE_NOTIFICATION = "force_mute";
+
     const shouldCheckAbsence = true;
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
@@ -95,9 +98,6 @@
                 videoMuted: GET_MUTE_VIDEO,
                 audioMuted: GET_MUTE_AUDIO,
             }),
-            myUserName() {
-                return this.currentUser.login
-            },
         },
         methods: {
             onClickPermitted() {
@@ -140,11 +140,11 @@
                   console.info("Signal is closed, something gonna happen");
                   this.tryRestartVideoProcess();
                 }
-                this.signalLocal.on_notify("force_mute", dto => {
+                this.signalLocal.on_notify(FORCE_MUTE_NOTIFICATION, dto => {
                     console.log("Got force mute", dto);
                     this.onForceMuteByAdmin(dto);
                 });
-                this.signalLocal.on_notify("kick", dto => {
+                this.signalLocal.on_notify(KICK_NOTIFICATION, dto => {
                     console.log("Got kick", dto);
                     this.onVideoCallKicked(dto);
                 });
@@ -197,6 +197,8 @@
                                     const data = value.userDto;
                                     streamHolder.component.setUserName(data.login);
                                     streamHolder.component.setDisplayAudioMute(data.audioMute);
+                                    streamHolder.component.setVideoMute(data.videoMute);
+                                    streamHolder.component.setAvatar(data.avatar);
                                 }
                             })
                         }
@@ -294,6 +296,7 @@
                     .then(response => response.data)
             },
             notifyWithData() {
+                // notify another participants, they will receive VIDEO_CALL_CHANGED
                 const toSend = {
                     peerId: this.peerId,
                     streamId: this.$refs.localVideoComponent.getStreamId(),
@@ -371,7 +374,8 @@
                   this.localMediaStream = media;
                   this.$refs.localVideoComponent.setSource(media);
                   this.$refs.localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
-                  this.$refs.localVideoComponent.setUserName(this.myUserName);
+                  this.$refs.localVideoComponent.setUserName(this.currentUser.login);
+                  this.$refs.localVideoComponent.setAvatar(this.currentUser.avatar);
 
                   console.log("Publishing " + (screen ? "screen" : "camera"));
                   this.clientLocal.publish(media);
@@ -435,10 +439,12 @@
             onStartVideoMuting(requestedState) {
                 if (requestedState) {
                     this.localMediaStream.mute("video");
+                    this.$refs.localVideoComponent.setVideoMute(true);
                     this.$store.commit(SET_MUTE_VIDEO, requestedState);
                     this.notifyWithData();
                 } else {
                     this.localMediaStream.unmute("video").then(value => {
+                        this.$refs.localVideoComponent.setVideoMute(false);
                         this.$store.commit(SET_MUTE_VIDEO, requestedState);
                         this.notifyWithData();
                     })
@@ -465,12 +471,14 @@
                 }
             },
             onVideoCallChanged(dto) {
+                // this method reacts only when data present - in this case it contains changes for particular stream id
                 if (dto) {
                     const data = dto.data;
                     if (data) {
-                        const streamInfo = this.streams[data.streamId];
-                        if (streamInfo) {
-                            streamInfo.component.setDisplayAudioMute(data.audioMute);
+                        const streamHolder = this.streams[data.streamId];
+                        if (streamHolder) {
+                            streamHolder.component.setDisplayAudioMute(data.audioMute);
+                            streamHolder.component.setVideoMute(data.videoMute);
                         }
                     }
                 }

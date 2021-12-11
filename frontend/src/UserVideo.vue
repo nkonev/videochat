@@ -1,11 +1,14 @@
 <template>
     <div class="video-container-element">
-        <video :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted" v-on:dblclick="onDoubleClick"/>
+        <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
+        <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted" v-on:dblclick="onDoubleClick"/>
         <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
 
 <script>
+
+import {hasLength} from "@/utils";
 
 export default {
 	name: 'UserVideo',
@@ -17,6 +20,8 @@ export default {
             audioMute: false,
             speaking: false,
             errorDescription: null,
+            avatar: "",
+            videoMute: false,
       }
     },
 
@@ -60,7 +65,18 @@ export default {
         setSpeaking(speaking) {
             this.speaking = speaking;
         },
+        setAvatar(a) {
+            this.avatar = a;
+        },
+        setVideoMute(newState) {
+            this.videoMute = newState;
+        }
     },
+    computed: {
+        avatarIsSet() {
+            return hasLength(this.avatar);
+        }
+    }
 };
 </script>
 
@@ -79,7 +95,7 @@ export default {
         background #e4efff;
     }
 
-    video {
+    .video-element {
         height 100% !important
     }
 

@@ -7,20 +7,20 @@ import (
 )
 
 type RestClientConfig struct {
-	MaxIdleConns int `mapstructure:"maxIdleConns"`
-	IdleConnTimeout time.Duration `mapstructure:"idleConnTimeout"`
-	DisableCompression bool `mapstructure:"disableCompression"`
+	MaxIdleConns       int           `mapstructure:"maxIdleConns"`
+	IdleConnTimeout    time.Duration `mapstructure:"idleConnTimeout"`
+	DisableCompression bool          `mapstructure:"disableCompression"`
 }
 
 type ExtendedICEServerConfig struct {
-	ICEServerConfig       sfu.ICEServerConfig `mapstructure:"server"`
-	LongTermCredentialDuration time.Duration `mapstructure:"turnCredentialDuration"`
+	ICEServerConfig            sfu.ICEServerConfig `mapstructure:"server"`
+	LongTermCredentialDuration time.Duration       `mapstructure:"turnCredentialDuration"`
 }
 
 type FrontendConfig struct {
 	ICEServers     []ExtendedICEServerConfig `mapstructure:"iceserver"`
-	PreferredCodec string `mapstructure:"preferredCodec"`
-	ForceKickAfter time.Duration `mapstructure:"forceKickAfter"`
+	PreferredCodec string                    `mapstructure:"preferredCodec"`
+	ForceKickAfter time.Duration             `mapstructure:"forceKickAfter"`
 }
 
 type RabbitMqConfig struct {
@@ -31,27 +31,36 @@ type ChatConfig struct {
 	ChatUrlConfig ChatUrlConfig `mapstructure:"url"`
 }
 
+type AaaConfig struct {
+	AaaUrlConfig AaaUrlConfig `mapstructure:"url"`
+}
+
 type ChatUrlConfig struct {
-	Base string `mapstructure:"base"`
+	Base        string `mapstructure:"base"`
 	Access      string `mapstructure:"access"`
 	IsChatAdmin string `mapstructure:"isChatAdmin"`
 }
 
+type AaaUrlConfig struct {
+	Base          string `mapstructure:"base"`
+	GetUserPrefix string `mapstructure:"userPrefix"`
+}
+
 type HttpServerConfig struct {
-	Addr string `mapstructure:"addr"`
+	Addr        string `mapstructure:"addr"`
 	MetricsAddr string `mapstructure:"metricsAddr"`
-	Cert string `mapstructure:"cert"`
-	Key string `mapstructure:"key"`
+	Cert        string `mapstructure:"cert"`
+	Key         string `mapstructure:"key"`
 }
 
 type ExtendedConfig struct {
 	sfu.Config
-	FrontendConfig FrontendConfig `mapstructure:"frontend"`
-	RestClientConfig RestClientConfig `mapstructure:"http"`
-	ChatConfig ChatConfig `mapstructure:"chat"`
-	HttpServerConfig HttpServerConfig `mapstructure:"server"`
-	LogC log.GlobalConfig `mapstructure:"log"`
-	SyncNotificationPeriod time.Duration `mapstructure:"syncNotificationPeriod"`
-	RabbitMqConfig RabbitMqConfig `mapstructure:"rabbitmq"`
+	FrontendConfig         FrontendConfig   `mapstructure:"frontend"`
+	RestClientConfig       RestClientConfig `mapstructure:"http"`
+	ChatConfig             ChatConfig       `mapstructure:"chat"`
+	AaaConfig              AaaConfig        `mapstructure:"aaa"`
+	HttpServerConfig       HttpServerConfig `mapstructure:"server"`
+	LogC                   log.GlobalConfig `mapstructure:"log"`
+	SyncNotificationPeriod time.Duration    `mapstructure:"syncNotificationPeriod"`
+	RabbitMqConfig         RabbitMqConfig   `mapstructure:"rabbitmq"`
 }
-

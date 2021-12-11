@@ -29,13 +29,12 @@ import (
 var embeddedFiles embed.FS
 
 type Handler struct {
-	upgrader        *websocket.Upgrader
-	sfu 			*sfu.SFU
-	conf            *config.ExtendedConfig
-	httpFs          *http.FileSystem
-	service *service.ExtendedService
+	upgrader *websocket.Upgrader
+	sfu      *sfu.SFU
+	conf     *config.ExtendedConfig
+	httpFs   *http.FileSystem
+	service  *service.ExtendedService
 }
-
 
 type JsonRpcExtendedHandler struct {
 	*server.JSONSignal
@@ -45,7 +44,8 @@ type JsonRpcExtendedHandler struct {
 type ContextData struct {
 	userId int64
 	chatId int64
-	login string
+	login  string
+	avatar string
 }
 
 // key is an unexported type for keys defined in this package.
@@ -69,8 +69,8 @@ func FromContext(ctx context.Context) (*ContextData, bool) {
 }
 
 type UserByStreamId struct {
-	StreamId string `json:"streamId"`
-	IncludeOtherStreamIds bool `json:"includeOtherStreamIds"`
+	StreamId              string `json:"streamId"`
+	IncludeOtherStreamIds bool   `json:"includeOtherStreamIds"`
 }
 
 func NewHandler(
@@ -87,40 +87,50 @@ func NewHandler(
 
 	handler := Handler{
 		upgrader: upgrader,
-		sfu: sfu,
+		sfu:      sfu,
 		conf:     conf,
 		httpFs:   &staticDir,
-		service: service,
+		service:  service,
 	}
 	return handler
 }
 
 var logger = log.New()
 
-
 func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId, userId, err := parseChatIdAndUserId(vars["chatId"], r.Header.Get("X-Auth-UserId"))
 	if err != nil {
+		logger.Error(err, "Unable to get data from userId header or chatId variable", "user_id", userId)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	decodedString, err := base64.StdEncoding.DecodeString(r.Header.Get("X-Auth-Username"))
 	if err != nil {
+		logger.Error(err, "Unable to get data from username header", "user_id", userId)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	userLogin := string(decodedString)
 
+	info, err := h.service.GetUserInfo(userId)
+	if err != nil {
+		logger.Error(err, "Unable to get data from aaa", "user_id", userId)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	if ok, err := h.service.CheckAccess(userId, chatId); err != nil {
+		logger.Error(err, "Error during checking access to chat", "user_id", userId, "chat_id", chatId)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else if !ok {
+		logger.Error(err, "User has no access to chat", "user_id", userId, "chat_id", chatId)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId, login: userLogin}))
+	r = r.WithContext(NewContext(r.Context(), &ContextData{userId: userId, chatId: chatId, login: userLogin, avatar: info.Avatar}))
 
 	c, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -145,7 +155,6 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 
 	<-jc.DisconnectNotify()
 }
-
 
 func (h *Handler) CountUsers(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -254,8 +263,8 @@ type ICEServerConfigDto struct {
 }
 
 type FrontendConfigDto struct {
-	ICEServers []ICEServerConfigDto `json:"iceServers"`
-	PreferredCodec string `json:"codec"`
+	ICEServers     []ICEServerConfigDto `json:"iceServers"`
+	PreferredCodec string               `json:"codec"`
 }
 
 func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
@@ -265,8 +274,8 @@ func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 
 	for _, s := range frontendConfig.ICEServers {
 		var newElement = ICEServerConfigDto{
-			URLs: s.ICEServerConfig.URLs,
-			Username: s.ICEServerConfig.Username,
+			URLs:       s.ICEServerConfig.URLs,
+			Username:   s.ICEServerConfig.Username,
 			Credential: s.ICEServerConfig.Credential,
 		}
 		if s.LongTermCredentialDuration != 0 {
@@ -308,7 +317,6 @@ func (h *Handler) Static() http.HandlerFunc {
 		}
 	}
 }
-
 
 func (h *Handler) Kick(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -391,9 +399,9 @@ func parseChatIdAndUserId(chatId, userId string) (int64, int64, error) {
 }
 
 type UserDtoWrapper struct {
-	UserDto *dto.StoreNotifyDto `json:"userDto"`
-	Found bool              `json:"found"`
-	OtherStreamIds []string `json:"otherStreamIds"`
+	UserDto        *dto.StoreNotifyDto `json:"userDto"`
+	Found          bool                `json:"found"`
+	OtherStreamIds []string            `json:"otherStreamIds"`
 }
 
 func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
@@ -441,31 +449,32 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 		resp.OtherStreamIds = otherStreamIds
 		_ = conn.Reply(ctx, req.ID, resp)
 
-	case "putUserData": {
-		var bodyStruct dto.UserInputDto
-		err := json.Unmarshal(*req.Params, &bodyStruct)
-		if err != nil {
-			p.Logger.Error(err, "error parsing StoreNotifyDto request")
-			break
-		}
+	case "putUserData":
+		{
+			var bodyStruct dto.UserInputDto
+			err := json.Unmarshal(*req.Params, &bodyStruct)
+			if err != nil {
+				p.Logger.Error(err, "error parsing StoreNotifyDto request")
+				break
+			}
 
-		if !p.service.ExistsPeerByStreamId(fromContext.chatId, bodyStruct.StreamId) {
-			logger.Info("Not found peer metadata by streamId, putting it in advance", "chat_id", fromContext.chatId, "stream_id", bodyStruct.StreamId)
-		}
-		// TODO write map cleanup mechanism
+			if !p.service.ExistsPeerByStreamId(fromContext.chatId, bodyStruct.StreamId) {
+				logger.Info("Not found peer metadata by streamId, putting it in advance", "chat_id", fromContext.chatId, "stream_id", bodyStruct.StreamId)
+			}
+			// TODO write map cleanup mechanism
 
-		p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.PeerId, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
-		notificationDto := &dto.StoreNotifyDto{
-			UserId:    fromContext.userId,
-			StreamId:  bodyStruct.StreamId,
-			Login:     fromContext.login,
-			VideoMute: bodyStruct.VideoMute,
-			AudioMute: bodyStruct.AudioMute,
+			p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, fromContext.avatar, bodyStruct.PeerId, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
+			notificationDto := &dto.StoreNotifyDto{
+				UserId:    fromContext.userId,
+				StreamId:  bodyStruct.StreamId,
+				Login:     fromContext.login,
+				VideoMute: bodyStruct.VideoMute,
+				AudioMute: bodyStruct.AudioMute,
+			}
+			if err := p.service.Notify(fromContext.chatId, notificationDto); err != nil {
+				p.Logger.Error(err, "error during sending notification")
+			}
 		}
-		if err := p.service.Notify(fromContext.chatId, notificationDto); err != nil {
-			p.Logger.Error(err, "error during sending notification")
-		}
-	}
 	default:
 		p.JSONSignal.Handle(ctx, conn, req)
 	}

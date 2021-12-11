@@ -108,6 +108,10 @@ chat:
   url:
     base: "http://chat:1235"
 
+aaa:
+  url:
+    base: "http://aaa:8060"
+
 frontend:
   preferredCodec: h264
   iceserver:
