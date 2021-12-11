@@ -61,6 +61,17 @@
                                 </v-list-item-content>
                             </template>
                         </v-autocomplete>
+
+                        <v-img v-if="currentUser.avatarBig || currentUser.avatar"
+                               :src="ava"
+                               :aspect-ratio="16/9"
+                               min-width="200"
+                               min-height="200"
+                               @click="openAvatarDialog"
+                        >
+                        </v-img>
+                        <v-btn v-else color="primary" @click="openAvatarDialog()">Choose avatar</v-btn>
+
                     </v-form>
                 </v-container>
 
@@ -79,7 +90,8 @@
 <script>
     import axios from "axios";
     import debounce from "lodash/debounce";
-    import bus, {OPEN_CHAT_EDIT} from "./bus";
+    import bus, {OPEN_CHAT_EDIT, OPEN_CHOOSE_AVATAR} from "./bus";
+    import {FETCH_USER_PROFILE, GET_USER} from "@/store";
 
     const dtoFactory = ()=>{
         return {
@@ -179,7 +191,41 @@
                 this.isLoading = false;
                 this.people = [  ];
                 this.valid = true;
-            }
+            },
+            openAvatarDialog() {
+                bus.$emit(OPEN_CHOOSE_AVATAR, {
+                    initialAvatarCallback: () => {
+                        const user = this.$store.getters[GET_USER];
+                        if (user && user.avatarBig) {
+                            return user.avatarBig
+                        } else if (user && user.avatar) {
+                            return user.avatar
+                        } else {
+                            return null
+                        }
+                    },
+                    uploadAvatarFileCallback: (blob) => {
+                        if (!blob) {
+                            return Promise.resolve(false);
+                        }
+                        const config = {
+                            headers: { 'content-type': 'multipart/form-data' }
+                        }
+                        const formData = new FormData();
+                        formData.append('data', blob);
+                        return axios.post('/api/storage/avatar', formData, config)
+                    },
+                    removeAvatarUrlCallback: () => {
+                        return axios.patch(`/api/profile`, {removeAvatar: true});
+                    },
+                    storeAvatarUrlCallback: (res) => {
+                        return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl});
+                    },
+                    onSuccessCallback: () => {
+                        this.$store.dispatch(FETCH_USER_PROFILE);
+                    }
+                });
+            },
         },
         created() {
             // https://forum-archive.vuejs.org/topic/5174/debounce-replacement-in-vue-2-0
