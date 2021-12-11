@@ -131,7 +131,7 @@
             saveAvatar() {
                 this.uploading = true;
                 this.createBlob().then(this.sendAvatar).then((res) => {
-                    if (!res) {
+                    if (!res) { // no res - when createBlob() returned empty when user removed avatar
                         if (this.removeImage) {
                             return axios.patch(`/api/profile`, {removeAvatar: true});
                         } else {
@@ -141,7 +141,6 @@
                         return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl})
                     }
                 }).then(value => {
-                    console.log("PATCH result", value);
                     if (value) {
                         this.$store.dispatch(FETCH_USER_PROFILE);
                     }
@@ -152,7 +151,6 @@
             },
 
             showModal() {
-                console.log("Reseiving open avatar");
                 this.$data.show = true;
             },
         },

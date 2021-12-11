@@ -14,7 +14,7 @@
                        @click="openAvatarDialog"
                 >
                 </v-img>
-                <v-btn v-else color="primary" @click="chooseAvatar()">Choose avatar</v-btn>
+                <v-btn v-else color="primary" @click="openAvatarDialog()">Choose avatar</v-btn>
                 <v-list-item-title class="headline mb-1 mt-2">{{ currentUser.login }}</v-list-item-title>
                 <v-list-item-subtitle v-if="currentUser.email">{{ currentUser.email }}</v-list-item-subtitle>
             </v-list-item-content>
@@ -346,12 +346,6 @@ export default {
         openAvatarDialog() {
             bus.$emit(OPEN_CHOOSE_AVATAR);
         },
-        // getAvatar() {
-        //     return getCorrectUserAvatar(this.currentUser.avatar)
-        // },
-        chooseAvatar() {
-            bus.$emit(OPEN_CHOOSE_AVATAR);
-        }
     },
     mounted() {
         this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.user_profile'));
