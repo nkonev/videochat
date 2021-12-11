@@ -3,8 +3,8 @@ package handlers
 import (
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"nkonev.name/chat/redis"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/redis"
 	"nkonev.name/chat/utils"
 	"strings"
 )
@@ -42,7 +42,7 @@ func (h UserOnlineHandler) GetOnlineUsers(context echo.Context) error {
 		}
 		arr = append(arr, UserOnlineChanged{
 			UserId: userIdInt64,
-			Online: online,
+			Online: online != 0,
 		})
 
 	}
