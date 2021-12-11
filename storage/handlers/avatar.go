@@ -143,17 +143,17 @@ func (h *abstractAvatarHandler) Download(c echo.Context) error {
 func NewUserAvatarHandler(minio *minio.Client) *UserAvatarHandler {
 	uah := UserAvatarHandler{}
 	uah.minio = minio
-	uah.delegate = uah
+	uah.delegate = &uah
 	return &uah
 }
 
 const urlStorageGetUserAvatar = "/storage/public/avatar"
 
-func (h UserAvatarHandler) ensureAndGetAvatarBucket() (string, error) {
+func (h *UserAvatarHandler) ensureAndGetAvatarBucket() (string, error) {
 	return EnsureAndGetAvatarBucket(h.minio)
 }
 
-func (r UserAvatarHandler) getAvatarFileName(c echo.Context, avatarType AvatarType) (string, error) {
+func (r *UserAvatarHandler) getAvatarFileName(c echo.Context, avatarType AvatarType) (string, error) {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -162,6 +162,6 @@ func (r UserAvatarHandler) getAvatarFileName(c echo.Context, avatarType AvatarTy
 	return fmt.Sprintf("%v_%v.jpg", userPrincipalDto.UserId, avatarType), nil
 }
 
-func (r UserAvatarHandler) GetUrlPath() string {
+func (r *UserAvatarHandler) GetUrlPath() string {
 	return urlStorageGetUserAvatar
 }
