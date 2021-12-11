@@ -34,7 +34,7 @@
 
                 <v-card-actions class="pa-4">
                     <v-btn color="primary" class="mr-4" @click="saveAvatar()" :loading="uploading" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
-                    <v-btn color="error" class="mr-4" @click="show=false" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="error" class="mr-4" @click="closeModal()" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>
@@ -43,9 +43,7 @@
 </template>
 
 <script>
-    import axios from "axios";
     import bus, {OPEN_CHOOSE_AVATAR} from "./bus";
-    import {FETCH_USER_PROFILE, GET_USER} from "./store";
     import 'vue-croppa/dist/vue-croppa.css'
     import Croppa from 'vue-croppa'
 
@@ -63,18 +61,21 @@
                 removeImage: false,
                 imageContentType: null,
                 imageChanged: false,
-                uploading: false
+                uploading: false,
+
+                initialAvatar: null,
+                uploadAvatarFileCallback: null,
+                removeAvatarUrlCallback: null,
+                storeAvatarUrlCallback: null,
+                onSuccessCallback: null,
             }
         },
         computed: {
             initialImage() {
-                const user = this.$store.getters[GET_USER];
-                if (user && user.avatarBig) {
-                    return user.avatarBig
-                } else if (user && user.avatar) {
-                    return user.avatar
+                if (this.$data.initialAvatar) {
+                    return this.$data.initialAvatar();
                 } else {
-                    return null
+                    return null;
                 }
             },
             limit() {
@@ -116,33 +117,23 @@
 
 
             sendAvatar(blob) {
-                if (!blob) {
-                    return Promise.resolve(false);
-                }
-
-                const config = {
-                    headers: { 'content-type': 'multipart/form-data' }
-                }
-                console.log("Sending avatar to storage");
-                const formData = new FormData();
-                formData.append('data', blob);
-                return axios.post('/api/storage/avatar', formData, config)
+                return this.$data.uploadAvatarFileCallback(blob);
             },
             saveAvatar() {
                 this.uploading = true;
                 this.createBlob().then(this.sendAvatar).then((res) => {
                     if (!res) { // no res - when createBlob() returned empty when user removed avatar
                         if (this.removeImage) {
-                            return axios.patch(`/api/profile`, {removeAvatar: true});
+                            return this.$data.removeAvatarUrlCallback();
                         } else {
                             return Promise.resolve(false);
                         }
                     } else {
-                        return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl})
+                        return this.$data.storeAvatarUrlCallback(res);
                     }
                 }).then(value => {
-                    if (value) {
-                        this.$store.dispatch(FETCH_USER_PROFILE);
+                    if (value && this.$data.onSuccessCallback) {
+                        this.$data.onSuccessCallback();
                     }
                     this.show = false;
                 }).finally(() => {
@@ -150,9 +141,22 @@
                 });
             },
 
-            showModal() {
+            showModal({initialAvatar, uploadAvatarFileCallback, removeAvatarUrlCallback, storeAvatarUrlCallback, onSuccessCallback}) {
                 this.$data.show = true;
+                this.$data.initialAvatar = initialAvatar;
+                this.$data.uploadAvatarFileCallback = uploadAvatarFileCallback;
+                this.$data.removeAvatarUrlCallback = removeAvatarUrlCallback;
+                this.$data.storeAvatarUrlCallback = storeAvatarUrlCallback;
+                this.$data.onSuccessCallback = onSuccessCallback;
             },
+            closeModal() {
+                this.$data.show=false;
+                this.$data.initialAvatar = null;
+                this.$data.uploadAvatarFileCallback = null;
+                this.$data.removeAvatarUrlCallback = null;
+                this.$data.storeAvatarUrlCallback = null;
+                this.$data.onSuccessCallback = null;
+            }
         },
         created() {
             bus.$on(OPEN_CHOOSE_AVATAR, this.showModal);

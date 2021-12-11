@@ -344,7 +344,38 @@ export default {
 
 
         openAvatarDialog() {
-            bus.$emit(OPEN_CHOOSE_AVATAR);
+            bus.$emit(OPEN_CHOOSE_AVATAR, {
+                initialAvatar: () => {
+                    const user = this.$store.getters[GET_USER];
+                    if (user && user.avatarBig) {
+                        return user.avatarBig
+                    } else if (user && user.avatar) {
+                        return user.avatar
+                    } else {
+                        return null
+                    }
+                },
+                uploadAvatarFileCallback: (blob) => {
+                    if (!blob) {
+                        return Promise.resolve(false);
+                    }
+                    const config = {
+                        headers: { 'content-type': 'multipart/form-data' }
+                    }
+                    const formData = new FormData();
+                    formData.append('data', blob);
+                    return axios.post('/api/storage/avatar', formData, config)
+                },
+                removeAvatarUrlCallback: () => {
+                    return axios.patch(`/api/profile`, {removeAvatar: true});
+                },
+                storeAvatarUrlCallback: (res) => {
+                    return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl});
+                },
+                onSuccessCallback: () => {
+                    this.$store.dispatch(FETCH_USER_PROFILE);
+                }
+            });
         },
     },
     mounted() {
