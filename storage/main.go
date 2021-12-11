@@ -33,7 +33,7 @@ func main() {
 			client.NewChatAccessClient,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
-			handlers.NewAvatarHandler,
+			handlers.NewUserAvatarHandler,
 			handlers.NewFilesHandler,
 			handlers.NewEmbedHandler,
 		),
@@ -82,7 +82,7 @@ func configureEcho(
 	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
-	ch *handlers.AvatarHandler,
+	uah *handlers.UserAvatarHandler,
 	fh *handlers.FilesHandler,
 	eh *handlers.EmbedHandler,
 ) *echo.Echo {
@@ -108,8 +108,8 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.POST("/storage/avatar", ch.PutAvatar)
-	e.GET(fmt.Sprintf("%v/:filename", handlers.UrlStorageGetAvatar), ch.Download)
+	e.POST("/storage/avatar", uah.PutAvatar)
+	e.GET(fmt.Sprintf("%v/:filename", uah.GetUrlPath()), uah.Download)
 	e.POST("/storage/:chatId/file", fh.UploadHandler)
 	e.POST("/storage/:chatId/file/:fileItemUuid", fh.UploadHandler)
 	e.PUT("/storage/:chatId/replace/file", fh.ReplaceHandler)
@@ -150,7 +150,6 @@ func configureMinio() (*minio.Client, error) {
 
 	return minioClient, nil
 }
-
 
 func initJaeger(lc fx.Lifecycle) error {
 	exporter, err := jaeger.NewExporter(jaeger.Options{

@@ -19,18 +19,7 @@ import (
 	"time"
 )
 
-type AvatarHandler struct {
-	minio *minio.Client
-}
-
-func NewAvatarHandler(minio *minio.Client) *AvatarHandler {
-	return &AvatarHandler{
-		minio: minio,
-	}
-}
-
 const FormFile = "data"
-const UrlStorageGetAvatar = "/storage/public/avatar"
 
 // Go enum
 type AvatarType string
@@ -40,20 +29,29 @@ const (
 	AVATAR_640x640 AvatarType = "AVATAR_640x640"
 )
 
-func (h *AvatarHandler) PutAvatar(c echo.Context) error {
-	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
-		return errors.New("Error during getting auth context")
-	}
+type abstractMethods interface {
+	getAvatarFileName(c echo.Context, avatarType AvatarType) (string, error)
+	ensureAndGetAvatarBucket() (string, error)
+	GetUrlPath() string
+}
 
+type abstractAvatarHandler struct {
+	minio    *minio.Client
+	delegate abstractMethods
+}
+
+type UserAvatarHandler struct {
+	abstractAvatarHandler
+}
+
+func (h *abstractAvatarHandler) PutAvatar(c echo.Context) error {
 	filePart, err := c.FormFile(FormFile)
 	if err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during extracting form %v parameter: %v", FormFile, err)
 		return err
 	}
 
-	bucketName, err := EnsureAndGetAvatarBucket(h.minio)
+	bucketName, err := h.delegate.ensureAndGetAvatarBucket()
 	if err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during get bucket: %v", err)
 		return err
@@ -76,39 +74,46 @@ func (h *AvatarHandler) PutAvatar(c echo.Context) error {
 		return err
 	}
 
-	filename200, err := h.putSizedFile(c, srcImage, err, userPrincipalDto, bucketName, contentType, 200, 200, AVATAR_200x200)
-	if err != nil {
-		return err
-	}
-	filename640, err := h.putSizedFile(c, srcImage, err, userPrincipalDto, bucketName, contentType, 640, 640, AVATAR_640x640)
-	if err != nil {
-		return err
-	}
-
 	currTime := time.Now().Unix()
-	relativeUrl := fmt.Sprintf("%v%v/%v?time=%v", viper.GetString("server.contextPath"), UrlStorageGetAvatar, filename200, currTime)
-	relativeBigUrl := fmt.Sprintf("%v%v/%v?time=%v", viper.GetString("server.contextPath"), UrlStorageGetAvatar, filename640, currTime)
+	filename200, relativeUrl, err := h.putSizedFile(c, srcImage, err, bucketName, contentType, 200, 200, AVATAR_200x200, currTime)
+	if err != nil {
+		return err
+	}
+	filename640, relativeBigUrl, err := h.putSizedFile(c, srcImage, err, bucketName, contentType, 640, 640, AVATAR_640x640, currTime)
+	if err != nil {
+		return err
+	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "filename": filename200, "filenameBig": filename640, "relativeUrl": relativeUrl, "relativeBigUrl": relativeBigUrl})
 }
 
-func (fh *AvatarHandler) putSizedFile(c echo.Context, srcImage image.Image, err error, userPrincipalDto *auth.AuthResult, bucketName string, contentType string, width, height int, avatarType AvatarType) (string, error) {
+func (h *abstractAvatarHandler) putSizedFile(c echo.Context, srcImage image.Image, err error, bucketName string, contentType string, width, height int, avatarType AvatarType, currTime int64) (string, string, error) {
 	dstImage := imaging.Resize(srcImage, width, height, imaging.Lanczos)
 	byteBuffer := new(bytes.Buffer)
 	err = jpeg.Encode(byteBuffer, dstImage, nil)
 	if err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during encoding image: %v", err)
-		return "", err
+		return "", "", err
 	}
-	filename := fmt.Sprintf("%v_%v.jpg", userPrincipalDto.UserId, avatarType)
-	if _, err := fh.minio.PutObject(context.Background(), bucketName, filename, byteBuffer, int64(byteBuffer.Len()), minio.PutObjectOptions{ContentType: contentType}); err != nil {
+	filename, err := h.getAvatarFileName(c, avatarType)
+	if err != nil {
+		GetLogEntry(c.Request()).Errorf("Error during get avatar filename: %v", err)
+		return "", "", err
+	}
+	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, byteBuffer, int64(byteBuffer.Len()), minio.PutObjectOptions{ContentType: contentType}); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during upload object: %v", err)
-		return "", err
+		return "", "", err
 	}
-	return filename, nil
+	relativeUrl := fmt.Sprintf("%v%v/%v?time=%v", viper.GetString("server.contextPath"), h.delegate.GetUrlPath(), filename, currTime)
+
+	return filename, relativeUrl, nil
 }
 
-func (h *AvatarHandler) Download(c echo.Context) error {
+func (r *abstractAvatarHandler) getAvatarFileName(c echo.Context, avatarType AvatarType) (string, error) {
+	return r.delegate.getAvatarFileName(c, avatarType)
+}
+
+func (h *abstractAvatarHandler) Download(c echo.Context) error {
 	bucketName, err := EnsureAndGetAvatarBucket(h.minio)
 	if err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during get bucket: %v", err)
@@ -133,4 +138,30 @@ func (h *AvatarHandler) Download(c echo.Context) error {
 	}
 
 	return c.Stream(http.StatusOK, info.ContentType, object)
+}
+
+func NewUserAvatarHandler(minio *minio.Client) *UserAvatarHandler {
+	uah := UserAvatarHandler{}
+	uah.minio = minio
+	uah.delegate = uah
+	return &uah
+}
+
+const urlStorageGetUserAvatar = "/storage/public/avatar"
+
+func (h UserAvatarHandler) ensureAndGetAvatarBucket() (string, error) {
+	return EnsureAndGetAvatarBucket(h.minio)
+}
+
+func (r UserAvatarHandler) getAvatarFileName(c echo.Context, avatarType AvatarType) (string, error) {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return "", errors.New("Error during getting auth context")
+	}
+	return fmt.Sprintf("%v_%v.jpg", userPrincipalDto.UserId, avatarType), nil
+}
+
+func (r UserAvatarHandler) GetUrlPath() string {
+	return urlStorageGetUserAvatar
 }
