@@ -2,7 +2,7 @@
     <v-card>
         <v-list>
             <v-list-item-group v-model="group" color="primary">
-            <v-list-item @keydown.esc="showContextMenu = false"
+            <v-list-item @keydown.esc="onCloseContextMenu()"
                     v-for="(item, index) in items"
                     :key="item.id"
                     @contextmenu="onShowContextMenu($event, item)"
@@ -30,26 +30,7 @@
             </v-list-item>
             </v-list-item-group>
         </v-list>
-        <v-menu
-            v-model="showContextMenu"
-            :position-x="contextMenuX"
-            :position-y="contextMenuY"
-            absolute
-            offset-y
-        >
-            <v-list>
-                <v-list-item
-                    v-for="(item, index) in getContextMenuItems()"
-                    :key="index"
-                    link
-                    @click="item.action"
-                >
-                    <v-list-item-avatar><v-icon :color="item.iconColor">{{item.icon}}</v-icon></v-list-item-avatar>
-                    <v-list-item-title>{{ item.title }}</v-list-item-title>
-                </v-list-item>
-            </v-list>
-        </v-menu>
-
+        <ChatListContextMenu ref="contextMenuRef" :actionsHolder="this"/>
         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
             <template slot="no-more"><span/></template>
             <template slot="no-results"><span/></template>
@@ -84,6 +65,7 @@
         SET_SHOW_SEARCH,
         SET_TITLE
     } from "./store";
+    import ChatListContextMenu from "@/ChatListContextMenu";
 
     const pageSize = 40;
 
@@ -101,15 +83,11 @@
                 infiniteId: +new Date(),
 
                 group: -1,
-
-                showContextMenu: false,
-                menuableItem: null,
-                contextMenuX: 0,
-                contextMenuY: 0,
             }
         },
         components:{
             InfiniteLoading,
+            ChatListContextMenu,
         },
         methods:{
             // not working until you will change this.items list
@@ -243,30 +221,11 @@
                     this.$forceUpdate();
                 }
             },
-            onShowContextMenu(e, menuableItem) {
-                e.preventDefault();
-                this.showContextMenu = false;
-                this.contextMenuX = e.clientX;
-                this.contextMenuY = e.clientY;
-                this.menuableItem = menuableItem;
-                this.$nextTick(() => {
-                    this.showContextMenu = true;
-                })
+            onShowContextMenu(e, menuableItem){
+                this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
             },
-            getContextMenuItems() {
-                const ret = [];
-                if (this.menuableItem) {
-                    if (this.menuableItem.canEdit) {
-                        ret.push({title: 'Edit', icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.editChat(this.menuableItem) });
-                    }
-                    if (this.menuableItem.canDelete) {
-                        ret.push({title: 'Remove', icon: 'mdi-delete', iconColor: 'error', action: () => this.deleteChat(this.menuableItem) });
-                    }
-                    if (this.menuableItem.canLeave) {
-                        ret.push({title: 'Leave', icon: 'mdi-exit-run', action: () => this.leaveChat(this.menuableItem) });
-                    }
-                }
-                return ret;
+            onCloseContextMenu(){
+                this.$refs.contextMenuRef.onCloseContextMenu()
             }
         },
         created() {
