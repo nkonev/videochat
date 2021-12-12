@@ -147,7 +147,7 @@ func NewUserAvatarHandler(minio *minio.Client) *UserAvatarHandler {
 	return &uah
 }
 
-const urlStorageGetUserAvatar = "/storage/public/avatar"
+const urlStorageGetUserAvatar = "/storage/public/user/avatar"
 
 func (h *UserAvatarHandler) ensureAndGetAvatarBucket() (string, error) {
 	return EnsureAndGetAvatarBucket(h.minio)
