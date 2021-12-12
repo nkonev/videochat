@@ -29,10 +29,10 @@ type EditChatDto struct {
 }
 
 type CreateChatDto struct {
-	Name           string   `json:"name"`
-	ParticipantIds *[]int64 `json:"participantIds"`
-	Avatar         string   `json:"avatar"`
-	AvatarBig      string   `json:"avatarBig"`
+	Name           string      `json:"name"`
+	ParticipantIds *[]int64    `json:"participantIds"`
+	Avatar         null.String `json:"avatar"`
+	AvatarBig      null.String `json:"avatarBig"`
 }
 
 type ChatHandler struct {

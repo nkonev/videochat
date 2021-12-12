@@ -91,7 +91,6 @@
     import axios from "axios";
     import debounce from "lodash/debounce";
     import bus, {OPEN_CHAT_EDIT, OPEN_CHOOSE_AVATAR} from "./bus";
-    import {FETCH_USER_PROFILE, GET_USER} from "@/store";
 
     const dtoFactory = ()=>{
         return {
