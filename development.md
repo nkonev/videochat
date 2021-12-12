@@ -345,3 +345,11 @@ Remove 'command' tag from `docker-compose-infra.template.yml`
 ```
 chown -R 1001 /mnt/chat-minio
 ```
+
+# Rename minio bucket
+... by [mirroring it](https://github.com/minio/mc/issues/2619#issuecomment-444545894)
+```
+mc mb myminio/newbucket
+mc mirror myminio/oldbucket myminio/newbucket
+mc rm -r --force myminio/oldbucket
+```

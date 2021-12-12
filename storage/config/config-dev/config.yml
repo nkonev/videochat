@@ -17,7 +17,7 @@ minio:
   secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   location: "europe-east"
   bucket:
-    avatar: "avatar"
+    userAvatar: "user-avatar"
     chatAvatar: "chat-avatar"
     files: "files"
     embedded: "embedded"

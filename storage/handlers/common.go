@@ -125,8 +125,8 @@ func EnsureBucket(minioClient *minio.Client, bucketName, location string) error 
 	}
 }
 
-func EnsureAndGetAvatarBucket(minioClient *minio.Client) (string, error) {
-	bucketName := viper.GetString("minio.bucket.avatar")
+func EnsureAndGetUserAvatarBucket(minioClient *minio.Client) (string, error) {
+	bucketName := viper.GetString("minio.bucket.userAvatar")
 	bucketLocation := viper.GetString("minio.location")
 	err := EnsureBucket(minioClient, bucketName, bucketLocation)
 	return bucketName, err
