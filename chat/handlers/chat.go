@@ -31,6 +31,8 @@ type EditChatDto struct {
 type CreateChatDto struct {
 	Name           string   `json:"name"`
 	ParticipantIds *[]int64 `json:"participantIds"`
+	Avatar         string   `json:"avatar"`
+	AvatarBig      string   `json:"avatarBig"`
 }
 
 type ChatHandler struct {
@@ -191,10 +193,12 @@ func (ch ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto,
 }
 
 func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64) *dto.ChatDto {
-	b := dto.BaseChatDto {
-		Id:                  c.Id,
-		Name:                c.Title,
-		ParticipantIds:      c.ParticipantsIds,
+	b := dto.BaseChatDto{
+		Id:             c.Id,
+		Name:           c.Title,
+		ParticipantIds: c.ParticipantsIds,
+		Avatar:         c.Avatar,
+		AvatarBig:      c.AvatarBig,
 		// see also notifications/notifications.go:75 chatNotifyCommon()
 		CanEdit:             null.BoolFrom(c.IsAdmin && !c.TetATet),
 		CanDelete:           null.BoolFrom(c.IsAdmin),
@@ -207,8 +211,8 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		CanChangeChatAdmins: c.IsAdmin && !c.TetATet,
 	}
 	return &dto.ChatDto{
-		BaseChatDto: b,
-		Participants:        users,
+		BaseChatDto:  b,
+		Participants: users,
 	}
 }
 
@@ -335,7 +339,7 @@ func (ch ChatHandler) EditChat(c echo.Context) error {
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
 		}
-		_, err := tx.EditChat(bindTo.Id, TrimAmdSanitize(ch.policy, bindTo.Name))
+		_, err := tx.EditChat(bindTo.Id, TrimAmdSanitize(ch.policy, bindTo.Name), bindTo.Avatar, bindTo.AvatarBig)
 		if err != nil {
 			return err
 		}

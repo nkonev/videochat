@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/guregu/null"
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"time"
@@ -15,6 +16,8 @@ type Chat struct {
 	Title              string
 	LastUpdateDateTime time.Time
 	TetATet            bool
+	Avatar             null.String
+	AvatarBig          null.String
 }
 
 type ChatWithParticipants struct {
@@ -71,7 +74,7 @@ func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int
 func (db *DB) GetChats(participantId int64, limit int, offset int) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = db.Query(`SELECT id, title, last_update_date_time, tet_a_tet FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset);
+	rows, err = db.Query(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
@@ -80,7 +83,7 @@ func (db *DB) GetChats(participantId int64, limit int, offset int) ([]*Chat, err
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
-			if err := rows.Scan(&chat.Id, &chat.Title, &chat.LastUpdateDateTime, &chat.TetATet); err != nil {
+			if err := rows.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -174,9 +177,9 @@ func (tx *Tx) DeleteChat(id int64) error {
 	}
 }
 
-func (tx *Tx) EditChat(id int64, newTitle string) (*time.Time, error) {
+func (tx *Tx) EditChat(id int64, newTitle, avatar, avatarBig string) (*time.Time, error) {
 	var lastUpdateDateTime time.Time
-	res := tx.QueryRow(`UPDATE chat SET title = $2, last_update_date_time = utc_now() WHERE id = $1 RETURNING id, last_update_date_time`, id, newTitle)
+	res := tx.QueryRow(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now() WHERE id = $1 RETURNING id, last_update_date_time`, id, newTitle, avatar, avatarBig)
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
 		Logger.Errorf("Error during getting chat id %v", err)
 		return nil, err
@@ -185,9 +188,9 @@ func (tx *Tx) EditChat(id int64, newTitle string) (*time.Time, error) {
 }
 
 func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, error) {
-	row := co.QueryRow(`SELECT id, title, last_update_date_time, tet_a_tet FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
+	row := co.QueryRow(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
 	chat := Chat{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.LastUpdateDateTime, &chat.TetATet)
+	err := row.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil

@@ -62,7 +62,7 @@
                             </template>
                         </v-autocomplete>
 
-                        <v-img v-if="currentUser.avatarBig || currentUser.avatar"
+                        <v-img v-if="editDto.avatarBig || editDto.avatar"
                                :src="ava"
                                :aspect-ratio="16/9"
                                min-width="200"
@@ -120,6 +120,15 @@
         computed: {
             isNew() {
                 return !this.editChatId;
+            },
+            ava() {
+                if (this.editDto.avatarBig) {
+                    return this.editDto.avatarBig
+                } else if (this.editDto.avatar) {
+                    return this.editDto.avatar
+                } else {
+                    return null
+                }
             }
         },
         watch: {
@@ -132,18 +141,23 @@
                 this.$data.show = true;
                 this.editChatId = chatId;
                 if (this.editChatId) {
-                    console.log("Getting info about chat id", this.editChatId);
-                    axios.get('/api/chat/'+this.editChatId)
-                        .then((response) => {
-                            this.editDto = {
-                                id: this.editChatId,
-                                name: response.data.name,
-                            }
-                        })
+                    this.loadData();
                 } else {
                     this.editDto = dtoFactory();
                 }
 
+            },
+            loadData() {
+                console.log("Getting info about chat id", this.editChatId);
+                axios.get('/api/chat/'+this.editChatId)
+                    .then((response) => {
+                        this.editDto = {
+                            id: response.data.id,
+                            name: response.data.name,
+                            avatar: response.data.avatar,
+                            avatarBig: response.data.avatarBig,
+                        };
+                    })
             },
             removeSelected(item) {
                 const index = this.editDto.participantIds.indexOf(item.id);
@@ -172,6 +186,8 @@
                         id: this.editDto.id,
                         name: this.editDto.name,
                         participantIds: this.isNew ? this.editDto.participantIds : null,
+                        avatar: this.editDto.avatar,
+                        avatarBig: this.editDto.avatarBig,
                     };
                     (this.isNew ? axios.post(`/api/chat`, dtoToPost) : axios.put(`/api/chat`, dtoToPost))
                         .then(() => {
@@ -195,14 +211,7 @@
             openAvatarDialog() {
                 bus.$emit(OPEN_CHOOSE_AVATAR, {
                     initialAvatarCallback: () => {
-                        const user = this.$store.getters[GET_USER];
-                        if (user && user.avatarBig) {
-                            return user.avatarBig
-                        } else if (user && user.avatar) {
-                            return user.avatar
-                        } else {
-                            return null
-                        }
+                        return this.ava;
                     },
                     uploadAvatarFileCallback: (blob) => {
                         if (!blob) {
@@ -213,16 +222,20 @@
                         }
                         const formData = new FormData();
                         formData.append('data', blob);
-                        return axios.post('/api/storage/avatar', formData, config)
+                        return axios.post(`/api/storage/chat/${this.editDto.id}/avatar`, formData, config)
                     },
                     removeAvatarUrlCallback: () => {
-                        return axios.patch(`/api/profile`, {removeAvatar: true});
+                        this.editDto.avatar = null;
+                        this.editDto.avatarBig = null;
+                        return axios.put(`/api/chat`, this.editDto);
                     },
                     storeAvatarUrlCallback: (res) => {
-                        return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl});
+                        this.editDto.avatar = res.data.relativeUrl;
+                        this.editDto.avatarBig = res.data.relativeBigUrl;
+                        return axios.put(`/api/chat`, this.editDto);
                     },
                     onSuccessCallback: () => {
-                        this.$store.dispatch(FETCH_USER_PROFILE);
+                        this.loadData();
                     }
                 });
             },

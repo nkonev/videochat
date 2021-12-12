@@ -132,6 +132,13 @@ func EnsureAndGetAvatarBucket(minioClient *minio.Client) (string, error) {
 	return bucketName, err
 }
 
+func EnsureAndGetChatAvatarBucket(minioClient *minio.Client) (string, error) {
+	bucketName := viper.GetString("minio.bucket.chatAvatar")
+	bucketLocation := viper.GetString("minio.location")
+	err := EnsureBucket(minioClient, bucketName, bucketLocation)
+	return bucketName, err
+}
+
 func EnsureAndGetFilesBucket(minioClient *minio.Client) (string, error) {
 	bucketName := viper.GetString("minio.bucket.files")
 	bucketLocation := viper.GetString("minio.location")

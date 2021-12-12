@@ -34,6 +34,7 @@ func main() {
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			handlers.NewUserAvatarHandler,
+			handlers.NewChatAvatarHandler,
 			handlers.NewFilesHandler,
 			handlers.NewEmbedHandler,
 		),
@@ -83,6 +84,7 @@ func configureEcho(
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
 	uah *handlers.UserAvatarHandler,
+	cha *handlers.ChatAvatarHandler,
 	fh *handlers.FilesHandler,
 	eh *handlers.EmbedHandler,
 ) *echo.Echo {
@@ -110,6 +112,8 @@ func configureEcho(
 
 	e.POST("/storage/avatar", uah.PutAvatar)
 	e.GET(fmt.Sprintf("%v/:filename", uah.GetUrlPath()), uah.Download)
+	e.POST("/storage/chat/:chatId/avatar", cha.PutAvatar)
+	e.GET(fmt.Sprintf("%v/:filename", cha.GetUrlPath()), cha.Download)
 	e.POST("/storage/:chatId/file", fh.UploadHandler)
 	e.POST("/storage/:chatId/file/:fileItemUuid", fh.UploadHandler)
 	e.PUT("/storage/:chatId/replace/file", fh.ReplaceHandler)

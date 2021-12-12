@@ -40,10 +40,6 @@ type abstractAvatarHandler struct {
 	delegate abstractMethods
 }
 
-type UserAvatarHandler struct {
-	abstractAvatarHandler
-}
-
 func (h *abstractAvatarHandler) PutAvatar(c echo.Context) error {
 	filePart, err := c.FormFile(FormFile)
 	if err != nil {
@@ -114,7 +110,7 @@ func (r *abstractAvatarHandler) getAvatarFileName(c echo.Context, avatarType Ava
 }
 
 func (h *abstractAvatarHandler) Download(c echo.Context) error {
-	bucketName, err := EnsureAndGetAvatarBucket(h.minio)
+	bucketName, err := h.delegate.ensureAndGetAvatarBucket()
 	if err != nil {
 		GetLogEntry(c.Request()).Errorf("Error during get bucket: %v", err)
 		return err
@@ -138,6 +134,10 @@ func (h *abstractAvatarHandler) Download(c echo.Context) error {
 	}
 
 	return c.Stream(http.StatusOK, info.ContentType, object)
+}
+
+type UserAvatarHandler struct {
+	abstractAvatarHandler
 }
 
 func NewUserAvatarHandler(minio *minio.Client) *UserAvatarHandler {
@@ -164,4 +164,29 @@ func (r *UserAvatarHandler) getAvatarFileName(c echo.Context, avatarType AvatarT
 
 func (r *UserAvatarHandler) GetUrlPath() string {
 	return urlStorageGetUserAvatar
+}
+
+type ChatAvatarHandler struct {
+	abstractAvatarHandler
+}
+
+func NewChatAvatarHandler(minio *minio.Client) *ChatAvatarHandler {
+	uah := ChatAvatarHandler{}
+	uah.minio = minio
+	uah.delegate = &uah
+	return &uah
+}
+
+const urlStorageGetChatAvatar = "/storage/public/chat/avatar"
+
+func (h *ChatAvatarHandler) ensureAndGetAvatarBucket() (string, error) {
+	return EnsureAndGetChatAvatarBucket(h.minio)
+}
+
+func (r *ChatAvatarHandler) getAvatarFileName(c echo.Context, avatarType AvatarType) (string, error) {
+	return fmt.Sprintf("%v_%v.jpg", c.Param("chatId"), avatarType), nil
+}
+
+func (r *ChatAvatarHandler) GetUrlPath() string {
+	return urlStorageGetChatAvatar
 }

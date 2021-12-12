@@ -6,6 +6,9 @@
                     v-for="(item, index) in items"
                     :key="item.id"
             >
+                <v-list-item-avatar v-if="item.avatar">
+                    <img :src="item.avatar"/>
+                </v-list-item-avatar>
                 <v-list-item-content @click="openChat(item)" :id="'chat-item-' + item.id">
                     <v-list-item-title>
                         <span class="min-height">

@@ -6,7 +6,8 @@
 
                 <v-container fluid>
                     <v-row justify="center">
-                    <croppa v-model="myCroppa"
+                    <croppa :key="croppaKey"
+                            v-model="myCroppa"
                             :width="400"
                             :height="400"
                             :remove-button-size="32"
@@ -14,7 +15,7 @@
                             :file-size-limit="limit"
                             :show-loading="true"
                             placeholder="Choose avatar image"
-                            :initial-image="initialImage"
+                            :initial-image="initialImage()"
                             :placeholder-font-size="32"
                             :disabled="false"
                             :prevent-white-space="true"
@@ -57,6 +58,7 @@
             return {
                 show: false,
 
+                croppaKey: 1,
                 myCroppa: {},
                 removeImage: false,
                 imageContentType: null,
@@ -71,6 +73,11 @@
             }
         },
         computed: {
+            limit() {
+                return UPLOAD_FILE_SIZE_LIMIT;
+            }
+        },
+        methods: {
             initialImage() {
                 if (this.$data.initialAvatarCallback) {
                     return this.$data.initialAvatarCallback();
@@ -78,11 +85,6 @@
                     return null;
                 }
             },
-            limit() {
-                return UPLOAD_FILE_SIZE_LIMIT;
-            }
-        },
-        methods: {
             handleCroppaFileChoose(e){
                 this.removeImage = false;
                 this.imageContentType = e.type;
@@ -135,13 +137,14 @@
                     if (value && this.$data.onSuccessCallback) {
                         this.$data.onSuccessCallback();
                     }
-                    this.show = false;
+                    this.closeModal();
                 }).finally(() => {
                     this.uploading = false;
                 });
             },
 
             showModal({initialAvatarCallback, uploadAvatarFileCallback, removeAvatarUrlCallback, storeAvatarUrlCallback, onSuccessCallback}) {
+                this.croppaKey++;
                 this.$data.show = true;
                 this.$data.initialAvatarCallback = initialAvatarCallback;
                 this.$data.uploadAvatarFileCallback = uploadAvatarFileCallback;
@@ -151,6 +154,7 @@
             },
             closeModal() {
                 this.$data.show=false;
+                this.myCroppa = {};
                 this.$data.initialAvatarCallback = null;
                 this.$data.uploadAvatarFileCallback = null;
                 this.$data.removeAvatarUrlCallback = null;

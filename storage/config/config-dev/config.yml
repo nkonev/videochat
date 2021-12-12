@@ -18,6 +18,7 @@ minio:
   location: "europe-east"
   bucket:
     avatar: "avatar"
+    chatAvatar: "chat-avatar"
     files: "files"
     embedded: "embedded"
 
