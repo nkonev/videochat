@@ -1,7 +1,7 @@
 [![Build Status](https://github.com/nkonev/videochat/workflows/CI%20jobs/badge.svg)](https://github.com/nkonev/videochat/actions)
 
 # Videochat
-Your self-hosted videoconference platform.
+Your open source self-hosted videoconference platform.
 
 [![Chat image](./.screenshots/2_chat_participants_management_crop.png)](./screenshots.md)
 
