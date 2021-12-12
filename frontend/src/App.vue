@@ -129,7 +129,7 @@
                 <template v-slot:activator="{ on, attrs }">
                     <v-icon color="white" class="mr-2" v-bind="attrs" v-on="on">mdi-lan-disconnect</v-icon>
                 </template>
-                <span>Websocket is not connected</span>
+                <span>{{ $vuetify.lang.t('$vuetify.websocket_not_connected') }}</span>
             </v-tooltip>
         </v-app-bar>
 

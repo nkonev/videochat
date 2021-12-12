@@ -56,6 +56,7 @@ export default {
     please_allow_audio_policy_bypass: "Please allow audio autoplay. If not, it will be enabled after unmute.",
     allow: "Allow",
     user_profile_choose_avatar: "Choose avatar",
+    choose_avatar_btn: "Choose avatar",
     upload: "Upload",
     upload_files: "Upload files",
     attached_files: "Attached files",
@@ -85,4 +86,5 @@ export default {
     requested_codec: "Requested codec",
     websocket_restored: "Websocket connection has been restored, press button to update",
     btn_update: "Update",
+    websocket_not_connected: "Websocket is not connected",
 }

@@ -14,7 +14,7 @@
                        @click="openAvatarDialog"
                 >
                 </v-img>
-                <v-btn v-else color="primary" @click="openAvatarDialog()">Choose avatar</v-btn>
+                <v-btn v-else color="primary" @click="openAvatarDialog()">{{ $vuetify.lang.t('$vuetify.choose_avatar_btn') }}</v-btn>
                 <v-list-item-title class="headline mb-1 mt-2">{{ currentUser.login }}</v-list-item-title>
                 <v-list-item-subtitle v-if="currentUser.email">{{ currentUser.email }}</v-list-item-subtitle>
             </v-list-item-content>

@@ -49,13 +49,13 @@ export default {
             const ret = [];
             if (this.menuableItem) {
                 if (this.menuableItem.canEdit) {
-                    ret.push({title: 'Edit', icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.actionsHolder.editChat(this.menuableItem) });
+                    ret.push({title: this.$vuetify.lang.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.actionsHolder.editChat(this.menuableItem) });
                 }
                 if (this.menuableItem.canDelete) {
-                    ret.push({title: 'Remove', icon: 'mdi-delete', iconColor: 'error', action: () => this.actionsHolder.deleteChat(this.menuableItem) });
+                    ret.push({title: this.$vuetify.lang.t('$vuetify.delete_btn'), icon: 'mdi-delete', iconColor: 'error', action: () => this.actionsHolder.deleteChat(this.menuableItem) });
                 }
                 if (this.menuableItem.canLeave) {
-                    ret.push({title: 'Leave', icon: 'mdi-exit-run', action: () => this.actionsHolder.leaveChat(this.menuableItem) });
+                    ret.push({title: this.$vuetify.lang.t('$vuetify.leave_btn'), icon: 'mdi-exit-run', action: () => this.actionsHolder.leaveChat(this.menuableItem) });
                 }
             }
             return ret;

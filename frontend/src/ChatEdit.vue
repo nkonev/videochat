@@ -71,7 +71,7 @@
                                    @click="openAvatarDialog"
                             >
                             </v-img>
-                            <v-btn v-else color="primary" @click="openAvatarDialog()">Choose avatar</v-btn>
+                            <v-btn v-else color="primary" @click="openAvatarDialog()">{{ $vuetify.lang.t('$vuetify.choose_avatar_btn') }}</v-btn>
                         </template>
                     </v-form>
                 </v-container>

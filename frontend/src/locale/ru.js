@@ -56,6 +56,7 @@ export default {
     please_allow_audio_policy_bypass: "Пожалуйста, разрешите автовоспроизведение аудио. Если забыли - аудио заработает после включения микрофона.",
     allow: "Разрешить",
     user_profile_choose_avatar: "Выбор аватара",
+    choose_avatar_btn: "Выбрать аватар",
     upload: "Загрузить",
     upload_files: "Загрузка файлов",
     attached_files: "Файлы чата",
@@ -85,4 +86,5 @@ export default {
     requested_codec: "Предпочитаемый кодек",
     websocket_restored: "Подключение по Websocket было восстановлено, нажмите кнопку для обновления данных",
     btn_update: "Обновить",
+    websocket_not_connected: "Websocket не подключен",
 }
