@@ -62,16 +62,17 @@
                             </template>
                         </v-autocomplete>
 
-                        <v-img v-if="editDto.avatarBig || editDto.avatar"
-                               :src="ava"
-                               :aspect-ratio="16/9"
-                               min-width="200"
-                               min-height="200"
-                               @click="openAvatarDialog"
-                        >
-                        </v-img>
-                        <v-btn v-else color="primary" @click="openAvatarDialog()">Choose avatar</v-btn>
-
+                        <template v-if="!isNew">
+                            <v-img v-if="editDto.avatarBig || editDto.avatar"
+                                   :src="ava"
+                                   :aspect-ratio="16/9"
+                                   min-width="200"
+                                   min-height="200"
+                                   @click="openAvatarDialog"
+                            >
+                            </v-img>
+                            <v-btn v-else color="primary" @click="openAvatarDialog()">Choose avatar</v-btn>
+                        </template>
                     </v-form>
                 </v-container>
 
