@@ -24,10 +24,11 @@ jobs:
             ${{ runner.os }}-maven-
       - name: Start & wait docker-compose environment
         run: |
-          docker-compose up -d postgresql redis rabbitmq keycloak-postgresql
+          docker-compose up -d postgresql redis rabbitmq jaeger keycloak-postgresql
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:6831 -- echo 'jaeger is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:5420 -- echo 'keycloak postgres is up'
           docker-compose up -d keycloak
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
