@@ -2,9 +2,10 @@
     <v-card>
         <v-list>
             <v-list-item-group v-model="group" color="primary">
-            <v-list-item
+            <v-list-item @keydown.esc="showContextMenu = false"
                     v-for="(item, index) in items"
                     :key="item.id"
+                    @contextmenu="onShowContextMenu($event, item)"
             >
                 <v-list-item-avatar v-if="item.avatar">
                     <img :src="item.avatar"/>
@@ -19,7 +20,7 @@
                     </v-list-item-title>
                     <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
-                <v-list-item-action>
+                <v-list-item-action v-if="$vuetify.breakpoint.smAndUp">
                     <v-container class="mb-0 mt-0 pl-0 pr-0 pb-0 pt-0">
                         <v-btn v-if="item.canEdit" icon color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
                         <v-btn v-if="item.canDelete" icon @click="deleteChat(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
@@ -29,6 +30,26 @@
             </v-list-item>
             </v-list-item-group>
         </v-list>
+        <v-menu
+            v-model="showContextMenu"
+            :position-x="contextMenuX"
+            :position-y="contextMenuY"
+            absolute
+            offset-y
+        >
+            <v-list>
+                <v-list-item
+                    v-for="(item, index) in getContextMenuItems()"
+                    :key="index"
+                    link
+                    @click="item.action"
+                >
+                    <v-list-item-avatar><v-icon :color="item.iconColor">{{item.icon}}</v-icon></v-list-item-avatar>
+                    <v-list-item-title>{{ item.title }}</v-list-item-title>
+                </v-list-item>
+            </v-list>
+        </v-menu>
+
         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
             <template slot="no-more"><span/></template>
             <template slot="no-results"><span/></template>
@@ -79,7 +100,12 @@
                 itemsTotal: 0,
                 infiniteId: +new Date(),
 
-                group: -1
+                group: -1,
+
+                showContextMenu: false,
+                menuableItem: null,
+                contextMenuX: 0,
+                contextMenuY: 0,
             }
         },
         components:{
@@ -217,6 +243,31 @@
                     this.$forceUpdate();
                 }
             },
+            onShowContextMenu(e, menuableItem) {
+                e.preventDefault();
+                this.showContextMenu = false;
+                this.contextMenuX = e.clientX;
+                this.contextMenuY = e.clientY;
+                this.menuableItem = menuableItem;
+                this.$nextTick(() => {
+                    this.showContextMenu = true;
+                })
+            },
+            getContextMenuItems() {
+                const ret = [];
+                if (this.menuableItem) {
+                    if (this.menuableItem.canEdit) {
+                        ret.push({title: 'Edit', icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.editChat(this.menuableItem) });
+                    }
+                    if (this.menuableItem.canDelete) {
+                        ret.push({title: 'Remove', icon: 'mdi-delete', iconColor: 'error', action: () => this.deleteChat(this.menuableItem) });
+                    }
+                    if (this.menuableItem.canLeave) {
+                        ret.push({title: 'Leave', icon: 'mdi-exit-run', action: () => this.leaveChat(this.menuableItem) });
+                    }
+                }
+                return ret;
+            }
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadItems);
