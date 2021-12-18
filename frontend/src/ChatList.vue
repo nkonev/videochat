@@ -7,7 +7,7 @@
                     :key="item.id"
                     @contextmenu="onShowContextMenu($event, item)"
             >
-                <v-list-item-avatar v-if="item.avatar">
+                <v-list-item-avatar v-if="item.avatar" @click="openChat(item)">
                     <img :src="item.avatar"/>
                 </v-list-item-avatar>
                 <v-list-item-content @click="openChat(item)" :id="'chat-item-' + item.id">
