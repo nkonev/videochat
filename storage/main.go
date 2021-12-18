@@ -4,6 +4,7 @@ import (
 	"context"
 	"contrib.go.opencensus.io/exporter/jaeger"
 	"fmt"
+	"github.com/ehsaniara/gointerlock"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/minio/minio-go/v7"
@@ -19,6 +20,7 @@ import (
 	"nkonev.name/storage/handlers"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
+	"nkonev.name/storage/redis"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -32,6 +34,8 @@ func main() {
 			configureMinio,
 			configureMinioBuckets,
 			configureEcho,
+			redis.RedisV8,
+			redis.CleanDeletedImagesFromMessageBody,
 			client.NewChatAccessClient,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
@@ -42,6 +46,7 @@ func main() {
 		),
 		fx.Invoke(
 			initJaeger,
+			runScheduler,
 			runEcho,
 		),
 	)
@@ -217,4 +222,13 @@ func configureMinioBuckets(client *minio.Client) (*utils.MinioConfig, error) {
 		Files:      f,
 		Embedded:   e,
 	}, nil
+}
+
+func runScheduler(task *gointerlock.GoInterval) {
+	go func() {
+		err := task.Run(context.Background())
+		if err != nil {
+			Logger.Errorf("Error during starting scheduler: %s", err)
+		}
+	}()
 }

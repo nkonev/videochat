@@ -4,6 +4,8 @@ require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.0
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/disintegration/imaging v1.6.2
+	github.com/ehsaniara/gointerlock v1.1.1 // indirect
+	github.com/go-redis/redis/v8 v8.11.4 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/minio/minio-go/v7 v7.0.11

@@ -39,3 +39,8 @@ limits:
   default:
     # 512 megabytes
     all.users.limit: 536870912
+
+redis:
+  address: :36379
+  password: ""
+  db: 3
