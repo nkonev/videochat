@@ -18,6 +18,7 @@ import (
 	"nkonev.name/storage/config"
 	"nkonev.name/storage/handlers"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/utils"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -29,6 +30,7 @@ func main() {
 		fx.Logger(Logger),
 		fx.Provide(
 			configureMinio,
+			configureMinioBuckets,
 			configureEcho,
 			client.NewChatAccessClient,
 			handlers.ConfigureStaticMiddleware,
@@ -192,4 +194,27 @@ func runEcho(e *echo.Echo) {
 		}
 	}()
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
+}
+
+func configureMinioBuckets(client *minio.Client) (*utils.MinioConfig, error) {
+	var ua, ca, f, e string
+	var err error
+	if ua, err = utils.EnsureAndGetUserAvatarBucket(client); err != nil {
+		return nil, err
+	}
+	if ca, err = utils.EnsureAndGetChatAvatarBucket(client); err != nil {
+		return nil, err
+	}
+	if f, err = utils.EnsureAndGetFilesBucket(client); err != nil {
+		return nil, err
+	}
+	if e, err = utils.EnsureAndGetEmbeddedBucket(client); err != nil {
+		return nil, err
+	}
+	return &utils.MinioConfig{
+		UserAvatar: ua,
+		ChatAvatar: ca,
+		Files:      f,
+		Embedded:   e,
+	}, nil
 }

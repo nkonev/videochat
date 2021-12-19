@@ -36,8 +36,9 @@ type abstractMethods interface {
 }
 
 type abstractAvatarHandler struct {
-	minio    *minio.Client
-	delegate abstractMethods
+	minio       *minio.Client
+	minioConfig *utils.MinioConfig
+	delegate    abstractMethods
 }
 
 func (h *abstractAvatarHandler) PutAvatar(c echo.Context) error {
@@ -140,17 +141,18 @@ type UserAvatarHandler struct {
 	abstractAvatarHandler
 }
 
-func NewUserAvatarHandler(minio *minio.Client) *UserAvatarHandler {
+func NewUserAvatarHandler(minio *minio.Client, minioConfig *utils.MinioConfig) *UserAvatarHandler {
 	uah := UserAvatarHandler{}
 	uah.minio = minio
 	uah.delegate = &uah
+	uah.minioConfig = minioConfig
 	return &uah
 }
 
 const urlStorageGetUserAvatar = "/storage/public/user/avatar"
 
 func (h *UserAvatarHandler) ensureAndGetAvatarBucket() (string, error) {
-	return EnsureAndGetUserAvatarBucket(h.minio)
+	return h.minioConfig.UserAvatar, nil
 }
 
 func (r *UserAvatarHandler) getAvatarFileName(c echo.Context, avatarType AvatarType) (string, error) {
@@ -170,17 +172,18 @@ type ChatAvatarHandler struct {
 	abstractAvatarHandler
 }
 
-func NewChatAvatarHandler(minio *minio.Client) *ChatAvatarHandler {
+func NewChatAvatarHandler(minio *minio.Client, minioConfig *utils.MinioConfig) *ChatAvatarHandler {
 	uah := ChatAvatarHandler{}
 	uah.minio = minio
 	uah.delegate = &uah
+	uah.minioConfig = minioConfig
 	return &uah
 }
 
 const urlStorageGetChatAvatar = "/storage/public/chat/avatar"
 
 func (h *ChatAvatarHandler) ensureAndGetAvatarBucket() (string, error) {
-	return EnsureAndGetChatAvatarBucket(h.minio)
+	return h.minioConfig.ChatAvatar, nil
 }
 
 func (r *ChatAvatarHandler) getAvatarFileName(c echo.Context, avatarType AvatarType) (string, error) {

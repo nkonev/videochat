@@ -16,8 +16,9 @@ import (
 )
 
 type EmbedHandler struct {
-	minio      *minio.Client
-	chatClient *client.RestClient
+	minio       *minio.Client
+	chatClient  *client.RestClient
+	minioConfig *utils.MinioConfig
 }
 
 const embedMultipartKey = "embed_file_header"
@@ -26,10 +27,12 @@ const RelativeEmbeddedUrl = "/api/storage/%v/embed/%v%v"
 func NewEmbedHandler(
 	minio *minio.Client,
 	chatClient *client.RestClient,
+	minioConfig *utils.MinioConfig,
 ) *EmbedHandler {
 	return &EmbedHandler{
-		minio:      minio,
-		chatClient: chatClient,
+		minio:       minio,
+		chatClient:  chatClient,
+		minioConfig: minioConfig,
 	}
 }
 
@@ -49,10 +52,7 @@ func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	bucketName, err := EnsureAndGetEmbeddedBucket(h.minio)
-	if err != nil {
-		return err
-	}
+	bucketName := h.minioConfig.Embedded
 
 	formFile, err := c.FormFile(embedMultipartKey)
 	if err != nil {
@@ -101,10 +101,7 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	bucketName, err := EnsureAndGetEmbeddedBucket(h.minio)
-	if err != nil {
-		return err
-	}
+	bucketName := h.minioConfig.Embedded
 
 	// check user belongs to chat
 	fileWithExt := c.Param("file")

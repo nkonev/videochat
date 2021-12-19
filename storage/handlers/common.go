@@ -104,55 +104,6 @@ func Convert(h http.Handler) echo.HandlerFunc {
 	}
 }
 
-func EnsureBucket(minioClient *minio.Client, bucketName, location string) error {
-	// Check to see if we already own this bucket (which happens if you run this twice)
-	exists, err := minioClient.BucketExists(context.Background(), bucketName)
-	if err == nil && exists {
-		Logger.Debugf("Bucket '%s' already present", bucketName)
-		return nil
-	} else if err != nil {
-		return err
-	} else {
-		if err := minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{
-			Region:        location,
-			ObjectLocking: false,
-		}); err != nil {
-			return err
-		} else {
-			Logger.Infof("Successfully created bucket '%s'", bucketName)
-			return nil
-		}
-	}
-}
-
-func EnsureAndGetUserAvatarBucket(minioClient *minio.Client) (string, error) {
-	bucketName := viper.GetString("minio.bucket.userAvatar")
-	bucketLocation := viper.GetString("minio.location")
-	err := EnsureBucket(minioClient, bucketName, bucketLocation)
-	return bucketName, err
-}
-
-func EnsureAndGetChatAvatarBucket(minioClient *minio.Client) (string, error) {
-	bucketName := viper.GetString("minio.bucket.chatAvatar")
-	bucketLocation := viper.GetString("minio.location")
-	err := EnsureBucket(minioClient, bucketName, bucketLocation)
-	return bucketName, err
-}
-
-func EnsureAndGetFilesBucket(minioClient *minio.Client) (string, error) {
-	bucketName := viper.GetString("minio.bucket.files")
-	bucketLocation := viper.GetString("minio.location")
-	err := EnsureBucket(minioClient, bucketName, bucketLocation)
-	return bucketName, err
-}
-
-func EnsureAndGetEmbeddedBucket(minioClient *minio.Client) (string, error) {
-	bucketName := viper.GetString("minio.bucket.embedded")
-	bucketLocation := viper.GetString("minio.location")
-	err := EnsureBucket(minioClient, bucketName, bucketLocation)
-	return bucketName, err
-}
-
 func getDotExtension(file *multipart.FileHeader) string {
 	return getDotExtensionStr(file.Filename)
 }
