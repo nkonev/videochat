@@ -97,9 +97,8 @@ func (tx *Tx) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 }
 
 func addMessageReadCommon(co CommonOperations, messageId, userId int64, chatId int64) error {
-	//_, err := co.Exec(`INSERT INTO message_read (last_message_id, user_id, chat_id) VALUES ($1, $2, $3) ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1  WHERE $1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
-	//return err
-	return nil // TODO fix it
+	_, err := co.Exec(`INSERT INTO message_read (last_message_id, user_id, chat_id) VALUES ($1, $2, $3) ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1  WHERE $1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
+	return err
 }
 
 func (db *DB) AddMessageRead(messageId, userId int64, chatId int64) error {
@@ -151,15 +150,14 @@ func (dbR *DB) SetFileItemUuidToNull(ownerId, chatId int64, uuid string) (int64,
 }
 
 func getUnreadMessagesCountCommon(co CommonOperations, chatId int64, userId int64) (int64, error) {
-	//var count int64
-	//row := co.QueryRow("SELECT COUNT(*) FROM message WHERE chat_id = $1 AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = $2 AND chat_id = $1), 0)", chatId, userId)
-	//err := row.Scan(&count)
-	//if err != nil {
-	//	return 0, err
-	//} else {
-	//	return count, nil
-	//}
-	return 0, nil // TODO fix it
+	var count int64
+	row := co.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM message_chat_%v WHERE chat_id = $1 AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = $2 AND chat_id = $1), 0)", chatId), chatId, userId)
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	} else {
+		return count, nil
+	}
 }
 
 func getAllUnreadMessagesCountCommon(co CommonOperations, userId int64) (int64, error) {
