@@ -151,7 +151,7 @@ func (dbR *DB) SetFileItemUuidToNull(ownerId, chatId int64, uuid string) (int64,
 
 func getUnreadMessagesCountCommon(co CommonOperations, chatId int64, userId int64) (int64, error) {
 	var count int64
-	row := co.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM message_chat_%v WHERE chat_id = $1 AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = $2 AND chat_id = $1), 0)", chatId), chatId, userId)
+	row := co.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = $2 AND chat_id = $1), 0)", chatId), chatId, userId)
 	err := row.Scan(&count)
 	if err != nil {
 		return 0, err
