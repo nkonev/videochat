@@ -81,11 +81,10 @@ func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64,
 	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", tx)
 }
 
-
 func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, tx *db.Tx) {
 	for _, participantId := range userIds {
 		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-		GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
+		GetLogEntry(c.Request()).Infof("Sending notification about %v the chat to participantChannel: %v", eventType, participantChannel)
 
 		var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
 		if err := deepcopy.Copy(copied, newChatDto); err != nil {
@@ -170,7 +169,7 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 	}
 }
 
-func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx){
+func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx) {
 	for _, participantId := range userIds {
 		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 		GetLogEntry(c.Request()).Infof("Sending notification about all unread messages to participantChannel: %v", participantChannel)
@@ -199,7 +198,6 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 		}
 	}
 }
-
 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
 	// we send a notification only to those people who are currently reading the chat
@@ -357,7 +355,6 @@ func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId in
 	}
 
 	participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(userId)
-
 
 	if marshalledBytes, err := json.Marshal(notification); err != nil {
 		GetLogEntry(c.Request()).Errorf("error during marshalling VideoCallInvitation: %s", err)

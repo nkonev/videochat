@@ -37,26 +37,12 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 		return 0, nil, errors.New("title required")
 	}
 
-	var lastUpdateDateTime time.Time
-	res := tx.QueryRow(`INSERT INTO chat (title) VALUES ($1) RETURNING id, last_update_date_time`, u.Title)
+	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
+	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title)
 	var id int64
+	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
 		Logger.Errorf("Error during getting chat id %v", err)
-		return 0, nil, err
-	}
-
-	if _, err := tx.Exec(fmt.Sprintf(`CREATE TABLE message_chat_%v () INHERITS (message);`, id)); err != nil {
-		Logger.Errorf("Error during creating messages table %v", err)
-		return 0, nil, err
-	}
-
-	if _, err := tx.Exec(fmt.Sprintf(`ALTER TABLE message_chat_%v ADD PRIMARY KEY(id);`, id)); err != nil {
-		Logger.Errorf("Error during creating primary key on messages table %v", err)
-		return 0, nil, err
-	}
-
-	if _, err := tx.Exec(fmt.Sprintf(`ALTER TABLE message_chat_%v ADD FOREIGN KEY (chat_id) REFERENCES chat(id);`, id)); err != nil {
-		Logger.Errorf("Error during creating foreign key on messages table %v", err)
 		return 0, nil, err
 	}
 
