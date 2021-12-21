@@ -85,19 +85,32 @@ func (tx *Tx) Migrate(chatId int64) error {
 		return err
 	}
 	defer query.Close()
+
+	type Tuple struct {
+		messageId, ownerId int64
+		text               string
+		fileItemUuid       *uuid.UUID
+	}
+
+	var list = []Tuple{}
+
+	Logger.Infof("Quierying messages")
 	for query.Next() {
-		var messageId, ownerId int64
-		var text string
-		var fileItemUuid *uuid.UUID
-		if err := query.Scan(&messageId, &text, &ownerId, fileItemUuid); err != nil {
+		var tuple Tuple
+		if err := query.Scan(&tuple.messageId, &tuple.text, &tuple.ownerId, &tuple.fileItemUuid); err != nil {
 			Logger.Errorf("Error during scan message row %v", err)
 			return err
 		} else {
-			_, err := tx.Exec(fmt.Sprintf("INSERT INTO message_chat_%v (id, text, chat_id, owner_id, file_item_uuid) VALUES ($1, $2, $3, $4)", chatId), messageId, text, ownerId, fileItemUuid)
-			if err != nil {
-				Logger.Errorf("Error during insert to specialized message row %v", err)
-				return err
-			}
+			list = append(list, tuple)
+		}
+	}
+
+	Logger.Infof("Inserting messages")
+	for _, tuple := range list {
+		_, err := tx.Exec(fmt.Sprintf("INSERT INTO message_chat_%v (id, text, chat_id, owner_id, file_item_uuid) VALUES ($1, $2, $3, $4, $5)", chatId), tuple.messageId, tuple.text, chatId, tuple.ownerId, tuple.fileItemUuid)
+		if err != nil {
+			Logger.Errorf("Error during insert to specialized message row %v", err)
+			return err
 		}
 	}
 
