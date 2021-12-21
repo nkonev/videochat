@@ -60,7 +60,7 @@ func (tx *Tx) Migrate(chatId int64) error {
 		return err
 	}
 
-	if _, err := tx.Exec(fmt.Sprintf(`ALTER TABLE message_chat_%v ADD FOREIGN KEY (chat_id) REFERENCES chat(id);`, chatId)); err != nil {
+	if _, err := tx.Exec(fmt.Sprintf(`ALTER TABLE message_chat_%v ADD FOREIGN KEY (chat_id) REFERENCES chat(id) ON DELETE CASCADE;`, chatId)); err != nil {
 		Logger.Errorf("Error during creating foreign key on messages table %v", err)
 		return err
 	}
