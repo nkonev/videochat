@@ -136,6 +136,17 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 	}
 }
 
+func (ch ChatHandler) MigrateChat(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	return db.Transact(ch.db, func(tx *db.Tx) error {
+		return tx.Migrate(chatId)
+	})
+}
+
 func (ch ChatHandler) GetChat(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
