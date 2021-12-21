@@ -43,6 +43,11 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 		Logger.Errorf("Error during getting chat id %v", err)
 		return 0, nil, err
 	}
+
+	if _, err := tx.Exec(fmt.Sprintf(`CREATE TABLE message_chat_%v () INHERITS (message);`, id)); err != nil {
+		return 0, nil, err
+	}
+
 	return id, &lastUpdateDateTime, nil
 }
 
@@ -173,6 +178,13 @@ func (tx *Tx) DeleteChat(id int64) error {
 		Logger.Errorf("Error during delete chat %v %v", id, err)
 		return err
 	} else {
+		// OK
+
+		if _, err := tx.Exec(fmt.Sprintf(`DROP TABLE message_chat_%v;`, id)); err != nil {
+			Logger.Errorf("Error during drop message table %v %v", id, err)
+			return err
+		}
+
 		return nil
 	}
 }
