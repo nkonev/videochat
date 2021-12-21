@@ -45,6 +45,17 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	}
 
 	if _, err := tx.Exec(fmt.Sprintf(`CREATE TABLE message_chat_%v () INHERITS (message);`, id)); err != nil {
+		Logger.Errorf("Error during creating messages table %v", err)
+		return 0, nil, err
+	}
+
+	if _, err := tx.Exec(fmt.Sprintf(`ALTER TABLE message_chat_%v ADD PRIMARY KEY(id);`, id)); err != nil {
+		Logger.Errorf("Error during creating primary key on messages table %v", err)
+		return 0, nil, err
+	}
+
+	if _, err := tx.Exec(fmt.Sprintf(`ALTER TABLE message_chat_%v ADD FOREIGN KEY (chat_id) REFERENCES chat(id);`, id)); err != nil {
+		Logger.Errorf("Error during creating foreign key on messages table %v", err)
 		return 0, nil, err
 	}
 
