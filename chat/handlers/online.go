@@ -13,13 +13,13 @@ type UserOnlineHandler struct {
 	onlineStorage redis.OnlineStorage
 }
 
-func NewOnlineHandler(onlineStorage redis.OnlineStorage) UserOnlineHandler {
-	return UserOnlineHandler{
+func NewOnlineHandler(onlineStorage redis.OnlineStorage) *UserOnlineHandler {
+	return &UserOnlineHandler{
 		onlineStorage: onlineStorage,
 	}
 }
 
-func (h UserOnlineHandler) GetOnlineUsers(context echo.Context) error {
+func (h *UserOnlineHandler) GetOnlineUsers(context echo.Context) error {
 	param := context.QueryParam("participantIds")
 	Logger.Printf("See here - %v", param)
 	split := strings.Split(param, ",")

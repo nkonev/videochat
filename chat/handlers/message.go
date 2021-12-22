@@ -22,13 +22,13 @@ import (
 )
 
 type EditMessageDto struct {
-	Id   int64  `json:"id"`
-	Text string `json:"text"`
+	Id           int64      `json:"id"`
+	Text         string     `json:"text"`
 	FileItemUuid *uuid.UUID `json:"fileItemUuid"`
 }
 
 type CreateMessageDto struct {
-	Text string `json:"text"`
+	Text         string     `json:"text"`
 	FileItemUuid *uuid.UUID `json:"fileItemUuid"`
 }
 
@@ -39,13 +39,13 @@ type MessageHandler struct {
 	restClient  client.RestClient
 }
 
-func NewMessageHandler(dbR db.DB, policy *bluemonday.Policy, notificator notifications.Notifications, restClient client.RestClient) MessageHandler {
-	return MessageHandler{
+func NewMessageHandler(dbR db.DB, policy *bluemonday.Policy, notificator notifications.Notifications, restClient client.RestClient) *MessageHandler {
+	return &MessageHandler{
 		db: dbR, policy: policy, notificator: notificator, restClient: restClient,
 	}
 }
 
-func (mc MessageHandler) GetMessages(c echo.Context) error {
+func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -106,7 +106,7 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestCl
 	}
 }
 
-func (mc MessageHandler) GetMessage(c echo.Context) error {
+func (mc *MessageHandler) GetMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -148,7 +148,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, beha
 		EditDateTime:   dbMessage.EditDateTime,
 		Owner:          user,
 		CanEdit:        dbMessage.OwnerId == behalfUserId,
-		FileItemUuid: dbMessage.FileItemUuid,
+		FileItemUuid:   dbMessage.FileItemUuid,
 	}
 }
 
@@ -167,7 +167,7 @@ func noContent(c echo.Context) error {
 	return c.NoContent(204)
 }
 
-func (mc MessageHandler) PostMessage(c echo.Context) error {
+func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	var bindTo = new(CreateMessageDto)
 	if err := c.Bind(bindTo); err != nil {
 		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
@@ -232,14 +232,14 @@ func (mc MessageHandler) PostMessage(c echo.Context) error {
 
 func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *bluemonday.Policy) *db.Message {
 	return &db.Message{
-		Text:    TrimAmdSanitize(policy, dto.Text),
-		ChatId:  chatId,
-		OwnerId: authPrincipal.UserId,
+		Text:         TrimAmdSanitize(policy, dto.Text),
+		ChatId:       chatId,
+		OwnerId:      authPrincipal.UserId,
 		FileItemUuid: dto.FileItemUuid,
 	}
 }
 
-func (mc MessageHandler) EditMessage(c echo.Context) error {
+func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	var bindTo = new(EditMessageDto)
 	if err := c.Bind(bindTo); err != nil {
 		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
@@ -301,7 +301,7 @@ func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResul
 	}
 }
 
-func (mc MessageHandler) DeleteMessage(c echo.Context) error {
+func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -333,7 +333,7 @@ func (mc MessageHandler) DeleteMessage(c echo.Context) error {
 	}
 }
 
-func (mc MessageHandler) TypeMessage(c echo.Context) error {
+func (mc *MessageHandler) TypeMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -366,7 +366,7 @@ type BroadcastDto struct {
 	Text string `json:"text"`
 }
 
-func (mc MessageHandler) BroadcastMessage(c echo.Context) error {
+func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -396,12 +396,11 @@ func (mc MessageHandler) BroadcastMessage(c echo.Context) error {
 		return err
 	}
 
-
 	mc.notificator.NotifyAboutBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, strip.StripTags(bindTo.Text))
 	return c.NoContent(http.StatusAccepted)
 }
 
-func (mc MessageHandler) RemoveFileItem(c echo.Context) error {
+func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 	chatId, err := GetQueryParamAsInt64(c, "chatId")
 	if err != nil {
 		return err

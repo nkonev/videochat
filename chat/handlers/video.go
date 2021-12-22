@@ -17,14 +17,14 @@ type VideoHandler struct {
 	notificator notifications.Notifications
 }
 
-func NewVideoHandler(db db.DB, notificator notifications.Notifications) VideoHandler {
-	return VideoHandler{db, notificator}
+func NewVideoHandler(db db.DB, notificator notifications.Notifications) *VideoHandler {
+	return &VideoHandler{db, notificator}
 }
 
 type simpleChat struct {
-	Id                 int64     `json:"id"`
-	Name               string    `json:"name"`
-	IsTetATet			   bool 	 `json:"tetATet"`
+	Id        int64  `json:"id"`
+	Name      string `json:"name"`
+	IsTetATet bool   `json:"tetATet"`
 }
 
 func (r *simpleChat) GetId() int64 {
@@ -43,7 +43,7 @@ func (r *simpleChat) GetIsTetATet() bool {
 	return r.IsTetATet
 }
 
-func (vh VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
+func (vh *VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		logger.Logger.Errorf("Error during getting auth context")
@@ -81,8 +81,8 @@ func (vh VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
 
 	meAsUser := dto.User{Id: userPrincipalDto.UserId, Login: userPrincipalDto.UserLogin}
 	var sch dto.ChatDtoWithTetATet = &simpleChat{
-		Id: chat.Id,
-		Name: chat.Title,
+		Id:        chat.Id,
+		Name:      chat.Title,
 		IsTetATet: chat.TetATet,
 	}
 	utils.ReplaceChatNameToLoginForTetATet(
@@ -94,4 +94,3 @@ func (vh VideoHandler) NotifyAboutCallInvitation(c echo.Context) error {
 	vh.notificator.NotifyAboutCallInvitation(c, chatId, userId, sch.GetName())
 	return c.NoContent(http.StatusOK)
 }
-

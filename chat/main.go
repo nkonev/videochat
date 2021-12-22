@@ -115,10 +115,10 @@ func configureEcho(
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
 	node *centrifuge.Node,
-	ch handlers.ChatHandler,
-	mc handlers.MessageHandler,
-	vh handlers.VideoHandler,
-	sh handlers.UserOnlineHandler,
+	ch *handlers.ChatHandler,
+	mc *handlers.MessageHandler,
+	vh *handlers.VideoHandler,
+	sh *handlers.UserOnlineHandler,
 ) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")

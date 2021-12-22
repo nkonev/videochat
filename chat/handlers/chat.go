@@ -42,8 +42,8 @@ type ChatHandler struct {
 	policy      *bluemonday.Policy
 }
 
-func NewChatHandler(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient, policy *bluemonday.Policy) ChatHandler {
-	return ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
+func NewChatHandler(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient, policy *bluemonday.Policy) *ChatHandler {
+	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
 }
 
 func (a *CreateChatDto) Validate() error {
@@ -54,7 +54,7 @@ func (a *EditChatDto) Validate() error {
 	return validation.ValidateStruct(a, validation.Field(&a.Name, validation.Required, validation.Length(1, 256)), validation.Field(&a.Id, validation.Required))
 }
 
-func (ch ChatHandler) GetChats(c echo.Context) error {
+func (ch *ChatHandler) GetChats(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -136,7 +136,7 @@ func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Conte
 	}
 }
 
-func (ch ChatHandler) GetChat(c echo.Context) error {
+func (ch *ChatHandler) GetChat(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
@@ -165,7 +165,7 @@ func (ch ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
-func (ch ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto, commonDbOperations db.CommonOperations) (*dto.ChatDtoWithAdmin, error) {
+func (ch *ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto, commonDbOperations db.CommonOperations) (*dto.ChatDtoWithAdmin, error) {
 	var copiedChat = &dto.ChatDtoWithAdmin{}
 	err := deepcopy.Copy(copiedChat, chat)
 	if err != nil {
@@ -216,7 +216,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 	}
 }
 
-func (ch ChatHandler) CreateChat(c echo.Context) error {
+func (ch *ChatHandler) CreateChat(c echo.Context) error {
 	var bindTo = new(CreateChatDto)
 	if err := c.Bind(bindTo); err != nil {
 		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
@@ -279,7 +279,7 @@ func convertToCreatableChat(d *CreateChatDto, policy *bluemonday.Policy) *db.Cha
 	}
 }
 
-func (ch ChatHandler) DeleteChat(c echo.Context) error {
+func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
 		return err
@@ -313,7 +313,7 @@ func (ch ChatHandler) DeleteChat(c echo.Context) error {
 	return errOuter
 }
 
-func (ch ChatHandler) EditChat(c echo.Context) error {
+func (ch *ChatHandler) EditChat(c echo.Context) error {
 	var bindTo = new(EditChatDto)
 	if err := c.Bind(bindTo); err != nil {
 		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
@@ -402,7 +402,7 @@ func (ch ChatHandler) EditChat(c echo.Context) error {
 	return errOuter
 }
 
-func (ch ChatHandler) LeaveChat(c echo.Context) error {
+func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
 		return err
@@ -445,7 +445,7 @@ type ChangeAdminResponseDto struct {
 	Admin bool `json:"admin"`
 }
 
-func (ch ChatHandler) ChangeParticipant(c echo.Context) error {
+func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
 		return err
@@ -520,7 +520,7 @@ func (ch ChatHandler) ChangeParticipant(c echo.Context) error {
 	return errOuter
 }
 
-func (ch ChatHandler) DeleteParticipant(c echo.Context) error {
+func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
 		return err
@@ -583,7 +583,7 @@ type AddParticipantsDto struct {
 	ParticipantIds []int64 `json:"addParticipantIds"`
 }
 
-func (ch ChatHandler) AddParticipants(c echo.Context) error {
+func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
 		return err
@@ -646,7 +646,7 @@ func (ch ChatHandler) AddParticipants(c echo.Context) error {
 	return errOuter
 }
 
-func (ch ChatHandler) CheckAccess(c echo.Context) error {
+func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 	chatId, err := GetQueryParamAsInt64(c, "chatId")
 	if err != nil {
 		return err
@@ -666,7 +666,7 @@ func (ch ChatHandler) CheckAccess(c echo.Context) error {
 	}
 }
 
-func (ch ChatHandler) IsAdmin(c echo.Context) error {
+func (ch *ChatHandler) IsAdmin(c echo.Context) error {
 	chatId, err := GetQueryParamAsInt64(c, "chatId")
 	if err != nil {
 		return err
@@ -690,7 +690,7 @@ type TetATetResponse struct {
 	Id int64 `json:"id"`
 }
 
-func (ch ChatHandler) TetATet(c echo.Context) error {
+func (ch *ChatHandler) TetATet(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
 		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
