@@ -34,7 +34,7 @@
                 <v-card-actions class="pa-4">
                     <template v-if="!limitError && files.length > 0">
                         <v-btn color="primary" v-if="!uploading" @click="upload()">{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
-                        <v-btn v-else @click="cancel()">Cancel</v-btn>
+                        <v-btn v-else @click="cancel()">{{ $vuetify.lang.t('$vuetify.cancel') }}</v-btn>
                     </template>
                     <v-btn class="mr-4" @click="hideModal()" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                     <v-spacer/>

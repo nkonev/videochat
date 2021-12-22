@@ -87,4 +87,5 @@ export default {
     websocket_restored: "Websocket connection has been restored, press button to update",
     btn_update: "Update",
     websocket_not_connected: "Websocket is not connected",
+    cancel: "Cancel",
 }
