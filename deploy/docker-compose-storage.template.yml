@@ -38,6 +38,8 @@ services:
         tag: chat-storage
     volumes:
       - /mnt/chat-minio/data:/data
+      # use temp dir for uploading large files
+      - /mnt/chat-storage-tmp:/tmp
 
 
 networks:
