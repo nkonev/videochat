@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
@@ -47,60 +46,6 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	}
 
 	return id, &lastUpdateDateTime, nil
-}
-
-func (tx *Tx) Migrate(chatId int64) error {
-	if _, err := tx.Exec(fmt.Sprintf(`CREATE TABLE message_chat_%v () INHERITS (message);`, chatId)); err != nil {
-		Logger.Errorf("Error during creating messages table %v", err)
-		return err
-	}
-
-	if _, err := tx.Exec(fmt.Sprintf(`ALTER TABLE message_chat_%v ADD PRIMARY KEY(id);`, chatId)); err != nil {
-		Logger.Errorf("Error during creating primary key on messages table %v", err)
-		return err
-	}
-
-	if _, err := tx.Exec(fmt.Sprintf(`ALTER TABLE message_chat_%v ADD FOREIGN KEY (chat_id) REFERENCES chat(id) ON DELETE CASCADE;`, chatId)); err != nil {
-		Logger.Errorf("Error during creating foreign key on messages table %v", err)
-		return err
-	}
-
-	query, err := tx.Query("select id, text, owner_id, file_item_uuid from message where chat_id = $1", chatId)
-	if err != nil {
-		Logger.Errorf("Error during selecting messages table %v", err)
-		return err
-	}
-	defer query.Close()
-
-	type Tuple struct {
-		messageId, ownerId int64
-		text               string
-		fileItemUuid       *uuid.UUID
-	}
-
-	var list = []Tuple{}
-
-	Logger.Infof("Quierying messages")
-	for query.Next() {
-		var tuple Tuple
-		if err := query.Scan(&tuple.messageId, &tuple.text, &tuple.ownerId, &tuple.fileItemUuid); err != nil {
-			Logger.Errorf("Error during scan message row %v", err)
-			return err
-		} else {
-			list = append(list, tuple)
-		}
-	}
-
-	Logger.Infof("Inserting messages")
-	for _, tuple := range list {
-		_, err := tx.Exec(fmt.Sprintf("INSERT INTO message_chat_%v (id, text, chat_id, owner_id, file_item_uuid) VALUES ($1, $2, $3, $4, $5)", chatId), tuple.messageId, tuple.text, chatId, tuple.ownerId, tuple.fileItemUuid)
-		if err != nil {
-			Logger.Errorf("Error during insert to specialized message row %v", err)
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (tx *Tx) CreateTetATetChat(behalfUserId int64, toParticipantId int64) (int64, error) {

@@ -146,7 +146,6 @@ func configureEcho(
 
 	e.GET("/chat", ch.GetChats)
 	e.GET("/chat/:id", ch.GetChat)
-	e.POST("/internal/migrate/:id", ch.MigrateChat)
 	e.POST("/chat", ch.CreateChat)
 	e.DELETE("/chat/:id", ch.DeleteChat)
 	e.PUT("/chat", ch.EditChat)
