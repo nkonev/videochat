@@ -37,7 +37,7 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	}
 
 	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title)
+	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -50,13 +50,8 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 
 func (tx *Tx) CreateTetATetChat(behalfUserId int64, toParticipantId int64) (int64, error) {
 	tetATetChatName := fmt.Sprintf("tet_a_tet_%v_%v", behalfUserId, toParticipantId)
-	res := tx.QueryRow(`INSERT INTO chat (title, tet_a_tet) VALUES ($1, true) RETURNING id`, tetATetChatName)
-	var id int64
-	if err := res.Scan(&id); err != nil {
-		Logger.Errorf("Error during getting chat id %v", err)
-		return 0, err
-	}
-	return id, nil
+	chatId, _, err := tx.CreateChat(&Chat{Title: tetATetChatName, TetATet: true})
+	return chatId, err
 }
 
 func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int64, error) {
