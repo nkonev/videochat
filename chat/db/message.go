@@ -27,15 +27,15 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		order = "desc"
 		nonEquality = "m.id < $3"
 	}
-	if rows, err := db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.chat_id, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE chat_id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) AND %s ORDER BY id %s LIMIT $2`, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId); err != nil {
+	if rows, err := db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) AND %s ORDER BY id %s LIMIT $2`, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId); err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
 	} else {
 		defer rows.Close()
 		list := make([]*Message, 0)
 		for rows.Next() {
-			message := Message{}
-			if err := rows.Scan(&message.Id, &message.Text, &message.ChatId, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid); err != nil {
+			message := Message{ChatId: chatId}
+			if err := rows.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
@@ -53,7 +53,7 @@ func (tx *Tx) CreateMessage(m *Message) (id int64, createDatetime time.Time, edi
 		return id, createDatetime, editDatetime, errors.New("text required")
 	}
 
-	res := tx.QueryRow(fmt.Sprintf(`INSERT INTO message_chat_%v (text, chat_id, owner_id, file_item_uuid) VALUES ($1, $2, $3, $4) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.ChatId, m.OwnerId, m.FileItemUuid)
+	res := tx.QueryRow(fmt.Sprintf(`INSERT INTO message_chat_%v (text, owner_id, file_item_uuid) VALUES ($1, $2, $3) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.OwnerId, m.FileItemUuid)
 	if err := res.Scan(&id, &createDatetime, &editDatetime); err != nil {
 		Logger.Errorf("Error during getting message id %v", err)
 		return id, createDatetime, editDatetime, err
@@ -73,9 +73,9 @@ func (db *DB) CountMessages() (int64, error) {
 }
 
 func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId int64) (*Message, error) {
-	row := co.QueryRow(fmt.Sprintf(`SELECT m.id, m.text, m.chat_id, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE m.id = $1 AND chat_id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, chatId), messageId, userId, chatId)
-	message := Message{}
-	err := row.Scan(&message.Id, &message.Text, &message.ChatId, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid)
+	row := co.QueryRow(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE m.id = $1 AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, chatId), messageId, userId, chatId)
+	message := Message{ChatId: chatId}
+	err := row.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -126,7 +126,7 @@ func (tx *Tx) EditMessage(m *Message) error {
 }
 
 func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error {
-	if _, err := db.Exec(fmt.Sprintf(`DELETE FROM message_chat_%v WHERE id = $1 AND owner_id = $2 AND chat_id = $3`, chatId), messageId, ownerId, chatId); err != nil {
+	if _, err := db.Exec(fmt.Sprintf(`DELETE FROM message_chat_%v WHERE id = $1 AND owner_id = $2`, chatId), messageId, ownerId); err != nil {
 		Logger.Errorf("Error during deleting message id %v", err)
 		return err
 	}
@@ -134,7 +134,7 @@ func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error 
 }
 
 func (dbR *DB) SetFileItemUuidToNull(ownerId, chatId int64, uuid string) (int64, error) {
-	res := dbR.QueryRow(fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = NULL WHERE file_item_uuid = $1 AND owner_id = $2 AND chat_id = $3 RETURNING id`, chatId), uuid, ownerId, chatId)
+	res := dbR.QueryRow(fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = NULL WHERE file_item_uuid = $1 AND owner_id = $2 RETURNING id`, chatId), uuid, ownerId)
 
 	if res.Err() != nil {
 		Logger.Errorf("Error during nulling file_item_uuid message id %v", res.Err())
