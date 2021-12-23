@@ -448,6 +448,10 @@
             },
             onResizedListener() {
                 this.splitpanesHeight = calcSplitpanesHeight();
+                const isScrolled = this.isScrolledToBottom();
+                if (isScrolled) {
+                    this.scrollDown();
+                }
             }
         },
         created() {
