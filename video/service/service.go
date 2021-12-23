@@ -78,7 +78,7 @@ func NewExtendedService(
 	return handler
 }
 
-func (h *ExtendedService) StoreToIndex(streamId string, userId int64, login, avatar, peerId string, videoMute, audioMute bool, method string) {
+func (h *ExtendedService) PutToMetadataIndex(streamId string, userId int64, login, avatar, peerId string, videoMute, audioMute bool, method string) {
 	logger.Info("Storing peer metadata to map", "stream_id", streamId, "user_id", userId, "login", login, "peerId", peerId, "video_mute", videoMute, "audio_mute", audioMute, "from_method", method)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
@@ -93,7 +93,7 @@ func (h *ExtendedService) StoreToIndex(streamId string, userId int64, login, ava
 	}
 }
 
-func (h *ExtendedService) RemoveFromIndex(peer0 sfu.Peer, userId int64, conn *websocket.Conn) {
+func (h *ExtendedService) RemoveFromMetadataIndex(peer0 sfu.Peer, userId int64, conn *websocket.Conn) {
 	logger.Info("Removing peer from map", "peer_id", peer0.ID(), "user_id", userId)
 	h.peerUserIdIndex.Lock()
 	defer h.peerUserIdIndex.Unlock()
@@ -463,7 +463,7 @@ func (h *ExtendedService) Schedule() *chan struct{} {
 	return &quit
 }
 
-func (h *ExtendedService) AddToJsonRpcIndex(userId int64, jc *jsonrpc2.Conn) {
+func (h *ExtendedService) AddToJsonRpcConnectionsIndex(userId int64, jc *jsonrpc2.Conn) {
 	h.userConnectionsIndex.Lock()
 	defer h.userConnectionsIndex.Unlock()
 	var list = []*jsonrpc2.Conn{}
@@ -476,7 +476,7 @@ func (h *ExtendedService) AddToJsonRpcIndex(userId int64, jc *jsonrpc2.Conn) {
 	h.userConnectionsIndex.mapUserConnectionsList[userId] = list
 }
 
-func (h *ExtendedService) RemoveFromJsonRpcIndex(userId int64, jc *jsonrpc2.Conn) {
+func (h *ExtendedService) RemoveFromJsonRpcConnectionsIndex(userId int64, jc *jsonrpc2.Conn) {
 	h.userConnectionsIndex.Lock()
 	defer h.userConnectionsIndex.Unlock()
 	existing, ok := h.userConnectionsIndex.mapUserConnectionsList[userId]

@@ -134,16 +134,16 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 
 	peer0 := sfu.NewPeer(h.sfu)
 	// we can't store it here because peer's stream is not initialized yet - TODO recheck
-	// h.service.StoreToIndex(...)
-	defer h.service.RemoveFromIndex(peer0, userId, c)
+	// h.service.PutToMetadataIndex(...)
+	defer h.service.RemoveFromMetadataIndex(peer0, userId, c)
 	defer h.service.NotifyAboutLeaving(chatId)
 	p := server.NewJSONSignal(peer0, logger)
 	je := &JsonRpcExtendedHandler{p, h.service}
 	defer p.Close()
 
 	jc := jsonrpc2.NewConn(r.Context(), websocketjsonrpc2.NewObjectStream(c), je)
-	h.service.AddToJsonRpcIndex(userId, jc)
-	defer h.service.RemoveFromJsonRpcIndex(userId, jc)
+	h.service.AddToJsonRpcConnectionsIndex(userId, jc)
+	defer h.service.RemoveFromJsonRpcConnectionsIndex(userId, jc)
 
 	<-jc.DisconnectNotify()
 }
@@ -455,7 +455,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			}
 			// TODO write map cleanup mechanism
 
-			p.service.StoreToIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.Avatar, bodyStruct.PeerId, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
+			p.service.PutToMetadataIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.Avatar, bodyStruct.PeerId, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
 			notificationDto := &dto.StoreNotifyDto{
 				UserId:    fromContext.userId,
 				StreamId:  bodyStruct.StreamId,
