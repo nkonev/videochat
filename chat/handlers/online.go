@@ -21,7 +21,7 @@ func NewOnlineHandler(onlineStorage redis.OnlineStorage) *UserOnlineHandler {
 
 func (h *UserOnlineHandler) GetOnlineUsers(context echo.Context) error {
 	param := context.QueryParam("participantIds")
-	Logger.Printf("See here - %v", param)
+	Logger.Debugf("Got participantIds - %v", param)
 	split := strings.Split(param, ",")
 
 	var arr []UserOnlineChanged = make([]UserOnlineChanged, 0)
