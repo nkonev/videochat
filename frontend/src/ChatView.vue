@@ -369,12 +369,15 @@
                         this.goToChatList();
                     }
                 }).then(() => {
-                    axios.get(`/api/video/${this.chatId}/users`)
-                        .then(response => response.data)
-                        .then(data => {
-                            bus.$emit(VIDEO_CALL_CHANGED, data);
-                            this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, data.usersCount);
-                        });
+                    const chatId = this.chatId;
+                    if (chatId) {
+                        axios.get(`/api/video/${chatId}/users`)
+                            .then(response => response.data)
+                            .then(data => {
+                                bus.$emit(VIDEO_CALL_CHANGED, data);
+                                this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, data.usersCount);
+                            });
+                    }
                 });
             },
             goToChatList() {
