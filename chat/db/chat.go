@@ -166,17 +166,16 @@ func (db *DB) CountChatsPerUser(userId int64) (int64, error) {
 }
 
 func (tx *Tx) DeleteChat(id int64) error {
+	if _, err := tx.Exec(fmt.Sprintf(`DROP TABLE message_chat_%v;`, id)); err != nil {
+		Logger.Errorf("Error during drop message table %v %v", id, err)
+		return err
+	}
+
 	if _, err := tx.Exec("DELETE FROM chat WHERE id = $1", id); err != nil {
 		Logger.Errorf("Error during delete chat %v %v", id, err)
 		return err
 	} else {
 		// OK
-
-		if _, err := tx.Exec(fmt.Sprintf(`DROP TABLE message_chat_%v;`, id)); err != nil {
-			Logger.Errorf("Error during drop message table %v %v", id, err)
-			return err
-		}
-
 		return nil
 	}
 }
