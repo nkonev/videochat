@@ -215,6 +215,11 @@ type MessageIdsAndTextPair struct {
 }
 
 func (db *DB) IsEmbedExists(chatId int64, filenames []string) ([]*MessageIdsAndTextPair, error) {
+	if len(filenames) == 0 {
+		Logger.Infof("Exiting from IsEmbedExists because no filenames")
+		return make([]*MessageIdsAndTextPair, 0), nil
+	}
+
 	likePart := ""
 	secondFile := false
 	for _, filename := range filenames {
@@ -225,7 +230,7 @@ func (db *DB) IsEmbedExists(chatId int64, filenames []string) ([]*MessageIdsAndT
 
 		secondFile = true
 	}
-	sqlString := fmt.Sprintf(`SELECT id, text FROM message_chat_%v WHERE  %v`, chatId, likePart)
+	sqlString := fmt.Sprintf(`SELECT id, text FROM message_chat_%v WHERE %v LIMIT %v`, chatId, likePart, len(filenames))
 	if rows, err := db.Query(sqlString); err != nil {
 		Logger.Errorf("Error during get embed files existence %v", err)
 		return nil, err
