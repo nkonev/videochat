@@ -21,6 +21,10 @@ minio:
     chatAvatar: "chat-avatar"
     files: "files"
     embedded: "embedded"
+  cleaner:
+    embedded:
+      interval: 2s
+      maxKeys: 10
 
 chat:
   url:
