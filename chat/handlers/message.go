@@ -445,6 +445,10 @@ type Tuple struct {
 	Exists   bool   `json:"exists"`
 }
 
+func (rec Tuple) String() string {
+	return fmt.Sprintf("Tuple(key=%s, exists=%v, filename=%s)", rec.MinioKey, rec.Exists, rec.Filename)
+}
+
 func (mc *MessageHandler) CheckEmbeddedFiles(c echo.Context) error {
 	requestMap := new(map[int64][]Tuple)
 	if err := c.Bind(requestMap); err != nil {
