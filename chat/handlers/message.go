@@ -450,12 +450,28 @@ func (rec Tuple) String() string {
 }
 
 func (mc *MessageHandler) CheckEmbeddedFiles(c echo.Context) error {
-	requestMap := new(map[int64][]Tuple)
+	requestMap := new(map[int64][]*Tuple)
 	if err := c.Bind(requestMap); err != nil {
 		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
-	GetLogEntry(c.Request()).Infof("Got request %v", requestMap)
+	GetLogEntry(c.Request()).Debugf("Got request %v", requestMap)
+	for chatIdKey, tupleValue := range *requestMap {
+		GetLogEntry(c.Request()).Infof("Processing %v=%v", chatIdKey, tupleValue)
+		exists, err := mc.db.IsChatExists(chatIdKey)
+		if err != nil {
+			Logger.Warnf("Error during checking existence of %v, skipping: %v", chatIdKey, err)
+			continue
+		}
+		if !exists {
+			for _, value := range tupleValue {
+				value.Exists = false
+			}
+			Logger.Infof("Set not exists for all tuples for chatId = %v", chatIdKey)
+			continue
+		}
+		// TODO find here all files in messages
+	}
 
 	return c.JSON(http.StatusOK, requestMap)
 }

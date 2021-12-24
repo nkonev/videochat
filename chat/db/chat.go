@@ -222,3 +222,16 @@ func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
 		return nil
 	}
 }
+
+func (db *DB) IsChatExists(chatId int64) (bool, error) {
+	row := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM chat WHERE id = $1)`, chatId)
+	exists := false
+	err := row.Scan(&exists)
+	if err != nil {
+		Logger.Errorf("Error during get chat exists %v", err)
+		return false, err
+	} else {
+		return exists, nil
+	}
+
+}
