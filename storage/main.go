@@ -19,8 +19,8 @@ import (
 	"nkonev.name/storage/config"
 	"nkonev.name/storage/handlers"
 	. "nkonev.name/storage/logger"
-	"nkonev.name/storage/utils"
 	"nkonev.name/storage/redis"
+	"nkonev.name/storage/utils"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -231,4 +231,5 @@ func runScheduler(task *gointerlock.GoInterval) {
 			Logger.Errorf("Error during starting scheduler: %s", err)
 		}
 	}()
+	Logger.Infof("Cleaning scheduler is started")
 }
