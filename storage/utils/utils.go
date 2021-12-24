@@ -143,3 +143,9 @@ func Remove(ids []int64, elem int64) []int64 {
 func SecondsToStringMilliseconds(seconds int64) string {
 	return fmt.Sprintf("%v000", seconds)
 }
+
+type Tuple struct {
+	MinioKey string `json:"minioKey"`
+	Filename string `json:"filename"`
+	Exists   bool   `json:"exists"`
+}

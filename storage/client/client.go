@@ -16,12 +16,13 @@ import (
 )
 
 type RestClient struct {
-	client          *http.Client
-	baseUrl string
-	accessPath string
-	removeFileItemPath string
-	aaaBaseUrl string
-	aaaGetUsersUrl string
+	client                 *http.Client
+	baseUrl                string
+	accessPath             string
+	removeFileItemPath     string
+	aaaBaseUrl             string
+	aaaGetUsersUrl         string
+	checkFilesPresencePath string
 }
 
 func newRestClient() *http.Client {
@@ -39,12 +40,13 @@ func NewChatAccessClient() *RestClient {
 	client := newRestClient()
 
 	return &RestClient{
-		client: client,
-		baseUrl: viper.GetString("chat.url.base"),
-		accessPath: viper.GetString("chat.url.access"),
-		removeFileItemPath: viper.GetString("chat.url.removeFileItem"),
-		aaaBaseUrl: viper.GetString("aaa.url.base"),
-		aaaGetUsersUrl: viper.GetString("aaa.url.getUsers"),
+		client:                 client,
+		baseUrl:                viper.GetString("chat.url.base"),
+		accessPath:             viper.GetString("chat.url.access"),
+		removeFileItemPath:     viper.GetString("chat.url.removeFileItem"),
+		aaaBaseUrl:             viper.GetString("aaa.url.base"),
+		aaaGetUsersUrl:         viper.GetString("aaa.url.getUsers"),
+		checkFilesPresencePath: viper.GetString("chat.url.checkEmbeddedFilesPath"),
 	}
 }
 
@@ -147,4 +149,44 @@ func (h *RestClient) GetUsers(userIds []int64) ([]*dto.User, error) {
 		return nil, err
 	}
 	return *users, nil
+}
+
+func (h *RestClient) CheckFilesInChat(input map[int64][]utils.Tuple) (map[int64][]utils.Tuple, error) {
+	fullUrl := fmt.Sprintf("%v%v", h.baseUrl, h.checkFilesPresencePath)
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		Logger.Errorln("Failed during parse chat url:", err)
+		return nil, err
+	}
+
+	request := &http.Request{
+		Method: "POST",
+		URL:    parsedUrl,
+	}
+
+	response, err := h.client.Do(request)
+	if err != nil {
+		Logger.Error(err, "Transport error during checking embedded file")
+		return nil, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		err = errors.New(fmt.Sprintf("Unexpected status checking embedded file %v", response.StatusCode))
+		return nil, err
+	}
+
+	bodyBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		Logger.Errorln("Failed to decode get users response:", err)
+		return nil, err
+	}
+
+	resultMap := new(map[int64][]utils.Tuple)
+	if err := json.Unmarshal(bodyBytes, resultMap); err != nil {
+		Logger.Errorln("Failed to parse result:", err)
+		return nil, err
+	}
+	return *resultMap, nil
+
 }
