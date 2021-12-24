@@ -386,6 +386,9 @@
             onChatChange(dto) {
                 if (dto.id == this.chatId) {
                     this.chatDto = dto;
+
+                    this.$store.commit(SET_CHAT_USERS_COUNT, this.chatDto.participants.length);
+                    this.$store.commit(SET_TITLE, this.chatDto.name);
                 }
             },
             onChatDelete(dto) {
