@@ -79,7 +79,7 @@
                 peerId: null,
 
                 // this one is about skipping ping checks during changing media stream
-                insideSwitchingCameraScreen: false,
+                isCnangingLocalStream: false,
 
                 // this two are about restart process
                 restartingStarted: false,
@@ -245,7 +245,7 @@
                 this.streams = {};
                 this.remotesDiv = null;
                 this.localMediaStream = null;
-                this.insideSwitchingCameraScreen = false;
+                this.isCnangingLocalStream = false;
 
                 this.$store.commit(SET_MUTE_VIDEO, false);
                 this.$store.commit(SET_MUTE_AUDIO, localAudioMutedInitial);
@@ -256,7 +256,7 @@
                 }
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
-                    if (!this.insideSwitchingCameraScreen) {
+                    if (!this.isCnangingLocalStream) {
                         const localStreamId = this.$refs.localVideoComponent.getStreamId();
                         console.debug("Checking self user", "streamId", localStreamId);
                         this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: localStreamId, includeOtherStreamIds: true}).then(value => {
@@ -337,7 +337,7 @@
                     });
             },
             getAndPublishLocalMediaStream({screen = false}) {
-                this.insideSwitchingCameraScreen = true;
+                this.isCnangingLocalStream = true;
 
                 const resolution = getVideoResolution();
 
@@ -353,7 +353,7 @@
                     });
 
                     this.$store.commit(SET_SHARE_SCREEN, false);
-                    // this.insideSwitchingCameraScreen = false;
+                    // this.isCnangingLocalStream = false;
 
                     return Promise.resolve(true);
                 }
@@ -399,7 +399,7 @@
                   this.$store.commit(SET_MUTE_VIDEO, !video);
                   this.$refs.localVideoComponent.setDisplayAudioMute(actualAudioMuted);
                   this.$refs.localVideoComponent.setVideoMute(!video);
-                  this.insideSwitchingCameraScreen = false;
+                  this.isCnangingLocalStream = false;
                 }).then(() => {
                     this.notifyWithData();
                     return Promise.resolve(true)
