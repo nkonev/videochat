@@ -25,6 +25,8 @@ minio:
     embedded:
       interval: 10s
       maxKeys: 10
+      # User has this time to send message with newly uploaded embedded image
+      threshold: 40s
 
 chat:
   url:

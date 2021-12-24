@@ -208,3 +208,40 @@ func (db *DB) GetAllUnreadMessagesCount(userId int64) (int64, error) {
 func (tx *Tx) GetAllUnreadMessagesCount(userId int64) (int64, error) {
 	return getAllUnreadMessagesCountCommon(tx, userId)
 }
+
+type MessageIdsAndTextPair struct {
+	Id   int64
+	Text string
+}
+
+func (db *DB) IsEmbedExists(chatId int64, filenames []string) ([]*MessageIdsAndTextPair, error) {
+	likePart := ""
+	secondFile := false
+	for _, filename := range filenames {
+		if secondFile {
+			likePart += " OR "
+		}
+		likePart += " text LIKE '%" + filename + "%' "
+
+		secondFile = true
+	}
+	sqlString := fmt.Sprintf(`SELECT id, text FROM message_chat_%v WHERE  %v`, chatId, likePart)
+	if rows, err := db.Query(sqlString); err != nil {
+		Logger.Errorf("Error during get embed files existence %v", err)
+		return nil, err
+	} else {
+		defer rows.Close()
+		list := make([]*MessageIdsAndTextPair, 0)
+		for rows.Next() {
+			var dtoObj = new(MessageIdsAndTextPair)
+			if err := rows.Scan(&dtoObj.Id, &dtoObj.Text); err != nil {
+				Logger.Errorf("Error during embed files existence rows %v", err)
+				return nil, err
+			} else {
+				list = append(list, dtoObj)
+			}
+		}
+
+		return list, nil
+	}
+}

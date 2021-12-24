@@ -12,6 +12,7 @@ import (
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
 	"strings"
+	"time"
 )
 
 type DeleteMissedInChatFilesService struct {
@@ -43,8 +44,6 @@ func (srv *DeleteMissedInChatFilesService) doJob() {
 	var i = 0
 	// TODO is it ok to perform potentially long operations inside processing the channel ?
 	for objInfo := range objects {
-		i++
-
 		// here in minio 'chat/108/b4c03030-e054-49b5-b63c-78808b4bdeff.png'
 		logger.Logger.Infof("Start processing minio key '%v'", objInfo.Key)
 		// in chat <p><img src="/api/storage/108/embed/b4c03030-e054-49b5-b63c-78808b4bdeff.png" style="width: 600px; height: 480px;"></p>
@@ -63,6 +62,11 @@ func (srv *DeleteMissedInChatFilesService) doJob() {
 			logger.Logger.Errorf("Unable to extract filename from %v", objInfo.Key)
 			continue
 		}
+		if time.Now().UTC().Sub(objInfo.LastModified) < viper.GetDuration("minio.cleaner.embedded.threshold") {
+			logger.Logger.Infof("Minio object %v is too young to be cleared", objInfo.Key)
+			continue
+		}
+		i++
 		chatsWithFiles[chatId] = append(chatsWithFiles[chatId], utils.Tuple{Filename: filename, Exists: true, MinioKey: objInfo.Key})
 
 		if i >= maxMinioKeysInBatch {
@@ -80,18 +84,19 @@ func (srv *DeleteMissedInChatFilesService) doJob() {
 func (srv *DeleteMissedInChatFilesService) processChunk(chatsWithFiles map[int64][]utils.Tuple) {
 	chatsWithFilesResponse, err := srv.invokeChat(chatsWithFiles)
 	if err != nil {
-		logger.Logger.Errorf("Error during asking chat %v", err)
+		logger.Logger.Errorf("Error during asking chat %v, skipping", err)
 		return
 	}
 	for keyChatId, valuePairs := range chatsWithFilesResponse {
 		logger.Logger.Infof("Processing responded chat id %v files", keyChatId)
 		for _, valuePair := range valuePairs {
 			if !valuePair.Exists {
+				logger.Logger.Infof("Deleting object %v", valuePair.MinioKey)
 				err := srv.minioClient.RemoveObject(context.Background(), srv.minioBucketsConfig.Embedded, valuePair.MinioKey, minio.RemoveObjectOptions{})
 				if err != nil {
 					logger.Logger.Errorf("Object %v has been cleared from minio with error: %v", valuePair.MinioKey, err)
 				} else {
-					logger.Logger.Infof("Object %v has been cleared from minio successfully", valuePair.MinioKey)
+					logger.Logger.Debugf("Object %v has been cleared from minio successfully", valuePair.MinioKey)
 				}
 			}
 		}

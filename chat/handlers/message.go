@@ -18,6 +18,7 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
+	"strings"
 	"time"
 )
 
@@ -456,21 +457,45 @@ func (mc *MessageHandler) CheckEmbeddedFiles(c echo.Context) error {
 		return err
 	}
 	GetLogEntry(c.Request()).Debugf("Got request %v", requestMap)
-	for chatIdKey, tupleValue := range *requestMap {
-		GetLogEntry(c.Request()).Infof("Processing %v=%v", chatIdKey, tupleValue)
+	for chatIdKey, tupleValues := range *requestMap {
+		GetLogEntry(c.Request()).Infof("Processing %v=%v", chatIdKey, tupleValues)
 		exists, err := mc.db.IsChatExists(chatIdKey)
 		if err != nil {
 			Logger.Warnf("Error during checking existence of %v, skipping: %v", chatIdKey, err)
 			continue
 		}
 		if !exists {
-			for _, value := range tupleValue {
+			for _, value := range tupleValues {
 				value.Exists = false
 			}
-			Logger.Infof("Set not exists for all tuples for chatId = %v", chatIdKey)
+			Logger.Infof("Set not exists for all files for chatId = %v", chatIdKey)
 			continue
 		}
-		// TODO find here all files in messages
+
+		// find here all files in messages
+		var filenames = []string{}
+		for _, tupleValue := range tupleValues {
+			filenames = append(filenames, tupleValue.Filename)
+		}
+		messageIdsAndTextsFromDb, err := mc.db.IsEmbedExists(chatIdKey, filenames)
+		if err != nil {
+			Logger.Warnf("Error during checking existence of filenames %v in %v, skipping: %v", filenames, chatIdKey, err)
+			continue
+		}
+
+		// invert to false for all pairs
+		for _, value := range tupleValues {
+			value.Exists = false
+		}
+		// here we try to find it in message texts
+		for _, messageIdsAndTextPair := range messageIdsAndTextsFromDb {
+			for _, tupleValue := range tupleValues {
+				if strings.Contains(messageIdsAndTextPair.Text, tupleValue.Filename) {
+					Logger.Infof("File %v is exists in chat with id %v", tupleValue.Filename, chatIdKey)
+					tupleValue.Exists = true
+				}
+			}
+		}
 	}
 
 	return c.JSON(http.StatusOK, requestMap)
