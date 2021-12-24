@@ -46,7 +46,7 @@ func (srv *DeleteMissedInChatFilesService) doJob() {
 		i++
 
 		// here in minio 'chat/108/b4c03030-e054-49b5-b63c-78808b4bdeff.png'
-		logger.Logger.Infof("Processing object '%v'", objInfo.Key)
+		logger.Logger.Infof("Start processing minio key '%v'", objInfo.Key)
 		// in chat <p><img src="/api/storage/108/embed/b4c03030-e054-49b5-b63c-78808b4bdeff.png" style="width: 600px; height: 480px;"></p>
 		chatId, err := extractChatId(objInfo.Key)
 		if err != nil {
@@ -55,7 +55,7 @@ func (srv *DeleteMissedInChatFilesService) doJob() {
 		}
 
 		if _, ok := chatsWithFiles[chatId]; !ok {
-			logger.Logger.Infof("Creating tuple array for chat id %v", chatId)
+			logger.Logger.Debugf("Creating tuple array for chat id %v", chatId)
 			chatsWithFiles[chatId] = []utils.Tuple{} // create tuple array if need
 		}
 		filename, err := extractFileName(objInfo.Key)
@@ -84,7 +84,7 @@ func (srv *DeleteMissedInChatFilesService) processChunk(chatsWithFiles map[int64
 		return
 	}
 	for keyChatId, valuePairs := range chatsWithFilesResponse {
-		logger.Logger.Infof("Processing chat id %v files", keyChatId)
+		logger.Logger.Infof("Processing responded chat id %v files", keyChatId)
 		for _, valuePair := range valuePairs {
 			if !valuePair.Exists {
 				err := srv.minioClient.RemoveObject(context.Background(), srv.minioBucketsConfig.Embedded, valuePair.MinioKey, minio.RemoveObjectOptions{})
@@ -95,7 +95,7 @@ func (srv *DeleteMissedInChatFilesService) processChunk(chatsWithFiles map[int64
 				}
 			}
 		}
-		logger.Logger.Infof("Completed processing chat id files", keyChatId)
+		logger.Logger.Debugf("Completed processing chat id %v files", keyChatId)
 	}
 }
 

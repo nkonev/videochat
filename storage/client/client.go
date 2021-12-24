@@ -1,10 +1,12 @@
 package client
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
@@ -160,9 +162,19 @@ func (h *RestClient) CheckFilesInChat(input map[int64][]utils.Tuple) (map[int64]
 		return nil, err
 	}
 
+	bytesArray, err := json.Marshal(input)
+	if err != nil {
+		Logger.Errorln("Failed during marshall body:", err)
+		return nil, err
+	}
+
 	request := &http.Request{
 		Method: "POST",
 		URL:    parsedUrl,
+		Body:   ioutil.NopCloser(bytes.NewReader(bytesArray)),
+		Header: map[string][]string{
+			echo.HeaderContentType: {"application/json"},
+		},
 	}
 
 	response, err := h.client.Do(request)

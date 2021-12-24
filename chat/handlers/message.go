@@ -438,3 +438,20 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 
 	return c.NoContent(http.StatusOK)
 }
+
+type Tuple struct {
+	MinioKey string `json:"minioKey"`
+	Filename string `json:"filename"`
+	Exists   bool   `json:"exists"`
+}
+
+func (mc *MessageHandler) CheckEmbeddedFiles(c echo.Context) error {
+	requestMap := new(map[int64][]Tuple)
+	if err := c.Bind(requestMap); err != nil {
+		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+	GetLogEntry(c.Request()).Infof("Got request %v", requestMap)
+
+	return c.JSON(http.StatusOK, requestMap)
+}

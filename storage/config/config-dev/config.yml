@@ -23,7 +23,7 @@ minio:
     embedded: "embedded"
   cleaner:
     embedded:
-      interval: 2s
+      interval: 10s
       maxKeys: 10
 
 chat:
