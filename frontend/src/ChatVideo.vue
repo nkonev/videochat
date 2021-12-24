@@ -238,7 +238,7 @@
                 }
                 this.clearLocalMediaStream();
                 if (this.clientLocal) {
-                    this.clientLocal.close();
+                    this.clientLocal.close(); // also closes signal
                 }
                 this.clientLocal = null;
                 this.signalLocal = null;
