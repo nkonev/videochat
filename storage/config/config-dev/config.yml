@@ -23,10 +23,12 @@ minio:
     embedded: "embedded"
   cleaner:
     embedded:
-      interval: 10s
+      # Start every
+      interval: 30s
+      # Max keys in batch
       maxKeys: 10
       # User has this time to send message with newly uploaded embedded image
-      threshold: 40s
+      threshold: 300s
 
 chat:
   url:
