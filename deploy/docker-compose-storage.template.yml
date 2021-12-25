@@ -31,6 +31,7 @@ services:
         - STORAGE_CHAT.URL.BASE=http://chat:1235
         - STORAGE_AAA.URL.BASE=http://aaa:8060
         - STORAGE_LIMITS.STAT.DIR=/data
+        - STORAGE_REDIS.ADDRESS=redis:6379
 
     logging:
       driver: "journald"
