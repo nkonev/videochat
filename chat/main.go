@@ -156,6 +156,7 @@ func configureEcho(
 	e.PUT("/chat/tet-a-tet/:participantId", ch.TetATet)
 	e.GET("/internal/access", ch.CheckAccess)
 	e.GET("/internal/is-admin", ch.IsAdmin)
+	e.GET("/internal/is-chat-exists/:id", ch.IsExists)
 
 	e.GET("/chat/:id/message", mc.GetMessages)
 	e.GET("/chat/:id/message/:messageId", mc.GetMessage)

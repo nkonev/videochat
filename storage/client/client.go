@@ -25,6 +25,7 @@ type RestClient struct {
 	aaaBaseUrl             string
 	aaaGetUsersUrl         string
 	checkFilesPresencePath string
+	checkChatExistsPath    string
 }
 
 func newRestClient() *http.Client {
@@ -49,6 +50,7 @@ func NewChatAccessClient() *RestClient {
 		aaaBaseUrl:             viper.GetString("aaa.url.base"),
 		aaaGetUsersUrl:         viper.GetString("aaa.url.getUsers"),
 		checkFilesPresencePath: viper.GetString("chat.url.checkEmbeddedFilesPath"),
+		checkChatExistsPath:    viper.GetString("chat.url.checkChatExistsPath"),
 	}
 }
 
@@ -200,5 +202,50 @@ func (h *RestClient) CheckFilesInChat(input map[int64][]utils.Tuple) (map[int64]
 		return nil, err
 	}
 	return *resultMap, nil
+}
 
+type ChatExists struct {
+	Exists bool `json:"exists"`
+}
+
+func (h *RestClient) CheckIsChatExists(chatId int64) (bool, error) {
+	fullUrl := fmt.Sprintf("%v%v/%v", h.baseUrl, h.checkChatExistsPath, chatId)
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		Logger.Errorln("Failed during parse chat url:", err)
+		return false, err
+	}
+
+	request := &http.Request{
+		Method: "GET",
+		URL:    parsedUrl,
+		Header: map[string][]string{
+			echo.HeaderContentType: {"application/json"},
+		},
+	}
+
+	response, err := h.client.Do(request)
+	if err != nil {
+		Logger.Error(err, "Transport error during checking chat presence")
+		return false, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		err = errors.New(fmt.Sprintf("Unexpected status checking chat presence %v", response.StatusCode))
+		return false, err
+	}
+
+	bodyBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		Logger.Errorln("Failed to decode get chat presence response:", err)
+		return false, err
+	}
+
+	resultMap := new(ChatExists)
+	if err := json.Unmarshal(bodyBytes, resultMap); err != nil {
+		Logger.Errorln("Failed to parse result:", err)
+		return false, err
+	}
+	return resultMap.Exists, nil
 }

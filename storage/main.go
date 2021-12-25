@@ -4,7 +4,6 @@ import (
 	"context"
 	"contrib.go.opencensus.io/exporter/jaeger"
 	"fmt"
-	"github.com/ehsaniara/gointerlock"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/minio/minio-go/v7"
@@ -225,12 +224,13 @@ func configureMinioBuckets(client *minio.Client) (*utils.MinioConfig, error) {
 	}, nil
 }
 
-func runScheduler(task *gointerlock.GoInterval) {
+func runScheduler(cleanEmbeddedFilesTask *redis.CleanEmbeddedFilesTask) {
 	go func() {
-		err := task.Run(context.Background())
+		err := cleanEmbeddedFilesTask.Run(context.Background())
 		if err != nil {
-			Logger.Errorf("Error during starting scheduler: %s", err)
+			Logger.Errorf("Error during working cleanEmbeddedFilesTask: %s", err)
 		}
 	}()
-	Logger.Infof("Cleaning scheduler is started")
+
+	Logger.Infof("Cleaning schedulers are started")
 }

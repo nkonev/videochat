@@ -745,3 +745,19 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 	}
 	return errOuter
 }
+
+type ChatExists struct {
+	Exists bool `json:"exists"`
+}
+
+func (ch *ChatHandler) IsExists(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+	exists, err := ch.db.IsChatExists(chatId)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, ChatExists{exists})
+}
