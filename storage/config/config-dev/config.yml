@@ -24,11 +24,11 @@ minio:
   cleaner:
     embedded:
       # Start every
-      interval: 10s
+      interval: 90s
       # Max keys in batch
       maxKeys: 10
       # User has this time to send message with newly uploaded embedded image
-      threshold: 30s
+      threshold: 300s
     files:
       # Start every
       interval: 60s

@@ -141,6 +141,7 @@ func DeleteMissedInChatFilesScheduler(
 	service *DeleteMissedInChatFilesService,
 ) *CleanEmbeddedFilesTask {
 	var interv = viper.GetDuration("minio.cleaner.embedded.interval")
+	logger.Logger.Infof("Created DeleteMissedInChatFilesScheduler with interval %v", interv)
 	return &CleanEmbeddedFilesTask{&gointerlock.GoInterval{
 		Name:           "embeddedFilesCleaner",
 		Interval:       interv,

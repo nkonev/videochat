@@ -21,6 +21,7 @@ func CleanFilesOfDeletedChatScheduler(
 	service *CleanFilesOfDeletedChatService,
 ) *CleanFilesOfDeletedChatTask {
 	var interv = viper.GetDuration("minio.cleaner.files.interval")
+	logger.Logger.Infof("Created CleanFilesOfDeletedChatScheduler with interval %v", interv)
 	return &CleanFilesOfDeletedChatTask{&gointerlock.GoInterval{
 		Name:           "deletedChatFilesCleaner",
 		Interval:       interv,
