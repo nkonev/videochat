@@ -31,48 +31,9 @@ func NewDeleteMissedInChatFilesService(minioClient *minio.Client, minioBucketsCo
 
 func (srv *DeleteMissedInChatFilesService) doJob() {
 	filenameChatPrefix := fmt.Sprintf("chat/")
-	srv.processChats(filenameChatPrefix)
 	srv.processEmbeddedFiles(filenameChatPrefix)
 
-	logger.Logger.Infof("End of cleaning job")
-}
-
-func (srv *DeleteMissedInChatFilesService) processChats(filenameChatPrefix string) {
-	var maxMinioKeysInBatch = viper.GetInt("minio.cleaner.files.maxKeys")
-	logger.Logger.Infof("Starting cleaning files of deleted chats job with max minio keys limit = %v", maxMinioKeysInBatch)
-	var objects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(context.Background(), srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
-		Prefix:    filenameChatPrefix,
-		Recursive: true,
-	})
-
-	for objInfo := range objects {
-		// here in minio 'chat/108/'
-		logger.Logger.Infof("Start processing minio key '%v'", objInfo.Key)
-		chatId, err := extractChatId(objInfo.Key)
-		if err != nil {
-			logger.Logger.Errorf("Unable to extract chat id from %v", objInfo.Key)
-			continue
-		}
-		logger.Logger.Debugf("Successfully get chatId '%v'", chatId)
-
-		exists, err := srv.chatClient.CheckIsChatExists(chatId)
-		if err != nil {
-			logger.Logger.Errorf("Unable to chech existence of chat id from %v", objInfo.Key)
-			continue
-		}
-		if !exists {
-			logger.Logger.Infof("Deleting file(directory) object %v", objInfo.Key)
-			err := srv.minioClient.RemoveObject(context.Background(), srv.minioBucketsConfig.Files, objInfo.Key, minio.RemoveObjectOptions{})
-			if err != nil {
-				logger.Logger.Errorf("Object file %v has been cleared from minio with error: %v", objInfo.Key, err)
-			} else {
-				logger.Logger.Debugf("Object file %v has been cleared from minio successfully", objInfo.Key)
-			}
-		} else {
-			logger.Logger.Infof("Chat %v is present, skipping", chatId)
-		}
-	}
-	logger.Logger.Infof("End of processChats job")
+	logger.Logger.Infof("End of cleaning embedded files job")
 }
 
 func (srv *DeleteMissedInChatFilesService) processEmbeddedFiles(filenameChatPrefix string) {
@@ -132,8 +93,8 @@ func (srv *DeleteMissedInChatFilesService) processChunk(chatsWithFiles map[int64
 		return
 	}
 	for keyChatId, valuePairs := range chatsWithFilesResponse {
-		logger.Logger.Infof("Processing responded chat id %v files", keyChatId)
 		for _, valuePair := range valuePairs {
+			logger.Logger.Infof("Processing responded chat id %v file %v", keyChatId, valuePair.MinioKey)
 			if !valuePair.Exists {
 				logger.Logger.Infof("Deleting embedded file object %v", valuePair.MinioKey)
 				err := srv.minioClient.RemoveObject(context.Background(), srv.minioBucketsConfig.Embedded, valuePair.MinioKey, minio.RemoveObjectOptions{})
@@ -142,6 +103,8 @@ func (srv *DeleteMissedInChatFilesService) processChunk(chatsWithFiles map[int64
 				} else {
 					logger.Logger.Debugf("Object embedded file %v has been cleared from minio successfully", valuePair.MinioKey)
 				}
+			} else {
+				logger.Logger.Infof("Responded chat id %v files file %v is present", keyChatId, valuePair.MinioKey)
 			}
 		}
 		logger.Logger.Debugf("Completed processing chat id %v files", keyChatId)
@@ -177,9 +140,9 @@ func DeleteMissedInChatFilesScheduler(
 	redisConnector *redisV8.Client,
 	service *DeleteMissedInChatFilesService,
 ) *CleanEmbeddedFilesTask {
-	var interv = viper.GetDuration("minio.cleaner.interval")
+	var interv = viper.GetDuration("minio.cleaner.embedded.interval")
 	return &CleanEmbeddedFilesTask{&gointerlock.GoInterval{
-		Name:           "filesCleaner",
+		Name:           "embeddedFilesCleaner",
 		Interval:       interv,
 		Arg:            service.doJob,
 		RedisConnector: redisConnector,
