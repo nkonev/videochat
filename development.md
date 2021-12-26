@@ -171,8 +171,9 @@ curl -s 'http:/localhost:7001/internal/111/users' | jq '.'
 ``` 
 
 # Kick user
+Can be used for check "self health-check" mechanism.
 ```
-curl -i -X PUT 'http:/localhost:7001/internal/108/kick?silent=true&chatId=108&userId=1'
+curl -i -X PUT 'http:/localhost:7001/internal/108/kick?silent=true&chatId=107&userId=2'
 ```
 
 # Install nodejs same version as in ci.yml on macOS:

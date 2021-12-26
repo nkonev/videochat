@@ -166,12 +166,12 @@
 
                 // adding remote tracks
                 this.clientLocal.ontrack = (track, stream) => {
-                    console.info("Got track", track, "kind=", track.kind, " for stream", stream);
+                    console.info("Got track", track, "kind=", track.kind, " for remote stream", stream);
                     track.onunmute = () => {
                         const streamId = stream.id;
                         if (!this.streams[streamId]) {
                             const videoTagId = this.getNewId();
-                            console.info("Setting track", track.id, "for stream", streamId, " into video tag id=", videoTagId);
+                            console.info("Setting track", track.id, "for remote stream", streamId, " into video tag id=", videoTagId);
 
                             const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId }});
                             component.$mount();
@@ -190,7 +190,7 @@
                             // here we (asynchronously) get metadata by streamId from app server
                             this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: streamId}).then(value => {
                                 if (!value.found || !value.userDto) {
-                                    console.error("Metadata by streamId=", streamId, " is not found on server");
+                                    console.error("Metadata by remote streamId=", streamId, " is not found on server");
                                 } else {
                                     const data = value.userDto;
                                     console.debug("Successfully got data by streamId", streamId, data);
@@ -229,10 +229,11 @@
             },
             leaveSession() {
                 if (pingTimerId) {
+                    console.log("Clearing self healthcheck timer");
                     clearInterval(pingTimerId);
                 }
                 for (const streamId in this.streams) {
-                    console.log("Cleaning stream " + streamId);
+                    console.log("Cleaning remote stream " + streamId);
                     const component = this.streams[streamId].component;
                     this.removeStream(streamId, component);
                 }
@@ -269,7 +270,7 @@
 
                                 // check other
                                 for (const streamId in this.streams) {
-                                    console.debug("Checking other streamId", streamId);
+                                    console.debug("Checking remote streamId", streamId);
                                     const streamHolder = this.streams[streamId];
                                     const component = streamHolder.component;
                                     if (value.otherStreamIds.filter(v => v == streamId).length == 0) {
