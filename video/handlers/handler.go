@@ -133,7 +133,7 @@ func (h *Handler) SfuHandler(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	peer0 := sfu.NewPeer(h.sfu)
-	// we can't store it here because peer's stream is not initialized yet - TODO recheck
+	// we can't store it here because peer's stream is not initialized yet
 	// h.service.PutToMetadataIndex(...)
 	defer h.service.RemoveFromMetadataIndex(peer0, userId, c)
 	defer h.service.NotifyAboutLeaving(chatId)
