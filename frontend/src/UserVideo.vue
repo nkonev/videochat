@@ -2,7 +2,7 @@
     <div class="video-container-element">
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted" v-on:dblclick="onDoubleClick"/>
-        <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
+        <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
 
@@ -23,6 +23,7 @@ export default {
             avatar: "",
             videoMute: false,
             userId: null,
+            failureCount: 0
       }
     },
 
@@ -77,11 +78,23 @@ export default {
         },
         setUserId(id) {
             this.userId = id;
+        },
+        resetFailureCount() {
+            this.failureCount = 0;
+        },
+        incrementFailureCount() {
+            this.failureCount++;
+        },
+        getFailureCount() {
+            return this.failureCount;
         }
     },
     computed: {
         avatarIsSet() {
             return hasLength(this.avatar);
+        },
+        errored() {
+            return this.failureCount > 0;
         }
     }
 };
@@ -117,5 +130,9 @@ export default {
 
     .video-container-element-caption-speaking {
         text-shadow: -2px 0 #9cffa1, 0 2px #9cffa1, 2px 0 #9cffa1, 0 -2px #9cffa1;
+    }
+
+    .video-container-element-caption-errored {
+        text-shadow: -2px 0 #ff9c9c, 0 2px #ff9c9c, 2px 0 #ff9c9c, 0 -2px #ff9c9c;
     }
 </style>

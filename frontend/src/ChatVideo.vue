@@ -177,7 +177,7 @@
                             component.$mount();
                             this.remotesDiv.appendChild(component.$el);
                             component.setSource(stream);
-                            const streamHolder = {stream, component, failureCount: 0}
+                            const streamHolder = {stream, component}
                             this.streams[streamId] = streamHolder;
 
                             stream.onremovetrack = (e) => {
@@ -272,15 +272,16 @@
                                     const streamHolder = this.streams[streamId];
                                     const component = streamHolder.component;
                                     if (value.otherStreamIds.filter(v => v == streamId).length == 0) {
-                                        streamHolder.failureCount++;
-                                        console.info("Other streamId", streamId, "is not present, failureCount icreased to", streamHolder.failureCount);
-                                        if (streamHolder.failureCount > MAX_MISSED_FAILURES) {
+                                        component.incrementFailureCount();
+
+                                        console.info("Other streamId", streamId, "is not present, failureCount icreased to", component.getFailureCount());
+                                        if (component.getFailureCount() > MAX_MISSED_FAILURES) {
                                             console.debug("Other streamId", streamId, "subsequently is not present, removing...");
                                             this.removeStream(streamId, component);
                                         }
                                     } else {
                                         console.debug("Other streamId", streamId, "is present, resetting failureCount");
-                                        streamHolder.failureCount = 0;
+                                        component.resetFailureCount();
                                     }
                                 }
                             }
