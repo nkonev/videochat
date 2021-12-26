@@ -162,8 +162,29 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 	defer h.peerUserIdIndex.RUnlock()
 	selfExtendedPeerInfo, ok := h.peerUserIdIndex.connectionWithData[interestingStreamId]
 	if !ok {
+		logger.Info("User metadata is not exists in map", "stream_id", interestingStreamId, "user_id", behalfUserId, "chat_id", chatId)
 		return nil, otherStreamIds, nil
 	}
+
+	peerFound := false
+	session := h.getSessionWithoutCreatingAnew(chatId)
+	if session != nil {
+		interestingPeerId := selfExtendedPeerInfo.peerId
+		for _, peer := range session.Peers() {
+			if h.peerIsAlive(peer) && peer.ID() == interestingPeerId {
+				peerFound = true
+				break
+			}
+		}
+	} else {
+		logger.Info("Session is not exists in sfu", "stream_id", interestingStreamId, "user_id", behalfUserId, "chat_id", chatId)
+		return nil, otherStreamIds, nil
+	}
+	if !peerFound {
+		logger.Info("Peer is not active in sfu", "stream_id", interestingStreamId, "user_id", behalfUserId, "chat_id", chatId)
+		return nil, otherStreamIds, nil
+	}
+
 	sessionInfoDto = &dto.StoreNotifyDto{
 		StreamId:  selfExtendedPeerInfo.streamId,
 		Login:     selfExtendedPeerInfo.login,
