@@ -262,6 +262,7 @@
                         this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: localStreamId, includeOtherStreamIds: true}).then(value => {
                             if (!value.found) {
                                 console.warn("Detected absence of self user on server, restarting...", "streamId", localStreamId);
+                                this.$refs.localVideoComponent.incrementFailureCount();
                                 this.tryRestartWithResetOncloseHandler();
                             } else {
                                 console.debug("Successfully checked self user", "streamId", localStreamId, value);
@@ -400,6 +401,7 @@
                   this.$store.commit(SET_MUTE_VIDEO, !video);
                   this.$refs.localVideoComponent.setDisplayAudioMute(actualAudioMuted);
                   this.$refs.localVideoComponent.setVideoMute(!video);
+                  this.$refs.localVideoComponent.resetFailureCount();
                   this.isCnangingLocalStream = false;
                 }).then(() => {
                     this.notifyWithData();
