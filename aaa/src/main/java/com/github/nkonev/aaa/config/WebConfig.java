@@ -62,8 +62,9 @@ public class WebConfig implements WebMvcConfigurer {
     public ServletWebServerFactory servletContainer(Valve... valves) {
         CustomizedTomcatServletWebServerFactory tomcat = new CustomizedTomcatServletWebServerFactory();
         tomcat.setSameSite(sameSite);
-        tomcat.addContextValves(valves);
-
+        if (valves != null) {
+            tomcat.addContextValves(valves);
+        }
         final File baseDir = serverProperties.getTomcat().getBasedir();
         if (baseDir!=null) {
             File docRoot = new File(baseDir, "document-root");
