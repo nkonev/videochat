@@ -14,8 +14,6 @@
             </template>
         </v-snackbar>
         <p v-if="errorDescription" class="error">{{ errorDescription }}</p>
-
-        <UserVideo ref="localVideoComponent" :key="localPublisherKey" :initial-muted="true" :id="getNewId()"/>
     </v-col>
 </template>
 
@@ -259,7 +257,7 @@
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
                     if (Object.keys(this.localStreams).length && !this.isCnangingLocalStream && !this.restartingStarted) { // TODO rewrite
-                        const localStreamId = this.$refs.localVideoComponent.getStreamId();
+                        const localStreamId = this.$refs.localVideoComponent.getStreamId(); // todo use something instead this.$refs.localVideoComponent
                         console.debug("Checking self user", "streamId", localStreamId);
                         this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: localStreamId, includeOtherStreamIds: true}).then(value => {
                             if (!value.found) {
@@ -334,7 +332,7 @@
             onSwitchMediaStream({screen = false}) {
                 this.isCnangingLocalStream = true;
                 //this.clearLocalMediaStream(); // todo seems not need when we add stream with screen
-                this.$refs.localVideoComponent.setSource(null);
+                //this.$refs.localVideoComponent.setSource(null); // todo use something instead this.$refs.localVideoComponent
                 this.localPublisherKey++;
                 this.getAndPublishLocalMediaStream({screen})
                     .catch(reason => {
@@ -394,7 +392,7 @@
                   // actually during screen sharing there is no audio track - we calculate the actual audio muting state
                   let actualAudioMuted = true;
                   localMediaStream.getTracks().forEach(t => {
-                      console.log("localMediaStream track kind=", t.kind, " trackId=", t.id, " local video tag id", localVideoComponent.$props.id, " streamId=", this.$refs.localVideoComponent.getStreamId());
+                      console.log("localMediaStream track kind=", t.kind, " trackId=", t.id, " local video tag id", localVideoComponent.$props.id, " streamId=", localVideoComponent.getStreamId());
                       if (t.kind === "audio") {
                           actualAudioMuted = t.muted;
                       }
