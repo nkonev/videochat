@@ -337,7 +337,7 @@
             onStopScreenSharing() {
                 return this.onSwitchMediaStream({screen: false});
             },
-            // TODO rewrite
+            // TODO rename to something 'addScreenSharingStream' and refactor
             onSwitchMediaStream({screen = false}) {
                 this.isCnangingLocalStream = true;
                 this.clearLocalMediaStream();
