@@ -70,9 +70,8 @@
                 clientLocal: null,
                 localStreams: {}, // user can have several cameras, or simultaneously translate camera and screen
                 remoteStreams: {},
-                remotesDiv: null, // todo rename to video container div (both local and remote)
+                videoContainerDiv: null,
                 signalLocal: null,
-                localMediaStream: null,//todo remove
                 localPublisherKey: 1,
                 chatId: null,
                 remoteVideoIsMuted: true,
@@ -106,7 +105,7 @@
             appendUserVideo(stream, videoTagId, appendTo) {
                 const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId }});
                 component.$mount();
-                this.remotesDiv.appendChild(component.$el);
+                this.videoContainerDiv.appendChild(component.$el);
                 component.setSource(stream);
                 const streamHolder = {stream, component}
                 appendTo[stream.id] = streamHolder;
@@ -184,7 +183,7 @@
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
                                 if (e.track) {
-                                    this.removeRemoteStream(streamId, remoteComponent)
+                                    this.removeStream(streamId, remoteComponent, this.remoteStreams)
                                 }
                             };
 
@@ -206,15 +205,15 @@
                     }
                 };
             },
-            removeRemoteStream(streamId, component) {
+            removeStream(streamId, component, removeFrom) {
               console.log("Removing stream streamId=", streamId);
               try {
-                this.remotesDiv.removeChild(component.$el);
+                this.videoContainerDiv.removeChild(component.$el);
                 component.$destroy();
               } catch (e) {
-                console.debug("Something wrong on removing child", e, component.$el, this.remotesDiv);
+                console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
               }
-              delete this.remoteStreams[streamId];
+              delete removeFrom[streamId];
             },
             tryRestartWithResetOncloseHandler() {
                 if (this.signalLocal) {
@@ -222,26 +221,32 @@
                 }
                 this.tryRestartVideoProcess();
             },
-            clearLocalMediaStream() {
-                if (this.localMediaStream) {
-                    this.localMediaStream.getTracks().forEach(t => t.stop());
-                    this.localMediaStream.unpublish();
+            clearLocalMediaStream(localMediaStream) {
+                if (localMediaStream) {
+                    localMediaStream.getTracks().forEach(t => t.stop());
+                    localMediaStream.unpublish();
                 }
             },
-            leaveSession() {
+            leaveSession() { // TODO think is it ok to clear all (scree, cam1, cam2) in case error
                 for (const streamId in this.remoteStreams) {
                     console.log("Cleaning remote stream " + streamId);
                     const component = this.remoteStreams[streamId].component;
-                    this.removeRemoteStream(streamId, component);
+                    this.removeStream(streamId, component, this.remoteStreams);
                 }
-                this.clearLocalMediaStream();
+
+                for (const streamId in this.localStreams) {
+                    console.log("Cleaning local stream " + streamId);
+                    const streamHolder = this.localStreams[streamId];
+                    this.clearLocalMediaStream(streamHolder.stream);
+                    this.removeStream(streamId, streamHolder.component, this.localStreams);
+                }
+
                 if (this.clientLocal) {
                     this.clientLocal.close(); // also closes signal
                 }
                 this.clientLocal = null;
                 this.signalLocal = null;
                 this.remoteStreams = {};
-                this.localMediaStream = null;
                 this.isCnangingLocalStream = false;
 
                 this.$store.commit(SET_MUTE_VIDEO, false);
@@ -275,7 +280,7 @@
                                         console.info("Other streamId", streamId, "is not present, failureCount icreased to", component.getFailureCount());
                                         if (component.getFailureCount() > MAX_MISSED_FAILURES) {
                                             console.debug("Other streamId", streamId, "subsequently is not present, removing...");
-                                            this.removeRemoteStream(streamId, component);
+                                            this.removeStream(streamId, component, this.remoteStreams);
                                         }
                                     } else {
                                         console.debug("Other streamId", streamId, "is present, resetting failureCount");
@@ -293,18 +298,6 @@
                 return axios
                     .get(`/api/video/${this.chatId}/config`)
                     .then(response => response.data)
-            },
-            // TODO remove
-            notifyWithData() {
-                // notify another participants, they will receive VIDEO_CALL_CHANGED
-                const toSend = {
-                    avatar: this.currentUser.avatar,
-                    peerId: this.peerId,
-                    streamId: this.$refs.localVideoComponent.getStreamId(),
-                    videoMute: this.videoMuted, // from store
-                    audioMute: this.audioMuted
-                };
-                this.signalLocal.notify(PUT_USER_DATA_METHOD, toSend)
             },
             notifyWithData2(streamId) {
                 // notify another participants, they will receive VIDEO_CALL_CHANGED
@@ -340,7 +333,7 @@
             // TODO rename to something 'addScreenSharingStream' and refactor
             onSwitchMediaStream({screen = false}) {
                 this.isCnangingLocalStream = true;
-                this.clearLocalMediaStream();
+                //this.clearLocalMediaStream(); // todo seems not need when we add stream with screen
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
                 this.getAndPublishLocalMediaStream({screen})
@@ -567,7 +560,7 @@
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
             this.$store.commit(SET_SHOW_HANG_BUTTON, true);
             window.addEventListener('beforeunload', this.leaveSession);
-            this.remotesDiv = document.getElementById("video-container");
+            this.videoContainerDiv = document.getElementById("video-container");
             this.startHealthCheckPing();
             this.startVideoProcess();
         },
@@ -584,7 +577,7 @@
                 clearInterval(pingTimerId);
             }
             this.leaveSession();
-            this.remotesDiv = null;
+            this.videoContainerDiv = null;
         },
         created() {
             bus.$on(SHARE_SCREEN_START, this.onStartScreenSharing);
