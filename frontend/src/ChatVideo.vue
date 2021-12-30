@@ -183,8 +183,8 @@
                             const remoteComponent = this.appendUserVideo(stream, videoTagId, this.remoteStreams);
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
-                                if (e.track) { // todo rewrite here to be aware of simultaneously camera and screen
-                                    this.removeStream(streamId, remoteComponent)
+                                if (e.track) {
+                                    this.removeRemoteStream(streamId, remoteComponent)
                                 }
                             };
 
@@ -206,7 +206,7 @@
                     }
                 };
             },
-            removeStream(streamId, component) {
+            removeRemoteStream(streamId, component) {
               console.log("Removing stream streamId=", streamId);
               try {
                 this.remotesDiv.removeChild(component.$el);
@@ -232,7 +232,7 @@
                 for (const streamId in this.remoteStreams) {
                     console.log("Cleaning remote stream " + streamId);
                     const component = this.remoteStreams[streamId].component;
-                    this.removeStream(streamId, component);
+                    this.removeRemoteStream(streamId, component);
                 }
                 this.clearLocalMediaStream();
                 if (this.clientLocal) {
@@ -275,7 +275,7 @@
                                         console.info("Other streamId", streamId, "is not present, failureCount icreased to", component.getFailureCount());
                                         if (component.getFailureCount() > MAX_MISSED_FAILURES) {
                                             console.debug("Other streamId", streamId, "subsequently is not present, removing...");
-                                            this.removeStream(streamId, component);
+                                            this.removeRemoteStream(streamId, component);
                                         }
                                     } else {
                                         console.debug("Other streamId", streamId, "is present, resetting failureCount");
