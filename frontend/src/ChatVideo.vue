@@ -59,7 +59,6 @@
     const KICK_NOTIFICATION = "kick";
     const FORCE_MUTE_NOTIFICATION = "force_mute";
 
-    const shouldCheckAbsence = true;
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
     const MAX_MISSED_FAILURES = 5;
@@ -155,7 +154,7 @@
                         console.info("Joined to session, gathering media devices")
                         this.getAndPublishLocalMediaStream({})
                             .then(value => {
-                                this.startHealthCheckPing();
+
                             })
                             .catch(reason => {
                               console.error("Error during publishing camera stream, won't restart...", reason);
@@ -228,10 +227,6 @@
                 }
             },
             leaveSession() {
-                if (pingTimerId) {
-                    console.log("Clearing self healthcheck timer");
-                    clearInterval(pingTimerId);
-                }
                 for (const streamId in this.streams) {
                     console.log("Cleaning remote stream " + streamId);
                     const component = this.streams[streamId].component;
@@ -252,12 +247,9 @@
                 this.$store.commit(SET_MUTE_AUDIO, localAudioMutedInitial);
             },
             startHealthCheckPing() {
-                if (!shouldCheckAbsence) {
-                    return
-                }
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
-                    if (!this.isCnangingLocalStream && !this.restartingStarted) {
+                    if (this.localMediaStream && !this.isCnangingLocalStream && !this.restartingStarted) {
                         const localStreamId = this.$refs.localVideoComponent.getStreamId();
                         console.debug("Checking self user", "streamId", localStreamId);
                         this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: localStreamId, includeOtherStreamIds: true}).then(value => {
@@ -289,7 +281,7 @@
                             }
                         })
                     } else {
-                        console.debug("Skipping checking self user because we switch camera to screen sharing or vice versa");
+                        console.debug("Skipping checking self user because it isn't ready");
                     }
                 }, pingInterval)
             },
@@ -538,7 +530,8 @@
             this.closingStarted = false;
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
             this.$store.commit(SET_SHOW_HANG_BUTTON, true);
-            window.addEventListener('beforeunload', this.leaveSession)
+            window.addEventListener('beforeunload', this.leaveSession);
+            this.startHealthCheckPing();
             this.startVideoProcess();
         },
         beforeDestroy() {
@@ -549,6 +542,10 @@
 
             this.closingStarted = true;
             window.removeEventListener('beforeunload', this.leaveSession);
+            if (pingTimerId) {
+                console.log("Clearing self healthcheck timer");
+                clearInterval(pingTimerId);
+            }
             this.leaveSession();
         },
         created() {
