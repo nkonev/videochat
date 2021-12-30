@@ -180,11 +180,11 @@
                         if (!this.remoteStreams[streamId]) {
                             const videoTagId = 'remote-' + streamId + '-' + this.getNewId();
                             console.info("Setting track", track.id, "for remote stream", streamId, " into video tag id=", videoTagId);
-                            this.appendUserVideo(stream, videoTagId, this.remoteStreams);
+                            const remoteComponent = this.appendUserVideo(stream, videoTagId, this.remoteStreams);
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
                                 if (e.track) { // todo rewrite here to be aware of simultaneously camera and screen
-                                    this.removeStream(streamId, component)
+                                    this.removeStream(streamId, remoteComponent)
                                 }
                             };
 
@@ -195,11 +195,11 @@
                                 } else {
                                     const data = value.userDto;
                                     console.debug("Successfully got data by streamId", streamId, data);
-                                    streamHolder.component.setUserName(data.login);
-                                    streamHolder.component.setDisplayAudioMute(data.audioMute);
-                                    streamHolder.component.setVideoMute(data.videoMute);
-                                    streamHolder.component.setAvatar(data.avatar);
-                                    streamHolder.component.setUserId(data.userId);
+                                    remoteComponent.setUserName(data.login);
+                                    remoteComponent.setDisplayAudioMute(data.audioMute);
+                                    remoteComponent.setVideoMute(data.videoMute);
+                                    remoteComponent.setAvatar(data.avatar);
+                                    remoteComponent.setUserId(data.userId);
                                 }
                             })
                         }
@@ -253,7 +253,7 @@
                 }
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
-                    if (this.localMediaStream && !this.isCnangingLocalStream && !this.restartingStarted) {
+                    if (Object.keys(this.localStreams).length && !this.isCnangingLocalStream && !this.restartingStarted) { // TODO rewrite
                         const localStreamId = this.$refs.localVideoComponent.getStreamId();
                         console.debug("Checking self user", "streamId", localStreamId);
                         this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: localStreamId, includeOtherStreamIds: true}).then(value => {
@@ -455,32 +455,43 @@
                 }
             },
             onStartVideoMuting(requestedState) {
-                if (requestedState) {
-                    this.localMediaStream.mute("video");
-                    this.$refs.localVideoComponent.setVideoMute(true);
-                    this.$store.commit(SET_MUTE_VIDEO, requestedState);
-                    this.notifyWithData();
-                } else {
-                    this.localMediaStream.unmute("video").then(value => {
-                        this.$refs.localVideoComponent.setVideoMute(false);
-                        this.$store.commit(SET_MUTE_VIDEO, requestedState);
-                        this.notifyWithData();
-                    })
+                for (const streamId in this.localStreams) {
+                    const streamHolder = this.localStreams[streamId];
+                    if (streamHolder) {
+                        if (requestedState) {
+                            streamHolder.stream.mute("video");
+                            streamHolder.component.setVideoMute(true);
+                            this.$store.commit(SET_MUTE_VIDEO, requestedState);
+                            this.notifyWithData2(streamId);
+                        } else {
+                            streamHolder.stream.unmute("video").then(value => {
+                                streamHolder.component.setVideoMute(false);
+                                this.$store.commit(SET_MUTE_VIDEO, requestedState);
+                                this.notifyWithData2(streamId);
+                            })
+                        }
+                    }
                 }
             },
             onStartAudioMuting(requestedState) {
                 this.ensureAudioIsEnabledAccordingBrowserPolicies();
-                if (requestedState) {
-                    this.localMediaStream.mute("audio");
-                    this.$store.commit(SET_MUTE_AUDIO, requestedState);
-                    this.$refs.localVideoComponent.setDisplayAudioMute(requestedState);
-                    this.notifyWithData();
-                } else {
-                    this.localMediaStream.unmute("audio").then(value => {
-                        this.$store.commit(SET_MUTE_AUDIO, requestedState);
-                        this.$refs.localVideoComponent.setDisplayAudioMute(requestedState);
-                        this.notifyWithData();
-                    })
+
+                for (const streamId in this.localStreams) {
+                    const streamHolder = this.localStreams[streamId];
+                    if (streamHolder) {
+                        if (requestedState) {
+                            streamHolder.stream.mute("audio");
+                            this.$store.commit(SET_MUTE_AUDIO, requestedState);
+                            streamHolder.component.setDisplayAudioMute(requestedState);
+                            this.notifyWithData2(streamId);
+                        } else {
+                            streamHolder.stream.unmute("audio").then(value => {
+                                this.$store.commit(SET_MUTE_AUDIO, requestedState);
+                                streamHolder.component.setDisplayAudioMute(requestedState);
+                                this.notifyWithData2(streamId);
+                            })
+                        }
+                    }
                 }
             },
             onForceMuteByAdmin(dto) {
@@ -505,9 +516,13 @@
                 this.tryRestartWithResetOncloseHandler();
             },
             enumerateAllStreams(callback) {
-                if (this.localMediaStream && this.$refs.localVideoComponent) {
-                    callback(this.$refs.localVideoComponent, this.$refs.localVideoComponent.getStreamId());
+                for (const streamId in this.localStreams) {
+                    const streamHolder = this.localStreams[streamId];
+                    if (streamHolder) {
+                        callback(streamHolder.component, streamId);
+                    }
                 }
+
                 for (const streamId in this.remoteStreams) {
                     const streamHolder = this.remoteStreams[streamId];
                     if (streamHolder) {
@@ -516,11 +531,13 @@
                 }
             },
             applyCallbackToStreamId(streamId, callback) {
-                if (this.localMediaStream && this.$refs.localVideoComponent && this.$refs.localVideoComponent.getStreamId() == streamId) {
-                    callback(this.$refs.localVideoComponent, this.$refs.localVideoComponent.getStreamId());
+                let streamHolder = this.localStreams[streamId];
+                if (streamHolder) {
+                    callback(streamHolder.component);
                     return;
                 }
-                const streamHolder = this.remoteStreams[streamId];
+
+                streamHolder = this.remoteStreams[streamId];
                 if (streamHolder) {
                     callback(streamHolder.component);
                 }
