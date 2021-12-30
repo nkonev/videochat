@@ -322,6 +322,7 @@
                 return this.onSwitchMediaStream({screen: false});
             },
             onSwitchMediaStream({screen = false}) {
+                this.isCnangingLocalStream = true;
                 this.clearLocalMediaStream();
                 this.$refs.localVideoComponent.setSource(null);
                 this.localPublisherKey++;
