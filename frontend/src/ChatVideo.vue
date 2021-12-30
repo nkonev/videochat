@@ -68,10 +68,11 @@
         data() {
             return {
                 clientLocal: null,
-                streams: {},
-                remotesDiv: null,
+                localStreams: {}, // user can have several cameras, or simultaneously translate camera and screen
+                streams: {}, // todo rename remote streams
+                remotesDiv: null, // todo rename to video container div (both local and remote)
                 signalLocal: null,
-                localMediaStream: null,
+                localMediaStream: null,//todo remove
                 localPublisherKey: 1,
                 chatId: null,
                 remoteVideoIsMuted: true,
@@ -102,13 +103,21 @@
                 this.ensureAudioIsEnabledAccordingBrowserPolicies();
                 this.showPermissionAsk = false;
             },
+            appendUserVideo(stream, videoTagId, appendTo) {
+                const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId }});
+                component.$mount();
+                this.remotesDiv.appendChild(component.$el);
+                component.setSource(stream);
+                const streamHolder = {stream, component}
+                appendTo[stream.id] = streamHolder;
+                return component;
+            },
             joinSession(configObj) {
                 console.info("Used webrtc config", JSON.stringify(configObj));
 
                 this.signalLocal = new IonSFUJSONRPCSignal(
                     getWebsocketUrlPrefix()+`/api/video/${this.chatId}/ws`
                 );
-                this.remotesDiv = document.getElementById("video-container");
 
                 if (hasLength(configObj.codec)) {
                     console.log("Server overrided codec to", configObj.codec)
@@ -169,19 +178,12 @@
                     track.onunmute = () => {
                         const streamId = stream.id;
                         if (!this.streams[streamId]) {
-                            const videoTagId = this.getNewId();
+                            const videoTagId = 'remote-' + streamId + '-' + this.getNewId();
                             console.info("Setting track", track.id, "for remote stream", streamId, " into video tag id=", videoTagId);
-
-                            const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId }});
-                            component.$mount();
-                            this.remotesDiv.appendChild(component.$el);
-                            component.setSource(stream);
-                            const streamHolder = {stream, component}
-                            this.streams[streamId] = streamHolder;
-
+                            this.appendUserVideo(stream, videoTagId, this.streams);
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
-                                if (e.track) {
+                                if (e.track) { // todo rewrite here to be aware of simultaneously camera and screen
                                     this.removeStream(streamId, component)
                                 }
                             };
@@ -239,7 +241,6 @@
                 this.clientLocal = null;
                 this.signalLocal = null;
                 this.streams = {};
-                this.remotesDiv = null;
                 this.localMediaStream = null;
                 this.isCnangingLocalStream = false;
 
@@ -247,6 +248,9 @@
                 this.$store.commit(SET_MUTE_AUDIO, localAudioMutedInitial);
             },
             startHealthCheckPing() {
+                if (true) {
+                    return
+                }
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
                     if (this.localMediaStream && !this.isCnangingLocalStream && !this.restartingStarted) {
@@ -290,12 +294,24 @@
                     .get(`/api/video/${this.chatId}/config`)
                     .then(response => response.data)
             },
+            // TODO remove
             notifyWithData() {
                 // notify another participants, they will receive VIDEO_CALL_CHANGED
                 const toSend = {
                     avatar: this.currentUser.avatar,
                     peerId: this.peerId,
                     streamId: this.$refs.localVideoComponent.getStreamId(),
+                    videoMute: this.videoMuted, // from store
+                    audioMute: this.audioMuted
+                };
+                this.signalLocal.notify(PUT_USER_DATA_METHOD, toSend)
+            },
+            notifyWithData2(streamId) {
+                // notify another participants, they will receive VIDEO_CALL_CHANGED
+                const toSend = {
+                    avatar: this.currentUser.avatar,
+                    peerId: this.peerId,
+                    streamId: streamId,
                     videoMute: this.videoMuted, // from store
                     audioMute: this.audioMuted
                 };
@@ -321,6 +337,7 @@
             onStopScreenSharing() {
                 return this.onSwitchMediaStream({screen: false});
             },
+            // TODO rewrite
             onSwitchMediaStream({screen = false}) {
                 this.isCnangingLocalStream = true;
                 this.clearLocalMediaStream();
@@ -344,17 +361,12 @@
 
                 if (!audio && !video && !screen) {
                     console.info("Not able to build local media stream, returning a successful promise");
-                    Vue.nextTick(() => {
-                        this.$refs.localVideoComponent.setUserName('No media configured');
-                    });
-
                     this.$store.commit(SET_SHARE_SCREEN, false);
                     // this.isCnangingLocalStream = false;
-
-                    return Promise.resolve(true);
+                    return Promise.reject('No media configured');
                 }
 
-                const localStream = screen ?
+                const localStreamSpec = screen ?
                     LocalStream.getDisplayMedia({
                         audio: audio,
                         video: true,
@@ -367,16 +379,19 @@
                         codec: this.preferredCodec,
                     });
 
-                return localStream.then((media) => {
-                  this.localMediaStream = media;
-                  this.$refs.localVideoComponent.setSource(media);
-                  this.$refs.localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
-                  this.$refs.localVideoComponent.setUserName(this.currentUser.login);
-                  this.$refs.localVideoComponent.setAvatar(this.currentUser.avatar);
-                  this.$refs.localVideoComponent.setUserId(this.currentUser.id);
+                return localStreamSpec.then((localMediaStream) => {
+                  const streamId = localMediaStream.id;
+                  const videoTagId = 'local-' + streamId + '-' + this.getNewId();
+                  console.info("Setting local stream", streamId, " into video tag id=", videoTagId);
+                  const localVideoComponent = this.appendUserVideo(localMediaStream, videoTagId, this.localStreams);
+                  localVideoComponent.setSource(localMediaStream);
+                  localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
+                  localVideoComponent.setUserName(this.currentUser.login);
+                  localVideoComponent.setAvatar(this.currentUser.avatar);
+                  localVideoComponent.setUserId(this.currentUser.id);
                   console.log("Publishing " + (screen ? "screen" : "camera"));
-                  this.clientLocal.publish(media);
-                  console.log("Successfully published " + (screen ? "screen" : "camera") + " streamId=", this.$refs.localVideoComponent.getStreamId());
+                  this.clientLocal.publish(localMediaStream);
+                  console.log("Successfully published " + (screen ? "screen" : "camera") + " streamId=", streamId);
                   if (screen) {
                       this.$store.commit(SET_SHARE_SCREEN, true);
                   } else {
@@ -385,22 +400,25 @@
 
                   // actually during screen sharing there is no audio track - we calculate the actual audio muting state
                   let actualAudioMuted = true;
-                  this.localMediaStream.getTracks().forEach(t => {
-                      console.log("localMediaStream track kind=", t.kind, " trackId=", t.id, " local video tag id", this.$refs.localVideoComponent.$props.id, " streamId=", this.$refs.localVideoComponent.getStreamId());
+                  localMediaStream.getTracks().forEach(t => {
+                      console.log("localMediaStream track kind=", t.kind, " trackId=", t.id, " local video tag id", localVideoComponent.$props.id, " streamId=", this.$refs.localVideoComponent.getStreamId());
                       if (t.kind === "audio") {
                           actualAudioMuted = t.muted;
                       }
                   });
                   this.$store.commit(SET_MUTE_AUDIO, actualAudioMuted);
                   this.$store.commit(SET_MUTE_VIDEO, !video);
-                  this.$refs.localVideoComponent.setDisplayAudioMute(actualAudioMuted);
-                  this.$refs.localVideoComponent.setVideoMute(!video);
-                  this.$refs.localVideoComponent.resetFailureCount();
+                  localVideoComponent.setDisplayAudioMute(actualAudioMuted);
+                  localVideoComponent.setVideoMute(!video);
+                  localVideoComponent.resetFailureCount();
                   this.isCnangingLocalStream = false;
-                }).then(() => {
-                    this.notifyWithData();
-                    return Promise.resolve(true)
-                });
+
+                  this.notifyWithData2(streamId);
+
+                  return Promise.resolve({
+                    component: localVideoComponent // TODO do we really need it because we already added in appendUserVideo()
+                  })
+                })
             },
             startVideoProcess() {
                 this.getConfig()
@@ -532,6 +550,7 @@
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
             this.$store.commit(SET_SHOW_HANG_BUTTON, true);
             window.addEventListener('beforeunload', this.leaveSession);
+            this.remotesDiv = document.getElementById("video-container");
             this.startHealthCheckPing();
             this.startVideoProcess();
         },
@@ -548,6 +567,7 @@
                 clearInterval(pingTimerId);
             }
             this.leaveSession();
+            this.remotesDiv = null;
         },
         created() {
             bus.$on(SHARE_SCREEN_START, this.onStartScreenSharing);
