@@ -1,6 +1,7 @@
 package com.github.nkonev.aaa.security;
 
 import com.github.nkonev.aaa.Constants;
+import com.github.nkonev.aaa.config.CustomConfig;
 import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import com.github.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.FormHttpMessageConverter;
@@ -89,6 +91,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private NoOpAuthorizedClientRepository noOpAuthorizedClientRepository;
 
+    @Autowired
+    private CustomConfig customConfig;
+
     @Value("${csrf.cookie.secure:false}")
     private boolean cookieSecure;
 
@@ -168,13 +173,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
         OAuth2AccessTokenResponseHttpMessageConverter oAuth2AccessTokenResponseHttpMessageConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
-        oAuth2AccessTokenResponseHttpMessageConverter.setTokenResponseConverter(new BearerOAuth2AccessTokenResponseConverter());
-        RestTemplate restTemplate = new RestTemplate(Arrays.asList(
-                new FormHttpMessageConverter(),
-                oAuth2AccessTokenResponseHttpMessageConverter
-        ));
+        oAuth2AccessTokenResponseHttpMessageConverter.setAccessTokenResponseConverter(new BearerOAuth2AccessTokenResponseConverter());
 
-        restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
+        RestTemplate restTemplate = new RestTemplateBuilder()
+                .setConnectTimeout(customConfig.getRestClientConnectTimeout())
+                .setReadTimeout(customConfig.getRestClientReadTimeout())
+                .messageConverters(Arrays.asList(
+                        new FormHttpMessageConverter(),
+                        oAuth2AccessTokenResponseHttpMessageConverter
+                ))
+                .errorHandler(new OAuth2ErrorResponseErrorHandler())
+                .build();
         DefaultAuthorizationCodeTokenResponseClient defaultAuthorizationCodeTokenResponseClient = new DefaultAuthorizationCodeTokenResponseClient();
         defaultAuthorizationCodeTokenResponseClient.setRestOperations(restTemplate);
         return defaultAuthorizationCodeTokenResponseClient;
