@@ -69,7 +69,7 @@
             return {
                 clientLocal: null,
                 localStreams: {}, // user can have several cameras, or simultaneously translate camera and screen
-                streams: {}, // todo rename remote streams
+                remoteStreams: {},
                 remotesDiv: null, // todo rename to video container div (both local and remote)
                 signalLocal: null,
                 localMediaStream: null,//todo remove
@@ -177,10 +177,10 @@
                     console.info("Got track", track, "kind=", track.kind, " for remote stream", stream);
                     track.onunmute = () => {
                         const streamId = stream.id;
-                        if (!this.streams[streamId]) {
+                        if (!this.remoteStreams[streamId]) {
                             const videoTagId = 'remote-' + streamId + '-' + this.getNewId();
                             console.info("Setting track", track.id, "for remote stream", streamId, " into video tag id=", videoTagId);
-                            this.appendUserVideo(stream, videoTagId, this.streams);
+                            this.appendUserVideo(stream, videoTagId, this.remoteStreams);
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
                                 if (e.track) { // todo rewrite here to be aware of simultaneously camera and screen
@@ -214,7 +214,7 @@
               } catch (e) {
                 console.debug("Something wrong on removing child", e, component.$el, this.remotesDiv);
               }
-              delete this.streams[streamId];
+              delete this.remoteStreams[streamId];
             },
             tryRestartWithResetOncloseHandler() {
                 if (this.signalLocal) {
@@ -229,9 +229,9 @@
                 }
             },
             leaveSession() {
-                for (const streamId in this.streams) {
+                for (const streamId in this.remoteStreams) {
                     console.log("Cleaning remote stream " + streamId);
-                    const component = this.streams[streamId].component;
+                    const component = this.remoteStreams[streamId].component;
                     this.removeStream(streamId, component);
                 }
                 this.clearLocalMediaStream();
@@ -240,7 +240,7 @@
                 }
                 this.clientLocal = null;
                 this.signalLocal = null;
-                this.streams = {};
+                this.remoteStreams = {};
                 this.localMediaStream = null;
                 this.isCnangingLocalStream = false;
 
@@ -265,9 +265,9 @@
                                 console.debug("Successfully checked self user", "streamId", localStreamId, value);
 
                                 // check other
-                                for (const streamId in this.streams) {
+                                for (const streamId in this.remoteStreams) {
                                     console.debug("Checking remote streamId", streamId);
-                                    const streamHolder = this.streams[streamId];
+                                    const streamHolder = this.remoteStreams[streamId];
                                     const component = streamHolder.component;
                                     if (value.otherStreamIds.filter(v => v == streamId).length == 0) {
                                         component.incrementFailureCount();
@@ -320,7 +320,7 @@
             ensureAudioIsEnabledAccordingBrowserPolicies() {
                 if (this.remoteVideoIsMuted) {
                     // Unmute all the current videoElements.
-                    for (const streamHolder of Object.values(this.streams)) {
+                    for (const streamHolder of Object.values(this.remoteStreams)) {
                         let { component } = streamHolder;
                         const videoElement = component.getVideoElement();
                         videoElement.pause();
@@ -493,7 +493,7 @@
                 if (dto) {
                     const data = dto.data;
                     if (data) {
-                        const streamHolder = this.streams[data.streamId];
+                        const streamHolder = this.remoteStreams[data.streamId];
                         if (streamHolder) {
                             streamHolder.component.setDisplayAudioMute(data.audioMute);
                             streamHolder.component.setVideoMute(data.videoMute);
@@ -508,8 +508,8 @@
                 if (this.localMediaStream && this.$refs.localVideoComponent) {
                     callback(this.$refs.localVideoComponent, this.$refs.localVideoComponent.getStreamId());
                 }
-                for (const streamId in this.streams) {
-                    const streamHolder = this.streams[streamId];
+                for (const streamId in this.remoteStreams) {
+                    const streamHolder = this.remoteStreams[streamId];
                     if (streamHolder) {
                         callback(streamHolder.component, streamId);
                     }
@@ -520,7 +520,7 @@
                     callback(this.$refs.localVideoComponent, this.$refs.localVideoComponent.getStreamId());
                     return;
                 }
-                const streamHolder = this.streams[streamId];
+                const streamHolder = this.remoteStreams[streamId];
                 if (streamHolder) {
                     callback(streamHolder.component);
                 }
