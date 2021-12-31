@@ -11,10 +11,6 @@ export const FETCH_USER_PROFILE = 'fetchUserProfile';
 export const FETCH_AVAILABLE_OAUTH2_PROVIDERS = 'fetchAvailableOauth2';
 export const GET_AVAILABLE_OAUTH2_PROVIDERS = 'getAvailableOauth2';
 export const SET_AVAILABLE_OAUTH2_PROVIDERS = 'setAvailableOauth2';
-export const GET_MUTE_VIDEO = 'getMuteVideo';
-export const SET_MUTE_VIDEO = 'setMuteVideo';
-export const GET_MUTE_AUDIO = 'getMuteAudio';
-export const SET_MUTE_AUDIO = 'setMuteAudio';
 
 export const GET_TITLE = 'getTitle';
 export const SET_TITLE = 'setTitle';
@@ -30,8 +26,6 @@ export const GET_SHOW_CALL_BUTTON = 'getShowCallButton';
 export const SET_SHOW_CALL_BUTTON = 'setShowCallButton';
 export const GET_SHOW_HANG_BUTTON = 'getShowHangButton';
 export const SET_SHOW_HANG_BUTTON = 'setShowHangButton';
-export const GET_SHARE_SCREEN = 'getShareScreenButton';
-export const SET_SHARE_SCREEN = 'setShareScreenButton';
 export const GET_SHOW_CHAT_EDIT_BUTTON = 'getChatEditButton';
 export const SET_SHOW_CHAT_EDIT_BUTTON = 'setChatEditButton';
 
@@ -59,20 +53,11 @@ const store = new Vuex.Store({
         [UNSET_USER](state) {
             state.currentUser = null;
         },
-        [SET_MUTE_VIDEO](state, payload) {
-            state.muteVideo = payload;
-        },
-        [SET_MUTE_AUDIO](state, payload) {
-            state.muteAudio = payload;
-        },
         [SET_SHOW_CALL_BUTTON](state, payload) {
             state.showCallButton = payload;
         },
         [SET_SHOW_HANG_BUTTON](state, payload) {
             state.showHangButton = payload;
-        },
-        [SET_SHARE_SCREEN](state, payload) {
-            state.shareScreen = payload;
         },
         [SET_VIDEO_CHAT_USERS_COUNT](state, payload) {
             state.videoChatUsersCount = payload;
@@ -100,20 +85,11 @@ const store = new Vuex.Store({
         [GET_USER](state) {
             return state.currentUser;
         },
-        [GET_MUTE_VIDEO](state) {
-            return state.muteVideo;
-        },
-        [GET_MUTE_AUDIO](state) {
-            return state.muteAudio;
-        },
         [GET_SHOW_CALL_BUTTON](state) {
             return state.showCallButton;
         },
         [GET_SHOW_HANG_BUTTON](state) {
             return state.showHangButton;
-        },
-        [GET_SHARE_SCREEN](state) {
-            return state.shareScreen;
         },
         [GET_VIDEO_CHAT_USERS_COUNT](state) {
             return state.videoChatUsersCount;

@@ -175,9 +175,6 @@
     import {mapGetters} from 'vuex'
     import {
         FETCH_USER_PROFILE, GET_CHAT_ID, GET_CHAT_USERS_COUNT,
-        GET_MUTE_AUDIO,
-        GET_MUTE_VIDEO,
-        GET_SHARE_SCREEN,
         GET_SHOW_CALL_BUTTON,
         GET_SHOW_CHAT_EDIT_BUTTON,
         GET_SHOW_HANG_BUTTON,
@@ -353,11 +350,8 @@
         computed: {
             ...mapGetters({
                 currentUser: GET_USER,
-                videoMuted: GET_MUTE_VIDEO,
-                audioMuted: GET_MUTE_AUDIO,
                 showCallButton: GET_SHOW_CALL_BUTTON,
                 showHangButton: GET_SHOW_HANG_BUTTON,
-                shareScreen: GET_SHARE_SCREEN,
                 videoChatUsersCount: GET_VIDEO_CHAT_USERS_COUNT,
                 showChatEditButton: GET_SHOW_CHAT_EDIT_BUTTON,
                 chatId: GET_CHAT_ID,

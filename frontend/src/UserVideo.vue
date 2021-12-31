@@ -16,6 +16,8 @@
 
 import {hasLength} from "@/utils";
 
+const PUT_USER_DATA_METHOD = "putUserData";
+
 export default {
 	name: 'UserVideo',
 
@@ -40,6 +42,9 @@ export default {
         },
         initialMuted: {
             type: Boolean
+        },
+        localVideoObject: {
+            type: Object
         }
     },
 
@@ -98,6 +103,18 @@ export default {
         getFailureCount() {
             return this.failureCount;
         },
+        notifyOtherParticipants() {
+            // notify another participants, they will receive VIDEO_CALL_CHANGED
+            const toSend = {
+                avatar: this.avatarIsSet ? this.avatar : null,
+                peerId: this.localVideoObject.peerId,
+                streamId: this.getStreamId(),
+                videoMute: this.videoMute,
+                audioMute: this.audioMute
+            };
+            this.localVideoObject.signalLocal.notify(PUT_USER_DATA_METHOD, toSend);
+        },
+
     },
     computed: {
         avatarIsSet() {
@@ -105,7 +122,7 @@ export default {
         },
         errored() {
             return this.failureCount > 0;
-        }
+        },
     }
 };
 </script>

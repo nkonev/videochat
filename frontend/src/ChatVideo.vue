@@ -21,19 +21,13 @@
     import Vue from 'vue';
     import {mapGetters} from "vuex";
     import {
-        GET_MUTE_AUDIO,
-        GET_MUTE_VIDEO,
         GET_USER,
-        SET_MUTE_AUDIO,
-        SET_MUTE_VIDEO, SET_SHARE_SCREEN,
         SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON,
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import bus, {
-        AUDIO_START_MUTING, REQUEST_CHANGE_VIDEO_PARAMETERS,
-        SHARE_SCREEN_START,
-        SHARE_SCREEN_STOP, USER_PROFILE_CHANGED, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
-        VIDEO_START_MUTING
+        REQUEST_CHANGE_VIDEO_PARAMETERS,
+        USER_PROFILE_CHANGED, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
     } from "./bus";
     import axios from "axios";
     import { Client, LocalStream } from 'ion-sdk-js';
@@ -52,7 +46,6 @@
     const UserVideoClass = Vue.extend(UserVideo);
 
     let pingTimerId;
-    const PUT_USER_DATA_METHOD = "putUserData";
     const USER_BY_STREAM_ID_METHOD = "userByStreamId";
     const KICK_NOTIFICATION = "kick";
     const FORCE_MUTE_NOTIFICATION = "force_mute";
@@ -91,8 +84,6 @@
         computed: {
             ...mapGetters({
                 currentUser: GET_USER,
-                videoMuted: GET_MUTE_VIDEO,
-                audioMuted: GET_MUTE_AUDIO,
             }),
         },
         methods: {
@@ -100,13 +91,12 @@
                 this.ensureAudioIsEnabledAccordingBrowserPolicies();
                 this.showPermissionAsk = false;
             },
-            appendUserVideo(stream, videoTagId, appendTo) {
-                const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId }});
+            appendUserVideo(stream, videoTagId, appendTo, localVideoObject) {
+                const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId, localVideoObject: localVideoObject }});
                 component.$mount();
                 this.videoContainerDiv.appendChild(component.$el);
                 component.setSource(stream);
-                const streamHolder = {stream, component}
-                appendTo[stream.id] = streamHolder;
+                appendTo[stream.id] = {stream, component};
                 return component;
             },
             joinSession(configObj) {
@@ -177,7 +167,7 @@
                         if (!this.remoteStreams[streamId]) {
                             const videoTagId = 'remote-' + streamId + '-' + this.getNewId();
                             console.info("Setting track", track.id, "for remote stream", streamId, " into video tag id=", videoTagId);
-                            const remoteComponent = this.appendUserVideo(stream, videoTagId, this.remoteStreams);
+                            const remoteComponent = this.appendUserVideo(stream, videoTagId, this.remoteStreams, null);
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
                                 if (e.track) {
@@ -246,9 +236,6 @@
                 this.signalLocal = null;
                 this.remoteStreams = {};
                 this.isChangingLocalStream = false;
-
-                this.$store.commit(SET_MUTE_VIDEO, false);
-                this.$store.commit(SET_MUTE_AUDIO, localAudioMutedInitial);
             },
             startHealthCheckPing() {
                 if (true) {
@@ -297,17 +284,6 @@
                     .get(`/api/video/${this.chatId}/config`)
                     .then(response => response.data)
             },
-            notifyWithData2(streamId) {
-                // notify another participants, they will receive VIDEO_CALL_CHANGED
-                const toSend = {
-                    avatar: this.currentUser.avatar,
-                    peerId: this.peerId,
-                    streamId: streamId,
-                    videoMute: this.videoMuted, // from store
-                    audioMute: this.audioMuted
-                };
-                this.signalLocal.notify(PUT_USER_DATA_METHOD, toSend)
-            },
             ensureAudioIsEnabledAccordingBrowserPolicies() {
                 if (this.remoteVideoIsMuted) {
                     // Unmute all the current videoElements.
@@ -352,7 +328,6 @@
 
                 if (!audio && !video && !screen) {
                     console.info("Not able to build local media stream, returning a successful promise");
-                    this.$store.commit(SET_SHARE_SCREEN, false);
                     // this.isChangingLocalStream = false;
                     return Promise.reject('No media configured');
                 }
@@ -374,7 +349,10 @@
                   const streamId = localMediaStream.id;
                   const videoTagId = 'local-' + streamId + '-' + this.getNewId();
                   console.info("Setting local stream", streamId, " into video tag id=", videoTagId);
-                  const localVideoComponent = this.appendUserVideo(localMediaStream, videoTagId, this.localStreams);
+                  const localVideoComponent = this.appendUserVideo(localMediaStream, videoTagId, this.localStreams, {
+                      peerId: this.peerId,
+                      signalLocal: this.signalLocal
+                  });
                   localVideoComponent.setSource(localMediaStream);
                   localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
                   localVideoComponent.setUserName(this.currentUser.login);
@@ -383,11 +361,6 @@
                   console.log("Publishing " + (screen ? "screen" : "camera"));
                   this.clientLocal.publish(localMediaStream);
                   console.log("Successfully published " + (screen ? "screen" : "camera") + " streamId=", streamId);
-                  if (screen) {
-                      this.$store.commit(SET_SHARE_SCREEN, true);
-                  } else {
-                      this.$store.commit(SET_SHARE_SCREEN, false);
-                  }
 
                   // actually during screen sharing there is no audio track - we calculate the actual audio muting state
                   let actualAudioMuted = true;
@@ -397,14 +370,11 @@
                           actualAudioMuted = t.muted;
                       }
                   });
-                  this.$store.commit(SET_MUTE_AUDIO, actualAudioMuted);
-                  this.$store.commit(SET_MUTE_VIDEO, !video);
                   localVideoComponent.setDisplayAudioMute(actualAudioMuted);
                   localVideoComponent.setVideoMute(!video);
                   localVideoComponent.resetFailureCount();
                   this.isChangingLocalStream = false;
-
-                  this.notifyWithData2(streamId);
+                  localVideoComponent.notifyOtherParticipants();
 
                   return Promise.resolve(true)
                 })
@@ -450,13 +420,11 @@
                         if (requestedState) {
                             streamHolder.stream.mute("video");
                             streamHolder.component.setVideoMute(true);
-                            this.$store.commit(SET_MUTE_VIDEO, requestedState);
-                            this.notifyWithData2(streamId);
+                            streamHolder.component.notifyOtherParticipants();
                         } else {
                             streamHolder.stream.unmute("video").then(value => {
                                 streamHolder.component.setVideoMute(false);
-                                this.$store.commit(SET_MUTE_VIDEO, requestedState);
-                                this.notifyWithData2(streamId);
+                                streamHolder.component.notifyOtherParticipants();
                             })
                         }
                     }
@@ -468,14 +436,12 @@
                 const muteFunction = (streamHolder, streamId) => {
                     if (requestedState) {
                         streamHolder.stream.mute("audio");
-                        this.$store.commit(SET_MUTE_AUDIO, requestedState);
                         streamHolder.component.setDisplayAudioMute(requestedState);
-                        this.notifyWithData2(streamId);
+                        streamHolder.component.notifyOtherParticipants();
                     } else {
                         streamHolder.stream.unmute("audio").then(value => {
-                            this.$store.commit(SET_MUTE_AUDIO, requestedState);
                             streamHolder.component.setDisplayAudioMute(requestedState);
-                            this.notifyWithData2(streamId);
+                            streamHolder.component.notifyOtherParticipants();
                         })
                     }
                 }
@@ -574,7 +540,6 @@
         beforeDestroy() {
             this.$store.commit(SET_SHOW_CALL_BUTTON, true);
             this.$store.commit(SET_SHOW_HANG_BUTTON, false);
-            this.$store.commit(SET_SHARE_SCREEN, false);
             this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
 
             this.closingStarted = true;
