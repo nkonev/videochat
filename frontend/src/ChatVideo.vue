@@ -76,7 +76,7 @@
                 peerId: null,
 
                 // this one is about skipping ping checks during changing media stream
-                isCnangingLocalStream: false,
+                isChangingLocalStream: false,
 
                 // this two are about restart process
                 restartingStarted: false,
@@ -245,7 +245,7 @@
                 this.clientLocal = null;
                 this.signalLocal = null;
                 this.remoteStreams = {};
-                this.isCnangingLocalStream = false;
+                this.isChangingLocalStream = false;
 
                 this.$store.commit(SET_MUTE_VIDEO, false);
                 this.$store.commit(SET_MUTE_AUDIO, localAudioMutedInitial);
@@ -256,7 +256,7 @@
                 }
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
-                    if (Object.keys(this.localStreams).length && !this.isCnangingLocalStream && !this.restartingStarted) { // TODO rewrite
+                    if (Object.keys(this.localStreams).length && !this.isChangingLocalStream && !this.restartingStarted) { // TODO rewrite
                         const localStreamId = this.$refs.localVideoComponent.getStreamId(); // todo use something instead this.$refs.localVideoComponent
                         console.debug("Checking self user", "streamId", localStreamId);
                         this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: localStreamId, includeOtherStreamIds: true}).then(value => {
@@ -330,7 +330,7 @@
             },
             // TODO rename to something 'addScreenSharingStream' and refactor
             onSwitchMediaStream({screen = false}) {
-                this.isCnangingLocalStream = true;
+                this.isChangingLocalStream = true;
                 //this.clearLocalMediaStream(); // todo seems not need when we add stream with screen
                 //this.$refs.localVideoComponent.setSource(null); // todo use something instead this.$refs.localVideoComponent
                 this.localPublisherKey++;
@@ -341,7 +341,7 @@
                     });
             },
             getAndPublishLocalMediaStream({screen = false}) {
-                this.isCnangingLocalStream = true;
+                this.isChangingLocalStream = true;
 
                 const resolution = getVideoResolution();
 
@@ -353,7 +353,7 @@
                 if (!audio && !video && !screen) {
                     console.info("Not able to build local media stream, returning a successful promise");
                     this.$store.commit(SET_SHARE_SCREEN, false);
-                    // this.isCnangingLocalStream = false;
+                    // this.isChangingLocalStream = false;
                     return Promise.reject('No media configured');
                 }
 
@@ -402,13 +402,11 @@
                   localVideoComponent.setDisplayAudioMute(actualAudioMuted);
                   localVideoComponent.setVideoMute(!video);
                   localVideoComponent.resetFailureCount();
-                  this.isCnangingLocalStream = false;
+                  this.isChangingLocalStream = false;
 
                   this.notifyWithData2(streamId);
 
-                  return Promise.resolve({
-                    component: localVideoComponent // TODO do we really need it because we already added in appendUserVideo()
-                  })
+                  return Promise.resolve(true)
                 })
             },
             startVideoProcess() {
@@ -445,7 +443,7 @@
                     console.info("Will not restart video process because", "closingStarted", this.closingStarted, "restartingStarted", this.restartingStarted);
                 }
             },
-            onStartVideoMuting(requestedState) {
+            onStartVideoMuting(requestedState, streamId) {
                 for (const streamId in this.localStreams) {
                     const streamHolder = this.localStreams[streamId];
                     if (streamHolder) {
@@ -464,30 +462,41 @@
                     }
                 }
             },
-            onStartAudioMuting(requestedState) {
+            onStartAudioMuting(requestedState, filteringStreamId) {
                 this.ensureAudioIsEnabledAccordingBrowserPolicies();
+
+                const muteFunction = (streamHolder, streamId) => {
+                    if (requestedState) {
+                        streamHolder.stream.mute("audio");
+                        this.$store.commit(SET_MUTE_AUDIO, requestedState);
+                        streamHolder.component.setDisplayAudioMute(requestedState);
+                        this.notifyWithData2(streamId);
+                    } else {
+                        streamHolder.stream.unmute("audio").then(value => {
+                            this.$store.commit(SET_MUTE_AUDIO, requestedState);
+                            streamHolder.component.setDisplayAudioMute(requestedState);
+                            this.notifyWithData2(streamId);
+                        })
+                    }
+                }
 
                 for (const streamId in this.localStreams) {
                     const streamHolder = this.localStreams[streamId];
                     if (streamHolder) {
-                        if (requestedState) {
-                            streamHolder.stream.mute("audio");
-                            this.$store.commit(SET_MUTE_AUDIO, requestedState);
-                            streamHolder.component.setDisplayAudioMute(requestedState);
-                            this.notifyWithData2(streamId);
+                        if (filteringStreamId) {
+                            if (filteringStreamId == streamId) {
+                                muteFunction(streamHolder, streamId);
+                                break;
+                            }
                         } else {
-                            streamHolder.stream.unmute("audio").then(value => {
-                                this.$store.commit(SET_MUTE_AUDIO, requestedState);
-                                streamHolder.component.setDisplayAudioMute(requestedState);
-                                this.notifyWithData2(streamId);
-                            })
+                            muteFunction(streamHolder, streamId);
                         }
                     }
                 }
             },
             onForceMuteByAdmin(dto) {
                 if(dto.chatId == this.chatId) {
-                    this.onStartAudioMuting(true);
+                    this.onStartAudioMuting(true, null);
                 }
             },
             onVideoCallChanged(dto) {
@@ -578,19 +587,11 @@
             this.videoContainerDiv = null;
         },
         created() {
-            bus.$on(SHARE_SCREEN_START, this.onStartScreenSharing);
-            bus.$on(SHARE_SCREEN_STOP, this.onStopScreenSharing);
-            bus.$on(VIDEO_START_MUTING, this.onStartVideoMuting);
-            bus.$on(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
         destroyed() {
-            bus.$off(SHARE_SCREEN_START, this.onStartScreenSharing);
-            bus.$off(SHARE_SCREEN_STOP, this.onStopScreenSharing);
-            bus.$off(VIDEO_START_MUTING, this.onStartVideoMuting);
-            bus.$off(AUDIO_START_MUTING, this.onStartAudioMuting);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);

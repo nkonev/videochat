@@ -22,24 +22,6 @@
             <v-divider></v-divider>
 
             <v-list dense>
-                <v-list-item @click="toggleMuteAudio()" v-if="shouldDisplayAudioUnmute()">
-                    <v-list-item-icon><v-icon color="error">mdi-microphone-off</v-icon></v-list-item-icon>
-                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.unmute_audio') }}</v-list-item-title></v-list-item-content>
-                </v-list-item>
-                <v-list-item @click="toggleMuteAudio()" v-if="shouldDisplayAudioMute()">
-                    <v-list-item-icon><v-icon color="primary">mdi-microphone</v-icon></v-list-item-icon>
-                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.mute_audio') }}</v-list-item-title></v-list-item-content>
-                </v-list-item>
-
-                <v-list-item @click="toggleMuteVideo()" v-if="shouldDisplayVideoUnmute()">
-                      <v-list-item-icon><v-icon color="error">mdi-video-off</v-icon></v-list-item-icon>
-                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.unmute_video') }}</v-list-item-title></v-list-item-content>
-                </v-list-item>
-                <v-list-item @click="toggleMuteVideo()" v-if="shouldDisplayVideoMute()">
-                    <v-list-item-icon><v-icon color="primary">mdi-video</v-icon></v-list-item-icon>
-                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.mute_video') }}</v-list-item-title></v-list-item-content>
-                </v-list-item>
-
                 <v-list-item @click="goHome()">
                     <v-list-item-icon><v-icon>mdi-home-city</v-icon></v-list-item-icon>
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.chats') }}</v-list-item-title></v-list-item-content>
@@ -96,10 +78,6 @@
                 :clipped-left="true"
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
-            <v-btn v-if="showHangButton && !shareScreen && $vuetify.breakpoint.smAndUp" icon @click="shareScreenStart()"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
-            <v-btn v-if="showHangButton && shareScreen" icon @click="shareScreenStop()"><v-icon>mdi-stop</v-icon></v-btn>
-            <v-btn v-if="shouldDisplayAudioMute()" icon @click="toggleMuteAudio()"><v-icon>mdi-microphone</v-icon></v-btn>
-            <v-btn v-if="shouldDisplayAudioUnmute()" icon @click="toggleMuteAudio()"><v-icon>mdi-microphone-off</v-icon></v-btn>
             <v-badge
                 v-if="showCallButton || showHangButton"
                 :content="videoChatUsersCount"
@@ -302,12 +280,6 @@
                 console.log("stopCall");
                 this.$router.push({ name: chat_name});
             },
-            shareScreenStart() {
-                bus.$emit(SHARE_SCREEN_START);
-            },
-            shareScreenStop() {
-                bus.$emit(SHARE_SCREEN_STOP);
-            },
             onChangeWsStatus({connected, wasInitialized}) {
                 console.log("onChangeWsStatus: connected", connected, "wasInitialized", wasInitialized)
                 this.wsConnected = connected;
@@ -348,24 +320,6 @@
             },
             findUser() {
                 bus.$emit(OPEN_FIND_USER)
-            },
-            toggleMuteAudio() {
-                bus.$emit(AUDIO_START_MUTING, !this.audioMuted)
-            },
-            toggleMuteVideo() {
-                bus.$emit(VIDEO_START_MUTING, !this.videoMuted)
-            },
-            shouldDisplayAudioUnmute() {
-                return getStoredAudioDevicePresents() && this.isVideoRoute() && this.audioMuted && this.currentUser != null;
-            },
-            shouldDisplayAudioMute() {
-                return getStoredAudioDevicePresents() && this.isVideoRoute() && !this.audioMuted && this.currentUser != null;
-            },
-            shouldDisplayVideoUnmute() {
-                return !this.shareScreen && this.isVideoRoute() && this.videoMuted;
-            },
-            shouldDisplayVideoMute() {
-                return !this.shareScreen && this.isVideoRoute() && !this.videoMuted;
             },
             shouldDisplayFiles() {
                 return this.chatId;

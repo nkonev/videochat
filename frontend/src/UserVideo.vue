@@ -1,7 +1,13 @@
 <template>
-    <div class="video-container-element">
+    <div class="video-container-element" @mouseenter="showControls=true" @mouseleave="showControls=false" @click="showControls=!showControls">
+        <div class="video-container-element-control" v-show="showControls" @click="suppress">
+            <v-btn icon><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
+            <v-btn icon><v-icon class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
+            <v-btn icon><v-icon large class="video-container-element-control-item" @click="onEnterFullscreen">mdi-arrow-expand-all</v-icon></v-btn>
+            <v-btn icon><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
+        </div>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
-        <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted" v-on:dblclick="onDoubleClick"/>
+        <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted"/>
         <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
@@ -23,7 +29,8 @@ export default {
             avatar: "",
             videoMute: false,
             userId: null,
-            failureCount: 0
+            failureCount: 0,
+            showControls: false
       }
     },
 
@@ -56,13 +63,16 @@ export default {
         setStreamMuted(b) {
             this.$refs.videoRef.muted = b;
         },
-        onDoubleClick(e) {
-            const elem = e.target;
+        onEnterFullscreen(e) {
+            const elem = this.$refs.videoRef;
             if (elem.requestFullscreen) {
                 elem.requestFullscreen();
             } else if (elem.webkitRequestFullscreen) { // Safari
                 elem.webkitRequestFullscreen();
             }
+        },
+        suppress(e) {
+            e.stopImmediatePropagation();
         },
         setSpeaking(speaking) {
             this.speaking = speaking;
@@ -87,7 +97,7 @@ export default {
         },
         getFailureCount() {
             return this.failureCount;
-        }
+        },
     },
     computed: {
         avatarIsSet() {
@@ -118,6 +128,18 @@ export default {
     .video-element {
         height 100% !important
     }
+
+    .video-container-element-control {
+        display inherit
+        margin: 0;
+        position: fixed
+    }
+
+    .video-container-element-control-item {
+        cursor pointer
+        text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
+    }
+
 
     .video-container-element-caption {
         display inherit
