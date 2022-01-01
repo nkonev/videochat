@@ -1,5 +1,4 @@
 <template>
-
     <div class="video-container-element" @mouseenter="showControls=true" @mouseleave="showControls=false" @click="showControls=!showControls">
         <div class="video-container-element-control" v-show="showControls" @click="suppress">
             <v-btn icon><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
@@ -33,7 +32,7 @@ export default {
             videoMute: false,
             userId: null,
             failureCount: 0,
-            showControls: true
+            showControls: false
       }
     },
 
@@ -170,6 +169,12 @@ export default {
         bottom 0.4em
         text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
         position: absolute
+        width: 90%;
+        //word-wrap: break-word;
+        //overflow-wrap: break-all
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .video-container-element-caption-speaking {
