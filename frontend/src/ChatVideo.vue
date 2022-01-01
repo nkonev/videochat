@@ -95,7 +95,7 @@
                 const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId, localVideoObject: localVideoObject }});
                 component.$mount();
                 this.videoContainerDiv.appendChild(component.$el);
-                component.setSource(stream);
+                component.setStream(stream);
                 appendTo[stream.id] = {stream, component};
                 return component;
             },
@@ -341,7 +341,7 @@
                       signalLocal: this.signalLocal,
                       parent: this
                   });
-                  localVideoComponent.setSource(localMediaStream);
+                  localVideoComponent.setStream(localMediaStream);
                   localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
                   localVideoComponent.setUserName(this.currentUser.login);
                   localVideoComponent.setAvatar(this.currentUser.avatar);
