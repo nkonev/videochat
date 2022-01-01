@@ -91,8 +91,9 @@
                 </v-btn>
                 <v-btn v-if="showHangButton" icon @click="stopCall">
                     <v-icon color="red">mdi-phone</v-icon>
-            </v-btn>
+                </v-btn>
             </v-badge>
+            <v-btn v-if="showHangButton" icon @click="addVideoSource"><v-icon>mdi-video-plus</v-icon></v-btn>
 
             <v-spacer></v-spacer>
             <v-btn class="ma-2" text color="white" @click="onInfoClicked" :disabled="!chatId">
@@ -184,18 +185,18 @@
         UNSET_USER
     } from "./store";
     import bus, {
-      AUDIO_START_MUTING,
-      VIDEO_START_MUTING,
-      CHANGE_WEBSOCKET_STATUS,
-      LOGGED_OUT,
-      OPEN_CHAT_EDIT,
-      OPEN_PARTICIPANTS_DIALOG,
-      OPEN_PERMISSIONS_WARNING_MODAL,
-      SHARE_SCREEN_START,
-      SHARE_SCREEN_STOP,
-      VIDEO_CALL_INVITED,
-      REFRESH_ON_WEBSOCKET_RESTORED,
-      OPEN_FIND_USER, OPEN_VIEW_FILES_DIALOG, OPEN_VIDEO_SETTINGS, OPEN_LANGUAGE_MODAL,
+        AUDIO_START_MUTING,
+        VIDEO_START_MUTING,
+        CHANGE_WEBSOCKET_STATUS,
+        LOGGED_OUT,
+        OPEN_CHAT_EDIT,
+        OPEN_PARTICIPANTS_DIALOG,
+        OPEN_PERMISSIONS_WARNING_MODAL,
+        SHARE_SCREEN_START,
+        SHARE_SCREEN_STOP,
+        VIDEO_CALL_INVITED,
+        REFRESH_ON_WEBSOCKET_RESTORED,
+        OPEN_FIND_USER, OPEN_VIEW_FILES_DIALOG, OPEN_VIDEO_SETTINGS, OPEN_LANGUAGE_MODAL, ADD_VIDEO_SOURCE,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -295,6 +296,9 @@
             },
             onInfoClicked() {
                 bus.$emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
+            },
+            addVideoSource() {
+                bus.$emit(ADD_VIDEO_SOURCE);
             },
             onVideoCallInvited(data) {
                 this.invitedVideoChatId = data.chatId;

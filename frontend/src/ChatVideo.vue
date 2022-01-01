@@ -26,6 +26,7 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import bus, {
+        ADD_VIDEO_SOURCE,
         REQUEST_CHANGE_VIDEO_PARAMETERS,
         USER_PROFILE_CHANGED, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
     } from "./bus";
@@ -301,9 +302,6 @@
             onStartScreenSharing() {
                 return this.onSwitchMediaStream({screen: true});
             },
-            onStopScreenSharing() {
-                return this.onSwitchMediaStream({screen: false});
-            },
             // TODO rename to something 'addScreenSharingStream' and refactor
             onSwitchMediaStream({screen = false}) {
                 this.isChangingLocalStream = true;
@@ -555,11 +553,13 @@
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.$on(ADD_VIDEO_SOURCE, this.onStartScreenSharing);
         },
         destroyed() {
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.$off(ADD_VIDEO_SOURCE, this.onStartScreenSharing);
         },
         components: {
             UserVideo
