@@ -1,9 +1,9 @@
 <template>
     <div class="video-container-element" @mouseenter="showControls=true" @mouseleave="showControls=false" @click="showControls=!showControls">
         <div class="video-container-element-control" v-show="showControls" @click="suppress">
-            <v-btn icon><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
-            <v-btn icon><v-icon class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
-            <v-btn icon><v-icon large class="video-container-element-control-item" @click="onEnterFullscreen">mdi-arrow-expand-all</v-icon></v-btn>
+            <v-btn icon @click="doMuteAudio(!audioMute)"><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
+            <v-btn icon @click="doMuteVideo(!videoMute)"><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
+            <v-btn icon @click="onEnterFullscreen"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
             <v-btn icon><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
@@ -55,6 +55,9 @@ export default {
         },
         getStreamId() {
             return this?.$refs?.videoRef?.srcObject?.id;
+        },
+        getStream() {
+            return this?.$refs?.videoRef?.srcObject;
         },
         getVideoElement() {
             return this?.$refs?.videoRef;
@@ -114,7 +117,31 @@ export default {
             };
             this.localVideoObject.signalLocal.notify(PUT_USER_DATA_METHOD, toSend);
         },
-
+        doMuteAudio(requestedState) {
+            if (requestedState) {
+                this.getStream().mute("audio");
+                this.setDisplayAudioMute(requestedState);
+                this.notifyOtherParticipants();
+            } else {
+                this.localVideoObject.parent.ensureAudioIsEnabledAccordingBrowserPolicies();
+                this.getStream().unmute("audio").then(value => {
+                    this.setDisplayAudioMute(requestedState);
+                    this.notifyOtherParticipants();
+                })
+            }
+        },
+        doMuteVideo(requestedState) {
+            if (requestedState) {
+                this.getStream().mute("video");
+                this.setVideoMute(true);
+                this.notifyOtherParticipants();
+            } else {
+                this.getStream().unmute("video").then(value => {
+                    this.setVideoMute(false);
+                    this.notifyOtherParticipants();
+                })
+            }
+        },
     },
     computed: {
         avatarIsSet() {

@@ -338,7 +338,8 @@
                   console.info("Setting local stream", streamId, " into video tag id=", videoTagId);
                   const localVideoComponent = this.appendUserVideo(localMediaStream, videoTagId, this.localStreams, {
                       peerId: this.peerId,
-                      signalLocal: this.signalLocal
+                      signalLocal: this.signalLocal,
+                      parent: this
                   });
                   localVideoComponent.setSource(localMediaStream);
                   localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
@@ -417,39 +418,14 @@
                     }
                 }
             },
-            onStartAudioMuting(requestedState, filteringStreamId) {
-                this.ensureAudioIsEnabledAccordingBrowserPolicies();
-
-                const muteFunction = (streamHolder, streamId) => {
-                    if (requestedState) {
-                        streamHolder.stream.mute("audio");
-                        streamHolder.component.setDisplayAudioMute(requestedState);
-                        streamHolder.component.notifyOtherParticipants();
-                    } else {
-                        streamHolder.stream.unmute("audio").then(value => {
-                            streamHolder.component.setDisplayAudioMute(requestedState);
-                            streamHolder.component.notifyOtherParticipants();
-                        })
-                    }
-                }
-
-                for (const streamId in this.localStreams) {
-                    const streamHolder = this.localStreams[streamId];
-                    if (streamHolder) {
-                        if (filteringStreamId) {
-                            if (filteringStreamId == streamId) {
-                                muteFunction(streamHolder, streamId);
-                                break;
-                            }
-                        } else {
-                            muteFunction(streamHolder, streamId);
-                        }
-                    }
-                }
-            },
             onForceMuteByAdmin(dto) {
                 if(dto.chatId == this.chatId) {
-                    this.onStartAudioMuting(true, null);
+                    for (const streamId in this.localStreams) {
+                        const streamHolder = this.localStreams[streamId];
+                        if (streamHolder) {
+                            streamHolder.component.doMuteAudio(true);
+                        }
+                    }
                 }
             },
             onVideoCallChanged(dto) {

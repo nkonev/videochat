@@ -35,7 +35,6 @@
         methods: {
             onMessageClick(dto) {
                 this.centrifuge.namedRPC(TYPE_MESSAGE_READ, { chatId: parseInt(this.chatId), messageId: dto.id}).then(value => {
-                    console.debug("New messages response", value);
                     if (getData(value)) {
                         const currentNewMessages = getData(value).allUnreadMessages > 0;
                         setIcon(currentNewMessages)
