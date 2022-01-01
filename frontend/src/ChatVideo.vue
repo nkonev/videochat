@@ -295,8 +295,8 @@
                     this.remoteVideoIsMuted = false;
                 }
             },
-            onStartScreenSharing() {
-                this.getAndPublishLocalMediaStream({screen: true})
+            onAddVideoSource(screen) {
+                this.getAndPublishLocalMediaStream({screen: screen})
                     .catch(reason => {
                         console.error("Error during publishing screen stream, won't restart...", reason);
                         this.errorDescription = reason;
@@ -401,23 +401,6 @@
                     console.info("Will not restart video process because", "closingStarted", this.closingStarted, "restartingStarted", this.restartingStarted);
                 }
             },
-            onStartVideoMuting(requestedState, streamId) {
-                for (const streamId in this.localStreams) {
-                    const streamHolder = this.localStreams[streamId];
-                    if (streamHolder) {
-                        if (requestedState) {
-                            streamHolder.stream.mute("video");
-                            streamHolder.component.setVideoMute(true);
-                            streamHolder.component.notifyOtherParticipants();
-                        } else {
-                            streamHolder.stream.unmute("video").then(value => {
-                                streamHolder.component.setVideoMute(false);
-                                streamHolder.component.notifyOtherParticipants();
-                            })
-                        }
-                    }
-                }
-            },
             onForceMuteByAdmin(dto) {
                 if(dto.chatId == this.chatId) {
                     for (const streamId in this.localStreams) {
@@ -519,13 +502,13 @@
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
-            bus.$on(ADD_VIDEO_SOURCE, this.onStartScreenSharing);
+            bus.$on(ADD_VIDEO_SOURCE, this.onAddVideoSource);
         },
         destroyed() {
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
-            bus.$off(ADD_VIDEO_SOURCE, this.onStartScreenSharing);
+            bus.$off(ADD_VIDEO_SOURCE, this.onAddVideoSource);
         },
         components: {
             UserVideo
