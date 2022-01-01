@@ -64,7 +64,6 @@
                 remoteStreams: {},
                 videoContainerDiv: null,
                 signalLocal: null,
-                localPublisherKey: 1,
                 chatId: null,
                 remoteVideoIsMuted: true,
                 peerId: null,
@@ -150,9 +149,6 @@
                     this.clientLocal.join(`chat${this.chatId}`, this.peerId).then(()=>{
                         console.info("Joined to session, gathering media devices")
                         this.getAndPublishLocalMediaStream({})
-                            .then(value => {
-
-                            })
                             .catch(reason => {
                               console.error("Error during publishing camera stream, won't restart...", reason);
                               this.errorDescription = reason;
@@ -300,19 +296,12 @@
                 }
             },
             onStartScreenSharing() {
-                return this.onSwitchMediaStream({screen: true});
-            },
-            // TODO rename to something 'addScreenSharingStream' and refactor
-            onSwitchMediaStream({screen = false}) {
-                this.isChangingLocalStream = true;
-                //this.clearLocalMediaStream(); // todo seems not need when we add stream with screen
-                //this.$refs.localVideoComponent.setSource(null); // todo use something instead this.$refs.localVideoComponent
-                this.localPublisherKey++;
-                this.getAndPublishLocalMediaStream({screen})
+                this.getAndPublishLocalMediaStream({screen: true})
                     .catch(reason => {
-                      console.error("Error during publishing screen stream, won't restart...", reason);
-                      this.$refs.localVideoComponent.setUserName('Error get getDisplayMedia');
+                        console.error("Error during publishing screen stream, won't restart...", reason);
+                        this.errorDescription = reason;
                     });
+
             },
             getAndPublishLocalMediaStream({screen = false}) {
                 this.isChangingLocalStream = true;
@@ -477,6 +466,7 @@
                 }
             },
             onVideoParametersChanged() { // TODO change parameters of only one stream
+                // todo may be we need to introduce something like this.localPublisherKey++; in order to forcely restart the <video> element
                 this.tryRestartWithResetOncloseHandler();
             },
             enumerateAllStreams(callback) {
