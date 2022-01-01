@@ -163,6 +163,7 @@
                 <VideoSettings/>
                 <FileTextEditModal/>
                 <LanguageModal/>
+                <VideoDeviceSettings/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -208,6 +209,7 @@
     import VideoSettings from './VideoSettings';
     import FileTextEditModal from "./FileTextEditModal";
     import LanguageModal from "./LanguageModal";
+    import VideoDeviceSettings from "./VideoDeviceSettings";
     import {getData} from "@/centrifugeConnection";
 
     const audio = new Audio("/call.mp3");
@@ -239,6 +241,7 @@
             VideoSettings,
             FileTextEditModal,
             LanguageModal,
+            VideoDeviceSettings
         },
         methods:{
             toggleLeftNavigation() {
