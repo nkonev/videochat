@@ -215,7 +215,7 @@
                     localMediaStream.unpublish();
                 }
             },
-            leaveSession() { // TODO think is it ok to clear all (scree, cam1, cam2) in case error
+            leaveSession() { // we won't do restart particular stream in case error, we are gonna restart all
                 for (const streamId in this.remoteStreams) {
                     console.log("Cleaning remote stream " + streamId);
                     const component = this.remoteStreams[streamId].component;
@@ -478,7 +478,7 @@
                     }
                 }
             },
-            onVideoParametersChanged() {
+            onVideoParametersChanged() { // TODO change parameters of only one stream
                 this.tryRestartWithResetOncloseHandler();
             },
             enumerateAllStreams(callback) {
