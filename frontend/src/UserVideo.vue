@@ -32,7 +32,7 @@ export default {
             videoMute: false,
             userId: null,
             failureCount: 0,
-            showControls: false
+            showControls: true
       }
     },
 
@@ -132,6 +132,7 @@ export default {
         height 100%
         width min-content
         overflow-wrap anywhere
+        position relative
     }
 
     .video-container-element:nth-child(even) {
@@ -147,13 +148,10 @@ export default {
     }
 
     .video-container-element-control {
-        display inherit
-        margin: 0;
-        position: fixed
+        position: absolute
     }
 
     .video-container-element-control-item {
-        cursor pointer
         text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
     }
 
