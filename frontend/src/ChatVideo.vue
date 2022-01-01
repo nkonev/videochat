@@ -561,9 +561,15 @@
     #video-container {
         display: flex;
         flex-direction: row;
-        overflow-x: auto;
+        overflow-x: scroll;
         overflow-y: hidden;
+        scrollbar-width: none;
+        //scroll-snap-align width
+        //scroll-padding 0
         height 100%
+        width 100%
+        //object-fit: contain;
+        //box-sizing: border-box
     }
 
 </style>

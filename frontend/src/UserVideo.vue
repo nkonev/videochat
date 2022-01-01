@@ -1,4 +1,5 @@
 <template>
+
     <div class="video-container-element" @mouseenter="showControls=true" @mouseleave="showControls=false" @click="showControls=!showControls">
         <div class="video-container-element-control" v-show="showControls" @click="suppress">
             <v-btn icon><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
@@ -130,9 +131,13 @@ export default {
 <style lang="stylus" scoped>
     .video-container-element {
         height 100%
-        width min-content
-        overflow-wrap anywhere
         position relative
+        display flex
+        flex-direction column
+        align-items: baseline;
+        //width: fit-content
+        //block-size: fit-content
+        //box-sizing: content-box
     }
 
     .video-container-element:nth-child(even) {
@@ -144,6 +149,8 @@ export default {
     }
 
     .video-element {
+        // object-fit: contain;
+        //box-sizing: border-box;
         height 100% !important
     }
 
@@ -159,10 +166,10 @@ export default {
     .video-container-element-caption {
         display inherit
         margin: 0;
-        top -2em
-        right -0.4em
+        left 0.4em
+        bottom 0.4em
         text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
-        position: relative
+        position: absolute
     }
 
     .video-container-element-caption-speaking {
