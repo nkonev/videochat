@@ -78,6 +78,8 @@
                 :clipped-left="true"
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
+            <v-btn v-if="showHangButton" icon @click="addVideoSource(true)"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
+            <v-btn v-if="showHangButton" icon @click="addVideoSource(false)"><v-icon>mdi-video-plus</v-icon></v-btn>
             <v-badge
                 v-if="showCallButton || showHangButton"
                 :content="videoChatUsersCount"
@@ -93,8 +95,6 @@
                     <v-icon color="red">mdi-phone</v-icon>
                 </v-btn>
             </v-badge>
-            <v-btn v-if="showHangButton" icon @click="addVideoSource(true)"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
-            <v-btn v-if="showHangButton" icon @click="addVideoSource(false)"><v-icon>mdi-video-plus</v-icon></v-btn>
 
             <v-spacer></v-spacer>
             <v-btn class="ma-2" text color="white" @click="onInfoClicked" :disabled="!chatId">

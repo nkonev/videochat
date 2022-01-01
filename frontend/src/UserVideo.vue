@@ -1,10 +1,10 @@
 <template>
     <div class="video-container-element" @mouseenter="showControls=true" @mouseleave="showControls=false" @click="showControls=!showControls">
-        <div class="video-container-element-control" v-show="showControls" v-if="isLocal" @click="suppress">
-            <v-btn icon @click="doMuteAudio(!audioMute)"><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
-            <v-btn icon @click="doMuteVideo(!videoMute)"><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
+        <div class="video-container-element-control" v-show="showControls" @click="suppress">
+            <v-btn icon @click="doMuteAudio(!audioMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
+            <v-btn icon @click="doMuteVideo(!videoMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
             <v-btn icon @click="onEnterFullscreen"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
-            <v-btn icon><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
+            <v-btn icon v-if="isLocal" ><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted"/>
