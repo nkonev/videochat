@@ -152,12 +152,9 @@ export default {
                 return
             }
             console.log("Request to change device", deviceId, kind, "stream to change", this.getStream());
-            //videoElement.pause();
-            //this.videoKey++;
             this.getStream().switchDevice(kind, deviceId).then(()=>{
                 this.setStream(this.getStream());
                 bus.$emit(DEVICE_CHANGED, null);
-                //videoElement.play();
             }).catch(e => {
                 console.error("Request to change device failed", deviceId, kind, "stream to change", this.getStream(), e);
                 bus.$emit(DEVICE_CHANGED, e);
