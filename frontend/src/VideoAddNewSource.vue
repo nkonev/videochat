@@ -1,8 +1,8 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" max-width="440" persistent>
-            <v-card v-if="show" :disabled="changing" :loading="changing">
-                <v-card-title>{{ $vuetify.lang.t('$vuetify.video_settings') }}</v-card-title>
+            <v-card v-if="show">
+                <v-card-title>{{ $vuetify.lang.t('$vuetify.source_add') }}</v-card-title>
 
                 <v-card-text class="px-4 py-0">
                     <v-select
@@ -11,7 +11,6 @@
                         item-text="label"
                         item-value="deviceId"
                         label="Select video device"
-                        @change="changeVideoDevice"
                         dense
                         solo
                         v-model="videoDevice"
@@ -22,22 +21,14 @@
                         item-text="label"
                         item-value="deviceId"
                         label="Select audio device"
-                        @change="changeAudioDevice"
                         dense
                         solo
                         v-model="audioDevice"
                     ></v-select>
-                    <v-alert
-                        dismissible
-                        v-model="showAlert"
-                        type="error"
-                    >
-                        {{error}}
-                    </v-alert>
-
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
+                    <v-btn v-if="videoDevice != null && audioDevice != null" color="success" class="mr-4" @click="addSource()">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
                     <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                     <v-spacer/>
                 </v-card-actions>
@@ -50,44 +41,32 @@
 
 <script>
     import bus, {
-        CHANGE_DEVICE,
-        DEVICE_CHANGED,
+        ADD_VIDEO_SOURCE,
+        ADD_VIDEO_SOURCE_DIALOG,
         OPEN_DEVICE_SETTINGS,
     } from "./bus";
-    import {videochat_name} from "./routes";
 
     export default {
         data () {
             return {
-                changing: false,
                 show: false,
                 videoDevices: [],
-                videoDevice: null,
+                videoDevice: null, // actually contains id due to v-select configuration
                 audioDevices: [],
-                audioDevice: null,
-                elementIdToProcess: null,
-                error: null,
-                showAlert: false,
+                audioDevice: null, // actually contains id due to v-select configuration
             }
         },
         methods: {
-            showModal(elementIdToProcess) {
+            showModal() {
                 this.show = true;
-                this.elementIdToProcess = elementIdToProcess;
                 this.requestVideoDeviceItems()
             },
             closeModal() {
                 this.show = false;
                 this.videoDevices = [];
-                this.videoDevice = null; // actually contains id due to v-select configuration
+                this.videoDevice = null;
                 this.audioDevices = [];
-                this.audioDevice = null; // actually contains id due to v-select configuration
-                this.elementIdToProcess = null;
-                this.error = null;
-                this.showAlert = false;
-            },
-            isVideoRoute() {
-                return this.$route.name == videochat_name
+                this.audioDevice = null;
             },
             requestVideoDeviceItems() {
                 navigator.mediaDevices.enumerateDevices()
@@ -106,45 +85,16 @@
                         console.log(err.name + ": " + err.message);
                     });
             },
-            onVideoDeviceChanged(e) {
-                if (!this.show) {
-                    return
-                }
-                this.changing = false;
-                this.error = e;
-                this.showAlert = e != null;
-            },
-            changeVideoDevice(newDeviceId) {
-                this.error = null;
-                this.showAlert = false;
-                console.log("Invoked changeVideoDevice");
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
-                bus.$emit(CHANGE_DEVICE, {kind: 'video', deviceId: newDeviceId, elementIdToProcess: this.elementIdToProcess});
-            },
-            changeAudioDevice(newDeviceId) {
-                this.error = null;
-                this.showAlert = false;
-                console.log("Invoked changeAudioDevice");
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
-                bus.$emit(CHANGE_DEVICE, {kind: 'audio', deviceId: newDeviceId, elementIdToProcess: this.elementIdToProcess});
-            },
-        },
-        computed: {
-            chatId() {
-                return this.$route.params.id
-            },
+            addSource() {
+                bus.$emit(ADD_VIDEO_SOURCE, this.videoDevice, this.audioDevice);
+                this.closeModal();
+            }
         },
         created() {
-            bus.$on(OPEN_DEVICE_SETTINGS, this.showModal);
-            bus.$on(DEVICE_CHANGED, this.onVideoDeviceChanged)
+            bus.$on(ADD_VIDEO_SOURCE_DIALOG, this.showModal);
         },
         destroyed() {
             bus.$off(OPEN_DEVICE_SETTINGS, this.showModal);
-            bus.$off(DEVICE_CHANGED, this.onVideoDeviceChanged)
         },
     }
 </script>

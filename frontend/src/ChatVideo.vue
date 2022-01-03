@@ -26,7 +26,7 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import bus, {
-        ADD_VIDEO_SOURCE,
+        ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE,
         REQUEST_CHANGE_VIDEO_PARAMETERS,
         USER_PROFILE_CHANGED, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
     } from "./bus";
@@ -313,15 +313,21 @@
                     this.remoteVideoIsMuted = false;
                 }
             },
-            onAddVideoSource(screen) {
-                this.getAndPublishLocalMediaStream({screen: screen})
+            onAddScreenSource() {
+                this.getAndPublishLocalMediaStream({screen: true})
                     .catch(reason => {
                         console.error("Error during publishing screen stream, won't restart...", reason);
                         this.errorDescription = reason;
                     });
-
             },
-            getAndPublishLocalMediaStream({screen = false}) {
+            onAddVideoSource(videoId, audioId) {
+                this.getAndPublishLocalMediaStream({screen: false, videoId, audioId})
+                    .catch(reason => {
+                        console.error("Error during publishing screen stream, won't restart...", reason);
+                        this.errorDescription = reason;
+                    });
+            },
+            getAndPublishLocalMediaStream({screen = false, videoId = null, audioId = null}) {
                 this.isChangingLocalStream = true;
 
                 const resolution = getVideoResolution();
@@ -337,6 +343,10 @@
                     return Promise.reject('No media configured');
                 }
 
+                const audioConstraints = audioId ? { deviceId: audioId } : audio;
+                const videoConstraints = videoId ?  { deviceId: videoId } : video;
+                console.info("Selected constraints", "video", videoConstraints, "audio", audioConstraints);
+
                 const localStreamSpec = screen ?
                     LocalStream.getDisplayMedia({
                         audio: audio,
@@ -346,8 +356,8 @@
                     }) :
                     LocalStream.getUserMedia({
                         resolution: resolution,
-                        audio: audio,
-                        video: video,
+                        audio: audioConstraints,
+                        video: videoConstraints,
                         codec: this.preferredCodec,
                         simulcast: this.simulcast,
                     });
@@ -379,7 +389,7 @@
                       }
                   });
                   localVideoComponent.setDisplayAudioMute(actualAudioMuted);
-                  localVideoComponent.setVideoMute(!video);
+                  localVideoComponent.setVideoMute(!videoConstraints);
                   localVideoComponent.resetFailureCount();
                   this.isChangingLocalStream = false;
                   localVideoComponent.notifyOtherParticipants();
@@ -521,12 +531,14 @@
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onGlobalVideoParametersChanged);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.$on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
             bus.$on(ADD_VIDEO_SOURCE, this.onAddVideoSource);
         },
         destroyed() {
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onGlobalVideoParametersChanged);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
             bus.$off(ADD_VIDEO_SOURCE, this.onAddVideoSource);
         },
         components: {

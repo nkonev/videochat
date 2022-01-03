@@ -88,4 +88,5 @@ export default {
     btn_update: "Обновить",
     websocket_not_connected: "Websocket не подключен",
     cancel: "Отменить",
+    source_add: "Добавить источник",
 }

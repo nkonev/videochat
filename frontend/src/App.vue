@@ -78,8 +78,8 @@
                 :clipped-left="true"
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
-            <v-btn v-if="showHangButton" icon @click="addVideoSource(true)"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
-            <v-btn v-if="showHangButton" icon @click="addVideoSource(false)"><v-icon>mdi-video-plus</v-icon></v-btn>
+            <v-btn v-if="showHangButton" icon @click="addScreenSource()"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
+            <v-btn v-if="showHangButton" icon @click="addVideoSource()"><v-icon>mdi-video-plus</v-icon></v-btn>
             <v-badge
                 v-if="showCallButton || showHangButton"
                 :content="videoChatUsersCount"
@@ -164,6 +164,7 @@
                 <FileTextEditModal/>
                 <LanguageModal/>
                 <VideoDeviceSettings/>
+                <VideoAddNewSource/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -194,7 +195,12 @@
         OPEN_PERMISSIONS_WARNING_MODAL,
         VIDEO_CALL_INVITED,
         REFRESH_ON_WEBSOCKET_RESTORED,
-        OPEN_FIND_USER, OPEN_VIEW_FILES_DIALOG, OPEN_VIDEO_SETTINGS, OPEN_LANGUAGE_MODAL, ADD_VIDEO_SOURCE,
+        OPEN_FIND_USER,
+        OPEN_VIEW_FILES_DIALOG,
+        OPEN_VIDEO_SETTINGS,
+        OPEN_LANGUAGE_MODAL,
+        ADD_VIDEO_SOURCE_DIALOG,
+        ADD_SCREEN_SOURCE,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -211,6 +217,7 @@
     import LanguageModal from "./LanguageModal";
     import VideoDeviceSettings from "./VideoDeviceSettings";
     import {getData} from "@/centrifugeConnection";
+    import VideoAddNewSource from "@/VideoAddNewSource";
 
     const audio = new Audio("/call.mp3");
 
@@ -241,7 +248,8 @@
             VideoGlobalSettings,
             FileTextEditModal,
             LanguageModal,
-            VideoDeviceSettings
+            VideoDeviceSettings,
+            VideoAddNewSource
         },
         methods:{
             toggleLeftNavigation() {
@@ -297,8 +305,11 @@
             onInfoClicked() {
                 bus.$emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
             },
-            addVideoSource(screen) {
-                bus.$emit(ADD_VIDEO_SOURCE, screen);
+            addVideoSource() {
+                bus.$emit(ADD_VIDEO_SOURCE_DIALOG);
+            },
+            addScreenSource() {
+                bus.$emit(ADD_SCREEN_SOURCE);
             },
             onVideoCallInvited(data) {
                 this.invitedVideoChatId = data.chatId;
