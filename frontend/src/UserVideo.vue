@@ -161,8 +161,9 @@ export default {
             });
         },
         onClose() {
+            const streamId = this.getStreamId();
             this.localVideoObject.parent.clearLocalMediaStream(this.getStream());
-            this.localVideoObject.parent.removeStream(this.getStreamId(), this, this.localVideoObject.parent.localStreams);
+            this.localVideoObject.parent.removeStream(streamId, this, this.localVideoObject.parent.localStreams);
         }
     },
     computed: {
