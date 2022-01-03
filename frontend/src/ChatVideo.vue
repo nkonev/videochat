@@ -349,7 +349,7 @@
 
                 const localStreamSpec = screen ?
                     LocalStream.getDisplayMedia({
-                        audio: audio,
+                        audio: audioConstraints,
                         video: true,
                         codec: this.preferredCodec,
                         simulcast: this.simulcast,
