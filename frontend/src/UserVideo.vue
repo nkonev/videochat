@@ -45,7 +45,7 @@ export default {
         initialMuted: {
             type: Boolean
         },
-        localVideoObject: {
+        localVideoProperties: {
             type: Object
         }
     },
@@ -109,12 +109,12 @@ export default {
             // notify another participants, they will receive VIDEO_CALL_CHANGED
             const toSend = {
                 avatar: this.avatarIsSet ? this.avatar : null,
-                peerId: this.localVideoObject.peerId,
+                peerId: this.localVideoProperties.peerId,
                 streamId: this.getStreamId(),
                 videoMute: this.videoMute,
                 audioMute: this.audioMute
             };
-            this.localVideoObject.signalLocal.notify(PUT_USER_DATA_METHOD, toSend);
+            this.localVideoProperties.signalLocal.notify(PUT_USER_DATA_METHOD, toSend);
         },
         doMuteAudio(requestedState) {
             if (requestedState) {
@@ -122,7 +122,7 @@ export default {
                 this.setDisplayAudioMute(requestedState);
                 this.notifyOtherParticipants();
             } else {
-                this.localVideoObject.parent.ensureAudioIsEnabledAccordingBrowserPolicies();
+                this.localVideoProperties.parent.ensureAudioIsEnabledAccordingBrowserPolicies();
                 this.getStream().unmute("audio").then(value => {
                     this.setDisplayAudioMute(requestedState);
                     this.notifyOtherParticipants();
@@ -159,8 +159,8 @@ export default {
         },
         onClose() {
             const streamId = this.getStreamId();
-            this.localVideoObject.parent.clearLocalMediaStream(this.getStream());
-            this.localVideoObject.parent.removeStream(streamId, this, this.localVideoObject.parent.localStreams);
+            this.localVideoProperties.parent.clearLocalMediaStream(this.getStream());
+            this.localVideoProperties.parent.removeStream(streamId, this, this.localVideoProperties.parent.localStreams);
         }
     },
     computed: {
@@ -171,7 +171,7 @@ export default {
             return this.failureCount > 0;
         },
         isLocal() {
-            return !!this.localVideoObject;
+            return !!this.localVideoProperties;
         }
     },
     created(){

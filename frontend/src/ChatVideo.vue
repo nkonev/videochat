@@ -94,8 +94,8 @@
                 this.ensureAudioIsEnabledAccordingBrowserPolicies();
                 this.showPermissionAsk = false;
             },
-            appendUserVideo(stream, videoTagId, appendTo, localVideoObject) {
-                const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId, localVideoObject: localVideoObject }});
+            appendUserVideo(stream, videoTagId, appendTo, localVideoProperties) {
+                const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId, localVideoProperties: localVideoProperties }});
                 component.$mount();
                 this.videoContainerDiv.appendChild(component.$el);
                 component.setStream(stream);
