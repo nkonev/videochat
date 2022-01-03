@@ -160,7 +160,7 @@
                 <FindUser/>
                 <FileUploadModal/>
                 <FileListModal/>
-                <VideoSettings/>
+                <VideoGlobalSettings/>
                 <FileTextEditModal/>
                 <LanguageModal/>
                 <VideoDeviceSettings/>
@@ -206,7 +206,7 @@
     import FindUser from "./FindUser";
     import FileUploadModal from './FileUploadModal';
     import FileListModal from "./FileListModal";
-    import VideoSettings from './VideoSettings';
+    import VideoGlobalSettings from './VideoGlobalSettings';
     import FileTextEditModal from "./FileTextEditModal";
     import LanguageModal from "./LanguageModal";
     import VideoDeviceSettings from "./VideoDeviceSettings";
@@ -238,7 +238,7 @@
             FindUser,
             FileUploadModal,
             FileListModal,
-            VideoSettings,
+            VideoGlobalSettings,
             FileTextEditModal,
             LanguageModal,
             VideoDeviceSettings
