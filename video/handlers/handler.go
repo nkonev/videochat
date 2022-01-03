@@ -71,10 +71,6 @@ type UserByStreamId struct {
 	StreamId string `json:"streamId"`
 }
 
-type GetAliveStreamIds struct {
-	ChatId int64 `json:"chatId"`
-}
-
 func NewHandler(
 	upgrader *websocket.Upgrader,
 	sfu *sfu.SFU,
@@ -221,7 +217,7 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userDto, otherStreamIds, err := h.service.UserByStreamId(chatId, streamId, true, userId)
+	userDto, err := h.service.UserByStreamId(chatId, streamId, userId)
 	if err != nil {
 		if errors.Is(err, &service.ErrorNoAccess{}) {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -236,7 +232,6 @@ func (h *Handler) UserByStreamId(w http.ResponseWriter, r *http.Request) {
 		resp.Found = true
 		resp.UserDto = userDto
 	}
-	resp.OtherStreamIds = otherStreamIds
 	marshal, err := json.Marshal(resp)
 	if err != nil {
 		logger.Error(err, "Error during marshalling peerWithMetadata to json")
@@ -396,9 +391,12 @@ func parseChatIdAndUserId(chatId, userId string) (int64, int64, error) {
 }
 
 type UserDtoWrapper struct {
-	UserDto        *dto.StoreNotifyDto `json:"userDto"`
-	Found          bool                `json:"found"`
-	OtherStreamIds []string            `json:"otherStreamIds"`
+	UserDto *dto.StoreNotifyDto `json:"userDto"`
+	Found   bool                `json:"found"`
+}
+
+type AliveStreamsResponse struct {
+	AllStreamIds []string `json:"aliveStreamIds"`
 }
 
 func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
@@ -433,7 +431,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			replyError(err)
 			break
 		}
-		userDto, otherStreamIds, err := p.service.UserByStreamId(fromContext.chatId, userByStreamId.StreamId, userByStreamId.IncludeOtherStreamIds, fromContext.userId)
+		userDto, err := p.service.UserByStreamId(fromContext.chatId, userByStreamId.StreamId, fromContext.userId)
 		if err != nil {
 			replyError(err)
 			break
@@ -443,7 +441,15 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 			resp.Found = true
 			resp.UserDto = userDto
 		}
-		resp.OtherStreamIds = otherStreamIds
+		_ = conn.Reply(ctx, req.ID, resp)
+	case "getAliveStreamIds":
+		otherStreamIds, err := p.service.GetAliveStreamIds(fromContext.chatId, fromContext.userId)
+		if err != nil {
+			replyError(err)
+			break
+		}
+		resp := AliveStreamsResponse{}
+		resp.AllStreamIds = otherStreamIds
 		_ = conn.Reply(ctx, req.ID, resp)
 
 	case "putUserData":

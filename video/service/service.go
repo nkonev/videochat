@@ -148,22 +148,21 @@ func getStreamIds(peer0 sfu.Peer) []string {
 	}
 }
 
-func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId string, includeOtherStreamIds bool, behalfUserId int64) (*dto.StoreNotifyDto, []string, error) {
+func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId string, behalfUserId int64) (*dto.StoreNotifyDto, error) {
 	if ok, err := h.CheckAccess(behalfUserId, chatId); err != nil {
-		return nil, nil, &errorInternal{}
+		return nil, &errorInternal{}
 	} else if !ok {
-		return nil, nil, &ErrorNoAccess{}
+		return nil, &ErrorNoAccess{}
 	}
 
 	var sessionInfoDto *dto.StoreNotifyDto
-	var otherStreamIds = []string{}
 
 	h.peerUserIdIndex.RLock()
 	defer h.peerUserIdIndex.RUnlock()
 	selfExtendedPeerInfo, ok := h.peerUserIdIndex.connectionWithData[interestingStreamId]
 	if !ok {
 		logger.Info("User metadata is not exists in map", "stream_id", interestingStreamId, "user_id", behalfUserId, "chat_id", chatId)
-		return nil, otherStreamIds, nil
+		return nil, nil
 	}
 
 	peerFound := false
@@ -178,11 +177,11 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 		}
 	} else {
 		logger.Info("Session is not exists in sfu", "stream_id", interestingStreamId, "user_id", behalfUserId, "chat_id", chatId)
-		return nil, otherStreamIds, nil
+		return nil, nil
 	}
 	if !peerFound {
 		logger.Info("Peer is not active in sfu", "stream_id", interestingStreamId, "user_id", behalfUserId, "chat_id", chatId)
-		return nil, otherStreamIds, nil
+		return nil, nil
 	}
 
 	sessionInfoDto = &dto.StoreNotifyDto{
@@ -194,26 +193,31 @@ func (h *ExtendedService) UserByStreamId(chatId int64, interestingStreamId strin
 		UserId:    selfExtendedPeerInfo.userId,
 	}
 
-	if includeOtherStreamIds {
-		session := h.getSessionWithoutCreatingAnew(chatId)
-		if session != nil {
-			for _, peer := range session.Peers() {
-				var skipPeer = false
-				for _, streamId := range getStreamIds(peer) {
-					if streamId == interestingStreamId {
-						skipPeer = true
-					}
-				}
-				if !skipPeer && h.peerIsAlive(peer) {
-					for _, eci := range h.getExtendedConnectionInfo(peer) {
-						// will return stalled self stream id as otherStreamIds.
-						otherStreamIds = append(otherStreamIds, eci.streamId)
-					}
+	return sessionInfoDto, nil
+}
+
+func (h *ExtendedService) GetAliveStreamIds(chatId int64, behalfUserId int64) ([]string, error) {
+	if ok, err := h.CheckAccess(behalfUserId, chatId); err != nil {
+		return nil, &errorInternal{}
+	} else if !ok {
+		return nil, &ErrorNoAccess{}
+	}
+
+	var allStreamIds = []string{}
+
+	session := h.getSessionWithoutCreatingAnew(chatId)
+	if session != nil {
+		for _, peer := range session.Peers() {
+			if h.peerIsAlive(peer) {
+				for _, eci := range h.getExtendedConnectionInfo(peer) {
+					// will return stalled self stream id as allStreamIds.
+					allStreamIds = append(allStreamIds, eci.streamId)
 				}
 			}
 		}
 	}
-	return sessionInfoDto, otherStreamIds, nil
+
+	return allStreamIds, nil
 }
 
 // sent to chat through RabbitMQ

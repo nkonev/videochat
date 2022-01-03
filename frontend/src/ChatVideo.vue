@@ -48,13 +48,14 @@
 
     let pingTimerId;
     const USER_BY_STREAM_ID_METHOD = "userByStreamId";
+    const GET_ALIVE_STREAM_IDS_METHOD = "getAliveStreamIds";
+
     const KICK_NOTIFICATION = "kick";
     const FORCE_MUTE_NOTIFICATION = "force_mute";
 
     const pingInterval = 5000;
     const videoProcessRestartInterval = 1000;
     const MAX_MISSED_FAILURES = 5;
-    const localAudioMutedInitial = false; // actually works only with camera, screen sharing always started without audio stream
 
     export default {
         data() {
@@ -239,39 +240,48 @@
                 this.isChangingLocalStream = false;
             },
             startHealthCheckPing() {
-                if (true) {
-                    return
-                }
                 console.log("Setting up ping every", pingInterval, "ms");
                 pingTimerId = setInterval(()=>{
-                    if (Object.keys(this.localStreams).length && !this.isChangingLocalStream && !this.restartingStarted) { // TODO rewrite
-                        const localStreamId = this.$refs.localVideoComponent.getStreamId(); // todo use something instead this.$refs.localVideoComponent
-                        console.debug("Checking self user", "streamId", localStreamId);
-                        this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: localStreamId, includeOtherStreamIds: true}).then(value => {
-                            if (!value.found) {
-                                console.warn("Detected absence of self user on server, restarting...", "streamId", localStreamId);
-                                this.$refs.localVideoComponent.incrementFailureCount();
-                                this.tryRestartWithResetOncloseHandler();
-                            } else {
-                                console.debug("Successfully checked self user", "streamId", localStreamId, value);
-
-                                // check other
-                                for (const streamId in this.remoteStreams) {
-                                    console.debug("Checking remote streamId", streamId);
-                                    const streamHolder = this.remoteStreams[streamId];
-                                    const component = streamHolder.component;
-                                    if (value.otherStreamIds.filter(v => v == streamId).length == 0) {
-                                        component.incrementFailureCount();
-
-                                        console.info("Other streamId", streamId, "is not present, failureCount icreased to", component.getFailureCount());
-                                        if (component.getFailureCount() > MAX_MISSED_FAILURES) {
-                                            console.debug("Other streamId", streamId, "subsequently is not present, removing...");
-                                            this.removeStream(streamId, component, this.remoteStreams);
-                                        }
+                    if (!this.isChangingLocalStream && !this.restartingStarted) {
+                        console.debug("Checking local streams");
+                        for (const localStreamId in this.localStreams) {
+                            console.debug("Checking self user", "streamId", localStreamId);
+                            const streamHolder = this.localStreams[localStreamId]
+                            if (streamHolder) {
+                                this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {
+                                    streamId: localStreamId,
+                                }).then(value => {
+                                    if (!value.found) {
+                                        console.warn("Detected absence of self user on server, restarting...", "streamId", localStreamId);
+                                        streamHolder.component.incrementFailureCount();
+                                        this.tryRestartWithResetOncloseHandler();
                                     } else {
-                                        console.debug("Other streamId", streamId, "is present, resetting failureCount");
-                                        component.resetFailureCount();
+                                        console.debug("Successfully checked self user", "streamId", localStreamId, value);
                                     }
+                                });
+                            } else {
+                                console.warn("streamHolder is not present for", "streamId", localStreamId, value);
+                            }
+                        }
+
+                        console.debug("Checking remote streams");
+                        this.signalLocal.call(GET_ALIVE_STREAM_IDS_METHOD, { }).then((value) => {
+                            // check other
+                            for (const streamId in this.remoteStreams) {
+                                console.debug("Checking remote streamId", streamId);
+                                const streamHolder = this.remoteStreams[streamId];
+                                const component = streamHolder.component;
+                                if (value.aliveStreamIds.filter(v => v == streamId).length == 0) {
+                                    component.incrementFailureCount();
+
+                                    console.info("Other streamId", streamId, "is not present, failureCount icreased to", component.getFailureCount());
+                                    if (component.getFailureCount() > MAX_MISSED_FAILURES) {
+                                        console.debug("Other streamId", streamId, "subsequently is not present, removing...");
+                                        this.removeStream(streamId, component, this.remoteStreams);
+                                    }
+                                } else {
+                                    console.debug("Other streamId", streamId, "is present, resetting failureCount");
+                                    component.resetFailureCount();
                                 }
                             }
                         })
