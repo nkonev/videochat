@@ -1,6 +1,6 @@
 <template>
-    <div class="video-container-element" @mouseenter="showControls=true" @mouseleave="showControls=false" @click="showControls=!showControls">
-        <div class="video-container-element-control" v-show="showControls" @click="suppress">
+    <div class="video-container-element" @mouseenter="showControls=true" @mouseleave="showControls=false">
+        <div class="video-container-element-control" v-show="showControls">
             <v-btn icon @click="doMuteAudio(!audioMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
             <v-btn icon @click="doMuteVideo(!videoMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
             <v-btn icon @click="onEnterFullscreen"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
@@ -9,7 +9,7 @@
         </div>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted"/>
-        <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
+        <p @click="showControls=!showControls" v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
 
@@ -80,9 +80,6 @@ export default {
             } else if (elem.webkitRequestFullscreen) { // Safari
                 elem.webkitRequestFullscreen();
             }
-        },
-        suppress(e) {
-            e.stopImmediatePropagation();
         },
         setSpeaking(speaking) {
             this.speaking = speaking;
@@ -213,10 +210,12 @@ export default {
     }
 
     .video-container-element-control {
+        z-index 1000
         position: absolute
     }
 
     .video-container-element-control-item {
+        z-index 1001
         text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
     }
 
