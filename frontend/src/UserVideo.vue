@@ -4,7 +4,7 @@
             <v-btn icon @click="doMuteAudio(!audioMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
             <v-btn icon @click="doMuteVideo(!videoMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
             <v-btn icon @click="onEnterFullscreen"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
-            <v-btn icon @click="onSetupDevice()" v-if="isLocal" ><v-icon large class="video-container-element-control-item">mdi-video-switch-outline</v-icon></v-btn>
+            <v-btn icon @click="onSetupDevice()" v-if="isLocal" ><v-icon large class="video-container-element-control-item">mdi-cog</v-icon></v-btn>
             <v-btn icon v-if="isLocal" @click="onClose()"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
