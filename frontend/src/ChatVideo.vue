@@ -424,8 +424,7 @@
                     }
                 }
             },
-            onVideoParametersChanged() { // TODO change parameters of only one stream
-                // todo may be we need to introduce something like this.localPublisherKey++; in order to forcely restart the <video> element
+            onGlobalVideoParametersChanged() {
                 this.tryRestartWithResetOncloseHandler();
             },
             enumerateAllStreams(callback) {
@@ -500,13 +499,13 @@
         },
         created() {
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
-            bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
+            bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onGlobalVideoParametersChanged);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(ADD_VIDEO_SOURCE, this.onAddVideoSource);
         },
         destroyed() {
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
-            bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onVideoParametersChanged);
+            bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onGlobalVideoParametersChanged);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(ADD_VIDEO_SOURCE, this.onAddVideoSource);
         },
