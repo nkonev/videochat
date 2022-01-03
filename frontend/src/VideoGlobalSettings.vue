@@ -46,14 +46,6 @@
                         v-model="codec"
                     ></v-select>
 
-                    <!--
-                    <v-select
-                        messages="Video device"
-                        :items="['Frontal camera', 'Back camera']"
-                        label="Video device"
-                        dense
-                        solo
-                    ></v-select>-->
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
