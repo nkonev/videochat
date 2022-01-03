@@ -10,7 +10,7 @@
                         :items="videoDevices"
                         item-text="label"
                         item-value="deviceId"
-                        label="Video device"
+                        label="Select video device"
                         @change="changeVideoDevice"
                         dense
                         solo
@@ -21,11 +21,20 @@
                         :items="audioDevices"
                         item-text="label"
                         item-value="deviceId"
-                        label="Audio device"
+                        label="Select audio device"
+                        @change="changeAudioDevice"
                         dense
                         solo
                         v-model="audioDevice"
                     ></v-select>
+                    <v-alert
+                        dismissible
+                        v-model="showAlert"
+                        type="error"
+                    >
+                        {{error}}
+                    </v-alert>
+
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
@@ -57,6 +66,8 @@
                 audioDevices: [],
                 audioDevice: null,
                 elementIdToProcess: null,
+                error: null,
+                showAlert: false,
             }
         },
         methods: {
@@ -72,6 +83,8 @@
                 this.audioDevices = [];
                 this.audioDevice = null;
                 this.elementIdToProcess = null;
+                this.error = null;
+                this.showAlert = false;
             },
             isVideoRoute() {
                 return this.$route.name == videochat_name
@@ -93,20 +106,32 @@
                         console.log(err.name + ": " + err.message);
                     });
             },
-            onVideoDeviceChanged() {
+            onVideoDeviceChanged(e) {
                 if (!this.show) {
                     return
                 }
                 this.changing = false;
+                this.error = e;
+                this.showAlert = e != null;
             },
-            changeVideoDevice(newVideoDeviceId) {
+            changeVideoDevice(newDeviceId) {
+                this.error = null;
+                this.showAlert = false;
                 console.log("Invoked changeVideoDevice");
                 if (this.isVideoRoute()) {
                     this.changing = true;
                 }
-                bus.$emit(CHANGE_DEVICE, {kind: 'video', deviceId: newVideoDeviceId, elementIdToProcess: this.elementIdToProcess});
+                bus.$emit(CHANGE_DEVICE, {kind: 'video', deviceId: newDeviceId, elementIdToProcess: this.elementIdToProcess});
             },
-
+            changeAudioDevice(newDeviceId) {
+                this.error = null;
+                this.showAlert = false;
+                console.log("Invoked changeAudioDevice");
+                if (this.isVideoRoute()) {
+                    this.changing = true;
+                }
+                bus.$emit(CHANGE_DEVICE, {kind: 'audio', deviceId: newDeviceId, elementIdToProcess: this.elementIdToProcess});
+            },
         },
         computed: {
             chatId() {
