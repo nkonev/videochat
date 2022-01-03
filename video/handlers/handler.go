@@ -68,8 +68,11 @@ func FromContext(ctx context.Context) (*ContextData, bool) {
 }
 
 type UserByStreamId struct {
-	StreamId              string `json:"streamId"`
-	IncludeOtherStreamIds bool   `json:"includeOtherStreamIds"`
+	StreamId string `json:"streamId"`
+}
+
+type GetAliveStreamIds struct {
+	ChatId int64 `json:"chatId"`
 }
 
 func NewHandler(

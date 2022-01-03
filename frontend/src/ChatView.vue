@@ -1,6 +1,6 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid v-bind:style="{height: splitpanesHeight + 'px'}">
-        <splitpanes ref="spl" class="default-theme" horizontal style="height: 100%"
+        <splitpanes ref="spl" :class="['default-theme', this.isAllowedVideo() ? 'panes3' : 'panes2']" horizontal style="height: 100%"
                     :dbl-click-splitter="false"
                     @pane-add="onPanelAdd(isScrolledToBottom())" @pane-remove="onPanelRemove()" @resize="onPanelResized">
             <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" v-bind:size="videoSize">
@@ -573,4 +573,11 @@
 .splitpanes__splitter:hover:before {opacity: 1;}
 .splitpanes--vertical > .splitpanes__splitter:before {left: -10px;right: -10px;height: 100%;}
 .splitpanes--horizontal > .splitpanes__splitter:before {top: -10px;bottom: -10px;width: 100%;}
+.panes3 {
+    .splitpanes__splitter:nth-child(2):before {top: 0;bottom: -20px;width: 100%;}
+    .splitpanes__splitter:nth-child(4):before {top: -20px;bottom: 0;width: 100%;}
+}
+.panes2 {
+    .splitpanes__splitter:before {top: -20px;bottom: 0;width: 100%;}
+}
 </style>
