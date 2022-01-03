@@ -35,6 +35,7 @@ export default {
             userId: null,
             failureCount: 0,
             showControls: false,
+            stream: null
       }
     },
 
@@ -53,13 +54,14 @@ export default {
     methods: {
         setStream(d) {
             console.log("Setting source for videoRef=", this.$refs.videoRef, " source=", d, " video tag id=", this.id);
+            this.stream = d;
             this.$refs.videoRef.srcObject = d;
         },
         getStreamId() {
-            return this?.$refs?.videoRef?.srcObject?.id;
+            return this.stream?.id;
         },
         getStream() {
-            return this?.$refs?.videoRef?.srcObject;
+            return this.stream;
         },
         getVideoElement() {
             return this?.$refs?.videoRef;

@@ -321,7 +321,7 @@
                     });
             },
             onAddVideoSource(videoId, audioId) {
-                this.getAndPublishLocalMediaStream({screen: false, videoId, audioId})
+                this.getAndPublishLocalMediaStream({screen: false, videoId : videoId == null ? false : videoId, audioId: audioId == null ? false : audioId})
                     .catch(reason => {
                         console.error("Error during publishing screen stream, won't restart...", reason);
                         this.errorDescription = reason;
@@ -343,8 +343,8 @@
                     return Promise.reject('No media configured');
                 }
 
-                const audioConstraints = audioId ? { deviceId: audioId } : audio;
-                const videoConstraints = videoId ?  { deviceId: videoId } : video;
+                const audioConstraints = audioId === null ? audio : (audioId === false ? audioId : { deviceId: audioId });
+                const videoConstraints = videoId === null ? video : (videoId === false ? videoId : { deviceId: videoId });
                 console.info("Selected constraints", "video", videoConstraints, "audio", audioConstraints);
 
                 const localStreamSpec = screen ?
