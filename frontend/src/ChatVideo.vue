@@ -77,7 +77,10 @@
 
                 showPermissionAsk: true,
 
-                errorDescription: null
+                errorDescription: null,
+
+                preferredCodec: null,
+                simulcast: false,
             }
         },
         props: ['chatDto'],
@@ -106,6 +109,7 @@
                     getWebsocketUrlPrefix()+`/api/video/${this.chatId}/ws`
                 );
 
+                this.simulcast = configObj.simulcast;
                 if (hasLength(configObj.codec)) {
                     console.log("Server overrided codec to", configObj.codec)
                     this.preferredCodec = configObj.codec;
@@ -324,12 +328,14 @@
                         audio: audio,
                         video: true,
                         codec: this.preferredCodec,
+                        simulcast: this.simulcast,
                     }) :
                     LocalStream.getUserMedia({
                         resolution: resolution,
                         audio: audio,
                         video: video,
                         codec: this.preferredCodec,
+                        simulcast: this.simulcast,
                     });
 
                 return localStreamSpec.then((localMediaStream) => {

@@ -105,6 +105,7 @@ http:
   disableCompression: false
 
 frontend:
+  simulcast: true
   # in ion-sdk-js vp8 is default
   preferredCodec: h264
   forceKickAfter: 5s

@@ -109,6 +109,7 @@ chat:
     base: "http://chat:1235"
 
 frontend:
+  simulcast: true
   preferredCodec: h264
   iceserver:
     - server:
