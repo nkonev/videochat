@@ -332,19 +332,19 @@
 
                 const resolution = getVideoResolution();
 
-                const audio = getStoredAudioDevicePresents();
-                const video = getStoredVideoDevicePresents();
+                const audioIsPresents = getStoredAudioDevicePresents();
+                const videoIsPresents = getStoredVideoDevicePresents();
 
                 bus.$emit(VIDEO_PARAMETERS_CHANGED);
 
-                if (!audio && !video && !screen) {
+                if (!audioIsPresents && !videoIsPresents && !screen) {
                     console.info("Not able to build local media stream, returning a successful promise");
                     // this.isChangingLocalStream = false;
                     return Promise.reject('No media configured');
                 }
 
-                const audioConstraints = audioId === null ? audio : (audioId === false ? audioId : { deviceId: audioId });
-                const videoConstraints = videoId === null ? video : (videoId === false ? videoId : { deviceId: videoId });
+                const audioConstraints = audioId === null ? audioIsPresents : (audioId === false ? audioId : { deviceId: audioId });
+                const videoConstraints = videoId === null ? videoIsPresents : (videoId === false ? videoId : { deviceId: videoId });
                 console.info("Selected constraints", "video", videoConstraints, "audio", audioConstraints);
 
                 const localStreamSpec = screen ?
