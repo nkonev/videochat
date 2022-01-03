@@ -95,10 +95,14 @@
                 this.ensureAudioIsEnabledAccordingBrowserPolicies();
                 this.showPermissionAsk = false;
             },
-            appendUserVideo(stream, videoTagId, appendTo, localVideoProperties) {
+            appendUserVideo(prepend, stream, videoTagId, appendTo, localVideoProperties) {
                 const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId, localVideoProperties: localVideoProperties }});
                 component.$mount();
-                this.videoContainerDiv.appendChild(component.$el);
+                if (prepend) {
+                    this.videoContainerDiv.prepend(component.$el);
+                } else {
+                    this.videoContainerDiv.appendChild(component.$el);
+                }
                 component.setStream(stream);
                 appendTo[stream.id] = {stream, component};
                 return component;
@@ -169,7 +173,7 @@
                         if (!this.remoteStreams[streamId]) {
                             const videoTagId = 'remote-' + streamId + '-' + this.getNewId();
                             console.info("Setting track", track.id, "for remote stream", streamId, " into video tag id=", videoTagId);
-                            const remoteComponent = this.appendUserVideo(stream, videoTagId, this.remoteStreams, null);
+                            const remoteComponent = this.appendUserVideo(false, stream, videoTagId, this.remoteStreams, null);
                             stream.onremovetrack = (e) => {
                                 console.log("onremovetrack", e);
                                 if (e.track) {
@@ -352,7 +356,7 @@
                   const streamId = localMediaStream.id;
                   const videoTagId = 'local-' + streamId + '-' + this.getNewId();
                   console.info("Setting local stream", streamId, " into video tag id=", videoTagId);
-                  const localVideoComponent = this.appendUserVideo(localMediaStream, videoTagId, this.localStreams, {
+                  const localVideoComponent = this.appendUserVideo(true, localMediaStream, videoTagId, this.localStreams, {
                       peerId: this.peerId,
                       signalLocal: this.signalLocal,
                       parent: this
