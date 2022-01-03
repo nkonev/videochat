@@ -465,6 +465,7 @@ func (p *JsonRpcExtendedHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn
 				logger.Info("Not found peer metadata by streamId, putting it in advance", "chat_id", fromContext.chatId, "stream_id", bodyStruct.StreamId)
 			}
 			// TODO write map cleanup mechanism to clear occasionally added metadata
+			//  it's not critical because they are cleaned by defer in SfuHandler
 
 			p.service.PutToMetadataIndex(bodyStruct.StreamId, fromContext.userId, fromContext.login, bodyStruct.Avatar, bodyStruct.PeerId, bodyStruct.VideoMute, bodyStruct.AudioMute, req.Method)
 			notificationDto := &dto.StoreNotifyDto{

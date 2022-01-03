@@ -278,7 +278,7 @@
                                 if (value.aliveStreamIds.filter(v => v == streamId).length == 0) {
                                     component.incrementFailureCount();
 
-                                    console.info("Other streamId", streamId, "is not present, failureCount icreased to", component.getFailureCount());
+                                    console.info("Other streamId", streamId, "is not present, failureCount increased to", component.getFailureCount());
                                     if (component.getFailureCount() > MAX_MISSED_FAILURES) {
                                         console.debug("Other streamId", streamId, "subsequently is not present, removing...");
                                         this.removeStream(streamId, component, this.remoteStreams);
