@@ -369,9 +369,9 @@
                   const localVideoComponent = this.appendUserVideo(true, localMediaStream, videoTagId, this.localStreams, {
                       peerId: this.peerId,
                       signalLocal: this.signalLocal,
-                      parent: this
+                      parent: this,
+                      screen: screen
                   });
-                  localVideoComponent.setStream(localMediaStream);
                   localVideoComponent.setStreamMuted(true); // tris is not error - we disable audio in local (own) video tag
                   localVideoComponent.setUserName(this.currentUser.login);
                   localVideoComponent.setAvatar(this.currentUser.avatar);
@@ -388,8 +388,16 @@
                           actualAudioMuted = t.muted;
                       }
                   });
+                  // process cornercase: global video disabled but user start sharing screen
+                  let actualVideoMuted = true;
+                  localMediaStream.getTracks().forEach(t => {
+                      if (t.kind === "video") {
+                          actualVideoMuted = t.muted;
+                      }
+                  });
+
                   localVideoComponent.setDisplayAudioMute(actualAudioMuted);
-                  localVideoComponent.setVideoMute(!videoConstraints);
+                  localVideoComponent.setVideoMute(actualVideoMuted);
                   localVideoComponent.resetFailureCount();
                   this.isChangingLocalStream = false;
                   localVideoComponent.notifyOtherParticipants();
