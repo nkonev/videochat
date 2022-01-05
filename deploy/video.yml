@@ -110,7 +110,7 @@ chat:
 
 frontend:
   preferredCodec: h264
-  simulcast: true
+  simulcast: false
   resolution: vga
   forceKickAfter: 5s
   iceserver:
