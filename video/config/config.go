@@ -22,6 +22,7 @@ type FrontendConfig struct {
 	PreferredCodec string                    `mapstructure:"preferredCodec"`
 	Simulcast      bool                      `mapstructure:"simulcast"`
 	ForceKickAfter time.Duration             `mapstructure:"forceKickAfter"`
+	Resolution     string                    `mapstructure:"resolution"`
 }
 
 type RabbitMqConfig struct {

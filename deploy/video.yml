@@ -109,8 +109,10 @@ chat:
     base: "http://chat:1235"
 
 frontend:
-  simulcast: true
   preferredCodec: h264
+  simulcast: true
+  resolution: vga
+  forceKickAfter: 5s
   iceserver:
     - server:
         urls: ["turn:api.site.local:3478"]

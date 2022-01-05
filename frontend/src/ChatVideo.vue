@@ -82,6 +82,7 @@
 
                 preferredCodec: null,
                 simulcast: false,
+                resolution: null,
             }
         },
         props: ['chatDto'],
@@ -114,7 +115,17 @@
                     getWebsocketUrlPrefix()+`/api/video/${this.chatId}/ws`
                 );
 
-                this.simulcast = configObj.simulcast;
+                if (configObj.simulcast) {
+                    this.simulcast = configObj.simulcast;
+                    console.info("Forcing simulcast");
+                }
+                if (hasLength(configObj.resolution)) {
+                    console.log("Server overrided resolution to", configObj.resolution)
+                    this.resolution = configObj.resolution;
+                } else {
+                    this.resolution = getVideoResolution();
+                    console.log("Used resolution from localstorage", this.resolution)
+                }
                 if (hasLength(configObj.codec)) {
                     console.log("Server overrided codec to", configObj.codec)
                     this.preferredCodec = configObj.codec;
@@ -330,8 +341,6 @@
             getAndPublishLocalMediaStream({screen = false, videoId = null, audioId = null}) {
                 this.isChangingLocalStream = true;
 
-                const resolution = getVideoResolution();
-
                 const audioIsPresents = getStoredAudioDevicePresents();
                 const videoIsPresents = getStoredVideoDevicePresents();
 
@@ -345,7 +354,7 @@
 
                 const audioConstraints = audioId === null ? audioIsPresents : (audioId === false ? audioId : { deviceId: audioId });
                 const videoConstraints = videoId === null ? videoIsPresents : (videoId === false ? videoId : { deviceId: videoId });
-                console.info("Selected constraints", "video", videoConstraints, "audio", audioConstraints);
+                console.info("Selected constraints", "video", videoConstraints, "audio", audioConstraints, "resolution", this.resolution);
 
                 const localStreamSpec = screen ?
                     LocalStream.getDisplayMedia({
@@ -355,7 +364,7 @@
                         simulcast: this.simulcast,
                     }) :
                     LocalStream.getUserMedia({
-                        resolution: resolution,
+                        resolution: this.resolution,
                         audio: audioConstraints,
                         video: videoConstraints,
                         codec: this.preferredCodec,

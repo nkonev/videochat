@@ -256,6 +256,7 @@ type FrontendConfigDto struct {
 	ICEServers     []ICEServerConfigDto `json:"iceServers"`
 	PreferredCodec string               `json:"codec"`
 	Simulcast      bool                 `json:"simulcast"`
+	Resolution     string               `json:"resolution"`
 }
 
 func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
@@ -283,6 +284,7 @@ func (h *Handler) Config(w http.ResponseWriter, r *http.Request) {
 	}
 	responseSliceFrontendConfig.PreferredCodec = frontendConfig.PreferredCodec
 	responseSliceFrontendConfig.Simulcast = frontendConfig.Simulcast
+	responseSliceFrontendConfig.Resolution = frontendConfig.Resolution
 
 	marshal, err := json.Marshal(responseSliceFrontendConfig)
 	if err != nil {

@@ -28,6 +28,7 @@
                     </v-row>
 
                     <v-select
+                        :disabled="serverPreferredResolution"
                         :messages="$vuetify.lang.t('$vuetify.quality')"
                         :items="qualityItems"
                         dense
@@ -82,6 +83,7 @@
                 changing: false,
                 show: false,
                 serverPreferredCodec: false,
+                serverPreferredResolution: false,
 
                 audioPresents: null,
                 videoPresents: null,
@@ -96,6 +98,7 @@
                 this.videoQuality = getVideoResolution();
                 this.codec = getCodec();
                 this.serverPreferredCodec = false;
+                this.serverPreferredResolution = false;
                 this.show = true;
                 axios
                     .get(`/api/video/${this.chatId}/config`)
@@ -104,6 +107,10 @@
                         if (hasLength(respData.codec)) {
                             this.serverPreferredCodec = true;
                             this.codec = respData.codec;
+                        }
+                        if (hasLength(respData.resolution)) {
+                            this.serverPreferredResolution = true;
+                            this.videoQuality = respData.resolution;
                         }
                     })
 
