@@ -10,7 +10,7 @@ sfu:
 # Ballast size in MiB, will allocate memory to reduce the GC trigger upto 2x the
 # size of ballast. Be aware that the ballast should be less than the half of memory
 # available.
-  ballast: 0
+  ballast: 512
 # enable prometheus sfu statistics
   withstats: false
 
