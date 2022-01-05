@@ -19,7 +19,7 @@ router:
 # zero means no limits
   maxbandwidth: 1500
 # max number of video tracks packets the SFU will keep trac
-  maxpackettrack: 500
+  maxpackettrack: 100
 # Sets the audio level volume threshold.
 # Values from [0-127] where 0 is the loudest.
 # Audio levels are read from rtp extension header according to:
