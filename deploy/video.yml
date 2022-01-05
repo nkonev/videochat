@@ -24,7 +24,7 @@ router:
 # Values from [0-127] where 0 is the loudest.
 # Audio levels are read from rtp extension header according to:
 # https://tools.ietf.org/html/rfc6464
-  audiolevelthreshold: 30
+  audiolevelthreshold: 40
 # Sets the interval in which the SFU will check the audio level
 # in [ms]. If the active speaker has changed, the sfu will
 # emit an event to clients.
