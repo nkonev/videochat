@@ -83,6 +83,7 @@
                 preferredCodec: null,
                 simulcast: false,
                 resolution: null,
+                simulcastLayers: []
             }
         },
         props: ['chatDto'],
@@ -118,6 +119,11 @@
                 if (configObj.simulcast) {
                     this.simulcast = configObj.simulcast;
                     console.info("Forcing simulcast");
+                    if (configObj.simulcastLayers.length == 0) {
+                        console.error("Simulcast layers are not set");
+                    } else {
+                        this.simulcastLayers = configObj.simulcastLayers;
+                    }
                 }
                 if (hasLength(configObj.resolution)) {
                     console.log("Server overrided resolution to", configObj.resolution)
@@ -147,6 +153,10 @@
                             component.setSpeaking(true);
                         });
                     }
+                }
+
+                this.clientLocal.onactivelayer = (e) => {
+                    console.info("onactivelayer", e);
                 }
 
                 this.signalLocal.onerror = (e) => { console.error("Error in signal", e); }
@@ -410,6 +420,10 @@
                   localVideoComponent.resetFailureCount();
                   this.isChangingLocalStream = false;
                   localVideoComponent.notifyOtherParticipants();
+                  if (this.simulcast) {
+                      console.log("Applying simulcastLayers", this.simulcastLayers);
+                      localMediaStream.enableLayers(this.simulcastLayers);
+                  }
 
                   return Promise.resolve(true)
                 })

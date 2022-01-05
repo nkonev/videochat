@@ -18,11 +18,12 @@ type ExtendedICEServerConfig struct {
 }
 
 type FrontendConfig struct {
-	ICEServers     []ExtendedICEServerConfig `mapstructure:"iceserver"`
-	PreferredCodec string                    `mapstructure:"preferredCodec"`
-	Simulcast      bool                      `mapstructure:"simulcast"`
-	ForceKickAfter time.Duration             `mapstructure:"forceKickAfter"`
-	Resolution     string                    `mapstructure:"resolution"`
+	ICEServers      []ExtendedICEServerConfig `mapstructure:"iceserver"`
+	PreferredCodec  string                    `mapstructure:"preferredCodec"`
+	Simulcast       bool                      `mapstructure:"simulcast"`
+	SimulcastLayers []string                  `mapstructure:"simulcastLayers"`
+	ForceKickAfter  time.Duration             `mapstructure:"forceKickAfter"`
+	Resolution      string                    `mapstructure:"resolution"`
 }
 
 type RabbitMqConfig struct {
