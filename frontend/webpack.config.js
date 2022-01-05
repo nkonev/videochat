@@ -13,11 +13,18 @@ const contentBase = path.join(contentStaticDest, "/build");
 const LIVE_RELOAD_PORT = 35736
 const DEVELOPMENT_MODE='development'
 
+const isDevelopment = (argv) => {
+    return argv.mode === DEVELOPMENT_MODE
+}
+
 module.exports = (env, argv) => {
+    const currDate = +new Date();
     const pluginsArray = [
         // new BundleAnalyzerPlugin({defaultSizes: "parsed"}),
         new HtmlWebpackPlugin({
-            livereload: argv.mode === DEVELOPMENT_MODE ? `
+            // Load a custom template (lodash by default)
+            currDate: currDate,
+            livereload: isDevelopment(argv) ? `
                 <script type="application/javascript">
                     const livereloadProtocolHost = window.location.protocol + "//" + window.location.hostname;
                     const scriptTag = document.createElement('script');
@@ -25,7 +32,6 @@ module.exports = (env, argv) => {
                     document.head.appendChild(scriptTag);
                 </script>
                 ` : "",
-            // Load a custom template (lodash by default)
             template: './src/index.template.html',
             inject: false
         }),
@@ -37,12 +43,12 @@ module.exports = (env, argv) => {
         new CssExtractPlugin({
             // Options similar to the same options in webpackOptions.output
             // all options are optional
-            filename: '[name].css',
-            chunkFilename: '[id].css',
+            filename: `[name]_${currDate}.css`,
+            chunkFilename: `[id]_${currDate}.css`,
             ignoreOrder: false, // Enable to remove warnings about conflicting order
         }),
     ];
-    if (argv.mode === DEVELOPMENT_MODE) {
+    if (isDevelopment(argv)) {
         console.log("Starting LiveReloadPlugin");
         pluginsArray.push(
             new LiveReloadPlugin({
@@ -55,7 +61,7 @@ module.exports = (env, argv) => {
         entry: "./src/main.js",
         output: {
             path: contentBase,
-            filename: "[name].js",
+            filename: `[name]_${currDate}.js`,
         },
         resolve: {
             alias: {
@@ -121,7 +127,7 @@ module.exports = (env, argv) => {
         plugins: pluginsArray,
     };
 
-    if (argv.mode === DEVELOPMENT_MODE) {
+    if (isDevelopment(argv)) {
         // https://github.com/vuejs/vue-loader/issues/620#issuecomment-363931521
         webpackCfg.devtool = 'source-map';
     }
