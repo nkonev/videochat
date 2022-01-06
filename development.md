@@ -369,3 +369,8 @@ docker run --network=videochat_backend -it --rm lesovsky/pgcenter:latest pgcente
 In `receiver.go` we have isSimulcast: len(track.RID()) > 0, given this and fact that Firefox doesn't sent rid we acn't enable simulcast in Firefox.
 
 But according to https://webrtchacks.com/sfu-simulcast/ H.264/SVC, where scalability capabilities are fully built into the codec itself.
+
+Firefox [doesn't support simulcast for H264](https://bugzilla.mozilla.org/show_bug.cgi?id=1210175)
+
+
+Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=1663368)
