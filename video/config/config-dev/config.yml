@@ -107,7 +107,7 @@ http:
 frontend:
   # in ion-sdk-js vp8 is default
   preferredCodec: h264
-  simulcast: true
+  simulcast: false
   simulcastLayers: ['low', 'high']
   resolution: vga
   forceKickAfter: 5s
