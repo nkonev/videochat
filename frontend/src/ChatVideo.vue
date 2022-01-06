@@ -175,7 +175,7 @@
 
                 this.peerId = uuidv4();
                 this.signalLocal.onopen = () => {
-                    console.info("Signal opened, joining to session...")
+                    console.info("Signal opened, joining to session, peerId=", this.peerId)
                     this.clientLocal.join(`chat${this.chatId}`, this.peerId).then(()=>{
                         console.info("Joined to session, gathering media devices")
                         this.getAndPublishLocalMediaStream({})
@@ -201,11 +201,6 @@
                                     this.removeStream(streamId, remoteComponent, this.remoteStreams)
                                 }
                             };
-
-                            // TODO complete simulcast
-                            // if (this.simulcast) {
-                            //     stream.preferLayer(this.simulcastLayers);
-                            // }
 
                             // here we (asynchronously) get metadata by streamId from app server
                             this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: streamId}).then(value => {

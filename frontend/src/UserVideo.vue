@@ -6,6 +6,8 @@
             <v-btn icon @click="onEnterFullscreen"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
             <v-btn icon @click="onSetupDevice()" v-if="isLocal && isChangeable" ><v-icon large class="video-container-element-control-item">mdi-cog</v-icon></v-btn>
             <v-btn icon v-if="isLocal" @click="onClose()"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
+            <v-btn icon @click="onSimulcastLow()" v-if="!isLocal"><v-icon large class="video-container-element-control-item">mdi-minus</v-icon></v-btn>
+            <v-btn icon @click="onSimulcastHigh()" v-if="!isLocal" ><v-icon large class="video-container-element-control-item">mdi-plus</v-icon></v-btn>
         </div>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted"/>
@@ -163,6 +165,12 @@ export default {
             const streamId = this.getStreamId();
             this.localVideoProperties.parent.clearLocalMediaStream(this.getStream());
             this.localVideoProperties.parent.removeStream(streamId, this, this.localVideoProperties.parent.localStreams);
+        },
+        onSimulcastLow() {
+            this.getStream().preferLayer('low');
+        },
+        onSimulcastHigh() {
+            this.getStream().preferLayer('high');
         }
     },
     computed: {
