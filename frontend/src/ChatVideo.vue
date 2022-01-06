@@ -202,6 +202,11 @@
                                 }
                             };
 
+                            // TODO complete simulcast
+                            // if (this.simulcast) {
+                            //     stream.preferLayer(this.simulcastLayers);
+                            // }
+
                             // here we (asynchronously) get metadata by streamId from app server
                             this.signalLocal.call(USER_BY_STREAM_ID_METHOD, {streamId: streamId}).then(value => {
                                 if (!value.found || !value.userDto) {
