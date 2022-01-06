@@ -81,9 +81,7 @@
                 errorDescription: null,
 
                 preferredCodec: null,
-                simulcast: false,
                 resolution: null,
-                simulcastLayers: []
             }
         },
         props: ['chatDto'],
@@ -116,15 +114,6 @@
                     getWebsocketUrlPrefix()+`/api/video/${this.chatId}/ws`
                 );
 
-                if (configObj.simulcast) {
-                    this.simulcast = configObj.simulcast;
-                    console.info("Forcing simulcast");
-                    if (configObj.simulcastLayers.length == 0) {
-                        console.error("Simulcast layers are not set");
-                    } else {
-                        this.simulcastLayers = configObj.simulcastLayers;
-                    }
-                }
                 if (hasLength(configObj.resolution)) {
                     console.log("Server overrided resolution to", configObj.resolution)
                     this.resolution = configObj.resolution;
@@ -371,14 +360,12 @@
                         audio: audioConstraints,
                         video: true,
                         codec: this.preferredCodec,
-                        simulcast: this.simulcast,
                     }) :
                     LocalStream.getUserMedia({
                         resolution: this.resolution,
                         audio: audioConstraints,
                         video: videoConstraints,
                         codec: this.preferredCodec,
-                        simulcast: this.simulcast,
                     });
 
                 return localStreamSpec.then((localMediaStream) => {
@@ -420,10 +407,6 @@
                   localVideoComponent.resetFailureCount();
                   this.isChangingLocalStream = false;
                   localVideoComponent.notifyOtherParticipants();
-                  if (this.simulcast) {
-                      console.log("Applying simulcastLayers", this.simulcastLayers);
-                      localMediaStream.enableLayers(this.simulcastLayers);
-                  }
 
                   return Promise.resolve(true)
                 })

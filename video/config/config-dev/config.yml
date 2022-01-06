@@ -107,8 +107,6 @@ http:
 frontend:
   # in ion-sdk-js vp8 is default
   preferredCodec: vp8
-  simulcast: true
-  simulcastLayers: ['low', 'high']
   resolution: vga
   forceKickAfter: 5s
   iceserver:
