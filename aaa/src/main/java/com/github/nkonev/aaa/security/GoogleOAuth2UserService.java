@@ -45,7 +45,8 @@ public class GoogleOAuth2UserService extends AbstractOAuth2UserService implement
     @Autowired
     private AaaPostAuthenticationChecks aaaPostAuthenticationChecks;
 
-    final OidcUserService oidcUserService = new OidcUserService();
+    @Autowired
+    private OidcUserService oidcUserService;
 
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {

@@ -45,8 +45,8 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
     @Autowired
     private AaaPostAuthenticationChecks aaaPostAuthenticationChecks;
 
-    final DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
-
+    @Autowired
+    private DefaultOAuth2UserService delegate;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {

@@ -38,7 +38,8 @@ public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implem
     @Autowired
     private AaaPostAuthenticationChecks aaaPostAuthenticationChecks;
 
-    final DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
+    @Autowired
+    private DefaultOAuth2UserService delegate;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VkontakteOAuth2UserService.class);
 
