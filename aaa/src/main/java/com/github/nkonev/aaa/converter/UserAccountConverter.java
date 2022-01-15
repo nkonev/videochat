@@ -8,9 +8,7 @@ import com.github.nkonev.aaa.entity.jdbc.CreationType;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.exception.BadRequestException;
-import com.github.nkonev.aaa.security.AaaSecurityService;
-import com.github.nkonev.aaa.security.FacebookOAuth2UserService;
-import com.github.nkonev.aaa.security.VkontakteOAuth2UserService;
+import com.github.nkonev.aaa.security.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -172,6 +170,8 @@ public class UserAccountConverter {
         Assert.hasLength(login, "login should have length");
         Assert.isTrue(!login.startsWith(FacebookOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
         Assert.isTrue(!login.startsWith(VkontakteOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+        Assert.isTrue(!login.startsWith(GoogleOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+        Assert.isTrue(!login.startsWith(KeycloakOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
 
         return login;
     }
