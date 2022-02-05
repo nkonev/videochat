@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"contrib.go.opencensus.io/exporter/jaeger"
+	"errors"
 	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
+	"github.com/olivere/elastic/v7"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
@@ -33,6 +35,7 @@ func main() {
 		fx.Provide(
 			redis.RedisPooledConnection,
 			redis.NewOnlineStorage,
+			db.NewElasticsearch,
 			client.NewRestClient,
 			handlers.NewOnlineHandler,
 			handlers.ConfigureCentrifuge,
@@ -57,6 +60,7 @@ func main() {
 		fx.Invoke(
 			initJaeger,
 			runMigrations,
+			runElasticMigrations,
 			runCentrifuge,
 			runEcho,
 			listener.ListenAaaQueue,
@@ -210,6 +214,47 @@ func initJaeger(lc fx.Lifecycle) error {
 
 func configureMigrations() db.MigrationsConfig {
 	return db.MigrationsConfig{}
+}
+
+func runElasticMigrations(client *elastic.Client) error {
+	ctx := context.Background()
+	const chatIndex = "chat"
+	const mapping = `
+{
+	"settings":{
+		"number_of_shards": 1,
+		"number_of_replicas": 0
+	},
+	"mappings":{
+		"properties":{
+			"ownerId":{
+				"type":"long"
+			},
+			"name":{
+				"type":"text"
+			}
+		}
+	}
+}`
+	exists, err := client.IndexExists(chatIndex).Do(ctx)
+	if err != nil {
+		Logger.Errorf("Error during checking index: %v", err)
+		return err
+	}
+	if !exists {
+		// Create a new index.
+		createIndex, err := client.CreateIndex(chatIndex).BodyString(mapping).Do(ctx)
+		if err != nil {
+			Logger.Errorf("Error during creating index: %v", err)
+			return err
+		}
+		if !createIndex.Acknowledged {
+			err := errors.New("not Acknowledged")
+			Logger.Errorf("Error during creating index: %v", err)
+			return err
+		}
+	}
+	return nil
 }
 
 func runMigrations(db db.DB, migrationsConfig db.MigrationsConfig) {

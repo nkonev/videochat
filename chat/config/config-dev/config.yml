@@ -56,3 +56,7 @@ redis:
 online:
   notification:
     period: 2s
+
+elastic:
+  addresses:
+    - "http://localhost:28200"

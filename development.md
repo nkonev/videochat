@@ -374,3 +374,10 @@ Firefox [doesn't support simulcast for H264](https://bugzilla.mozilla.org/show_b
 
 
 Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=1663368)
+
+# Working with Elasticsearch
+* https://olivere.github.io/elastic/
+* https://www.elastic.co/guide/en/elasticsearch/reference/7.17/explicit-mapping.html
+```bash
+curl 'http://127.0.0.1:28200/chat/_mapping' | jq '.'
+```

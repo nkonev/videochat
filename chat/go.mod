@@ -19,11 +19,12 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.3
 	github.com/nkonev/jaeger-uber-propagation-compat v0.0.0-20200708125206-e763f0a72519
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
+	github.com/olivere/elastic/v7 v7.0.31
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/viper v1.7.0
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.0
-	go.opencensus.io v0.22.4
+	go.opencensus.io v0.23.0
 	go.uber.org/fx v1.12.0
 )
 
