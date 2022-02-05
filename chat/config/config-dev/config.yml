@@ -58,5 +58,6 @@ online:
     period: 2s
 
 elastic:
+  replace: false
   addresses:
     - "http://localhost:28200"

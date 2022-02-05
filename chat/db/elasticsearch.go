@@ -34,12 +34,26 @@ func RunElasticMigrations(client *elastic.Client) error {
 		}
 	}
 }`
+	shouldReplace := viper.GetBool("elastic.replace")
 	exists, err := client.IndexExists(chatIndex).Do(ctx)
 	if err != nil {
 		Logger.Errorf("Error during checking index: %v", err)
 		return err
 	}
-	if !exists {
+	if exists && shouldReplace {
+		did, err := client.DeleteIndex(chatIndex).Do(ctx)
+		if err != nil {
+			Logger.Errorf("Error during deleting index: %v", err)
+			return err
+		}
+		if !did.Acknowledged {
+			err := errors.New("not Acknowledged")
+			Logger.Errorf("Error during deleting index: %v", err)
+			return err
+		}
+		Logger.Infof("Index has been deleted")
+	}
+	if !exists || shouldReplace {
 		createIndex, err := client.CreateIndex(chatIndex).BodyString(mapping).Do(ctx)
 		if err != nil {
 			Logger.Errorf("Error during creating index: %v", err)
