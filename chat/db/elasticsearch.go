@@ -6,17 +6,26 @@ import (
 	"github.com/olivere/elastic/v7"
 	"github.com/spf13/viper"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/utils"
 )
 
-func NewElasticsearch() (*elastic.Client, error) {
-	addrs := viper.GetStringSlice("elastic.addresses")
-	return elastic.NewClient(
-		elastic.SetURL(addrs[:]...))
+type ChatIndexOperations struct {
+	esClient *elastic.Client
 }
 
-func RunElasticMigrations(client *elastic.Client) error {
+func NewChatIndexOperations() (*ChatIndexOperations, error) {
+	addrs := viper.GetStringSlice("elastic.addresses")
+	client, err := elastic.NewClient(elastic.SetURL(addrs[:]...))
+	if err != nil {
+		return nil, err
+	}
+	return &ChatIndexOperations{esClient: client}, nil
+}
+
+const chatIndex = "chat"
+
+func RunElasticMigrations(ops *ChatIndexOperations) error {
 	ctx := context.Background()
-	const chatIndex = "chat"
 	const mapping = `
 {
 	"settings":{
@@ -28,23 +37,20 @@ func RunElasticMigrations(client *elastic.Client) error {
 			"id":{
 				"type":"long"
 			},
-			"ownerId":{
-				"type":"long"
-			},
-			"title":{
+			"name":{
 				"type":"text"
 			}
 		}
 	}
 }`
 	shouldReplace := viper.GetBool("elastic.replace")
-	exists, err := client.IndexExists(chatIndex).Do(ctx)
+	exists, err := ops.esClient.IndexExists(chatIndex).Do(ctx)
 	if err != nil {
 		Logger.Errorf("Error during checking index: %v", err)
 		return err
 	}
 	if exists && shouldReplace {
-		did, err := client.DeleteIndex(chatIndex).Do(ctx)
+		did, err := ops.esClient.DeleteIndex(chatIndex).Do(ctx)
 		if err != nil {
 			Logger.Errorf("Error during deleting index: %v", err)
 			return err
@@ -57,7 +63,7 @@ func RunElasticMigrations(client *elastic.Client) error {
 		Logger.Infof("Index has been deleted")
 	}
 	if !exists || shouldReplace {
-		createIndex, err := client.CreateIndex(chatIndex).BodyString(mapping).Do(ctx)
+		createIndex, err := ops.esClient.CreateIndex(chatIndex).BodyString(mapping).Do(ctx)
 		if err != nil {
 			Logger.Errorf("Error during creating index: %v", err)
 			return err
@@ -72,7 +78,20 @@ func RunElasticMigrations(client *elastic.Client) error {
 }
 
 type ElasticChatDto struct {
-	Id      int64
-	OwnerId int64
-	Title   string
+	Id             int64   `json:"id"`
+	ParticipantIds []int64 `json:"participantIds"`
+	Name           string  `json:"name"`
+}
+
+func (ops *ChatIndexOperations) SaveChat(dto *ElasticChatDto) error {
+	if dto == nil {
+		return errors.New("Saving dto cannot be null")
+	}
+	ctx := context.Background()
+	_, err := ops.esClient.Index().
+		Index(chatIndex).
+		Id(utils.Int64ToString(dto.Id)).
+		BodyJson(dto).
+		Do(ctx)
+	return err
 }

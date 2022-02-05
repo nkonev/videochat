@@ -379,6 +379,8 @@ Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=166
 * https://olivere.github.io/elastic/
 * https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index.html
 * https://www.elastic.co/guide/en/elasticsearch/reference/7.17/explicit-mapping.html
+* https://www.elastic.co/guide/en/elasticsearch/reference/7.17/mapping-types.html
 ```bash
 curl 'http://127.0.0.1:28200/chat/_mapping' | jq '.'
+curl 'http://127.0.0.1:28200/chat/_doc/3' | jq '.'
 ```

@@ -33,7 +33,7 @@ func main() {
 		fx.Provide(
 			redis.RedisPooledConnection,
 			redis.NewOnlineStorage,
-			db.NewElasticsearch,
+			db.NewChatIndexOperations,
 			client.NewRestClient,
 			handlers.NewOnlineHandler,
 			handlers.ConfigureCentrifuge,

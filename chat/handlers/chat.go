@@ -36,14 +36,15 @@ type CreateChatDto struct {
 }
 
 type ChatHandler struct {
-	db          db.DB
-	notificator notifications.Notifications
-	restClient  client.RestClient
-	policy      *bluemonday.Policy
+	db                  db.DB
+	notificator         notifications.Notifications
+	restClient          client.RestClient
+	policy              *bluemonday.Policy
+	elasticsearchClient *db.ChatIndexOperations
 }
 
-func NewChatHandler(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient, policy *bluemonday.Policy) *ChatHandler {
-	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
+func NewChatHandler(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient, policy *bluemonday.Policy, elasticsearchClient *db.ChatIndexOperations) *ChatHandler {
+	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy, elasticsearchClient: elasticsearchClient}
 }
 
 func (a *CreateChatDto) Validate() error {
@@ -264,6 +265,12 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
+		errEs := ch.elasticsearchClient.SaveChat(convertToEsDto(responseDto))
+		if errEs != nil {
+			GetLogEntry(c.Request()).Errorf("Error during save to elasticsearch %v", errEs)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
 		ch.notificator.NotifyAboutNewChat(c, copiedChat, responseDto.ParticipantIds, tx)
 		return c.JSON(http.StatusCreated, responseDto)
 	})
@@ -271,6 +278,17 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
+}
+
+func convertToEsDto(responseDto *dto.ChatDto) *db.ElasticChatDto {
+	if responseDto == nil {
+		return nil
+	}
+	return &db.ElasticChatDto{
+		Id:             responseDto.Id,
+		ParticipantIds: responseDto.ParticipantIds,
+		Name:           responseDto.Name,
+	}
 }
 
 func convertToCreatableChat(d *CreateChatDto, policy *bluemonday.Policy) *db.Chat {
