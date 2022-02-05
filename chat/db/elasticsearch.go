@@ -25,6 +25,9 @@ func RunElasticMigrations(client *elastic.Client) error {
 	},
 	"mappings":{
 		"properties":{
+			"id":{
+				"type":"long"
+			},
 			"ownerId":{
 				"type":"long"
 			},
@@ -66,4 +69,10 @@ func RunElasticMigrations(client *elastic.Client) error {
 		}
 	}
 	return nil
+}
+
+type ElasticChatDto struct {
+	Id      int64
+	OwnerId int64
+	Title   string
 }
