@@ -408,6 +408,13 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
+
+			errEs := ch.elasticsearchClient.UpdateChat(convertToEsDto(responseDto))
+			if errEs != nil {
+				GetLogEntry(c.Request()).Errorf("Error during save to elasticsearch %v", errEs)
+				return c.NoContent(http.StatusInternalServerError)
+			}
+
 			ch.notificator.NotifyAboutNewChat(c, copiedChat, userIdsToNotifyAboutChatCreated, tx)
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, userIdsToNotifyAboutChatDeleted, tx)
 			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)

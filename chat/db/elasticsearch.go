@@ -95,3 +95,10 @@ func (ops *ChatIndexOperations) SaveChat(dto *ElasticChatDto) error {
 		Do(ctx)
 	return err
 }
+
+func (ops *ChatIndexOperations) UpdateChat(dto *ElasticChatDto) error {
+	ctx := context.Background()
+	_, err := ops.esClient.Update().Index(chatIndex).Id(utils.Int64ToString(dto.Id)).
+		Doc(dto).Do(ctx)
+	return err
+}
