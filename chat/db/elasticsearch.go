@@ -102,3 +102,9 @@ func (ops *ChatIndexOperations) UpdateChat(dto *ElasticChatDto) error {
 		Doc(dto).Do(ctx)
 	return err
 }
+
+func (ops *ChatIndexOperations) DeleteChat(id int64) error {
+	ctx := context.Background()
+	_, err := ops.esClient.Delete().Index(chatIndex).Id(utils.Int64ToString(id)).Do(ctx)
+	return err
+}

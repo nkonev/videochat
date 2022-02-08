@@ -322,6 +322,12 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 		if err := tx.DeleteChat(chatId); err != nil {
 			return err
 		}
+		errEs := ch.elasticsearchClient.DeleteChat(chatId)
+		if errEs != nil {
+			GetLogEntry(c.Request()).Errorf("Error during delete in elasticsearch %v", errEs)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
 		ch.notificator.NotifyAboutDeleteChat(c, chatId, ids, tx)
 		return c.JSON(http.StatusAccepted, &utils.H{"id": chatId})
 	})
@@ -411,7 +417,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 
 			errEs := ch.elasticsearchClient.UpdateChat(convertToEsDto(responseDto))
 			if errEs != nil {
-				GetLogEntry(c.Request()).Errorf("Error during save to elasticsearch %v", errEs)
+				GetLogEntry(c.Request()).Errorf("Error during update in elasticsearch %v", errEs)
 				return c.NoContent(http.StatusInternalServerError)
 			}
 
