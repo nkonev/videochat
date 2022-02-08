@@ -105,6 +105,11 @@
                 </div>
             </v-btn>
             <v-spacer></v-spacer>
+
+            <v-card light>
+                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" clearable clear-icon="mdi-close-circle"></v-text-field>
+            </v-card>
+
             <v-tooltip bottom v-if="!wsConnected">
                 <template v-slot:activator="{ on, attrs }">
                     <v-icon color="white" class="mr-2" v-bind="attrs" v-on="on">mdi-lan-disconnect</v-icon>
@@ -233,6 +238,7 @@
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
                 showWebsocketRestored: false,
+                searchString: ""
             }
         },
         components:{
