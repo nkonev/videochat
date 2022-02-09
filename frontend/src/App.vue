@@ -205,13 +205,13 @@
         OPEN_VIDEO_SETTINGS,
         OPEN_LANGUAGE_MODAL,
         ADD_VIDEO_SOURCE_DIALOG,
-        ADD_SCREEN_SOURCE,
+        ADD_SCREEN_SOURCE, SEARCH_STRING_CHANGED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
     import SimpleModal from "./SimpleModal";
     import ChooseAvatar from "./ChooseAvatar";
-    import {getStoredAudioDevicePresents, setIcon} from "./utils";
+    import {setIcon} from "./utils";
     import ChatParticipants from "./ChatParticipants";
     import PermissionsWarning from "./PermissionsWarning";
     import FindUser from "./FindUser";
@@ -223,6 +223,7 @@
     import VideoDeviceSettings from "./VideoDeviceSettings";
     import {getData} from "@/centrifugeConnection";
     import VideoAddNewSource from "@/VideoAddNewSource";
+    import debounce from "lodash/debounce";
 
     const audio = new Audio("/call.mp3");
 
@@ -238,7 +239,7 @@
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
                 showWebsocketRestored: false,
-                searchString: ""
+                searchString: "",
             }
         },
         components:{
@@ -367,6 +368,14 @@
             openLocale() {
                 bus.$emit(OPEN_LANGUAGE_MODAL);
             },
+            doSearch(searchString) {
+                if (!searchString) {
+                    bus.$emit(SEARCH_STRING_CHANGED, null);
+                    return;
+                }
+                searchString = searchString.trim();
+                bus.$emit(SEARCH_STRING_CHANGED, searchString);
+            }
         },
         computed: {
             ...mapGetters({
@@ -389,8 +398,13 @@
         created() {
             bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
+            this.doSearch = debounce(this.doSearch, 700, {leading:false, trailing:true});
         },
-
+        watch: {
+            searchString (searchString) {
+                this.doSearch(searchString);
+            },
+        },
     }
 </script>
 

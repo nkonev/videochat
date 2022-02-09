@@ -41,19 +41,19 @@
 </template>
 
 <script>
-    import bus, {
-        CHAT_ADD,
-        CHAT_EDITED,
-        CHAT_DELETED,
-        LOGGED_IN,
-        OPEN_CHAT_EDIT,
-        OPEN_SIMPLE_MODAL,
-        UNREAD_MESSAGES_CHANGED,
-        USER_PROFILE_CHANGED,
-        CLOSE_SIMPLE_MODAL,
-        REFRESH_ON_WEBSOCKET_RESTORED,
-        VIDEO_CALL_CHANGED
-    } from "./bus";
+import bus, {
+    CHAT_ADD,
+    CHAT_EDITED,
+    CHAT_DELETED,
+    LOGGED_IN,
+    OPEN_CHAT_EDIT,
+    OPEN_SIMPLE_MODAL,
+    UNREAD_MESSAGES_CHANGED,
+    USER_PROFILE_CHANGED,
+    CLOSE_SIMPLE_MODAL,
+    REFRESH_ON_WEBSOCKET_RESTORED,
+    VIDEO_CALL_CHANGED, SEARCH_STRING_CHANGED
+} from "./bus";
     import {chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
     import { findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition } from "./utils";
@@ -81,7 +81,7 @@
                 items: [],
                 itemsTotal: 0,
                 infiniteId: +new Date(),
-
+                searchString: null,
                 group: -1,
             }
         },
@@ -95,12 +95,12 @@
                 this.infiniteId += 1;
                 console.log("Resetting infinite loader", this.infiniteId);
             },
-            searchStringChanged() {
+            searchStringChanged(searchString) {
+                this.searchString = searchString;
                 this.items = [];
                 this.page = 0;
                 this.reloadItems();
             },
-
             addItem(dto) {
                 console.log("Adding item", dto);
                 this.items.unshift(dto);
@@ -141,6 +141,7 @@
                     params: {
                         page: this.page,
                         size: pageSize,
+                        searchString: this.searchString,
                     },
                 }).then(({ data }) => {
                     const list = data.data;
@@ -207,7 +208,7 @@
                 this.$forceUpdate();
             },
             onWsRestoredRefresh() {
-                this.searchStringChanged();
+                this.searchStringChanged(null);
             },
             onVideoCallChanged(dto) {
                 let matched = false;
@@ -226,7 +227,7 @@
             },
             onCloseContextMenu(){
                 this.$refs.contextMenuRef.onCloseContextMenu()
-            }
+            },
         },
         created() {
             bus.$on(LOGGED_IN, this.reloadItems);
@@ -237,6 +238,7 @@
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$on(SEARCH_STRING_CHANGED, this.searchStringChanged);
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadItems);
@@ -247,6 +249,7 @@
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$off(SEARCH_STRING_CHANGED, this.searchStringChanged);
         },
         mounted() {
             this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
