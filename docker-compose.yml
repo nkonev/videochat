@@ -125,32 +125,6 @@ services:
         max-size: "50m"
         max-file: "1"
 
-  elasticsearch:
-    image: elasticsearch:7.17.0
-    hostname: elasticsearch
-    restart: unless-stopped
-    ports:
-      - 28200:9200
-    environment:
-      - discovery.type=single-node
-      - cluster.name=elasticsearch
-      - xpack.security.enabled=false
-      - xpack.enrich.enabled=false
-      - xpack.graph.enabled=false
-      - xpack.watcher.enabled=false
-      - xpack.monitoring.enabled=false
-      - xpack.ml.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    volumes:
-      - es_data_dir:/usr/share/elasticsearch/data:z
-    networks:
-      backend:
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "1"
-
   keycloak-postgresql:
     image: library/postgres:14.0
     environment:

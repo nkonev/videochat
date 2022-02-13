@@ -33,7 +33,6 @@ func main() {
 		fx.Provide(
 			redis.RedisPooledConnection,
 			redis.NewOnlineStorage,
-			db.NewChatIndexOperations,
 			client.NewRestClient,
 			handlers.NewOnlineHandler,
 			handlers.ConfigureCentrifuge,
@@ -58,7 +57,6 @@ func main() {
 		fx.Invoke(
 			initJaeger,
 			runMigrations,
-			db.RunElasticMigrations,
 			runCentrifuge,
 			runEcho,
 			listener.ListenAaaQueue,

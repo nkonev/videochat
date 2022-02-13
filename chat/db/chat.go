@@ -7,7 +7,6 @@ import (
 	"github.com/guregu/null"
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/utils"
 	"time"
 )
 
@@ -92,32 +91,17 @@ func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) 
 	}
 }
 
-func (db *DB) GetChatsByIds(participantId int64, ids []int64) ([]*Chat, error) {
-	list := make([]*Chat, 0)
-	if len(ids) == 0 {
-		return list, nil
-	}
-
+func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, searchString string) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
-
-	var idsInPart = ""
-	var second = false
-	for _, id := range ids {
-		if second {
-			idsInPart += ", "
-		}
-		idsInPart += utils.Int64ToString(id)
-		second = true
-	}
-
-	str := fmt.Sprintf(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND id IN (%v) ORDER BY (last_update_date_time, id) DESC`, idsInPart)
-	rows, err = db.Query(str, participantId)
+	searchString = "%" + searchString + "%"
+	rows, err = db.Query(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND title ILIKE $4 ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset, searchString)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
 	} else {
 		defer rows.Close()
+		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
 			if err := rows.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet); err != nil {
@@ -157,17 +141,16 @@ type ChatQueryByIds struct {
 	Ids []int64
 }
 
-func (db *DB) GetChatsWithParticipants(participantId int64, chatQueryStrategy interface{}, userPrincipalDto *auth.AuthResult) ([]*ChatWithParticipants, error) {
+func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, searchString string, userPrincipalDto *auth.AuthResult) ([]*ChatWithParticipants, error) {
 	var err error
 	var chats []*Chat
-	switch v := chatQueryStrategy.(type) {
-	case ChatQueryByLimitOffset:
-		chats, err = db.GetChatsByLimitOffset(participantId, v.Limit, v.Offset)
-	case ChatQueryByIds:
-		chats, err = db.GetChatsByIds(participantId, v.Ids)
-	default:
-		return nil, errors.New("Unknown chatQueryStrategy")
+
+	if searchString == "" {
+		chats, err = db.GetChatsByLimitOffset(participantId, limit, offset)
+	} else {
+		chats, err = db.GetChatsByLimitOffsetSearch(participantId, limit, offset, searchString)
 	}
+
 	if err != nil {
 		return nil, err
 	} else {

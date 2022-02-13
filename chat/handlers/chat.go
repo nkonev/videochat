@@ -37,15 +37,14 @@ type CreateChatDto struct {
 }
 
 type ChatHandler struct {
-	db                  db.DB
-	notificator         notifications.Notifications
-	restClient          client.RestClient
-	policy              *bluemonday.Policy
-	elasticsearchClient *db.ChatIndexOperations
+	db          db.DB
+	notificator notifications.Notifications
+	restClient  client.RestClient
+	policy      *bluemonday.Policy
 }
 
-func NewChatHandler(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient, policy *bluemonday.Policy, elasticsearchClient *db.ChatIndexOperations) *ChatHandler {
-	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy, elasticsearchClient: elasticsearchClient}
+func NewChatHandler(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient, policy *bluemonday.Policy) *ChatHandler {
+	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
 }
 
 func (a *CreateChatDto) Validate() error {
@@ -71,26 +70,13 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	searchString = strings.TrimSpace(searchString)
 	var dbChats []*db.ChatWithParticipants
 	if searchString != "" {
-		esChats, err := ch.elasticsearchClient.SearchChat(searchString, size, offset)
-		if err != nil {
-			return errors.New("Error during getting chats from elasticsearch: " + err.Error())
-		}
-		var ids = make([]int64, 0)
-		for _, esChat := range esChats {
-			ids = append(ids, esChat.Id)
-		}
-		dbChats, err = ch.db.GetChatsWithParticipants(userPrincipalDto.UserId, db.ChatQueryByIds{Ids: ids}, userPrincipalDto)
-		if err != nil {
-			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
-			return err
-		}
-	} else {
-		var err error
-		dbChats, err = ch.db.GetChatsWithParticipants(userPrincipalDto.UserId, db.ChatQueryByLimitOffset{Limit: size, Offset: offset}, userPrincipalDto)
-		if err != nil {
-			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
-			return err
-		}
+		searchString = TrimAmdSanitize(ch.policy, searchString)
+	}
+
+	dbChats, err := ch.db.GetChatsWithParticipants(userPrincipalDto.UserId, size, offset, searchString, userPrincipalDto)
+	if err != nil {
+		GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
+		return err
 	}
 
 	chatDtos := make([]*dto.ChatDto, 0)
@@ -287,12 +273,6 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		errEs := ch.elasticsearchClient.SaveChat(convertToEsDto(responseDto))
-		if errEs != nil {
-			GetLogEntry(c.Request()).Errorf("Error during save to elasticsearch %v", errEs)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-
 		ch.notificator.NotifyAboutNewChat(c, copiedChat, responseDto.ParticipantIds, tx)
 		return c.JSON(http.StatusCreated, responseDto)
 	})
@@ -300,17 +280,6 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
-}
-
-func convertToEsDto(responseDto *dto.ChatDto) *db.ElasticChatDto {
-	if responseDto == nil {
-		return nil
-	}
-	return &db.ElasticChatDto{
-		Id:             responseDto.Id,
-		ParticipantIds: responseDto.ParticipantIds,
-		Name:           responseDto.Name,
-	}
 }
 
 func convertToCreatableChat(d *CreateChatDto, policy *bluemonday.Policy) *db.Chat {
@@ -343,11 +312,6 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 		}
 		if err := tx.DeleteChat(chatId); err != nil {
 			return err
-		}
-		errEs := ch.elasticsearchClient.DeleteChat(chatId)
-		if errEs != nil {
-			GetLogEntry(c.Request()).Errorf("Error during delete in elasticsearch %v", errEs)
-			return c.NoContent(http.StatusInternalServerError)
 		}
 
 		ch.notificator.NotifyAboutDeleteChat(c, chatId, ids, tx)
@@ -434,12 +398,6 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		} else {
 			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
 			if err != nil {
-				return c.NoContent(http.StatusInternalServerError)
-			}
-
-			errEs := ch.elasticsearchClient.UpdateChat(convertToEsDto(responseDto))
-			if errEs != nil {
-				GetLogEntry(c.Request()).Errorf("Error during update in elasticsearch %v", errEs)
 				return c.NoContent(http.StatusInternalServerError)
 			}
 
