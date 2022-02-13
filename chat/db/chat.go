@@ -104,10 +104,10 @@ func (db *DB) GetChatsByIds(participantId int64, ids []int64) ([]*Chat, error) {
 	var idsInPart = ""
 	var second = false
 	for _, id := range ids {
-		idsInPart += utils.Int64ToString(id)
 		if second {
 			idsInPart += ", "
 		}
+		idsInPart += utils.Int64ToString(id)
 		second = true
 	}
 

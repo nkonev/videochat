@@ -30,21 +30,72 @@ func RunElasticMigrations(ops *ChatIndexOperations) error {
 	ctx := context.Background()
 	const mapping = `
 {
-	"settings":{
-		"number_of_shards": 1,
-		"number_of_replicas": 0
-	},
-	"mappings":{
-		"properties":{
-			"id":{
-				"type":"long"
-			},
-			"name":{
-				"type":"keyword"
-			}
-		}
-	}
-}`
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "filter": {
+        "ru_stop": {
+          "type": "stop",
+          "stopwords": "_russian_"
+        },
+        "ru_stemmer": {
+          "type": "stemmer",
+          "language": "russian"
+        },
+        "en_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        },
+        "en_stemmer": {
+          "type": "stemmer",
+          "language": "english"
+        }
+      },
+      "analyzer": {
+        "my_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "ru_stop",
+            "ru_stemmer",
+            "en_stop",
+            "en_stemmer"
+          ]
+        },
+        "rebuilt_standard": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "long"
+      },
+      "name": {
+        "type": "text",
+        "fields": {
+          "std": {
+            "type": "text",
+            "analyzer": "rebuilt_standard",
+            "term_vector": "with_positions_offsets_payloads"
+          }
+        },
+		"fielddata": true,
+        "index": true,
+        "search_analyzer": "my_analyzer",
+        "analyzer": "my_analyzer",
+        "term_vector": "with_positions_offsets_payloads"
+      }
+    }
+  }
+}
+`
 	shouldReplace := viper.GetBool("elastic.replace")
 	exists, err := ops.esClient.IndexExists(chatIndex).Do(ctx)
 	if err != nil {
