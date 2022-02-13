@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
+	"reflect"
 )
 
 type ChatIndexOperations struct {
@@ -23,6 +24,7 @@ func NewChatIndexOperations() (*ChatIndexOperations, error) {
 }
 
 const chatIndex = "chat"
+const chatNameFiled = "name"
 
 func RunElasticMigrations(ops *ChatIndexOperations) error {
 	ctx := context.Background()
@@ -38,7 +40,7 @@ func RunElasticMigrations(ops *ChatIndexOperations) error {
 				"type":"long"
 			},
 			"name":{
-				"type":"text"
+				"type":"keyword"
 			}
 		}
 	}
@@ -107,4 +109,42 @@ func (ops *ChatIndexOperations) DeleteChat(id int64) error {
 	ctx := context.Background()
 	_, err := ops.esClient.Delete().Index(chatIndex).Id(utils.Int64ToString(id)).Do(ctx)
 	return err
+}
+
+func (ops *ChatIndexOperations) SearchChat(searchString string, size, offset int) ([]*ElasticChatDto, error) {
+	ctx := context.Background()
+
+	aQuery := elastic.NewWildcardQuery(chatNameFiled, "*"+searchString+"*")
+	searchResult, err := ops.esClient.Search().
+		Index(chatIndex).          // search in index "twitter"
+		Query(aQuery).             // specify the query
+		Sort(chatNameFiled, true). // sort by "user" field, ascending
+		From(offset).Size(size).   // take documents 0-9
+		Pretty(true).              // pretty print request and response JSON
+		Do(ctx)                    // execute
+	if err != nil {
+		// Handle error
+		return nil, err
+	}
+
+	// searchResult is of type SearchResult and returns hits, suggestions,
+	// and all kinds of other information from Elasticsearch.
+	Logger.Debugf("Query took %d milliseconds\n", searchResult.TookInMillis)
+
+	var result = make([]*ElasticChatDto, 0)
+
+	// Each is a convenience function that iterates over hits in a search result.
+	// It makes sure you don't need to check for nil values in the response.
+	var ttyp *ElasticChatDto
+	for _, item := range searchResult.Each(reflect.TypeOf(ttyp)) {
+		if elasticChatDto, ok := item.(*ElasticChatDto); ok {
+			result = append(result, elasticChatDto)
+		} else {
+			Logger.Errorf("Not able to deserialize ElasticChatDto")
+		}
+	}
+	// TotalHits is another convenience function that works even when something goes wrong.
+	Logger.Debugf("Found a total of %d chats\n", searchResult.TotalHits())
+
+	return result, nil
 }

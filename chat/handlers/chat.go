@@ -16,6 +16,7 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
+	"strings"
 )
 
 type ChatWrapper struct {
@@ -66,44 +67,65 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	size := utils.FixSizeString(c.QueryParam("size"))
 	offset := utils.GetOffset(page, size)
 
-	if dbChats, err := ch.db.GetChatsWithParticipants(userPrincipalDto.UserId, size, offset, userPrincipalDto); err != nil {
-		GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
-		return err
-	} else {
-		chatDtos := make([]*dto.ChatDto, 0)
-		for _, cc := range dbChats {
-			messages, err := ch.db.GetUnreadMessagesCount(cc.Id, userPrincipalDto.UserId)
-			if err != nil {
-				return err
-			}
-			cd := convertToDto(cc, []*dto.User{}, messages)
-			chatDtos = append(chatDtos, cd)
-		}
-
-		var participantIdSet = map[int64]bool{}
-		for _, chatDto := range chatDtos {
-			for _, participantId := range chatDto.ParticipantIds {
-				participantIdSet[participantId] = true
-			}
-		}
-		var users = getUsersRemotelyOrEmpty(participantIdSet, ch.restClient, c)
-		for _, chatDto := range chatDtos {
-			for _, participantId := range chatDto.ParticipantIds {
-				user := users[participantId]
-				if user != nil {
-					chatDto.Participants = append(chatDto.Participants, user)
-					utils.ReplaceChatNameToLoginForTetATet(chatDto, user, userPrincipalDto.UserId)
-				}
-			}
-		}
-
-		userChatCount, err := ch.db.CountChatsPerUser(userPrincipalDto.UserId)
+	searchString := c.QueryParam("searchString")
+	searchString = strings.TrimSpace(searchString)
+	var dbChats []*db.ChatWithParticipants
+	if searchString != "" {
+		esChats, err := ch.elasticsearchClient.SearchChat(searchString, size, offset)
 		if err != nil {
-			return errors.New("Error during getting user chat count")
+			return errors.New("Error during getting chats from elasticsearch: " + err.Error())
 		}
-		GetLogEntry(c.Request()).Infof("Successfully returning %v chats", len(chatDtos))
-		return c.JSON(http.StatusOK, ChatWrapper{Data: chatDtos, Count: userChatCount})
+		var ids = make([]int64, 0)
+		for _, esChat := range esChats {
+			ids = append(ids, esChat.Id)
+		}
+		dbChats, err = ch.db.GetChatsWithParticipants(userPrincipalDto.UserId, db.ChatQueryByIds{Ids: ids}, userPrincipalDto)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
+			return err
+		}
+	} else {
+		var err error
+		dbChats, err = ch.db.GetChatsWithParticipants(userPrincipalDto.UserId, db.ChatQueryByLimitOffset{Limit: size, Offset: offset}, userPrincipalDto)
+		if err != nil {
+			GetLogEntry(c.Request()).Errorf("Error get chats from db %v", err)
+			return err
+		}
 	}
+
+	chatDtos := make([]*dto.ChatDto, 0)
+	for _, cc := range dbChats {
+		messages, err := ch.db.GetUnreadMessagesCount(cc.Id, userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+		cd := convertToDto(cc, []*dto.User{}, messages)
+		chatDtos = append(chatDtos, cd)
+	}
+
+	var participantIdSet = map[int64]bool{}
+	for _, chatDto := range chatDtos {
+		for _, participantId := range chatDto.ParticipantIds {
+			participantIdSet[participantId] = true
+		}
+	}
+	var users = getUsersRemotelyOrEmpty(participantIdSet, ch.restClient, c)
+	for _, chatDto := range chatDtos {
+		for _, participantId := range chatDto.ParticipantIds {
+			user := users[participantId]
+			if user != nil {
+				chatDto.Participants = append(chatDto.Participants, user)
+				utils.ReplaceChatNameToLoginForTetATet(chatDto, user, userPrincipalDto.UserId)
+			}
+		}
+	}
+
+	userChatCount, err := ch.db.CountChatsPerUser(userPrincipalDto.UserId)
+	if err != nil {
+		return errors.New("Error during getting user chat count")
+	}
+	GetLogEntry(c.Request()).Infof("Successfully returning %v chats", len(chatDtos))
+	return c.JSON(http.StatusOK, ChatWrapper{Data: chatDtos, Count: userChatCount})
 }
 
 func getChat(dbR db.CommonOperations, restClient client.RestClient, c echo.Context, chatId int64, behalfParticipantId int64, authResult *auth.AuthResult) (*dto.ChatDto, error) {
