@@ -166,9 +166,7 @@
             },
             searchStringChanged(searchString) {
                 this.searchString = searchString;
-                this.items = [];
-                this.startingFromItemId = null;
-                this.aDirection = directionTop;
+                this.resetVariables();
                 this.reloadItems();
             },
 
