@@ -42,7 +42,7 @@
         LOGGED_OUT,
         VIDEO_CALL_CHANGED,
         MESSAGE_BROADCAST,
-        REFRESH_ON_WEBSOCKET_RESTORED,
+        REFRESH_ON_WEBSOCKET_RESTORED, SEARCH_STRING_CHANGED,
     } from "./bus";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
@@ -95,6 +95,7 @@
                 items: [],
                 itemsTotal: 0,
                 infiniteId: +new Date(),
+                searchString: null,
 
                 chatMessagesSubscription: null,
                 chatDto: {
@@ -162,6 +163,12 @@
             reloadItems() {
               this.infiniteId += 1;
               console.log("Resetting infinite loader", this.infiniteId);
+            },
+            searchStringChanged(searchString) {
+                this.searchString = searchString;
+                this.items = [];
+                this.startingFromItemId = null;
+                this.reloadItems();
             },
 
             onScroll(e) {
@@ -281,7 +288,8 @@
                     params: {
                         startingFromItemId: this.startingFromItemId,
                         size: pageSize,
-                        reverse: this.isTopDirection()
+                        reverse: this.isTopDirection(),
+                        searchString: this.searchString
                     },
                 }).then(({data}) => {
                     const list = data;
@@ -359,7 +367,6 @@
                     console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
                     this.$store.commit(SET_TITLE, data.name);
                     this.$store.commit(SET_CHAT_USERS_COUNT, data.participants.length);
-                    this.$store.commit(SET_SHOW_SEARCH, false);
                     this.$store.commit(SET_CHAT_ID, this.chatId);
                     this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, data.canEdit);
 
@@ -489,6 +496,7 @@
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$on(SEARCH_STRING_CHANGED, this.searchStringChanged);
 
             this.scrollerDiv = document.getElementById("messagesScroller");
         },
@@ -505,6 +513,7 @@
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$off(SEARCH_STRING_CHANGED, this.searchStringChanged);
 
             this.unsubscribe();
         },

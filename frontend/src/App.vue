@@ -369,7 +369,7 @@
                 bus.$emit(OPEN_LANGUAGE_MODAL);
             },
             doSearch(searchString) {
-                if (!searchString) {
+                if (!searchString || searchString == "") {
                     bus.$emit(SEARCH_STRING_CHANGED, null);
                     return;
                 }
