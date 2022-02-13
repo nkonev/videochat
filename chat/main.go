@@ -20,7 +20,6 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/rabbitmq"
-	"nkonev.name/chat/redis"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -31,10 +30,7 @@ func main() {
 	app := fx.New(
 		fx.Logger(Logger),
 		fx.Provide(
-			redis.RedisPooledConnection,
-			redis.NewOnlineStorage,
 			client.NewRestClient,
-			handlers.NewOnlineHandler,
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
@@ -118,7 +114,6 @@ func configureEcho(
 	ch *handlers.ChatHandler,
 	mc *handlers.MessageHandler,
 	vh *handlers.VideoHandler,
-	sh *handlers.UserOnlineHandler,
 ) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")
@@ -169,8 +164,6 @@ func configureEcho(
 	e.POST("/internal/check-embedded-files", mc.CheckEmbeddedFiles)
 
 	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
-
-	e.GET("/chat/online", sh.GetOnlineUsers)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

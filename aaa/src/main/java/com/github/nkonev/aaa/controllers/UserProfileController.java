@@ -245,6 +245,14 @@ public class UserProfileController {
         return aaaUserDetailsService.getMySessions(userDetails);
     }
 
+    public record UserOnlineResponse (long userId, boolean online) {}
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping(Constants.Urls.API+Constants.Urls.USER+"/online")
+    public List<UserOnlineResponse> getOnlineForUsers(@RequestParam(value = "userId") List<Long> userIds){
+        return aaaUserDetailsService.getUsersSessions(userIds);
+    }
+
     @PreAuthorize("@aaaSecurityService.hasSessionManagementPermission(#userAccount)")
     @GetMapping(Constants.Urls.API+Constants.Urls.SESSIONS)
     public Map<String, Session> sessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){

@@ -1,5 +1,6 @@
 package com.github.nkonev.aaa.security;
 
+import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.exception.DataNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
@@ -17,7 +18,11 @@ import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 
 /**
  * Provides Spring Security compatible UserAccountDetailsDTO.
@@ -68,6 +73,13 @@ public class AaaUserDetailsService implements UserDetailsService {
             throw new RuntimeException("getMySessions may be called only by authorized users");
         }
         return getSessions(userDetails.getUsername());
+    }
+
+    public List<UserProfileController.UserOnlineResponse> getUsersSessions(List<Long> userIds){
+        if (userIds == null){
+            throw new RuntimeException("userIds cannon be null");
+        }
+        return StreamSupport.stream(userAccountRepository.findAllById(userIds).spliterator(), false).map(u -> new UserProfileController.UserOnlineResponse(u.id(), !getSessions(u.username()).isEmpty())).toList();
     }
 
     public UserAccount getUserAccount(long userId){

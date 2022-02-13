@@ -26,7 +26,6 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/rabbitmq"
-	"nkonev.name/chat/redis"
 	"nkonev.name/chat/utils"
 	"os"
 	"strings"
@@ -168,7 +167,6 @@ func waitForChatServer() {
 	restClient.CloseIdleConnections()
 }
 
-
 func startAaaEmu() *http.Server {
 	s := &http.Server{
 		Addr:    ":" + aaaEmuPort,
@@ -205,10 +203,7 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 		fx.Logger(Logger),
 		fx.Populate(&s),
 		fx.Provide(
-			redis.RedisPooledConnection,
-			redis.NewOnlineStorage,
 			client.NewRestClient,
-			handlers.NewOnlineHandler,
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
@@ -242,10 +237,7 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 		fx.Logger(Logger),
 		fx.Populate(&s),
 		fx.Provide(
-			redis.RedisPooledConnection,
-			redis.NewOnlineStorage,
 			client.NewRestClient,
-			handlers.NewOnlineHandler,
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
@@ -573,8 +565,6 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 	var countUnreadMessage int64 = int64(countUnreadMessageFloat.(float64))
 	assert.Equal(t, int64(1), countUnreadMessage)
 
-
-
 	_, data, err = websocketConnection.ReadMessage()
 	if err != nil {
 		assert.Fail(t, err.Error())
@@ -587,8 +577,6 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 	countUnreadMessageFloat2 := getJsonPathResult(t, strDataAboutUnreadMessage2, "$.result.data.data.payload.allUnreadMessages").(interface{})
 	var countUnreadMessage2 int64 = int64(countUnreadMessageFloat2.(float64))
 	assert.Equal(t, int64(1), countUnreadMessage2)
-
-
 
 	// send message to chat again
 	messageRequest2 := &http.Request{

@@ -41,18 +41,3 @@ rabbitmq:
 
 jaeger:
   endpoint: "localhost:6831"
-
-redis:
-  address: :36379
-  password: ""
-  db: 1
-  connectTimeout: 5s
-  readTimeout: 30s
-  writeTimeout: 30s
-  idleTimeout: 60s
-  maxIdle: 1
-  maxActive: 10
-
-online:
-  notification:
-    period: 2s

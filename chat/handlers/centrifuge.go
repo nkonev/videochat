@@ -12,7 +12,6 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/redis"
 	"nkonev.name/chat/utils"
 	"strings"
 	"time"
@@ -84,7 +83,7 @@ func getNewMessagesNotificationMessage(dbs db.DB, userId int64) ([]byte, error) 
 	}
 }
 
-func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineStorage) *centrifuge.Node {
+func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB) *centrifuge.Node {
 	// We use default config here as starting point. Default config contains
 	// reasonable values for available options.
 	cfg := centrifuge.DefaultConfig
@@ -166,9 +165,6 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 			return
 		}
 
-		expirationTimestamp := getNextRefreshTime()
-		onlineStorage.PutUserOnline(userId, expirationTimestamp)
-
 		client.OnSubscribe(func(e centrifuge.SubscribeEvent, cb centrifuge.SubscribeCallback) {
 			chatId, channelName, err := getChatId(e.Channel)
 			if err != nil {
@@ -232,12 +228,10 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 		// Set Disconnect Handler to react on client disconnect events.
 		client.OnDisconnect(func(e centrifuge.DisconnectEvent) {
 			Logger.Printf("Centrifuge user %v disconnected", creds.UserID)
-			onlineStorage.RemoveUserOnline(userId)
 		})
 
 		client.OnRefresh(func(event centrifuge.RefreshEvent, cb centrifuge.RefreshCallback) {
 			expirationTimestamp := getNextRefreshTime()
-			onlineStorage.PutUserOnline(userId, expirationTimestamp)
 			Logger.Infof("Refreshing centrifuge session for user %v", userId)
 			cb(centrifuge.RefreshReply{
 				ExpireAt: expirationTimestamp,
@@ -246,7 +240,6 @@ func ConfigureCentrifuge(lc fx.Lifecycle, dbs db.DB, onlineStorage redis.OnlineS
 
 		client.OnSubRefresh(func(event centrifuge.SubRefreshEvent, cb centrifuge.SubRefreshCallback) {
 			expirationTimestamp := getNextRefreshTime()
-			onlineStorage.PutUserOnline(userId, expirationTimestamp)
 			Logger.Infof("SubRefreshing centrifuge subscription for user %v", userId)
 			cb(centrifuge.SubRefreshReply{
 				ExpireAt: expirationTimestamp,
@@ -359,9 +352,4 @@ func markMessageAsRead(db db.DB, userId, chatId, messageId int64) error {
 		return err
 	}
 	return nil
-}
-
-type UserOnlineChanged struct {
-	UserId int64 `json:"userId"`
-	Online bool  `json:"online"`
 }

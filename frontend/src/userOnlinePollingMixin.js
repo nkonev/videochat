@@ -16,9 +16,9 @@ export default () => {
                         return;
                     }
                     console.debug("Participants are non-empty, invoking axios");
-                    axios.get(`/api/chat/online`, {
+                    axios.get(`/api/user/online`, {
                         params: {
-                            participantIds: participants.reduce((f, s) => `${f},${s}`)
+                            userId: participants.reduce((f, s) => `${f},${s}`)
                             // participantIds: [1,2,3].reduce((f, s) => `${f},${s}`)
                         }
                     }).then(value => {
