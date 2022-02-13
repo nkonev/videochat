@@ -106,7 +106,7 @@
             </v-btn>
             <v-spacer></v-spacer>
 
-            <v-card light>
+            <v-card light v-if="isShowSearch">
                 <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" clearable clear-icon="mdi-close-circle"></v-text-field>
             </v-card>
 
@@ -186,7 +186,7 @@
         FETCH_USER_PROFILE, GET_CHAT_ID, GET_CHAT_USERS_COUNT,
         GET_SHOW_CALL_BUTTON,
         GET_SHOW_CHAT_EDIT_BUTTON,
-        GET_SHOW_HANG_BUTTON,
+        GET_SHOW_HANG_BUTTON, GET_SHOW_SEARCH,
         GET_TITLE,
         GET_USER,
         GET_VIDEO_CHAT_USERS_COUNT,
@@ -387,6 +387,7 @@
                 chatId: GET_CHAT_ID,
                 title: GET_TITLE,
                 chatUsersCount: GET_CHAT_USERS_COUNT,
+                isShowSearch: GET_SHOW_SEARCH,
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return this.currentUser.avatar;
