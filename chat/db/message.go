@@ -20,30 +20,43 @@ type Message struct {
 	FileItemUuid   *uuid.UUID
 }
 
-func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
+func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromItemId int64, reverse bool, searchString string) ([]*Message, error) {
 	order := "asc"
 	nonEquality := "m.id > $3"
 	if reverse {
 		order = "desc"
 		nonEquality = "m.id < $3"
 	}
-	if rows, err := db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) AND %s ORDER BY id %s LIMIT $2`, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId); err != nil {
-		Logger.Errorf("Error during get chat rows %v", err)
-		return nil, err
-	} else {
-		defer rows.Close()
-		list := make([]*Message, 0)
-		for rows.Next() {
-			message := Message{ChatId: chatId}
-			if err := rows.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid); err != nil {
-				Logger.Errorf("Error during scan message rows %v", err)
-				return nil, err
-			} else {
-				list = append(list, &message)
-			}
+
+	var err error
+	var rows *sql.Rows
+	if searchString != "" {
+		searchString = "%" + searchString + "%"
+		rows, err = db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) AND %s AND m.text ILIKE $5 ORDER BY id %s LIMIT $2`, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId, searchString)
+		if err != nil {
+			Logger.Errorf("Error during get chat rows %v", err)
+			return nil, err
 		}
-		return list, nil
+	} else {
+		rows, err = db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) AND %s ORDER BY id %s LIMIT $2`, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId)
+		if err != nil {
+			Logger.Errorf("Error during get chat rows with search %v", err)
+			return nil, err
+		}
 	}
+
+	defer rows.Close()
+	list := make([]*Message, 0)
+	for rows.Next() {
+		message := Message{ChatId: chatId}
+		if err := rows.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid); err != nil {
+			Logger.Errorf("Error during scan message rows %v", err)
+			return nil, err
+		} else {
+			list = append(list, &message)
+		}
+	}
+	return list, nil
 }
 
 func (tx *Tx) CreateMessage(m *Message) (id int64, createDatetime time.Time, editDatetime null.Time, err error) {

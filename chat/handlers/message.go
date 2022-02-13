@@ -66,6 +66,8 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	}
 	size := utils.FixSizeString(c.QueryParam("size"))
 	reverse := utils.GetBoolean(c.QueryParam("reverse"))
+	searchString := c.QueryParam("searchString")
+	searchString = TrimAmdSanitize(mc.policy, searchString)
 
 	chatIdString := c.Param("id")
 	chatId, err := utils.ParseInt64(chatIdString)
@@ -73,7 +75,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 		return err
 	}
 
-	if messages, err := mc.db.GetMessages(chatId, userPrincipalDto.UserId, size, startingFromItemId, reverse); err != nil {
+	if messages, err := mc.db.GetMessages(chatId, userPrincipalDto.UserId, size, startingFromItemId, reverse, searchString); err != nil {
 		GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
 		return err
 	} else {

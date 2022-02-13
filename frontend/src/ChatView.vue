@@ -168,6 +168,7 @@
                 this.searchString = searchString;
                 this.items = [];
                 this.startingFromItemId = null;
+                this.aDirection = directionTop;
                 this.reloadItems();
             },
 
