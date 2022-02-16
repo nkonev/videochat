@@ -58,7 +58,6 @@ export default {
       immediate: true,
       deep: true,
       handler(value) {
-        console.log(JSON.stringify(value));
         this.$emit("input", value);
       },
     },
@@ -73,29 +72,9 @@ export default {
     },
   },
   computed: {
-    replacementTags() {
-      return {
-        strong: "b",
-        em: "i",
-      };
-    },
     richText() {
-      let richText = this.html
-          .replaceAll("<p>", "")
-          .replaceAll("</p>", "\n\n")
-          .replaceAll("<br>", "\n");
-
-      Object.entries(this.replacementTags).forEach((tag) => {
-        const oldTag = tag[0];
-        const newTag = tag[1];
-
-        richText = richText
-            .replaceAll(`<${oldTag}>`, `<${newTag}>`)
-            .replaceAll(`</${oldTag}>`, `</${newTag}>`);
-      });
-
+      let richText = this.html;
       richText = richText.replace(/^\s+|\s+$/g, ""); // Trim to remove lasts \n
-
       return richText;
     },
   },

@@ -1,5 +1,5 @@
 <template>
-  <tiptap :value="text" />
+  <tiptap v-model="content" />
 </template>
 
 <script>
@@ -8,11 +8,16 @@
   export default {
     data() {
       return {
-        text: "a texto"
+        content: "a texto"
       }
     },
     components: {
       Tiptap
+    },
+    watch: {
+      content(newValue) {
+        console.log("New content: ", newValue);
+      }
     }
   }
 </script>
