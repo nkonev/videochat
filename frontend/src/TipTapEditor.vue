@@ -11,18 +11,48 @@ export default {
     EditorContent,
   },
 
+  props: {
+    value: {
+      type: String,
+      default: '',
+    },
+  },
+
   data() {
     return {
       editor: null,
     }
   },
 
+  watch: {
+    value(value) {
+      // HTML
+      const isSame = this.editor.getHTML() === value
+
+      // JSON
+      // const isSame = JSON.stringify(this.editor.getJSON()) === JSON.stringify(value)
+
+      if (isSame) {
+        return
+      }
+
+      this.editor.commands.setContent(value, false)
+    },
+  },
+
   mounted() {
     this.editor = new Editor({
-      content: '<p>I’m running Tiptap with Vue.js. 🎉</p>',
+      content: this.value,
       extensions: [
         StarterKit,
       ],
+      onUpdate: () => {
+        // HTML
+        this.$emit('input', this.editor.getHTML())
+
+        // JSON
+        // this.$emit('input', this.editor.getJSON())
+      },
     })
   },
 
