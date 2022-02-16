@@ -112,6 +112,7 @@ export default {
   background-color: #fff;
   border: 3px solid #0D0D0D;
   border-radius: 0.75rem;
+  height: 100%;
 }
 .richText__header {
   display: flex;
