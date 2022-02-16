@@ -81,6 +81,7 @@ export default {
             this.handleDynamicStyles()
             this.checkForInitialContent()
             this.checkForCustomImageHandler()
+            this.quill.focus()
         },
 
         setQuillElement() {
