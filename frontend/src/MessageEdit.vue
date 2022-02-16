@@ -1,28 +1,7 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid style="height: 100%">
-            <quill-editor
-                :key="editorKey"
-                :editorOptions="editorOption"
-                @keyup.native.ctrl.enter="sendMessageToChat"
-                @keyup.native.esc="resetInput"
-                ref="quillEditorInstance"
-                v-model="editMessageDto.text"
-                useCustomImageHandler
-                @imageAdded="handleImageAdded"
-                :customModules="customModules"
-            />
+            <tiptap :value="editMessageDto.text" />
             <div id="custom-toolbar">
-                <div class="custom-toolbar-format">
-                    <button class="ql-bold"></button>
-                    <button class="ql-italic"></button>
-                    <button class="ql-underline"></button>
-                    <button class="ql-strike"></button>
-                    <select class="ql-color" v-if="$vuetify.breakpoint.smAndUp"></select>
-                    <select class="ql-background" v-if="$vuetify.breakpoint.smAndUp"></select>
-                    <button class="ql-link"></button>
-                    <button class="ql-image"></button>
-                    <button class="ql-clean"></button>
-                </div>
                 <div class="custom-toolbar-send">
                     <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : ''" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
                     <template v-if="this.editMessageDto.fileItemUuid">
@@ -63,22 +42,7 @@
     import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
     import {GET_USER, SET_TITLE} from "./store";
-    import 'quill/dist/quill.core.css'
-    import 'quill/dist/quill.snow.css'
-    import imageDropFunction from './ImageDrop';
-    import VQuill from 'quill'
-    const Quill = VQuill;
-    // We need use Quill.import https://github.com/quilljs/quill/pull/2939/files
-    const Image = Quill.import('formats/image');
-    class SizedImage extends Image {
-      static create(value) {
-        let node = super.create(value);
-        node.setAttribute('style', 'width: 600px; height: 480px;');
-        return node;
-      }
-    }
-    Quill.register({'formats/image': SizedImage});
-    import Editor from "./Editor";
+    import Tiptap from './TipTapEditor.vue'
 
     const dtoFactory = () => {
         return {
@@ -105,50 +69,10 @@
         props:['chatId', 'canBroadcast'],
         data() {
             const chatIdRef = this.$props.chatId;
-            const messageEditPlaceholder = this.$vuetify.lang.t('$vuetify.message_edit_placeholder');
             return {
                 editorKey: +new Date(),
                 editMessageDto: dtoFactory(),
                 writingUsers: [],
-
-                editorOption: {
-                    theme: 'snow',
-                    // Some Quill options...
-                    modules: {
-                        // https://quilljs.com/docs/modules/toolbar/
-                        toolbar: '#custom-toolbar',
-
-                        imageDrop: true
-                    },
-                    placeholder: messageEditPlaceholder,
-                    formats: [
-                      'background',
-                      'bold',
-                      'color',
-                      //'font',
-                      //'code',
-                      'italic',
-                      'link',
-                      //'size',
-                      'strike',
-                      //'script',
-                      'underline',
-                      //'blockquote',
-                      //'header',
-                      //'indent',
-                      //'list',
-                      //'align',
-                      //'direction',
-                      //'code-block',
-                      //'formula'
-                      'image'
-                      // 'video'
-                    ]
-                },
-                customModules: [
-                  { alias: 'imageDrop', module: imageDropFunction(embedUploadFunction, chatIdRef)}
-                ],
-
                 showTooltip: true,
                 sendBroadcast: false,
                 broadcastMessage: null,
@@ -168,9 +92,6 @@
               console.log("Resetting text input");
               this.editMessageDto = dtoFactory();
               this.fileCount = null;
-              this.$nextTick(() => {
-                  this.$refs.quillEditorInstance.$data.editor.innerHTML = "";
-              })
             },
             messageTextIsPresent() {
                 return this.editMessageDto.text && this.editMessageDto.text !== "" && this.editMessageDto.text !== '<p><br></p>'
@@ -302,7 +223,7 @@
             }
         },
         components: {
-            quillEditor: Editor
+            Tiptap
         }
     }
 </script>

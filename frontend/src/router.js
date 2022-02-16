@@ -4,6 +4,7 @@ import {chat_list_name, root, chat_name, profile_self_name, videochat_name, prof
 import Error404 from "./Error404";
 import ChatList from "./ChatList";
 import ChatView from "./ChatView.vue";
+import EditorTest from "@/EditorTest";
 const UserSelfProfile = () => import("./UserSelfProfile");
 const UserProfile = () => import("./UserProfile");
 
@@ -20,6 +21,7 @@ const router = new Router({
         { name: chat_name, path: '/chat/:id', component: ChatView},
         { name: videochat_name, path: '/chat/:id/video', component: ChatView},
         { name: profile_self_name, path: '/profile', component: UserSelfProfile},
+        { name: "et", path: '/editor', component: EditorTest},
         { name: profile_name, path: '/profile/:id', component: UserProfile},
         { path: '*', component: Error404 },
     ]
