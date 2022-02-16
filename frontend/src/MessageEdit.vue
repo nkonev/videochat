@@ -1,6 +1,6 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid style="height: 100%">
-            <tiptap :value="editMessageDto.text" />
+            <tiptap v-model="editMessageDto.text" />
             <div id="custom-toolbar">
                 <div class="custom-toolbar-send">
                     <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : ''" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
