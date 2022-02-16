@@ -36,16 +36,29 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 		return 0, nil, errors.New("title required")
 	}
 
-	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet)
-	var id int64
+	res := tx.QueryRow("INSERT INTO chat(title, tet_a_tet) VALUES($1, $2) RETURNING id, last_update_date_time", u.Title, u.TetATet)
+	if res.Err() != nil {
+		Logger.Errorf("Error during inserting chat %v", res.Err())
+		return 0, nil, res.Err()
+	}
+	var chatId int64
 	var lastUpdateDateTime time.Time
-	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
-		Logger.Errorf("Error during getting chat id %v", err)
+	if err := res.Scan(&chatId, &lastUpdateDateTime); err != nil {
+		Logger.Errorf("Error during scanning chat id %v", err)
 		return 0, nil, err
 	}
 
-	return id, &lastUpdateDateTime, nil
+	if _, err := tx.Exec(fmt.Sprintf("CREATE TABLE message_chat_%v() INHERITS (message)", chatId)); err != nil {
+		Logger.Errorf("Error during creating messages table %v", err)
+		return 0, nil, err
+	}
+
+	if _, err := tx.Exec(fmt.Sprintf("ALTER TABLE message_chat_%v ADD PRIMARY KEY(id)", chatId)); err != nil {
+		Logger.Errorf("Error during creating messages table %v", err)
+		return 0, nil, err
+	}
+
+	return chatId, &lastUpdateDateTime, nil
 }
 
 func (tx *Tx) CreateTetATetChat(behalfUserId int64, toParticipantId int64) (int64, error) {
