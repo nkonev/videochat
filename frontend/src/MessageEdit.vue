@@ -273,7 +273,7 @@ $mobileWidth = 800px
     .richText__menu-item {
         min-width: 1.75rem;
         height: 1.75rem;
-        color: #0d0d0d;
+        color: rgba(0, 0, 0, 0.87);
         border: none;
         background-color: transparent;
         border-radius: 0.4rem;
@@ -287,7 +287,7 @@ $mobileWidth = 800px
     .richText__menu-item.active,
     .richText__menu-item:hover {
         color: #fff;
-        background-color: #0d0d0d;
+        background-color: rgba(0, 0, 0, 0.87);
     }
 }
 .custom-toolbar-send {
