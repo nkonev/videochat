@@ -261,5 +261,6 @@ $mobileWidth = 800px
     display: flex;
     flex-grow: 10
     justify-content flex-end
+    align-items center
 }
 </style>
