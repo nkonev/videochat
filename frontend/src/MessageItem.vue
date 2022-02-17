@@ -27,6 +27,7 @@
     import { format, parseISO, differenceInDays } from 'date-fns';
     import {getData} from "@/centrifugeConnection";
     import {setIcon} from "@/utils";
+    import "./messageImage.styl";
 
     const TYPE_MESSAGE_READ = "message_read";
 

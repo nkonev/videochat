@@ -1,6 +1,6 @@
 <template>
   <div class="richText">
-    <input id="file-input" type="file"style="display: none;" />
+    <input id="file-input" type="file" style="display: none;" />
     <div class="richText__content">
       <editor-content :editor="editor" />
     </div>
@@ -9,6 +9,7 @@
 
 <script>
 import "prosemirror-view/style/prosemirror.css";
+import "./messageImage.styl";
 import { Editor, EditorContent } from "@tiptap/vue-2";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -115,7 +116,11 @@ export default {
               },
           }),
           Text,
-          Image,
+          Image.configure({
+              HTMLAttributes: {
+                  class: 'image-custom-class',
+              },
+          }),
           Italic,
           Bold,
       ],
