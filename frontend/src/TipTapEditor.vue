@@ -109,12 +109,11 @@ export default {
 .richText {
   display: flex;
   flex-direction: column;
-  max-height: 26rem;
   color: #0d0d0d;
   background-color: #fff;
-  border: 3px solid #0D0D0D;
-  border-radius: 0.75rem;
+  border: 1px solid #0D0D0D;
   height: 100%;
+  overflow-y: auto;
 }
 .richText__header {
   display: flex;

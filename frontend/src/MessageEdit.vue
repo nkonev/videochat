@@ -235,53 +235,6 @@ $mobileWidth = 800px
     min-height 25%
 }
 
-.quillWrapper {
-    height 100%
-    overflow-y auto
-}
-
-.ql-editor {
-    padding 10px 8px
-}
-
-.ql-toolbar.ql-snow {
-    padding 4px
-}
-.ql-snow .ql-picker.ql-expanded .ql-picker-options {
-    top: unset
-    bottom 100%
-}
-
-.ql-snow .ql-picker svg {
-    position: absolute;
-    margin-top: -9px;
-    right: 0;
-    top: 50%;
-    width: 18px;
-}
-
-@media screen and (max-width: $mobileWidth) {
-    .ql-editor {
-        padding-left 4px
-        padding-right 4px
-        padding-top 2px
-        padding-bottom 2px
-    }
-
-    .ql-toolbar.ql-snow {
-        padding 2px
-    }
-}
-//.ql-container {
-//    height calc(100% - 16px)
-//}
-.ql-toolbar {
-    display: inline-flex;
-    //align-items center
-}
-.ql-snow .ql-tooltip {
-    left 0 !important
-}
 #custom-toolbar {
     display: flex;
     align-items: center
@@ -290,6 +243,7 @@ $mobileWidth = 800px
     border-bottom-style dashed
     border-left-style dashed
     border-right-style dashed
+    border-width 1px
 }
 @media screen and (max-width: $mobileWidth) {
     #custom-toolbar {
