@@ -29,7 +29,7 @@
                     <button class="richText__menu-item">x</button>
                 </div>
                 <div class="custom-toolbar-send">
-                    <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : ''" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
+                    <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
                     <template v-if="this.editMessageDto.fileItemUuid">
                         <v-badge
                             :value="fileCount"
@@ -38,10 +38,10 @@
                             overlap
                             left
                         >
-                            <v-btn icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : ''" @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
+                            <v-btn icon tile @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
                         </v-badge>
                     </template>
-                    <v-btn icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : 'mr-2'" @click="resetInput()"><v-icon>mdi-delete</v-icon></v-btn>
+                    <v-btn icon tile class="mr-2" @click="resetInput()"><v-icon>mdi-delete</v-icon></v-btn>
                     <v-switch v-if="canBroadcast && $vuetify.breakpoint.smAndUp" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                         :label="$vuetify.breakpoint.smAndUp ? $vuetify.lang.t('$vuetify.message_broadcast') : null"
                     ></v-switch>
