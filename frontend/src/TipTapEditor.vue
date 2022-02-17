@@ -1,6 +1,6 @@
 <template>
   <div class="richText">
-    <input id="file-input" type="file" style="display: none;" />
+    <input id="file-input" type="file" style="display: none;" accept="image/*" />
     <div class="richText__content">
       <editor-content :editor="editor" />
     </div>
