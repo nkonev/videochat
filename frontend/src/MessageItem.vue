@@ -128,6 +128,9 @@
       p {
           margin-bottom unset
       }
+      p:empty:after {
+          content: '\200b';
+      }
 
       img {
           max-width 100%
