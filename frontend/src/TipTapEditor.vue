@@ -119,6 +119,7 @@ export default {
       content: this.value,
       onCreate: () => this.updateHtml(),
       onUpdate: () => this.updateHtml(),
+      onSelectionUpdate: () => this.updateHtml(),
     });
 
     this.imageFileInput = document.getElementById('file-input');
