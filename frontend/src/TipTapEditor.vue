@@ -15,6 +15,7 @@ import Italic from "@tiptap/extension-italic";
 import Bold from "@tiptap/extension-bold";
 import Text from "@tiptap/extension-text";
 import History from '@tiptap/extension-history';
+import Placeholder from '@tiptap/extension-placeholder'
 
 export default {
   components: {
@@ -74,14 +75,26 @@ export default {
       enablePasteRules: false,
       injectCSS: false,
       enableInputRules: false,
-      extensions: [Document, Paragraph, History, Text, Italic, Bold],
+      extensions: [
+          Document,
+          Paragraph,
+          History,
+          Placeholder.configure({
+              placeholder: ({ node }) => {
+                return this.$vuetify.lang.t('$vuetify.message_edit_placeholder')
+              },
+          }),
+          Text,
+          Italic,
+          Bold,
+      ],
       content: this.value,
       onCreate: () => this.updateHtml(),
       onUpdate: () => this.updateHtml(),
     });
   },
 
-  beforeUnmount() {
+  beforeDestroy() {
     this.editor.destroy();
   },
 };
@@ -133,5 +146,13 @@ export default {
 
 .richText__content :focus-visible {
   outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #adb5bd;
+    pointer-events: none;
+    height: 0;
 }
 </style>
