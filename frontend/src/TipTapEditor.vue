@@ -27,6 +27,7 @@
 </template>
 
 <script>
+import "prosemirror-view/style/prosemirror.css";
 import { Editor, EditorContent } from "@tiptap/vue-2";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -88,6 +89,7 @@ export default {
       parseOptions: {
         preserveWhitespace: "full",
       },
+      autofocus: true,
       enablePasteRules: false,
       injectCSS: false,
       enableInputRules: false,
