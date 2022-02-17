@@ -1,7 +1,28 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid style="height: 100%">
-            <tiptap v-model="editMessageDto.text" />
+            <tiptap v-model="editMessageDto.text" ref="tipTapRef" />
             <div id="custom-toolbar">
+                <div class="custom-toolbar-format" v-if="$refs.tipTapRef != null && $refs.tipTapRef.$data.editor != null">
+                    <button
+                        :class="{
+                          'richText__menu-item': true,
+                          active: $refs.tipTapRef.$data.editor.isActive('bold'),
+                        }"
+                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleBold().run()">b</button>
+                    <button
+                        :class="{
+                          'richText__menu-item': true,
+                          active: $refs.tipTapRef.$data.editor.isActive('italic'),
+                        }"
+                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()">i</button>
+                    <button class="richText__menu-item">u</button>
+                    <button class="richText__menu-item">s</button>
+                    <select class="ql-color" v-if="false"></select>
+                    <select class="ql-background" v-if="false"></select>
+                    <button class="richText__menu-item">link</button>
+                    <button class="richText__menu-item">image</button>
+                    <button class="richText__menu-item">x</button>
+                </div>
                 <div class="custom-toolbar-send">
                     <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile :class="$vuetify.breakpoint.smAndUp ? 'mr-4' : ''" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
                     <template v-if="this.editMessageDto.fileItemUuid">
@@ -255,7 +276,27 @@ $mobileWidth = 800px
 
 .custom-toolbar-format {
     display: flex;
-    flex-grow: 0
+    flex-grow: 0;
+
+    .richText__menu-item {
+        width: 1.75rem;
+        height: 1.75rem;
+        color: #0d0d0d;
+        border: none;
+        background-color: transparent;
+        border-radius: 0.4rem;
+        padding: 0.25rem;
+        margin-right: 0.25rem;
+        font-weight: bold;
+        cursor: pointer;
+        font-family: Georgia, serif;
+    }
+
+    .richText__menu-item.active,
+    .richText__menu-item:hover {
+        color: #fff;
+        background-color: #0d0d0d;
+    }
 }
 .custom-toolbar-send {
     display: flex;

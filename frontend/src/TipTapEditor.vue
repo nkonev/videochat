@@ -1,25 +1,5 @@
 <template>
   <div class="richText">
-    <div v-if="editor" class="richText__header">
-      <button
-          @click="editor.chain().focus().toggleBold().run()"
-          :class="{
-          'richText__menu-item': true,
-          active: editor.isActive('bold'),
-        }"
-      >
-        B
-      </button>
-      <button
-          @click="editor.chain().focus().toggleItalic().run()"
-          :class="{
-          'richText__menu-item': true,
-          active: editor.isActive('italic'),
-        }"
-      >
-        I
-      </button>
-    </div>
     <div class="richText__content">
       <editor-content :editor="editor" />
     </div>
@@ -125,7 +105,7 @@ export default {
 }
 
 .richText__content {
-  padding: 4px 4px;
+  padding: 6px 6px;
   flex: 1 1 auto;
   overflow-x: hidden;
   overflow-y: auto;
@@ -150,25 +130,6 @@ export default {
   padding: 0.25rem 0.75rem;
 }
 
-.richText__menu-item {
-  width: 1.75rem;
-  height: 1.75rem;
-  color: #0d0d0d;
-  border: none;
-  background-color: transparent;
-  border-radius: 0.4rem;
-  padding: 0.25rem;
-  margin-right: 0.25rem;
-  font-weight: bold;
-  cursor: pointer;
-  font-family: Georgia, serif;
-}
-
-.richText__menu-item.active,
-.richText__menu-item:hover {
-  color: #fff;
-  background-color: #0d0d0d;
-}
 .richText__content :focus-visible {
   outline: none;
 }
