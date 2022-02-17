@@ -22,15 +22,20 @@
                         }"
                         @click="$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()">i</button>
                     <button class="richText__menu-item">u</button>
-                    <button class="richText__menu-item">s</button>
+                    <button class="richText__menu-item"
+                        :class="{
+                          'richText__menu-item': true,
+                          active: $refs.tipTapRef.$data.editor.isActive('strike'),
+                        }"
+                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()"
+                    >s</button>
                     <select class="ql-color" v-if="false"></select>
                     <select class="ql-background" v-if="false"></select>
-                    <button class="richText__menu-item">link</button>
+                    <button class="richText__menu-item" v-if="false">link</button>
                     <button
                         class="richText__menu-item"
                         @click="$refs.tipTapRef.addImage()"
                     >image</button>
-                    <button class="richText__menu-item">x</button>
                 </div>
                 <div class="custom-toolbar-send">
                     <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
@@ -146,7 +151,7 @@
             onUserTyping(data) {
                 console.debug("OnUserTyping", data);
 
-                if (!this.sendBroadcast && this.currentUser.id == data.participantId) {
+                if (!this.sendBroadcast && this.currentUser && this.currentUser.id == data.participantId) {
                     console.log("Skipping myself typing notifications");
                     return;
                 }
