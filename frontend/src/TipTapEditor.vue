@@ -48,6 +48,7 @@ export default {
     return {
       editor: null,
       html: "",
+      imageFileInput: null,
     };
   },
 
@@ -84,17 +85,7 @@ export default {
       this.html = this.editor.getHTML();
     },
     addImage() {
-      const el = document.getElementById('file-input');
-      el.onchange = e => {
-        if (e.target.files.length) {
-            const file = e.target.files[0];
-            embedUploadFunction(this.chatId, file)
-                .then(url => {
-                    this.editor.chain().focus().setImage({ src: url }).run()
-                })
-        }
-      }
-      el.click();
+      this.imageFileInput.click();
     },
   },
   mounted() {
@@ -128,10 +119,22 @@ export default {
       onCreate: () => this.updateHtml(),
       onUpdate: () => this.updateHtml(),
     });
+
+    this.imageFileInput = document.getElementById('file-input');
+    this.imageFileInput.onchange = e => {
+      if (e.target.files.length) {
+          const file = e.target.files[0];
+          embedUploadFunction(this.chatId, file)
+              .then(url => {
+                  this.editor.chain().focus().setImage({ src: url }).run()
+              })
+      }
+    }
   },
 
   beforeDestroy() {
     this.editor.destroy();
+    this.imageFileInput = null;
   },
 };
 </script>
