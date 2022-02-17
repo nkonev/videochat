@@ -55,15 +55,17 @@ export default {
   },
 
   watch: {
-    richText: {
+    html: {
       immediate: true,
       deep: true,
       handler(value) {
-        this.$emit("input", value);
+        if (value != "<p></p>") {
+            this.$emit("input", value);
+        }
       },
     },
     value(value) {
-      const isSame = this.richText === value;
+      const isSame = this.html === value;
 
       if (isSame) {
         return;
@@ -73,11 +75,6 @@ export default {
     },
   },
   computed: {
-    richText() {
-      let richText = this.html;
-      richText = richText.replace(/^\s+|\s+$/g, ""); // Trim to remove lasts \n
-      return richText;
-    },
     chatId() {
       return this.$route.params.id
     },
