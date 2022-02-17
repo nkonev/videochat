@@ -125,11 +125,15 @@ export default {
 }
 
 .richText__content {
-  padding: 1.25rem 1rem;
+  padding: 4px 4px;
   flex: 1 1 auto;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.richText__content p {
+    margin-bottom: unset
 }
 
 .richText__footer {
