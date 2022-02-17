@@ -1,5 +1,6 @@
 <template>
   <div class="richText">
+    <input id="file-input" type="file"style="display: none;" />
     <div class="richText__content">
       <editor-content :editor="editor" />
     </div>
@@ -15,7 +16,20 @@ import Italic from "@tiptap/extension-italic";
 import Bold from "@tiptap/extension-bold";
 import Text from "@tiptap/extension-text";
 import History from '@tiptap/extension-history';
-import Placeholder from '@tiptap/extension-placeholder'
+import Placeholder from '@tiptap/extension-placeholder';
+import Image from '@tiptap/extension-image';
+import axios from "axios";
+
+const embedUploadFunction = (chatId, fileObj) => {
+    const formData = new FormData();
+    formData.append('embed_file_header', fileObj);
+    return axios.post('/api/storage/'+chatId+'/embed', formData)
+        .then((result) => {
+            let url = result.data.relativeUrl; // Get url from response
+            console.debug("got embed url", url);
+            return url;
+        })
+}
 
 export default {
   components: {
@@ -60,10 +74,26 @@ export default {
       richText = richText.replace(/^\s+|\s+$/g, ""); // Trim to remove lasts \n
       return richText;
     },
+    chatId() {
+      return this.$route.params.id
+    },
   },
   methods: {
     updateHtml() {
       this.html = this.editor.getHTML();
+    },
+    addImage() {
+      const el = document.getElementById('file-input');
+      el.onchange = e => {
+        if (e.target.files.length) {
+            const file = e.target.files[0];
+            embedUploadFunction(this.chatId, file)
+                .then(url => {
+                    this.editor.chain().focus().setImage({ src: url }).run()
+                })
+        }
+      }
+      el.click();
     },
   },
   mounted() {
@@ -85,6 +115,7 @@ export default {
               },
           }),
           Text,
+          Image,
           Italic,
           Bold,
       ],
@@ -155,4 +186,10 @@ export default {
     pointer-events: none;
     height: 0;
 }
+
+.ProseMirror img {
+    max-width: 100%;
+    height: auto;
+}
+
 </style>

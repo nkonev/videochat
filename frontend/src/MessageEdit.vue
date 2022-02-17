@@ -1,6 +1,7 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid style="height: 100%">
             <tiptap
+                :key="editorKey"
                 v-model="editMessageDto.text"
                 ref="tipTapRef"
                 @keyup.native.ctrl.enter="sendMessageToChat"
@@ -25,7 +26,10 @@
                     <select class="ql-color" v-if="false"></select>
                     <select class="ql-background" v-if="false"></select>
                     <button class="richText__menu-item">link</button>
-                    <button class="richText__menu-item">image</button>
+                    <button
+                        class="richText__menu-item"
+                        @click="$refs.tipTapRef.addImage()"
+                    >image</button>
                     <button class="richText__menu-item">x</button>
                 </div>
                 <div class="custom-toolbar-send">
@@ -78,23 +82,11 @@
         }
     };
 
-    const embedUploadFunction = (chatId, fileObj) => {
-        const formData = new FormData();
-        formData.append('embed_file_header', fileObj);
-        return axios.post('/api/storage/'+chatId+'/embed', formData)
-            .then((result) => {
-                let url = result.data.relativeUrl; // Get url from response
-                console.debug("got embed url", url);
-                return url;
-            })
-    }
-
     let timerId;
 
     export default {
         props:['chatId', 'canBroadcast'],
         data() {
-            const chatIdRef = this.$props.chatId;
             return {
                 editorKey: +new Date(),
                 editMessageDto: dtoFactory(),
@@ -178,9 +170,6 @@
                     this.broadcastMessage = null;
                 }
             },
-            updateModel(html) {
-                this.editMessageDto.text = html;
-            },
             openFileUpload() {
                 bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.editMessageDto.fileItemUuid, true, false);
             },
@@ -193,13 +182,6 @@
                 if (this.fileCount === 0) {
                     this.editMessageDto.fileItemUuid = null;
                 }
-            },
-            handleImageAdded(file, Editor, cursorLocation) {
-                embedUploadFunction(this.chatId, file)
-                    .then(url => Editor.insertEmbed(cursorLocation, 'image', url))
-                    .catch((err) => {
-                    console.log(err);
-                  })
             },
         },
         computed: {
@@ -243,7 +225,6 @@
             },
             '$vuetify.lang.current': {
                 handler: function (newValue, oldValue) {
-                    this.editorOption.placeholder = this.$vuetify.lang.t('$vuetify.message_edit_placeholder');
                     this.editorKey++;
                 },
             }
