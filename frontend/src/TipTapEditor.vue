@@ -14,6 +14,7 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Italic from "@tiptap/extension-italic";
 import Bold from "@tiptap/extension-bold";
 import Text from "@tiptap/extension-text";
+import History from '@tiptap/extension-history';
 
 export default {
   components: {
@@ -73,7 +74,7 @@ export default {
       enablePasteRules: false,
       injectCSS: false,
       enableInputRules: false,
-      extensions: [Document, Paragraph, Text, Italic, Bold],
+      extensions: [Document, Paragraph, History, Text, Italic, Bold],
       content: this.value,
       onCreate: () => this.updateHtml(),
       onUpdate: () => this.updateHtml(),

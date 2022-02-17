@@ -284,7 +284,7 @@ $mobileWidth = 800px
     flex-grow: 0;
 
     .richText__menu-item {
-        width: 1.75rem;
+        min-width: 1.75rem;
         height: 1.75rem;
         color: #0d0d0d;
         border: none;
