@@ -1,6 +1,11 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid style="height: 100%">
-            <tiptap v-model="editMessageDto.text" ref="tipTapRef" />
+            <tiptap
+                v-model="editMessageDto.text"
+                ref="tipTapRef"
+                @keyup.native.ctrl.enter="sendMessageToChat"
+                @keyup.native.esc="resetInput"
+            />
             <div id="custom-toolbar">
                 <div class="custom-toolbar-format" v-if="$refs.tipTapRef != null && $refs.tipTapRef.$data.editor != null">
                     <button
