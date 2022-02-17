@@ -12,18 +12,21 @@
                     <button
                         :class="{
                           'richText__menu-item': true,
+                          'bold': true,
                           active: $refs.tipTapRef.$data.editor.isActive('bold'),
                         }"
                         @click="$refs.tipTapRef.$data.editor.chain().focus().toggleBold().run()">b</button>
                     <button
                         :class="{
                           'richText__menu-item': true,
+                          'italic': true,
                           active: $refs.tipTapRef.$data.editor.isActive('italic'),
                         }"
                         @click="$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()">i</button>
                     <button class="richText__menu-item"
                         :class="{
                           'richText__menu-item': true,
+                          'underline': true,
                           active: $refs.tipTapRef.$data.editor.isActive('underline')
                         }"
                         @click="$refs.tipTapRef.$data.editor.chain().focus().toggleUnderline().run()"
@@ -31,6 +34,7 @@
                     <button class="richText__menu-item"
                         :class="{
                           'richText__menu-item': true,
+                          'strike': true,
                           active: $refs.tipTapRef.$data.editor.isActive('strike'),
                         }"
                         @click="$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()"
@@ -285,9 +289,24 @@ $mobileWidth = 800px
         border-radius: 0.4rem;
         padding: 0.25rem;
         margin-right: 0.25rem;
-        font-weight: bold;
         cursor: pointer;
         font-family: Georgia, serif;
+    }
+
+    .bold {
+        font-weight: bold;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    .underline {
+        text-decoration: underline;
+    }
+
+    .strike {
+        text-decoration: line-through;
     }
 
     .richText__menu-item.active,
