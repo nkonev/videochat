@@ -21,7 +21,13 @@
                           active: $refs.tipTapRef.$data.editor.isActive('italic'),
                         }"
                         @click="$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()">i</button>
-                    <button class="richText__menu-item">u</button>
+                    <button class="richText__menu-item"
+                        :class="{
+                          'richText__menu-item': true,
+                          active: $refs.tipTapRef.$data.editor.isActive('underline')
+                        }"
+                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleUnderline().run()"
+                    >u</button>
                     <button class="richText__menu-item"
                         :class="{
                           'richText__menu-item': true,
@@ -54,7 +60,7 @@
                     <v-switch v-if="canBroadcast && $vuetify.breakpoint.smAndUp" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                         :label="$vuetify.breakpoint.smAndUp ? $vuetify.lang.t('$vuetify.message_broadcast') : null"
                     ></v-switch>
-                    <v-btn color="primary" @click="sendMessageToChat" small><v-icon color="white">mdi-send</v-icon></v-btn>
+                    <v-btn color="primary" @click="sendMessageToChat" small class="mr-1"><v-icon color="white">mdi-send</v-icon></v-btn>
                 </div>
             </div>
             <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#sendButtonContainer'" top v-model="showTooltip" :key="tooltipKey">

@@ -16,6 +16,7 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Italic from "@tiptap/extension-italic";
 import Bold from "@tiptap/extension-bold";
 import Strike from '@tiptap/extension-strike';
+import Underline from '@tiptap/extension-underline';
 import Text from "@tiptap/extension-text";
 import History from '@tiptap/extension-history';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -116,6 +117,7 @@ export default {
           Italic,
           Bold,
           Strike,
+          Underline,
       ],
       content: this.value,
       onCreate: () => this.updateHtml(),
