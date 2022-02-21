@@ -6,6 +6,8 @@ import com.github.nkonev.aaa.it.OAuth2EmulatorTests;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import io.opentracing.contrib.spring.tracer.configuration.TracerAutoConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -33,12 +35,14 @@ class IgnoreAllSecurityConfiguration extends WebSecurityConfigurerAdapter {
 @EnableJdbcRepositories(basePackageClasses = {UserAccountRepository.class})
 public class EmulatorServersController extends OAuth2EmulatorTests {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmulatorServersController.class);
+
     public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 tearDownClass();
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.warn("Exception during executing shutdown hook", e);
             }
         }));
 
@@ -58,10 +62,12 @@ public class EmulatorServersController extends OAuth2EmulatorTests {
 
     @PostMapping("/recreate-oauth2-mocks")
     public void commandReceiver() throws InterruptedException {
+        LOGGER.info("Resetting emulators");
         resetFacebookEmulator();
         resetVkontakteEmulator();
         resetGoogleEmulator();
 
+        LOGGER.info("Configuring emulators");
         configureFacebookEmulator();
         configureVkontakteEmulator();
         configureGoogleEmulator();
