@@ -1,0 +1,154 @@
+logging.level.root: INFO
+
+custom.base-url: "http://localhost:${server.port}"
+
+# https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
+# https://yandex.ru/support/mail-new/mail-clients.html
+# https://stackoverflow.com/questions/411331/using-javamail-with-tls
+spring.mail:
+  testConnection: false
+  host: 127.0.0.1
+  port: 3025
+  username: testEmailUsername 
+  password: testEmailPassword 
+  properties:
+    # mail.smtp.starttls.enable: "true"
+    # mail.smtp.ssl.enable: "true"
+    mail.smtp.connectiontimeout: 5000
+    mail.smtp.timeout: 3000
+    mail.smtp.writetimeout: 5000
+
+
+spring.session.timeout: 2d
+spring.session.store-type: none
+
+opentracing:
+  jaeger:
+    enabled: false
+
+
+spring:
+  application:
+    name: aaa
+  data:
+    ldap:
+      repositories:
+        enabled: false
+
+custom:
+  email:
+    from: testEmailUsername@test.example.com 
+  registration:
+    email:  
+      subject: "Registration confirmation"
+  confirmation:
+    registration:
+      token:
+        ttl-minutes: 5
+  password-reset:
+    email:
+      subject: "Password reset"
+    token:
+      ttl-minutes: 5
+
+
+server.port: 9080
+
+server.tomcat.basedir: ${java.io.tmpdir}/com.github.nkonev.aaa.tomcat
+spring.servlet.multipart.max-file-size: 6MB
+spring.servlet.multipart.max-request-size: 8MB
+server.servlet.encoding.force-response: true
+server.servlet.session.cookie.name: VIDEOCHAT_SESSION
+
+custom.it.user: admin
+custom.it.password: admin
+custom.it.user.id: 1
+
+custom.htmlunit.implicitly-wait-timeout: 10000
+custom.htmlunit.window-height: 900
+custom.htmlunit.window-width: 1600
+
+
+spring.datasource:
+    name: aaa_ds
+    type: org.apache.tomcat.jdbc.pool.DataSource
+    # https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters
+    url: jdbc:postgresql://127.0.0.1:35432/aaa?connectTimeout=10&socketTimeout=40
+    username: aaa
+    password: "aaaPazZw0rd"
+    driverClassName: org.postgresql.Driver
+    # https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#boot-features-connect-to-production-database
+    # https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html#Common_Attributes
+    # https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-connect-to-production-database
+    tomcat:
+      minIdle: 4
+      maxIdle: 8
+      maxActive: 10
+      maxWait: 60000
+      testOnBorrow: true
+      testOnConnect: true
+      testWhileIdle: true
+      timeBetweenEvictionRunsMillis: 5000
+      validationQuery: SELECT 1;
+      validationQueryTimeout: 4
+      logValidationErrors: true
+
+# https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#howto-execute-flyway-database-migrations-on-startup
+# https://flywaydb.org/documentation/configfiles
+spring.flyway:
+  enabled: false
+
+spring.redis.url: redis://127.0.0.1:36379/0
+
+spring.rabbitmq:
+  addresses: localhost:36672
+  username: videoChat
+  password: videoChatPazZw0rd
+
+management.endpoints.web.exposure.include: '*'
+management.endpoint.health.show-details: always
+management:
+  health:
+    mail:
+      enabled: false
+
+spring.ldap.embedded:
+  base-dn: dc=springframework,dc=org
+  ldif: classpath:test-server.ldif
+
+custom.ldap.auth:
+  enabled: true
+  filter: "uid={0}"
+
+spring.security:
+  oauth2:
+    client:
+      registration:
+        vkontakte:
+          client-id: 6805077
+          client-secret: your-app-client-secret
+          authorization-grant-type: authorization_code
+          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+          client-authentication-method: post
+        facebook:
+          client-id: 1684113965162824
+          client-secret: your-app-client-secret
+          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+        google:
+          client-id: 987654321
+          client-secret: your-app-client-secret
+          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+      provider:
+        vkontakte:
+          authorization-uri: http://127.0.0.1:10081/mock/vkontakte/authorize
+          token-uri: http://127.0.0.1:10081/mock/vkontakte/access_token
+          user-info-uri: http://127.0.0.1:10081/mock/vkontakte/method/users.get?v=5.92
+          user-info-authentication-method: form
+          user-name-attribute: response
+        facebook:
+          authorization-uri: http://127.0.0.1:10080/mock/facebook/dialog/oauth
+          token-uri: http://127.0.0.1:10080/mock/facebook/oauth/access_token
+          user-info-uri: http://127.0.0.1:10080/mock/facebook/me?fields=id,name,picture
+        google:
+          authorization-uri: http://127.0.0.1:10082/mock/google/o/oauth2/v2/auth
+          token-uri: http://127.0.0.1:10082/mock/google/oauth2/v4/token

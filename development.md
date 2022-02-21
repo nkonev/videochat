@@ -384,3 +384,12 @@ Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=166
 curl 'http://127.0.0.1:28200/chat/_mapping' | jq '.'
 curl 'http://127.0.0.1:28200/chat/_doc/3' | jq '.'
 ```
+
+# Starting server for integration tests
+```
+cd aaa
+export JAVA_HOME=/usr/lib/jvm/bellsoft-java17.x86_64
+
+# https://docs.spring.io/spring-boot/docs/current/maven-plugin/reference/htmlsingle/#goals-run-parameters-details-mainClass
+# https://stackoverflow.com/questions/40094423/spring-boot-usetestclasspath-throws-cannotloadbeanclassexception-and-classnotfou/43765880#43765880
+./mvnw -Pintegration_test clean spring-boot:run -DuseTestClasspath=true -DmainClass=com.github.nkonev.integration.EmulatorServersController```

@@ -75,14 +75,11 @@ public abstract class AbstractTestRunner {
     @Autowired
     protected UserConfirmationTokenRepository userConfirmationTokenRepository;
 
-    @Autowired
+    @Autowired(required = false)
     protected TestRestTemplate testRestTemplate;
 
     @Autowired
     protected RestTemplate restTemplate;
-
-    @Value("${local.management.port}")
-    protected int mgmtPort;
 
     @Value("${custom.base-url}")
     protected String urlPrefix;

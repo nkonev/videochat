@@ -37,9 +37,6 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
-    protected UserService userDeleteService;
-
     @BeforeAll
     public static void setUpClass() {
         mockServerFacebook = startClientAndServer(MOCK_SERVER_FACEBOOK_PORT);
