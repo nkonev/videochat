@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <v-list>
-            <v-list-item-group v-model="group" color="primary">
+            <v-list-item-group v-model="group" color="primary" id="chat-list-items">
             <v-list-item @keydown.esc="onCloseContextMenu()"
                     v-for="(item, index) in items"
                     :key="item.id"
