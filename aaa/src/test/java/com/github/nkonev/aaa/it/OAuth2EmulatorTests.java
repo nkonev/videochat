@@ -42,7 +42,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
 
     @BeforeAll
     public static void setUpClass() {
-        LOGGER.info("Starting mock servers on ports {}", Arrays.asList(MOCK_SERVER_FACEBOOK_PORT, MOCK_SERVER_VKONTAKTE_PORT, MOCK_SERVER_GOOGLE_PORT));
+        LOGGER.info("Starting mock OAuth2 servers on ports {}", Arrays.asList(MOCK_SERVER_FACEBOOK_PORT, MOCK_SERVER_VKONTAKTE_PORT, MOCK_SERVER_GOOGLE_PORT));
         mockServerFacebook = startClientAndServer(MOCK_SERVER_FACEBOOK_PORT);
         mockServerVkontakte = startClientAndServer(MOCK_SERVER_VKONTAKTE_PORT);
         mockServerGoogle = startClientAndServer(MOCK_SERVER_GOOGLE_PORT);
@@ -50,7 +50,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
 
     @AfterAll
     public static void tearDownClass() throws Exception {
-        LOGGER.info("Stopping mock servers");
+        LOGGER.info("Stopping mock OAuth2 servers");
         mockServerFacebook.stop();
         mockServerVkontakte.stop();
         mockServerGoogle.stop();
