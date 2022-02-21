@@ -1,0 +1,18 @@
+{
+  "name": "it",
+  "version": "1.0.0",
+  "description": "[![Build Status](https://github.com/nkonev/videochat/workflows/CI%20jobs/badge.svg)](https://github.com/nkonev/videochat/actions)",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nkonev/videochat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://github.com/nkonev/videochat#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.19.1"
+  }
+}
