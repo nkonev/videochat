@@ -2,7 +2,6 @@ package com.github.nkonev.aaa.it;
 
 import com.github.nkonev.aaa.AbstractTestRunner;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.services.UserService;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -10,12 +9,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Header;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.concurrent.Exchanger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
@@ -37,8 +38,11 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OAuth2EmulatorTests.class);
+
     @BeforeAll
     public static void setUpClass() {
+        LOGGER.info("Starting mock servers on ports {}", Arrays.asList(MOCK_SERVER_FACEBOOK_PORT, MOCK_SERVER_VKONTAKTE_PORT, MOCK_SERVER_GOOGLE_PORT));
         mockServerFacebook = startClientAndServer(MOCK_SERVER_FACEBOOK_PORT);
         mockServerVkontakte = startClientAndServer(MOCK_SERVER_VKONTAKTE_PORT);
         mockServerGoogle = startClientAndServer(MOCK_SERVER_GOOGLE_PORT);
@@ -46,6 +50,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
 
     @AfterAll
     public static void tearDownClass() throws Exception {
+        LOGGER.info("Stopping mock servers");
         mockServerFacebook.stop();
         mockServerVkontakte.stop();
         mockServerGoogle.stop();

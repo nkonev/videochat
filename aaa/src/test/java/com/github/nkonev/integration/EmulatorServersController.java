@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
@@ -19,6 +20,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 @Configuration
 @EnableWebSecurity
@@ -38,16 +42,6 @@ public class EmulatorServersController extends OAuth2EmulatorTests {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmulatorServersController.class);
 
     public static void main(String[] args) {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                tearDownClass();
-            } catch (Exception e) {
-                LOGGER.warn("Exception during executing shutdown hook", e);
-            }
-        }));
-
-        setUpClass();
-
         new SpringApplicationBuilder()
                 .profiles("integration_test")
                 .properties("spring.config.location=classpath:/config/application-integration_test.yml")
@@ -58,6 +52,16 @@ public class EmulatorServersController extends OAuth2EmulatorTests {
                     WebConfig.class
                 )
                 .run(args);
+    }
+
+    @PostConstruct
+    public void postConstruct() {
+        setUpClass();
+    }
+
+    @PreDestroy
+    public void preDestroy() throws Exception {
+        tearDownClass();
     }
 
     @PostMapping("/recreate-oauth2-mocks")
