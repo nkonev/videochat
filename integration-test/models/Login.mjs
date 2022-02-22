@@ -25,6 +25,13 @@ export default class Login {
         await submit.click();
     }
 
+    assertWrongLogin() {
+        const alertLocator = this.page.locator('.v-dialog .v-form .v-alert');
+        return expect(alertLocator).toBeVisible().then(() => {
+            return expect(alertLocator).toHaveText("Wrong login or password");
+        });
+    }
+
     async assertNicknameVkontakte() {
         return expect(this.page.locator('.v-navigation-drawer .user-login')).toHaveText("Никита Конев")
     }

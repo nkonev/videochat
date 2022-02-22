@@ -18,9 +18,7 @@ test('login unsuccessful', async ({ page }) => {
     await loginPage.navigate();
     await loginPage.submitLogin();
 
-    const alertLocator = page.locator('.v-dialog .v-form .v-alert');
-    await expect(alertLocator).toBeVisible();
-    await expect(alertLocator).toHaveText("Wrong login or password");
+    await loginPage.assertWrongLogin();
 });
 
 test('login vkontakte', async ({ page }) => {
