@@ -288,7 +288,6 @@ $mobileWidth = 800px
 
     .richText__menu-item {
         min-width: 1.75rem;
-        height: 1.75rem;
         color: rgba(0, 0, 0, 0.87);
         border: none;
         background-color: transparent;
