@@ -3,6 +3,10 @@ export const defaultAdminUser = {
     password: "admin"
 }
 
+export const defaultVkontakteUser = {
+    user: "Никита Конев",
+}
+
 export const defaultWrongUser = {
     user: "wrong",
     password: "admin"

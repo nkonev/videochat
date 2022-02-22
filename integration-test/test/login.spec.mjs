@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import {defaultAdminUser, defaultWrongUser, recreateAaaOauth2MocksUrl} from "../constants.mjs";
+import {defaultAdminUser, defaultVkontakteUser, defaultWrongUser, recreateAaaOauth2MocksUrl} from "../constants.mjs";
 import Login from "../models/Login.mjs";
 import axios from "axios";
 
@@ -8,9 +8,7 @@ test('login successful', async ({ page }) => {
     await loginPage.navigate();
     await loginPage.submitLogin();
 
-    await expect(page.locator('#chat-list-items')).toBeVisible();
-    const count = await page.locator('#chat-list-items .v-list-item').count();
-    expect(count).toBeGreaterThanOrEqual(1);
+    await loginPage.assertNickname(defaultAdminUser.user)
 });
 
 test('login unsuccessful', async ({ page }) => {
@@ -28,7 +26,7 @@ test('login vkontakte', async ({ page }) => {
     await loginPage.navigate();
     await loginPage.submitVkontakte();
 
-    await loginPage.assertNicknameVkontakte()
+    await loginPage.assertNickname(defaultVkontakteUser.user)
 });
 
 

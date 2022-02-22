@@ -32,9 +32,8 @@ export default class Login {
         });
     }
 
-    async assertNicknameVkontakte() {
-        return expect(this.page.locator('.v-navigation-drawer .user-login')).toHaveText("Никита Конев")
+    async assertNickname(expected) {
+        return expect(this.page.locator('.v-navigation-drawer .user-login')).toHaveText(expected)
     }
-
 
 }
