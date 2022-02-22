@@ -12,40 +12,46 @@
                     <button
                         :class="{
                           'richText__menu-item': true,
-                          'bold': true,
                           active: $refs.tipTapRef.$data.editor.isActive('bold'),
                         }"
-                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleBold().run()">b</button>
+                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleBold().run()">
+                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'bold' }"></font-awesome-icon>
+                    </button>
                     <button
                         :class="{
                           'richText__menu-item': true,
-                          'italic': true,
                           active: $refs.tipTapRef.$data.editor.isActive('italic'),
                         }"
-                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()">i</button>
+                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()">
+                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'italic' }"></font-awesome-icon>
+                    </button>
                     <button class="richText__menu-item"
                         :class="{
                           'richText__menu-item': true,
-                          'underline': true,
                           active: $refs.tipTapRef.$data.editor.isActive('underline')
                         }"
                         @click="$refs.tipTapRef.$data.editor.chain().focus().toggleUnderline().run()"
-                    >u</button>
+                    >
+                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'underline' }"></font-awesome-icon>
+                    </button>
                     <button class="richText__menu-item"
                         :class="{
                           'richText__menu-item': true,
-                          'strike': true,
                           active: $refs.tipTapRef.$data.editor.isActive('strike'),
                         }"
                         @click="$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()"
-                    >s</button>
+                    >
+                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'strikethrough' }"></font-awesome-icon>
+                    </button>
                     <select class="ql-color" v-if="false"></select>
                     <select class="ql-background" v-if="false"></select>
                     <button class="richText__menu-item" v-if="false">link</button>
                     <button
                         class="richText__menu-item"
                         @click="$refs.tipTapRef.addImage()"
-                    >image</button>
+                    >
+                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'image' }"></font-awesome-icon>
+                    </button>
                 </div>
                 <div class="custom-toolbar-send">
                     <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
@@ -288,25 +294,8 @@ $mobileWidth = 800px
         background-color: transparent;
         border-radius: 0.4rem;
         padding: 0.25rem;
-        margin-right: 0.25rem;
+        margin-right: 0.35rem;
         cursor: pointer;
-        font-family: Georgia, serif;
-    }
-
-    .bold {
-        font-weight: bold;
-    }
-
-    .italic {
-        font-style: italic;
-    }
-
-    .underline {
-        text-decoration: underline;
-    }
-
-    .strike {
-        text-decoration: line-through;
     }
 
     .richText__menu-item.active,
