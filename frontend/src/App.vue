@@ -14,7 +14,7 @@
                     </v-list-item-avatar>
 
                     <v-list-item-content>
-                        <v-list-item-title>{{currentUser.login}}</v-list-item-title>
+                        <v-list-item-title class="user-login">{{currentUser.login}}</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
             </template>

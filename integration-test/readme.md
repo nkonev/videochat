@@ -6,4 +6,6 @@ npx playwright test
 npx playwright test --headed --project=chromium --debug
 
 npx playwright test --headed --project=chromium test/login.spec.mjs
+
+npx playwright test --headed --project=chromium -g "login vkontakte"
 ```

@@ -1,6 +1,6 @@
 logging.level.root: INFO
 
-custom.base-url: "http://localhost:${server.port}"
+custom.base-url: "http://localhost:8060"
 
 # https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
 # https://yandex.ru/support/mail-new/mail-clients.html

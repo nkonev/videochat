@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { defaultAdminUser, defaultWrongUser} from "../constants.mjs";
 import Login from "../models/Login.mjs";
+import axios from "axios";
 
 test('login successful', async ({ page }) => {
     const loginPage = new Login(page, defaultAdminUser.user, defaultAdminUser.password);
@@ -21,4 +22,15 @@ test('login unsuccessful', async ({ page }) => {
     await expect(alertLocator).toBeVisible();
     await expect(alertLocator).toHaveText("Wrong login or password");
 });
+
+test('login vkontakte', async ({ page }) => {
+    await axios.post('http://localhost:9080/recreate-oauth2-mocks')
+
+    const loginPage = new Login(page);
+    await loginPage.navigate();
+    await loginPage.submitVkontakte();
+
+    await expect(page.locator('.v-navigation-drawer .user-login')).toHaveText("Никита Конев")
+});
+
 

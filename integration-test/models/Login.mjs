@@ -18,4 +18,11 @@ export default class Login {
         await expect(submit).toBeVisible();
         await submit.click();
     }
+
+    async submitVkontakte() {
+        const submit = this.page.locator('.v-dialog .v-form .c-btn-vk');
+        await expect(submit).toBeVisible();
+        await submit.click();
+    }
+
 }

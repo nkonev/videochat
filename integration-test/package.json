@@ -12,7 +12,8 @@
   "author": "",
   "license": "ISC",
   "homepage": "https://github.com/nkonev/videochat#readme",
-  "devDependencies": {
+  "devDependencies":    {
+    "axios": "^0.21.1",
     "@playwright/test": "^1.19.1"
   }
 }
