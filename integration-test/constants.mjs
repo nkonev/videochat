@@ -8,4 +8,6 @@ export const defaultWrongUser = {
     password: "admin"
 }
 
-export const webUiUrl = "http://localhost:8081/"
+export const webUiUrl = "http://localhost:8081/";
+
+export const recreateAaaOauth2MocksUrl = "http://localhost:9080/recreate-oauth2-mocks"

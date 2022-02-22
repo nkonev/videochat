@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { defaultAdminUser, defaultWrongUser} from "../constants.mjs";
+import {defaultAdminUser, defaultWrongUser, recreateAaaOauth2MocksUrl} from "../constants.mjs";
 import Login from "../models/Login.mjs";
 import axios from "axios";
 
@@ -24,7 +24,7 @@ test('login unsuccessful', async ({ page }) => {
 });
 
 test('login vkontakte', async ({ page }) => {
-    await axios.post('http://localhost:9080/recreate-oauth2-mocks')
+    await axios.post(recreateAaaOauth2MocksUrl)
 
     const loginPage = new Login(page);
     await loginPage.navigate();
