@@ -396,3 +396,16 @@ export JAVA_HOME=/usr/lib/jvm/bellsoft-java17.x86_64
 
 curl -i -X POST 'http://localhost:9080/recreate-oauth2-mocks'
 ```
+
+# Playwright
+https://playwright.dev/docs/intro
+```
+npx playwright test
+
+# in foreground
+npx playwright test --headed --project=chromium --debug
+
+npx playwright test --headed --project=chromium test/login.spec.mjs
+
+npx playwright test --headed --project=chromium -g "login vkontakte"
+```
