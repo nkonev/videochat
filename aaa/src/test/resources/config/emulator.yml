@@ -34,6 +34,8 @@ spring:
     ldap:
       repositories:
         enabled: false
+  config:
+    location: classpath:/config/oauth2-basic.yml
 
 custom:
   email:
@@ -120,35 +122,35 @@ custom.ldap.auth:
   enabled: true
   filter: "uid={0}"
 
-spring.security:
-  oauth2:
-    client:
-      registration:
-        vkontakte:
-          client-id: 6805077
-          client-secret: your-app-client-secret
-          authorization-grant-type: authorization_code
-          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
-          client-authentication-method: post
-        facebook:
-          client-id: 1684113965162824
-          client-secret: your-app-client-secret
-          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
-        google:
-          client-id: 987654321
-          client-secret: your-app-client-secret
-          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
-      provider:
-        vkontakte:
-          authorization-uri: http://127.0.0.1:10081/mock/vkontakte/authorize
-          token-uri: http://127.0.0.1:10081/mock/vkontakte/access_token
-          user-info-uri: http://127.0.0.1:10081/mock/vkontakte/method/users.get?v=5.92
-          user-info-authentication-method: form
-          user-name-attribute: response
-        facebook:
-          authorization-uri: http://127.0.0.1:10080/mock/facebook/dialog/oauth
-          token-uri: http://127.0.0.1:10080/mock/facebook/oauth/access_token
-          user-info-uri: http://127.0.0.1:10080/mock/facebook/me?fields=id,name,picture
-        google:
-          authorization-uri: http://127.0.0.1:10082/mock/google/o/oauth2/v2/auth
-          token-uri: http://127.0.0.1:10082/mock/google/oauth2/v4/token
+#spring.security:
+#  oauth2:
+#    client:
+#      registration:
+#        vkontakte:
+#          client-id: 6805077
+#          client-secret: your-app-client-secret
+#          authorization-grant-type: authorization_code
+#          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+#          client-authentication-method: post
+#        facebook:
+#          client-id: 1684113965162824
+#          client-secret: your-app-client-secret
+#          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+#        google:
+#          client-id: 987654321
+#          client-secret: your-app-client-secret
+#          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+#      provider:
+#        vkontakte:
+#          authorization-uri: http://127.0.0.1:10081/mock/vkontakte/authorize
+#          token-uri: http://127.0.0.1:10081/mock/vkontakte/access_token
+#          user-info-uri: http://127.0.0.1:10081/mock/vkontakte/method/users.get?v=5.92
+#          user-info-authentication-method: form
+#          user-name-attribute: response
+#        facebook:
+#          authorization-uri: http://127.0.0.1:10080/mock/facebook/dialog/oauth
+#          token-uri: http://127.0.0.1:10080/mock/facebook/oauth/access_token
+#          user-info-uri: http://127.0.0.1:10080/mock/facebook/me?fields=id,name,picture
+#        google:
+#          authorization-uri: http://127.0.0.1:10082/mock/google/o/oauth2/v2/auth
+#          token-uri: http://127.0.0.1:10082/mock/google/oauth2/v4/token

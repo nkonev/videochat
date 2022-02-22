@@ -44,7 +44,7 @@ public class EmulatorServersController extends OAuth2EmulatorTests {
     public static void main(String[] args) {
         new SpringApplicationBuilder()
                 .profiles("integration_test")
-                .properties("spring.config.location=classpath:/config/application-integration_test.yml")
+                .properties("spring.config.location=classpath:/config/emulator.yml")
                 .web(WebApplicationType.SERVLET)
                 .sources(
                     EmulatorServersController.class,
