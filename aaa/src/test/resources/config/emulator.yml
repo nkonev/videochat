@@ -2,6 +2,10 @@ logging.level.root: INFO
 
 custom.base-url: "http://localhost:8060"
 
+logging:
+  pattern:
+    console: "%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @oauth2-emu [%thread] %logger{36}:%line %msg%n"
+
 # https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
 # https://yandex.ru/support/mail-new/mail-clients.html
 # https://stackoverflow.com/questions/411331/using-javamail-with-tls

@@ -1,4 +1,15 @@
-logging.level.root: INFO
+
+logging:
+  level:
+    root: INFO
+    org.springframework.test.web.servlet.result: WARN
+    org.springframework.boot.test.context.SpringBootTestContextBootstrapper: WARN
+    org.springframework.test.context.transaction.TransactionContext: WARN
+    org.springframework.test.context.support.AbstractContextLoader: WARN
+    org.springframework.security: WARN
+    org.mockserver: WARN
+  pattern:
+    console: "%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @aaa [%thread] %logger{36}:%line %msg%n"
 
 custom.base-url: "http://localhost:${server.port}"
 
