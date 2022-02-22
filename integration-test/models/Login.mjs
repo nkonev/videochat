@@ -25,4 +25,9 @@ export default class Login {
         await submit.click();
     }
 
+    async assertNicknameVkontakte() {
+        return expect(this.page.locator('.v-navigation-drawer .user-login')).toHaveText("Никита Конев")
+    }
+
+
 }

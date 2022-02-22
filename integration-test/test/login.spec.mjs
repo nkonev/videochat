@@ -30,7 +30,7 @@ test('login vkontakte', async ({ page }) => {
     await loginPage.navigate();
     await loginPage.submitVkontakte();
 
-    await expect(page.locator('.v-navigation-drawer .user-login')).toHaveText("Никита Конев")
+    await loginPage.assertNicknameVkontakte()
 });
 
 
