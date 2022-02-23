@@ -65,7 +65,7 @@ public class EmulatorServersController extends OAuth2EmulatorTests {
     }
 
     @PostMapping("/recreate-oauth2-mocks")
-    public void commandReceiver() throws InterruptedException {
+    public void commandReceiver() throws Exception {
         LOGGER.info("Resetting emulators");
         resetFacebookEmulator();
         resetVkontakteEmulator();

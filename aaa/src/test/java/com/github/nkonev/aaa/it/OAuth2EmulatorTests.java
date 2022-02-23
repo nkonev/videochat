@@ -2,6 +2,18 @@ package com.github.nkonev.aaa.it;
 
 import com.github.nkonev.aaa.AbstractTestRunner;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.KeyUse;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.PlainJWT;
+import com.nimbusds.jwt.SignedJWT;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -12,12 +24,20 @@ import org.mockserver.model.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.security.oauth2.jwt.Jwt;
 
+import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
@@ -156,9 +176,60 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
         });
     }
 
+    private static KeyPair getKeyPair() throws NoSuchAlgorithmException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(2048);
+        return kpg.genKeyPair();
+    }
+
+    private static JWKSet jwkSet(KeyPair kp) {
+        RSAKey.Builder builder = new RSAKey.Builder((RSAPublicKey)kp.getPublic())
+                .keyUse(KeyUse.SIGNATURE)
+                .algorithm(JWSAlgorithm.RS256)
+                .keyID("fake-google-key-id");
+        return new JWKSet(builder.build());
+    }
+
+    private static KeyPair keyPair;
+    private static JWSSigner signer;
+    private static JWKSet jwkSet;
+
+    // aaa caches public keys, so in order to survive them across recreating mockservers they are put into static block
+    static {
+        try {
+            keyPair = getKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        signer = new RSASSASigner(keyPair.getPrivate());
+        jwkSet = jwkSet(keyPair);
+    }
+
     @BeforeEach
-    public void configureGoogleEmulator(){
+    public void configureGoogleEmulator() throws NoSuchAlgorithmException {
         AtomicReference<String> nonceHolder = new AtomicReference<>();
+
+        Supplier<String> tokenCreator = () -> {
+            try {
+                var currDate = new Date();
+                JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                        .subject(googleId)
+                        .issuer("https://accounts.google.com")
+                        .issueTime(currDate)
+                        .expirationTime(new Date(currDate.getTime() + 600 * 1000))
+                        .audience("987654321") // clientId
+                        .claim("name", googleLogin)
+                        .claim("admin", true)
+                        .claim("nonce", nonceHolder.get())
+                        .build();
+                SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.RS256), claimsSet);
+                signedJWT.sign(signer);
+                return signedJWT.serialize();
+            } catch (JOSEException e) {
+                throw new RuntimeException(e);
+            }
+        };
+
         mockServerGoogle
                 .when(request().withPath("/mock/google/o/oauth2/v2/auth")).respond(httpRequest -> {
             String state = httpRequest.getQueryStringParameters().getEntries().stream().filter(parameter -> "state".equals(parameter.getName().getValue())).findFirst().get().getValues().get(0).getValue();
@@ -169,13 +240,22 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
             ).withStatusCode(302);
         });
 
+        // https://www.baeldung.com/spring-security-oauth2-jws-jwk
+        mockServerGoogle
+                .when(request().withPath("/mock/google/jwks")).respond(httpRequest -> {
+                    return response().withHeaders(
+                            new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json")
+                    ).withBody(jwkSet.toString())
+                            .withStatusCode(200);
+                });
+
         mockServerGoogle
                 .when(request().withPath("/mock/google/oauth2/v4/token"))
                 .respond(httpRequest -> {
                     return response().withHeaders(
                             new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json")
                     ).withStatusCode(200).withBody("{\n" +
-                            "  \"id_token\": \""+nonceHolder.get()+"\", \n" +
+                            "  \"id_token\": \""+tokenCreator.get()+"\", \n" +
                             "  \"access_token\": \"fake-access-token\", \n" +
                             "  \"scope\": \"openid https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email\", \n" +
                             "  \"token_type\": \"Bearer\",\n" +

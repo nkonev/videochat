@@ -7,6 +7,10 @@ export const defaultVkontakteUser = {
     user: "Никита Конев",
 }
 
+export const defaultGoogleUser = {
+    user: "NIKITA KONEV",
+}
+
 export const defaultWrongUser = {
     user: "wrong",
     password: "admin"

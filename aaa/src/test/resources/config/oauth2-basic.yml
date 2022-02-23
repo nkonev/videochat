@@ -29,5 +29,6 @@ spring.security:
           token-uri: http://127.0.0.1:10080/mock/facebook/oauth/access_token
           user-info-uri: http://127.0.0.1:10080/mock/facebook/me?fields=id,name,picture
         google:
+          jwk-set-uri: http://127.0.0.1:10082/mock/google/jwks
           authorization-uri: http://127.0.0.1:10082/mock/google/o/oauth2/v2/auth
           token-uri: http://127.0.0.1:10082/mock/google/oauth2/v4/token

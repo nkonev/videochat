@@ -25,6 +25,12 @@ export default class Login {
         await submit.click();
     }
 
+    async submitGoogle() {
+        const submit = this.page.locator('.v-dialog .v-form .c-btn-google');
+        await expect(submit).toBeVisible();
+        await submit.click();
+    }
+
     assertWrongLogin() {
         const alertLocator = this.page.locator('.v-dialog .v-form .v-alert');
         return expect(alertLocator).toBeVisible().then(() => {
