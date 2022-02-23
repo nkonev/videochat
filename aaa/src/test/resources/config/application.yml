@@ -39,8 +39,6 @@ spring:
     ldap:
       repositories:
         enabled: false
-#  config:
-#    locations: classpath:/config/oauth2-basic.yml,classpath:/config/oauth2-keycloak.yml
 
 custom:
   email:
