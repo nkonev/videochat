@@ -65,7 +65,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: ${{ runner.os }}-mycache-v4-${{ hashFiles('**/lockfiles') }}
+          key: ${{ runner.os }}-frontend-cache-v1-${{ hashFiles('**/package-lock.json') }}
       - name: Build with npm run
         run: |
           (cd frontend; npm install && npm run build)
@@ -221,3 +221,87 @@ jobs:
         with:
           file_pattern: .drawio/exported/*.png
           commit_message: Convert drawio to png
+  integration-test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install software
+        run: |
+          mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17.0.1
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16.13.0
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+      - name: Cache frontend playwright modules
+        uses: actions/cache@v2
+        with:
+          path: |
+            **/node_modules
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-browsers-v0-${{ hashFiles('**/package-lock.json') }}
+      - name: Cache frontend Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-frontend-cache-v1-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16.9
+      - name: Cache go modules
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Start and wait docker-compose
+        run: |
+          docker-compose up -d postgresql redis rabbitmq jaeger minio frontend
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:6831 -- echo 'jaeger is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8082 -- echo 'frontend nginx is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'
+      - name: Build microservices
+        run: |
+          (cd aaa; ./mvnw -DskipTests clean package)
+          (cd frontend; npm install && npm run build)
+          (cd chat; make check-env download generate package-go)
+      - name: Run microservices
+        run: |
+          (cd aaa; ./run-oauth2-emu.sh & ./run-with-oauth2.sh &)
+          (cd chat; ./chat &)
+      - name: Wait for microservices
+        run: |
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8060 -- echo 'aaa is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:1235 -- echo 'chat is up'
+      - name: Run your tests
+        run: (cd integration-test; npx playwright test)
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: playwright-results
+          path: test-results
