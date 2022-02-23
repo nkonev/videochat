@@ -248,8 +248,8 @@ jobs:
       - name: Install Playwright dependencies
         run: (cd integration-test; npm ci)
       - name: Install Playwright
-        run: (cd integration-test; npx playwright install --with-deps)
-      - name: Cache frontend playwright modules
+        run: (cd integration-test; npx playwright install)
+      - name: Cache frontend Playwright modules
         uses: actions/cache@v2
         with:
           path: |
@@ -296,7 +296,7 @@ jobs:
           (cd chat; ./chat &)
       - name: Wait for microservices
         run: |
-          ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator is up'
+          ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator controller is up'
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:8060 -- echo 'aaa is up'
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1235 -- echo 'chat is up'
       - name: Run your Playwright tests
