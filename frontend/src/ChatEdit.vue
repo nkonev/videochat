@@ -13,6 +13,7 @@
                         @keydown.native.enter.prevent="saveChat"
                     >
                         <v-text-field
+                            id="new-chat-text"
                             :label="$vuetify.lang.t('$vuetify.chat_name')"
                             v-model="editDto.name"
                             required
@@ -78,7 +79,7 @@
 
                 <v-card-actions class="pa-4">
                     <template>
-                        <v-btn color="primary" class="mr-4" @click="saveChat">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
+                        <v-btn color="primary" class="mr-4" @click="saveChat" id="chat-save-button">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
                     </template>
                     <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                     <v-spacer/>

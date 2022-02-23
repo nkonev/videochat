@@ -39,7 +39,7 @@
 
                 <v-list-item @click="createChat()">
                     <v-list-item-icon><v-icon>mdi-plus-circle-outline</v-icon></v-list-item-icon>
-                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.new_chat') }}</v-list-item-title></v-list-item-content>
+                    <v-list-item-content><v-list-item-title id="new-chat-dialog-button">{{ $vuetify.lang.t('$vuetify.new_chat') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
                 <v-list-item @click="editChat()" v-if="shouldDisplayEditChat()">
