@@ -281,7 +281,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-          ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:16686 -- echo 'jaeger web ui is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8082 -- echo 'frontend nginx is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
