@@ -36,7 +36,7 @@ export default class ChatList {
             await this.page.locator('.v-dialog .v-card__title').click()
         }
 
-        const submit = this.page.locator('.v-dialog #chat-save-button');
+        const submit = this.page.locator('.v-dialog #chat-save-btn');
         await submit.click();
         const form = this.page.locator('.v-dialog .v-form');
         await expect(form).not.toBeVisible();

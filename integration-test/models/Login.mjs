@@ -12,9 +12,9 @@ export default class Login {
         await this.page.goto(webUiUrl);
     }
     async submitLogin() {
-        const submit = this.page.locator('.v-dialog .v-form #button-login');
-        await this.page.fill('.v-dialog .v-form #text-login', this.user);
-        await this.page.fill('.v-dialog .v-form #text-password', this.password);
+        const submit = this.page.locator('.v-dialog .v-form #login-btn');
+        await this.page.fill('.v-dialog .v-form #login-text', this.user);
+        await this.page.fill('.v-dialog .v-form #password-text', this.password);
         await expect(submit).toBeVisible();
         await submit.click();
     }
