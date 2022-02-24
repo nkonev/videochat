@@ -6,74 +6,13 @@ logging:
   pattern:
     console: "%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @oauth2-emu [%thread] %logger{36}:%line %msg%n"
 
-# https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
-# https://yandex.ru/support/mail-new/mail-clients.html
-# https://stackoverflow.com/questions/411331/using-javamail-with-tls
-spring.mail:
-  testConnection: false
-  host: 127.0.0.1
-  port: 3025
-  username: testEmailUsername 
-  password: testEmailPassword 
-  properties:
-    # mail.smtp.starttls.enable: "true"
-    # mail.smtp.ssl.enable: "true"
-    mail.smtp.connectiontimeout: 5000
-    mail.smtp.timeout: 3000
-    mail.smtp.writetimeout: 5000
-
-
-spring.session.timeout: 2d
-spring.session.store-type: none
-
-opentracing:
-  jaeger:
-    enabled: false
-
-
 spring:
   application:
     name: aaa
-  data:
-    ldap:
-      repositories:
-        enabled: false
-  config:
-    location: classpath:/config/oauth2-basic.yml
-
-custom:
-  email:
-    from: testEmailUsername@test.example.com 
-  registration:
-    email:  
-      subject: "Registration confirmation"
-  confirmation:
-    registration:
-      token:
-        ttl-minutes: 5
-  password-reset:
-    email:
-      subject: "Password reset"
-    token:
-      ttl-minutes: 5
-
 
 server.port: 9080
 
-server.tomcat.basedir: ${java.io.tmpdir}/com.github.nkonev.aaa.tomcat
-spring.servlet.multipart.max-file-size: 6MB
-spring.servlet.multipart.max-request-size: 8MB
-server.servlet.encoding.force-response: true
-server.servlet.session.cookie.name: VIDEOCHAT_SESSION
-
-custom.it.user: admin
-custom.it.password: admin
-custom.it.user.id: 1
-
-custom.htmlunit.implicitly-wait-timeout: 10000
-custom.htmlunit.window-height: 900
-custom.htmlunit.window-width: 1600
-
+server.tomcat.basedir: ${java.io.tmpdir}/com.github.nkonev.oauth2emu.tomcat
 
 spring.datasource:
     name: aaa_ds
@@ -98,30 +37,3 @@ spring.datasource:
       validationQuery: SELECT 1;
       validationQueryTimeout: 4
       logValidationErrors: true
-
-# https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#howto-execute-flyway-database-migrations-on-startup
-# https://flywaydb.org/documentation/configfiles
-spring.flyway:
-  enabled: false
-
-spring.redis.url: redis://127.0.0.1:36379/0
-
-spring.rabbitmq:
-  addresses: localhost:36672
-  username: videoChat
-  password: videoChatPazZw0rd
-
-management.endpoints.web.exposure.include: '*'
-management.endpoint.health.show-details: always
-management:
-  health:
-    mail:
-      enabled: false
-
-spring.ldap.embedded:
-  base-dn: dc=springframework,dc=org
-  ldif: classpath:test-server.ldif
-
-custom.ldap.auth:
-  enabled: true
-  filter: "uid={0}"

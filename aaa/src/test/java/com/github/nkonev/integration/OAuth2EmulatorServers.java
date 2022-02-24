@@ -48,6 +48,7 @@ public class OAuth2EmulatorServers {
     // aaa caches public keys, so in order to survive them across recreating mockservers they are put into static block
     static {
         try {
+            LOGGER.info("Generating new RSA keypair (served in fake google jwks endpoint)");
             keyPair = getKeyPair();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
