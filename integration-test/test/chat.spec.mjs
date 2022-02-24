@@ -8,13 +8,6 @@ import axios from "axios";
 test('login vkontakte and google and create chat', async ({ browser }) => {
     await axios.post(recreateAaaOauth2MocksUrl);
 
-    const vkContext = await browser.newContext();
-    const vkPage = await vkContext.newPage();
-    const vkLoginPage = new Login(vkPage);
-    await vkLoginPage.navigate();
-    await vkLoginPage.submitVkontakte();
-    await vkLoginPage.assertNickname(defaultVkontakteUser.user);
-
     const googleContext = await browser.newContext();
     const googlePage = await googleContext.newPage();
     const googleLoginPage = new Login(googlePage);
@@ -22,13 +15,20 @@ test('login vkontakte and google and create chat', async ({ browser }) => {
     await googleLoginPage.submitGoogle();
     await googleLoginPage.assertNickname(defaultGoogleUser.user);
 
+    const vkContext = await browser.newContext();
+    const vkPage = await vkContext.newPage();
+    const vkLoginPage = new Login(vkPage);
+    await vkLoginPage.navigate();
+    await vkLoginPage.submitVkontakte();
+    await vkLoginPage.assertNickname(defaultVkontakteUser.user);
+
     const chatName = "test chatto";
     const vkChatList = new ChatList(vkPage);
     await vkChatList.openNewChatDialog();
-    await vkChatList.createAndSubmit(chatName);
+    await vkChatList.createAndSubmit(chatName, [defaultGoogleUser.user]);
 
     await vkChatList.openNewChatDialog();
-    await vkChatList.createAndSubmit(chatName+" trash");
+    await vkChatList.createAndSubmit(chatName+" trash", []);
 
     // https://playwright.dev/docs/locators
     const vkCount = await vkChatList.getChatItemCount()
@@ -36,8 +36,10 @@ test('login vkontakte and google and create chat', async ({ browser }) => {
     const vkSecondRow = await vkChatList.getChatName(1);
     expect(vkSecondRow).toBe(chatName);
 
-    for (let i = 0; i < vkCount; ++i) {
-        console.log(await vkChatList.getChatName(i));
-    }
+    const googleChatList = new ChatList(googlePage);
+    await expect(googleChatList.getRowsLocator().nth(0)).toHaveText(chatName);
+    const googleChatsCount = await (googleChatList.getRowsLocator().count());
+    console.log("count behalf google is", googleChatsCount);
+    expect(googleChatsCount).toBe(1);
 });
 
