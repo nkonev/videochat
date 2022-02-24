@@ -276,3 +276,8 @@ func (db *DB) IsChatExists(chatId int64) (bool, error) {
 	}
 
 }
+
+func (db *DB) DeleteAllParticipants() error {
+	_, err := db.Exec("DELETE FROM chat_participant WHERE user_id > 10")
+	return err
+}

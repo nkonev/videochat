@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nkonev.aaa.dto.SuccessfulLoginDTO;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.aaa.util.ContextPathHelper;
+import com.github.nkonev.integration.UserTestService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +22,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.connection.DefaultStringRedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisServerCommands;
@@ -55,6 +57,7 @@ import static org.springframework.http.HttpHeaders.COOKIE;
                 "spring.config.location=classpath:/config/application.yml,classpath:/config/oauth2-basic.yml,classpath:/config/oauth2-keycloak.yml"
         }
 )
+@Import(UserTestService.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractTestRunner {
 

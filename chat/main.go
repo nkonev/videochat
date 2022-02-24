@@ -147,6 +147,7 @@ func configureEcho(
 	e.PUT("/chat/:id/leave", ch.LeaveChat)
 	e.PUT("/chat/:id/user/:participantId", ch.ChangeParticipant)
 	e.DELETE("/chat/:id/user/:participantId", ch.DeleteParticipant)
+	e.DELETE("/internal/delete-all-participants", ch.RemoveAllParticipants) // TODO to separated executable
 	e.PUT("/chat/:id/users", ch.AddParticipants)
 	e.PUT("/chat/tet-a-tet/:participantId", ch.TetATet)
 	e.GET("/internal/access", ch.CheckAccess)

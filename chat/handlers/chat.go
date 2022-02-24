@@ -772,3 +772,8 @@ func (ch *ChatHandler) IsExists(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, ChatExists{exists})
 }
+
+func (ch *ChatHandler) RemoveAllParticipants(c echo.Context) error {
+	GetLogEntry(c.Request()).Warnf("Removing ALL participants")
+	return ch.db.DeleteAllParticipants()
+}

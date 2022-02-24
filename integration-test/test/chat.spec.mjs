@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import {defaultVkontakteUser, defaultGoogleUser, recreateAaaOauth2MocksUrl} from "../constants.mjs";
+import {defaultVkontakteUser, defaultGoogleUser, recreateAaaOauth2MocksUrl, removeChatParticipantsUrl} from "../constants.mjs";
 import Login from "../models/Login.mjs";
 import ChatList from "../models/ChatList.mjs";
 import axios from "axios";
@@ -7,6 +7,7 @@ import axios from "axios";
 // https://playwright.dev/docs/intro
 test('login vkontakte and google and create chat', async ({ browser }) => {
     await axios.post(recreateAaaOauth2MocksUrl);
+    await axios.delete(removeChatParticipantsUrl);
 
     const googleContext = await browser.newContext();
     const googlePage = await googleContext.newPage();
