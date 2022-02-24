@@ -2,17 +2,15 @@ package com.github.nkonev.aaa.it;
 
 import com.github.nkonev.aaa.AbstractTestRunner;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.ECDSASigner;
-import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.jwt.SignedJWT;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import org.junit.jupiter.api.AfterAll;
@@ -24,19 +22,16 @@ import org.mockserver.model.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.security.oauth2.jwt.Jwt;
 
-import java.security.*;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
@@ -133,13 +128,13 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     }
 
     @BeforeEach
-    public void clearOauthBindingsInDb() throws InterruptedException {
-        String deleteUsers = "DELETE FROM users WHERE username = :username";
-        namedParameterJdbcTemplate.update(deleteUsers, Collections.singletonMap("username", facebookLogin));
-        namedParameterJdbcTemplate.update(deleteUsers, Collections.singletonMap("username", vkontakteLogin));
-        namedParameterJdbcTemplate.update(deleteUsers, Collections.singletonMap("username", googleLogin));
+    public void clearOauthBindingsInDb() {
+        final var deleteUsersSql = "DELETE FROM users WHERE username = :username";
+        namedParameterJdbcTemplate.update(deleteUsersSql, Map.of("username", facebookLogin));
+        namedParameterJdbcTemplate.update(deleteUsersSql, Map.of("username", vkontakteLogin));
+        namedParameterJdbcTemplate.update(deleteUsersSql, Map.of("username", googleLogin));
 
-        namedParameterJdbcTemplate.update("UPDATE users SET vkontakte_id=NULL, facebook_id=NULL, google_id=NULL", new HashMap<>());
+        namedParameterJdbcTemplate.update("UPDATE users SET vkontakte_id=NULL, facebook_id=NULL, google_id=NULL", Map.of());
     }
 
     @BeforeEach
