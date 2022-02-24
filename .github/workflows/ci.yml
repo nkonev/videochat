@@ -34,6 +34,22 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:5420 -- echo 'keycloak postgres is up'
           docker-compose up -d keycloak
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
+
+          let success=0
+          for i in {1..60}
+          do
+            echo "Checking keycloak with curl $i"
+            curl --connect-timeout 2 --max-time 2 -Ss 'http://localhost:8484/auth/realms/my_realm/.well-known/openid-configuration'
+            if [[ $? -eq 0 ]]; then
+              echo "Successful response is taken"
+              success=1
+              break
+            fi
+          done
+          if [[ $success -eq 0 ]]; then
+            echo "Did not got successful responce from keycloak"
+            exit 1
+          fi
       - name: Build with Maven
         run: |
           (cd aaa; ./mvnw clean package)
