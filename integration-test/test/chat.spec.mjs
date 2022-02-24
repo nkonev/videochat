@@ -28,22 +28,16 @@ test('login vkontakte and google and create chat', async ({ browser }) => {
     await vkChatList.createAndSubmit(chatName);
 
     await vkChatList.openNewChatDialog();
-    await vkChatList.createAndSubmit(chatName+"_trash");
+    await vkChatList.createAndSubmit(chatName+" trash");
 
-    // await expect(vkPage.locator('#chat-list-items')).toBeVisible();
-    // const locator = vkPage.locator('#chat-list-items .v-list-item');
-    // await expect(locator.count()).toBe(2);
-    // const firstRow = await locator.first().textContent();
-    // expect(firstRow).toHaveValue(chatName);
-
-    const vkRows = vkPage.locator('#chat-list-items .v-list-item .v-list-item__title');
     // https://playwright.dev/docs/locators
-    const vkCount = await vkRows.count()
-    for (let i = 0; i < vkCount; ++i) {
-        console.log(await vkRows.nth(i).textContent());
-    }
+    const vkCount = await vkChatList.getChatItemCount()
     expect(vkCount).toBe(2);
-    const vkSecondRow = (await vkRows.nth(1).textContent()).trim();
+    const vkSecondRow = await vkChatList.getChatName(1);
     expect(vkSecondRow).toBe(chatName);
+
+    for (let i = 0; i < vkCount; ++i) {
+        console.log(await vkChatList.getChatName(i));
+    }
 });
 

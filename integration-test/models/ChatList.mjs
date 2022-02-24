@@ -24,5 +24,15 @@ export default class ChatList {
         await expect(form).not.toBeVisible();
     }
 
+    getRowsLocator() {
+        return this.page.locator('#chat-list-items .v-list-item .v-list-item__title');
+    }
 
+    async getChatItemCount() {
+        return await this.getRowsLocator().count();
+    }
+
+    async getChatName(index) {
+        return (await this.getRowsLocator().nth(index).textContent()).trim()
+    }
 }
