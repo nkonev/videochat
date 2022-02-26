@@ -1,4 +1,4 @@
-package com.github.nkonev.integration;
+package com.github.nkonev.oauth2emu;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;

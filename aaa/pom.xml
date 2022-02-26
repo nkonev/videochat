@@ -444,7 +444,7 @@
                         <artifactId>spring-boot-maven-plugin</artifactId>
                         <version>${spring.boot.version}</version>
                         <configuration>
-                            <mainClass>com.github.nkonev.integration.EmulatorServersController</mainClass>
+                            <mainClass>com.github.nkonev.oauth2emu.EmulatorServersController</mainClass>
                             <useTestClasspath>true</useTestClasspath>
                             <directories>
                                 <directory>${project.build.testOutputDirectory}</directory>

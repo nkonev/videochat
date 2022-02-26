@@ -1,4 +1,4 @@
-package com.github.nkonev.integration;
+package com.github.nkonev.oauth2emu;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
