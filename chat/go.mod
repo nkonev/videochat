@@ -7,18 +7,18 @@ require (
 	github.com/centrifugal/protocol v0.7.3
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
-	github.com/golang-migrate/migrate/v4 v4.11.0
+	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/guregu/null v4.0.0+incompatible
 	github.com/isayme/go-amqp-reconnect v0.0.0-20210303120416-fc811b0bcda2
-	github.com/jackc/pgx/v4 v4.14.1
+	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/microcosm-cc/bluemonday v1.0.3
 	github.com/nkonev/jaeger-uber-propagation-compat v0.0.0-20200708125206-e763f0a72519
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
-	github.com/sirupsen/logrus v1.6.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.7.0
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.0
