@@ -3,8 +3,8 @@ module nkonev.name/chat
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.0
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
-	github.com/centrifugal/centrifuge v0.18.9
-	github.com/centrifugal/protocol v0.7.3
+	github.com/centrifugal/centrifuge v0.21.1
+	github.com/centrifugal/protocol v0.8.4
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang-migrate/migrate/v4 v4.15.1
