@@ -215,6 +215,10 @@ https://habr.com/en/company/Voximplant/blog/316840/
 # ion-SFU FAQ
 https://github.com/pion/ion-sfu/pull/496/files
 
+# Explaination of two peer connections
+https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
+> ion-sfu does not support perfect negotiation, becuase there were some issues on browser implementation, thats why it uses 2 pc, one to publish and other one to subscribe, that way negotiations would be always one sided.
+
 # Known issues
 
 ## Codecs
