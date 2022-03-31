@@ -245,14 +245,22 @@ Also it works good when all the devices use the same h264.
 ## IceLite
 When one of participants has the public IP (it's possible) there are no video. I turned on IceLite in config in order to fix it.
 
+## Simulcast
+* https://github.com/pion/webrtc/tree/master/examples/simulcast
+* https://github.com/pion/ion-sfu/pull/189
+* https://github.com/pion/ion-sfu/pull/227
+* https://github.com/pion/ion-sdk-flutter/commit/d480792ce89fd1d87dc010f85aafaad8139f8671#diff-29436ed00f4c4d104d7a3a703144724e4dff5b5d01c2b7da70ea54b2ef39b780R65
+
+In `receiver.go` we have isSimulcast: len(track.RID()) > 0, given this and fact that Firefox doesn't sent rid we acn't enable simulcast in Firefox.
+
+But according to https://webrtchacks.com/sfu-simulcast/ H.264/SVC, where scalability capabilities are fully built into the codec itself.
+
+Firefox [doesn't support simulcast for H264](https://bugzilla.mozilla.org/show_bug.cgi?id=1210175)
 
 
-## Keycloak
-
-Problem: Keycloak renders 'Invalid parameter: redirect_uri'
+Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=1663368)
 
 
-Solution: Set proper [redirect url](https://stackoverflow.com/questions/45352880/keycloak-invalid-parameter-redirect-uri)
 
 ## I don't see my image from camera when I connect from mobile
 Some mobile operators impede WebRTC traffic. 
@@ -261,8 +269,22 @@ Solution: try to use Wi-Fi.
 
 
 
+## Interesting forks ion-sfu
+* https://github.com/edudip/ion-sfu/commits/master
+* https://github.com/cryptagon/ion-sfu/commits/master-tandem (With fixing simulcast)
 
-# spring-boot-keycloak
+
+
+
+
+# Keycloak
+
+Problem: Keycloak renders 'Invalid parameter: redirect_uri'
+
+
+Solution: Set proper [redirect url](https://stackoverflow.com/questions/45352880/keycloak-invalid-parameter-redirect-uri)
+
+## spring-boot-keycloak
 Using spring boot and Keycloak authorization server
 https://habr.com/en/amp/post/552346/
 
@@ -286,14 +308,14 @@ Configuring Keycloak - adding user:
 3. User's -> Credentials -> Set password, disable temporal
 4. User's -> Role Mappings -> add 'USER' role
 
-# Login as user1 (get 3 tokens)
+## Login as user1 (get 3 tokens)
 ```bash
 curl -i -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/auth/realms/my_realm/protocol/openid-connect/token' -d 'client_id=my_client&grant_type=password&scope=openid&username=user1&password=user_password'
 
 curl -Ss -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/auth/realms/my_realm/protocol/openid-connect/token' -d 'client_id=my_client&grant_type=password&scope=openid&username=user1&password=user_password' | jq '.'
 ```
 
-# How to save added users to realm-export.json ?
+## How to save added users to realm-export.json ?
 from https://github.com/nkonev/videochat/tree/062aaf2ea58edcffadf6ddf768e289273801492a
 
 ## 1. exporting (not always importable)
@@ -363,21 +385,6 @@ mc rm -r --force myminio/oldbucket
 ```bash
 docker run --network=videochat_backend -it --rm lesovsky/pgcenter:latest pgcenter top -h videochat_postgresql_1 -U chat -d chat
 ```
-
-# Simulcast
-* https://github.com/pion/webrtc/tree/master/examples/simulcast
-* https://github.com/pion/ion-sfu/pull/189
-* https://github.com/pion/ion-sfu/pull/227
-* https://github.com/pion/ion-sdk-flutter/commit/d480792ce89fd1d87dc010f85aafaad8139f8671#diff-29436ed00f4c4d104d7a3a703144724e4dff5b5d01c2b7da70ea54b2ef39b780R65
-
-In `receiver.go` we have isSimulcast: len(track.RID()) > 0, given this and fact that Firefox doesn't sent rid we acn't enable simulcast in Firefox.
-
-But according to https://webrtchacks.com/sfu-simulcast/ H.264/SVC, where scalability capabilities are fully built into the codec itself.
-
-Firefox [doesn't support simulcast for H264](https://bugzilla.mozilla.org/show_bug.cgi?id=1210175)
-
-
-Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=1663368)
 
 # Working with Elasticsearch
 * https://olivere.github.io/elastic/
