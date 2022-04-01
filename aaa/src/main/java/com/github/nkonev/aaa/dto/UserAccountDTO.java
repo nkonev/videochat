@@ -1,11 +1,8 @@
 package com.github.nkonev.aaa.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.nkonev.aaa.Constants;
-
 import javax.validation.constraints.NotEmpty;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
