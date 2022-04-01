@@ -205,6 +205,8 @@ Then restart (sic!) PC.
 * BigBlueButton
 * LiveKit
 
+
+
 # SDP specification
 https://datatracker.ietf.org/doc/html/rfc4566#section-5
 
@@ -215,13 +217,19 @@ https://habr.com/en/company/Voximplant/blog/316840/
 # ion-SFU FAQ
 https://github.com/pion/ion-sfu/pull/496/files
 
-# Explaination of two peer connections
+## Explaination of two peer connections
 https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
 > ion-sfu does not support perfect negotiation, becuase there were some issues on browser implementation, thats why it uses 2 pc, one to publish and other one to subscribe, that way negotiations would be always one sided.
 
-# Known issues
+### Tracing
+You can match media stream id, media track id in console (F12) and in `about:webrtc` 
 
-## Codecs
+Peer connection does not have id. [1](https://github.com/w3c/webrtc-pc/issues/1775), [2](https://github.com/pion/webrtc/issues/1250)
+
+
+## Known issues
+
+### Codecs
 When Call started in th next sequence
 * Desktop Firefox hd vp8 (1)
 * Mobile Chrome hd vp8 (2)
@@ -242,8 +250,16 @@ then all works ok.
 
 Also it works good when all the devices use the same h264.
 
-## IceLite
+
+### IceLite
 When one of participants has the public IP (it's possible) there are no video. I turned on IceLite in config in order to fix it.
+
+
+### I don't see my image from camera when I connect from mobile
+Some mobile operators impede WebRTC traffic. 
+
+Solution: try to use Wi-Fi.
+
 
 ## Simulcast
 * https://github.com/pion/webrtc/tree/master/examples/simulcast
@@ -257,22 +273,12 @@ But according to https://webrtchacks.com/sfu-simulcast/ H.264/SVC, where scalabi
 
 Firefox [doesn't support simulcast for H264](https://bugzilla.mozilla.org/show_bug.cgi?id=1210175)
 
-
 Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=1663368)
-
-
-
-## I don't see my image from camera when I connect from mobile
-Some mobile operators impede WebRTC traffic. 
-
-Solution: try to use Wi-Fi.
-
 
 
 ## Interesting forks ion-sfu
 * https://github.com/edudip/ion-sfu/commits/master
 * https://github.com/cryptagon/ion-sfu/commits/master-tandem (With fixing simulcast)
-
 
 
 
