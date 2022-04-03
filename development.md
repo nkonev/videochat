@@ -73,9 +73,7 @@ http://localhost:8081/api/user/list?userId=1&userId=-1
 ```
 
 
-
-# Videochat
-http://localhost:8081/public/index_old.html
+# Go
 
 Push down dummy go packages
 ```
@@ -87,11 +85,26 @@ Test:
 go test ./... -count=1
 ```
 
-# Update Go modules
+## Update Go modules
 https://github.com/golang/go/wiki/Modules
 ```bash
 go get -u -t ./...
 ```
+
+# Node.js
+## Install nodejs same version as in ci.yml on macOS:
+```
+brew install nvm
+nvm install v15.11.0
+```
+
+## Update node
+```
+nvm install v16.13.0
+nvm use v16.13.0
+```
+Then restart (sic!) PC.
+
 
 
 # Firefox enable video on non-localhost
@@ -132,39 +145,6 @@ Correct output
 2: Average jitter 0.800000 ms; min = 0 ms, max = 2 ms
 ```
 
-# Run one test
-```bash
-go test ./... -count=1 -test.v -test.timeout=20s -p 1 -run TestExtractAuth
-```
-
-
-# For Github CI
-```
-git diff --dirstat=files,0 HEAD~1 | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq
-```
-
-# Generate ports
-```python
-for x in range(5200, 5301):
-    print("""
-      - target: %d
-        published: %d
-        protocol: udp
-        mode: host""" % (x, x))
-```
-
-# Fixing fibers issue
-```
-# npm install --global node-gyp
-$ /usr/bin/node /home/nkonev/go_1_11/videochat/frontend/node_modules/fibers/build
-# yum groupinstall 'Development Tools'
-```
-
-# Show minio content
-```
-mc stat local/files/chat/111/e4a37493-c6ff-4bd7-9d81-ffc9558af447/0a583bad-23c0-4c3d-8e8d-3a0591653603.jpg
-```
-
 # Get peers of video chat
 ```
 curl -s 'http:/localhost:7001/internal/111/users' | jq '.'
@@ -176,18 +156,6 @@ Can be used for check "self health-check" mechanism.
 curl -i -X PUT 'http:/localhost:7001/internal/108/kick?silent=true&chatId=107&userId=2'
 ```
 
-# Install nodejs same version as in ci.yml on macOS:
-```
-brew install nvm
-nvm install v15.11.0
-```
-
-# Update node
-```
-nvm install v16.13.0
-nvm use v16.13.0
-```
-Then restart (sic!) PC.
 
 # Alternatives (SFU servers)
 * https://github.com/versatica/mediasoup
@@ -204,7 +172,6 @@ Then restart (sic!) PC.
 * OpenMeetings
 * BigBlueButton
 * LiveKit
-
 
 
 # SDP specification
@@ -281,6 +248,39 @@ Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=166
 * https://github.com/cryptagon/ion-sfu/commits/master-tandem (With fixing simulcast)
 
 
+
+# Run one test
+```bash
+go test ./... -count=1 -test.v -test.timeout=20s -p 1 -run TestExtractAuth
+```
+
+
+# For Github CI
+```
+git diff --dirstat=files,0 HEAD~1 | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq
+```
+
+# Generate ports
+```python
+for x in range(5200, 5301):
+    print("""
+      - target: %d
+        published: %d
+        protocol: udp
+        mode: host""" % (x, x))
+```
+
+# Fixing fibers issue
+```
+# npm install --global node-gyp
+$ /usr/bin/node /home/nkonev/go_1_11/videochat/frontend/node_modules/fibers/build
+# yum groupinstall 'Development Tools'
+```
+
+# Show minio content
+```
+mc stat local/files/chat/111/e4a37493-c6ff-4bd7-9d81-ffc9558af447/0a583bad-23c0-4c3d-8e8d-3a0591653603.jpg
+```
 
 
 # Keycloak
