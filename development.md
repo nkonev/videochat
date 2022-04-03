@@ -1,7 +1,3 @@
-# WebRTC
-[In plain English](https://forasoft.com/blog/article/what-is-webrtc-156)
-[In plain Russian](http://forasoft.github.io/webrtc-in-plain-russian/)
-
 # Development
 
 ## Firewalld help
@@ -105,6 +101,18 @@ nvm use v16.13.0
 ```
 Then restart (sic!) PC.
 
+## Fixing fibers issue
+```
+# npm install --global node-gyp
+$ /usr/bin/node /home/nkonev/go_1_11/videochat/frontend/node_modules/fibers/build
+# yum groupinstall 'Development Tools'
+```
+
+
+
+# WebRTC
+[In plain English](https://forasoft.com/blog/article/what-is-webrtc-156)
+[In plain Russian](http://forasoft.github.io/webrtc-in-plain-russian/)
 
 
 # Firefox enable video on non-localhost
@@ -270,12 +278,6 @@ for x in range(5200, 5301):
         mode: host""" % (x, x))
 ```
 
-# Fixing fibers issue
-```
-# npm install --global node-gyp
-$ /usr/bin/node /home/nkonev/go_1_11/videochat/frontend/node_modules/fibers/build
-# yum groupinstall 'Development Tools'
-```
 
 # Show minio content
 ```
