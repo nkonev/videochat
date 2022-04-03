@@ -13,7 +13,7 @@ import com.github.nkonev.aaa.util.UrlParser;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.Retriever;
-import com.icegreen.greenmail.util.ServerSetupTest;
+import com.icegreen.greenmail.util.ServerSetup;
 import com.sun.mail.imap.IMAPMessage;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -47,8 +47,13 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationControllerTest.class);
 
+    private static final int portOffset = 3100;
+    private static final ServerSetup SMTP = new ServerSetup(25+portOffset, null, ServerSetup.PROTOCOL_SMTP);
+    private static final ServerSetup IMAP = new ServerSetup(143+portOffset, null, ServerSetup.PROTOCOL_IMAP);
+    private static final ServerSetup[] SMTP_IMAP = new ServerSetup[]{SMTP, IMAP};
+
     @RegisterExtension
-    protected GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP_IMAP).withConfiguration(GreenMailConfiguration.aConfig().withDisabledAuthentication());
+    protected GreenMailExtension greenMail = new GreenMailExtension(SMTP_IMAP).withConfiguration(GreenMailConfiguration.aConfig().withDisabledAuthentication());
 
     @Test
     public void testConfirmationSuccess() throws Exception {
