@@ -3,7 +3,7 @@
 # Videochat
 Your open source self-hosted videoconference platform.
 
-[![Chat image](./.screenshots/2_chat_participants_management_crop.png)](./screenshots.md)
+[![Chat image](./.screenshots/2_chat_participants_management.png)](./screenshots.md)
 
 # Key features:
 * Well-integrated video calls into entire platform UI, no separated video rooms, text chats, etc...
@@ -22,6 +22,7 @@ Your open source self-hosted videoconference platform.
 * Firewall friendly: single port for WebRTC.
 * Simple setup with docker swarm or docker-compose.
 * Self-contained frontend bundle without any CDN downloads.
+* No need to edit `/etc/hosts` for development.
 
 # Try
 [Demo](https://chat.nkonev.name/)
