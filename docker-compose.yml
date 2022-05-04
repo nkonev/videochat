@@ -112,6 +112,14 @@ services:
       options:
         max-size: "50m"
 
+  livekit:
+    image: livekit/livekit-server:v0.15.7
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - ./docker/livekit/livekit.yaml:/etc/livekit.yaml
+
   jaeger:
     image: jaegertracing/all-in-one:1.34.0
     hostname: jaeger
