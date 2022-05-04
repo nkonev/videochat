@@ -33,7 +33,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:6831 -- echo 'jaeger is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:5420 -- echo 'keycloak postgres is up'
           docker-compose -f docker-compose.yml -f docker-compose.keycloak.yml up -d keycloak
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
+          sleep 15 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
       - name: Build with Maven
         run: |
           (cd aaa; ./mvnw clean package)
