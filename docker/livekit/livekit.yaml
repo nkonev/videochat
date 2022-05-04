@@ -1,22 +1,15 @@
 port: 7880
 rtc:
+    udp_port: 7882
     tcp_port: 7881
-    port_range_start: 50000
-    port_range_end: 60000
-    use_external_ip: true
+    use_external_ip: false
 redis:
     address: redis:6379
     username: ""
     password: ""
     db: 2
-turn:
-    # it was enabled
-    enabled: false
-    domain: turn.example.com
-    cert_file: ""
-    key_file: ""
-    tls_port: 5349
-    udp_port: 443
-    external_tls: true
 keys:
     APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA
+logging:
+  json: false
+  level: info
