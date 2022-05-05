@@ -20,6 +20,10 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:7000
+    livekit-service:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:7880
 
   routers:
     frontend-router:
@@ -64,6 +68,9 @@ http:
       middlewares:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
+    livekit-router:
+      rule: "PathPrefix(`/rtc`)"
+      service: livekit-service
 
   middlewares:
     api-strip-prefix-middleware:

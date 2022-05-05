@@ -58,7 +58,7 @@ module.exports = (env, argv) => {
     }
 
     const webpackCfg = {
-        entry: "./src/main.js",
+        entry: ["regenerator-runtime/runtime.js", "./src/main.js"],
         output: {
             path: contentBase,
             filename: `[name]_${currDate}.js`,
