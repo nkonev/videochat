@@ -31,8 +31,8 @@
         USER_PROFILE_CHANGED, VIDEO_CALL_CHANGED, VIDEO_PARAMETERS_CHANGED,
     } from "./bus";
     import axios from "axios";
-    import { Client, LocalStream } from 'ion-sdk-js';
-    import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
+    // import { Client, LocalStream } from 'ion-sdk-js';
+    // import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
     import UserVideo from "./UserVideo";
     import {
         getWebsocketUrlPrefix,

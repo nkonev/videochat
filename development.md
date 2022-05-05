@@ -255,7 +255,13 @@ Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=166
 * https://github.com/edudip/ion-sfu/commits/master
 * https://github.com/cryptagon/ion-sfu/commits/master-tandem (With fixing simulcast)
 
-
+# Generate livekit token
+```
+docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA" \
+    livekit/livekit-server create-join-token \
+    --room "chat100" \
+    --identity
+```
 
 # Run one test
 ```bash
