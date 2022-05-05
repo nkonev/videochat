@@ -4,7 +4,7 @@ rtc:
     tcp_port: 7881
     use_external_ip: false
 redis:
-    address: redis:6379
+    address: localhost:36379
     username: ""
     password: ""
     db: 2
