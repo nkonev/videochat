@@ -318,9 +318,9 @@ Configuring Keycloak - adding user:
 
 ## Login as user1 (get 3 tokens)
 ```bash
-curl -i -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/auth/realms/my_realm/protocol/openid-connect/token' -d 'client_id=my_client&grant_type=password&scope=openid&username=user1&password=user_password'
+curl -i -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/realms/my_realm/protocol/openid-connect/token' -d 'client_id=my_client&grant_type=password&scope=openid&username=user1&password=user_password'
 
-curl -Ss -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/auth/realms/my_realm/protocol/openid-connect/token' -d 'client_id=my_client&grant_type=password&scope=openid&username=user1&password=user_password' | jq '.'
+curl -Ss -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/realms/my_realm/protocol/openid-connect/token' -d 'client_id=my_client&grant_type=password&scope=openid&username=user1&password=user_password' | jq '.'
 ```
 
 ## How to save added users to realm-export.json ?
@@ -329,14 +329,13 @@ from https://github.com/nkonev/videochat/tree/062aaf2ea58edcffadf6ddf768e2892738
 ## 1. exporting (not always importable)
 ```bash
 docker-compose exec keycloak bash
-cd /opt/jboss/keycloak/
-bin/standalone.sh -Djboss.socket.binding.port-offset=100 -Dkeycloak.migration.action=export -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.file=/tmp/export.json
-^C
+/opt/keycloak/bin/kc.sh export --file /tmp/realm-export.json --realm my_realm
+# don't worry about the busy port
 exit
 ```
 next on host
 ```bash
-docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/export.json ./export2.json
+docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/realm-export.json ./export2.json
 ```
 
 ## 2. Next find "users" JSON array. Then find required user's document by their name.

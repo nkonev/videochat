@@ -38,7 +38,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     public static final String googleId = "1234567890";
     public static final String keycloakLogin = "user1";
     public static final String keycloakPassword = "user_password";
-    public static final String keycloakId = "b5d67207-0996-4af0-bcb5-eee814687b30";
+    public static final String keycloakId = "ddcb2c97-baba-4811-9c1c-f3e3dd4fb942";
 
     @BeforeEach
     public void clearOauthBindingsInDb() {

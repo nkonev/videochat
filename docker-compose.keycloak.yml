@@ -3,30 +3,18 @@
 version: '3.7'
 
 services:
-
-  keycloak-postgresql:
-    image: library/postgres:14.0
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: keycloak_db
-    ports:
-      - "5420:5432"
-    restart: unless-stopped
-
+  # https://habr.com/en/amp/post/552346/
   keycloak:
-    image: jboss/keycloak:15.0.2
+    # https://quay.io/repository/keycloak/keycloak
+    image: quay.io/keycloak/keycloak:18.0.0
     volumes:
-      - ./docker/keycloak/realm-export.json:/opt/jboss/keycloak/imports/realm-export.json:ro,z
+      - ./docker/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro,z
+    # https://www.keycloak.org/server/containers
     environment:
-      DB_VENDOR: POSTGRES
-      DB_ADDR: keycloak-postgresql
-      DB_DATABASE: keycloak_db
-      DB_USER: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      KEYCLOAK_USER: keycloak_admin
-      KEYCLOAK_PASSWORD: admin_password
-      KEYCLOAK_IMPORT: /opt/jboss/keycloak/imports/realm-export.json
+      KEYCLOAK_ADMIN: keycloak_admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_password
     ports:
       - "8484:8080"
-
+    # https://www.keycloak.org/server/importExport
+    command: [ "start-dev", "--import-realm" ]
+    # command: [ "start-dev" ]
