@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	. "nkonev.name/storage/logger"
 	"regexp"
 	"strconv"
 )
@@ -27,7 +27,7 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
-			log.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
+			Logger.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
 			return true
 		}
 	}
