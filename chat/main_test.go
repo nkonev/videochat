@@ -203,6 +203,7 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 		fx.Logger(Logger),
 		fx.Populate(&s),
 		fx.Provide(
+			configureTracer,
 			client.NewRestClient,
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
@@ -221,7 +222,6 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			runMigrations,
 			runCentrifuge,
 			//runEcho,
-			initJaeger,
 			testFunc,
 		),
 	)
@@ -237,6 +237,7 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 		fx.Logger(Logger),
 		fx.Populate(&s),
 		fx.Provide(
+			configureTracer,
 			client.NewRestClient,
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
@@ -255,7 +256,6 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 			runMigrations,
 			runCentrifuge,
 			runEcho,
-			initJaeger,
 		),
 	)
 	waitForChatServer()

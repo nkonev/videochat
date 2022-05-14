@@ -9,7 +9,8 @@ auth:
     - "^/storage/public.*"
 
 jaeger:
-  endpoint: "localhost:6831"
+  host: "localhost"
+  port: 6831
 
 minio:
   endpoint: 127.0.0.1:9000

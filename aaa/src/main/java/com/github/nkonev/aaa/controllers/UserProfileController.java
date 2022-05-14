@@ -87,6 +87,7 @@ public class UserProfileController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = Constants.Urls.API+Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
     public com.github.nkonev.aaa.dto.UserSelfProfileDTO checkAuthenticated(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
+        LOGGER.info("Requesting external user profile");
         Long expiresAt = getExpiresAt(session);
         return UserAccountConverter.getUserSelfProfile(userAccount, userAccount.getLastLoginDateTime(), expiresAt);
     }

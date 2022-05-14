@@ -35,6 +35,9 @@ accessLog:
 tracing:
   spanNameLimit: 150
   jaeger:
-    gen128Bit: true
+    samplingType: const
+    samplingParam: 1
     localAgentHostPort: jaeger:6831
-
+    propagation: jaeger
+    disableAttemptReconnecting: false
+    gen128Bit: true

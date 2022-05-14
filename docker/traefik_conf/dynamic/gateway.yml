@@ -78,4 +78,5 @@ http:
         address: "http://host.docker.internal:8060/internal/profile"
         authRequestHeaders:
           - "Cookie"
+          - "uber-trace-id"
         authResponseHeadersRegex: "^X-Auth-"

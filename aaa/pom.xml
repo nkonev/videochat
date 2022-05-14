@@ -22,13 +22,13 @@
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
         <flatten-maven-plugin.version>1.2.2</flatten-maven-plugin.version>
         <versions-maven-plugin.version>2.8.1</versions-maven-plugin.version>
-
-        <spring.boot.version>2.6.6</spring.boot.version>
+        <spring-cloud.version>2021.0.2</spring-cloud.version>
+        <spring-cloud-sleuth-otel.version>1.1.0-M5</spring-cloud-sleuth-otel.version>
+        <spring.boot.version>2.6.7</spring.boot.version>
         <guava.version>31.0.1-jre</guava.version>
         <greenmail.version>1.6.5</greenmail.version>
         <mockserver.version>5.11.2</mockserver.version>
         <skipTests>false</skipTests>
-        <opentracing-spring-jaeger-web-starter.version>3.3.1</opentracing-spring-jaeger-web-starter.version>
         <git-json>git.json</git-json>
     </properties>
 
@@ -36,6 +36,13 @@
         <repository>
             <id>central</id>
             <url>https://repo.maven.apache.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>spring-milestones</id>
+            <url>https://repo.spring.io/milestone</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -221,6 +228,21 @@
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-sleuth-otel-dependencies</artifactId>
+                <!-- Provide the version of the Spring Cloud Sleuth OpenTelemetry project -->
+                <version>${spring-cloud-sleuth-otel.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#using-boot-maven-without-a-parent -->
             <dependency>
                 <!-- Import dependency management from Spring Boot -->
@@ -338,9 +360,26 @@
         </dependency>
 
         <dependency>
-            <groupId>io.opentracing.contrib</groupId>
-            <artifactId>opentracing-spring-jaeger-web-starter</artifactId>
-            <version>${opentracing-spring-jaeger-web-starter.version}</version>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-sleuth</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.cloud</groupId>
+                    <artifactId>spring-cloud-sleuth-brave</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-sleuth-otel-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-extension-trace-propagators</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-jaeger</artifactId>
         </dependency>
 
         <dependency>

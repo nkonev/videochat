@@ -32,7 +32,8 @@ services:
       - CHAT_CENTRIFUGE.REDIS.ADDRESS=redis:6379
       - CHAT_AAA.URL.BASE=http://aaa:8060
       - CHAT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
-      - CHAT_JAEGER.ENDPOINT=jaeger:6831
+      - CHAT_JAEGER.HOST=jaeger
+      - CHAT_JAEGER.PORT=6831
     logging:
       driver: "journald"
       options:

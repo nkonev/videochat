@@ -26,13 +26,13 @@ services:
         - "traefik.http.routers.storage-version-router.entrypoints=http"
         - "traefik.http.routers.storage-version-router.middlewares=storage-stripprefix-middleware"
     environment:
-        - STORAGE_JAEGER.ENDPOINT=jaeger:6831
         - STORAGE_MINIO.ENDPOINT=minio:9000
         - STORAGE_CHAT.URL.BASE=http://chat:1235
         - STORAGE_AAA.URL.BASE=http://aaa:8060
         - STORAGE_LIMITS.STAT.DIR=/data
         - STORAGE_REDIS.ADDRESS=redis:6379
-
+        - STORAGE_JAEGER.HOST=jaeger
+        - STORAGE_JAEGER.PORT=6831
     logging:
       driver: "journald"
       options:

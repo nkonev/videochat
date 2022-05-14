@@ -54,8 +54,7 @@ services:
       - spring.security.oauth2.client.provider.facebook.user-info-uri=https://graph.facebook.com/me?fields=id,name,picture
       - CSRF_COOKIE_SECURE=true
       - COOKIE_SAME-SITE=Strict
-      - opentracing.jaeger.udp-sender.host=jaeger
-      - opentracing.jaeger.udp-sender.port=6831
+      - spring.sleuth.otel.exporter.jaeger.endpoint=http://jaeger:14250
 
     logging:
       driver: "journald"

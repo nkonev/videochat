@@ -12,5 +12,6 @@ http:
         address: "http://aaa:8060/internal/profile"
         authRequestHeaders:
           - "Cookie"
+          - "uber-trace-id"
         authResponseHeadersRegex: "^X-Auth-"
 

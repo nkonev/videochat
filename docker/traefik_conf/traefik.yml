@@ -34,5 +34,9 @@ accessLog:
 tracing:
   spanNameLimit: 150
   jaeger:
+    samplingType: const
+    samplingParam: 1
+    localAgentHostPort: jaeger:6831
+    propagation: jaeger
+    disableAttemptReconnecting: false
     gen128Bit: true
-    localAgentHostPort: host.docker.internal:6831

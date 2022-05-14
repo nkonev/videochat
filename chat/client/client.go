@@ -4,10 +4,9 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	uberCompat "github.com/nkonev/jaeger-uber-propagation-compat/propagation"
 	"github.com/spf13/viper"
-	"go.opencensus.io/plugin/ochttp"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -28,10 +27,7 @@ func NewRestClient() RestClient {
 		DisableCompression: viper.GetBool("http.disableCompression"),
 	}
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	trR := &ochttp.Transport{
-		Base:        tr,
-		Propagation: &uberCompat.HTTPFormat{},
-	}
+	trR := otelhttp.NewTransport(tr)
 	client := &http.Client{Transport: trR}
 	return RestClient{client}
 }
@@ -67,7 +63,8 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 		URL:    parsedUrl,
 	}
 
-	ctx, span := trace.StartSpan(c, "users.Get")
+	tr := otel.Tracer("rest/client")
+	ctx, span := tr.Start(c, "users.Get")
 	defer span.End()
 	request = request.WithContext(ctx)
 	resp, err := rc.Do(request)

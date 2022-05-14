@@ -40,4 +40,5 @@ rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
 
 jaeger:
-  endpoint: "localhost:6831"
+  host: "localhost"
+  port: 6831
