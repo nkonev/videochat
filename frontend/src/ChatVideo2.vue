@@ -1,8 +1,11 @@
 <template>
-    <div>Hi its video 2</div>
+    <v-col cols="12" class="ma-0 pa-0" id="video-container">
+        <div>Hi its video 2</div>
+    </v-col>
 </template>
 
 <script>
+import Vue from 'vue';
 // https://dev.to/hulyakarakaya/how-to-fix-regeneratorruntime-is-not-defined-doj
 import 'regenerator-runtime/runtime';
 import {
@@ -12,21 +15,53 @@ import {
     RemoteTrackPublication,
     RemoteTrack,
     Participant,
-    VideoPresets
+    VideoPresets,
+    Track
 } from 'livekit-client';
+import UserVideo from "./UserVideo";
+import vuetify from "@/plugins/vuetify";
+import { v4 as uuidv4 } from 'uuid';
+
+const UserVideoClass = Vue.extend(UserVideo);
 
 export default {
     data() {
         return {
-            room: null
+            room: null,
+            localStreams: {}, // user can have several cameras, or simultaneously translate camera and screen
+            remoteStreams: {},
+            videoContainerDiv: null,
         }
     },
     methods: {
+        getNewId() {
+            return uuidv4();
+        },
+        appendUserVideo(prepend, participant, appendTo) {
+            const videoTagId = 'local-' + this.getNewId();
+
+            const cameraPub = participant.getTrack(Track.Source.Camera);
+            const micPub = participant.getTrack(Track.Source.Microphone);
+            console.log("appendUserVideo", cameraPub, micPub);
+            const stream = {}; // TODO fixme
+            const localVideoProperties = {}; // TODO fixme
+            const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId, localVideoProperties: localVideoProperties }});
+            component.$mount();
+            if (prepend) {
+                this.videoContainerDiv.prepend(component.$el);
+            } else {
+                this.videoContainerDiv.appendChild(component.$el);
+            }
+            component.setStream(stream);
+            appendTo[stream.id] = {stream, component};
+            return component;
+        },
         handleTrackSubscribed(
             track,
             publication,
             participant,
         ) {
+            console.log("handleTrackSubscribed");
             if (track.kind === Track.Kind.Video || track.kind === Track.Kind.Audio) {
                 // attach it to a new HTMLVideoElement or HTMLAudioElement
                 const element = track.attach();
@@ -57,6 +92,8 @@ export default {
         }
     },
     async mounted() {
+        this.videoContainerDiv = document.getElementById("video-container");
+
         // creates a new room with options
         this.room = new Room({
             // automatically manage subscribed video quality
@@ -77,12 +114,18 @@ export default {
             .on(RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed)
             .on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakerChange)
             .on(RoomEvent.Disconnected, this.handleDisconnect)
-            .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished);
-
+            .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
+            .on(RoomEvent.LocalTrackPublished, () => {
+                console.log("LocalTrackPublished");
+                this.appendUserVideo(true, this.room.localParticipant, this.localStreams);
+            })
+            .on(RoomEvent.LocalTrackUnpublished, () => {
+                console.log("LocalTrackUnpublished");
+            })
         // connect to room
         await this.room.connect('ws://localhost:8081', "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTQzODE3NjksImlzcyI6IkFQSXpuSnhXU2hHVzNLdCIsIm5iZiI6MTY1MTc4OTc2OSwic3ViIjoibmlraXRhIiwidmlkZW8iOnsicm9vbSI6ImNoYXQxMDAiLCJyb29tSm9pbiI6dHJ1ZX19.79xvGP8b1BbbufYCvp8xg4NeP7rpx-kaIw7I0UOXkXk", {
             // don't subscribe to other participants automatically
-            autoSubscribe: false,
+            autoSubscribe: true,
         });
         console.log('connected to room', this.room.name);
 
@@ -90,7 +133,7 @@ export default {
         await this.room.localParticipant.enableCameraAndMicrophone();
     },
     beforeDestroy() {
-
+        this.videoContainerDiv = null;
     }
 }
 
