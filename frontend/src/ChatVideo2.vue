@@ -48,7 +48,7 @@ export default {
             const cameraEnabled = cameraPub && cameraPub.isSubscribed && !cameraPub.isMuted;
 
             let component;
-            // TODO remove from this array
+            // TODO remove from this array somewhere in UserVideo.close()
             const videoCandidates = this.localElements.filter(e => !e.hasVideoStream());
             const audioCandidates = this.localElements.filter(e => !e.hasAudioStream());
             console.log("appendUserVideo", cameraPub, micPub);
