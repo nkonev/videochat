@@ -53,16 +53,17 @@ export default {
     },
 
     methods: {
-        setAudioStream(micPub) {
+        setAudioStream(micPub, micEnabled) {
             console.log("Setting source audio for videoRef=", this.$refs.videoRef, " track=", micPub, " audio tag id=", this.id);
-            const micEnabled = micPub && micPub.isSubscribed && !micPub.isMuted;
             this.setDisplayAudioMute(true); // we don't need to sear own audio
             this.audioTrack = micPub;
             // this.$refs.videoRef.srcObject = d; // TODO implement
         },
-        setVideoStream(cameraPub) {
+        hasAudioStream() {
+            return this.audioTrack != null
+        },
+        setVideoStream(cameraPub, cameraEnabled) {
             console.log("Setting source video for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id);
-            const cameraEnabled = cameraPub && cameraPub.isSubscribed && !cameraPub.isMuted;
             this.setVideoMute(!cameraEnabled);
             this.videoTrack = cameraPub;
 
@@ -70,6 +71,10 @@ export default {
                 cameraPub?.videoTrack?.attach(this.$refs.videoRef);
             }
         },
+        hasVideoStream() {
+            return this.videoTrack != null
+        },
+
         getStreamId() {
             return this.stream?.id;
         },

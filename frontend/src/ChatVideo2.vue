@@ -31,28 +31,47 @@ export default {
             chatId: null,
             room: null,
             videoContainerDiv: null,
+            localElements: []
         }
     },
     methods: {
         getNewId() {
             return uuidv4();
         },
-        appendUserVideo(prepend, participant, local) {
+        appendUserVideo(prepend, participant, localVideoProperties) {
             const videoTagId = 'local-' + this.getNewId();
 
             const cameraPub = participant.getTrack(Track.Source.Camera);
             const micPub = participant.getTrack(Track.Source.Microphone);
+            const micEnabled = micPub && micPub.isSubscribed && !micPub.isMuted;
+            const cameraEnabled = cameraPub && cameraPub.isSubscribed && !cameraPub.isMuted;
+
+            let component;
+            // TODO remove from this array
+            const videoCandidates = this.localElements.filter(e => !e.hasVideoStream());
+            const audioCandidates = this.localElements.filter(e => !e.hasAudioStream());
             console.log("appendUserVideo", cameraPub, micPub);
-            const localVideoProperties = {}; // TODO fixme
-            const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId, localVideoProperties: localVideoProperties }});
-            component.$mount();
-            if (prepend) {
-                this.videoContainerDiv.prepend(component.$el);
+
+            if (videoCandidates.length) {
+                component = videoCandidates[0];
             } else {
-                this.videoContainerDiv.appendChild(component.$el);
+                component = new UserVideoClass({vuetify: vuetify,
+                    propsData: {
+                        initialMuted: this.remoteVideoIsMuted,
+                        id: videoTagId,
+                        localVideoProperties: localVideoProperties
+                    }
+                });
+                component.$mount();
+                if (prepend) {
+                    this.videoContainerDiv.prepend(component.$el);
+                } else {
+                    this.videoContainerDiv.appendChild(component.$el);
+                }
+                this.localElements.push(component);
             }
-            component.setAudioStream(micPub);
-            component.setVideoStream(cameraPub);
+            component.setAudioStream(micPub, micEnabled);
+            component.setVideoStream(cameraPub, cameraEnabled);
             return component;
         },
         handleTrackSubscribed(
@@ -118,7 +137,8 @@ export default {
             .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
             .on(RoomEvent.LocalTrackPublished, () => {
                 console.log("LocalTrackPublished", this.room);
-                this.appendUserVideo(true, this.room.localParticipant, true);
+                const localVideoProperties = {}; // todo set local video properties
+                this.appendUserVideo(true, this.room.localParticipant, localVideoProperties);
             })
             .on(RoomEvent.LocalTrackUnpublished, () => {
                 console.log("LocalTrackUnpublished");
