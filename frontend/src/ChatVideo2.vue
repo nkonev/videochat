@@ -39,7 +39,8 @@ export default {
             return uuidv4();
         },
         appendUserVideo(prepend, participant, localVideoProperties) {
-            const videoTagId = 'local-' + this.getNewId();
+            const prefix = localVideoProperties ? 'local-' : 'remote-';
+            const videoTagId = prefix + this.getNewId();
 
             const cameraPub = participant.getTrack(Track.Source.Camera);
             const micPub = participant.getTrack(Track.Source.Microphone);
