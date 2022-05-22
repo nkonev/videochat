@@ -16,10 +16,10 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:1236
-    video-proxy-service:
+    video-service:
       loadBalancer:
         servers:
-          - url: http://host.docker.internal:7000
+          - url: http://host.docker.internal:1237
     livekit-service:
       loadBalancer:
         servers:
@@ -52,7 +52,7 @@ http:
         - "retry-middleware"
     video-router:
       rule: "PathPrefix(`/api/video`)"
-      service: video-proxy-service
+      service: video-service
       middlewares:
         - "auth-middleware"
         - "api-strip-prefix-middleware"

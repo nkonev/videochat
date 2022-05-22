@@ -260,7 +260,7 @@ Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=166
 docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA" \
     livekit/livekit-server create-join-token \
     --room "chat100" \
-    --identity
+    --identity nkonev
 ```
 
 # Run one test

@@ -21,12 +21,14 @@ import {
 import UserVideo from "./UserVideo";
 import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
+import axios from "axios";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
 export default {
     data() {
         return {
+            chatId: null,
             room: null,
             localStreams: {}, // user can have several cameras, or simultaneously translate camera and screen
             remoteStreams: {},
@@ -92,6 +94,8 @@ export default {
         }
     },
     async mounted() {
+        this.chatId = this.$route.params.id;
+
         this.videoContainerDiv = document.getElementById("video-container");
 
         // creates a new room with options
@@ -121,9 +125,12 @@ export default {
             })
             .on(RoomEvent.LocalTrackUnpublished, () => {
                 console.log("LocalTrackUnpublished");
-            })
+            });
         // connect to room
-        await this.room.connect('ws://localhost:8081', "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTQzODE3NjksImlzcyI6IkFQSXpuSnhXU2hHVzNLdCIsIm5iZiI6MTY1MTc4OTc2OSwic3ViIjoibmlraXRhIiwidmlkZW8iOnsicm9vbSI6ImNoYXQxMDAiLCJyb29tSm9pbiI6dHJ1ZX19.79xvGP8b1BbbufYCvp8xg4NeP7rpx-kaIw7I0UOXkXk", {
+        // TODO prefix url
+        const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
+        console.log("Got video token", token);
+        await this.room.connect('ws://localhost:8081', token, {
             // don't subscribe to other participants automatically
             autoSubscribe: true,
         });

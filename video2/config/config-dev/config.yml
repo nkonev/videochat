@@ -1,0 +1,28 @@
+server:
+  address: ":1237"
+  shutdown.timeout: "10s"
+  body.limit: "100G"
+  contextPath: "/api"
+
+auth:
+  exclude:
+    - "^/video/public.*"
+
+jaeger:
+  host: "localhost"
+  port: 6831
+
+chat:
+  url:
+    base: "http://localhost:1235"
+    access: "/internal/access"
+
+aaa:
+  url:
+    base: "http://localhost:8060"
+    getUsers: "/internal/user/list"
+
+livekit:
+  api:
+    key: "APIznJxWShGW3Kt"
+    secret: "KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA"
