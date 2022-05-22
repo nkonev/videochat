@@ -1,4 +1,3 @@
-logging.level.root: INFO
 # logging.pattern.console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} traceId=%X{traceId} spanId=%X{spanId} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-50.50(%logger{49}:%line)){cyan} %clr(:){faint} %m%n%wEx'
 #logging.level.org.springframework.boot.web.servlet: TRACE
 #logging.level.org.springframework.security: TRACE
