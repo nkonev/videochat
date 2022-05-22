@@ -30,8 +30,6 @@ export default {
         return {
             chatId: null,
             room: null,
-            localStreams: {}, // user can have several cameras, or simultaneously translate camera and screen
-            remoteStreams: {},
             videoContainerDiv: null,
         }
     },
@@ -39,13 +37,12 @@ export default {
         getNewId() {
             return uuidv4();
         },
-        appendUserVideo(prepend, participant, appendTo) {
+        appendUserVideo(prepend, participant, local) {
             const videoTagId = 'local-' + this.getNewId();
 
             const cameraPub = participant.getTrack(Track.Source.Camera);
             const micPub = participant.getTrack(Track.Source.Microphone);
             console.log("appendUserVideo", cameraPub, micPub);
-            const stream = {}; // TODO fixme
             const localVideoProperties = {}; // TODO fixme
             const component = new UserVideoClass({vuetify: vuetify, propsData: { initialMuted: this.remoteVideoIsMuted, id: videoTagId, localVideoProperties: localVideoProperties }});
             component.$mount();
@@ -54,8 +51,8 @@ export default {
             } else {
                 this.videoContainerDiv.appendChild(component.$el);
             }
-            component.setStream(stream);
-            appendTo[stream.id] = {stream, component};
+            component.setAudioStream(micPub);
+            component.setVideoStream(cameraPub);
             return component;
         },
         handleTrackSubscribed(
@@ -120,8 +117,8 @@ export default {
             .on(RoomEvent.Disconnected, this.handleDisconnect)
             .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
             .on(RoomEvent.LocalTrackPublished, () => {
-                console.log("LocalTrackPublished");
-                this.appendUserVideo(true, this.room.localParticipant, this.localStreams);
+                console.log("LocalTrackPublished", this.room);
+                this.appendUserVideo(true, this.room.localParticipant, true);
             })
             .on(RoomEvent.LocalTrackUnpublished, () => {
                 console.log("LocalTrackUnpublished");
@@ -145,3 +142,20 @@ export default {
 }
 
 </script>
+
+<style lang="stylus" scoped>
+#video-container {
+    display: flex;
+    flex-direction: row;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    //scroll-snap-align width
+    //scroll-padding 0
+    height 100%
+    width 100%
+    //object-fit: contain;
+    //box-sizing: border-box
+}
+
+</style>

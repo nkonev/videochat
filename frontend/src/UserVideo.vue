@@ -35,8 +35,9 @@ export default {
             userId: null,
             failureCount: 0,
             showControls: false,
-            stream: null
-      }
+            audioTrack: null,
+            videoTrack: null
+        }
     },
 
     props: {
@@ -52,10 +53,19 @@ export default {
     },
 
     methods: {
-        setStream(d) {
-            console.log("Setting source for videoRef=", this.$refs.videoRef, " source=", d, " video tag id=", this.id);
-            this.stream = d;
-            this.$refs.videoRef.srcObject = d;
+        setAudioStream(micPub) {
+            console.log("Setting source for videoRef=", this.$refs.videoRef, " track=", micPub, " audio tag id=", this.id);
+            const micEnabled = micPub && micPub.isSubscribed && !micPub.isMuted;
+            this.setDisplayAudioMute(true); // we don't need to sear own audio
+            this.audioTrack = micPub;
+            // this.$refs.videoRef.srcObject = d; // TODO implement
+        },
+        setVideoStream(cameraPub) {
+            console.log("Setting source for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id);
+            const cameraEnabled = cameraPub && cameraPub.isSubscribed && !cameraPub.isMuted;
+            this.setVideoMute(!cameraEnabled);
+            this.videoTrack = cameraPub;
+            // this.$refs.videoRef.srcObject = d; // TODO implement
         },
         getStreamId() {
             return this.stream?.id;
@@ -107,41 +117,43 @@ export default {
         getFailureCount() {
             return this.failureCount;
         },
-        notifyOtherParticipants() {
-            // notify another participants, they will receive VIDEO_CALL_CHANGED
-            const toSend = {
-                avatar: this.avatarIsSet ? this.avatar : null,
-                peerId: this.localVideoProperties.peerId,
-                streamId: this.getStreamId(),
-                videoMute: this.videoMute,
-                audioMute: this.audioMute
-            };
-            this.localVideoProperties.signalLocal.notify(PUT_USER_DATA_METHOD, toSend);
-        },
+        // notifyOtherParticipants() {
+        //     // notify another participants, they will receive VIDEO_CALL_CHANGED
+        //     const toSend = {
+        //         avatar: this.avatarIsSet ? this.avatar : null,
+        //         peerId: this.localVideoProperties.peerId,
+        //         streamId: this.getStreamId(),
+        //         videoMute: this.videoMute,
+        //         audioMute: this.audioMute
+        //     };
+        //     this.localVideoProperties.signalLocal.notify(PUT_USER_DATA_METHOD, toSend);
+        // },
         doMuteAudio(requestedState) {
-            if (requestedState) {
-                this.getStream().mute("audio");
-                this.setDisplayAudioMute(requestedState);
-                this.notifyOtherParticipants();
-            } else {
-                this.localVideoProperties.parent.ensureAudioIsEnabledAccordingBrowserPolicies();
-                this.getStream().unmute("audio").then(value => {
-                    this.setDisplayAudioMute(requestedState);
-                    this.notifyOtherParticipants();
-                })
-            }
+            // TODO find mute and unmute in new api
+            // if (requestedState) {
+            //     this.getStream().mute("audio");
+            //     this.setDisplayAudioMute(requestedState);
+            //     this.notifyOtherParticipants();
+            // } else {
+            //     this.localVideoProperties.parent.ensureAudioIsEnabledAccordingBrowserPolicies();
+            //     this.getStream().unmute("audio").then(value => {
+            //         this.setDisplayAudioMute(requestedState);
+            //         this.notifyOtherParticipants();
+            //     })
+            // }
         },
         doMuteVideo(requestedState) {
-            if (requestedState) {
-                this.getStream().mute("video");
-                this.setVideoMute(true);
-                this.notifyOtherParticipants();
-            } else {
-                this.getStream().unmute("video").then(value => {
-                    this.setVideoMute(false);
-                    this.notifyOtherParticipants();
-                })
-            }
+            // TODO find mute and unmute in new api
+            // if (requestedState) {
+            //     this.getStream().mute("video");
+            //     this.setVideoMute(true);
+            //     this.notifyOtherParticipants();
+            // } else {
+            //     this.getStream().unmute("video").then(value => {
+            //         this.setVideoMute(false);
+            //         this.notifyOtherParticipants();
+            //     })
+            // }
         },
         onSetupDevice() {
             bus.$emit(OPEN_DEVICE_SETTINGS, this.id);
@@ -150,19 +162,22 @@ export default {
             if (elementIdToProcess != this.id) {
                 return
             }
-            console.log("Request to change device", deviceId, kind, "stream to change", this.getStream());
-            this.getStream().switchDevice(kind, deviceId).then(()=>{
-                this.setStream(this.getStream());
-                bus.$emit(DEVICE_CHANGED, null);
-            }).catch(e => {
-                console.error("Request to change device failed", deviceId, kind, "stream to change", this.getStream(), e);
-                bus.$emit(DEVICE_CHANGED, e);
-            });
+            // TODO implement in new api
+            // console.log("Request to change device", deviceId, kind, "stream to change", this.getStream());
+            // this.getStream().switchDevice(kind, deviceId).then(()=>{
+            //     this.setStream(this.getStream());
+            //     bus.$emit(DEVICE_CHANGED, null);
+            // }).catch(e => {
+            //     console.error("Request to change device failed", deviceId, kind, "stream to change", this.getStream(), e);
+            //     bus.$emit(DEVICE_CHANGED, e);
+            // });
         },
         onClose() {
-            const streamId = this.getStreamId();
-            this.localVideoProperties.parent.clearLocalMediaStream(this.getStream());
-            this.localVideoProperties.parent.removeStream(streamId, this, this.localVideoProperties.parent.localStreams);
+            // const streamId = this.getStreamId();
+            // // TODO check if need in new api
+            // // this.localVideoProperties.parent.clearLocalMediaStream(this.getStream());
+            // this.localVideoProperties.parent.removeStream(streamId, this, this.localVideoProperties.parent.localStreams);
+            // TODO send event to livekit
         },
     },
     computed: {
