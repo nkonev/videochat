@@ -4,8 +4,6 @@ import (
 	"context"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
@@ -21,7 +19,6 @@ import (
 	"nkonev.name/video/config"
 	"nkonev.name/video/handlers"
 	. "nkonev.name/video/logger"
-	"nkonev.name/video/utils"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -34,8 +31,6 @@ func main() {
 		fx.Logger(Logger),
 		fx.Provide(
 			configureTracer,
-			configureMinio,
-			configureMinioBuckets,
 			configureEcho,
 			client.NewChatAccessClient,
 			handlers.NewUserHandler,
@@ -128,23 +123,6 @@ func configureEcho(
 	return e
 }
 
-func configureMinio() (*minio.Client, error) {
-	endpoint := viper.GetString("minio.endpoint")
-	accessKeyID := viper.GetString("minio.accessKeyId")
-	secretAccessKey := viper.GetString("minio.secretAccessKey")
-
-	// Initialize minio client object.
-	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: false,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return minioClient, nil
-}
-
 func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	Logger.Infof("Configuring Jaeger tracing")
 	endpoint := jaegerExporter.WithAgentEndpoint(
@@ -193,27 +171,4 @@ func runEcho(e *echo.Echo) {
 		}
 	}()
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
-}
-
-func configureMinioBuckets(client *minio.Client) (*utils.MinioConfig, error) {
-	var ua, ca, f, e string
-	var err error
-	if ua, err = utils.EnsureAndGetUserAvatarBucket(client); err != nil {
-		return nil, err
-	}
-	if ca, err = utils.EnsureAndGetChatAvatarBucket(client); err != nil {
-		return nil, err
-	}
-	if f, err = utils.EnsureAndGetFilesBucket(client); err != nil {
-		return nil, err
-	}
-	if e, err = utils.EnsureAndGetEmbeddedBucket(client); err != nil {
-		return nil, err
-	}
-	return &utils.MinioConfig{
-		UserAvatar: ua,
-		ChatAvatar: ca,
-		Files:      f,
-		Embedded:   e,
-	}, nil
 }
