@@ -3,6 +3,7 @@ package auth
 type AuthResult struct {
 	UserId    int64
 	UserLogin string
+	Avatar    string
 	ExpiresAt int64 // in GMT. in seconds for centrifuge
 	Roles     []string
 }

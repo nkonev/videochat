@@ -73,6 +73,8 @@ export default {
             }
             component.setAudioStream(micPub, micEnabled);
             component.setVideoStream(cameraPub, cameraEnabled);
+            const md = JSON.parse((participant.metadata));
+            component.setUserName(md.login);
             return component;
         },
         handleTrackSubscribed(

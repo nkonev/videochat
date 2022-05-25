@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -48,9 +49,8 @@ func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
 	aKey := viper.GetString("livekit.api.key")
 	aSecret := viper.GetString("livekit.api.secret")
 	aRoomId := getRoom(chatId)
-	aId := getIdentity(userPrincipalDto)
 
-	token, err := h.getJoinToken(aKey, aSecret, aRoomId, aId)
+	token, err := h.getJoinToken(aKey, aSecret, aRoomId, userPrincipalDto)
 	if err != nil {
 		Logger.Errorf("Error during getting token, userId=%v, chatId=%v, error=%v", userPrincipalDto.UserId, chatId, err)
 		return err
@@ -60,17 +60,20 @@ func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
 	})
 }
 
-func getIdentity(authResult *auth.AuthResult) string {
-	return fmt.Sprintf("%v", authResult.UserId)
-}
-
 func getRoom(chatId int64) string {
 	return fmt.Sprintf("chat%v", chatId)
 }
 
-func (h *TokenHandler) getJoinToken(apiKey, apiSecret, room, identity string) (string, error) {
+type MetadataDto struct {
+	Login  string `json:"login"`
+	Avatar string `json:"avatar"` // url
+}
+
+func (h *TokenHandler) getJoinToken(apiKey, apiSecret, room string, authResult *auth.AuthResult) (string, error) {
 	canPublish := true
 	canSubscribe := true
+
+	aId := fmt.Sprintf("%v", authResult.UserId)
 
 	at := lkauth.NewAccessToken(apiKey, apiSecret)
 	grant := &lkauth.VideoGrant{
@@ -79,9 +82,20 @@ func (h *TokenHandler) getJoinToken(apiKey, apiSecret, room, identity string) (s
 		CanPublish:   &canPublish,
 		CanSubscribe: &canSubscribe,
 	}
+	md := &MetadataDto{
+		Login:  authResult.UserLogin,
+		Avatar: authResult.Avatar,
+	}
+
+	bytes, err := json.Marshal(md)
+	if err != nil {
+		return "", err
+	}
+
+	mds := string(bytes)
+
 	at.AddGrant(grant).
-		SetIdentity(identity).
-		SetValidFor(time.Hour)
+		SetIdentity(aId).SetValidFor(time.Hour).SetMetadata(mds)
 
 	return at.ToJWT()
 }

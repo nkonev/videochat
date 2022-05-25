@@ -37,6 +37,8 @@ public class Constants {
         public static final String X_AUTH_EXPIRESIN = "X-Auth-ExpiresIn";
         public static final String X_AUTH_ROLE = "X-Auth-Role";
         public static final String X_AUTH_SESSION_ID = "X-Auth-SessionId";
+
+        public static final String X_AUTH_AVATAR = "X-Auth-Avatar";
     }
 
     public static class PathVariables {

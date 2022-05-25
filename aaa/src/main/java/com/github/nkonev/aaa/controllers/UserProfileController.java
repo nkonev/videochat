@@ -103,6 +103,7 @@ public class UserProfileController {
         headers.set(X_AUTH_USER_ID, ""+userAccount.getId());
         headers.set(X_AUTH_EXPIRESIN, ""+expiresAt);
         headers.set(X_AUTH_SESSION_ID, session.getId());
+        headers.set(X_AUTH_AVATAR, userAccount.getAvatar());
         convertRolesToStringList(userAccount.getRoles()).forEach(s -> {
             headers.add(X_AUTH_ROLE, s);
         });
