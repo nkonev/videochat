@@ -23,6 +23,7 @@ import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
+import {getWebsocketUrlPrefix} from "@/utils";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
@@ -176,7 +177,7 @@ export default {
         // connect to room
         const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
         console.log("Got video token", token);
-        await this.room.connect('ws://localhost:8081/api/livekit', token, {
+        await this.room.connect(getWebsocketUrlPrefix()+'/api/livekit', token, {
             // don't subscribe to other participants automatically
             autoSubscribe: true,
         });
