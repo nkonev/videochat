@@ -31,7 +31,7 @@ export default {
             chatId: null,
             room: null,
             videoContainerDiv: null,
-            localElements: []
+            userVideoComponents: []
         }
     },
     methods: {
@@ -48,29 +48,52 @@ export default {
             const cameraEnabled = cameraPub && cameraPub.isSubscribed && !cameraPub.isMuted;
 
             let component;
-            // TODO remove from this array somewhere in UserVideo.close()
-            const videoCandidates = this.localElements.filter(e => !e.hasVideoStream());
-            const audioCandidates = this.localElements.filter(e => !e.hasAudioStream());
+            if (cameraPub) {
+                const localVideoCandidates = this.userVideoComponents.filter(e => !e.hasVideoStream());
+                if (localVideoCandidates.length) {
+                    component = localVideoCandidates[0];
+                } else {
+                    component = new UserVideoClass({vuetify: vuetify,
+                        propsData: {
+                            initialMuted: this.remoteVideoIsMuted,
+                            id: videoTagId,
+                            localVideoProperties: localVideoProperties
+                        }
+                    });
+                    component.$mount();
+                    if (prepend) {
+                        this.videoContainerDiv.prepend(component.$el);
+                    } else {
+                        this.videoContainerDiv.appendChild(component.$el);
+                    }
+                    // TODO remove from this array somewhere in UserVideo.close()
+                    this.userVideoComponents.push(component);
+                }
+            }
+            if (micPub && !component) {
+                const localVideoCandidates = this.userVideoComponents.filter(e => !e.hasAudioStream());
+                if (localVideoCandidates.length) {
+                    component = localVideoCandidates[0];
+                } else {
+                    component = new UserVideoClass({vuetify: vuetify,
+                        propsData: {
+                            initialMuted: this.remoteVideoIsMuted,
+                            id: videoTagId,
+                            localVideoProperties: localVideoProperties
+                        }
+                    });
+                    component.$mount();
+                    if (prepend) {
+                        this.videoContainerDiv.prepend(component.$el);
+                    } else {
+                        this.videoContainerDiv.appendChild(component.$el);
+                    }
+                    // TODO remove from this array somewhere in UserVideo.close()
+                    this.userVideoComponents.push(component);
+                }
+            }
             console.log("appendUserVideo", cameraPub, micPub);
 
-            if (videoCandidates.length) {
-                component = videoCandidates[0];
-            } else {
-                component = new UserVideoClass({vuetify: vuetify,
-                    propsData: {
-                        initialMuted: this.remoteVideoIsMuted,
-                        id: videoTagId,
-                        localVideoProperties: localVideoProperties
-                    }
-                });
-                component.$mount();
-                if (prepend) {
-                    this.videoContainerDiv.prepend(component.$el);
-                } else {
-                    this.videoContainerDiv.appendChild(component.$el);
-                }
-                this.localElements.push(component);
-            }
             component.setAudioStream(micPub, micEnabled);
             component.setVideoStream(cameraPub, cameraEnabled);
             const md = JSON.parse((participant.metadata));
