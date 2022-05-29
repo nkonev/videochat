@@ -22,6 +22,7 @@ import UserVideo from "./UserVideo";
 import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
+import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
@@ -138,6 +139,9 @@ export default {
     async mounted() {
         this.chatId = this.$route.params.id;
 
+        this.$store.commit(SET_SHOW_CALL_BUTTON, false);
+        this.$store.commit(SET_SHOW_HANG_BUTTON, true);
+
         this.videoContainerDiv = document.getElementById("video-container");
 
         // creates a new room with options
@@ -184,6 +188,10 @@ export default {
     },
     beforeDestroy() {
         this.videoContainerDiv = null;
+
+        this.$store.commit(SET_SHOW_CALL_BUTTON, true);
+        this.$store.commit(SET_SHOW_HANG_BUTTON, false);
+        this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
     }
 }
 
