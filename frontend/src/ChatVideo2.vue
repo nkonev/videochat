@@ -174,7 +174,6 @@ export default {
                 console.log("LocalTrackUnpublished");
             });
         // connect to room
-        // TODO prefix url
         const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
         console.log("Got video token", token);
         await this.room.connect('ws://localhost:8081/api/livekit', token, {
