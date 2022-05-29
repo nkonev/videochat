@@ -54,16 +54,20 @@ export default {
 
     methods: {
         setAudioStream(micPub, micEnabled) {
-            console.log("Setting source audio for videoRef=", this.$refs.videoRef, " track=", micPub, " audio tag id=", this.id);
-            this.setDisplayAudioMute(true); // we don't need to sear own audio
+            console.log("Setting source audio for videoRef=", this.$refs.videoRef, " track=", micPub, " audio tag id=", this.id, ", enabled=", micEnabled);
+            this.setDisplayAudioMute(!micEnabled);
             this.audioTrack = micPub;
-            // this.$refs.videoRef.srcObject = d; // TODO implement
+
+            // we don't need to hear own audio
+            if (micEnabled && !this.localVideoProperties) {
+                micPub?.audioTrack?.attach(this.$refs.videoRef);
+            }
         },
         hasAudioStream() {
             return this.audioTrack != null
         },
         setVideoStream(cameraPub, cameraEnabled) {
-            console.log("Setting source video for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id);
+            console.log("Setting source video for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id, ", enabled=", cameraEnabled);
             this.setVideoMute(!cameraEnabled);
             this.videoTrack = cameraPub;
 
