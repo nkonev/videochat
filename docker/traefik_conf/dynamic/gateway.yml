@@ -69,14 +69,21 @@ http:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
     livekit-router:
-      rule: "PathPrefix(`/rtc`)"
+      rule: "PathPrefix(`/api/livekit`)"
       service: livekit-service
+      middlewares:
+        - "livekit-strip-prefix-middleware"
+        - "retry-middleware"
 
   middlewares:
     api-strip-prefix-middleware:
       stripPrefix:
         prefixes:
           - "/api"
+    livekit-strip-prefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/api/livekit"
     retry-middleware:
       retry:
         attempts: 4

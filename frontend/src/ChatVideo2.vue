@@ -177,7 +177,7 @@ export default {
         // TODO prefix url
         const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
         console.log("Got video token", token);
-        await this.room.connect('ws://localhost:8081', token, {
+        await this.room.connect('ws://localhost:8081/api/livekit', token, {
             // don't subscribe to other participants automatically
             autoSubscribe: true,
         });
