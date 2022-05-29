@@ -44,8 +44,6 @@ export default {
 
             const cameraPub = participant.getTrack(Track.Source.Camera);
             const micPub = participant.getTrack(Track.Source.Microphone);
-            const micEnabled = micPub && micPub.isSubscribed && !micPub.isMuted;
-            const cameraEnabled = cameraPub && cameraPub.isSubscribed && !cameraPub.isMuted;
 
             let component;
             if (cameraPub) {
@@ -94,6 +92,8 @@ export default {
             }
             console.log("appendUserVideo", cameraPub, micPub);
 
+            const micEnabled = micPub && micPub.isSubscribed && !micPub.isMuted;
+            const cameraEnabled = cameraPub && cameraPub.isSubscribed && !cameraPub.isMuted;
             component.setAudioStream(micPub, micEnabled);
             component.setVideoStream(cameraPub, cameraEnabled);
             const md = JSON.parse((participant.metadata));
