@@ -120,11 +120,14 @@ export default {
             publication,
             participant,
         ) {
+            console.log('handleTrackUnsubscribed', track);
             // remove tracks from all attached elements
             track.detach();
         },
 
-        handleLocalTrackUnpublished(track, participant) {
+        handleLocalTrackUnpublished(trackPublication, participant) {
+            const track = trackPublication.track;
+            console.log('handleLocalTrackUnpublished', track);
             // when local tracks are ended, update UI to remove them from rendering
             track.detach();
         },
@@ -187,6 +190,12 @@ export default {
         await this.room.localParticipant.enableCameraAndMicrophone();
     },
     beforeDestroy() {
+        for(const component of this.userVideoComponents) {
+            component.onClose();
+        }
+        this.room.disconnect();
+
+        this.room = null;
         this.videoContainerDiv = null;
 
         this.$store.commit(SET_SHOW_CALL_BUTTON, true);

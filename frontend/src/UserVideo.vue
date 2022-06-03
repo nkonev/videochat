@@ -54,7 +54,7 @@ export default {
 
     methods: {
         setAudioStream(micPub, micEnabled) {
-            console.log("Setting source audio for videoRef=", this.$refs.videoRef, " track=", micPub, " audio tag id=", this.id, ", enabled=", micEnabled);
+            console.debug("Setting source audio for videoRef=", this.$refs.videoRef, " track=", micPub, " audio tag id=", this.id, ", enabled=", micEnabled);
             this.setDisplayAudioMute(!micEnabled);
             this.audioTrack = micPub;
 
@@ -67,7 +67,7 @@ export default {
             return this.audioTrack != null
         },
         setVideoStream(cameraPub, cameraEnabled) {
-            console.log("Setting source video for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id, ", enabled=", cameraEnabled);
+            console.debug("Setting source video for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id, ", enabled=", cameraEnabled);
             this.setVideoMute(!cameraEnabled);
             this.videoTrack = cameraPub;
 
