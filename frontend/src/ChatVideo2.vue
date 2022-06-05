@@ -62,6 +62,7 @@ export default {
             return component;
         },
         drawNewComponentOrGetExisting(participant, prepend, localVideoProperties) {
+            const md = JSON.parse((participant.metadata));
             const prefix = localVideoProperties ? 'local-' : 'remote-';
             const videoTagId = prefix + this.getNewId();
 
@@ -94,6 +95,7 @@ export default {
                     const cameraEnabled = track && track.isSubscribed && !track.isMuted;
                     candidateToAppendVideo.setVideoStream(track, cameraEnabled);
                     console.log("Video track was set", track, "to", candidateToAppendVideo);
+                    candidateToAppendVideo.setUserName(md.login);
                     return candidateToAppendVideo
                 } else if (track.kind == 'audio') {
                     console.debug("Processing audio track", track);
@@ -109,22 +111,14 @@ export default {
                     const micEnabled = track && track.isSubscribed && !track.isMuted;
                     candidateToAppendAudio.setAudioStream(track, micEnabled);
                     console.log("Audio track was set", track, "to", candidateToAppendAudio);
+                    candidateToAppendAudio.setUserName(md.login);
                     return candidateToAppendAudio
                 }
             }
+            console.warn("something wrong");
             return null
         },
-        renderUserVideo(prepend, participant, localVideoProperties) {
-            console.log("appendingUserVideo", participant);
 
-            const component = this.drawNewComponentOrGetExisting(participant, prepend, localVideoProperties);
-            if (!component) {
-                console.warn("something wrong");
-                return
-            }
-            const md = JSON.parse((participant.metadata));
-            component.setUserName(md.login);
-        },
         handleTrackSubscribed(
             track,
             publication,
@@ -228,7 +222,7 @@ export default {
                 const localVideoProperties = {
                     localParticipant: this.room.localParticipant
                 };
-                this.renderUserVideo(true, this.room.localParticipant, localVideoProperties);
+                this.drawNewComponentOrGetExisting(this.room.localParticipant, true, localVideoProperties);
             })
             .on(RoomEvent.LocalTrackUnpublished, () => {
                 console.log("LocalTrackUnpublished");

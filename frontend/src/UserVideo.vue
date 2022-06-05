@@ -18,8 +18,6 @@
 import {hasLength} from "@/utils";
 import bus, {CHANGE_DEVICE, DEVICE_CHANGED, OPEN_DEVICE_SETTINGS, VIDEO_PARAMETERS_CHANGED} from "@/bus";
 
-const PUT_USER_DATA_METHOD = "putUserData";
-
 export default {
 	name: 'UserVideo',
 
@@ -35,8 +33,8 @@ export default {
             userId: null,
             failureCount: 0,
             showControls: false,
-            audioTrack: null,
-            videoTrack: null
+            audioPublication: null,
+            videoPublication: null
         }
     },
 
@@ -55,7 +53,7 @@ export default {
             // we don't need to hear own audio
             const realMicEnabled = micEnabled && !this.localVideoProperties;
             this.setDisplayAudioMute(!realMicEnabled);
-            this.audioTrack = micPub;
+            this.audioPublication = micPub;
             if (realMicEnabled) {
                 micPub?.audioTrack?.attach(this.$refs.videoRef);
             }
@@ -63,17 +61,17 @@ export default {
         setVideoStream(cameraPub, cameraEnabled) {
             console.info("Setting source video for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id, ", enabled=", cameraEnabled);
             this.setVideoMute(!cameraEnabled);
-            this.videoTrack = cameraPub;
+            this.videoPublication = cameraPub;
 
             if (cameraEnabled) {
                 cameraPub?.videoTrack?.attach(this.$refs.videoRef);
             }
         },
         getVideoStreamId() {
-            return this.videoTrack?.trackSid;
+            return this.videoPublication?.trackSid;
         },
         getAudioStreamId() {
-            return this.audioTrack?.trackSid;
+            return this.audioPublication?.trackSid;
         },
         getId() {
             return this.$props.id;
@@ -182,8 +180,8 @@ export default {
             // // this.localVideoProperties.parent.clearLocalMediaStream(this.getStream());
             // this.localVideoProperties.parent.removeStream(streamId, this, this.localVideoProperties.parent.localStreams);
 
-            this.localVideoProperties.localParticipant.unpublishTrack(this.videoTrack?.videoTrack);
-            this.localVideoProperties.localParticipant.unpublishTrack(this.audioTrack?.audioTrack);
+            this.localVideoProperties.localParticipant.unpublishTrack(this.videoPublication?.videoTrack);
+            this.localVideoProperties.localParticipant.unpublishTrack(this.audioPublication?.audioTrack);
         },
     },
     computed: {
