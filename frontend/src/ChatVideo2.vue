@@ -140,6 +140,7 @@ export default {
             console.log('handleTrackUnsubscribed', track);
             // remove tracks from all attached elements
             track.detach();
+            this.removeComponent(track);
         },
 
         handleLocalTrackUnpublished(trackPublication, participant) {
@@ -147,8 +148,7 @@ export default {
             console.log('handleLocalTrackUnpublished', trackPublication);
             // when local tracks are ended, update UI to remove them from rendering
             track.detach();
-
-            this.removeComponent(track)
+            this.removeComponent(track);
         },
         removeComponent(track) {
             for (const componentId in this.userVideoComponents) {
