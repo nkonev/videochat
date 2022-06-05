@@ -148,6 +148,9 @@ export default {
             // when local tracks are ended, update UI to remove them from rendering
             track.detach();
 
+            this.removeComponent(track)
+        },
+        removeComponent(track) {
             for (const componentId in this.userVideoComponents) {
                 const component = this.userVideoComponents[componentId];
                 console.debug("For removal checking component=", component, "against", track);
