@@ -132,31 +132,22 @@ export default {
         //     this.localVideoProperties.signalLocal.notify(PUT_USER_DATA_METHOD, toSend);
         // },
         doMuteAudio(requestedState) {
-            // TODO find mute and unmute in new api
-            // if (requestedState) {
-            //     this.getStream().mute("audio");
-            //     this.setDisplayAudioMute(requestedState);
-            //     this.notifyOtherParticipants();
-            // } else {
-            //     this.localVideoProperties.parent.ensureAudioIsEnabledAccordingBrowserPolicies();
-            //     this.getStream().unmute("audio").then(value => {
-            //         this.setDisplayAudioMute(requestedState);
-            //         this.notifyOtherParticipants();
-            //     })
-            // }
+            if (requestedState) {
+                this.audioPublication?.mute();
+            } else {
+                this.audioPublication?.unmute();
+            }
+            this.setDisplayAudioMute(requestedState);
+            // TODO this.notifyOtherParticipants()
         },
         doMuteVideo(requestedState) {
-            // TODO find mute and unmute in new api
-            // if (requestedState) {
-            //     this.getStream().mute("video");
-            //     this.setVideoMute(true);
-            //     this.notifyOtherParticipants();
-            // } else {
-            //     this.getStream().unmute("video").then(value => {
-            //         this.setVideoMute(false);
-            //         this.notifyOtherParticipants();
-            //     })
-            // }
+            if (requestedState) {
+                this.videoPublication?.mute();
+            } else {
+                this.videoPublication?.unmute();
+            }
+            this.setVideoMute(requestedState);
+            // TODO this.notifyOtherParticipants()
         },
         onSetupDevice() {
             bus.$emit(OPEN_DEVICE_SETTINGS, this.id);

@@ -96,6 +96,7 @@ export default {
                     candidateToAppendVideo.setVideoStream(track, cameraEnabled);
                     console.log("Video track was set", track, "to", candidateToAppendVideo);
                     candidateToAppendVideo.setUserName(md.login);
+                    candidateToAppendVideo.setAvatar(md.avatar);
                     return candidateToAppendVideo
                 } else if (track.kind == 'audio') {
                     console.debug("Processing audio track", track);
@@ -112,6 +113,7 @@ export default {
                     candidateToAppendAudio.setAudioStream(track, micEnabled);
                     console.log("Audio track was set", track, "to", candidateToAppendAudio);
                     candidateToAppendAudio.setUserName(md.login);
+                    candidateToAppendAudio.setAvatar(md.avatar);
                     return candidateToAppendAudio
                 }
             }
