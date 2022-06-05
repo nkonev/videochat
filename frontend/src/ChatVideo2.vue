@@ -61,7 +61,12 @@ export default {
             this.userVideoComponents.push(component); // TODO remove somewhere in some close
             return component;
         },
-        drawNewComponentOrGetExisting(participantTracks, videoTagId, prepend, localVideoProperties) {
+        drawNewComponentOrGetExisting(participant, prepend, localVideoProperties) {
+            const prefix = localVideoProperties ? 'local-' : 'remote-';
+            const videoTagId = prefix + this.getNewId();
+
+            const participantTracks = participant.getTracks();
+
             const candidatesWithoutVideo = this.userVideoComponents.filter(e => !e.hasVideoStream());
             const candidatesWithoutAudio = this.userVideoComponents.filter(e => !e.hasAudioStream());
 
@@ -109,13 +114,9 @@ export default {
             return null
         },
         renderUserVideo(prepend, participant, localVideoProperties) {
-            const prefix = localVideoProperties ? 'local-' : 'remote-';
-            const videoTagId = prefix + this.getNewId();
-
-            const allTracks = participant.getTracks();
             console.log("appendingUserVideo", participant);
 
-            const component = this.drawNewComponentOrGetExisting(allTracks, videoTagId, prepend, localVideoProperties);
+            const component = this.drawNewComponentOrGetExisting(participant, prepend, localVideoProperties);
             if (!component) {
                 console.warn("something wrong");
                 return
