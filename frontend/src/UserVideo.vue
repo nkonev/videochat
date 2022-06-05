@@ -167,10 +167,6 @@ export default {
             // });
         },
         onClose() {
-            // const streamId = this.getStreamId();
-            // // this.localVideoProperties.parent.clearLocalMediaStream(this.getStream());
-            // this.localVideoProperties.parent.removeStream(streamId, this, this.localVideoProperties.parent.localStreams);
-
             this.localVideoProperties.localParticipant.unpublishTrack(this.videoPublication?.videoTrack);
             this.localVideoProperties.localParticipant.unpublishTrack(this.audioPublication?.audioTrack);
         },
