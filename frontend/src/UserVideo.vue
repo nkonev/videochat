@@ -189,13 +189,9 @@ export default {
             // // this.localVideoProperties.parent.clearLocalMediaStream(this.getStream());
             // this.localVideoProperties.parent.removeStream(streamId, this, this.localVideoProperties.parent.localStreams);
 
-            // TODO send event to livekit
-            // track.stop - может быть не надо
-            // track.detach - уже делается . надо unpublish
-
-
-            // TODO надо вызвать localParticipant.unpublishTrack()
-            // delete html element - по идее где-то в родительском
+            // TODO delete html element - по идее где-то в родительском
+            this.localVideoProperties.localParticipant.unpublishTrack(this.videoTrack?.videoTrack);
+            this.localVideoProperties.localParticipant.unpublishTrack(this.audioTrack?.audioTrack);
         },
     },
     computed: {

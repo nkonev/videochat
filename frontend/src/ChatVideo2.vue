@@ -67,8 +67,8 @@ export default {
 
             const participantTracks = participant.getTracks();
 
-            const candidatesWithoutVideo = this.userVideoComponents.filter(e => !e.hasVideoStream());
-            const candidatesWithoutAudio = this.userVideoComponents.filter(e => !e.hasAudioStream());
+            const candidatesWithoutVideo = this.userVideoComponents.filter(e => !e.getVideoStreamId());
+            const candidatesWithoutAudio = this.userVideoComponents.filter(e => !e.getAudioStreamId());
 
             const videoPublicationIsPresent = (videoStream, userVideoComponents) => {
                 return !!userVideoComponents.filter(e => e.getVideoStreamId() == videoStream.trackSid).length
@@ -149,7 +149,7 @@ export default {
 
         handleLocalTrackUnpublished(trackPublication, participant) {
             const track = trackPublication.track;
-            console.log('handleLocalTrackUnpublished', track);
+            console.log('handleLocalTrackUnpublished', trackPublication);
             // when local tracks are ended, update UI to remove them from rendering
             track.detach();
         },
@@ -209,7 +209,9 @@ export default {
             .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
             .on(RoomEvent.LocalTrackPublished, () => {
                 console.log("LocalTrackPublished", this.room);
-                const localVideoProperties = {}; // todo set local video properties
+                const localVideoProperties = {
+                    localParticipant: this.room.localParticipant
+                };
                 this.renderUserVideo(true, this.room.localParticipant, localVideoProperties);
             })
             .on(RoomEvent.LocalTrackUnpublished, () => {
