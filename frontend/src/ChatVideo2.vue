@@ -1,6 +1,5 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <div>Hi its video 2</div>
     </v-col>
 </template>
 
@@ -45,81 +44,7 @@ export default {
         getNewId() {
             return uuidv4();
         },
-        appendUserVideo2(prepend, participant, localVideoProperties) {
-            const prefix = localVideoProperties ? 'local-' : 'remote-';
-            const videoTagId = prefix + this.getNewId();
 
-            const allTracks = participant.getTracks();
-
-            const cameraPubs = allTracks.filter(track => track.kind == "video");
-            const micPubs = allTracks.filter(track => track.kind == "audio");
-            const cameraPub = cameraPubs.length ? cameraPubs[0] : null;
-            const micPub = micPubs.length ? micPubs[0] : null;
-
-            const videoPublicationIsSet = (videoStream, userVideoComponents) => {
-                return !!userVideoComponents.filter(e => e.getVideoStreamId() == videoStream.trackSid).length
-            }
-
-            const audioPublicationIsSet = (audioStream, userVideoComponents) => {
-                return !!userVideoComponents.filter(e => e.getAudioStreamId() == audioStream.trackSid).length
-            }
-
-            let component;
-            // this.userVideoComponents.filter(e => e.getVideoStreamId())
-            if (!videoPublicationIsSet(cameraPub, this.userVideoComponents)) {
-                const localVideoCandidates = this.userVideoComponents.filter(e => !e.hasVideoStream());
-                if (localVideoCandidates.length) {
-                    component = localVideoCandidates[0];
-                } else {
-                    component = new UserVideoClass({vuetify: vuetify,
-                        propsData: {
-                            initialMuted: this.remoteVideoIsMuted,
-                            id: videoTagId,
-                            localVideoProperties: localVideoProperties
-                        }
-                    });
-                    component.$mount();
-                    if (prepend) {
-                        this.videoContainerDiv.prepend(component.$el);
-                    } else {
-                        this.videoContainerDiv.appendChild(component.$el);
-                    }
-                    // TODO remove from this array somewhere in UserVideo.close()
-                    this.userVideoComponents.push(component);
-                }
-            }
-            if (!component && !audioPublicationIsSet(micPub, this.userVideoComponents)) {
-                const localVideoCandidates = this.userVideoComponents.filter(e => !e.hasAudioStream());
-                if (localVideoCandidates.length) {
-                    component = localVideoCandidates[0];
-                } else {
-                    component = new UserVideoClass({vuetify: vuetify,
-                        propsData: {
-                            initialMuted: this.remoteVideoIsMuted,
-                            id: videoTagId,
-                            localVideoProperties: localVideoProperties
-                        }
-                    });
-                    component.$mount();
-                    if (prepend) {
-                        this.videoContainerDiv.prepend(component.$el);
-                    } else {
-                        this.videoContainerDiv.appendChild(component.$el);
-                    }
-                    // TODO remove from this array somewhere in UserVideo.close()
-                    this.userVideoComponents.push(component);
-                }
-            }
-            console.log("appenqdUserVideo", cameraPub, micPub);
-
-            const micEnabled = micPub && micPub.isSubscribed && !micPub.isMuted;
-            const cameraEnabled = cameraPub && cameraPub.isSubscribed && !cameraPub.isMuted;
-            component.setAudioStream(micPub, micEnabled);
-            component.setVideoStream(cameraPub, cameraEnabled);
-            const md = JSON.parse((participant.metadata));
-            component.setUserName(md.login);
-            return component;
-        },
         createComponent(prepend, videoTagId, localVideoProperties) {
             const component = new UserVideoClass({vuetify: vuetify,
                 propsData: {
@@ -150,42 +75,40 @@ export default {
 
             for (const track of participantTracks) { // track is video, before audio created an element
                 if (track.kind == 'video') {
-                    console.log("Processing video track", track);
+                    console.debug("Processing video track", track);
                     if (videoPublicationIsPresent(track, this.userVideoComponents)) {
-                        console.log("Skipping video", track);
+                        console.debug("Skipping video", track);
                         continue;
                     }
-                    //let candidateToAppendVideo = candidatesWithoutVideo.find(e => e.getVideoStreamId() == track.trackSid);
                     let candidateToAppendVideo = candidatesWithoutVideo.length ? candidatesWithoutVideo[0] : null;
-                    console.log("candidatesWithoutVideo", candidatesWithoutVideo, "candidateToAppendVideo", candidateToAppendVideo);
+                    console.debug("candidatesWithoutVideo", candidatesWithoutVideo, "candidateToAppendVideo", candidateToAppendVideo);
                     if (!candidateToAppendVideo) {
                         candidateToAppendVideo = this.createComponent(prepend, videoTagId, localVideoProperties);
                     }
                     const cameraEnabled = track && track.isSubscribed && !track.isMuted;
                     candidateToAppendVideo.setVideoStream(track, cameraEnabled);
-                    console.log("Video track was set");
+                    console.log("Video track was set", track, "to", candidateToAppendVideo);
                     return candidateToAppendVideo
                 } else if (track.kind == 'audio') {
-                    console.log("Processing audio track", track);
+                    console.debug("Processing audio track", track);
                     if (audioPublicationIsPresent(track, this.userVideoComponents)) {
-                        console.log("Skipping audio", track);
+                        console.debug("Skipping audio", track);
                         continue;
                     }
-                    // let candidateToAppendAudio = candidatesWithoutAudio.find(e => e.getAudioStreamId() == track.trackSid);
                     let candidateToAppendAudio = candidatesWithoutAudio.length ? candidatesWithoutAudio[0] : null;
-                    console.log("candidatesWithoutAudio", candidatesWithoutAudio, "candidateToAppendAudio", candidateToAppendAudio);
+                    console.debug("candidatesWithoutAudio", candidatesWithoutAudio, "candidateToAppendAudio", candidateToAppendAudio);
                     if (!candidateToAppendAudio) {
                         candidateToAppendAudio = this.createComponent(prepend, videoTagId, localVideoProperties);
                     }
                     const micEnabled = track && track.isSubscribed && !track.isMuted;
                     candidateToAppendAudio.setAudioStream(track, micEnabled);
-                    console.log("Audio track was set");
+                    console.log("Audio track was set", track, "to", candidateToAppendAudio);
                     return candidateToAppendAudio
                 }
             }
             return null
         },
-        appendUserVideo(prepend, participant, localVideoProperties) {
+        renderUserVideo(prepend, participant, localVideoProperties) {
             const prefix = localVideoProperties ? 'local-' : 'remote-';
             const videoTagId = prefix + this.getNewId();
 
@@ -240,46 +163,6 @@ export default {
 
         async onAddVideoSource(videoId, audioId) {
             console.info("onAddVideoSource", "audioId", audioId, "videoid", videoId);
-            /*const onlyVideo = audioId == null;
-            const onlyAudio = videoId == null;
-            const tracks = await this.room.localParticipant.createTracks({
-                audio: {deviceId: onlyVideo ? false : audioId},
-                video: {deviceId: onlyAudio ? false : videoId }
-            });
-            if (!tracks.length) {
-                console.warn("No tracks found");
-            } else {
-                console.info("Found tracks", tracks);
-                if (onlyVideo) {
-                    const filteredTracks = tracks.filter(track => track.kind == "video");
-                    for (const track of filteredTracks) {
-                        console.info("1 Publishing track", track);
-                        this.room.localParticipant.publishTrack(track);
-                    }
-                } else if (onlyAudio) {
-                    const filteredTracks = tracks.filter(track => track.kind == "audio");
-                    for (const track of filteredTracks) {
-                        console.info("2 Publishing track", track);
-                        this.room.localParticipant.publishTrack(track);
-                    }
-                } else {
-                    for (const track of tracks) {
-                        console.info("3 Publishing track", track);
-                        this.room.localParticipant.publishTrack(track);
-                    }
-                }
-            }*/
-            /*const videoTrack = await createLocalVideoTrack({
-                deviceId: videoId
-            })
-            const audioTrack = await createLocalAudioTrack({
-                deviceId: audioId,
-                echoCancellation: true,
-                noiseSuppression: true,
-            })
-                        const videoPublication = await this.room.localParticipant.publishTrack(videoTrack);
-            const audioPublication = await this.room.localParticipant.publishTrack(audioTrack);
-            */
 
             const tracks = await createLocalTracks({
                 audio: {
@@ -313,10 +196,6 @@ export default {
             // optimize publishing bandwidth and CPU for simulcasted tracks
             dynacast: true,
 
-            // default capture settings
-            // videoCaptureDefaults: {
-            //     resolution: VideoPresets.h720.resolution,
-            // },
         });
 
         // set up event listeners
@@ -329,7 +208,7 @@ export default {
             .on(RoomEvent.LocalTrackPublished, () => {
                 console.log("LocalTrackPublished", this.room);
                 const localVideoProperties = {}; // todo set local video properties
-                this.appendUserVideo(true, this.room.localParticipant, localVideoProperties);
+                this.renderUserVideo(true, this.room.localParticipant, localVideoProperties);
             })
             .on(RoomEvent.LocalTrackUnpublished, () => {
                 console.log("LocalTrackUnpublished");
@@ -342,10 +221,6 @@ export default {
             autoSubscribe: true,
         });
         console.log('connected to room', this.room.name);
-
-        // publish local camera and mic tracks
-        // await this.room.localParticipant.enableCameraAndMicrophone();
-
 
         const videoTrack = await createLocalVideoTrack({
             facingMode: "user",
