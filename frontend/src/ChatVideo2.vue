@@ -175,8 +175,8 @@ export default {
             console.log('disconnected from room');
         },
 
-        async onAddVideoSource(videoId, audioId) {
-            console.info("onAddVideoSource", "audioId", audioId, "videoid", videoId);
+        async createLocalMediaTracks(videoId, audioId) {
+            console.info("Creating media tracks", "audioId", audioId, "videoid", videoId);
 
             const tracks = await createLocalTracks({
                 audio: {
@@ -237,7 +237,7 @@ export default {
         });
         console.log('connected to room', this.room.name);
 
-        this.onAddVideoSource(null, null);
+        await this.createLocalMediaTracks(null, null);
     },
     beforeDestroy() {
         for(const componentId in this.userVideoComponents) {
@@ -254,10 +254,10 @@ export default {
         this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
     },
     created() {
-        bus.$on(ADD_VIDEO_SOURCE, this.onAddVideoSource);
+        bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
     },
     destroyed() {
-        bus.$off(ADD_VIDEO_SOURCE, this.onAddVideoSource);
+        bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
     }
 }
 
