@@ -200,6 +200,8 @@ github.com/livekit/protocol v0.13.2 h1:0rTlqdkiWiuGKRoLJzKxsVRfGjspyjFzpudWSYOnL
 github.com/livekit/protocol v0.13.2/go.mod h1:BLtSeVmn2rLP37xjzw7gHgaAmkWl3L/L9bPvgSbaOfo=
 github.com/livekit/server-sdk-go v0.10.0 h1:YL+SXr/xZV8y0SB6Nh6Je3guH+7JURJS01kbX2P9qQA=
 github.com/livekit/server-sdk-go v0.10.0/go.mod h1:z09cpBfyYoqqrqtQASxzcB1/gOMFA2Guts/LhO6kjnI=
+github.com/livekit/server-sdk-go v0.10.1 h1:0SX/z2nFi7VRz/VbUY7gXbT1ZfzyxDS4S7hh6RLjIfI=
+github.com/livekit/server-sdk-go v0.10.1/go.mod h1:z09cpBfyYoqqrqtQASxzcB1/gOMFA2Guts/LhO6kjnI=
 github.com/magiconair/properties v1.8.1 h1:ZC2Vc7/ZFkGmsVC9KvOjumD+G5lXy2RtTKyzRKO2BQ4=
 github.com/magiconair/properties v1.8.1/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=

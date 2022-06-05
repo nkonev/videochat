@@ -16,7 +16,11 @@ import {
     RemoteTrack,
     Participant,
     VideoPresets,
-    Track
+    Track,
+    createLocalVideoTrack,
+    createLocalAudioTrack,
+    createLocalTracks
+
 } from 'livekit-client';
 import UserVideo from "./UserVideo";
 import vuetify from "@/plugins/vuetify";
@@ -24,6 +28,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
 import {getWebsocketUrlPrefix} from "@/utils";
+import bus, {ADD_VIDEO_SOURCE} from "@/bus";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
@@ -40,15 +45,28 @@ export default {
         getNewId() {
             return uuidv4();
         },
-        appendUserVideo(prepend, participant, localVideoProperties) {
+        appendUserVideo2(prepend, participant, localVideoProperties) {
             const prefix = localVideoProperties ? 'local-' : 'remote-';
             const videoTagId = prefix + this.getNewId();
 
-            const cameraPub = participant.getTrack(Track.Source.Camera);
-            const micPub = participant.getTrack(Track.Source.Microphone);
+            const allTracks = participant.getTracks();
+
+            const cameraPubs = allTracks.filter(track => track.kind == "video");
+            const micPubs = allTracks.filter(track => track.kind == "audio");
+            const cameraPub = cameraPubs.length ? cameraPubs[0] : null;
+            const micPub = micPubs.length ? micPubs[0] : null;
+
+            const videoPublicationIsSet = (videoStream, userVideoComponents) => {
+                return !!userVideoComponents.filter(e => e.getVideoStreamId() == videoStream.trackSid).length
+            }
+
+            const audioPublicationIsSet = (audioStream, userVideoComponents) => {
+                return !!userVideoComponents.filter(e => e.getAudioStreamId() == audioStream.trackSid).length
+            }
 
             let component;
-            if (cameraPub) {
+            // this.userVideoComponents.filter(e => e.getVideoStreamId())
+            if (!videoPublicationIsSet(cameraPub, this.userVideoComponents)) {
                 const localVideoCandidates = this.userVideoComponents.filter(e => !e.hasVideoStream());
                 if (localVideoCandidates.length) {
                     component = localVideoCandidates[0];
@@ -70,7 +88,7 @@ export default {
                     this.userVideoComponents.push(component);
                 }
             }
-            if (micPub && !component) {
+            if (!component && !audioPublicationIsSet(micPub, this.userVideoComponents)) {
                 const localVideoCandidates = this.userVideoComponents.filter(e => !e.hasAudioStream());
                 if (localVideoCandidates.length) {
                     component = localVideoCandidates[0];
@@ -92,7 +110,7 @@ export default {
                     this.userVideoComponents.push(component);
                 }
             }
-            console.log("appendUserVideo", cameraPub, micPub);
+            console.log("appenqdUserVideo", cameraPub, micPub);
 
             const micEnabled = micPub && micPub.isSubscribed && !micPub.isMuted;
             const cameraEnabled = cameraPub && cameraPub.isSubscribed && !cameraPub.isMuted;
@@ -101,6 +119,86 @@ export default {
             const md = JSON.parse((participant.metadata));
             component.setUserName(md.login);
             return component;
+        },
+        createComponent(prepend, videoTagId, localVideoProperties) {
+            const component = new UserVideoClass({vuetify: vuetify,
+                propsData: {
+                    id: videoTagId,
+                    localVideoProperties: localVideoProperties
+                }
+            });
+            component.$mount();
+            if (prepend) {
+                this.videoContainerDiv.prepend(component.$el);
+            } else {
+                this.videoContainerDiv.appendChild(component.$el);
+            }
+            this.userVideoComponents.push(component);
+            return component;
+        },
+        drawNewComponentOrGetExisting(participantTracks, videoTagId, prepend, localVideoProperties) {
+            const candidatesWithoutVideo = this.userVideoComponents.filter(e => !e.hasVideoStream());
+            const candidatesWithoutAudio = this.userVideoComponents.filter(e => !e.hasAudioStream());
+
+            const videoPublicationIsPresent = (videoStream, userVideoComponents) => {
+                return !!userVideoComponents.filter(e => e.getVideoStreamId() == videoStream.trackSid).length
+            }
+
+            const audioPublicationIsPresent = (audioStream, userVideoComponents) => {
+                return !!userVideoComponents.filter(e => e.getAudioStreamId() == audioStream.trackSid).length
+            }
+
+            for (const track of participantTracks) { // track is video, before audio created an element
+                if (track.kind == 'video') {
+                    console.log("Processing video track", track);
+                    if (videoPublicationIsPresent(track, this.userVideoComponents)) {
+                        console.log("Skipping video", track);
+                        continue;
+                    }
+                    //let candidateToAppendVideo = candidatesWithoutVideo.find(e => e.getVideoStreamId() == track.trackSid);
+                    let candidateToAppendVideo = candidatesWithoutVideo.length ? candidatesWithoutVideo[0] : null;
+                    console.log("candidatesWithoutVideo", candidatesWithoutVideo, "candidateToAppendVideo", candidateToAppendVideo);
+                    if (!candidateToAppendVideo) {
+                        candidateToAppendVideo = this.createComponent(prepend, videoTagId, localVideoProperties);
+                    }
+                    const cameraEnabled = track && track.isSubscribed && !track.isMuted;
+                    candidateToAppendVideo.setVideoStream(track, cameraEnabled);
+                    console.log("Video track was set");
+                    return candidateToAppendVideo
+                } else if (track.kind == 'audio') {
+                    console.log("Processing audio track", track);
+                    if (audioPublicationIsPresent(track, this.userVideoComponents)) {
+                        console.log("Skipping audio", track);
+                        continue;
+                    }
+                    // let candidateToAppendAudio = candidatesWithoutAudio.find(e => e.getAudioStreamId() == track.trackSid);
+                    let candidateToAppendAudio = candidatesWithoutAudio.length ? candidatesWithoutAudio[0] : null;
+                    console.log("candidatesWithoutAudio", candidatesWithoutAudio, "candidateToAppendAudio", candidateToAppendAudio);
+                    if (!candidateToAppendAudio) {
+                        candidateToAppendAudio = this.createComponent(prepend, videoTagId, localVideoProperties);
+                    }
+                    const micEnabled = track && track.isSubscribed && !track.isMuted;
+                    candidateToAppendAudio.setAudioStream(track, micEnabled);
+                    console.log("Audio track was set");
+                    return candidateToAppendAudio
+                }
+            }
+            return null
+        },
+        appendUserVideo(prepend, participant, localVideoProperties) {
+            const prefix = localVideoProperties ? 'local-' : 'remote-';
+            const videoTagId = prefix + this.getNewId();
+
+            const allTracks = participant.getTracks();
+            console.log("appendingUserVideo", participant);
+
+            const component = this.drawNewComponentOrGetExisting(allTracks, videoTagId, prepend, localVideoProperties);
+            if (!component) {
+                console.warn("something wrong");
+                return
+            }
+            const md = JSON.parse((participant.metadata));
+            component.setUserName(md.login);
         },
         handleTrackSubscribed(
             track,
@@ -138,6 +236,65 @@ export default {
 
         handleDisconnect() {
             console.log('disconnected from room');
+        },
+
+        async onAddVideoSource(videoId, audioId) {
+            console.info("onAddVideoSource", "audioId", audioId, "videoid", videoId);
+            /*const onlyVideo = audioId == null;
+            const onlyAudio = videoId == null;
+            const tracks = await this.room.localParticipant.createTracks({
+                audio: {deviceId: onlyVideo ? false : audioId},
+                video: {deviceId: onlyAudio ? false : videoId }
+            });
+            if (!tracks.length) {
+                console.warn("No tracks found");
+            } else {
+                console.info("Found tracks", tracks);
+                if (onlyVideo) {
+                    const filteredTracks = tracks.filter(track => track.kind == "video");
+                    for (const track of filteredTracks) {
+                        console.info("1 Publishing track", track);
+                        this.room.localParticipant.publishTrack(track);
+                    }
+                } else if (onlyAudio) {
+                    const filteredTracks = tracks.filter(track => track.kind == "audio");
+                    for (const track of filteredTracks) {
+                        console.info("2 Publishing track", track);
+                        this.room.localParticipant.publishTrack(track);
+                    }
+                } else {
+                    for (const track of tracks) {
+                        console.info("3 Publishing track", track);
+                        this.room.localParticipant.publishTrack(track);
+                    }
+                }
+            }*/
+            /*const videoTrack = await createLocalVideoTrack({
+                deviceId: videoId
+            })
+            const audioTrack = await createLocalAudioTrack({
+                deviceId: audioId,
+                echoCancellation: true,
+                noiseSuppression: true,
+            })
+                        const videoPublication = await this.room.localParticipant.publishTrack(videoTrack);
+            const audioPublication = await this.room.localParticipant.publishTrack(audioTrack);
+            */
+
+            const tracks = await createLocalTracks({
+                audio: {
+                    deviceId: audioId,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                },
+                video: {
+                    deviceId: videoId,
+                }
+            })
+            for (const track of tracks) {
+                console.info("Publishing track", track);
+                this.room.localParticipant.publishTrack(track, {name: "appended" + this.getNewId()});
+            }
         }
     },
     async mounted() {
@@ -157,9 +314,9 @@ export default {
             dynacast: true,
 
             // default capture settings
-            videoCaptureDefaults: {
-                resolution: VideoPresets.hd.resolution,
-            },
+            // videoCaptureDefaults: {
+            //     resolution: VideoPresets.h720.resolution,
+            // },
         });
 
         // set up event listeners
@@ -187,7 +344,21 @@ export default {
         console.log('connected to room', this.room.name);
 
         // publish local camera and mic tracks
-        await this.room.localParticipant.enableCameraAndMicrophone();
+        // await this.room.localParticipant.enableCameraAndMicrophone();
+
+
+        const videoTrack = await createLocalVideoTrack({
+            facingMode: "user",
+            // preset resolutions
+            resolution: VideoPresets.h720
+        })
+        const audioTrack = await createLocalAudioTrack({
+            echoCancellation: true,
+            noiseSuppression: true,
+        })
+        const videoPublication = await this.room.localParticipant.publishTrack(videoTrack, {name: "initialvideo"+this.getNewId()});
+        const audioPublication = await this.room.localParticipant.publishTrack(audioTrack, {name: "initialaudio"+this.getNewId()});
+
     },
     beforeDestroy() {
         for(const component of this.userVideoComponents) {
@@ -201,6 +372,12 @@ export default {
         this.$store.commit(SET_SHOW_CALL_BUTTON, true);
         this.$store.commit(SET_SHOW_HANG_BUTTON, false);
         this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
+    },
+    created() {
+        bus.$on(ADD_VIDEO_SOURCE, this.onAddVideoSource);
+    },
+    destroyed() {
+        bus.$off(ADD_VIDEO_SOURCE, this.onAddVideoSource);
     }
 }
 

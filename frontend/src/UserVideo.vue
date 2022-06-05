@@ -8,7 +8,7 @@
             <v-btn icon v-if="isLocal" @click="onClose()"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
-        <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted"/>
+        <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef" :muted="audioMute"/>
         <p @click="showControls=!showControls" v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
@@ -44,9 +44,6 @@ export default {
         id: {
             type: String
         },
-        initialMuted: {
-            type: Boolean
-        },
         localVideoProperties: {
             type: Object
         }
@@ -54,7 +51,7 @@ export default {
 
     methods: {
         setAudioStream(micPub, micEnabled) {
-            console.debug("Setting source audio for videoRef=", this.$refs.videoRef, " track=", micPub, " audio tag id=", this.id, ", enabled=", micEnabled);
+            console.info("Setting source audio for videoRef=", this.$refs.videoRef, " track=", micPub, " audio tag id=", this.id, ", enabled=", micEnabled);
             this.setDisplayAudioMute(!micEnabled);
             this.audioTrack = micPub;
 
@@ -67,7 +64,7 @@ export default {
             return this.audioTrack != null
         },
         setVideoStream(cameraPub, cameraEnabled) {
-            console.debug("Setting source video for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id, ", enabled=", cameraEnabled);
+            console.info("Setting source video for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id, ", enabled=", cameraEnabled);
             this.setVideoMute(!cameraEnabled);
             this.videoTrack = cameraPub;
 
@@ -79,8 +76,11 @@ export default {
             return this.videoTrack != null
         },
 
-        getStreamId() {
-            return this.stream?.id;
+        getVideoStreamId() {
+            return this.videoTrack?.trackSid;
+        },
+        getAudioStreamId() {
+            return this.audioTrack?.trackSid;
         },
         getStream() {
             return this.stream;
