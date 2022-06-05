@@ -227,6 +227,7 @@ export default {
                 };
                 this.drawNewComponentOrGetExisting(this.room.localParticipant, true, localVideoProperties);
             });
+
         // connect to room
         const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
         console.log("Got video token", token);
@@ -236,7 +237,7 @@ export default {
         });
         console.log('connected to room', this.room.name);
 
-        await this.onAddVideoSource(null, null);
+        this.onAddVideoSource(null, null);
     },
     beforeDestroy() {
         for(const componentId in this.userVideoComponents) {
