@@ -58,7 +58,7 @@ export default {
             } else {
                 this.videoContainerDiv.appendChild(component.$el);
             }
-            this.userVideoComponents.push(component);
+            this.userVideoComponents.push(component); // TODO remove somewhere in some close
             return component;
         },
         drawNewComponentOrGetExisting(participantTracks, videoTagId, prepend, localVideoProperties) {
@@ -100,6 +100,7 @@ export default {
                     if (!candidateToAppendAudio) {
                         candidateToAppendAudio = this.createComponent(prepend, videoTagId, localVideoProperties);
                     }
+                    // TODO set but mute for local subscriber basing on localVideoProperties
                     const micEnabled = track && track.isSubscribed && !track.isMuted;
                     candidateToAppendAudio.setAudioStream(track, micEnabled);
                     console.log("Audio track was set", track, "to", candidateToAppendAudio);
