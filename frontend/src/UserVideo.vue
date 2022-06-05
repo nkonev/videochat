@@ -4,7 +4,6 @@
             <v-btn icon @click="doMuteAudio(!audioMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
             <v-btn icon @click="doMuteVideo(!videoMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
             <v-btn icon @click="onEnterFullscreen"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
-            <v-btn icon @click="onSetupDevice()" v-if="isLocal && isChangeable" ><v-icon large class="video-container-element-control-item">mdi-cog</v-icon></v-btn>
             <v-btn icon v-if="isLocal" @click="onClose()"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
@@ -16,7 +15,6 @@
 <script>
 
 import {hasLength} from "@/utils";
-import bus, {CHANGE_DEVICE, DEVICE_CHANGED, OPEN_DEVICE_SETTINGS, VIDEO_PARAMETERS_CHANGED} from "@/bus";
 
 export default {
 	name: 'UserVideo',
@@ -149,23 +147,6 @@ export default {
             this.setVideoMute(requestedState);
             // TODO this.notifyOtherParticipants()
         },
-        onSetupDevice() {
-            bus.$emit(OPEN_DEVICE_SETTINGS, this.id);
-        },
-        onRequestChangeDevice({deviceId, kind, elementIdToProcess}) {
-            if (elementIdToProcess != this.id) {
-                return
-            }
-            // TODO implement in new api
-            // console.log("Request to change device", deviceId, kind, "stream to change", this.getStream());
-            // this.getStream().switchDevice(kind, deviceId).then(()=>{
-            //     this.setStream(this.getStream());
-            //     bus.$emit(DEVICE_CHANGED, null);
-            // }).catch(e => {
-            //     console.error("Request to change device failed", deviceId, kind, "stream to change", this.getStream(), e);
-            //     bus.$emit(DEVICE_CHANGED, e);
-            // });
-        },
         onClose() {
             this.localVideoProperties.localParticipant.unpublishTrack(this.videoPublication?.videoTrack);
             this.localVideoProperties.localParticipant.unpublishTrack(this.audioPublication?.audioTrack);
@@ -186,10 +167,10 @@ export default {
         }
     },
     created(){
-        bus.$on(CHANGE_DEVICE, this.onRequestChangeDevice);
+
     },
     destroyed() {
-        bus.$off(CHANGE_DEVICE, this.onRequestChangeDevice);
+
     }
 };
 </script>

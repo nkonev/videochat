@@ -27,7 +27,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
 import {getWebsocketUrlPrefix} from "@/utils";
-import bus, {ADD_VIDEO_SOURCE} from "@/bus";
+import bus, {ADD_VIDEO_SOURCE, CHANGE_DEVICE, KILL_OLD_DEVICE} from "@/bus";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
@@ -193,7 +193,7 @@ export default {
                 console.info("Publishing track", track);
                 this.room.localParticipant.publishTrack(track, {name: "appended" + this.getNewId()});
             }
-        }
+        },
     },
     async mounted() {
         this.chatId = this.$route.params.id;
