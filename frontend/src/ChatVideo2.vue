@@ -61,6 +61,12 @@ export default {
             this.userVideoComponents[videoTagId] = component;
             return component;
         },
+        videoPublicationIsPresent (videoStream, userVideoComponents) {
+            return !!userVideoComponents.filter(e => e.getVideoStreamId() == videoStream.trackSid).length
+        },
+        audioPublicationIsPresent (audioStream, userVideoComponents) {
+            return !!userVideoComponents.filter(e => e.getAudioStreamId() == audioStream.trackSid).length
+        },
         drawNewComponentOrGetExisting(participant, prepend, localVideoProperties) {
             const md = JSON.parse((participant.metadata));
             const prefix = localVideoProperties ? 'local-' : 'remote-';
@@ -72,18 +78,10 @@ export default {
             const candidatesWithoutVideo = components.filter(e => !e.getVideoStreamId());
             const candidatesWithoutAudio = components.filter(e => !e.getAudioStreamId());
 
-            const videoPublicationIsPresent = (videoStream, userVideoComponents) => {
-                return !!userVideoComponents.filter(e => e.getVideoStreamId() == videoStream.trackSid).length
-            }
-
-            const audioPublicationIsPresent = (audioStream, userVideoComponents) => {
-                return !!userVideoComponents.filter(e => e.getAudioStreamId() == audioStream.trackSid).length
-            }
-
             for (const track of participantTracks) { // track is video, before audio created an element
                 if (track.kind == 'video') {
                     console.debug("Processing video track", track);
-                    if (videoPublicationIsPresent(track, components)) {
+                    if (this.videoPublicationIsPresent(track, components)) {
                         console.debug("Skipping video", track);
                         continue;
                     }
@@ -100,7 +98,7 @@ export default {
                     return candidateToAppendVideo
                 } else if (track.kind == 'audio') {
                     console.debug("Processing audio track", track);
-                    if (audioPublicationIsPresent(track, components)) {
+                    if (this.audioPublicationIsPresent(track, components)) {
                         console.debug("Skipping audio", track);
                         continue;
                     }
