@@ -226,9 +226,6 @@ export default {
                     localParticipant: this.room.localParticipant
                 };
                 this.drawNewComponentOrGetExisting(this.room.localParticipant, true, localVideoProperties);
-            })
-            .on(RoomEvent.LocalTrackUnpublished, () => {
-                console.log("LocalTrackUnpublished");
             });
         // connect to room
         const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
