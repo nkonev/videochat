@@ -60,9 +60,6 @@ export default {
                 micPub?.audioTrack?.attach(this.$refs.videoRef);
             }
         },
-        hasAudioStream() {
-            return this.audioTrack != null
-        },
         setVideoStream(cameraPub, cameraEnabled) {
             console.info("Setting source video for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id, ", enabled=", cameraEnabled);
             this.setVideoMute(!cameraEnabled);
@@ -72,18 +69,14 @@ export default {
                 cameraPub?.videoTrack?.attach(this.$refs.videoRef);
             }
         },
-        hasVideoStream() {
-            return this.videoTrack != null
-        },
-
         getVideoStreamId() {
             return this.videoTrack?.trackSid;
         },
         getAudioStreamId() {
             return this.audioTrack?.trackSid;
         },
-        getStream() {
-            return this.stream;
+        getId() {
+            return this.$props.id;
         },
         getVideoElement() {
             return this?.$refs?.videoRef;
@@ -189,7 +182,6 @@ export default {
             // // this.localVideoProperties.parent.clearLocalMediaStream(this.getStream());
             // this.localVideoProperties.parent.removeStream(streamId, this, this.localVideoProperties.parent.localStreams);
 
-            // TODO delete html element - по идее где-то в родительском
             this.localVideoProperties.localParticipant.unpublishTrack(this.videoTrack?.videoTrack);
             this.localVideoProperties.localParticipant.unpublishTrack(this.audioTrack?.audioTrack);
         },

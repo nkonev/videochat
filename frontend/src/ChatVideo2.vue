@@ -37,7 +37,7 @@ export default {
             chatId: null,
             room: null,
             videoContainerDiv: null,
-            userVideoComponents: []
+            userVideoComponents: {}
         }
     },
     methods: {
@@ -58,7 +58,7 @@ export default {
             } else {
                 this.videoContainerDiv.appendChild(component.$el);
             }
-            this.userVideoComponents.push(component); // TODO remove somewhere in some close
+            this.userVideoComponents[videoTagId] = component;
             return component;
         },
         drawNewComponentOrGetExisting(participant, prepend, localVideoProperties) {
@@ -67,8 +67,9 @@ export default {
 
             const participantTracks = participant.getTracks();
 
-            const candidatesWithoutVideo = this.userVideoComponents.filter(e => !e.getVideoStreamId());
-            const candidatesWithoutAudio = this.userVideoComponents.filter(e => !e.getAudioStreamId());
+            const components = Object.values(this.userVideoComponents);
+            const candidatesWithoutVideo = components.filter(e => !e.getVideoStreamId());
+            const candidatesWithoutAudio = components.filter(e => !e.getAudioStreamId());
 
             const videoPublicationIsPresent = (videoStream, userVideoComponents) => {
                 return !!userVideoComponents.filter(e => e.getVideoStreamId() == videoStream.trackSid).length
@@ -81,7 +82,7 @@ export default {
             for (const track of participantTracks) { // track is video, before audio created an element
                 if (track.kind == 'video') {
                     console.debug("Processing video track", track);
-                    if (videoPublicationIsPresent(track, this.userVideoComponents)) {
+                    if (videoPublicationIsPresent(track, components)) {
                         console.debug("Skipping video", track);
                         continue;
                     }
@@ -96,7 +97,7 @@ export default {
                     return candidateToAppendVideo
                 } else if (track.kind == 'audio') {
                     console.debug("Processing audio track", track);
-                    if (audioPublicationIsPresent(track, this.userVideoComponents)) {
+                    if (audioPublicationIsPresent(track, components)) {
                         console.debug("Skipping audio", track);
                         continue;
                     }
@@ -152,6 +153,21 @@ export default {
             console.log('handleLocalTrackUnpublished', trackPublication);
             // when local tracks are ended, update UI to remove them from rendering
             track.detach();
+
+            for (const componentId in this.userVideoComponents) {
+                const component = this.userVideoComponents[componentId];
+                console.debug("For removal checking component=", component, "against", track);
+                if (component.getVideoStreamId() == track.sid || component.getAudioStreamId() == track.sid) {
+                    console.log("Removing component=", component);
+                    try {
+                        this.videoContainerDiv.removeChild(component.$el);
+                        component.$destroy();
+                    } catch (e) {
+                        console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
+                    }
+                    delete this.userVideoComponents[componentId];
+                }
+            }
         },
 
         handleActiveSpeakerChange(speakers) {
@@ -229,7 +245,8 @@ export default {
         await this.onAddVideoSource(null, null);
     },
     beforeDestroy() {
-        for(const component of this.userVideoComponents) {
+        for(const componentId in this.userVideoComponents) {
+            const component = this.userVideoComponents[componentId];
             component.onClose();
         }
         this.room.disconnect();
