@@ -52,11 +52,11 @@ export default {
     methods: {
         setAudioStream(micPub, micEnabled) {
             console.info("Setting source audio for videoRef=", this.$refs.videoRef, " track=", micPub, " audio tag id=", this.id, ", enabled=", micEnabled);
-            this.setDisplayAudioMute(!micEnabled);
-            this.audioTrack = micPub;
-
             // we don't need to hear own audio
-            if (micEnabled && !this.localVideoProperties) {
+            const realMicEnabled = micEnabled && !this.localVideoProperties;
+            this.setDisplayAudioMute(!realMicEnabled);
+            this.audioTrack = micPub;
+            if (realMicEnabled) {
                 micPub?.audioTrack?.attach(this.$refs.videoRef);
             }
         },
@@ -186,10 +186,16 @@ export default {
         },
         onClose() {
             // const streamId = this.getStreamId();
-            // // TODO check if need in new api
             // // this.localVideoProperties.parent.clearLocalMediaStream(this.getStream());
             // this.localVideoProperties.parent.removeStream(streamId, this, this.localVideoProperties.parent.localStreams);
+
             // TODO send event to livekit
+            // track.stop - может быть не надо
+            // track.detach - уже делается . надо unpublish
+
+
+            // TODO надо вызвать localParticipant.unpublishTrack()
+            // delete html element - по идее где-то в родительском
         },
     },
     computed: {

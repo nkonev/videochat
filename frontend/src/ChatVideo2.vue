@@ -105,7 +105,7 @@ export default {
                     if (!candidateToAppendAudio) {
                         candidateToAppendAudio = this.createComponent(prepend, videoTagId, localVideoProperties);
                     }
-                    const micEnabled = track && track.isSubscribed && !track.isMuted && !localVideoProperties;
+                    const micEnabled = track && track.isSubscribed && !track.isMuted;
                     candidateToAppendAudio.setAudioStream(track, micEnabled);
                     console.log("Audio track was set", track, "to", candidateToAppendAudio);
                     return candidateToAppendAudio
