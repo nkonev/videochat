@@ -173,6 +173,7 @@ export default {
                 },
                 video: {
                     deviceId: videoId,
+                    resolution: VideoPresets.h720
                 }
             })
             for (const track of tracks) {
@@ -223,18 +224,7 @@ export default {
         });
         console.log('connected to room', this.room.name);
 
-        const videoTrack = await createLocalVideoTrack({
-            facingMode: "user",
-            // preset resolutions
-            resolution: VideoPresets.h720
-        })
-        const audioTrack = await createLocalAudioTrack({
-            echoCancellation: true,
-            noiseSuppression: true,
-        })
-        const videoPublication = await this.room.localParticipant.publishTrack(videoTrack, {name: "initialvideo"+this.getNewId()});
-        const audioPublication = await this.room.localParticipant.publishTrack(audioTrack, {name: "initialaudio"+this.getNewId()});
-
+        await this.onAddVideoSource(null, null);
     },
     beforeDestroy() {
         for(const component of this.userVideoComponents) {
