@@ -172,7 +172,7 @@ export default {
                 const component = this.userVideoComponents[componentId];
                 console.debug("For removal checking component=", component, "against", track);
                 if (component.getVideoStreamId() == track.sid || component.getAudioStreamId() == track.sid) {
-                    console.log("Removing component=", component);
+                    console.log("Removing component=", component.getId());
                     try {
                         this.videoContainerDiv.removeChild(component.$el);
                         component.$destroy();
