@@ -26,8 +26,14 @@ import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
-import {getWebsocketUrlPrefix} from "@/utils";
-import bus, {ADD_VIDEO_SOURCE, CHANGE_DEVICE, KILL_OLD_DEVICE} from "@/bus";
+import {getCodec, getVideoResolution, getWebsocketUrlPrefix, hasLength} from "@/utils";
+import bus, {
+    ADD_VIDEO_SOURCE,
+    CHANGE_DEVICE,
+    KILL_OLD_DEVICE,
+    REQUEST_CHANGE_VIDEO_PARAMETERS,
+    VIDEO_PARAMETERS_CHANGED
+} from "@/bus";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
@@ -37,7 +43,9 @@ export default {
             chatId: null,
             room: null,
             videoContainerDiv: null,
-            userVideoComponents: {}
+            userVideoComponents: {},
+            videoResolution: null,
+            preferredCodec: null
         }
     },
     methods: {
@@ -175,8 +183,79 @@ export default {
             console.log('disconnected from room');
         },
 
+        async setConfig() {
+            const configObj = await axios
+                .get(`/api/video/${this.chatId}/config`)
+                .then(response => response.data)
+            if (hasLength(configObj.resolution)) {
+                console.log("Server overrided resolution to", configObj.resolution)
+                this.videoResolution = configObj.resolution;
+            } else {
+                this.videoResolution = getVideoResolution();
+                console.log("Used resolution from localstorage", this.videoResolution)
+            }
+            if (hasLength(configObj.codec)) {
+                console.log("Server overrided codec to", configObj.codec)
+                this.preferredCodec = configObj.codec;
+            } else {
+                this.preferredCodec = getCodec();
+                console.log("Used codec from localstorage", this.preferredCodec)
+            }
+        },
+
+        async tryRestartVideoProcess() {
+            await this.stopRoom();
+            await this.startRoom();
+        },
+
+        async startRoom() {
+            await this.setConfig();
+            // creates a new room with options
+            this.room = new Room({
+                // automatically manage subscribed video quality
+                adaptiveStream: true,
+
+                // optimize publishing bandwidth and CPU for simulcasted tracks
+                dynacast: true,
+            });
+
+            // set up event listeners
+            this.room
+                .on(RoomEvent.TrackSubscribed, this.handleTrackSubscribed)
+                .on(RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed)
+                .on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakerChange)
+                .on(RoomEvent.Disconnected, this.handleDisconnect)
+                .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
+                .on(RoomEvent.LocalTrackPublished, () => {
+                    console.log("LocalTrackPublished", this.room);
+                    bus.$emit(VIDEO_PARAMETERS_CHANGED);
+                    const localVideoProperties = {
+                        localParticipant: this.room.localParticipant
+                    };
+                    this.drawNewComponentOrGetExisting(this.room.localParticipant, true, localVideoProperties);
+                });
+
+            // connect to room
+            const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
+            console.log("Got video token", token);
+            await this.room.connect(getWebsocketUrlPrefix()+'/api/livekit', token, {
+                // don't subscribe to other participants automatically
+                autoSubscribe: true,
+            });
+            console.log('connected to room', this.room.name);
+
+            await this.createLocalMediaTracks(null, null);
+        },
+
+        async stopRoom() {
+            await this.room.disconnect();
+            this.room = null;
+        },
+
         async createLocalMediaTracks(videoId, audioId) {
-            console.info("Creating media tracks", "audioId", audioId, "videoid", videoId);
+            const resolution = VideoPresets[this.videoResolution];
+
+            console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", resolution, "preferredCodec", this.preferredCodec);
 
             const tracks = await createLocalTracks({
                 audio: {
@@ -186,12 +265,15 @@ export default {
                 },
                 video: {
                     deviceId: videoId,
-                    resolution: VideoPresets.h720
+                    resolution: resolution
                 }
             })
             for (const track of tracks) {
                 console.info("Publishing track", track);
-                this.room.localParticipant.publishTrack(track, {name: "appended" + this.getNewId()});
+                this.room.localParticipant.publishTrack(track, {
+                    name: "appended" + this.getNewId(),
+                    videoCodec: this.preferredCodec
+                });
             }
         },
     },
@@ -203,50 +285,11 @@ export default {
 
         this.videoContainerDiv = document.getElementById("video-container");
 
-        // creates a new room with options
-        this.room = new Room({
-            // automatically manage subscribed video quality
-            adaptiveStream: true,
-
-            // optimize publishing bandwidth and CPU for simulcasted tracks
-            dynacast: true,
-
-        });
-
-        // set up event listeners
-        this.room
-            .on(RoomEvent.TrackSubscribed, this.handleTrackSubscribed)
-            .on(RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed)
-            .on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakerChange)
-            .on(RoomEvent.Disconnected, this.handleDisconnect)
-            .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
-            .on(RoomEvent.LocalTrackPublished, () => {
-                console.log("LocalTrackPublished", this.room);
-                const localVideoProperties = {
-                    localParticipant: this.room.localParticipant
-                };
-                this.drawNewComponentOrGetExisting(this.room.localParticipant, true, localVideoProperties);
-            });
-
-        // connect to room
-        const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
-        console.log("Got video token", token);
-        await this.room.connect(getWebsocketUrlPrefix()+'/api/livekit', token, {
-            // don't subscribe to other participants automatically
-            autoSubscribe: true,
-        });
-        console.log('connected to room', this.room.name);
-
-        await this.createLocalMediaTracks(null, null);
+        this.startRoom();
     },
     beforeDestroy() {
-        for(const componentId in this.userVideoComponents) {
-            const component = this.userVideoComponents[componentId];
-            component.onClose();
-        }
-        this.room.disconnect();
+        this.stopRoom();
 
-        this.room = null;
         this.videoContainerDiv = null;
 
         this.$store.commit(SET_SHOW_CALL_BUTTON, true);
@@ -255,9 +298,11 @@ export default {
     },
     created() {
         bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
+        bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
     },
     destroyed() {
         bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
+        bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
     }
 }
 

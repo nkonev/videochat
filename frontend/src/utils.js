@@ -12,9 +12,9 @@ export const getWebsocketUrlPrefix = () => {
     return ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host
 }
 
-const defaultResolution = 'hd';
+const defaultResolution = 'h720';
 
-export const KEY_RESOLUTION = 'videoResolution';
+export const KEY_RESOLUTION = 'videoResolution2';
 
 export const getVideoResolution = () => {
     let got = localStorage.getItem(KEY_RESOLUTION);

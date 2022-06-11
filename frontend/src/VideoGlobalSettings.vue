@@ -158,11 +158,11 @@
         },
         computed: {
             qualityItems() {
-                // https://github.com/pion/ion-sdk-js/blob/master/src/stream.ts#L10
-                return ['qvga', 'vga', 'shd', 'hd', 'fhd', 'qhd']
+                // ./frontend/node_modules/livekit-client/dist/room/track/options.d.ts
+                return ['h180', 'h360', 'h720', 'h1080', 'h1440', 'h2160']
             },
             codecItems() {
-                return ['vp8', 'vp9', 'h264']
+                return ['vp8', 'vp9', 'h264', 'av1']
             },
             chatId() {
                 return this.$route.params.id
