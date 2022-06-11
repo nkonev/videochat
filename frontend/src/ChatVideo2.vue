@@ -16,10 +16,8 @@ import {
     Participant,
     VideoPresets,
     Track,
-    createLocalVideoTrack,
-    createLocalAudioTrack,
-    createLocalTracks
-
+    createLocalTracks,
+    createLocalScreenTracks,
 } from 'livekit-client';
 import UserVideo from "./UserVideo";
 import vuetify from "@/plugins/vuetify";
@@ -36,6 +34,7 @@ import {
     hasLength
 } from "@/utils";
 import bus, {
+    ADD_SCREEN_SOURCE,
     ADD_VIDEO_SOURCE,
     CHANGE_DEVICE,
     KILL_OLD_DEVICE,
@@ -283,8 +282,9 @@ export default {
             this.room = null;
         },
 
-        async createLocalMediaTracks(videoId, audioId) {
-            const resolution = VideoPresets[this.videoResolution];
+        async createLocalMediaTracks(videoId, audioId, isScreen) {
+            const preset = VideoPresets[this.videoResolution];
+            const resolution = preset.resolution;
             const audioIsPresents = getStoredAudioDevicePresents();
             const videoIsPresents = getStoredVideoDevicePresents();
 
@@ -296,20 +296,28 @@ export default {
 
             console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", resolution, "preferredCodec", this.preferredCodec);
 
-            const tracks = await createLocalTracks({
-                audio: audioIsPresents ? {
-                    deviceId: audioId,
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                } : false,
-                video: videoIsPresents ? {
-                    deviceId: videoId,
+            let tracks;
+            if (isScreen) {
+                tracks = await createLocalScreenTracks({
+                    audio: audioIsPresents,
                     resolution: resolution
-                } : false
-            })
+                });
+            } else {
+                tracks = await createLocalTracks({
+                    audio: audioIsPresents ? {
+                        deviceId: audioId,
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                    } : false,
+                    video: videoIsPresents ? {
+                        deviceId: videoId,
+                        resolution: resolution
+                    } : false
+                })
+            }
             for (const track of tracks) {
                 const publication = await this.room.localParticipant.publishTrack(track, {
-                    name: "appended" + this.getNewId(),
+                    name: "track_" + track.kind + "__screen_" + isScreen + "_" + this.getNewId(),
                     videoCodec: this.preferredCodec
                 });
                 if (track.kind == 'audio' && defaultAudioMute) {
@@ -318,6 +326,9 @@ export default {
                 console.info("Published track sid=", track.sid, " kind=", track.kind);
             }
         },
+        onAddScreenSource() {
+            this.createLocalMediaTracks(null, null, true);
+        }
     },
     async mounted() {
         this.chatId = this.$route.params.id;
@@ -340,10 +351,12 @@ export default {
     },
     created() {
         bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
+        bus.$on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
     },
     destroyed() {
         bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
+        bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
     }
 }
