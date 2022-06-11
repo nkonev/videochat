@@ -19,7 +19,7 @@
                     </infinite-loading>
                 </div>
             </pane>
-            <pane max-size="70" min-size="12" v-bind:size="editSize">
+            <pane max-size="70" min-size="12" v-bind:size="editSize" v-if="$vuetify.breakpoint.smAndUp">
                 <MessageEdit :chatId="chatId" :canBroadcast="canBroadcast"/>
             </pane>
         </splitpanes>
@@ -62,11 +62,16 @@
     import throttle from "lodash/throttle";
 
 
-    const default2 = [80, 20];
-    const default3 = [30, 50, 20];
+    const defaultDesktopWithoutVideo = [80, 20];
+    const defaultDesktopWithVideo = [30, 50, 20];
 
-    const KEY_3_PANELS = '3panels';
-    const KEY_2_PANELS = '2panels'
+    const defaultMobileWithoutVideo = [100];
+    const defaultMobileWithVideo = [40, 60];
+
+    const KEY_DESKTOP_WITH_VIDEO_PANELS = 'desktopWithVideo';
+    const KEY_DESKTOP_WITHOUT_VIDEO_PANELS = 'desktopWithoutVideo'
+    const KEY_MOBILE_WITH_VIDEO_PANELS = 'mobileWithVideo';
+    const KEY_MOBILE_WITHOUT_VIDEO_PANELS = 'mobileWithoutVideo'
 
     const directionTop = 'top';
     const directionBottom = 'bottom';
@@ -121,9 +126,19 @@
             },
             ...mapGetters({currentUser: GET_USER}),
             videoSize() {
+                let defaultWithVideo;
+                let defaultWithoutVideo;
+                if (this.$vuetify.breakpoint.smAndUp) {
+                    defaultWithVideo = defaultDesktopWithVideo;
+                    defaultWithoutVideo = defaultDesktopWithoutVideo;
+                } else {
+                    defaultWithVideo = defaultMobileWithVideo;
+                    defaultWithoutVideo = defaultMobileWithoutVideo;
+                }
+
                 let stored = this.getStored();
                 if (!stored) {
-                    this.saveToStored(this.isAllowedVideo() ? default3 : default2)
+                    this.saveToStored(this.isAllowedVideo() ? defaultWithVideo : defaultWithoutVideo)
                     stored = this.getStored();
                 }
                 if (this.isAllowedVideo()) {
@@ -134,9 +149,19 @@
                 }
             },
             messagesSize() {
+                let defaultWithVideo;
+                let defaultWithoutVideo;
+                if (this.$vuetify.breakpoint.smAndUp) {
+                    defaultWithVideo = defaultDesktopWithVideo;
+                    defaultWithoutVideo = defaultDesktopWithoutVideo;
+                } else {
+                    defaultWithVideo = defaultMobileWithVideo;
+                    defaultWithoutVideo = defaultMobileWithoutVideo;
+                }
+
                 let stored = this.getStored();
                 if (!stored) {
-                    this.saveToStored(this.isAllowedVideo() ? default3 : default2)
+                    this.saveToStored(this.isAllowedVideo() ? defaultWithVideo : defaultWithoutVideo)
                     stored = this.getStored();
                 }
                 if (this.isAllowedVideo()) {
@@ -146,9 +171,11 @@
                 }
             },
             editSize() {
+                // not need here because it's not used in mobile
+
                 let stored = this.getStored();
                 if (!stored) {
-                    this.saveToStored(this.isAllowedVideo() ? default3 : default2)
+                    this.saveToStored(this.isAllowedVideo() ? defaultDesktopWithVideo : defaultDesktopWithoutVideo)
                     stored = this.getStored();
                 }
                 if (this.isAllowedVideo()) {
@@ -197,7 +224,17 @@
                 }
             },
             getStored() {
-                const mbItem = this.isAllowedVideo() ? localStorage.getItem(KEY_3_PANELS) : localStorage.getItem(KEY_2_PANELS);
+                let keyWithVideo;
+                let keyWithoutVideo;
+                if (this.$vuetify.breakpoint.smAndUp) {
+                    keyWithVideo = KEY_DESKTOP_WITH_VIDEO_PANELS;
+                    keyWithoutVideo = KEY_DESKTOP_WITHOUT_VIDEO_PANELS;
+                } else {
+                    keyWithVideo = KEY_MOBILE_WITH_VIDEO_PANELS;
+                    keyWithoutVideo = KEY_MOBILE_WITHOUT_VIDEO_PANELS;
+                }
+
+                const mbItem = this.isAllowedVideo() ? localStorage.getItem(keyWithVideo) : localStorage.getItem(keyWithoutVideo);
                 if (!mbItem) {
                     return null;
                 } else {
@@ -205,10 +242,20 @@
                 }
             },
             saveToStored(arr) {
-                if (this.isAllowedVideo()) {
-                    localStorage.setItem(KEY_3_PANELS, JSON.stringify(arr));
+                let keyWithVideo;
+                let keyWithoutVideo;
+                if (this.$vuetify.breakpoint.smAndUp) {
+                    keyWithVideo = KEY_DESKTOP_WITH_VIDEO_PANELS;
+                    keyWithoutVideo = KEY_DESKTOP_WITHOUT_VIDEO_PANELS;
                 } else {
-                    localStorage.setItem(KEY_2_PANELS, JSON.stringify(arr));
+                    keyWithVideo = KEY_MOBILE_WITH_VIDEO_PANELS;
+                    keyWithoutVideo = KEY_MOBILE_WITHOUT_VIDEO_PANELS;
+                }
+
+                if (this.isAllowedVideo()) {
+                    localStorage.setItem(keyWithVideo, JSON.stringify(arr));
+                } else {
+                    localStorage.setItem(keyWithoutVideo, JSON.stringify(arr));
                 }
             },
             onPanelAdd(wasScrolled) {
@@ -220,7 +267,9 @@
                         if (this.$refs.spl) {
                             this.$refs.spl.panes[0].size = stored[0]; // video
                             this.$refs.spl.panes[1].size = stored[1]; // messages
-                            this.$refs.spl.panes[2].size = stored[2]; // edit
+                            if (this.$refs.spl.panes[2]) {
+                                this.$refs.spl.panes[2].size = stored[2]; // edit
+                            }
                             if (wasScrolled) {
                                 this.scrollDown();
                             }
@@ -238,7 +287,9 @@
                     this.$nextTick(() => {
                         if (this.$refs.spl) {
                             this.$refs.spl.panes[0].size = stored[0]; // messages
-                            this.$refs.spl.panes[1].size = stored[1]; // edit
+                            if (this.$refs.spl.panes[1]) {
+                                this.$refs.spl.panes[1].size = stored[1]; // edit
+                            }
                         }
                     })
                 } else {
