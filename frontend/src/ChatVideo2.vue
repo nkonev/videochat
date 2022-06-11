@@ -267,6 +267,12 @@ export default {
             const audioIsPresents = getStoredAudioDevicePresents();
             const videoIsPresents = getStoredVideoDevicePresents();
 
+            if (!audioIsPresents && !videoIsPresents) {
+                console.warn("Not able to build local media stream, returning a successful promise");
+                bus.$emit(VIDEO_PARAMETERS_CHANGED, {error: 'No media configured'});
+                return Promise.reject('No media configured');
+            }
+
             console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", resolution, "preferredCodec", this.preferredCodec);
 
             const tracks = await createLocalTracks({

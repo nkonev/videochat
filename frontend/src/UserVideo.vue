@@ -23,11 +23,11 @@ export default {
         const loadingMessage = this.$vuetify.lang.t('$vuetify.loading');
 	    return {
             userName: loadingMessage,
-            audioMute: false,
+            audioMute: true,
             speaking: false,
             errorDescription: null,
             avatar: "",
-            videoMute: false,
+            videoMute: true,
             userId: null,
             failureCount: 0,
             showControls: false,
