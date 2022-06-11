@@ -26,7 +26,14 @@ import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
-import {getCodec, getVideoResolution, getWebsocketUrlPrefix, hasLength} from "@/utils";
+import {
+    getCodec,
+    getStoredAudioDevicePresents,
+    getStoredVideoDevicePresents,
+    getVideoResolution,
+    getWebsocketUrlPrefix,
+    hasLength
+} from "@/utils";
 import bus, {
     ADD_VIDEO_SOURCE,
     CHANGE_DEVICE,
@@ -100,7 +107,7 @@ export default {
                     }
                     const cameraEnabled = track && track.isSubscribed && !track.isMuted;
                     candidateToAppendVideo.setVideoStream(track, cameraEnabled);
-                    console.log("Video track was set", track, "to", candidateToAppendVideo);
+                    console.log("Video track was set", track.trackSid, "to", candidateToAppendVideo.getId());
                     candidateToAppendVideo.setUserName(md.login);
                     candidateToAppendVideo.setAvatar(md.avatar);
                     return candidateToAppendVideo
@@ -117,7 +124,7 @@ export default {
                     }
                     const micEnabled = track && track.isSubscribed && !track.isMuted;
                     candidateToAppendAudio.setAudioStream(track, micEnabled);
-                    console.log("Audio track was set", track, "to", candidateToAppendAudio);
+                    console.log("Audio track was set", track.trackSid, "to", candidateToAppendAudio.getId());
                     candidateToAppendAudio.setUserName(md.login);
                     candidateToAppendAudio.setAvatar(md.avatar);
                     return candidateToAppendAudio
@@ -153,7 +160,9 @@ export default {
 
         handleLocalTrackUnpublished(trackPublication, participant) {
             const track = trackPublication.track;
-            console.log('handleLocalTrackUnpublished', trackPublication);
+            console.log('handleLocalTrackUnpublished sid=', track.sid, "kind=", track.kind);
+            console.debug('handleLocalTrackUnpublished', trackPublication, "track", track);
+
             // when local tracks are ended, update UI to remove them from rendering
             track.detach();
             this.removeComponent(track);
@@ -227,7 +236,8 @@ export default {
                 .on(RoomEvent.Disconnected, this.handleDisconnect)
                 .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
                 .on(RoomEvent.LocalTrackPublished, () => {
-                    console.log("LocalTrackPublished", this.room);
+                    console.log("LocalTrackPublished to room.name", this.room.name);
+                    console.debug("LocalTrackPublished to room", this.room);
                     bus.$emit(VIDEO_PARAMETERS_CHANGED);
                     const localVideoProperties = {
                         localParticipant: this.room.localParticipant
@@ -254,26 +264,28 @@ export default {
 
         async createLocalMediaTracks(videoId, audioId) {
             const resolution = VideoPresets[this.videoResolution];
+            const audioIsPresents = getStoredAudioDevicePresents();
+            const videoIsPresents = getStoredVideoDevicePresents();
 
             console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", resolution, "preferredCodec", this.preferredCodec);
 
             const tracks = await createLocalTracks({
-                audio: {
+                audio: audioIsPresents ? {
                     deviceId: audioId,
                     echoCancellation: true,
                     noiseSuppression: true,
-                },
-                video: {
+                } : false,
+                video: videoIsPresents ? {
                     deviceId: videoId,
                     resolution: resolution
-                }
+                } : false
             })
             for (const track of tracks) {
-                console.info("Publishing track", track);
-                this.room.localParticipant.publishTrack(track, {
+                await this.room.localParticipant.publishTrack(track, {
                     name: "appended" + this.getNewId(),
                     videoCodec: this.preferredCodec
                 });
+                console.info("Published track sid=", track.sid, " kind=", track.kind);
             }
         },
     },
