@@ -47,3 +47,22 @@ func InitViper() {
 	viper.AutomaticEnv()
 	// Find and read the config file
 }
+
+type ICEServerConfig struct {
+	URLs       []string `mapstructure:"urls"`
+	Username   string   `mapstructure:"username"`
+	Credential string   `mapstructure:"credential"`
+}
+
+type ExtendedICEServerConfig struct {
+	ICEServerConfig ICEServerConfig `mapstructure:"server"`
+}
+type FrontendConfig struct {
+	ICEServers     []ExtendedICEServerConfig `mapstructure:"iceserver"`
+	PreferredCodec string                    `mapstructure:"preferredCodec"`
+	Resolution     string                    `mapstructure:"resolution"`
+}
+
+type ExtendedConfig struct {
+	FrontendConfig FrontendConfig `mapstructure:"frontend"`
+}

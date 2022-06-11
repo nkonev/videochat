@@ -26,3 +26,11 @@ livekit:
   api:
     key: "APIznJxWShGW3Kt"
     secret: "KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA"
+
+frontend:
+  # in ion-sdk-js vp8 is default
+  preferredCodec: h264
+  resolution: vga
+  iceserver:
+    - server:
+        urls: ["stun:stun.l.google.com:19302"]

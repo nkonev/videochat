@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/viper"
@@ -30,10 +32,12 @@ func main() {
 	app := fx.New(
 		fx.Logger(Logger),
 		fx.Provide(
+			createTypedConfig,
 			configureTracer,
 			configureEcho,
 			client.NewChatAccessClient,
 			handlers.NewUserHandler,
+			handlers.NewConfigHandler,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			handlers.NewTokenHandler,
@@ -85,6 +89,7 @@ func configureEcho(
 	lc fx.Lifecycle,
 	th *handlers.TokenHandler,
 	uh *handlers.UserHandler,
+	ch *handlers.ConfigHandler,
 	tp *sdktrace.TracerProvider,
 ) *echo.Echo {
 
@@ -111,6 +116,7 @@ func configureEcho(
 
 	e.GET("/video/:chatId/token", th.GetTokenHandler)
 	e.GET("/video/:chatId/users", uh.GetVideoUsers)
+	e.GET("/video/:chatId/config", ch.GetConfig)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -171,4 +177,20 @@ func runEcho(e *echo.Echo) {
 		}
 	}()
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
+}
+
+func createTypedConfig() (*config.ExtendedConfig, error) {
+	conf := config.ExtendedConfig{}
+	err := viper.GetViper().Unmarshal(&conf)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("sfu extended config file loaded failed. %v\n", err))
+	}
+
+	for _, tc := range conf.FrontendConfig.ICEServers {
+		err = viper.GetViper().Unmarshal(&tc.ICEServerConfig)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("sfu extended turn config loaded failed. %v\n", err))
+		}
+	}
+	return &conf, nil
 }
