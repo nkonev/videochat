@@ -1,8 +1,7 @@
 server:
   address: ":1237"
-  shutdown.timeout: "10s"
-  body.limit: "100G"
-  contextPath: "/api"
+  shutdownTimeout: "10s"
+  bodyLimit: "100G"
 
 auth:
   exclude:
@@ -16,6 +15,7 @@ chat:
   url:
     base: "http://localhost:1235"
     access: "/internal/access"
+    isChatAdmin: "/internal/is-admin"
 
 aaa:
   url:

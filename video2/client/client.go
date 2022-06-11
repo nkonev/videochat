@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
@@ -16,39 +16,28 @@ import (
 )
 
 type RestClient struct {
-	client                 *http.Client
-	baseUrl                string
-	accessPath             string
-	removeFileItemPath     string
-	aaaBaseUrl             string
-	aaaGetUsersUrl         string
-	checkFilesPresencePath string
-	checkChatExistsPath    string
+	client         *http.Client
+	baseUrl        string
+	accessPath     string
+	aaaBaseUrl     string
+	aaaGetUsersUrl string
 }
 
-func newRestClient() *http.Client {
+func NewRestClient(config *config.ExtendedConfig) *RestClient {
 	tr := &http.Transport{
-		MaxIdleConns:       viper.GetInt("http.maxIdleConns"),
-		IdleConnTimeout:    viper.GetDuration("http.idleConnTimeout"),
-		DisableCompression: viper.GetBool("http.disableCompression"),
+		MaxIdleConns:       config.RestClientConfig.MaxIdleConns,
+		IdleConnTimeout:    config.RestClientConfig.IdleConnTimeout,
+		DisableCompression: config.RestClientConfig.DisableCompression,
 	}
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	client := &http.Client{Transport: tr}
-	return client
-}
-
-func NewChatAccessClient() *RestClient {
-	client := newRestClient()
 
 	return &RestClient{
-		client:                 client,
-		baseUrl:                viper.GetString("chat.url.base"),
-		accessPath:             viper.GetString("chat.url.access"),
-		removeFileItemPath:     viper.GetString("chat.url.removeFileItem"),
-		aaaBaseUrl:             viper.GetString("aaa.url.base"),
-		aaaGetUsersUrl:         viper.GetString("aaa.url.getUsers"),
-		checkFilesPresencePath: viper.GetString("chat.url.checkEmbeddedFilesPath"),
-		checkChatExistsPath:    viper.GetString("chat.url.checkChatExistsPath"),
+		client:         client,
+		baseUrl:        config.ChatConfig.ChatUrlConfig.Base,
+		accessPath:     config.ChatConfig.ChatUrlConfig.Access,
+		aaaBaseUrl:     config.AaaConfig.AaaUrlConfig.Base,
+		aaaGetUsersUrl: config.AaaConfig.AaaUrlConfig.GetUsers,
 	}
 }
 

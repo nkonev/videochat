@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	lkauth "github.com/livekit/protocol/auth"
-	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
+	"nkonev.name/video/config"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 	"time"
@@ -17,14 +17,15 @@ import (
 
 type TokenHandler struct {
 	chatClient *client.RestClient
+	config     *config.ExtendedConfig
 }
 
 type TokenResponse struct {
 	Token string `json:"token"`
 }
 
-func NewTokenHandler(chatClient *client.RestClient) *TokenHandler {
-	return &TokenHandler{chatClient: chatClient}
+func NewTokenHandler(chatClient *client.RestClient, cfg *config.ExtendedConfig) *TokenHandler {
+	return &TokenHandler{chatClient: chatClient, config: cfg}
 }
 
 func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
@@ -46,8 +47,8 @@ func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
 	// https://docs.livekit.io/guides/getting-started/#generating-access-tokens-(jwt)
 	// https://github.com/nkonev/videochat/blob/8fd81bccbe5f552de1ca123e2ba855dfe814cf66/development.md#generate-livekit-token
 
-	aKey := viper.GetString("livekit.api.key")
-	aSecret := viper.GetString("livekit.api.secret")
+	aKey := h.config.LivekitConfig.Api.Key
+	aSecret := h.config.LivekitConfig.Api.Secret
 	aRoomId := getRoom(chatId)
 
 	token, err := h.getJoinToken(aKey, aSecret, aRoomId, userPrincipalDto)

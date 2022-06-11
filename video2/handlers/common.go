@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/video/auth"
+	"nkonev.name/video/config"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 	"time"
@@ -59,8 +59,8 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 //  - *AuthResult pointer or nil
 //  - is whitelisted
 //  - error
-func authorize(request *http.Request) (*auth.AuthResult, bool, error) {
-	whitelistStr := viper.GetStringSlice("auth.exclude")
+func authorize(config *config.ExtendedConfig, request *http.Request) (*auth.AuthResult, bool, error) {
+	whitelistStr := config.AuthConfig.ExcludePaths
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
 	if utils.CheckUrlInWhitelist(whitelist, request.RequestURI) {
 		return nil, true, nil
@@ -74,10 +74,10 @@ func authorize(request *http.Request) (*auth.AuthResult, bool, error) {
 	return auth, false, nil
 }
 
-func ConfigureAuthMiddleware() AuthMiddleware {
+func ConfigureAuthMiddleware(config *config.ExtendedConfig) AuthMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			authResult, whitelist, err := authorize(c.Request())
+			authResult, whitelist, err := authorize(config, c.Request())
 			if err != nil {
 				Logger.Errorf("Error during authorize: %v", err)
 				return err

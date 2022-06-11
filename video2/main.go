@@ -35,7 +35,7 @@ func main() {
 			createTypedConfig,
 			configureTracer,
 			configureEcho,
-			client.NewChatAccessClient,
+			client.NewRestClient,
 			handlers.NewUserHandler,
 			handlers.NewConfigHandler,
 			handlers.ConfigureStaticMiddleware,
@@ -85,6 +85,7 @@ func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) 
 }
 
 func configureEcho(
+	cfg *config.ExtendedConfig,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
 	th *handlers.TokenHandler,
@@ -93,7 +94,7 @@ func configureEcho(
 	tp *sdktrace.TracerProvider,
 ) *echo.Echo {
 
-	bodyLimit := viper.GetString("server.body.limit")
+	bodyLimit := cfg.HttpServerConfig.BodyLimit
 
 	e := echo.New()
 	e.Logger.SetOutput(Logger.Writer())
@@ -129,11 +130,11 @@ func configureEcho(
 	return e
 }
 
-func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
+func configureTracer(lc fx.Lifecycle, cfg *config.ExtendedConfig) (*sdktrace.TracerProvider, error) {
 	Logger.Infof("Configuring Jaeger tracing")
 	endpoint := jaegerExporter.WithAgentEndpoint(
-		jaegerExporter.WithAgentHost(viper.GetString("jaeger.host")),
-		jaegerExporter.WithAgentPort(viper.GetString("jaeger.port")),
+		jaegerExporter.WithAgentHost(cfg.JaegerConfig.Host),
+		jaegerExporter.WithAgentPort(cfg.JaegerConfig.Port),
 	)
 	exporter, err := jaegerExporter.New(endpoint)
 	if err != nil {
@@ -166,8 +167,8 @@ func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 }
 
 // rely on viper import and it's configured by
-func runEcho(e *echo.Echo) {
-	address := viper.GetString("server.address")
+func runEcho(e *echo.Echo, cfg *config.ExtendedConfig) {
+	address := cfg.HttpServerConfig.Address
 
 	Logger.Info("Starting server...")
 	// Start server in another goroutine
@@ -186,11 +187,5 @@ func createTypedConfig() (*config.ExtendedConfig, error) {
 		return nil, errors.New(fmt.Sprintf("sfu extended config file loaded failed. %v\n", err))
 	}
 
-	for _, tc := range conf.FrontendConfig.ICEServers {
-		err = viper.GetViper().Unmarshal(&tc.ICEServerConfig)
-		if err != nil {
-			return nil, errors.New(fmt.Sprintf("sfu extended turn config loaded failed. %v\n", err))
-		}
-	}
 	return &conf, nil
 }

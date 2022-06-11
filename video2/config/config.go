@@ -8,6 +8,7 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"time"
 )
 
 //go:embed config-dev
@@ -48,6 +49,37 @@ func InitViper() {
 	// Find and read the config file
 }
 
+type ChatConfig struct {
+	ChatUrlConfig ChatUrlConfig `mapstructure:"url"`
+}
+
+type AaaConfig struct {
+	AaaUrlConfig AaaUrlConfig `mapstructure:"url"`
+}
+
+type ChatUrlConfig struct {
+	Base        string `mapstructure:"base"`
+	Access      string `mapstructure:"access"`
+	IsChatAdmin string `mapstructure:"isChatAdmin"`
+}
+
+type AaaUrlConfig struct {
+	Base     string `mapstructure:"base"`
+	GetUsers string `mapstructure:"getUsers"`
+}
+
+type HttpServerConfig struct {
+	Address         string        `mapstructure:"address"`
+	ShutdownTimeout time.Duration `mapstructure:"shutdownTimeout"`
+	BodyLimit       string        `mapstructure:"bodyLimit"`
+}
+
+type RestClientConfig struct {
+	MaxIdleConns       int           `mapstructure:"maxIdleConns"`
+	IdleConnTimeout    time.Duration `mapstructure:"idleConnTimeout"`
+	DisableCompression bool          `mapstructure:"disableCompression"`
+}
+
 type ICEServerConfig struct {
 	URLs       []string `mapstructure:"urls"`
 	Username   string   `mapstructure:"username"`
@@ -57,12 +89,38 @@ type ICEServerConfig struct {
 type ExtendedICEServerConfig struct {
 	ICEServerConfig ICEServerConfig `mapstructure:"server"`
 }
+
 type FrontendConfig struct {
 	ICEServers     []ExtendedICEServerConfig `mapstructure:"iceserver"`
 	PreferredCodec string                    `mapstructure:"preferredCodec"`
 	Resolution     string                    `mapstructure:"resolution"`
 }
 
+type AuthConfig struct {
+	ExcludePaths []string `mapstructure:"exclude"`
+}
+
+type JaegerConfig struct {
+	Host string `mapstructure:"host"`
+	Port string `mapstructure:"port"`
+}
+
+type LivekitApiConfig struct {
+	Key    string `mapstructure:"key"`
+	Secret string `mapstructure:"secret"`
+}
+
+type LivekitConfig struct {
+	Api LivekitApiConfig `mapstructure:"api"`
+}
+
 type ExtendedConfig struct {
-	FrontendConfig FrontendConfig `mapstructure:"frontend"`
+	FrontendConfig   FrontendConfig   `mapstructure:"frontend"`
+	RestClientConfig RestClientConfig `mapstructure:"http"`
+	ChatConfig       ChatConfig       `mapstructure:"chat"`
+	AaaConfig        AaaConfig        `mapstructure:"aaa"`
+	AuthConfig       AuthConfig       `mapstructure:"auth"`
+	LivekitConfig    LivekitConfig    `mapstructure:"livekit"`
+	JaegerConfig     JaegerConfig     `mapstructure:"jaeger"`
+	HttpServerConfig HttpServerConfig `mapstructure:"server"`
 }
