@@ -1,3 +1,5 @@
+export const defaultAudioMute = true;
+
 export const getHeight = (elementId, modifier, defaultValue) => {
     const maybeSendButton = document.getElementById(elementId);
     if (maybeSendButton) {

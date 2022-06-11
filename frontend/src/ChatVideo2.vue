@@ -27,6 +27,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
 import {
+    defaultAudioMute,
     getCodec,
     getStoredAudioDevicePresents,
     getStoredVideoDevicePresents,
@@ -110,6 +111,7 @@ export default {
                     console.log("Video track was set", track.trackSid, "to", candidateToAppendVideo.getId());
                     candidateToAppendVideo.setUserName(md.login);
                     candidateToAppendVideo.setAvatar(md.avatar);
+                    candidateToAppendVideo.setUserId(participant.identity);
                     return candidateToAppendVideo
                 } else if (track.kind == 'audio') {
                     console.debug("Processing audio track", track);
@@ -127,6 +129,7 @@ export default {
                     console.log("Audio track was set", track.trackSid, "to", candidateToAppendAudio.getId());
                     candidateToAppendAudio.setUserName(md.login);
                     candidateToAppendAudio.setAvatar(md.avatar);
+                    candidateToAppendAudio.setUserId(participant.identity);
                     return candidateToAppendAudio
                 }
             }
@@ -185,7 +188,25 @@ export default {
         },
 
         handleActiveSpeakerChange(speakers) {
-            // show UI indicators when participant is speaking
+            console.debug("handleActiveSpeakerChange", speakers);
+            this.enumerateAllStreams((component) => {
+                component.setSpeaking(false);
+            })
+            const activeSpeakerIdentities = speakers.filter(s => s.isSpeaking).map(s => s.identity);
+            this.enumerateAllStreams((component) => {
+                if (activeSpeakerIdentities.includes(component.getUserId())) {
+                    component.setSpeaking(true);
+                }
+            })
+        },
+
+        enumerateAllStreams(callback) {
+            for (const videoTagId in this.userVideoComponents) {
+                const component = this.userVideoComponents[videoTagId];
+                if (component) {
+                    callback(component);
+                }
+            }
         },
 
         handleDisconnect() {
@@ -287,10 +308,13 @@ export default {
                 } : false
             })
             for (const track of tracks) {
-                await this.room.localParticipant.publishTrack(track, {
+                const publication = await this.room.localParticipant.publishTrack(track, {
                     name: "appended" + this.getNewId(),
                     videoCodec: this.preferredCodec
                 });
+                if (track.kind == 'audio' && defaultAudioMute) {
+                    await publication.mute();
+                }
                 console.info("Published track sid=", track.sid, " kind=", track.kind);
             }
         },
