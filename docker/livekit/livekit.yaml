@@ -13,3 +13,8 @@ keys:
 logging:
   json: false
   level: info
+
+webhook:
+  api_key: 'APIznJxWShGW3Kt'
+  urls:
+    - 'http://localhost:1237/internal/livekit-webhook'

@@ -144,8 +144,15 @@ func SecondsToStringMilliseconds(seconds int64) string {
 	return fmt.Sprintf("%v000", seconds)
 }
 
-type Tuple struct {
-	MinioKey string `json:"minioKey"`
-	Filename string `json:"filename"`
-	Exists   bool   `json:"exists"`
+func GetRoomNameFromId(chatId int64) string {
+	return fmt.Sprintf("chat%v", chatId)
+}
+
+func GetRoomIdFromName(chatName string) (int64, error) {
+	var chatId int64
+	if _, err := fmt.Sscanf(chatName, "chat%d", &chatId); err != nil {
+		return 0, err
+	} else {
+		return chatId, nil
+	}
 }

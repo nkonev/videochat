@@ -49,7 +49,7 @@ func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
 
 	aKey := h.config.LivekitConfig.Api.Key
 	aSecret := h.config.LivekitConfig.Api.Secret
-	aRoomId := getRoom(chatId)
+	aRoomId := utils.GetRoomNameFromId(chatId)
 
 	token, err := h.getJoinToken(aKey, aSecret, aRoomId, userPrincipalDto)
 	if err != nil {
@@ -59,10 +59,6 @@ func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, TokenResponse{
 		Token: token,
 	})
-}
-
-func getRoom(chatId int64) string {
-	return fmt.Sprintf("chat%v", chatId)
 }
 
 type MetadataDto struct {

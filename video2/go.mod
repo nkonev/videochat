@@ -22,6 +22,8 @@ require (
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
+	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
+	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
 )
 
 go 1.16

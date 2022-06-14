@@ -21,6 +21,9 @@ import (
 	"nkonev.name/video/config"
 	"nkonev.name/video/handlers"
 	. "nkonev.name/video/logger"
+	"nkonev.name/video/producer"
+	"nkonev.name/video/rabbitmq"
+	"nkonev.name/video/services"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -36,11 +39,16 @@ func main() {
 			configureTracer,
 			configureEcho,
 			client.NewRestClient,
+			client.NewLivekitClient,
 			handlers.NewUserHandler,
 			handlers.NewConfigHandler,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			handlers.NewTokenHandler,
+			handlers.NewLivekitWebhookHandler,
+			rabbitmq.CreateRabbitMqConnection,
+			producer.NewRabbitPublisher,
+			services.NewNotificationService,
 		),
 		fx.Invoke(
 			runEcho,
@@ -91,6 +99,7 @@ func configureEcho(
 	th *handlers.TokenHandler,
 	uh *handlers.UserHandler,
 	ch *handlers.ConfigHandler,
+	lhf *handlers.LivekitWebhookHandler,
 	tp *sdktrace.TracerProvider,
 ) *echo.Echo {
 
@@ -118,6 +127,7 @@ func configureEcho(
 	e.GET("/video/:chatId/token", th.GetTokenHandler)
 	e.GET("/video/:chatId/users", uh.GetVideoUsers)
 	e.GET("/video/:chatId/config", ch.GetConfig)
+	e.POST("/internal/livekit-webhook", lhf.GetLivekitWebhookHandler())
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

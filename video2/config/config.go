@@ -112,6 +112,12 @@ type LivekitApiConfig struct {
 
 type LivekitConfig struct {
 	Api LivekitApiConfig `mapstructure:"api"`
+	Url string           `mapstructure:"url"`
+}
+
+type RabbitMqConfig struct {
+	Url   string `mapstructure:"url"`
+	Debug bool   `mapstructure:"debug"`
 }
 
 type ExtendedConfig struct {
@@ -123,4 +129,5 @@ type ExtendedConfig struct {
 	LivekitConfig    LivekitConfig    `mapstructure:"livekit"`
 	JaegerConfig     JaegerConfig     `mapstructure:"jaeger"`
 	HttpServerConfig HttpServerConfig `mapstructure:"server"`
+	RabbitMqConfig   RabbitMqConfig   `mapstructure:"rabbitmq"`
 }

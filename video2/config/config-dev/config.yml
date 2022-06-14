@@ -6,6 +6,7 @@ server:
 auth:
   exclude:
     - "^/video/public.*"
+    - "^/internal/.*"
 
 jaeger:
   host: "localhost"
@@ -26,6 +27,7 @@ livekit:
   api:
     key: "APIznJxWShGW3Kt"
     secret: "KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA"
+  url: "http://localhost:7880"
 
 frontend:
   # in ion-sdk-js vp8 is default
@@ -34,3 +36,7 @@ frontend:
   iceserver:
     - server:
         urls: ["stun:stun.l.google.com:19302"]
+
+rabbitmq:
+  url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
+  debug: true
