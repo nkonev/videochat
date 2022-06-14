@@ -59,11 +59,21 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 				Logger.Errorf("got error during parsing metadata from event=%v, %v", event, err)
 				goto exit
 			}
+
+			var mutedTracks = map[string]dto.MuteInfo{}
+
+			// TODO right after connection this contains no elements
+			for _, track := range participant.GetTracks() {
+				mutedTracks[track.Sid] = dto.MuteInfo{
+					Kind:  track.Type.String(),
+					Muted: track.Muted,
+				}
+			}
+
 			notificationDto := &dto.NotifyDto{
-				UserId:    userId,
-				Login:     md.Login,
-				VideoMute: false, // TODO
-				AudioMute: false,
+				UserId:      userId,
+				Login:       md.Login,
+				MutedTracks: mutedTracks,
 			}
 
 			chatId, err := utils.GetRoomIdFromName(event.Room.Name)
