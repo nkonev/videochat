@@ -61,7 +61,6 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 			}
 			notificationDto := &dto.NotifyDto{
 				UserId:    userId,
-				StreamId:  "TODO", // TODO
 				Login:     md.Login,
 				VideoMute: false, // TODO
 				AudioMute: false,

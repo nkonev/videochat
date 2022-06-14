@@ -27,10 +27,10 @@ type chatNotifyDto struct {
 func (h *NotificationService) Notify(chatId, usersCount int64, data *dto.NotifyDto) error {
 	var chatNotifyDto = chatNotifyDto{}
 	if data != nil {
-		Logger.Infof("Notifying with data chat_id=%v, stream_id=%v, login=%v, userId=%v", chatId, data.StreamId, data.Login, data.UserId)
+		Logger.Infof("Notifying with data chat_id=%v, login=%v, userId=%v", chatId, data.Login, data.UserId)
 		chatNotifyDto.Data = data
 	} else {
-		Logger.Infof("Notifying without data chat_id=%v, stream_id=%v, login=%v, userId=%v", chatId, data.StreamId, data.Login, data.UserId)
+		Logger.Infof("Notifying without data chat_id=%v, login=%v, userId=%v", chatId, data.Login, data.UserId)
 	}
 	chatNotifyDto.UsersCount = usersCount
 	chatNotifyDto.ChatId = chatId
