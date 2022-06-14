@@ -40,6 +40,7 @@ import bus, {
     REQUEST_CHANGE_VIDEO_PARAMETERS,
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus";
+import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
@@ -49,7 +50,7 @@ export default {
             chatId: null,
             room: null,
             videoContainerDiv: null,
-            userVideoComponents: {},
+            userVideoComponents: new ChatVideoUserComponentHolder(),
             videoResolution: null,
             preferredCodec: null
         }
@@ -59,7 +60,7 @@ export default {
             return uuidv4();
         },
 
-        createComponent(prepend, videoTagId, localVideoProperties) {
+        createComponent(userId, prepend, videoTagId, localVideoProperties) {
             const component = new UserVideoClass({vuetify: vuetify,
                 propsData: {
                     id: videoTagId,
@@ -72,7 +73,7 @@ export default {
             } else {
                 this.videoContainerDiv.appendChild(component.$el);
             }
-            this.userVideoComponents[videoTagId] = component;
+            this.userVideoComponents.addComponentForUser(userId, component);
             return component;
         },
         videoPublicationIsPresent (videoStream, userVideoComponents) {
@@ -87,8 +88,9 @@ export default {
             const videoTagId = prefix + this.getNewId();
 
             const participantTracks = participant.getTracks();
+            const participantIdentityString = participant.identity;
 
-            const components = Object.values(this.userVideoComponents);
+            const components = this.userVideoComponents.getByUser(participantIdentityString);
             const candidatesWithoutVideo = components.filter(e => !e.getVideoStreamId());
             const candidatesWithoutAudio = components.filter(e => !e.getAudioStreamId());
 
@@ -102,14 +104,14 @@ export default {
                     let candidateToAppendVideo = candidatesWithoutVideo.length ? candidatesWithoutVideo[0] : null;
                     console.debug("candidatesWithoutVideo", candidatesWithoutVideo, "candidateToAppendVideo", candidateToAppendVideo);
                     if (!candidateToAppendVideo) {
-                        candidateToAppendVideo = this.createComponent(prepend, videoTagId, localVideoProperties);
+                        candidateToAppendVideo = this.createComponent(participantIdentityString, prepend, videoTagId, localVideoProperties);
                     }
                     const cameraEnabled = track && track.isSubscribed && !track.isMuted;
                     candidateToAppendVideo.setVideoStream(track, cameraEnabled);
                     console.log("Video track was set", track.trackSid, "to", candidateToAppendVideo.getId());
                     candidateToAppendVideo.setUserName(md.login);
                     candidateToAppendVideo.setAvatar(md.avatar);
-                    candidateToAppendVideo.setUserId(participant.identity);
+                    candidateToAppendVideo.setUserId(participantIdentityString);
                     return candidateToAppendVideo
                 } else if (track.kind == 'audio') {
                     console.debug("Processing audio track", track);
@@ -120,14 +122,14 @@ export default {
                     let candidateToAppendAudio = candidatesWithoutAudio.length ? candidatesWithoutAudio[0] : null;
                     console.debug("candidatesWithoutAudio", candidatesWithoutAudio, "candidateToAppendAudio", candidateToAppendAudio);
                     if (!candidateToAppendAudio) {
-                        candidateToAppendAudio = this.createComponent(prepend, videoTagId, localVideoProperties);
+                        candidateToAppendAudio = this.createComponent(participantIdentityString, prepend, videoTagId, localVideoProperties);
                     }
                     const micEnabled = track && track.isSubscribed && !track.isMuted;
                     candidateToAppendAudio.setAudioStream(track, micEnabled);
                     console.log("Audio track was set", track.trackSid, "to", candidateToAppendAudio.getId());
                     candidateToAppendAudio.setUserName(md.login);
                     candidateToAppendAudio.setAvatar(md.avatar);
-                    candidateToAppendAudio.setUserId(participant.identity);
+                    candidateToAppendAudio.setUserId(participantIdentityString);
                     return candidateToAppendAudio
                 }
             }
@@ -166,11 +168,10 @@ export default {
 
             // when local tracks are ended, update UI to remove them from rendering
             track.detach();
-            this.removeComponent(track);
+            this.removeComponent(participant.identity, track);
         },
-        removeComponent(track) {
-            for (const componentId in this.userVideoComponents) {
-                const component = this.userVideoComponents[componentId];
+        removeComponent(userId, track) {
+            for (const component of this.userVideoComponents.getByUser(userId)) {
                 console.debug("For removal checking component=", component, "against", track);
                 if (component.getVideoStreamId() == track.sid || component.getAudioStreamId() == track.sid) {
                     console.log("Removing component=", component.getId());
@@ -180,31 +181,24 @@ export default {
                     } catch (e) {
                         console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
                     }
-                    delete this.userVideoComponents[componentId];
+                    this.userVideoComponents.removeComponentForUser(userId, component);
                 }
             }
         },
 
         handleActiveSpeakerChange(speakers) {
             console.debug("handleActiveSpeakerChange", speakers);
-            this.enumerateAllComponents((component) => {
-                component.setSpeaking(false);
-            })
-            const activeSpeakerIdentities = speakers.filter(s => s.isSpeaking).map(s => s.identity);
-            this.enumerateAllComponents((component) => {
-                if (activeSpeakerIdentities.includes(component.getUserId())) {
-                    component.setSpeaking(true);
-                }
-            })
-        },
 
-        // TODO Optimize. We have participant's sid, participant's id, video track's sid, audio tarck's sid
-        //   Seems we just need Map<UserId, []UserVideo>
-        enumerateAllComponents(callback) {
-            for (const videoTagId in this.userVideoComponents) {
-                const component = this.userVideoComponents[videoTagId];
-                if (component) {
-                    callback(component);
+            for (const speaker of speakers) {
+                const userId = speaker.identity;
+                const tracksSids = [...speaker.audioTracks.keys()];
+                const userComponents = this.userVideoComponents.getByUser(userId);
+                for (const component of userComponents) {
+                    const audioStreamId = component.getAudioStreamId();
+                    console.debug("Track sids", tracksSids, " component audio stream id", audioStreamId);
+                    if (tracksSids.includes(component.getAudioStreamId())) {
+                        component.setSpeakingWithTimeout(1000);
+                    }
                 }
             }
         },

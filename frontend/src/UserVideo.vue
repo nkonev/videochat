@@ -32,7 +32,8 @@ export default {
             failureCount: 0,
             showControls: false,
             audioPublication: null,
-            videoPublication: null
+            videoPublication: null,
+            speakingTimer: null
         }
     },
 
@@ -96,6 +97,15 @@ export default {
         },
         setSpeaking(speaking) {
             this.speaking = speaking;
+        },
+        setSpeakingWithTimeout(timeout) {
+            if (!this.speakingTimer) {
+                this.speaking = true;
+                this.speakingTimer = setTimeout(() => {
+                    this.speaking = false;
+                    this.speakingTimer = null;
+                }, timeout);
+            }
         },
         setAvatar(a) {
             this.avatar = a;
