@@ -37,7 +37,6 @@ import bus, {
     ADD_SCREEN_SOURCE,
     ADD_VIDEO_SOURCE,
     CHANGE_DEVICE,
-    KILL_OLD_DEVICE,
     REQUEST_CHANGE_VIDEO_PARAMETERS,
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus";
@@ -188,18 +187,20 @@ export default {
 
         handleActiveSpeakerChange(speakers) {
             console.debug("handleActiveSpeakerChange", speakers);
-            this.enumerateAllStreams((component) => {
+            this.enumerateAllComponents((component) => {
                 component.setSpeaking(false);
             })
             const activeSpeakerIdentities = speakers.filter(s => s.isSpeaking).map(s => s.identity);
-            this.enumerateAllStreams((component) => {
+            this.enumerateAllComponents((component) => {
                 if (activeSpeakerIdentities.includes(component.getUserId())) {
                     component.setSpeaking(true);
                 }
             })
         },
 
-        enumerateAllStreams(callback) {
+        // TODO Optimize. We have participant's sid, participant's id, video track's sid, audio tarck's sid
+        //   Seems we just need Map<UserId, []UserVideo>
+        enumerateAllComponents(callback) {
             for (const videoTagId in this.userVideoComponents) {
                 const component = this.userVideoComponents[videoTagId];
                 if (component) {
