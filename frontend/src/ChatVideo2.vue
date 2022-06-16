@@ -354,6 +354,11 @@ export default {
         bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
     }
+
+    // TODO Missed features
+    // mute icon propagation
+    // restore displaying green tube at chats list
+    // cleaning up garbage foreign UserVideo elements
 }
 
 </script>
