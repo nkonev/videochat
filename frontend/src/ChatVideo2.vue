@@ -284,7 +284,7 @@ export default {
             const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
             console.log("Got video token", token);
             await this.room.connect(getWebsocketUrlPrefix()+'/api/livekit', token, {
-                // don't subscribe to other participants automatically
+                // subscribe to other participants automatically
                 autoSubscribe: true,
             });
             console.log('connected to room', this.room.name);
