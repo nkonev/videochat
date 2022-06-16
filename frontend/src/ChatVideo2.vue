@@ -61,7 +61,7 @@ export default {
             return uuidv4();
         },
 
-        createComponent(userId, prepend, videoTagId, localVideoProperties) {
+        createComponent(userIdentity, prepend, videoTagId, localVideoProperties) {
             const component = new UserVideoClass({vuetify: vuetify,
                 propsData: {
                     id: videoTagId,
@@ -74,7 +74,7 @@ export default {
             } else {
                 this.videoContainerDiv.appendChild(component.$el);
             }
-            this.userVideoComponents.addComponentForUser(userId, component);
+            this.userVideoComponents.addComponentForUser(userIdentity, component);
             return component;
         },
         videoPublicationIsPresent (videoStream, userVideoComponents) {
@@ -83,7 +83,6 @@ export default {
         audioPublicationIsPresent (audioStream, userVideoComponents) {
             return !!userVideoComponents.filter(e => e.getAudioStreamId() == audioStream.trackSid).length
         },
-        // TODO missing feature - one user cannot use several separated windows - reconsider identity
         drawNewComponentOrGetExisting(participant, prepend, localVideoProperties) {
             const md = JSON.parse((participant.metadata));
             const prefix = localVideoProperties ? 'local-' : 'remote-';
@@ -109,7 +108,7 @@ export default {
                         candidateToAppendVideo = this.createComponent(participantIdentityString, prepend, videoTagId, localVideoProperties);
                     }
                     //const cameraEnabled = track && track.isSubscribed && !track.isMuted;
-                    const cameraEnabled = track && !track.isMuted;/* && track.isSubscribed && !track.isMuted*/;
+                    const cameraEnabled = track && !track.isMuted;// && track.isSubscribed && !track.isMuted;
                     if (!track.isSubscribed) {
                         console.warn("Video track is not subscribed");
                     }
@@ -117,7 +116,7 @@ export default {
                     console.log("Video track was set", track.trackSid, "to", candidateToAppendVideo.getId());
                     candidateToAppendVideo.setUserName(md.login);
                     candidateToAppendVideo.setAvatar(md.avatar);
-                    candidateToAppendVideo.setUserId(participantIdentityString);
+                    candidateToAppendVideo.setUserId(md.userId);
                     return candidateToAppendVideo
                 } else if (track.kind == 'audio') {
                     console.debug("Processing audio track", track);
@@ -131,7 +130,7 @@ export default {
                         candidateToAppendAudio = this.createComponent(participantIdentityString, prepend, videoTagId, localVideoProperties);
                     }
                     //const micEnabled = track && track.isSubscribed && !track.isMuted;
-                    const micEnabled = track && !track.isMuted/* && track.isSubscribed && !track.isMuted*/;
+                    const micEnabled = track && !track.isMuted// && track.isSubscribed && !track.isMuted;
                     if (!track.isSubscribed) {
                         console.warn("Audio track is not subscribed");
                     }
@@ -139,7 +138,7 @@ export default {
                     console.log("Audio track was set", track.trackSid, "to", candidateToAppendAudio.getId());
                     candidateToAppendAudio.setUserName(md.login);
                     candidateToAppendAudio.setAvatar(md.avatar);
-                    candidateToAppendAudio.setUserId(participantIdentityString);
+                    candidateToAppendAudio.setUserId(md.userId);
                     return candidateToAppendAudio
                 }
             }
@@ -167,8 +166,8 @@ export default {
             track.detach();
             this.removeComponent(participant.identity, track);
         },
-        removeComponent(userId, track) {
-            for (const component of this.userVideoComponents.getByUser(userId)) {
+        removeComponent(userIdentity, track) {
+            for (const component of this.userVideoComponents.getByUser(userIdentity)) {
                 console.debug("For removal checking component=", component, "against", track);
                 if (component.getVideoStreamId() == track.sid || component.getAudioStreamId() == track.sid) {
                     console.log("Removing component=", component.getId());
@@ -178,7 +177,7 @@ export default {
                     } catch (e) {
                         console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
                     }
-                    this.userVideoComponents.removeComponentForUser(userId, component);
+                    this.userVideoComponents.removeComponentForUser(userIdentity, component);
                 }
             }
         },
@@ -187,9 +186,9 @@ export default {
             console.debug("handleActiveSpeakerChange", speakers);
 
             for (const speaker of speakers) {
-                const userId = speaker.identity;
+                const userIdentity = speaker.identity;
                 const tracksSids = [...speaker.audioTracks.keys()];
-                const userComponents = this.userVideoComponents.getByUser(userId);
+                const userComponents = this.userVideoComponents.getByUser(userIdentity);
                 for (const component of userComponents) {
                     const audioStreamId = component.getAudioStreamId();
                     console.debug("Track sids", tracksSids, " component audio stream id", audioStreamId);

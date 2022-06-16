@@ -48,11 +48,6 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 
 		if event.Event == "participant_joined" || event.Event == "participant_left" {
 			participant := event.Participant
-			userId, err := utils.ParseInt64(participant.Identity)
-			if err != nil {
-				Logger.Errorf("got error during parsing userId from event=%v, %v", event, err)
-				goto exit
-			}
 			md := &MetadataDto{}
 			err = json.Unmarshal([]byte(participant.Metadata), md)
 			if err != nil {
@@ -71,7 +66,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 			}
 
 			notificationDto := &dto.NotifyDto{
-				UserId:      userId,
+				UserId:      md.UserId,
 				Login:       md.Login,
 				MutedTracks: mutedTracks,
 			}
@@ -91,7 +86,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 
 			var usersCount = int64(len(participants.Participants))
 
-			Logger.Infof("Sending notificationDto userId=%v, chatId=%v", userId, chatId)
+			Logger.Infof("Sending notificationDto userId=%v, chatId=%v", md.UserId, chatId)
 			err = h.notificationService.Notify(chatId, usersCount, notificationDto)
 			if err != nil {
 				Logger.Errorf("got error during notificationService.Notify event=%v, %v", event, err)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	lkauth "github.com/livekit/protocol/auth"
 	"net/http"
@@ -62,6 +63,7 @@ func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
 }
 
 type MetadataDto struct {
+	UserId int64  `json:"userId"`
 	Login  string `json:"login"`
 	Avatar string `json:"avatar"` // url
 }
@@ -70,7 +72,7 @@ func (h *TokenHandler) getJoinToken(apiKey, apiSecret, room string, authResult *
 	canPublish := true
 	canSubscribe := true
 
-	aId := fmt.Sprintf("%v", authResult.UserId)
+	aId := fmt.Sprintf("%v_%v", authResult.UserId, uuid.New().String())
 
 	at := lkauth.NewAccessToken(apiKey, apiSecret)
 	grant := &lkauth.VideoGrant{
@@ -80,6 +82,7 @@ func (h *TokenHandler) getJoinToken(apiKey, apiSecret, room string, authResult *
 		CanSubscribe: &canSubscribe,
 	}
 	md := &MetadataDto{
+		UserId: authResult.UserId,
 		Login:  authResult.UserLogin,
 		Avatar: authResult.Avatar,
 	}

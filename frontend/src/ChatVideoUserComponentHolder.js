@@ -1,16 +1,16 @@
 export class ChatVideoUserComponentHolder {
     #userVideoComponents = new Map();
 
-    addComponentForUser(userId, component) {
-        let existingList = this.#userVideoComponents[userId];
+    addComponentForUser(userIdentity, component) {
+        let existingList = this.#userVideoComponents[userIdentity];
         if (!existingList) {
-            existingList = this.#userVideoComponents[userId] = [];
+            existingList = this.#userVideoComponents[userIdentity] = [];
         }
         existingList.push(component);
     }
 
-    removeComponentForUser(userId, component) {
-        let existingList = this.#userVideoComponents[userId];
+    removeComponentForUser(userIdentity, component) {
+        let existingList = this.#userVideoComponents[userIdentity];
         if (existingList) {
             for(let i = 0; i < existingList.length; i++){
                 if (existingList[i].getId() == component.getId()) {
@@ -20,10 +20,10 @@ export class ChatVideoUserComponentHolder {
         }
     }
 
-    getByUser(userId) {
-        let existingList = this.#userVideoComponents[userId];
+    getByUser(userIdentity) {
+        let existingList = this.#userVideoComponents[userIdentity];
         if (!existingList) {
-            existingList = this.#userVideoComponents[userId] = [];
+            existingList = this.#userVideoComponents[userIdentity] = [];
         }
         return existingList;
     }
