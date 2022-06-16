@@ -10,6 +10,7 @@ import 'regenerator-runtime/runtime';
 import {
     Room,
     RoomEvent,
+    ParticipantEvent,
     RemoteParticipant,
     RemoteTrackPublication,
     RemoteTrack,
@@ -82,6 +83,7 @@ export default {
         audioPublicationIsPresent (audioStream, userVideoComponents) {
             return !!userVideoComponents.filter(e => e.getAudioStreamId() == audioStream.trackSid).length
         },
+        // TODO missing feature - one user cannot use several separated windows - reconsider identity
         drawNewComponentOrGetExisting(participant, prepend, localVideoProperties) {
             const md = JSON.parse((participant.metadata));
             const prefix = localVideoProperties ? 'local-' : 'remote-';
@@ -106,7 +108,11 @@ export default {
                     if (!candidateToAppendVideo) {
                         candidateToAppendVideo = this.createComponent(participantIdentityString, prepend, videoTagId, localVideoProperties);
                     }
-                    const cameraEnabled = track && track.isSubscribed && !track.isMuted;
+                    //const cameraEnabled = track && track.isSubscribed && !track.isMuted;
+                    const cameraEnabled = track && !track.isMuted;/* && track.isSubscribed && !track.isMuted*/;
+                    if (!track.isSubscribed) {
+                        console.warn("Video track is not subscribed");
+                    }
                     candidateToAppendVideo.setVideoStream(track, cameraEnabled);
                     console.log("Video track was set", track.trackSid, "to", candidateToAppendVideo.getId());
                     candidateToAppendVideo.setUserName(md.login);
@@ -124,7 +130,11 @@ export default {
                     if (!candidateToAppendAudio) {
                         candidateToAppendAudio = this.createComponent(participantIdentityString, prepend, videoTagId, localVideoProperties);
                     }
-                    const micEnabled = track && track.isSubscribed && !track.isMuted;
+                    //const micEnabled = track && track.isSubscribed && !track.isMuted;
+                    const micEnabled = track && !track.isMuted/* && track.isSubscribed && !track.isMuted*/;
+                    if (!track.isSubscribed) {
+                        console.warn("Audio track is not subscribed");
+                    }
                     candidateToAppendAudio.setAudioStream(track, micEnabled);
                     console.log("Audio track was set", track.trackSid, "to", candidateToAppendAudio.getId());
                     candidateToAppendAudio.setUserName(md.login);
@@ -137,19 +147,6 @@ export default {
             return null
         },
 
-        handleTrackSubscribed(
-            track,
-            publication,
-            participant,
-        ) {
-            console.log("handleTrackSubscribed");
-            if (track.kind === Track.Kind.Video || track.kind === Track.Kind.Audio) {
-                // attach it to a new HTMLVideoElement or HTMLAudioElement
-                const element = track.attach();
-                parentElement.appendChild(element);
-            }
-        },
-
         handleTrackUnsubscribed(
             track,
             publication,
@@ -158,7 +155,7 @@ export default {
             console.log('handleTrackUnsubscribed', track);
             // remove tracks from all attached elements
             track.detach();
-            this.removeComponent(track);
+            this.removeComponent(participant.identity, track);
         },
 
         handleLocalTrackUnpublished(trackPublication, participant) {
@@ -245,8 +242,32 @@ export default {
 
             // set up event listeners
             this.room
-                .on(RoomEvent.TrackSubscribed, this.handleTrackSubscribed)
+                .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                    console.log("TrackPublished to room.name", this.room.name);
+                    console.debug("TrackPublished to room", this.room);
+                    this.drawNewComponentOrGetExisting(participant, false, null);
+                })
                 .on(RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed)
+
+                // When a [[RemoteParticipant]] joins *after* the local
+                // .on(RoomEvent.ParticipantConnected, (participant) => {
+                //     console.log("ParticipantConnected");
+                //     participant
+                //         .on(ParticipantEvent.TrackSubscribed, (track, pub) => {
+                //             console.log('subscribed to remote track', pub.trackSid, participant.identity);
+                //             //renderParticipant(participant);
+                //             this.drawNewComponentOrGetExisting(participant, false, null);
+                //         })
+                //         .on(ParticipantEvent.TrackUnsubscribed, (track, pub) => {
+                //             console.log('unsubscribed from remote track', pub.trackSid);
+                //             //renderParticipant(participant);
+                //             track.detach();
+                //             this.removeComponent(participant.identity, track);
+                //         })
+                // })
+                // .on(RoomEvent.ParticipantDisconnected, (participant) => {
+                //     console.log("ParticipantDisconnected");
+                // })
                 .on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakerChange)
                 .on(RoomEvent.Disconnected, this.handleDisconnect)
                 .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
@@ -270,6 +291,11 @@ export default {
             console.log('connected to room', this.room.name);
 
             await this.createLocalMediaTracks(null, null);
+
+            // render participants who already were in room
+            // this.room.participants.forEach((participant) => {
+            //     this.drawNewComponentOrGetExisting(participant, false, null);
+            // });
         },
 
         async stopRoom() {
