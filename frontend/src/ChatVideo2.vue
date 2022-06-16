@@ -367,7 +367,8 @@ export default {
     // subscribe on participants mute events
     // remove tracks info from rabbitmq events
     // this should kill two rabbits - implementation force mute and usual self-mute
-    // don't forget to check if initial mute state was set correctly
+    // don't forget to check if initial mute state was set correctly -
+    // for example use doesn't have a microphone. it should be displayed as muted
 }
 
 </script>
