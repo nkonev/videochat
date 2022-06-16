@@ -369,6 +369,7 @@ export default {
     // this should kill two rabbits - implementation force mute and usual self-mute
     // don't forget to check if initial mute state was set correctly -
     // for example use doesn't have a microphone. it should be displayed as muted
+    // seems it's ok - in UserVideo.vue audioMute and videoMute are already set to true
 }
 
 </script>
