@@ -83,19 +83,18 @@ export default {
         audioPublicationIsPresent (audioStream, userVideoComponents) {
             return !!userVideoComponents.filter(e => e.getAudioStreamId() == audioStream.trackSid).length
         },
-        drawNewComponentOrGetExisting(participant, prepend, localVideoProperties) {
+        drawNewComponentOrGetExisting(participant, participantTrackPublications, prepend, localVideoProperties) {
             const md = JSON.parse((participant.metadata));
             const prefix = localVideoProperties ? 'local-' : 'remote-';
             const videoTagId = prefix + this.getNewId();
 
-            const participantTracks = participant.getTracks();
             const participantIdentityString = participant.identity;
 
             const components = this.userVideoComponents.getByUser(participantIdentityString);
             const candidatesWithoutVideo = components.filter(e => !e.getVideoStreamId());
             const candidatesWithoutAudio = components.filter(e => !e.getAudioStreamId());
 
-            for (const track of participantTracks) { // track is video, before audio created an element
+            for (const track of participantTrackPublications) {
                 if (track.kind == 'video') {
                     console.debug("Processing video track", track);
                     if (this.videoPublicationIsPresent(track, components)) {
@@ -244,7 +243,7 @@ export default {
                 .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
                     console.log("TrackPublished to room.name", this.room.name);
                     console.debug("TrackPublished to room", this.room);
-                    this.drawNewComponentOrGetExisting(participant, false, null);
+                    this.drawNewComponentOrGetExisting(participant, [publication], false, null);
                 })
                 .on(RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed)
 
@@ -277,7 +276,8 @@ export default {
                     const localVideoProperties = {
                         localParticipant: this.room.localParticipant
                     };
-                    this.drawNewComponentOrGetExisting(this.room.localParticipant, true, localVideoProperties);
+                    const participantTracks = this.room.localParticipant.getTracks();
+                    this.drawNewComponentOrGetExisting(this.room.localParticipant, participantTracks,true, localVideoProperties);
                 });
 
             // connect to room
