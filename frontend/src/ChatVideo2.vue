@@ -359,6 +359,8 @@ export default {
     // mute icon propagation
     // restore displaying green tube at chats list
     // cleaning up garbage foreign UserVideo elements
+    // kick
+    // force mute
 }
 
 </script>
