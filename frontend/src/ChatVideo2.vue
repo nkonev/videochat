@@ -246,26 +246,6 @@ export default {
                     this.drawNewComponentOrGetExisting(participant, [publication], false, null);
                 })
                 .on(RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed)
-
-                // When a [[RemoteParticipant]] joins *after* the local
-                // .on(RoomEvent.ParticipantConnected, (participant) => {
-                //     console.log("ParticipantConnected");
-                //     participant
-                //         .on(ParticipantEvent.TrackSubscribed, (track, pub) => {
-                //             console.log('subscribed to remote track', pub.trackSid, participant.identity);
-                //             //renderParticipant(participant);
-                //             this.drawNewComponentOrGetExisting(participant, false, null);
-                //         })
-                //         .on(ParticipantEvent.TrackUnsubscribed, (track, pub) => {
-                //             console.log('unsubscribed from remote track', pub.trackSid);
-                //             //renderParticipant(participant);
-                //             track.detach();
-                //             this.removeComponent(participant.identity, track);
-                //         })
-                // })
-                // .on(RoomEvent.ParticipantDisconnected, (participant) => {
-                //     console.log("ParticipantDisconnected");
-                // })
                 .on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakerChange)
                 .on(RoomEvent.Disconnected, this.handleDisconnect)
                 .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
@@ -290,11 +270,6 @@ export default {
             console.log('connected to room', this.room.name);
 
             await this.createLocalMediaTracks(null, null);
-
-            // render participants who already were in room
-            // this.room.participants.forEach((participant) => {
-            //     this.drawNewComponentOrGetExisting(participant, false, null);
-            // });
         },
 
         async stopRoom() {
