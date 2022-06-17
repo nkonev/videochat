@@ -121,13 +121,14 @@ type RabbitMqConfig struct {
 }
 
 type ExtendedConfig struct {
-	FrontendConfig   FrontendConfig   `mapstructure:"frontend"`
-	RestClientConfig RestClientConfig `mapstructure:"http"`
-	ChatConfig       ChatConfig       `mapstructure:"chat"`
-	AaaConfig        AaaConfig        `mapstructure:"aaa"`
-	AuthConfig       AuthConfig       `mapstructure:"auth"`
-	LivekitConfig    LivekitConfig    `mapstructure:"livekit"`
-	JaegerConfig     JaegerConfig     `mapstructure:"jaeger"`
-	HttpServerConfig HttpServerConfig `mapstructure:"server"`
-	RabbitMqConfig   RabbitMqConfig   `mapstructure:"rabbitmq"`
+	FrontendConfig         FrontendConfig   `mapstructure:"frontend"`
+	RestClientConfig       RestClientConfig `mapstructure:"http"`
+	ChatConfig             ChatConfig       `mapstructure:"chat"`
+	AaaConfig              AaaConfig        `mapstructure:"aaa"`
+	AuthConfig             AuthConfig       `mapstructure:"auth"`
+	LivekitConfig          LivekitConfig    `mapstructure:"livekit"`
+	JaegerConfig           JaegerConfig     `mapstructure:"jaeger"`
+	HttpServerConfig       HttpServerConfig `mapstructure:"server"`
+	RabbitMqConfig         RabbitMqConfig   `mapstructure:"rabbitmq"`
+	SyncNotificationPeriod time.Duration    `mapstructure:"syncNotificationPeriod"`
 }

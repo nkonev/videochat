@@ -30,7 +30,7 @@ func (h *NotificationService) Notify(chatId, usersCount int64, data *dto.NotifyD
 		Logger.Infof("Notifying with data chat_id=%v, login=%v, userId=%v", chatId, data.Login, data.UserId)
 		chatNotifyDto.Data = data
 	} else {
-		Logger.Infof("Notifying without data chat_id=%v, login=%v, userId=%v", chatId, data.Login, data.UserId)
+		Logger.Infof("Notifying without data chat_id=%v", chatId)
 	}
 	chatNotifyDto.UsersCount = usersCount
 	chatNotifyDto.ChatId = chatId

@@ -24,6 +24,7 @@ import (
 	"nkonev.name/video/producer"
 	"nkonev.name/video/rabbitmq"
 	"nkonev.name/video/services"
+	"time"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -50,9 +51,11 @@ func main() {
 			producer.NewRabbitPublisher,
 			services.NewNotificationService,
 			services.NewUserService,
+			services.NewScheduledService,
 		),
 		fx.Invoke(
 			runEcho,
+			runScheduler,
 		),
 	)
 	app.Run()
@@ -189,6 +192,28 @@ func runEcho(e *echo.Echo, cfg *config.ExtendedConfig) {
 		}
 	}()
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
+}
+
+func runScheduler(scheduleService *services.ScheduledService, conf *config.ExtendedConfig) *chan struct{} {
+	if conf.SyncNotificationPeriod == 0 {
+		Logger.Info("Sheduler is disabled")
+		return nil
+	}
+	ticker := time.NewTicker(conf.SyncNotificationPeriod)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				Logger.Info("Invoked chats periodic notificator")
+				scheduleService.NotifyAllChats()
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+	return &quit
 }
 
 func createTypedConfig() (*config.ExtendedConfig, error) {

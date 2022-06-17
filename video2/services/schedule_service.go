@@ -20,7 +20,7 @@ func NewScheduledService(conf *config.ExtendedConfig, livekitRoomClient *lksdk.R
 	return &ScheduledService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService}
 }
 
-func (h *ScheduledService) notifyAllChats() {
+func (h *ScheduledService) NotifyAllChats() {
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := h.livekitRoomClient.ListRooms(context.Background(), listRoomReq)
 	if err != nil {
@@ -33,8 +33,12 @@ func (h *ScheduledService) notifyAllChats() {
 			Logger.Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
 			continue
 		}
-		usersCount := int64(room.NumParticipants)
-
+		// Here room.NumParticipants are zeroed, so we need to invoke service
+		usersCount, err := h.userService.CountUsers(context.Background(), room.Name)
+		if err != nil {
+			Logger.Errorf("got error during counting users in scheduler, %v", err)
+			continue
+		}
 		Logger.Infof("Sending notificationDto chatId=%v", chatId)
 		err = h.notificationService.Notify(chatId, usersCount, nil)
 		if err != nil {
