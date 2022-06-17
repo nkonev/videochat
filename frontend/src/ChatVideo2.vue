@@ -371,20 +371,11 @@ export default {
     }
 
     // TODO Missed features
-    // mute icon propagation
     // restore displaying green tube at chats list
     // cleaning up garbage foreign UserVideo elements
     // kick
     // force mute
 
-    // plan
-    // Store somewhere participants (probably in ChatVideoUserComponentHolder)
-    // subscribe on participants mute events
-    // remove tracks info from rabbitmq events
-    // this should kill two rabbits - implementation force mute and usual self-mute
-    // don't forget to check if initial mute state was set correctly -
-    // for example use doesn't have a microphone. it should be displayed as muted
-    // seems it's ok - in UserVideo.vue audioMute and videoMute are already set to true
 }
 
 </script>
