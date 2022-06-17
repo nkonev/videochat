@@ -7,15 +7,17 @@ import (
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
 	. "nkonev.name/video/logger"
+	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
 )
 
 type UserHandler struct {
-	chatClient *client.RestClient
+	chatClient  *client.RestClient
+	userService *services.UserService
 }
 
-func NewUserHandler(chatClient *client.RestClient) *UserHandler {
-	return &UserHandler{chatClient: chatClient}
+func NewUserHandler(chatClient *client.RestClient, userService *services.UserService) *UserHandler {
+	return &UserHandler{chatClient: chatClient, userService: userService}
 }
 
 type CountUsersResponse struct {
@@ -38,5 +40,12 @@ func (h *UserHandler) GetVideoUsers(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	return c.JSON(http.StatusOK, CountUsersResponse{UsersCount: 0})
+	var roomName = utils.GetRoomNameFromId(chatId)
+	usersCount, err := h.userService.CountUsers(c.Request().Context(), roomName)
+	if err != nil {
+		Logger.Errorf("got error during getting participants from http users request, %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.JSON(http.StatusOK, CountUsersResponse{UsersCount: usersCount})
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/auth"
-	"github.com/livekit/protocol/livekit"
 	"github.com/livekit/protocol/webhook"
 	lksdk "github.com/livekit/server-sdk-go"
 	"nkonev.name/video/config"
@@ -18,13 +17,15 @@ type LivekitWebhookHandler struct {
 	config              *config.ExtendedConfig
 	notificationService *services.NotificationService
 	livekitRoomClient   *lksdk.RoomServiceClient
+	userService         *services.UserService
 }
 
-func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, livekitRoomClient *lksdk.RoomServiceClient) *LivekitWebhookHandler {
+func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, livekitRoomClient *lksdk.RoomServiceClient, userService *services.UserService) *LivekitWebhookHandler {
 	return &LivekitWebhookHandler{
 		config:              config,
 		notificationService: notificationService,
 		livekitRoomClient:   livekitRoomClient,
+		userService:         userService,
 	}
 }
 
@@ -66,14 +67,11 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 				goto exit
 			}
 
-			var req *livekit.ListParticipantsRequest = &livekit.ListParticipantsRequest{Room: event.Room.Name}
-			participants, err := h.livekitRoomClient.ListParticipants(c.Request().Context(), req)
+			usersCount, err := h.userService.CountUsers(c.Request().Context(), event.Room.Name)
 			if err != nil {
 				Logger.Errorf("got error during getting participants from livekit event=%v, %v", event, err)
 				goto exit
 			}
-
-			var usersCount = int64(len(participants.Participants))
 
 			Logger.Infof("Sending notificationDto userId=%v, chatId=%v", md.UserId, chatId)
 			err = h.notificationService.Notify(chatId, usersCount, notificationDto)

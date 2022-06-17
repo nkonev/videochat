@@ -49,6 +49,7 @@ func main() {
 			rabbitmq.CreateRabbitMqConnection,
 			producer.NewRabbitPublisher,
 			services.NewNotificationService,
+			services.NewUserService,
 		),
 		fx.Invoke(
 			runEcho,
