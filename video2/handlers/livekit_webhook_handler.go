@@ -67,11 +67,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 				goto exit
 			}
 
-			usersCount, err := h.userService.CountUsers(c.Request().Context(), event.Room.Name)
-			if err != nil {
-				Logger.Errorf("got error during getting participants from livekit event=%v, %v", event, err)
-				goto exit
-			}
+			usersCount := int64(event.Room.NumParticipants)
 
 			Logger.Infof("Sending notificationDto userId=%v, chatId=%v", md.UserId, chatId)
 			err = h.notificationService.Notify(chatId, usersCount, notificationDto)
