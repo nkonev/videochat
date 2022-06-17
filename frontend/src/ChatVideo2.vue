@@ -375,7 +375,7 @@ export default {
     // cleaning up garbage foreign UserVideo elements
     // kick
     // force mute
-
+    // auto-reconnect
 }
 
 </script>
