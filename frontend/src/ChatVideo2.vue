@@ -371,7 +371,6 @@ export default {
     }
 
     // TODO Missed features
-    // restore displaying green tube at chats list
     // cleaning up garbage foreign UserVideo elements
     // kick
     // force mute
