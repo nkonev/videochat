@@ -55,20 +55,9 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 				goto exit
 			}
 
-			var mutedTracks = map[string]dto.MuteInfo{}
-
-			// TODO right after connection this contains no elements
-			for _, track := range participant.GetTracks() {
-				mutedTracks[track.Sid] = dto.MuteInfo{
-					Kind:  track.Type.String(),
-					Muted: track.Muted,
-				}
-			}
-
 			notificationDto := &dto.NotifyDto{
-				UserId:      md.UserId,
-				Login:       md.Login,
-				MutedTracks: mutedTracks,
+				UserId: md.UserId,
+				Login:  md.Login,
 			}
 
 			chatId, err := utils.GetRoomIdFromName(event.Room.Name)

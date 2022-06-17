@@ -89,7 +89,6 @@ export default {
             const videoTagId = prefix + this.getNewId();
 
             const participantIdentityString = participant.identity;
-
             const components = this.userVideoComponents.getByUser(participantIdentityString);
             const candidatesWithoutVideo = components.filter(e => !e.getVideoStreamId());
             const candidatesWithoutAudio = components.filter(e => !e.getAudioStreamId());
@@ -222,6 +221,19 @@ export default {
             }
         },
 
+        handleTrackMuted(trackPublication, participant) {
+            const participantIdentityString = participant.identity;
+            const components = this.userVideoComponents.getByUser(participantIdentityString);
+            const matchedVideoComponents = components.filter(e => trackPublication.trackSid == e.getVideoStreamId());
+            const matchedAudioComponents = components.filter(e => trackPublication.trackSid == e.getAudioStreamId());
+            for (const component of matchedVideoComponents) {
+                component.setVideoMute(trackPublication.isMuted);
+            }
+            for (const component of matchedAudioComponents) {
+                component.setDisplayAudioMute(trackPublication.isMuted);
+            }
+        },
+
         async tryRestartVideoProcess() {
             await this.stopRoom();
             await this.startRoom();
@@ -258,7 +270,10 @@ export default {
                     };
                     const participantTracks = this.room.localParticipant.getTracks();
                     this.drawNewComponentOrGetExisting(this.room.localParticipant, participantTracks,true, localVideoProperties);
-                });
+                })
+                .on(RoomEvent.TrackMuted, this.handleTrackMuted)
+                .on(RoomEvent.TrackUnmuted, this.handleTrackMuted)
+            ;
 
             // connect to room
             const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
