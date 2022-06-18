@@ -30,12 +30,7 @@ livekit:
   url: "http://localhost:7880"
 
 frontend:
-  # in ion-sdk-js vp8 is default
-  preferredCodec: h264
   resolution: h720
-#  iceserver:
-#    - server:
-#        urls: ["stun:stun.l.google.com:19302"]
 
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"

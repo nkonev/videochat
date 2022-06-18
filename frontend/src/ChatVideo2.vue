@@ -54,8 +54,6 @@ export default {
             videoContainerDiv: null,
             userVideoComponents: new ChatVideoUserComponentHolder(),
             videoResolution: null,
-            preferredCodec: null,
-            rtcConfiguration: null
         }
     },
     methods: {
@@ -219,16 +217,6 @@ export default {
                 this.videoResolution = getVideoResolution();
                 console.log("Used resolution from localstorage", this.videoResolution)
             }
-            if (hasLength(configObj.codec)) {
-                console.log("Server overrided codec to", configObj.codec)
-                this.preferredCodec = configObj.codec;
-            } else {
-                this.preferredCodec = getCodec();
-                console.log("Used codec from localstorage", this.preferredCodec)
-            }
-            const rtcConfig = configObj.rtcConfiguration;
-            console.log("Used rtcConfiguration", rtcConfig);
-            this.rtcConfiguration = rtcConfig;
         },
 
         handleTrackMuted(trackPublication, participant) {
@@ -291,7 +279,6 @@ export default {
             await this.room.connect(getWebsocketUrlPrefix()+'/api/livekit', token, {
                 // subscribe to other participants automatically
                 autoSubscribe: true,
-                rtcConfig: this.rtcConfiguration,
             });
             console.log('connected to room', this.room.name);
 
@@ -316,7 +303,7 @@ export default {
                 return Promise.reject('No media configured');
             }
 
-            console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", resolution, "preferredCodec", this.preferredCodec);
+            console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", resolution);
 
             let tracks;
             if (isScreen) {
@@ -340,7 +327,6 @@ export default {
             for (const track of tracks) {
                 const publication = await this.room.localParticipant.publishTrack(track, {
                     name: "track_" + track.kind + "__screen_" + isScreen + "_" + this.getNewId(),
-                    videoCodec: this.preferredCodec
                 });
                 if (track.kind == 'audio' && defaultAudioMute) {
                     await publication.mute();

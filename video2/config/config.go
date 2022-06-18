@@ -80,20 +80,8 @@ type RestClientConfig struct {
 	DisableCompression bool          `mapstructure:"disableCompression"`
 }
 
-type ICEServerConfig struct {
-	URLs       []string `mapstructure:"urls"`
-	Username   string   `mapstructure:"username"`
-	Credential string   `mapstructure:"credential"`
-}
-
-type ExtendedICEServerConfig struct {
-	ICEServerConfig ICEServerConfig `mapstructure:"server"`
-}
-
 type FrontendConfig struct {
-	ICEServers     []ExtendedICEServerConfig `mapstructure:"iceserver"`
-	PreferredCodec string                    `mapstructure:"preferredCodec"`
-	Resolution     string                    `mapstructure:"resolution"`
+	Resolution string `mapstructure:"resolution"`
 }
 
 type AuthConfig struct {

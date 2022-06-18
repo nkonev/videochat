@@ -37,16 +37,6 @@
                         v-model="videoQuality"
                     ></v-select>
 
-                    <v-select
-                        :disabled="serverPreferredCodec"
-                        :messages="$vuetify.lang.t('$vuetify.requested_codec')"
-                        :items="codecItems"
-                        dense
-                        solo
-                        @change="changeCodec"
-                        v-model="codec"
-                    ></v-select>
-
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
@@ -72,7 +62,7 @@
         getStoredAudioDevicePresents,
         setStoredAudioPresents,
         getStoredVideoDevicePresents,
-        setStoredVideoPresents, setCodec, getCodec, hasLength
+        setStoredVideoPresents, hasLength
     } from "./utils";
     import axios from "axios";
     import {videochat_name} from "./routes";
@@ -82,13 +72,11 @@
             return {
                 changing: false,
                 show: false,
-                serverPreferredCodec: false,
                 serverPreferredResolution: false,
 
                 audioPresents: null,
                 videoPresents: null,
                 videoQuality: null,
-                codec: null,
             }
         },
         methods: {
@@ -96,18 +84,12 @@
                 this.audioPresents = getStoredAudioDevicePresents();
                 this.videoPresents = getStoredVideoDevicePresents();
                 this.videoQuality = getVideoResolution();
-                this.codec = getCodec();
-                this.serverPreferredCodec = false;
                 this.serverPreferredResolution = false;
                 this.show = true;
                 axios
                     .get(`/api/video/${this.chatId}/config`)
                     .then(response => response.data)
                     .then(respData => {
-                        if (hasLength(respData.codec)) {
-                            this.serverPreferredCodec = true;
-                            this.codec = respData.codec;
-                        }
                         if (hasLength(respData.resolution)) {
                             this.serverPreferredResolution = true;
                             this.videoQuality = respData.resolution;
@@ -134,13 +116,6 @@
                 setVideoResolution(newVideoResolution);
                 bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
-            changeCodec(newCodec) {
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
-                setCodec(newCodec);
-                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
-            },
             changeAudioPresents(v) {
                 if (this.isVideoRoute()) {
                     this.changing = true;
@@ -160,9 +135,6 @@
             qualityItems() {
                 // ./frontend/node_modules/livekit-client/dist/room/track/options.d.ts
                 return ['h180', 'h360', 'h720', 'h1080', 'h1440', 'h2160']
-            },
-            codecItems() {
-                return ['vp8', 'vp9', 'h264', 'av1']
             },
             chatId() {
                 return this.$route.params.id

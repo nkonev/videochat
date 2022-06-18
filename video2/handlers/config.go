@@ -55,18 +55,6 @@ func (h *ConfigHandler) GetConfig(c echo.Context) error {
 	frontendConfig := h.config.FrontendConfig
 	var responseSliceFrontendConfig = FrontendConfigDto{}
 
-	for _, s := range frontendConfig.ICEServers {
-		if responseSliceFrontendConfig.RtcConfig == nil {
-			responseSliceFrontendConfig.RtcConfig = &RtcConfig{}
-		}
-		var newElement = ICEServerConfigDto{
-			URLs:       s.ICEServerConfig.URLs,
-			Username:   s.ICEServerConfig.Username,
-			Credential: s.ICEServerConfig.Credential,
-		}
-		responseSliceFrontendConfig.RtcConfig.ICEServers = append(responseSliceFrontendConfig.RtcConfig.ICEServers, newElement)
-	}
-	responseSliceFrontendConfig.PreferredCodec = frontendConfig.PreferredCodec
 	responseSliceFrontendConfig.Resolution = frontendConfig.Resolution
 
 	return c.JSON(http.StatusOK, responseSliceFrontendConfig)
