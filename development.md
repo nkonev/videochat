@@ -121,11 +121,16 @@ about:config
 media.devices.insecure.enabled
 
 # Access to video camera (WebRTC) from local network without https from Mobile:
+## Firefox
 1. Install Firefox Beta (`about:config`it is working only in Beta releases and disabled in regular)
 2. Open `about:config`
 3. Set to true `media.devices.insecure.enabled` and `media.getusermedia.insecure.enabled`
 ![](./.markdown/mobile-ff-1.jpg)
 ![](./.markdown/mobile-ff-2.jpg)
+
+## Chrome
+1. Configure insecure origins treated as secure
+![](./.markdown/mobile-ch-1.jpg)
 
 # Validate turn server installation
 
