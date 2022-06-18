@@ -128,17 +128,6 @@ export default {
         getFailureCount() {
             return this.failureCount;
         },
-        // notifyOtherParticipants() {
-        //     // notify another participants, they will receive VIDEO_CALL_CHANGED
-        //     const toSend = {
-        //         avatar: this.avatarIsSet ? this.avatar : null,
-        //         peerId: this.localVideoProperties.peerId,
-        //         streamId: this.getStreamId(),
-        //         videoMute: this.videoMute,
-        //         audioMute: this.audioMute
-        //     };
-        //     this.localVideoProperties.signalLocal.notify(PUT_USER_DATA_METHOD, toSend);
-        // },
         doMuteAudio(requestedState) {
             if (requestedState) {
                 this.audioPublication?.mute();
@@ -146,7 +135,6 @@ export default {
                 this.audioPublication?.unmute();
             }
             this.setDisplayAudioMute(requestedState);
-            // TODO this.notifyOtherParticipants()
         },
         doMuteVideo(requestedState) {
             if (requestedState) {
@@ -155,7 +143,6 @@ export default {
                 this.videoPublication?.unmute();
             }
             this.setVideoMute(requestedState);
-            // TODO this.notifyOtherParticipants()
         },
         onClose() {
             this.localVideoProperties.localParticipant.unpublishTrack(this.videoPublication?.videoTrack);
