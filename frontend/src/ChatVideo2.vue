@@ -42,6 +42,7 @@ import bus, {
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus";
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
+import {chat_name, videochat_name} from "@/routes";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
@@ -163,6 +164,13 @@ export default {
             // when local tracks are ended, update UI to remove them from rendering
             track.detach();
             this.removeComponent(participant.identity, track);
+
+            // handles kick - all tracks were forciby unsubscribed so we go back to ChatList
+            if (this.userVideoComponents.isEmpty()) {
+                if (this.$route.name == videochat_name) {
+                    this.$router.push({name: chat_name});
+                }
+            }
         },
         removeComponent(userIdentity, track) {
             for (const component of this.userVideoComponents.getByUser(userIdentity)) {
@@ -288,6 +296,7 @@ export default {
         },
 
         async stopRoom() {
+            console.log('Stopping room');
             await this.room.disconnect();
             this.room = null;
         },
@@ -372,7 +381,6 @@ export default {
 
     // TODO Missed features
     // cleaning up garbage foreign UserVideo elements
-    // kick
     // force mute
     // auto-reconnect
 }

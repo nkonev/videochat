@@ -18,6 +18,13 @@ export class ChatVideoUserComponentHolder {
                 }
             }
         }
+        if (existingList.length == 0) {
+            this.#userVideoComponents.delete(userIdentity)
+        }
+    }
+
+    isEmpty() {
+        return this.#userVideoComponents.size == 0
     }
 
     getByUser(userIdentity) {
