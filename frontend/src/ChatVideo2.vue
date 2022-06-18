@@ -384,7 +384,6 @@ export default {
 
     // TODO Missed features
     // cleaning up garbage foreign UserVideo elements
-    // force mute
     // auto-reconnect
 }
 

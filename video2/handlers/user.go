@@ -106,3 +106,63 @@ func (h *UserHandler) Kick(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusOK)
 }
+
+func (h *UserHandler) Mute(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := utils.ParseInt64(c.Param("chatId"))
+	if err != nil {
+		return err
+	}
+	if ok, err := h.chatClient.IsAdmin(userPrincipalDto.UserId, chatId); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	userId, err := utils.ParseInt64(c.QueryParam("userId"))
+	if err != nil {
+		return err
+	}
+
+	roomName := utils.GetRoomNameFromId(chatId)
+
+	lpr := &livekit.ListParticipantsRequest{Room: roomName}
+	participants, err := h.livekitRoomClient.ListParticipants(c.Request().Context(), lpr)
+	if err != nil {
+		Logger.Errorf("Unable to get participants %v", err)
+		return err
+	}
+
+	for _, participant := range participants.Participants {
+		md := &MetadataDto{}
+		err = json.Unmarshal([]byte(participant.Metadata), md)
+		if err != nil {
+			Logger.Errorf("got error during parsing metadata from kick userId=%v from chatId=%v, %v", userId, chatId, err)
+			continue
+		}
+		if md.UserId == userId {
+			Logger.Infof("Muting userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
+
+			for _, track := range participant.GetTracks() {
+				if track.Type == livekit.TrackType_AUDIO && !track.Muted {
+					var muteReq = &livekit.MuteRoomTrackRequest{
+						Room:     roomName,
+						Identity: participant.Identity,
+						Muted:    true,
+						TrackSid: track.Sid,
+					}
+					_, err := h.livekitRoomClient.MutePublishedTrack(c.Request().Context(), muteReq)
+					if err != nil {
+						Logger.Errorf("got error during muting userId=%v, %v", userId, err)
+						continue
+					}
+				}
+			}
+		}
+	}
+	return c.NoContent(http.StatusOK)
+}
