@@ -54,7 +54,8 @@ export default {
             videoContainerDiv: null,
             userVideoComponents: new ChatVideoUserComponentHolder(),
             videoResolution: null,
-            preferredCodec: null
+            preferredCodec: null,
+            rtcConfiguration: null
         }
     },
     methods: {
@@ -227,6 +228,9 @@ export default {
                 this.preferredCodec = getCodec();
                 console.log("Used codec from localstorage", this.preferredCodec)
             }
+            const rtcConfig = configObj.rtcConfiguration;
+            console.log("Used rtcConfiguration", rtcConfig);
+            this.rtcConfiguration = rtcConfig;
         },
 
         handleTrackMuted(trackPublication, participant) {
@@ -285,10 +289,11 @@ export default {
 
             // connect to room
             const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
-            console.log("Got video token", token);
+            console.debug("Got video token", token);
             await this.room.connect(getWebsocketUrlPrefix()+'/api/livekit', token, {
                 // subscribe to other participants automatically
                 autoSubscribe: true,
+                rtcConfig: this.rtcConfiguration,
             });
             console.log('connected to room', this.room.name);
 

@@ -20,6 +20,10 @@ func NewConfigHandler(chatClient *client.RestClient, config *config.ExtendedConf
 	return &ConfigHandler{chatClient: chatClient, config: config}
 }
 
+type RtcConfig struct {
+	ICEServers []ICEServerConfigDto `json:"iceServers"`
+}
+
 type ICEServerConfigDto struct {
 	URLs       []string `json:"urls"`
 	Username   string   `json:"username"`
@@ -27,9 +31,9 @@ type ICEServerConfigDto struct {
 }
 
 type FrontendConfigDto struct {
-	ICEServers     []ICEServerConfigDto `json:"iceServers"`
-	PreferredCodec string               `json:"codec"`
-	Resolution     string               `json:"resolution"`
+	RtcConfig      *RtcConfig `json:"rtcConfiguration"`
+	PreferredCodec string     `json:"codec"`
+	Resolution     string     `json:"resolution"`
 }
 
 func (h *ConfigHandler) GetConfig(c echo.Context) error {
@@ -52,12 +56,15 @@ func (h *ConfigHandler) GetConfig(c echo.Context) error {
 	var responseSliceFrontendConfig = FrontendConfigDto{}
 
 	for _, s := range frontendConfig.ICEServers {
+		if responseSliceFrontendConfig.RtcConfig == nil {
+			responseSliceFrontendConfig.RtcConfig = &RtcConfig{}
+		}
 		var newElement = ICEServerConfigDto{
 			URLs:       s.ICEServerConfig.URLs,
 			Username:   s.ICEServerConfig.Username,
 			Credential: s.ICEServerConfig.Credential,
 		}
-		responseSliceFrontendConfig.ICEServers = append(responseSliceFrontendConfig.ICEServers, newElement)
+		responseSliceFrontendConfig.RtcConfig.ICEServers = append(responseSliceFrontendConfig.RtcConfig.ICEServers, newElement)
 	}
 	responseSliceFrontendConfig.PreferredCodec = frontendConfig.PreferredCodec
 	responseSliceFrontendConfig.Resolution = frontendConfig.Resolution
