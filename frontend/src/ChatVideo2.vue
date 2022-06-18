@@ -165,13 +165,6 @@ export default {
             // when local tracks are ended, update UI to remove them from rendering
             track.detach();
             this.removeComponent(participant.identity, track);
-
-            // handles kick - all tracks were forciby unsubscribed so we go back to ChatList
-            if (this.userVideoComponents.isEmpty()) {
-                if (this.$route.name == videochat_name) {
-                    this.$router.push({name: chat_name});
-                }
-            }
         },
         removeComponent(userIdentity, track) {
             for (const component of this.userVideoComponents.getByUser(userIdentity)) {
@@ -208,6 +201,11 @@ export default {
 
         handleDisconnect() {
             console.log('disconnected from room');
+
+            // handles kick
+            if (this.$route.name == videochat_name) {
+                this.$router.push({name: chat_name});
+            }
         },
 
         async setConfig() {
