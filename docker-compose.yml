@@ -10,7 +10,7 @@ services:
     # The Static Configuration
     command: --configFile=/traefik_conf/traefik.yml
     ports:
-      - 8081:8081
+      - 0.0.0.0:8081:8081
     extra_hosts:
       # https://github.com/moby/moby/pull/40007
       # works on Docker for Mac 3.4.0 or Linux Docker 20.10.4
