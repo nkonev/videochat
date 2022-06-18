@@ -132,6 +132,7 @@ func configureEcho(
 	e.GET("/video/:chatId/users", uh.GetVideoUsers)
 	e.GET("/video/:chatId/config", ch.GetConfig)
 	e.POST("/internal/livekit-webhook", lhf.GetLivekitWebhookHandler())
+	e.PUT("/video/:chatId/kick", uh.Kick)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

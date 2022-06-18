@@ -19,6 +19,7 @@ type RestClient struct {
 	client         *http.Client
 	baseUrl        string
 	accessPath     string
+	isAdminPath    string
 	aaaBaseUrl     string
 	aaaGetUsersUrl string
 }
@@ -36,6 +37,7 @@ func NewRestClient(config *config.ExtendedConfig) *RestClient {
 		client:         client,
 		baseUrl:        config.ChatConfig.ChatUrlConfig.Base,
 		accessPath:     config.ChatConfig.ChatUrlConfig.Access,
+		isAdminPath:    config.ChatConfig.ChatUrlConfig.IsChatAdmin,
 		aaaBaseUrl:     config.AaaConfig.AaaUrlConfig.Base,
 		aaaGetUsersUrl: config.AaaConfig.AaaUrlConfig.GetUsers,
 	}
@@ -43,6 +45,25 @@ func NewRestClient(config *config.ExtendedConfig) *RestClient {
 
 func (h *RestClient) CheckAccess(userId int64, chatId int64) (bool, error) {
 	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.baseUrl, h.accessPath, userId, chatId)
+	response, err := h.client.Get(url)
+	if err != nil {
+		Logger.Error(err, "Transport error during checking access")
+		return false, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode == http.StatusOK {
+		return true, nil
+	} else if response.StatusCode == http.StatusUnauthorized {
+		return false, nil
+	} else {
+		err := errors.New("Unexpected status on checkAccess")
+		Logger.Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
+		return false, err
+	}
+}
+
+func (h *RestClient) IsAdmin(userId int64, chatId int64) (bool, error) {
+	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.baseUrl, h.isAdminPath, userId, chatId)
 	response, err := h.client.Get(url)
 	if err != nil {
 		Logger.Error(err, "Transport error during checking access")
