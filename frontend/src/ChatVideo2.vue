@@ -10,13 +10,7 @@ import 'regenerator-runtime/runtime';
 import {
     Room,
     RoomEvent,
-    ParticipantEvent,
-    RemoteParticipant,
-    RemoteTrackPublication,
-    RemoteTrack,
-    Participant,
     VideoPresets,
-    Track,
     createLocalTracks,
     createLocalScreenTracks,
 } from 'livekit-client';
@@ -27,7 +21,6 @@ import axios from "axios";
 import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
 import {
     defaultAudioMute,
-    getCodec,
     getStoredAudioDevicePresents,
     getStoredVideoDevicePresents,
     getVideoResolution,
