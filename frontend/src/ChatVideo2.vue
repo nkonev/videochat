@@ -326,7 +326,7 @@ export default {
                     this.makeOk("Successfully reconnected to video server")
                 })
                 .on(RoomEvent.Disconnected, () => {
-                    this.makeError("Ubable to reconnect to video server")
+                    this.makeError(null, "Ubable to reconnect to video server")
                 })
             ;
 
