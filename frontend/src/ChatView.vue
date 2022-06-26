@@ -4,7 +4,7 @@
                     :dbl-click-splitter="false"
                     @pane-add="onPanelAdd(isScrolledToBottom())" @pane-remove="onPanelRemove()" @resize="onPanelResized">
             <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" v-bind:size="videoSize">
-                <ChatVideo2 :chatDto="chatDto"/>
+                <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane v-bind:size="messagesSize">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll">
@@ -45,7 +45,7 @@
         REFRESH_ON_WEBSOCKET_RESTORED, SEARCH_STRING_CHANGED,
     } from "./bus";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
-    import ChatVideo2 from "./ChatVideo2";
+    import ChatVideo from "./ChatVideo";
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
     import {
@@ -524,7 +524,7 @@
         components: {
             InfiniteLoading,
             MessageEdit: () => import("./MessageEdit"),
-            ChatVideo2,
+            ChatVideo,
             Splitpanes, Pane,
             MessageItem
         }
