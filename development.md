@@ -276,7 +276,7 @@ docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjM
 * [simulcast codecs support](https://github.com/livekit/client-sdk-js/commit/3384ad79984110de4855d8c1bbec50e7b9cb2f47)
 * [enable screen share simulcast by default](https://github.com/livekit/client-sdk-js/commit/faa0ad555a2f065af798983d385a1f5d0c65f878)
 * [Disable simulcasted screen share for FF](https://github.com/livekit/client-sdk-js/commit/082bd301898b3ec925bc93c752bd7c6892f5c589)
-
+* [Reconnect policy](https://github.com/livekit/client-sdk-js/pull/266)
 
 
 # Run one test
