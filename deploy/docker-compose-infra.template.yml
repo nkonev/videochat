@@ -79,10 +79,47 @@ services:
   livekit:
     image: livekit/livekit-server:v1.1.0
     command: --config /etc/livekit.yaml
-    restart: unless-stopped
-    network_mode: "host"
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
+    networks:
+      backend:
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.livekit-service.loadbalancer.server.port=7880"
+        - "traefik.http.routers.livekit-router.rule=PathPrefix(`/api/livekit`)"
+        - "traefik.http.routers.livekit-router.entrypoints=http"
+        - "traefik.http.middlewares.livekit-stripprefix-middleware.stripprefix.prefixes=/api/livekit"
+        - "traefik.http.routers.livekit-router.middlewares=auth-middleware@file,livekit-stripprefix-middleware,retry-middleware@file"
+    ports:
+      # turn udp port
+      - target: 3478
+        published: 3478
+        protocol: udp
+        mode: host
+
+      # turn tls port
+#      - target: 5349
+#        published: 5349
+#        protocol: tcp
+#        mode: host
+
+      # webrtc udp port
+      - target: 7882
+        published: 7882
+        protocol: udp
+        mode: host
+
+      # webrtc tcp port
+      - target: 7881
+        published: 7881
+        protocol: tcp
+        mode: host
+
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-livekit
 
   jaeger:
     image: jaegertracing/all-in-one:1.34.0

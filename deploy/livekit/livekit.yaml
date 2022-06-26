@@ -2,13 +2,18 @@ port: 7880
 rtc:
     udp_port: 7882
     tcp_port: 7881
-    use_external_ip: false
+    use_external_ip: true
 #room:
 #    enabled_codecs:
 #        - mime: audio/opus
 #        - mime: video/h264
+
+turn:
+    enabled: true
+    udp_port: 3478
+
 redis:
-    address: localhost:36379
+    address: redis:6379
     username: ""
     password: ""
     db: 2
@@ -21,4 +26,4 @@ logging:
 webhook:
   api_key: 'APIznJxWShGW3Kt'
   urls:
-    - 'http://localhost:1237/internal/livekit-webhook'
+    - 'http://video:1237/internal/livekit-webhook'
