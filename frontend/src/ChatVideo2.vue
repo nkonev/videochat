@@ -1,14 +1,14 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <v-snackbar v-model="showError" color="error" timeout="-1" :multi-line="true" top>
-            {{ errorMessage }}
+        <v-snackbar v-model="showMessage" :color="messageColor" timeout="-1" :multi-line="true" top>
+            {{ messageText }}
 
             <template v-slot:action="{ attrs }">
                 <v-btn
                     color="white"
                     text
                     v-bind="attrs"
-                    @click="showError = false"
+                    @click="closeMessage()"
                 >
                     Close
                 </v-btn>
@@ -60,8 +60,9 @@ export default {
             videoContainerDiv: null,
             userVideoComponents: new ChatVideoUserComponentHolder(),
             videoResolution: null,
-            showError: false,
-            errorMessage: ""
+            showMessage: false,
+            messageText: "",
+            messageColor: null
         }
     },
     methods: {
@@ -247,8 +248,29 @@ export default {
 
         makeError(e, txt) {
             console.error(txt, e);
-            this.showError = true;
-            this.errorMessage = txt + ": " + e;
+            this.showMessage = true;
+            this.messageText = txt + ": " + e;
+            this.messageColor = "error";
+        },
+
+        makeWarning(txt) {
+            console.warn(txt);
+            this.showMessage = true;
+            this.messageText = txt;
+            this.messageColor = "warning";
+        },
+
+        makeOk(txt) {
+            console.info(txt);
+            this.showMessage = true;
+            this.messageText = txt;
+            this.messageColor = "green";
+        },
+
+        closeMessage() {
+            this.showMessage = false;
+            this.messageText = "";
+            this.messageColor = null;
         },
 
         async startRoom() {
@@ -297,6 +319,15 @@ export default {
                 })
                 .on(RoomEvent.TrackMuted, this.handleTrackMuted)
                 .on(RoomEvent.TrackUnmuted, this.handleTrackMuted)
+                .on(RoomEvent.Reconnecting, () => {
+                    this.makeWarning("Reconnecting to video server")
+                })
+                .on(RoomEvent.Reconnected, () => {
+                    this.makeOk("Successfully reconnected to video server")
+                })
+                .on(RoomEvent.Disconnected, () => {
+                    this.makeError("Ubable to reconnect to video server")
+                })
             ;
 
             try {
@@ -320,8 +351,7 @@ export default {
             console.log('Stopping room');
             await this.room.disconnect();
             this.room = null;
-            this.showError = false;
-            this.errorMessage = "";
+            this.closeMessage();
         },
 
         async createLocalMediaTracks(videoId, audioId, isScreen) {
@@ -411,9 +441,8 @@ export default {
         bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
     }
 
-    // TODO Missed features
+    // TODO Unchecked features
     // cleaning up garbage foreign UserVideo elements
-    // auto-reconnect
 }
 
 </script>
