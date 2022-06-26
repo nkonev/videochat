@@ -39,6 +39,4 @@ export const OPEN_LANGUAGE_MODAL = "openLocaleModal";
 export const ADD_VIDEO_SOURCE_DIALOG = "addVideoSourceDialog";
 export const ADD_VIDEO_SOURCE = "addVideoSource";
 export const ADD_SCREEN_SOURCE = "addScreenSource";
-export const CHANGE_DEVICE = "ChangeDevice";
-export const DEVICE_CHANGED = "deviceChanged";
 export const SEARCH_STRING_CHANGED = "searchStringChanged";
