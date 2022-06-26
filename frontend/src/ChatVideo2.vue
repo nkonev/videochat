@@ -1,5 +1,19 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
+        <v-snackbar v-model="showError" color="error" timeout="-1" :multi-line="true" top>
+            {{ errorMessage }}
+
+            <template v-slot:action="{ attrs }">
+                <v-btn
+                    color="white"
+                    text
+                    v-bind="attrs"
+                    @click="showError = false"
+                >
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
     </v-col>
 </template>
 
@@ -46,6 +60,8 @@ export default {
             videoContainerDiv: null,
             userVideoComponents: new ChatVideoUserComponentHolder(),
             videoResolution: null,
+            showError: false,
+            errorMessage: ""
         }
     },
     methods: {
@@ -229,8 +245,18 @@ export default {
             await this.startRoom();
         },
 
+        makeError(e, txt) {
+            console.error(txt, e);
+            this.showError = true;
+            this.errorMessage = txt + ": " + e;
+        },
+
         async startRoom() {
-            await this.setConfig();
+            try {
+                await this.setConfig();
+            } catch (e) {
+                this.makeError(e, "Error during fetching config");
+            }
             // creates a new room with options
             this.room = new Room({
                 // automatically manage subscribed video quality
@@ -243,36 +269,49 @@ export default {
             // set up event listeners
             this.room
                 .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-                    console.log("TrackPublished to room.name", this.room.name);
-                    console.debug("TrackPublished to room", this.room);
-                    this.drawNewComponentOrGetExisting(participant, [publication], false, null);
+                    try {
+                        console.log("TrackPublished to room.name", this.room.name);
+                        console.debug("TrackPublished to room", this.room);
+                        this.drawNewComponentOrGetExisting(participant, [publication], false, null);
+                    } catch (e) {
+                        this.makeError(e, "Error during reacting on remote track published");
+                    }
                 })
                 .on(RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed)
                 .on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakerChange)
                 .on(RoomEvent.Disconnected, this.handleDisconnect)
                 .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
                 .on(RoomEvent.LocalTrackPublished, () => {
-                    console.log("LocalTrackPublished to room.name", this.room.name);
-                    console.debug("LocalTrackPublished to room", this.room);
-                    bus.$emit(VIDEO_PARAMETERS_CHANGED);
-                    const localVideoProperties = {
-                        localParticipant: this.room.localParticipant
-                    };
-                    const participantTracks = this.room.localParticipant.getTracks();
-                    this.drawNewComponentOrGetExisting(this.room.localParticipant, participantTracks,true, localVideoProperties);
+                    try {
+                        console.log("LocalTrackPublished to room.name", this.room.name);
+                        console.debug("LocalTrackPublished to room", this.room);
+                        bus.$emit(VIDEO_PARAMETERS_CHANGED);
+                        const localVideoProperties = {
+                            localParticipant: this.room.localParticipant
+                        };
+                        const participantTracks = this.room.localParticipant.getTracks();
+                        this.drawNewComponentOrGetExisting(this.room.localParticipant, participantTracks, true, localVideoProperties);
+                    } catch (e) {
+                        this.makeError(e, "Error during reacting on local track published");
+                    }
                 })
                 .on(RoomEvent.TrackMuted, this.handleTrackMuted)
                 .on(RoomEvent.TrackUnmuted, this.handleTrackMuted)
             ;
 
-            // connect to room
-            const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
-            console.debug("Got video token", token);
-            await this.room.connect(getWebsocketUrlPrefix()+'/api/livekit', token, {
-                // subscribe to other participants automatically
-                autoSubscribe: true,
-            });
-            console.log('connected to room', this.room.name);
+            try {
+                // connect to room
+                const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
+                console.debug("Got video token", token);
+                await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
+                    // subscribe to other participants automatically
+                    autoSubscribe: true,
+                });
+                console.log('connected to room', this.room.name);
+            } catch (e) {
+                this.makeError(e, "Error during connecting to room");
+            }
+
 
             await this.createLocalMediaTracks(null, null);
         },
@@ -281,49 +320,61 @@ export default {
             console.log('Stopping room');
             await this.room.disconnect();
             this.room = null;
+            this.showError = false;
+            this.errorMessage = "";
         },
 
         async createLocalMediaTracks(videoId, audioId, isScreen) {
-            const preset = VideoPresets[this.videoResolution];
-            const resolution = preset.resolution;
-            const audioIsPresents = getStoredAudioDevicePresents();
-            const videoIsPresents = getStoredVideoDevicePresents();
+            let tracks = [];
 
-            if (!audioIsPresents && !videoIsPresents) {
-                console.warn("Not able to build local media stream, returning a successful promise");
-                bus.$emit(VIDEO_PARAMETERS_CHANGED, {error: 'No media configured'});
-                return Promise.reject('No media configured');
-            }
+            try {
+                const preset = VideoPresets[this.videoResolution];
+                const resolution = preset.resolution;
+                const audioIsPresents = getStoredAudioDevicePresents();
+                const videoIsPresents = getStoredVideoDevicePresents();
 
-            console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", resolution);
-
-            let tracks;
-            if (isScreen) {
-                tracks = await createLocalScreenTracks({
-                    audio: audioIsPresents,
-                    resolution: resolution
-                });
-            } else {
-                tracks = await createLocalTracks({
-                    audio: audioIsPresents ? {
-                        deviceId: audioId,
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                    } : false,
-                    video: videoIsPresents ? {
-                        deviceId: videoId,
-                        resolution: resolution
-                    } : false
-                })
-            }
-            for (const track of tracks) {
-                const publication = await this.room.localParticipant.publishTrack(track, {
-                    name: "track_" + track.kind + "__screen_" + isScreen + "_" + this.getNewId(),
-                });
-                if (track.kind == 'audio' && defaultAudioMute) {
-                    await publication.mute();
+                if (!audioIsPresents && !videoIsPresents) {
+                    console.warn("Not able to build local media stream, returning a successful promise");
+                    bus.$emit(VIDEO_PARAMETERS_CHANGED, {error: 'No media configured'});
+                    return Promise.reject('No media configured');
                 }
-                console.info("Published track sid=", track.sid, " kind=", track.kind);
+
+                console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", resolution);
+
+                if (isScreen) {
+                    tracks = await createLocalScreenTracks({
+                        audio: audioIsPresents,
+                        resolution: resolution
+                    });
+                } else {
+                    tracks = await createLocalTracks({
+                        audio: audioIsPresents ? {
+                            deviceId: audioId,
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                        } : false,
+                        video: videoIsPresents ? {
+                            deviceId: videoId,
+                            resolution: resolution
+                        } : false
+                    })
+                }
+            } catch (e) {
+                this.makeError(e, "Error during creating local tracks");
+            }
+
+            try {
+                for (const track of tracks) {
+                    const publication = await this.room.localParticipant.publishTrack(track, {
+                        name: "track_" + track.kind + "__screen_" + isScreen + "_" + this.getNewId(),
+                    });
+                    if (track.kind == 'audio' && defaultAudioMute) {
+                        await publication.mute();
+                    }
+                    console.info("Published track sid=", track.sid, " kind=", track.kind);
+                }
+            } catch (e) {
+                this.makeError(e, "Error during publishing local tracks");
             }
         },
         onAddScreenSource() {
