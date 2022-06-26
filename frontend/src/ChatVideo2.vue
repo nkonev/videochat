@@ -440,9 +440,6 @@ export default {
         bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
     }
-
-    // TODO Unchecked features
-    // cleaning up garbage foreign UserVideo elements
 }
 
 </script>
