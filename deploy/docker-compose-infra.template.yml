@@ -76,6 +76,14 @@ services:
       options:
         tag: chat-rabbitmq
 
+  livekit:
+    image: livekit/livekit-server:v1.1.0
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - ./livekit/livekit.yaml:/etc/livekit.yaml
+
   jaeger:
     image: jaegertracing/all-in-one:1.34.0
     hostname: jaeger
