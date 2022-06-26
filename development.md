@@ -263,6 +263,14 @@ docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjM
 
 ## Interesting commits
 * [Post v1.1.0 - disable ice lite by default](https://github.com/livekit/livekit/commit/0b630e15b646be8dce6b5cd6770f83f40a02e82d)
+* [Improve docker connectivity by using srflx candidates](https://github.com/livekit/livekit/pull/624)
+* [Support for custom TURN servers](https://github.com/livekit/livekit/pull/409)
+* [Automatic token refresh](https://github.com/livekit/livekit/pull/365)
+* [Region aware](https://docs.livekit.io/deploy/distributed/#multi-region-support)
+* [Region aware routing](https://github.com/livekit/livekit/pull/135)
+* [Region Aware node selection fixes and enhancements](https://github.com/livekit/livekit/pull/141)
+* [Dev debug info](https://github.com/livekit/livekit/commit/5fdb6361cdbc48439cfb363a67bb8be5c88330bb)
+* [Add pprof endpoint when running in dev mode](https://github.com/livekit/livekit/commit/a933f1513f44f36e025811eaf0a64e15948f92d1)
 * [Fixed issues with reconnecting to the same Room object](https://github.com/livekit/client-sdk-js/commit/b0a5f6a271b45e2eda5bf22990c97e8adb07224a)
 * [Enable simulcast by default, add jest tests](https://github.com/livekit/client-sdk-js/commit/dcfcd26d117e3d7ca44a83348dfc800e21f8b327)
 * [simulcast codecs support](https://github.com/livekit/client-sdk-js/commit/3384ad79984110de4855d8c1bbec50e7b9cb2f47)
