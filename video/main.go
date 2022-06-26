@@ -99,6 +99,7 @@ func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) 
 func configureEcho(
 	cfg *config.ExtendedConfig,
 	authMiddleware handlers.AuthMiddleware,
+	staticMiddleware handlers.StaticMiddleware,
 	lc fx.Lifecycle,
 	th *handlers.TokenHandler,
 	uh *handlers.UserHandler,
@@ -114,6 +115,7 @@ func configureEcho(
 
 	e.HTTPErrorHandler = createCustomHTTPErrorHandler(e)
 
+	e.Pre(echo.MiddlewareFunc(staticMiddleware))
 	e.Use(configureOpentelemetryMiddleware(tp))
 	e.Use(configureWriteHeaderMiddleware())
 	e.Use(echo.MiddlewareFunc(authMiddleware))
