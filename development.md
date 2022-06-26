@@ -158,17 +158,6 @@ Correct output
 2: Average jitter 0.800000 ms; min = 0 ms, max = 2 ms
 ```
 
-# Get peers of video chat
-```
-curl -s 'http:/localhost:7001/internal/111/users' | jq '.'
-``` 
-
-# Kick user
-Can be used for check "self health-check" mechanism.
-```
-curl -i -X PUT 'http:/localhost:7001/internal/108/kick?silent=true&chatId=107&userId=2'
-```
-
 
 # Alternatives (SFU servers)
 * https://github.com/versatica/mediasoup
@@ -260,13 +249,22 @@ Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=166
 * https://github.com/edudip/ion-sfu/commits/master
 * https://github.com/cryptagon/ion-sfu/commits/master-tandem (With fixing simulcast)
 
-# Generate livekit token
+
+
+
+# Livekit
+## Generate livekit token
 ```
 docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA" \
     livekit/livekit-server create-join-token \
     --room "chat100" \
     --identity nkonev
 ```
+
+## Interesting commits
+* [Post v1.1.0 - disable ice lite by default](https://github.com/livekit/livekit/commit/0b630e15b646be8dce6b5cd6770f83f40a02e82d)
+* [Fixed issues with reconnecting to the same Room object](https://github.com/livekit/client-sdk-js/commit/b0a5f6a271b45e2eda5bf22990c97e8adb07224a)
+
 
 # Run one test
 ```bash
