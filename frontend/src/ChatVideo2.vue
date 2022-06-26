@@ -62,7 +62,8 @@ export default {
             videoResolution: null,
             showMessage: false,
             messageText: "",
-            messageColor: null
+            messageColor: null,
+            inRestarting: false,
         }
     },
     methods: {
@@ -210,7 +211,7 @@ export default {
             console.log('disconnected from room');
 
             // handles kick
-            if (this.$route.name == videochat_name) {
+            if (this.$route.name == videochat_name && !this.inRestarting) {
                 this.$router.push({name: chat_name});
             }
         },
@@ -242,8 +243,10 @@ export default {
         },
 
         async tryRestartVideoProcess() {
+            this.inRestarting = true;
             await this.stopRoom();
             await this.startRoom();
+            this.inRestarting = false;
         },
 
         makeError(e, txt) {
@@ -425,6 +428,7 @@ export default {
         this.stopRoom();
 
         this.videoContainerDiv = null;
+        this.inRestarting = false;
 
         this.$store.commit(SET_SHOW_CALL_BUTTON, true);
         this.$store.commit(SET_SHOW_HANG_BUTTON, false);
