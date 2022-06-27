@@ -11,34 +11,24 @@ services:
         parallelism: 1
         delay: 20s
       labels:
-        # it's loadbalancing enabled only for getting git.json. You should balance through video-proxy for the proper websocket balancing !
         - "traefik.enable=true"
-        - "traefik.http.services.video-service.loadbalancer.server.port=7001"
-        - "traefik.http.middlewares.video-stripprefix-middleware.stripprefix.prefixes=/api,/video"
+        - "traefik.http.services.video-service.loadbalancer.server.port=1237"
+
+        - "traefik.http.routers.video-router.rule=PathPrefix(`/api/video`)"
+        - "traefik.http.routers.video-router.entrypoints=http"
+        - "traefik.http.routers.video-router.middlewares=auth-middleware@file,api-strip-prefix-middleware@file,retry-middleware@file"
+
+        - "traefik.http.middlewares.video-stripprefix-middleware.stripprefix.prefixes=/video"
         - "traefik.http.routers.video-version-router.rule=Path(`/video/git.json`)"
         - "traefik.http.routers.video-version-router.entrypoints=http"
         - "traefik.http.routers.video-version-router.middlewares=video-stripprefix-middleware"
-
-    volumes:
-      - ./video.yml:/etc/video/config.yml
-    command: ["-o=/etc/video"]
-
-    ports:
-      # turn port
-      - target: 3478
-        published: 3478
-        protocol: udp
-        mode: host
-      - target: 3478
-        published: 3478
-        protocol: tcp
-        mode: host
-
-      # webrtc single port
-      - target: 5000
-        published: 5000
-        protocol: udp
-        mode: host
+    environment:
+      - VIDEO_AAA.URL.BASE=http://aaa:8060
+      - VIDEO_CHAT.URL.BASE=http://chat:1235
+      - VIDEO_LIVEKIT.URL=http://livekit:7880
+      - VIDEO_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
+      - VIDEO_JAEGER.HOST=jaeger
+      - VIDEO_JAEGER.PORT=6831
 
     logging:
       driver: "journald"

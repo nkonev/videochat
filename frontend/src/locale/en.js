@@ -89,4 +89,5 @@ export default {
     websocket_not_connected: "Websocket is not connected",
     cancel: "Cancel",
     source_add: "Add source",
+    apply: "Apply",
 }

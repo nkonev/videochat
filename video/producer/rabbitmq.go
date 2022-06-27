@@ -2,13 +2,11 @@ package producer
 
 import (
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
-	log "github.com/pion/ion-sfu/pkg/logger"
 	"github.com/streadway/amqp"
-	"time"
+	. "nkonev.name/video/logger"
 	myRabbitmq "nkonev.name/video/rabbitmq"
+	"time"
 )
-
-var logger = log.New()
 
 const videoNotificationsQueue = "video-notifications"
 
@@ -17,11 +15,11 @@ func (rp *RabbitPublisher) Publish(bytea []byte) error {
 		DeliveryMode: amqp.Persistent,
 		Timestamp:    time.Now(),
 		ContentType:  "application/json",
-		Body: bytea,
+		Body:         bytea,
 	}
 
 	if err := rp.channel.Publish("", videoNotificationsQueue, false, false, msg); err != nil {
-		logger.Error(err, "Error during publishing")
+		Logger.Error(err, "Error during publishing")
 		return err
 	} else {
 		return nil

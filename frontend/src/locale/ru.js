@@ -89,4 +89,5 @@ export default {
     websocket_not_connected: "Websocket не подключен",
     cancel: "Отменить",
     source_add: "Добавить источник",
+    apply: "Применить",
 }

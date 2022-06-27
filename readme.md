@@ -10,6 +10,7 @@ Your open source self-hosted videoconference platform.
 * No installation on client PC - only modern browser with video camera or microphone required.
 * Screen [sharing](./screenshots.md#screen-sharing).
 * Multiple cameras support.
+* One user can use several devices simultaneously (e. g. smartphone and PC).
 * [Muting, kicking](./screenshots.md#videoconference-and-participant-management) video participants.
 * Calling to user to [invite](./screenshots.md#inviting-user-to-videoconference) his or her to video conference.
 * User is [speaking indication](./screenshots.md#user-is-speaking-indication-green-nickname-and-microphone).
@@ -32,7 +33,5 @@ See [screenshots](./screenshots.md)
 # Installation
 * Use docker-swarm [files](./deploy)
 * Replace `api.site.local` with your actual hostname, remove 8080 if need
-* Replace 1.2.3.4 in ./deploy/video.yml with public ip if your deployment should be accessible from internet else comment it
 * Configure "ingress" in deploy/traefik_conf/traefik.yml and docker-compose-infra.template.yml
-* Open ports to traefik, described in deploy/docker-compose-infra.template.yml
-* Open ports :3478, :5000 as described in deploy/docker-compose-video.template.yml
+* Open ports to traefik and livekit, described in deploy/docker-compose-infra.template.yml

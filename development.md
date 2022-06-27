@@ -121,11 +121,16 @@ about:config
 media.devices.insecure.enabled
 
 # Access to video camera (WebRTC) from local network without https from Mobile:
+## Firefox
 1. Install Firefox Beta (`about:config`it is working only in Beta releases and disabled in regular)
 2. Open `about:config`
 3. Set to true `media.devices.insecure.enabled` and `media.getusermedia.insecure.enabled`
 ![](./.markdown/mobile-ff-1.jpg)
 ![](./.markdown/mobile-ff-2.jpg)
+
+## Chrome
+1. Configure insecure origins treated as secure
+![](./.markdown/mobile-ch-1.jpg)
 
 # Validate turn server installation
 
@@ -151,17 +156,6 @@ Correct output
 2: Total lost packets 0 (0.000000%), total send dropped 0 (0.000000%)
 2: Average round trip delay 11.500000 ms; min = 11 ms, max = 13 ms
 2: Average jitter 0.800000 ms; min = 0 ms, max = 2 ms
-```
-
-# Get peers of video chat
-```
-curl -s 'http:/localhost:7001/internal/111/users' | jq '.'
-``` 
-
-# Kick user
-Can be used for check "self health-check" mechanism.
-```
-curl -i -X PUT 'http:/localhost:7001/internal/108/kick?silent=true&chatId=107&userId=2'
 ```
 
 
@@ -255,6 +249,34 @@ Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=166
 * https://github.com/edudip/ion-sfu/commits/master
 * https://github.com/cryptagon/ion-sfu/commits/master-tandem (With fixing simulcast)
 
+
+
+
+# Livekit
+## Generate livekit token
+```
+docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA" \
+    livekit/livekit-server create-join-token \
+    --room "chat100" \
+    --identity nkonev
+```
+
+## Interesting commits
+* [Post v1.1.0 - disable ice lite by default](https://github.com/livekit/livekit/commit/0b630e15b646be8dce6b5cd6770f83f40a02e82d)
+* [Improve docker connectivity by using srflx candidates](https://github.com/livekit/livekit/pull/624)
+* [Support for custom TURN servers](https://github.com/livekit/livekit/pull/409)
+* [Automatic token refresh](https://github.com/livekit/livekit/pull/365)
+* [Region aware](https://docs.livekit.io/deploy/distributed/#multi-region-support)
+* [Region aware routing](https://github.com/livekit/livekit/pull/135)
+* [Region Aware node selection fixes and enhancements](https://github.com/livekit/livekit/pull/141)
+* [Dev debug info](https://github.com/livekit/livekit/commit/5fdb6361cdbc48439cfb363a67bb8be5c88330bb)
+* [Add pprof endpoint when running in dev mode](https://github.com/livekit/livekit/commit/a933f1513f44f36e025811eaf0a64e15948f92d1)
+* [Fixed issues with reconnecting to the same Room object](https://github.com/livekit/client-sdk-js/commit/b0a5f6a271b45e2eda5bf22990c97e8adb07224a)
+* [Enable simulcast by default, add jest tests](https://github.com/livekit/client-sdk-js/commit/dcfcd26d117e3d7ca44a83348dfc800e21f8b327)
+* [simulcast codecs support](https://github.com/livekit/client-sdk-js/commit/3384ad79984110de4855d8c1bbec50e7b9cb2f47)
+* [enable screen share simulcast by default](https://github.com/livekit/client-sdk-js/commit/faa0ad555a2f065af798983d385a1f5d0c65f878)
+* [Disable simulcasted screen share for FF](https://github.com/livekit/client-sdk-js/commit/082bd301898b3ec925bc93c752bd7c6892f5c589)
+* [Reconnect policy](https://github.com/livekit/client-sdk-js/pull/266)
 
 
 # Run one test
@@ -427,3 +449,7 @@ npx playwright test --headed --project=chromium test/login.spec.mjs
 
 npx playwright test --headed --project=chromium -g "login vkontakte"
 ```
+
+# Droid cam
+* https://askubuntu.com/questions/1235731/can-i-use-an-android-phone-as-webcam-for-an-ubuntu-device
+* https://play.google.com/store/apps/details?id=com.dev47apps.droidcam

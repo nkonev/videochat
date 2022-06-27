@@ -168,7 +168,6 @@
                 <VideoGlobalSettings/>
                 <FileTextEditModal/>
                 <LanguageModal/>
-                <VideoDeviceSettings/>
                 <VideoAddNewSource/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
@@ -220,7 +219,6 @@
     import VideoGlobalSettings from './VideoGlobalSettings';
     import FileTextEditModal from "./FileTextEditModal";
     import LanguageModal from "./LanguageModal";
-    import VideoDeviceSettings from "./VideoDeviceSettings";
     import {getData} from "@/centrifugeConnection";
     import VideoAddNewSource from "@/VideoAddNewSource";
     import debounce from "lodash/debounce";
@@ -255,7 +253,6 @@
             VideoGlobalSettings,
             FileTextEditModal,
             LanguageModal,
-            VideoDeviceSettings,
             VideoAddNewSource
         },
         methods:{

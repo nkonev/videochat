@@ -10,7 +10,7 @@ services:
     # The Static Configuration
     command: --configFile=/traefik_conf/traefik.yml
     ports:
-      - 8081:8081
+      - 0.0.0.0:8081:8081
     extra_hosts:
       # https://github.com/moby/moby/pull/40007
       # works on Docker for Mac 3.4.0 or Linux Docker 20.10.4
@@ -111,6 +111,14 @@ services:
       driver: "json-file"
       options:
         max-size: "50m"
+
+  livekit:
+    image: livekit/livekit-server:v1.1.0
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - ./docker/livekit/livekit.yaml:/etc/livekit.yaml
 
   jaeger:
     image: jaegertracing/all-in-one:1.34.0

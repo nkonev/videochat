@@ -1,4 +1,4 @@
-.PHONY: test push-docker clean
+.PHONY: download test push-docker clean
 
 download:
 	echo "Nothing to download"

@@ -16,10 +16,14 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:1236
-    video-proxy-service:
+    video-service:
       loadBalancer:
         servers:
-          - url: http://host.docker.internal:7000
+          - url: http://host.docker.internal:1237
+    livekit-service:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:7880
 
   routers:
     frontend-router:
@@ -48,7 +52,7 @@ http:
         - "retry-middleware"
     video-router:
       rule: "PathPrefix(`/api/video`)"
-      service: video-proxy-service
+      service: video-service
       middlewares:
         - "auth-middleware"
         - "api-strip-prefix-middleware"
@@ -64,12 +68,22 @@ http:
       middlewares:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
+    livekit-router:
+      rule: "PathPrefix(`/api/livekit`)"
+      service: livekit-service
+      middlewares:
+        - "livekit-strip-prefix-middleware"
+        - "retry-middleware"
 
   middlewares:
     api-strip-prefix-middleware:
       stripPrefix:
         prefixes:
           - "/api"
+    livekit-strip-prefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/api/livekit"
     retry-middleware:
       retry:
         attempts: 4

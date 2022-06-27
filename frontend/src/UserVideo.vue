@@ -4,11 +4,10 @@
             <v-btn icon @click="doMuteAudio(!audioMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
             <v-btn icon @click="doMuteVideo(!videoMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
             <v-btn icon @click="onEnterFullscreen"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
-            <v-btn icon @click="onSetupDevice()" v-if="isLocal && isChangeable" ><v-icon large class="video-container-element-control-item">mdi-cog</v-icon></v-btn>
             <v-btn icon v-if="isLocal" @click="onClose()"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
-        <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef" :muted="initialMuted"/>
+        <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef"/>
         <p @click="showControls=!showControls" v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
@@ -16,9 +15,6 @@
 <script>
 
 import {hasLength} from "@/utils";
-import bus, {CHANGE_DEVICE, DEVICE_CHANGED, OPEN_DEVICE_SETTINGS, VIDEO_PARAMETERS_CHANGED} from "@/bus";
-
-const PUT_USER_DATA_METHOD = "putUserData";
 
 export default {
 	name: 'UserVideo',
@@ -27,24 +23,23 @@ export default {
         const loadingMessage = this.$vuetify.lang.t('$vuetify.loading');
 	    return {
             userName: loadingMessage,
-            audioMute: false,
+            audioMute: true,
             speaking: false,
             errorDescription: null,
             avatar: "",
-            videoMute: false,
+            videoMute: true,
             userId: null,
             failureCount: 0,
             showControls: false,
-            stream: null
-      }
+            audioPublication: null,
+            videoPublication: null,
+            speakingTimer: null
+        }
     },
 
     props: {
         id: {
             type: String
-        },
-        initialMuted: {
-            type: Boolean
         },
         localVideoProperties: {
             type: Object
@@ -52,16 +47,30 @@ export default {
     },
 
     methods: {
-        setStream(d) {
-            console.log("Setting source for videoRef=", this.$refs.videoRef, " source=", d, " video tag id=", this.id);
-            this.stream = d;
-            this.$refs.videoRef.srcObject = d;
+        setAudioStream(micPub, micEnabled) {
+            console.info("Setting source audio for videoRef=", this.$refs.videoRef, " track=", micPub, " audio tag id=", this.id, ", enabled=", micEnabled);
+
+            this.setDisplayAudioMute(!micEnabled);
+            this.audioPublication = micPub;
+            if (!this.localVideoProperties) { // we don't need to hear own audio
+                micPub?.audioTrack?.attach(this.$refs.videoRef);
+            }
         },
-        getStreamId() {
-            return this.stream?.id;
+        setVideoStream(cameraPub, cameraEnabled) {
+            console.info("Setting source video for videoRef=", this.$refs.videoRef, " track=", cameraPub, " video tag id=", this.id, ", enabled=", cameraEnabled);
+            this.setVideoMute(!cameraEnabled);
+            this.videoPublication = cameraPub;
+
+            cameraPub?.videoTrack?.attach(this.$refs.videoRef);
         },
-        getStream() {
-            return this.stream;
+        getVideoStreamId() {
+            return this.videoPublication?.trackSid;
+        },
+        getAudioStreamId() {
+            return this.audioPublication?.trackSid;
+        },
+        getId() {
+            return this.$props.id;
         },
         getVideoElement() {
             return this?.$refs?.videoRef;
@@ -86,6 +95,15 @@ export default {
         setSpeaking(speaking) {
             this.speaking = speaking;
         },
+        setSpeakingWithTimeout(timeout) {
+            if (!this.speakingTimer) {
+                this.speaking = true;
+                this.speakingTimer = setTimeout(() => {
+                    this.speaking = false;
+                    this.speakingTimer = null;
+                }, timeout);
+            }
+        },
         setAvatar(a) {
             this.avatar = a;
         },
@@ -107,62 +125,25 @@ export default {
         getFailureCount() {
             return this.failureCount;
         },
-        notifyOtherParticipants() {
-            // notify another participants, they will receive VIDEO_CALL_CHANGED
-            const toSend = {
-                avatar: this.avatarIsSet ? this.avatar : null,
-                peerId: this.localVideoProperties.peerId,
-                streamId: this.getStreamId(),
-                videoMute: this.videoMute,
-                audioMute: this.audioMute
-            };
-            this.localVideoProperties.signalLocal.notify(PUT_USER_DATA_METHOD, toSend);
-        },
         doMuteAudio(requestedState) {
             if (requestedState) {
-                this.getStream().mute("audio");
-                this.setDisplayAudioMute(requestedState);
-                this.notifyOtherParticipants();
+                this.audioPublication?.mute();
             } else {
-                this.localVideoProperties.parent.ensureAudioIsEnabledAccordingBrowserPolicies();
-                this.getStream().unmute("audio").then(value => {
-                    this.setDisplayAudioMute(requestedState);
-                    this.notifyOtherParticipants();
-                })
+                this.audioPublication?.unmute();
             }
+            this.setDisplayAudioMute(requestedState);
         },
         doMuteVideo(requestedState) {
             if (requestedState) {
-                this.getStream().mute("video");
-                this.setVideoMute(true);
-                this.notifyOtherParticipants();
+                this.videoPublication?.mute();
             } else {
-                this.getStream().unmute("video").then(value => {
-                    this.setVideoMute(false);
-                    this.notifyOtherParticipants();
-                })
+                this.videoPublication?.unmute();
             }
-        },
-        onSetupDevice() {
-            bus.$emit(OPEN_DEVICE_SETTINGS, this.id);
-        },
-        onRequestChangeDevice({deviceId, kind, elementIdToProcess}) {
-            if (elementIdToProcess != this.id) {
-                return
-            }
-            console.log("Request to change device", deviceId, kind, "stream to change", this.getStream());
-            this.getStream().switchDevice(kind, deviceId).then(()=>{
-                this.setStream(this.getStream());
-                bus.$emit(DEVICE_CHANGED, null);
-            }).catch(e => {
-                console.error("Request to change device failed", deviceId, kind, "stream to change", this.getStream(), e);
-                bus.$emit(DEVICE_CHANGED, e);
-            });
+            this.setVideoMute(requestedState);
         },
         onClose() {
-            const streamId = this.getStreamId();
-            this.localVideoProperties.parent.clearLocalMediaStream(this.getStream());
-            this.localVideoProperties.parent.removeStream(streamId, this, this.localVideoProperties.parent.localStreams);
+            this.localVideoProperties.localParticipant.unpublishTrack(this.videoPublication?.videoTrack);
+            this.localVideoProperties.localParticipant.unpublishTrack(this.audioPublication?.audioTrack);
         },
     },
     computed: {
@@ -180,10 +161,10 @@ export default {
         }
     },
     created(){
-        bus.$on(CHANGE_DEVICE, this.onRequestChangeDevice);
+
     },
     destroyed() {
-        bus.$off(CHANGE_DEVICE, this.onRequestChangeDevice);
+
     }
 };
 </script>
