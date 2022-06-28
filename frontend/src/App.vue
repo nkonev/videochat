@@ -76,6 +76,7 @@
                 app
                 id="myAppBar"
                 :clipped-left="true"
+                dense
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
             <v-btn v-if="showHangButton && $vuetify.breakpoint.smAndUp" icon @click="addScreenSource()"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
