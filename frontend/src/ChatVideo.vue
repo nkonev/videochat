@@ -350,7 +350,7 @@ export default {
             } catch (e) {
                 this.makeError(e, "Error during connecting to room");
             }
-
+            return roomConnectPromise
         },
 
         async stopRoom() {
