@@ -259,6 +259,7 @@
 
 <style lang="stylus">
 $mobileWidth = 800px
+$borderColor = rgba(0, 0, 0, 0.2)
 
 #sendButtonContainer {
     min-height 25%
@@ -273,6 +274,10 @@ $mobileWidth = 800px
     border-left-style dashed
     border-right-style dashed
     border-width 1px
+    border-color: $borderColor
+}
+.richText {
+    border-color: $borderColor
 }
 @media screen and (max-width: $mobileWidth) {
     #custom-toolbar {
@@ -288,7 +293,7 @@ $mobileWidth = 800px
 
     .richText__menu-item {
         min-width: 1.75rem;
-        color: rgba(0, 0, 0, 0.87);
+        color: rgba(0, 0, 0, 0.67);
         border: none;
         background-color: transparent;
         border-radius: 0.4rem;
@@ -300,7 +305,7 @@ $mobileWidth = 800px
     .richText__menu-item.active,
     .richText__menu-item:hover {
         color: #fff;
-        background-color: rgba(0, 0, 0, 0.87);
+        background-color: rgba(0, 0, 0, 0.77);
     }
 }
 .custom-toolbar-send {
