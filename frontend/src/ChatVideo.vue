@@ -331,6 +331,9 @@ export default {
                 .on(RoomEvent.Disconnected, () => {
                     console.log("Disconnected from server")
                 })
+                .on(RoomEvent.SignalConnected, () => {
+                    this.createLocalMediaTracks(null, null);
+                })
             ;
 
             try {
@@ -346,8 +349,6 @@ export default {
                 this.makeError(e, "Error during connecting to room");
             }
 
-
-            await this.createLocalMediaTracks(null, null);
         },
 
         async stopRoom() {
