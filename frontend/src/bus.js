@@ -40,3 +40,4 @@ export const ADD_VIDEO_SOURCE_DIALOG = "addVideoSourceDialog";
 export const ADD_VIDEO_SOURCE = "addVideoSource";
 export const ADD_SCREEN_SOURCE = "addScreenSource";
 export const SEARCH_STRING_CHANGED = "searchStringChanged";
+export const OPEN_MESSAGE_DIALOG = "openMessageDialog";

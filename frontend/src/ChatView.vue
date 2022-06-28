@@ -23,6 +23,17 @@
                 <MessageEdit :chatId="chatId" :canBroadcast="canBroadcast"/>
             </pane>
         </splitpanes>
+        <v-btn v-if="!$vuetify.breakpoint.smAndUp"
+            color="primary"
+            fab
+            dark
+            bottom
+            right
+            fixed
+            @click="openMessageDialog()"
+        >
+            <v-icon>mdi-message-plus</v-icon>
+        </v-btn>
     </v-container>
 </template>
 
@@ -42,7 +53,7 @@
         LOGGED_OUT,
         VIDEO_CALL_CHANGED,
         MESSAGE_BROADCAST,
-        REFRESH_ON_WEBSOCKET_RESTORED, SEARCH_STRING_CHANGED,
+        REFRESH_ON_WEBSOCKET_RESTORED, SEARCH_STRING_CHANGED, OPEN_MESSAGE_DIALOG,
     } from "./bus";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
@@ -512,7 +523,10 @@
                 if (isScrolled) {
                     this.scrollDown();
                 }
-            }
+            },
+            openMessageDialog() {
+                bus.$emit(OPEN_MESSAGE_DIALOG, this.canBroadcast);
+            },
         },
         created() {
             this.onResizedListener = debounce(this.onResizedListener, 200, {leading:true, trailing:true});

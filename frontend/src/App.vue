@@ -169,6 +169,7 @@
                 <FileTextEditModal/>
                 <LanguageModal/>
                 <VideoAddNewSource/>
+                <MessageEditDialog/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -222,6 +223,7 @@
     import {getData} from "@/centrifugeConnection";
     import VideoAddNewSource from "@/VideoAddNewSource";
     import debounce from "lodash/debounce";
+    import MessageEditDialog from "@/MessageEditDialog";
 
     const audio = new Audio("/call.mp3");
 
@@ -253,7 +255,8 @@
             VideoGlobalSettings,
             FileTextEditModal,
             LanguageModal,
-            VideoAddNewSource
+            VideoAddNewSource,
+            MessageEditDialog,
         },
         methods:{
             toggleLeftNavigation() {
