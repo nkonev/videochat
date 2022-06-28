@@ -1,5 +1,5 @@
 <template>
-    <v-container class="ma-0 pa-0" id="chatViewContainer" fluid v-bind:style="{height: splitpanesHeight + 'px'}">
+    <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
         <splitpanes ref="spl" :class="['default-theme', this.isAllowedVideo() ? 'panes3' : 'panes2']" horizontal style="height: 100%"
                     :dbl-click-splitter="false"
                     @pane-add="onPanelAdd(isScrolledToBottom())" @pane-remove="onPanelRemove()" @resize="onPanelResized">
@@ -78,16 +78,6 @@
 
     const scrollingThreshold = 100; // px
 
-    const splitpanesThreshold = 1; // px
-
-    const calcSplitpanesHeight = () => {
-        const appBarHeight = parseInt(document.getElementById("myAppBar").style.height.replace('px', ''));
-        const displayableWindowHeight = window.innerHeight;
-        const ret = displayableWindowHeight - appBarHeight - splitpanesThreshold;
-        console.log("splitpanesHeight", ret);
-        return ret;
-    }
-
     export default {
         data() {
             return {
@@ -102,7 +92,6 @@
                     participantIds:[],
                     participants:[],
                 },
-                splitpanesHeight: 0,
                 aDirection: directionTop,
                 infinityKey: 1,
                 scrollerDiv: null,
@@ -456,7 +445,6 @@
                 }
             },
             onResizedListener() {
-                this.splitpanesHeight = calcSplitpanesHeight();
                 const isScrolled = this.isScrolledToBottom();
                 if (isScrolled) {
                     this.scrollDown();
@@ -468,8 +456,6 @@
             this.onScroll = throttle(this.onScroll, 400, {leading:false, trailing:true});
         },
         mounted() {
-            this.splitpanesHeight = calcSplitpanesHeight();
-
             window.addEventListener('resize', this.onResizedListener);
 
             this.subscribe();
@@ -540,7 +526,7 @@
 
     #chatViewContainer {
         position: relative
-        //height: calc(100% - 80px)
+        height: calc(100vh - 48px)
         //width: calc(100% - 80px)
     }
     //
