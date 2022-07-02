@@ -331,13 +331,18 @@ export default {
                 .on(RoomEvent.Disconnected, () => {
                     console.log("Disconnected from server")
                 })
+                .on(RoomEvent.SignalConnected, () => {
+                    roomConnectPromise.then(() => {
+                        this.createLocalMediaTracks(null, null);
+                    })
+                })
             ;
 
             try {
                 // connect to room
                 const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
                 console.debug("Got video token", token);
-                await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
+                var roomConnectPromise = this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
                     // subscribe to other participants automatically
                     autoSubscribe: true,
                 });
@@ -345,9 +350,7 @@ export default {
             } catch (e) {
                 this.makeError(e, "Error during connecting to room");
             }
-
-
-            await this.createLocalMediaTracks(null, null);
+            return roomConnectPromise
         },
 
         async stopRoom() {

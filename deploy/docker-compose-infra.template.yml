@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   traefik:
-    image: traefik:v2.6.2
+    image: traefik:v2.7.2
     hostname: traefik
     # The Static Configuration
     command: --configFile=/traefik_conf/traefik.yml
