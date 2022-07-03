@@ -73,10 +73,6 @@
                     <v-btn color="primary" @click="sendMessageToChat" small class="mr-1"><v-icon color="white">mdi-send</v-icon></v-btn>
                 </div>
             </div>
-            <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#sendButtonContainer'" top v-model="showTooltip" :key="tooltipKey">
-                <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} {{ $vuetify.lang.t('$vuetify.user_is_writing') }}</span>
-                <span v-else>{{broadcastMessage}}</span>
-            </v-tooltip>
 
     </v-container>
 </template>
@@ -104,20 +100,15 @@
         }
     };
 
-    let timerId;
-
     export default {
         props:['chatId', 'canBroadcast', 'fullHeight'],
         data() {
             return {
                 editorKey: +new Date(),
                 editMessageDto: dtoFactory(),
-                writingUsers: [],
-                showTooltip: true,
-                sendBroadcast: false,
-                broadcastMessage: null,
-                tooltipKey: 0,
                 fileCount: null,
+
+                sendBroadcast: false,
             }
         },
         methods: {
@@ -171,33 +162,6 @@
                 }
             },
 
-            onUserTyping(data) {
-                console.debug("OnUserTyping", data);
-
-                if (!this.sendBroadcast && this.currentUser && this.currentUser.id == data.participantId) {
-                    console.log("Skipping myself typing notifications");
-                    return;
-                }
-                this.showTooltip = true;
-
-                const idx = this.writingUsers.findIndex(value => value.login === data.login);
-                if (idx !== -1) {
-                    this.writingUsers[idx].timestamp = + new Date();
-                } else {
-                    this.writingUsers.push({timestamp: +new Date(), login: data.login})
-                }
-            },
-            onUserBroadcast(dto) {
-                console.log("onUserBroadcast", dto);
-                const stripped = dto.text;
-                if (stripped && stripped.length > 0) {
-                    this.tooltipKey++;
-                    this.showTooltip = true;
-                    this.broadcastMessage = dto.text;
-                } else {
-                    this.broadcastMessage = null;
-                }
-            },
             openFileUpload() {
                 bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.editMessageDto.fileItemUuid, true, false);
             },
@@ -220,20 +184,11 @@
         },
         mounted() {
             bus.$on(SET_EDIT_MESSAGE, this.onSetMessage);
-            timerId = setInterval(()=>{
-                const curr = + new Date();
-                this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
-            }, 500);
-            bus.$on(USER_TYPING, this.onUserTyping);
-            bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
             bus.$on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
         },
         beforeDestroy() {
             bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
-            bus.$off(USER_TYPING, this.onUserTyping);
-            bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
             bus.$off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
-            clearInterval(timerId);
         },
         created(){
             this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});

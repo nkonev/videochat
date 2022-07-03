@@ -34,6 +34,10 @@
         >
             <v-icon>mdi-message-plus</v-icon>
         </v-btn>
+        <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#chatViewContainer'" bottom v-model="showTooltip" :key="tooltipKey">
+            <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} {{ $vuetify.lang.t('$vuetify.user_is_writing') }}</span>
+            <span v-else>{{broadcastMessage}}</span>
+        </v-tooltip>
     </v-container>
 </template>
 
@@ -104,6 +108,8 @@
         return ret;
     }
 
+    let timerId;
+
     export default {
         data() {
             return {
@@ -125,7 +131,12 @@
                 scrollerProbeCurrent: 0,
                 scrollerProbePrevious: 0,
                 scrollerProbePreviousPrevious: 0,
-                forbidChangeScrollDirection: false
+                forbidChangeScrollDirection: false,
+
+                writingUsers: [],
+                showTooltip: true,
+                broadcastMessage: null,
+                tooltipKey: 0,
             }
         },
         computed: {
@@ -527,6 +538,34 @@
             openMessageDialog() {
                 bus.$emit(SET_EDIT_MESSAGE, null, this.canBroadcast);
             },
+
+            onUserTyping(data) {
+                console.debug("OnUserTyping", data);
+
+                if (this.currentUser && this.currentUser.id == data.participantId) {
+                    console.log("Skipping myself typing notifications");
+                    return;
+                }
+                this.showTooltip = true;
+
+                const idx = this.writingUsers.findIndex(value => value.login === data.login);
+                if (idx !== -1) {
+                    this.writingUsers[idx].timestamp = + new Date();
+                } else {
+                    this.writingUsers.push({timestamp: +new Date(), login: data.login})
+                }
+            },
+            onUserBroadcast(dto) {
+                console.log("onUserBroadcast", dto);
+                const stripped = dto.text;
+                if (stripped && stripped.length > 0) {
+                    this.tooltipKey++;
+                    this.showTooltip = true;
+                    this.broadcastMessage = dto.text;
+                } else {
+                    this.broadcastMessage = null;
+                }
+            },
         },
         created() {
             this.onResizedListener = debounce(this.onResizedListener, 200, {leading:true, trailing:true});
@@ -562,6 +601,14 @@
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$on(SEARCH_STRING_CHANGED, this.searchStringChanged);
 
+            bus.$on(USER_TYPING, this.onUserTyping);
+            bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
+
+            timerId = setInterval(()=>{
+                const curr = + new Date();
+                this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
+            }, 500);
+
             this.scrollerDiv = document.getElementById("messagesScroller");
         },
         beforeDestroy() {
@@ -578,6 +625,11 @@
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
             bus.$off(SEARCH_STRING_CHANGED, this.searchStringChanged);
+
+            bus.$off(USER_TYPING, this.onUserTyping);
+            bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
+
+            clearInterval(timerId);
 
             this.unsubscribe();
         },
