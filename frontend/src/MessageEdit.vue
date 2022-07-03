@@ -81,11 +81,9 @@
     import axios from "axios";
     import bus, {
         CLOSE_EDIT_MESSAGE,
-        MESSAGE_BROADCAST,
         OPEN_FILE_UPLOAD_MODAL,
         OPEN_VIEW_FILES_DIALOG,
         SET_EDIT_MESSAGE, SET_FILE_ITEM_UUID,
-        USER_TYPING
     } from "./bus";
     import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
@@ -179,7 +177,7 @@
         computed: {
             ...mapGetters({currentUser: GET_USER}),
             messageEditHeight() {
-                return this.fullHeight ? 'calc(100vh - 56px)' : '100%'
+                return this.fullHeight ? 'calc(100vh - 56px - 90px)' : '100%'
             }
         },
         mounted() {

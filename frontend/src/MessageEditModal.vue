@@ -33,7 +33,9 @@ import MessageEdit from "@/MessageEdit";
         },
         methods: {
             showModal() {
-                this.show = true;
+                if (!this.$vuetify.breakpoint.smAndUp) {
+                    this.show = true;
+                }
             },
             closeModal() {
                 this.show = false;
