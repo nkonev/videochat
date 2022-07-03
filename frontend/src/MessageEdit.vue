@@ -1,5 +1,5 @@
 <template>
-    <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid style="height: 100%">
+    <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid :style="{height: messageEditHeight}">
             <tiptap
                 :key="editorKey"
                 v-model="editMessageDto.text"
@@ -84,6 +84,7 @@
 <script>
     import axios from "axios";
     import bus, {
+        CLOSE_EDIT_MESSAGE,
         MESSAGE_BROADCAST,
         OPEN_FILE_UPLOAD_MODAL,
         OPEN_VIEW_FILES_DIALOG,
@@ -106,7 +107,7 @@
     let timerId;
 
     export default {
-        props:['chatId', 'canBroadcast'],
+        props:['chatId', 'canBroadcast', 'fullHeight'],
         data() {
             return {
                 editorKey: +new Date(),
@@ -124,6 +125,7 @@
                 if (this.messageTextIsPresent()) {
                     (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto)).then(response => {
                         this.resetInput();
+                        bus.$emit(CLOSE_EDIT_MESSAGE);
                     })
                 }
             },
@@ -136,7 +138,11 @@
                 return this.editMessageDto.text && this.editMessageDto.text !== "" && this.editMessageDto.text !== '<p><br></p>'
             },
             onSetMessage(dto) {
-                this.editMessageDto = dto;
+                if (!dto) {
+                    this.editMessageDto = dtoFactory()
+                } else {
+                    this.editMessageDto = dto;
+                }
                 this.editorKey++;
                 if (this.editMessageDto.fileItemUuid) {
                     axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
@@ -207,7 +213,10 @@
             },
         },
         computed: {
-            ...mapGetters({currentUser: GET_USER})
+            ...mapGetters({currentUser: GET_USER}),
+            messageEditHeight() {
+                return this.fullHeight ? 'calc(100vh - 56px)' : '100%'
+            }
         },
         mounted() {
             bus.$on(SET_EDIT_MESSAGE, this.onSetMessage);

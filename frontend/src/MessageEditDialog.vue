@@ -3,7 +3,7 @@
         <v-card>
             <v-toolbar
                 dark
-                color="primary"
+                color="indigo"
             >
                 <v-btn
                     icon
@@ -15,31 +15,28 @@
                 <v-toolbar-title>Editing message</v-toolbar-title>
             </v-toolbar>
             <div class="message-edit-dialog">
-                <MessageEdit :chatId="chatId" :canBroadcast="canBroadcast"/>
+                <MessageEdit :chatId="chatId" full-height="true"/>
             </div>
         </v-card>
     </v-dialog>
 </template>
 
 <script>
-import bus, {OPEN_MESSAGE_DIALOG} from "@/bus";
+import bus, {CLOSE_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "@/bus";
 import MessageEdit from "@/MessageEdit";
 
     export default {
         data() {
             return {
                 show: false,
-                canBroadcast: false,
             }
         },
         methods: {
-            showModal(canBroadcast) {
+            showModal() {
                 this.show = true;
-                this.canBroadcast = canBroadcast;
             },
             closeModal() {
                 this.show = false;
-                this.canBroadcast = false;
             }
         },
         components: {
@@ -51,10 +48,12 @@ import MessageEdit from "@/MessageEdit";
             },
         },
         created() {
-            bus.$on(OPEN_MESSAGE_DIALOG, this.showModal);
+            bus.$on(SET_EDIT_MESSAGE, this.showModal);
+            bus.$on(CLOSE_EDIT_MESSAGE, this.closeModal);
         },
         destroyed() {
-            bus.$off(OPEN_MESSAGE_DIALOG, this.showModal);
+            bus.$off(SET_EDIT_MESSAGE, this.showModal);
+            bus.$off(CLOSE_EDIT_MESSAGE, this.closeModal);
         }
     }
 </script>

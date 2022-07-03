@@ -53,7 +53,7 @@
         LOGGED_OUT,
         VIDEO_CALL_CHANGED,
         MESSAGE_BROADCAST,
-        REFRESH_ON_WEBSOCKET_RESTORED, SEARCH_STRING_CHANGED, OPEN_MESSAGE_DIALOG,
+        REFRESH_ON_WEBSOCKET_RESTORED, SEARCH_STRING_CHANGED, SET_EDIT_MESSAGE,
     } from "./bus";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
@@ -525,7 +525,7 @@
                 }
             },
             openMessageDialog() {
-                bus.$emit(OPEN_MESSAGE_DIALOG, this.canBroadcast);
+                bus.$emit(SET_EDIT_MESSAGE, null, this.canBroadcast);
             },
         },
         created() {
