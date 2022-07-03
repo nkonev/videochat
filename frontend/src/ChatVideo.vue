@@ -346,6 +346,7 @@ export default {
                     // subscribe to other participants automatically
                     autoSubscribe: true,
                 });
+                await roomConnectPromise;
                 console.log('connected to room', this.room.name);
             } catch (e) {
                 this.makeError(e, "Error during connecting to room");
