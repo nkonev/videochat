@@ -32,6 +32,7 @@ import UserVideo from "./UserVideo";
 import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
+import { retry } from '@lifeomic/attempt';
 import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
 import {
     defaultAudioMute,
@@ -336,16 +337,28 @@ export default {
                 })
             ;
 
+
+            const retryOptions = {
+                delay: 200,
+                maxAttempts: 5,
+            };
             try {
-                // connect to room
-                const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
-                console.debug("Got video token", token);
-                await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
-                    // subscribe to other participants automatically
-                    autoSubscribe: true,
-                });
-                console.log('connected to room', this.room.name);
-            } catch (e) {
+                await retry(async (context) => {
+                    const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
+                    console.debug("Got video token", token);
+                    const res = await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
+                        // subscribe to other participants automatically
+                        autoSubscribe: true,
+                    });
+                    console.log('connected to room', this.room.name);
+                    return res
+                }, retryOptions);
+            } catch (err) {
+                // If the max number of attempts was exceeded then `err`
+                // will be the last error that was thrown.
+                //
+                // If error is due to timeout then `err.code` will be the
+                // string `ATTEMPT_TIMEOUT`.
                 this.makeError(e, "Error during connecting to room");
             }
         },
