@@ -89,10 +89,10 @@
                 overlap
                 offset-y="1.8em"
             >
-                <v-btn v-if="showCallButton" icon @click="createCall">
+                <v-btn v-if="showCallButton" icon @click="createCall()">
                     <v-icon color="green">mdi-phone</v-icon>
                 </v-btn>
-                <v-btn v-if="showHangButton" icon @click="stopCall">
+                <v-btn v-if="showHangButton" icon @click="stopCall()">
                     <v-icon color="red">mdi-phone</v-icon>
                 </v-btn>
             </v-badge>
@@ -206,7 +206,7 @@
         OPEN_VIDEO_SETTINGS,
         OPEN_LANGUAGE_MODAL,
         ADD_VIDEO_SOURCE_DIALOG,
-        ADD_SCREEN_SOURCE, SEARCH_STRING_CHANGED,
+        ADD_SCREEN_SOURCE, SEARCH_STRING_CHANGED, VIDEO_CALL_STOP,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -291,8 +291,8 @@
                 this.$router.push({ name: videochat_name});
             },
             stopCall() {
-                console.log("stopCall");
-                this.$router.push({ name: chat_name});
+                console.log("stopping Call");
+                bus.$emit(VIDEO_CALL_STOP);
             },
             onChangeWsStatus({connected, wasInitialized}) {
                 console.log("onChangeWsStatus: connected", connected, "wasInitialized", wasInitialized)
