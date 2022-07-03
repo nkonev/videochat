@@ -206,7 +206,7 @@
         OPEN_VIDEO_SETTINGS,
         OPEN_LANGUAGE_MODAL,
         ADD_VIDEO_SOURCE_DIALOG,
-        ADD_SCREEN_SOURCE, SEARCH_STRING_CHANGED, VIDEO_CALL_STOP,
+        ADD_SCREEN_SOURCE, SEARCH_STRING_CHANGED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -292,7 +292,7 @@
             },
             stopCall() {
                 console.log("stopping Call");
-                bus.$emit(VIDEO_CALL_STOP);
+                this.$router.push({ name: chat_name});
             },
             onChangeWsStatus({connected, wasInitialized}) {
                 console.log("onChangeWsStatus: connected", connected, "wasInitialized", wasInitialized)

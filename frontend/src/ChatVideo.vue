@@ -45,7 +45,7 @@ import {
 import bus, {
     ADD_SCREEN_SOURCE,
     ADD_VIDEO_SOURCE,
-    REQUEST_CHANGE_VIDEO_PARAMETERS, VIDEO_CALL_STOP,
+    REQUEST_CHANGE_VIDEO_PARAMETERS,
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus";
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
@@ -432,9 +432,6 @@ export default {
         onAddScreenSource() {
             this.createLocalMediaTracks(null, null, true);
         },
-        async onStopCall() {
-            await this.stopRoom();
-        }
     },
     async mounted() {
         this.chatId = this.$route.params.id;
@@ -447,6 +444,8 @@ export default {
         this.startRoom();
     },
     beforeDestroy() {
+        this.stopRoom();
+
         this.videoContainerDiv = null;
         this.inRestarting = false;
 
@@ -458,13 +457,11 @@ export default {
         bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
-        bus.$on(VIDEO_CALL_STOP, this.onStopCall);
     },
     destroyed() {
         bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
-        bus.$off(VIDEO_CALL_STOP, this.onStopCall);
     }
 }
 
