@@ -337,6 +337,14 @@ export default {
                 })
             ;
 
+            let token;
+            try {
+                token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
+                console.debug("Got video token", token);
+            } catch (err) {
+                this.makeError(e, "Error during getting token");
+                return;
+            }
 
             const retryOptions = {
                 delay: 200,
@@ -344,8 +352,6 @@ export default {
             };
             try {
                 await retry(async (context) => {
-                    const token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
-                    console.debug("Got video token", token);
                     const res = await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
                         // subscribe to other participants automatically
                         autoSubscribe: true,
