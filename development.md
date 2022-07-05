@@ -277,7 +277,7 @@ docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjM
 * [enable screen share simulcast by default](https://github.com/livekit/client-sdk-js/commit/faa0ad555a2f065af798983d385a1f5d0c65f878)
 * [Disable simulcasted screen share for FF](https://github.com/livekit/client-sdk-js/commit/082bd301898b3ec925bc93c752bd7c6892f5c589)
 * [Reconnect policy](https://github.com/livekit/client-sdk-js/pull/266)
-* [Shreensharing quality](https://github.com/livekit/livekit/issues/761)
+* [Screensharing quality](https://github.com/livekit/livekit/issues/761)
 
 ## Explaination of two peer connections (livekit has their own fork of ion-sfu)
 https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
