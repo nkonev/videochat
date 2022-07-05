@@ -419,7 +419,6 @@ export default {
                 for (const track of tracks) {
                     const publication = await this.room.localParticipant.publishTrack(track, {
                         name: "track_" + track.kind + "__screen_" + isScreen + "_" + this.getNewId(),
-                        simulcast: false
                     });
                     if (track.kind == 'audio' && defaultAudioMute) {
                         await publication.mute();
