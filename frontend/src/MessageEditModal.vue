@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import bus, {CLOSE_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "@/bus";
+import bus, {CLOSE_EDIT_MESSAGE, OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "@/bus";
 import MessageEdit from "@/MessageEdit";
 
     export default {
@@ -32,10 +32,13 @@ import MessageEdit from "@/MessageEdit";
             }
         },
         methods: {
-            showModal() {
+            showModal(dto) {
                 if (!this.$vuetify.breakpoint.smAndUp) {
                     this.show = true;
                 }
+                this.$nextTick(()=>{
+                    bus.$emit(SET_EDIT_MESSAGE, dto);
+                })
             },
             closeModal() {
                 this.show = false;
@@ -50,11 +53,11 @@ import MessageEdit from "@/MessageEdit";
             },
         },
         created() {
-            bus.$on(SET_EDIT_MESSAGE, this.showModal);
+            bus.$on(OPEN_EDIT_MESSAGE, this.showModal);
             bus.$on(CLOSE_EDIT_MESSAGE, this.closeModal);
         },
         destroyed() {
-            bus.$off(SET_EDIT_MESSAGE, this.showModal);
+            bus.$off(OPEN_EDIT_MESSAGE, this.showModal);
             bus.$off(CLOSE_EDIT_MESSAGE, this.closeModal);
         }
     }

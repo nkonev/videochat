@@ -12,6 +12,7 @@ export const CLOSE_SIMPLE_MODAL = "closeSimpleModal";
 export const MESSAGE_ADD = "messageAdd";
 export const MESSAGE_DELETED = "messageDeleted";
 export const MESSAGE_EDITED = "messageEdited";
+export const OPEN_EDIT_MESSAGE = "openEditMessage";
 export const SET_EDIT_MESSAGE = "setEditMessageDto";
 export const CLOSE_EDIT_MESSAGE = "closeEditMessage";
 export const UNREAD_MESSAGES_CHANGED = "unreadMessagesChanged";
