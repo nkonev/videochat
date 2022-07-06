@@ -279,7 +279,7 @@ docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjM
 * [Reconnect policy](https://github.com/livekit/client-sdk-js/pull/266)
 * [Screensharing quality](https://github.com/livekit/livekit/issues/761)
 
-## Explaination of two peer connections (livekit has their own fork of ion-sfu)
+## Explanation of two peer connections (livekit has their own fork of ion-sfu)
 https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
 
 ## There was a problem when jaeger all-in-one ate too much memory - one of participants didn't see other
