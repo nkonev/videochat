@@ -105,16 +105,1023 @@ services:
 #        mode: host
 
       # webrtc udp port
-      - target: 7882
-        published: 7882
-        protocol: udp
-        mode: host
+#      - target: 7882
+#        published: 7882
+#        protocol: udp
+#        mode: host
 
       # webrtc tcp port
       - target: 7881
         published: 7881
         protocol: tcp
         mode: host
+
+      # webrtc ice udp port range
+      - target: 35200
+        published: 35200
+        protocol: udp
+        mode: host
+
+      - target: 35201
+        published: 35201
+        protocol: udp
+        mode: host
+
+      - target: 35202
+        published: 35202
+        protocol: udp
+        mode: host
+
+      - target: 35203
+        published: 35203
+        protocol: udp
+        mode: host
+
+      - target: 35204
+        published: 35204
+        protocol: udp
+        mode: host
+
+      - target: 35205
+        published: 35205
+        protocol: udp
+        mode: host
+
+      - target: 35206
+        published: 35206
+        protocol: udp
+        mode: host
+
+      - target: 35207
+        published: 35207
+        protocol: udp
+        mode: host
+
+      - target: 35208
+        published: 35208
+        protocol: udp
+        mode: host
+
+      - target: 35209
+        published: 35209
+        protocol: udp
+        mode: host
+
+      - target: 35210
+        published: 35210
+        protocol: udp
+        mode: host
+
+      - target: 35211
+        published: 35211
+        protocol: udp
+        mode: host
+
+      - target: 35212
+        published: 35212
+        protocol: udp
+        mode: host
+
+      - target: 35213
+        published: 35213
+        protocol: udp
+        mode: host
+
+      - target: 35214
+        published: 35214
+        protocol: udp
+        mode: host
+
+      - target: 35215
+        published: 35215
+        protocol: udp
+        mode: host
+
+      - target: 35216
+        published: 35216
+        protocol: udp
+        mode: host
+
+      - target: 35217
+        published: 35217
+        protocol: udp
+        mode: host
+
+      - target: 35218
+        published: 35218
+        protocol: udp
+        mode: host
+
+      - target: 35219
+        published: 35219
+        protocol: udp
+        mode: host
+
+      - target: 35220
+        published: 35220
+        protocol: udp
+        mode: host
+
+      - target: 35221
+        published: 35221
+        protocol: udp
+        mode: host
+
+      - target: 35222
+        published: 35222
+        protocol: udp
+        mode: host
+
+      - target: 35223
+        published: 35223
+        protocol: udp
+        mode: host
+
+      - target: 35224
+        published: 35224
+        protocol: udp
+        mode: host
+
+      - target: 35225
+        published: 35225
+        protocol: udp
+        mode: host
+
+      - target: 35226
+        published: 35226
+        protocol: udp
+        mode: host
+
+      - target: 35227
+        published: 35227
+        protocol: udp
+        mode: host
+
+      - target: 35228
+        published: 35228
+        protocol: udp
+        mode: host
+
+      - target: 35229
+        published: 35229
+        protocol: udp
+        mode: host
+
+      - target: 35230
+        published: 35230
+        protocol: udp
+        mode: host
+
+      - target: 35231
+        published: 35231
+        protocol: udp
+        mode: host
+
+      - target: 35232
+        published: 35232
+        protocol: udp
+        mode: host
+
+      - target: 35233
+        published: 35233
+        protocol: udp
+        mode: host
+
+      - target: 35234
+        published: 35234
+        protocol: udp
+        mode: host
+
+      - target: 35235
+        published: 35235
+        protocol: udp
+        mode: host
+
+      - target: 35236
+        published: 35236
+        protocol: udp
+        mode: host
+
+      - target: 35237
+        published: 35237
+        protocol: udp
+        mode: host
+
+      - target: 35238
+        published: 35238
+        protocol: udp
+        mode: host
+
+      - target: 35239
+        published: 35239
+        protocol: udp
+        mode: host
+
+      - target: 35240
+        published: 35240
+        protocol: udp
+        mode: host
+
+      - target: 35241
+        published: 35241
+        protocol: udp
+        mode: host
+
+      - target: 35242
+        published: 35242
+        protocol: udp
+        mode: host
+
+      - target: 35243
+        published: 35243
+        protocol: udp
+        mode: host
+
+      - target: 35244
+        published: 35244
+        protocol: udp
+        mode: host
+
+      - target: 35245
+        published: 35245
+        protocol: udp
+        mode: host
+
+      - target: 35246
+        published: 35246
+        protocol: udp
+        mode: host
+
+      - target: 35247
+        published: 35247
+        protocol: udp
+        mode: host
+
+      - target: 35248
+        published: 35248
+        protocol: udp
+        mode: host
+
+      - target: 35249
+        published: 35249
+        protocol: udp
+        mode: host
+
+      - target: 35250
+        published: 35250
+        protocol: udp
+        mode: host
+
+      - target: 35251
+        published: 35251
+        protocol: udp
+        mode: host
+
+      - target: 35252
+        published: 35252
+        protocol: udp
+        mode: host
+
+      - target: 35253
+        published: 35253
+        protocol: udp
+        mode: host
+
+      - target: 35254
+        published: 35254
+        protocol: udp
+        mode: host
+
+      - target: 35255
+        published: 35255
+        protocol: udp
+        mode: host
+
+      - target: 35256
+        published: 35256
+        protocol: udp
+        mode: host
+
+      - target: 35257
+        published: 35257
+        protocol: udp
+        mode: host
+
+      - target: 35258
+        published: 35258
+        protocol: udp
+        mode: host
+
+      - target: 35259
+        published: 35259
+        protocol: udp
+        mode: host
+
+      - target: 35260
+        published: 35260
+        protocol: udp
+        mode: host
+
+      - target: 35261
+        published: 35261
+        protocol: udp
+        mode: host
+
+      - target: 35262
+        published: 35262
+        protocol: udp
+        mode: host
+
+      - target: 35263
+        published: 35263
+        protocol: udp
+        mode: host
+
+      - target: 35264
+        published: 35264
+        protocol: udp
+        mode: host
+
+      - target: 35265
+        published: 35265
+        protocol: udp
+        mode: host
+
+      - target: 35266
+        published: 35266
+        protocol: udp
+        mode: host
+
+      - target: 35267
+        published: 35267
+        protocol: udp
+        mode: host
+
+      - target: 35268
+        published: 35268
+        protocol: udp
+        mode: host
+
+      - target: 35269
+        published: 35269
+        protocol: udp
+        mode: host
+
+      - target: 35270
+        published: 35270
+        protocol: udp
+        mode: host
+
+      - target: 35271
+        published: 35271
+        protocol: udp
+        mode: host
+
+      - target: 35272
+        published: 35272
+        protocol: udp
+        mode: host
+
+      - target: 35273
+        published: 35273
+        protocol: udp
+        mode: host
+
+      - target: 35274
+        published: 35274
+        protocol: udp
+        mode: host
+
+      - target: 35275
+        published: 35275
+        protocol: udp
+        mode: host
+
+      - target: 35276
+        published: 35276
+        protocol: udp
+        mode: host
+
+      - target: 35277
+        published: 35277
+        protocol: udp
+        mode: host
+
+      - target: 35278
+        published: 35278
+        protocol: udp
+        mode: host
+
+      - target: 35279
+        published: 35279
+        protocol: udp
+        mode: host
+
+      - target: 35280
+        published: 35280
+        protocol: udp
+        mode: host
+
+      - target: 35281
+        published: 35281
+        protocol: udp
+        mode: host
+
+      - target: 35282
+        published: 35282
+        protocol: udp
+        mode: host
+
+      - target: 35283
+        published: 35283
+        protocol: udp
+        mode: host
+
+      - target: 35284
+        published: 35284
+        protocol: udp
+        mode: host
+
+      - target: 35285
+        published: 35285
+        protocol: udp
+        mode: host
+
+      - target: 35286
+        published: 35286
+        protocol: udp
+        mode: host
+
+      - target: 35287
+        published: 35287
+        protocol: udp
+        mode: host
+
+      - target: 35288
+        published: 35288
+        protocol: udp
+        mode: host
+
+      - target: 35289
+        published: 35289
+        protocol: udp
+        mode: host
+
+      - target: 35290
+        published: 35290
+        protocol: udp
+        mode: host
+
+      - target: 35291
+        published: 35291
+        protocol: udp
+        mode: host
+
+      - target: 35292
+        published: 35292
+        protocol: udp
+        mode: host
+
+      - target: 35293
+        published: 35293
+        protocol: udp
+        mode: host
+
+      - target: 35294
+        published: 35294
+        protocol: udp
+        mode: host
+
+      - target: 35295
+        published: 35295
+        protocol: udp
+        mode: host
+
+      - target: 35296
+        published: 35296
+        protocol: udp
+        mode: host
+
+      - target: 35297
+        published: 35297
+        protocol: udp
+        mode: host
+
+      - target: 35298
+        published: 35298
+        protocol: udp
+        mode: host
+
+      - target: 35299
+        published: 35299
+        protocol: udp
+        mode: host
+
+      - target: 35300
+        published: 35300
+        protocol: udp
+        mode: host
+
+      - target: 35301
+        published: 35301
+        protocol: udp
+        mode: host
+
+      - target: 35302
+        published: 35302
+        protocol: udp
+        mode: host
+
+      - target: 35303
+        published: 35303
+        protocol: udp
+        mode: host
+
+      - target: 35304
+        published: 35304
+        protocol: udp
+        mode: host
+
+      - target: 35305
+        published: 35305
+        protocol: udp
+        mode: host
+
+      - target: 35306
+        published: 35306
+        protocol: udp
+        mode: host
+
+      - target: 35307
+        published: 35307
+        protocol: udp
+        mode: host
+
+      - target: 35308
+        published: 35308
+        protocol: udp
+        mode: host
+
+      - target: 35309
+        published: 35309
+        protocol: udp
+        mode: host
+
+      - target: 35310
+        published: 35310
+        protocol: udp
+        mode: host
+
+      - target: 35311
+        published: 35311
+        protocol: udp
+        mode: host
+
+      - target: 35312
+        published: 35312
+        protocol: udp
+        mode: host
+
+      - target: 35313
+        published: 35313
+        protocol: udp
+        mode: host
+
+      - target: 35314
+        published: 35314
+        protocol: udp
+        mode: host
+
+      - target: 35315
+        published: 35315
+        protocol: udp
+        mode: host
+
+      - target: 35316
+        published: 35316
+        protocol: udp
+        mode: host
+
+      - target: 35317
+        published: 35317
+        protocol: udp
+        mode: host
+
+      - target: 35318
+        published: 35318
+        protocol: udp
+        mode: host
+
+      - target: 35319
+        published: 35319
+        protocol: udp
+        mode: host
+
+      - target: 35320
+        published: 35320
+        protocol: udp
+        mode: host
+
+      - target: 35321
+        published: 35321
+        protocol: udp
+        mode: host
+
+      - target: 35322
+        published: 35322
+        protocol: udp
+        mode: host
+
+      - target: 35323
+        published: 35323
+        protocol: udp
+        mode: host
+
+      - target: 35324
+        published: 35324
+        protocol: udp
+        mode: host
+
+      - target: 35325
+        published: 35325
+        protocol: udp
+        mode: host
+
+      - target: 35326
+        published: 35326
+        protocol: udp
+        mode: host
+
+      - target: 35327
+        published: 35327
+        protocol: udp
+        mode: host
+
+      - target: 35328
+        published: 35328
+        protocol: udp
+        mode: host
+
+      - target: 35329
+        published: 35329
+        protocol: udp
+        mode: host
+
+      - target: 35330
+        published: 35330
+        protocol: udp
+        mode: host
+
+      - target: 35331
+        published: 35331
+        protocol: udp
+        mode: host
+
+      - target: 35332
+        published: 35332
+        protocol: udp
+        mode: host
+
+      - target: 35333
+        published: 35333
+        protocol: udp
+        mode: host
+
+      - target: 35334
+        published: 35334
+        protocol: udp
+        mode: host
+
+      - target: 35335
+        published: 35335
+        protocol: udp
+        mode: host
+
+      - target: 35336
+        published: 35336
+        protocol: udp
+        mode: host
+
+      - target: 35337
+        published: 35337
+        protocol: udp
+        mode: host
+
+      - target: 35338
+        published: 35338
+        protocol: udp
+        mode: host
+
+      - target: 35339
+        published: 35339
+        protocol: udp
+        mode: host
+
+      - target: 35340
+        published: 35340
+        protocol: udp
+        mode: host
+
+      - target: 35341
+        published: 35341
+        protocol: udp
+        mode: host
+
+      - target: 35342
+        published: 35342
+        protocol: udp
+        mode: host
+
+      - target: 35343
+        published: 35343
+        protocol: udp
+        mode: host
+
+      - target: 35344
+        published: 35344
+        protocol: udp
+        mode: host
+
+      - target: 35345
+        published: 35345
+        protocol: udp
+        mode: host
+
+      - target: 35346
+        published: 35346
+        protocol: udp
+        mode: host
+
+      - target: 35347
+        published: 35347
+        protocol: udp
+        mode: host
+
+      - target: 35348
+        published: 35348
+        protocol: udp
+        mode: host
+
+      - target: 35349
+        published: 35349
+        protocol: udp
+        mode: host
+
+      - target: 35350
+        published: 35350
+        protocol: udp
+        mode: host
+
+      - target: 35351
+        published: 35351
+        protocol: udp
+        mode: host
+
+      - target: 35352
+        published: 35352
+        protocol: udp
+        mode: host
+
+      - target: 35353
+        published: 35353
+        protocol: udp
+        mode: host
+
+      - target: 35354
+        published: 35354
+        protocol: udp
+        mode: host
+
+      - target: 35355
+        published: 35355
+        protocol: udp
+        mode: host
+
+      - target: 35356
+        published: 35356
+        protocol: udp
+        mode: host
+
+      - target: 35357
+        published: 35357
+        protocol: udp
+        mode: host
+
+      - target: 35358
+        published: 35358
+        protocol: udp
+        mode: host
+
+      - target: 35359
+        published: 35359
+        protocol: udp
+        mode: host
+
+      - target: 35360
+        published: 35360
+        protocol: udp
+        mode: host
+
+      - target: 35361
+        published: 35361
+        protocol: udp
+        mode: host
+
+      - target: 35362
+        published: 35362
+        protocol: udp
+        mode: host
+
+      - target: 35363
+        published: 35363
+        protocol: udp
+        mode: host
+
+      - target: 35364
+        published: 35364
+        protocol: udp
+        mode: host
+
+      - target: 35365
+        published: 35365
+        protocol: udp
+        mode: host
+
+      - target: 35366
+        published: 35366
+        protocol: udp
+        mode: host
+
+      - target: 35367
+        published: 35367
+        protocol: udp
+        mode: host
+
+      - target: 35368
+        published: 35368
+        protocol: udp
+        mode: host
+
+      - target: 35369
+        published: 35369
+        protocol: udp
+        mode: host
+
+      - target: 35370
+        published: 35370
+        protocol: udp
+        mode: host
+
+      - target: 35371
+        published: 35371
+        protocol: udp
+        mode: host
+
+      - target: 35372
+        published: 35372
+        protocol: udp
+        mode: host
+
+      - target: 35373
+        published: 35373
+        protocol: udp
+        mode: host
+
+      - target: 35374
+        published: 35374
+        protocol: udp
+        mode: host
+
+      - target: 35375
+        published: 35375
+        protocol: udp
+        mode: host
+
+      - target: 35376
+        published: 35376
+        protocol: udp
+        mode: host
+
+      - target: 35377
+        published: 35377
+        protocol: udp
+        mode: host
+
+      - target: 35378
+        published: 35378
+        protocol: udp
+        mode: host
+
+      - target: 35379
+        published: 35379
+        protocol: udp
+        mode: host
+
+      - target: 35380
+        published: 35380
+        protocol: udp
+        mode: host
+
+      - target: 35381
+        published: 35381
+        protocol: udp
+        mode: host
+
+      - target: 35382
+        published: 35382
+        protocol: udp
+        mode: host
+
+      - target: 35383
+        published: 35383
+        protocol: udp
+        mode: host
+
+      - target: 35384
+        published: 35384
+        protocol: udp
+        mode: host
+
+      - target: 35385
+        published: 35385
+        protocol: udp
+        mode: host
+
+      - target: 35386
+        published: 35386
+        protocol: udp
+        mode: host
+
+      - target: 35387
+        published: 35387
+        protocol: udp
+        mode: host
+
+      - target: 35388
+        published: 35388
+        protocol: udp
+        mode: host
+
+      - target: 35389
+        published: 35389
+        protocol: udp
+        mode: host
+
+      - target: 35390
+        published: 35390
+        protocol: udp
+        mode: host
+
+      - target: 35391
+        published: 35391
+        protocol: udp
+        mode: host
+
+      - target: 35392
+        published: 35392
+        protocol: udp
+        mode: host
+
+      - target: 35393
+        published: 35393
+        protocol: udp
+        mode: host
+
+      - target: 35394
+        published: 35394
+        protocol: udp
+        mode: host
+
+      - target: 35395
+        published: 35395
+        protocol: udp
+        mode: host
+
+      - target: 35396
+        published: 35396
+        protocol: udp
+        mode: host
+
+      - target: 35397
+        published: 35397
+        protocol: udp
+        mode: host
+
+      - target: 35398
+        published: 35398
+        protocol: udp
+        mode: host
+
+      - target: 35399
+        published: 35399
+        protocol: udp
+        mode: host
+
+      - target: 35400
+        published: 35400
+        protocol: udp
+        mode: host
+
 
     logging:
       driver: "journald"
