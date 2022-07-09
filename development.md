@@ -284,6 +284,8 @@ https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
 
 ## There was a problem when jaeger all-in-one ate too much memory - one of participants didn't see other
 
+## Another problem can be in Mobile Chrome - swap it up helps when video isn't connected from Mobile Chrome.
+
 ## Checking limits
 ```
 cat /proc/$(pgrep livekit)/limits
