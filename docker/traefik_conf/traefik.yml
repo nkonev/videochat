@@ -30,7 +30,7 @@ accessLog:
       defaultMode: drop
       names:
         User-Agent: keep
-        X-B3-Traceid: keep
+        uber-trace-id: keep
 tracing:
   spanNameLimit: 150
   jaeger:

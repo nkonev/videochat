@@ -140,7 +140,7 @@ func configureEcho(
 		Format: `"remote_ip":"${remote_ip}",` +
 			`"method":"${method}","uri":"${uri}",` +
 			`"status":${status},` +
-			`,"bytes_in":${bytes_in},"bytes_out":${bytes_out},"traceId":"${header:X-B3-Traceid}"` + "\n",
+			`,"bytes_in":${bytes_in},"bytes_out":${bytes_out},"traceId":"${header:uber-trace-id}"` + "\n",
 	}
 	e.Use(middleware.LoggerWithConfig(accessLoggerConfig))
 	e.Use(middleware.Secure())
