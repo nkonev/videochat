@@ -40,7 +40,8 @@ import {
     getStoredVideoDevicePresents,
     getVideoResolution,
     getWebsocketUrlPrefix,
-    hasLength
+    hasLength,
+    isMobileFireFox
 } from "@/utils";
 import bus, {
     ADD_SCREEN_SOURCE,
@@ -416,9 +417,12 @@ export default {
             }
 
             try {
+                const isMobileFirefox = isMobileFireFox();
+                console.log("isMobileFirefox = ", isMobileFirefox, " in case Mobile Firefox simulcast for video tracks will be disabled");
                 for (const track of tracks) {
                     const publication = await this.room.localParticipant.publishTrack(track, {
                         name: "track_" + track.kind + "__screen_" + isScreen + "_" + this.getNewId(),
+                        simulcast: !isMobileFirefox,
                     });
                     if (track.kind == 'audio' && defaultAudioMute) {
                         await publication.mute();

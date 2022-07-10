@@ -131,3 +131,7 @@ export const setIcon = (newMessages) => {
         link.href = '/favicon.svg';
     }
 }
+
+export const isMobileFireFox = () => {
+    return navigator.userAgent.indexOf('Firefox') !== -1 && navigator.userAgent.indexOf('Mobile') !== -1
+}
