@@ -46,7 +46,7 @@ func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId); err != nil {
+	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -117,7 +117,7 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 
 	fileId := fmt.Sprintf("chat/%v/%v", chatId, fileWithExt)
 
-	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId)
+	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
 	if err != nil {
 		Logger.Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)

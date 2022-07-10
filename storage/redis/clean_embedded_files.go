@@ -31,15 +31,16 @@ func NewDeleteMissedInChatFilesService(minioClient *minio.Client, minioBucketsCo
 
 func (srv *DeleteMissedInChatFilesService) doJob() {
 	filenameChatPrefix := fmt.Sprintf("chat/")
-	srv.processEmbeddedFiles(filenameChatPrefix)
+	ct := context.Background()
+	srv.processEmbeddedFiles(filenameChatPrefix, ct)
 
 	logger.Logger.Infof("End of cleaning embedded files job")
 }
 
-func (srv *DeleteMissedInChatFilesService) processEmbeddedFiles(filenameChatPrefix string) {
+func (srv *DeleteMissedInChatFilesService) processEmbeddedFiles(filenameChatPrefix string, c context.Context) {
 	var maxMinioKeysInBatch = viper.GetInt("minio.cleaner.embedded.maxKeys")
 	logger.Logger.Infof("Starting cleaning embed files job with max minio keys limit = %v", maxMinioKeysInBatch)
-	var objects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(context.Background(), srv.minioBucketsConfig.Embedded, minio.ListObjectsOptions{
+	var objects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Embedded, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
 		Recursive:    true,
@@ -77,17 +78,17 @@ func (srv *DeleteMissedInChatFilesService) processEmbeddedFiles(filenameChatPref
 
 		if i >= maxMinioKeysInBatch {
 			i = 0
-			srv.processChunk(chatsWithFiles)
+			srv.processChunk(chatsWithFiles, c)
 			chatsWithFiles = map[int64][]utils.Tuple{}
 		}
 	}
-	srv.processChunk(chatsWithFiles)
+	srv.processChunk(chatsWithFiles, c)
 	chatsWithFiles = map[int64][]utils.Tuple{}
 	logger.Logger.Infof("End of processEmbeddedFiles job")
 }
 
-func (srv *DeleteMissedInChatFilesService) processChunk(chatsWithFiles map[int64][]utils.Tuple) {
-	chatsWithFilesResponse, err := srv.invokeChat(chatsWithFiles)
+func (srv *DeleteMissedInChatFilesService) processChunk(chatsWithFiles map[int64][]utils.Tuple, c context.Context) {
+	chatsWithFilesResponse, err := srv.invokeChat(chatsWithFiles, c)
 	if err != nil {
 		logger.Logger.Errorf("Error during asking chat %v, skipping", err)
 		return
@@ -97,7 +98,7 @@ func (srv *DeleteMissedInChatFilesService) processChunk(chatsWithFiles map[int64
 			logger.Logger.Infof("Processing responded chat id %v file %v", keyChatId, valuePair.MinioKey)
 			if !valuePair.Exists {
 				logger.Logger.Infof("Deleting embedded file object %v", valuePair.MinioKey)
-				err := srv.minioClient.RemoveObject(context.Background(), srv.minioBucketsConfig.Embedded, valuePair.MinioKey, minio.RemoveObjectOptions{})
+				err := srv.minioClient.RemoveObject(c, srv.minioBucketsConfig.Embedded, valuePair.MinioKey, minio.RemoveObjectOptions{})
 				if err != nil {
 					logger.Logger.Errorf("Object embedded file %v has been cleared from minio with error: %v", valuePair.MinioKey, err)
 				} else {
@@ -128,8 +129,8 @@ func extractFileName(minioKey string) (string, error) {
 	return split[2], nil
 }
 
-func (srv *DeleteMissedInChatFilesService) invokeChat(input map[int64][]utils.Tuple) (map[int64][]utils.Tuple, error) {
-	return srv.chatClient.CheckFilesInChat(input)
+func (srv *DeleteMissedInChatFilesService) invokeChat(input map[int64][]utils.Tuple, c context.Context) (map[int64][]utils.Tuple, error) {
+	return srv.chatClient.CheckFilesInChat(input, c)
 }
 
 type CleanEmbeddedFilesTask struct {

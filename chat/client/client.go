@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -18,6 +19,7 @@ import (
 
 type RestClient struct {
 	*http.Client
+	tracer trace.Tracer
 }
 
 func NewRestClient() RestClient {
@@ -29,7 +31,9 @@ func NewRestClient() RestClient {
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	trR := otelhttp.NewTransport(tr)
 	client := &http.Client{Transport: trR}
-	return RestClient{client}
+	trcr := otel.Tracer("rest/client")
+
+	return RestClient{client, trcr}
 }
 
 // https://developers.google.com/protocol-buffers/docs/gotutorial
@@ -63,8 +67,7 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 		URL:    parsedUrl,
 	}
 
-	tr := otel.Tracer("rest/client")
-	ctx, span := tr.Start(c, "users.Get")
+	ctx, span := rc.tracer.Start(c, "users.Get")
 	defer span.End()
 	request = request.WithContext(ctx)
 	resp, err := rc.Do(request)

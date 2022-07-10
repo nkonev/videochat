@@ -1,10 +1,14 @@
 package client
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -22,6 +26,7 @@ type RestClient struct {
 	isAdminPath    string
 	aaaBaseUrl     string
 	aaaGetUsersUrl string
+	tracer         trace.Tracer
 }
 
 func NewRestClient(config *config.ExtendedConfig) *RestClient {
@@ -31,7 +36,9 @@ func NewRestClient(config *config.ExtendedConfig) *RestClient {
 		DisableCompression: config.RestClientConfig.DisableCompression,
 	}
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	client := &http.Client{Transport: tr}
+	trR := otelhttp.NewTransport(tr)
+	client := &http.Client{Transport: trR}
+	trcr := otel.Tracer("rest/client")
 
 	return &RestClient{
 		client:         client,
@@ -40,12 +47,24 @@ func NewRestClient(config *config.ExtendedConfig) *RestClient {
 		isAdminPath:    config.ChatConfig.ChatUrlConfig.IsChatAdmin,
 		aaaBaseUrl:     config.AaaConfig.AaaUrlConfig.Base,
 		aaaGetUsersUrl: config.AaaConfig.AaaUrlConfig.GetUsers,
+		tracer:         trcr,
 	}
 }
 
-func (h *RestClient) CheckAccess(userId int64, chatId int64) (bool, error) {
+func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) (bool, error) {
 	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.baseUrl, h.accessPath, userId, chatId)
-	response, err := h.client.Get(url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		Logger.Error(err, "Error during create GET")
+		return false, err
+	}
+
+	ctx, span := h.tracer.Start(c, "access.Check")
+	defer span.End()
+	req = req.WithContext(ctx)
+
+	response, err := h.client.Do(req)
 	if err != nil {
 		Logger.Error(err, "Transport error during checking access")
 		return false, err
@@ -62,9 +81,20 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64) (bool, error) {
 	}
 }
 
-func (h *RestClient) IsAdmin(userId int64, chatId int64) (bool, error) {
+func (h *RestClient) IsAdmin(userId int64, chatId int64, c context.Context) (bool, error) {
 	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.baseUrl, h.isAdminPath, userId, chatId)
-	response, err := h.client.Get(url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		Logger.Error(err, "Error during create GET")
+		return false, err
+	}
+
+	ctx, span := h.tracer.Start(c, "chat.IsAdmin")
+	defer span.End()
+	req = req.WithContext(ctx)
+
+	response, err := h.client.Do(req)
 	if err != nil {
 		Logger.Error(err, "Transport error during checking access")
 		return false, err
@@ -81,7 +111,7 @@ func (h *RestClient) IsAdmin(userId int64, chatId int64) (bool, error) {
 	}
 }
 
-func (h *RestClient) GetUsers(userIds []int64) ([]*dto.User, error) {
+func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.aaaBaseUrl + h.aaaGetUsersUrl
 
@@ -108,6 +138,10 @@ func (h *RestClient) GetUsers(userIds []int64) ([]*dto.User, error) {
 		Header: requestHeaders,
 		URL:    parsedUrl,
 	}
+
+	ctx, span := h.tracer.Start(c, "chat.GetUsers")
+	defer span.End()
+	request = request.WithContext(ctx)
 
 	resp, err := h.client.Do(request)
 	if err != nil {

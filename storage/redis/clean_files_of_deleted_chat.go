@@ -37,14 +37,15 @@ type CleanFilesOfDeletedChatService struct {
 }
 
 func (srv *CleanFilesOfDeletedChatService) doJob() {
+	ct := context.Background()
 	filenameChatPrefix := fmt.Sprintf("chat/")
-	srv.processChats(filenameChatPrefix)
+	srv.processChats(filenameChatPrefix, ct)
 }
 
-func (srv *CleanFilesOfDeletedChatService) processChats(filenameChatPrefix string) {
+func (srv *CleanFilesOfDeletedChatService) processChats(filenameChatPrefix string, c context.Context) {
 	var maxMinioKeysInBatch = viper.GetInt("minio.cleaner.files.maxKeys")
 	logger.Logger.Infof("Starting cleaning files of deleted chats job with max minio keys limit = %v", maxMinioKeysInBatch)
-	var objects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(context.Background(), srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
+	var objects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
 		Prefix:    filenameChatPrefix,
 		Recursive: true,
 	})
@@ -59,14 +60,14 @@ func (srv *CleanFilesOfDeletedChatService) processChats(filenameChatPrefix strin
 		}
 		logger.Logger.Debugf("Successfully get chatId '%v'", chatId)
 
-		exists, err := srv.chatClient.CheckIsChatExists(chatId)
+		exists, err := srv.chatClient.CheckIsChatExists(chatId, c)
 		if err != nil {
 			logger.Logger.Errorf("Unable to chech existence of chat id from %v", objInfo.Key)
 			continue
 		}
 		if !exists {
 			logger.Logger.Infof("Deleting file(directory) object %v", objInfo.Key)
-			err := srv.minioClient.RemoveObject(context.Background(), srv.minioBucketsConfig.Files, objInfo.Key, minio.RemoveObjectOptions{})
+			err := srv.minioClient.RemoveObject(c, srv.minioBucketsConfig.Files, objInfo.Key, minio.RemoveObjectOptions{})
 			if err != nil {
 				logger.Logger.Errorf("Object file %v has been cleared from minio with error: %v", objInfo.Key, err)
 			} else {

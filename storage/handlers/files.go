@@ -92,7 +92,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId); err != nil {
+	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -178,7 +178,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId); err != nil {
+	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -270,7 +270,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId); err != nil {
+	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -289,7 +289,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId)
+	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -297,8 +297,8 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list})
 }
 
-func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.User {
-	if remoteUsers, err := getUsersRemotely(userIdSet, restClient); err != nil {
+func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient, c context.Context) map[int64]*dto.User {
+	if remoteUsers, err := getUsersRemotely(userIdSet, restClient, c); err != nil {
 		Logger.Warn("Error during getting users from aaa")
 		return map[int64]*dto.User{}
 	} else {
@@ -306,14 +306,14 @@ func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestCl
 	}
 }
 
-func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.User, error) {
+func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c context.Context) (map[int64]*dto.User, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
 	Logger.Infof("Requested user length is %v", length)
 	if length == 0 {
 		return map[int64]*dto.User{}, nil
 	}
-	users, err := restClient.GetUsers(userIds)
+	users, err := restClient.GetUsers(userIds, c)
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +324,7 @@ func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient) (
 	return ownersObjects, nil
 }
 
-func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filenameChatPrefix string, chatId int64) ([]*FileInfoDto, error) {
+func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filenameChatPrefix string, chatId int64, c context.Context) ([]*FileInfoDto, error) {
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
@@ -334,7 +334,7 @@ func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filena
 	var list []*FileInfoDto = make([]*FileInfoDto, 0)
 	for objInfo := range objects {
 		Logger.Debugf("Object '%v'", objInfo.Key)
-		tagging, err := h.minio.GetObjectTagging(context.Background(), bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
+		tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
 		if err != nil {
 			Logger.Errorf("Error during getting tags %v", err)
 			return nil, err
@@ -356,7 +356,7 @@ func (h *FilesHandler) getListFilesInFileItem(behalfUserId int64, bucket, filena
 	for _, fileDto := range list {
 		participantIdSet[fileDto.OwnerId] = true
 	}
-	var users = getUsersRemotelyOrEmpty(participantIdSet, h.chatClient)
+	var users = getUsersRemotelyOrEmpty(participantIdSet, h.chatClient, c)
 	for _, fileDto := range list {
 		user := users[fileDto.OwnerId]
 		if user != nil {
@@ -461,7 +461,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId); err != nil {
+	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -503,14 +503,14 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId)
+	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context())
 	if err != nil {
 		return err
 	}
 
 	// this fileItemUuid used for remove orphans
 	if h.countFilesUnderFileUuid(chatId, formerFileItemUuid, bucketName) == 0 {
-		h.chatClient.RemoveFileItem(chatId, formerFileItemUuid, userPrincipalDto.UserId)
+		h.chatClient.RemoveFileItem(chatId, formerFileItemUuid, userPrincipalDto.UserId, c.Request().Context())
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list})
@@ -575,7 +575,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId)
+	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
 	if err != nil {
 		Logger.Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -669,7 +669,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 	}
 	var participantIdSet = map[int64]bool{}
 	participantIdSet[userPrincipalDto.UserId] = true
-	var users = getUsersRemotelyOrEmpty(participantIdSet, h.chatClient)
+	var users = getUsersRemotelyOrEmpty(participantIdSet, h.chatClient, c.Request().Context())
 	user, ok := users[userPrincipalDto.UserId]
 	if ok {
 		info.Owner = user
@@ -700,7 +700,7 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId)
+	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
 	if err != nil {
 		Logger.Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -792,7 +792,7 @@ func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId); err != nil {
+	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)

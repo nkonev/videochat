@@ -38,7 +38,7 @@ func (h *UserHandler) GetVideoUsers(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId); err != nil {
+	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -64,7 +64,7 @@ func (h *UserHandler) Kick(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.IsAdmin(userPrincipalDto.UserId, chatId); err != nil {
+	if ok, err := h.chatClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -117,7 +117,7 @@ func (h *UserHandler) Mute(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.IsAdmin(userPrincipalDto.UserId, chatId); err != nil {
+	if ok, err := h.chatClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)

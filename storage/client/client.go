@@ -2,12 +2,16 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -26,6 +30,7 @@ type RestClient struct {
 	aaaGetUsersUrl         string
 	checkFilesPresencePath string
 	checkChatExistsPath    string
+	tracer                 trace.Tracer
 }
 
 func newRestClient() *http.Client {
@@ -35,12 +40,14 @@ func newRestClient() *http.Client {
 		DisableCompression: viper.GetBool("http.disableCompression"),
 	}
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	client := &http.Client{Transport: tr}
+	trR := otelhttp.NewTransport(tr)
+	client := &http.Client{Transport: trR}
 	return client
 }
 
 func NewChatAccessClient() *RestClient {
 	client := newRestClient()
+	trcr := otel.Tracer("rest/client")
 
 	return &RestClient{
 		client:                 client,
@@ -51,12 +58,24 @@ func NewChatAccessClient() *RestClient {
 		aaaGetUsersUrl:         viper.GetString("aaa.url.getUsers"),
 		checkFilesPresencePath: viper.GetString("chat.url.checkEmbeddedFilesPath"),
 		checkChatExistsPath:    viper.GetString("chat.url.checkChatExistsPath"),
+		tracer:                 trcr,
 	}
 }
 
-func (h *RestClient) CheckAccess(userId int64, chatId int64) (bool, error) {
+func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) (bool, error) {
 	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.baseUrl, h.accessPath, userId, chatId)
-	response, err := h.client.Get(url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		Logger.Error(err, "Error during create GET")
+		return false, err
+	}
+
+	ctx, span := h.tracer.Start(c, "access.Check")
+	defer span.End()
+	req = req.WithContext(ctx)
+
+	response, err := h.client.Do(req)
 	if err != nil {
 		Logger.Error(err, "Transport error during checking access")
 		return false, err
@@ -73,7 +92,7 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64) (bool, error) {
 	}
 }
 
-func (h *RestClient) RemoveFileItem(chatId int64, fileItemUuid string, userId int64) {
+func (h *RestClient) RemoveFileItem(chatId int64, fileItemUuid string, userId int64, c context.Context) {
 	fullUrl := fmt.Sprintf("%v%v?chatId=%v&fileItemUuid=%v&userId=%v", h.baseUrl, h.removeFileItemPath, chatId, fileItemUuid, userId)
 
 	parsedUrl, err := url.Parse(fullUrl)
@@ -86,6 +105,10 @@ func (h *RestClient) RemoveFileItem(chatId int64, fileItemUuid string, userId in
 		Method: "DELETE",
 		URL:    parsedUrl,
 	}
+
+	ctx, span := h.tracer.Start(c, "fileItem.Remove")
+	defer span.End()
+	request = request.WithContext(ctx)
 
 	response, err := h.client.Do(request)
 	if err != nil {
@@ -102,7 +125,7 @@ func (h *RestClient) RemoveFileItem(chatId int64, fileItemUuid string, userId in
 
 }
 
-func (h *RestClient) GetUsers(userIds []int64) ([]*dto.User, error) {
+func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.aaaBaseUrl + h.aaaGetUsersUrl
 
@@ -130,6 +153,10 @@ func (h *RestClient) GetUsers(userIds []int64) ([]*dto.User, error) {
 		URL:    parsedUrl,
 	}
 
+	ctx, span := h.tracer.Start(c, "Users.Get")
+	defer span.End()
+	request = request.WithContext(ctx)
+
 	resp, err := h.client.Do(request)
 	if err != nil {
 		Logger.Warningln("Failed to request get users response:", err)
@@ -155,7 +182,7 @@ func (h *RestClient) GetUsers(userIds []int64) ([]*dto.User, error) {
 	return *users, nil
 }
 
-func (h *RestClient) CheckFilesInChat(input map[int64][]utils.Tuple) (map[int64][]utils.Tuple, error) {
+func (h *RestClient) CheckFilesInChat(input map[int64][]utils.Tuple, c context.Context) (map[int64][]utils.Tuple, error) {
 	fullUrl := fmt.Sprintf("%v%v", h.baseUrl, h.checkFilesPresencePath)
 
 	parsedUrl, err := url.Parse(fullUrl)
@@ -178,6 +205,10 @@ func (h *RestClient) CheckFilesInChat(input map[int64][]utils.Tuple) (map[int64]
 			echo.HeaderContentType: {"application/json"},
 		},
 	}
+
+	ctx, span := h.tracer.Start(c, "Files.CheckExists")
+	defer span.End()
+	request = request.WithContext(ctx)
 
 	response, err := h.client.Do(request)
 	if err != nil {
@@ -208,7 +239,7 @@ type ChatExists struct {
 	Exists bool `json:"exists"`
 }
 
-func (h *RestClient) CheckIsChatExists(chatId int64) (bool, error) {
+func (h *RestClient) CheckIsChatExists(chatId int64, c context.Context) (bool, error) {
 	fullUrl := fmt.Sprintf("%v%v/%v", h.baseUrl, h.checkChatExistsPath, chatId)
 
 	parsedUrl, err := url.Parse(fullUrl)
@@ -224,6 +255,10 @@ func (h *RestClient) CheckIsChatExists(chatId int64) (bool, error) {
 			echo.HeaderContentType: {"application/json"},
 		},
 	}
+
+	ctx, span := h.tracer.Start(c, "Chat.CheckExists")
+	defer span.End()
+	request = request.WithContext(ctx)
 
 	response, err := h.client.Do(request)
 	if err != nil {
