@@ -409,7 +409,11 @@
             },
             onEditMessage(dto) {
                 if (dto.chatId == this.chatId) {
+                    const isScrolled = this.isScrolledToBottom();
                     this.changeItem(dto);
+                    if (isScrolled) {
+                        this.scrollDown();
+                    }
                 } else {
                     console.log("Skipping", dto)
                 }
