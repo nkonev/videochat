@@ -31,9 +31,9 @@ type ICEServerConfigDto struct {
 }
 
 type FrontendConfigDto struct {
-	RtcConfig      *RtcConfig `json:"rtcConfiguration"`
-	PreferredCodec string     `json:"codec"`
-	Resolution     string     `json:"resolution"`
+	RtcConfig        *RtcConfig `json:"rtcConfiguration"`
+	VideoResolution  string     `json:"videoResolution"`
+	ScreenResolution string     `json:"screenResolution"`
 }
 
 func (h *ConfigHandler) GetConfig(c echo.Context) error {
@@ -55,7 +55,8 @@ func (h *ConfigHandler) GetConfig(c echo.Context) error {
 	frontendConfig := h.config.FrontendConfig
 	var responseSliceFrontendConfig = FrontendConfigDto{}
 
-	responseSliceFrontendConfig.Resolution = frontendConfig.Resolution
+	responseSliceFrontendConfig.VideoResolution = frontendConfig.VideoResolution
+	responseSliceFrontendConfig.ScreenResolution = frontendConfig.ScreenResolution
 
 	return c.JSON(http.StatusOK, responseSliceFrontendConfig)
 }

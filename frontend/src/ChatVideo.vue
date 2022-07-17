@@ -35,7 +35,7 @@ import axios from "axios";
 import { retry } from '@lifeomic/attempt';
 import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
 import {
-    defaultAudioMute,
+    defaultAudioMute, getScreenResolution,
     getStoredAudioDevicePresents,
     getStoredVideoDevicePresents,
     getVideoResolution,
@@ -62,6 +62,7 @@ export default {
             videoContainerDiv: null,
             userVideoComponents: new ChatVideoUserComponentHolder(),
             videoResolution: null,
+            screenResolution: null,
             showMessage: false,
             messageText: "",
             messageColor: null,
@@ -222,12 +223,21 @@ export default {
             const configObj = await axios
                 .get(`/api/video/${this.chatId}/config`)
                 .then(response => response.data)
-            if (hasLength(configObj.resolution)) {
-                console.log("Server overrided resolution to", configObj.resolution)
-                this.videoResolution = configObj.resolution;
+            const maybeVideoResolution = configObj.videoResolution;
+            if (hasLength(maybeVideoResolution)) {
+                console.log("Server overrided videoResolution to", maybeVideoResolution)
+                this.videoResolution = maybeVideoResolution;
             } else {
                 this.videoResolution = getVideoResolution();
-                console.log("Used resolution from localstorage", this.videoResolution)
+                console.log("Used videoResolution from localstorage", this.videoResolution)
+            }
+            const maybeScreenResolution = configObj.screenResolution;
+            if (hasLength(maybeScreenResolution)) {
+                console.log("Server overrided screenResolution to", maybeScreenResolution)
+                this.screenResolution = maybeScreenResolution;
+            } else {
+                this.screenResolution = getScreenResolution();
+                console.log("Used screenResolution from localstorage", this.screenResolution)
             }
         },
 
@@ -381,8 +391,8 @@ export default {
             let tracks = [];
 
             try {
-                const preset = VideoPresets[this.videoResolution];
-                const resolution = preset.resolution;
+                const videoResolution = VideoPresets[this.videoResolution].resolution;
+                const screenResolution = VideoPresets[this.screenResolution].resolution;
                 const audioIsPresents = getStoredAudioDevicePresents();
                 const videoIsPresents = getStoredVideoDevicePresents();
 
@@ -392,12 +402,12 @@ export default {
                     return Promise.reject('No media configured');
                 }
 
-                console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", resolution);
+                console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", videoResolution, "screenResolution", screenResolution);
 
                 if (isScreen) {
                     tracks = await createLocalScreenTracks({
                         audio: audioIsPresents,
-                        resolution: resolution
+                        resolution: screenResolution
                     });
                 } else {
                     tracks = await createLocalTracks({
@@ -408,7 +418,7 @@ export default {
                         } : false,
                         video: videoIsPresents ? {
                             deviceId: videoId,
-                            resolution: resolution
+                            resolution: videoResolution
                         } : false
                     })
                 }

@@ -81,7 +81,8 @@ type RestClientConfig struct {
 }
 
 type FrontendConfig struct {
-	Resolution string `mapstructure:"resolution"`
+	VideoResolution  string `mapstructure:"videoResolution"`
+	ScreenResolution string `mapstructure:"screenResolution"`
 }
 
 type AuthConfig struct {

@@ -16,19 +16,33 @@ export const getWebsocketUrlPrefix = () => {
 
 const defaultResolution = 'h720';
 
-export const KEY_RESOLUTION = 'videoResolution2';
+export const KEY_VIDEO_RESOLUTION = 'videoResolution2';
+export const KEY_SCREEN_RESOLUTION = 'screenResolution2';
 
 export const getVideoResolution = () => {
-    let got = localStorage.getItem(KEY_RESOLUTION);
+    let got = localStorage.getItem(KEY_VIDEO_RESOLUTION);
     if (!got) {
-        localStorage.setItem(KEY_RESOLUTION, defaultResolution);
-        got = localStorage.getItem(KEY_RESOLUTION);
+        localStorage.setItem(KEY_VIDEO_RESOLUTION, defaultResolution);
+        got = localStorage.getItem(KEY_VIDEO_RESOLUTION);
+    }
+    return got;
+}
+
+export const getScreenResolution = () => {
+    let got = localStorage.getItem(KEY_SCREEN_RESOLUTION);
+    if (!got) {
+        localStorage.setItem(KEY_SCREEN_RESOLUTION, defaultResolution);
+        got = localStorage.getItem(KEY_SCREEN_RESOLUTION);
     }
     return got;
 }
 
 export const setVideoResolution = (newVideoResolution) => {
-    localStorage.setItem(KEY_RESOLUTION, newVideoResolution);
+    localStorage.setItem(KEY_VIDEO_RESOLUTION, newVideoResolution);
+}
+
+export const setScreenResolution = (newVideoResolution) => {
+    localStorage.setItem(KEY_SCREEN_RESOLUTION, newVideoResolution);
 }
 
 

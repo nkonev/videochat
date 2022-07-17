@@ -28,13 +28,23 @@
                     </v-row>
 
                     <v-select
-                        :disabled="serverPreferredResolution"
-                        :messages="$vuetify.lang.t('$vuetify.quality')"
+                        :disabled="serverPreferredVideoResolution"
+                        :messages="$vuetify.lang.t('$vuetify.videoResolution')"
                         :items="qualityItems"
                         dense
                         solo
                         @change="changeVideoResolution"
                         v-model="videoQuality"
+                    ></v-select>
+
+                    <v-select
+                        :disabled="serverPreferredScreenResolution"
+                        :messages="$vuetify.lang.t('$vuetify.screenResolution')"
+                        :items="qualityItems"
+                        dense
+                        solo
+                        @change="changeScreenResolution"
+                        v-model="screenQuality"
                     ></v-select>
 
                 </v-card-text>
@@ -62,7 +72,7 @@
         getStoredAudioDevicePresents,
         setStoredAudioPresents,
         getStoredVideoDevicePresents,
-        setStoredVideoPresents, hasLength
+        setStoredVideoPresents, hasLength, setScreenResolution, getScreenResolution
     } from "./utils";
     import axios from "axios";
     import {videochat_name} from "./routes";
@@ -72,11 +82,13 @@
             return {
                 changing: false,
                 show: false,
-                serverPreferredResolution: false,
+                serverPreferredVideoResolution: false,
+                serverPreferredScreenResolution: false,
 
                 audioPresents: null,
                 videoPresents: null,
                 videoQuality: null,
+                screenQuality: null,
             }
         },
         methods: {
@@ -84,15 +96,21 @@
                 this.audioPresents = getStoredAudioDevicePresents();
                 this.videoPresents = getStoredVideoDevicePresents();
                 this.videoQuality = getVideoResolution();
-                this.serverPreferredResolution = false;
+                this.screenQuality = getScreenResolution();
+                this.serverPreferredVideoResolution = false;
+                this.serverPreferredScreenResolution = false;
                 this.show = true;
                 axios
                     .get(`/api/video/${this.chatId}/config`)
                     .then(response => response.data)
                     .then(respData => {
-                        if (hasLength(respData.resolution)) {
-                            this.serverPreferredResolution = true;
-                            this.videoQuality = respData.resolution;
+                        if (hasLength(respData.videoResolution)) {
+                            this.serverPreferredVideoResolution = true;
+                            this.videoQuality = respData.videoResolution;
+                        }
+                        if (hasLength(respData.screenResolution)) {
+                            this.serverPreferredScreenResolution = true;
+                            this.screenQuality = respData.screenResolution;
                         }
                     })
 
@@ -114,6 +132,13 @@
                     this.changing = true;
                 }
                 setVideoResolution(newVideoResolution);
+                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+            },
+            changeScreenResolution(newVideoResolution) {
+                if (this.isVideoRoute()) {
+                    this.changing = true;
+                }
+                setScreenResolution(newVideoResolution);
                 bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeAudioPresents(v) {

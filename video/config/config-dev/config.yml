@@ -30,7 +30,8 @@ livekit:
   url: "http://localhost:7880"
 
 frontend:
-  resolution: h720
+  videoResolution: h720
+  screenResolution: h1080
 
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
