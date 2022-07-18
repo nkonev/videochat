@@ -95,5 +95,7 @@ export default {
     websocket_not_connected: "Websocket не подключен",
     cancel: "Отменить",
     source_add: "Добавить источник",
+    screen_share: "Демонстрация экрана",
     apply: "Применить",
+    create_call: "Звонок"
 }
