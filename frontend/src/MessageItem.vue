@@ -126,6 +126,8 @@
       /* Instead use this non-standard one: */
       word-break: break-word;
 
+      white-space: pre-wrap
+
       /* Adds a hyphen where the word breaks, if supported (No Blink) */
       -ms-hyphens: auto;
       -moz-hyphens: auto;
