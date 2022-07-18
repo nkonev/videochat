@@ -7,6 +7,7 @@ export default {
     mute_audio: "Заглушить звук",
     unmute_video: "Включить видео",
     mute_video: "Выключить видео",
+    fullscreen: "На весь экран",
     files: "Файлы",
     find_user: "Найти пользователя",
     new_chat: "Новый чат",

@@ -1,10 +1,53 @@
 <template>
     <div class="video-container-element" @mouseenter="showControls=true" @mouseleave="showControls=false">
         <div class="video-container-element-control" v-show="showControls">
-            <v-btn icon @click="doMuteAudio(!audioMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
-            <v-btn icon @click="doMuteVideo(!videoMute)" v-if="isLocal" ><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
-            <v-btn icon @click="onEnterFullscreen"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
-            <v-btn icon v-if="isLocal" @click="onClose()"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
+            <v-badge
+                v-if="isLocal"
+                :value="muteAudioHover"
+                :content="audioMute ? $vuetify.lang.t('$vuetify.unmute_audio') : $vuetify.lang.t('$vuetify.mute_audio')"
+                bottom
+                transition="slide-y-transition"
+            >
+                <v-hover v-model="muteAudioHover">
+                    <v-btn icon @click="doMuteAudio(!audioMute)"><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
+                </v-hover>
+            </v-badge>
+
+            <v-badge
+                v-if="isLocal"
+                :value="muteVideoHover"
+                :content="videoMute ? $vuetify.lang.t('$vuetify.unmute_video') : $vuetify.lang.t('$vuetify.mute_video')"
+                bottom
+                transition="slide-y-transition"
+            >
+                <v-hover v-model="muteVideoHover">
+                    <v-btn icon @click="doMuteVideo(!videoMute)"><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
+                </v-hover>
+            </v-badge>
+
+            <v-badge
+                :value="fullscreenHover"
+                :content="$vuetify.lang.t('$vuetify.fullscreen')"
+                bottom
+                transition="slide-y-transition"
+            >
+                <v-hover v-model="fullscreenHover">
+                    <v-btn icon @click="onEnterFullscreen"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
+                </v-hover>
+            </v-badge>
+
+            <v-badge
+                v-if="isLocal"
+                :value="closeHover"
+                :content="$vuetify.lang.t('$vuetify.close')"
+                bottom
+                transition="slide-y-transition"
+            >
+                <v-hover v-model="closeHover">
+                    <v-btn icon @click="onClose()"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
+                </v-hover>
+            </v-badge>
+
         </div>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef"/>
@@ -33,7 +76,11 @@ export default {
             showControls: false,
             audioPublication: null,
             videoPublication: null,
-            speakingTimer: null
+            speakingTimer: null,
+            muteAudioHover: false,
+            muteVideoHover: false,
+            fullscreenHover: false,
+            closeHover: false,
         }
     },
 
@@ -161,7 +208,7 @@ export default {
         }
     },
     created(){
-
+        this.showControls = this.isLocal;
     },
     destroyed() {
 

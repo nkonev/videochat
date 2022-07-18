@@ -7,6 +7,7 @@ export default {
     mute_audio: "Mute audio",
     unmute_video: "Unmute video",
     mute_video: "Mute video",
+    fullscreen: "Fullscreen",
     files: "Files",
     find_user: "Find user",
     new_chat: "New chat",
