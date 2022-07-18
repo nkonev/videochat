@@ -79,53 +79,20 @@
                 dense
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
-
+            <v-btn v-if="showHangButton && $vuetify.breakpoint.smAndUp" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
+            <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
             <v-badge
-                v-if="showHangButton && $vuetify.breakpoint.smAndUp"
-                :content="$vuetify.lang.t('$vuetify.screen_share')"
-                :value="shareScreenButtonHover"
-                transition="slide-x-transition"
-                bottom
-            >
-                <v-hover v-model="shareScreenButtonHover">
-                    <v-btn icon @click="addScreenSource()"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
-                </v-hover>
-            </v-badge>
-            <v-badge
-                v-if="showHangButton"
-                :content="$vuetify.lang.t('$vuetify.source_add')"
-                :value="addSourceButtonHover"
-                transition="slide-x-transition"
-                bottom
-            >
-                <v-hover v-model="addSourceButtonHover">
-                    <v-btn icon @click="addVideoSource()"><v-icon>mdi-video-plus</v-icon></v-btn>
-                </v-hover>
-            </v-badge>
-            <v-badge
-                v-if="showCallButton"
-                :content="videoChatUsersCount? videoChatUsersCount : $vuetify.lang.t('$vuetify.create_call')"
-                :value="videoChatUsersCount? videoChatUsersCount : callButtonHover"
-                color="green"
-                :overlap="videoChatUsersCount > 0"
-                :offset-y="'1.8em'"
-                transition="slide-x-transition"
-            >
-                <v-hover v-model="callButtonHover">
-                    <v-btn icon @click="createCall()">
-                        <v-icon color="green">mdi-phone</v-icon>
-                    </v-btn>
-                </v-hover>
-            </v-badge>
-            <v-badge
-                v-if="showHangButton"
+                v-if="showCallButton || showHangButton"
                 :content="videoChatUsersCount"
                 :value="videoChatUsersCount"
                 color="green"
                 overlap
                 offset-y="1.8em"
             >
-                <v-btn icon @click="stopCall()">
+                <v-btn v-if="showCallButton" icon @click="createCall()" :title="$vuetify.lang.t('$vuetify.create_call')">
+                    <v-icon color="green">mdi-phone</v-icon>
+                </v-btn>
+                <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.stop_call')">
                     <v-icon color="red">mdi-phone</v-icon>
                 </v-btn>
             </v-badge>
@@ -274,9 +241,6 @@
                 callReblinkCounter: 0,
                 showWebsocketRestored: false,
                 searchString: "",
-                callButtonHover: false,
-                shareScreenButtonHover: false,
-                addSourceButtonHover: false,
             }
         },
         components:{
@@ -324,7 +288,6 @@
             },
             createCall() {
                 console.log("createCall");
-                this.callButtonHover = false;
                 this.$router.push({ name: videochat_name});
             },
             stopCall() {

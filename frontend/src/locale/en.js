@@ -97,5 +97,6 @@ export default {
     source_add: "Add source",
     screen_share: "Screen sharing",
     apply: "Apply",
-    create_call: "Call"
+    create_call: "Call",
+    stop_call: "Stop call"
 }

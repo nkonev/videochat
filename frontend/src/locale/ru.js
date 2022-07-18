@@ -97,5 +97,6 @@ export default {
     source_add: "Добавить источник",
     screen_share: "Демонстрация экрана",
     apply: "Применить",
-    create_call: "Звонок"
+    create_call: "Звонок",
+    stop_call: "Прервать звонок"
 }
