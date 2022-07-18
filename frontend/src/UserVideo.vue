@@ -77,7 +77,7 @@ export default {
             audioPublication: null,
             videoPublication: null,
             speakingTimer: null,
-            muteAudioHover: false,
+            muteAudioHover: true,
             muteVideoHover: false,
             fullscreenHover: false,
             closeHover: false,
