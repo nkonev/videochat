@@ -29,7 +29,7 @@
 
                     <v-select
                         :disabled="serverPreferredVideoResolution"
-                        :messages="$vuetify.lang.t('$vuetify.videoResolution')"
+                        :messages="$vuetify.lang.t('$vuetify.video_resolution')"
                         :items="qualityItems"
                         dense
                         solo
@@ -39,7 +39,7 @@
 
                     <v-select
                         :disabled="serverPreferredScreenResolution"
-                        :messages="$vuetify.lang.t('$vuetify.screenResolution')"
+                        :messages="$vuetify.lang.t('$vuetify.screen_resolution')"
                         :items="qualityItems"
                         dense
                         solo
