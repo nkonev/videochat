@@ -22,7 +22,7 @@
             <v-divider></v-divider>
 
             <v-list dense>
-                <v-list-item @click="goHome()">
+                <v-list-item @click.prevent="goHome()" :href="require('./routes').root">
                     <v-list-item-icon><v-icon>mdi-home-city</v-icon></v-list-item-icon>
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.chats') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
@@ -47,7 +47,7 @@
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.edit_chat') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
-                <v-list-item @click="goProfile()" v-if="shouldDisplayProfile()">
+                <v-list-item @click.prevent="goProfile()" v-if="shouldDisplayProfile()" :href="require('./routes').profile">
                     <v-list-item-icon><v-icon>mdi-account</v-icon></v-list-item-icon>
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.profile') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
