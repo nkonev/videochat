@@ -166,7 +166,7 @@ export default {
         }
     },
     created(){
-        this.showControls = this.isLocal;
+        this.showControls = this.isLocal && this.$vuetify.breakpoint.smAndUp;
     },
     destroyed() {
 
