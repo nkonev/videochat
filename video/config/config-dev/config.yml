@@ -32,6 +32,10 @@ livekit:
 frontend:
   videoResolution: h720
   screenResolution: h1080
+  videoSimulcast: true
+  screenSimulcast: false
+  roomDynacast: true
+  roomAdaptiveStream: true
 
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"

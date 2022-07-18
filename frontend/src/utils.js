@@ -89,6 +89,70 @@ export const getStoredLanguage = () => {
     return v;
 }
 
+export const KEY_VIDEO_SIMULCAST = 'videoSimulcast';
+export const KEY_SCREEN_SIMULCAST = 'screenSimulcast';
+
+export const getStoredVideoSimulcast = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_VIDEO_SIMULCAST));
+    if (v === null) {
+        console.log("Resetting video simulcast to default");
+        setStoredVideoSimulcast(true);
+        v = JSON.parse(localStorage.getItem(KEY_VIDEO_SIMULCAST));
+    }
+    return v;
+}
+
+export const setStoredVideoSimulcast = (v) => {
+    localStorage.setItem(KEY_VIDEO_SIMULCAST, JSON.stringify(v));
+}
+
+export const getStoredScreenSimulcast = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_SCREEN_SIMULCAST));
+    if (v === null) {
+        console.log("Resetting screen simulcast presents to default");
+        setStoredScreenSimulcast(true);
+        v = JSON.parse(localStorage.getItem(KEY_SCREEN_SIMULCAST));
+    }
+    return v;
+}
+
+export const setStoredScreenSimulcast = (v) => {
+    localStorage.setItem(KEY_SCREEN_SIMULCAST, JSON.stringify(v));
+}
+
+export const KEY_ROOM_DYNACAST = 'roomDynacast';
+
+export const getStoredRoomDynacast = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_ROOM_DYNACAST));
+    if (v === null) {
+        console.log("Resetting video dynacast to default");
+        setStoredRoomDynacast(true);
+        v = JSON.parse(localStorage.getItem(KEY_ROOM_DYNACAST));
+    }
+    return v;
+}
+
+export const setStoredRoomDynacast = (v) => {
+    localStorage.setItem(KEY_ROOM_DYNACAST, JSON.stringify(v));
+}
+
+export const KEY_ROOM_ADAPTIVE_STREAM = 'roomAdaptiveStream';
+
+export const getStoredRoomAdaptiveStream = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_ROOM_ADAPTIVE_STREAM));
+    if (v === null) {
+        console.log("Resetting adaptive stream to default");
+        setStoredRoomAdaptiveStream(true);
+        v = JSON.parse(localStorage.getItem(KEY_ROOM_ADAPTIVE_STREAM));
+    }
+    return v;
+}
+
+export const setStoredRoomAdaptiveStream = (v) => {
+    localStorage.setItem(KEY_ROOM_ADAPTIVE_STREAM, JSON.stringify(v));
+}
+
+
 export const setStoredLanguage = (v) => {
     localStorage.setItem(KEY_LANGUAGE, JSON.stringify(v));
 }
@@ -131,6 +195,11 @@ export const hasLength = (str) => {
         return str.length
     }
 }
+
+export const isSet = (str) => {
+    return str != null
+}
+
 
 export const setIcon = (newMessages) => {
     var link = document.querySelector("link[rel~='icon']");

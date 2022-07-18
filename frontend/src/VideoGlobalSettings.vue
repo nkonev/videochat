@@ -47,6 +47,55 @@
                         v-model="screenQuality"
                     ></v-select>
 
+                    <v-row no-gutters>
+                        <v-col
+                        >
+                            <v-checkbox
+                                dense
+                                :disabled="serverPreferredVideoSimulcast"
+                                v-model="videoSimulcast"
+                                @change="changeVideoSimulcast"
+                                :label="$vuetify.lang.t('$vuetify.video_simulcast')"
+                            ></v-checkbox>
+                        </v-col>
+
+                        <v-col
+                        >
+                            <v-checkbox
+                                dense
+                                :disabled="serverPreferredScreenSimulcast"
+                                v-model="screenSimulcast"
+                                @change="changeScreenSimulcast"
+                                :label="$vuetify.lang.t('$vuetify.screen_simulcast')"
+                            ></v-checkbox>
+                        </v-col>
+                    </v-row>
+
+                    <v-row no-gutters>
+                        <v-col
+                        >
+                            <v-checkbox
+                                dense
+                                :disabled="serverPreferredRoomDynacast"
+                                v-model="roomDynacast"
+                                @change="changeRoomDynacast"
+                                :label="$vuetify.lang.t('$vuetify.room_dynacast')"
+                            ></v-checkbox>
+                        </v-col>
+
+                        <v-col
+                        >
+                            <v-checkbox
+                                dense
+                                :disabled="serverPreferredRoomAdaptiveStream"
+                                v-model="roomAdaptiveStream"
+                                @change="changeRoomAdaptiveStream"
+                                :label="$vuetify.lang.t('$vuetify.room_adaptive_stream')"
+                            ></v-checkbox>
+                        </v-col>
+
+                    </v-row>
+
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
@@ -72,7 +121,15 @@
         getStoredAudioDevicePresents,
         setStoredAudioPresents,
         getStoredVideoDevicePresents,
-        setStoredVideoPresents, hasLength, setScreenResolution, getScreenResolution
+        setStoredVideoPresents,
+        hasLength,
+        setScreenResolution,
+        getScreenResolution,
+        setStoredVideoSimulcast,
+        setStoredScreenSimulcast,
+        getStoredRoomDynacast,
+        getStoredVideoSimulcast,
+        getStoredScreenSimulcast, setStoredRoomDynacast, isSet, setStoredRoomAdaptiveStream, getStoredRoomAdaptiveStream
     } from "./utils";
     import axios from "axios";
     import {videochat_name} from "./routes";
@@ -82,23 +139,48 @@
             return {
                 changing: false,
                 show: false,
-                serverPreferredVideoResolution: false,
-                serverPreferredScreenResolution: false,
 
                 audioPresents: null,
                 videoPresents: null,
+
+                serverPreferredVideoResolution: false,
+                serverPreferredScreenResolution: false,
                 videoQuality: null,
                 screenQuality: null,
+
+                serverPreferredVideoSimulcast: false,
+                serverPreferredScreenSimulcast: false,
+                videoSimulcast: true,
+                screenSimulcast: true,
+
+                serverPreferredRoomDynacast: false,
+                roomDynacast: true,
+
+                serverPreferredRoomAdaptiveStream: false,
+                roomAdaptiveStream: true,
             }
         },
         methods: {
             showModal() {
                 this.audioPresents = getStoredAudioDevicePresents();
                 this.videoPresents = getStoredVideoDevicePresents();
+
                 this.videoQuality = getVideoResolution();
                 this.screenQuality = getScreenResolution();
                 this.serverPreferredVideoResolution = false;
                 this.serverPreferredScreenResolution = false;
+
+                this.videoSimulcast = getStoredVideoSimulcast();
+                this.screenSimulcast = getStoredScreenSimulcast()
+                this.serverPreferredVideoSimulcast = false;
+                this.serverPreferredScreenSimulcast = false;
+
+                this.roomDynacast = getStoredRoomDynacast();
+                this.serverPreferredRoomDynacast = false;
+
+                this.roomAdaptiveStream = getStoredRoomAdaptiveStream();
+                this.serverPreferredRoomAdaptiveStream = false;
+
                 this.show = true;
                 axios
                     .get(`/api/video/${this.chatId}/config`)
@@ -111,6 +193,22 @@
                         if (hasLength(respData.screenResolution)) {
                             this.serverPreferredScreenResolution = true;
                             this.screenQuality = respData.screenResolution;
+                        }
+                        if (isSet(respData.videoSimulcast)) {
+                            this.serverPreferredVideoSimulcast = true;
+                            this.videoSimulcast = respData.videoSimulcast;
+                        }
+                        if (isSet(respData.screenSimulcast)) {
+                            this.serverPreferredScreenSimulcast = true;
+                            this.screenSimulcast = respData.screenSimulcast;
+                        }
+                        if (isSet(respData.roomDynacast)) {
+                            this.serverPreferredRoomDynacast = true;
+                            this.roomDynacast = respData.roomDynacast;
+                        }
+                        if (isSet(respData.roomAdaptiveStream)) {
+                            this.serverPreferredRoomAdaptiveStream = true;
+                            this.roomAdaptiveStream = respData.roomAdaptiveStream;
                         }
                     })
 
@@ -153,6 +251,34 @@
                     this.changing = true;
                 }
                 setStoredVideoPresents(v);
+                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+            },
+            changeVideoSimulcast(v) {
+                if (this.isVideoRoute()) {
+                    this.changing = true;
+                }
+                setStoredVideoSimulcast(v);
+                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+            },
+            changeScreenSimulcast(v) {
+                if (this.isVideoRoute()) {
+                    this.changing = true;
+                }
+                setStoredScreenSimulcast(v);
+                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+            },
+            changeRoomDynacast(v) {
+                if (this.isVideoRoute()) {
+                    this.changing = true;
+                }
+                setStoredRoomDynacast(v);
+                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+            },
+            changeRoomAdaptiveStream(v) {
+                if (this.isVideoRoute()) {
+                    this.changing = true;
+                }
+                setStoredRoomAdaptiveStream(v);
                 bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
         },

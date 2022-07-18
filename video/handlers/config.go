@@ -31,9 +31,13 @@ type ICEServerConfigDto struct {
 }
 
 type FrontendConfigDto struct {
-	RtcConfig        *RtcConfig `json:"rtcConfiguration"`
-	VideoResolution  string     `json:"videoResolution"`
-	ScreenResolution string     `json:"screenResolution"`
+	RtcConfig          *RtcConfig `json:"rtcConfiguration"`
+	VideoResolution    string     `json:"videoResolution"`
+	ScreenResolution   string     `json:"screenResolution"`
+	VideoSimulcast     *bool      `json:"videoSimulcast"`
+	ScreenSimulcast    *bool      `json:"screenSimulcast"`
+	RoomDynacast       *bool      `json:"roomDynacast"`
+	RoomAdaptiveStream *bool      `json:"roomAdaptiveStream"`
 }
 
 func (h *ConfigHandler) GetConfig(c echo.Context) error {
@@ -57,6 +61,10 @@ func (h *ConfigHandler) GetConfig(c echo.Context) error {
 
 	responseSliceFrontendConfig.VideoResolution = frontendConfig.VideoResolution
 	responseSliceFrontendConfig.ScreenResolution = frontendConfig.ScreenResolution
+	responseSliceFrontendConfig.VideoSimulcast = frontendConfig.VideoSimulcast
+	responseSliceFrontendConfig.ScreenSimulcast = frontendConfig.ScreenSimulcast
+	responseSliceFrontendConfig.RoomDynacast = frontendConfig.RoomDynacast
+	responseSliceFrontendConfig.RoomAdaptiveStream = frontendConfig.RoomAdaptiveStream
 
 	return c.JSON(http.StatusOK, responseSliceFrontendConfig)
 }

@@ -81,8 +81,12 @@ type RestClientConfig struct {
 }
 
 type FrontendConfig struct {
-	VideoResolution  string `mapstructure:"videoResolution"`
-	ScreenResolution string `mapstructure:"screenResolution"`
+	VideoResolution    string `mapstructure:"videoResolution"`
+	ScreenResolution   string `mapstructure:"screenResolution"`
+	VideoSimulcast     *bool  `mapstructure:"videoSimulcast"`
+	ScreenSimulcast    *bool  `mapstructure:"screenSimulcast"`
+	RoomDynacast       *bool  `mapstructure:"roomDynacast"`
+	RoomAdaptiveStream *bool  `mapstructure:"roomAdaptiveStream"`
 }
 
 type AuthConfig struct {

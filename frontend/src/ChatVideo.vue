@@ -36,12 +36,12 @@ import { retry } from '@lifeomic/attempt';
 import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
 import {
     defaultAudioMute, getScreenResolution,
-    getStoredAudioDevicePresents,
-    getStoredVideoDevicePresents,
+    getStoredAudioDevicePresents, getStoredScreenDynacast, getStoredScreenSimulcast,
+    getStoredVideoDevicePresents, getStoredRoomDynacast, getStoredVideoSimulcast,
     getVideoResolution,
     getWebsocketUrlPrefix,
     hasLength,
-    isMobileFireFox
+    isMobileFireFox, isSet, getStoredRoomAdaptiveStream
 } from "@/utils";
 import bus, {
     ADD_SCREEN_SOURCE,
@@ -63,6 +63,10 @@ export default {
             userVideoComponents: new ChatVideoUserComponentHolder(),
             videoResolution: null,
             screenResolution: null,
+            videoSimulcast: true,
+            screenSimulcast: true,
+            roomDynacast: true,
+            roomAdaptiveStream: true,
             showMessage: false,
             messageText: "",
             messageColor: null,
@@ -239,6 +243,42 @@ export default {
                 this.screenResolution = getScreenResolution();
                 console.log("Used screenResolution from localstorage", this.screenResolution)
             }
+
+            const maybeVideoSimulcast = configObj.videoSimulcast;
+            if (isSet(maybeVideoSimulcast)) {
+                console.log("Server overrided videoSimulcast to", maybeVideoSimulcast)
+                this.videoSimulcast = maybeVideoSimulcast;
+            } else {
+                this.videoSimulcast = getStoredVideoSimulcast();
+                console.log("Used videoSimulcast from localstorage", this.videoSimulcast)
+            }
+
+            const maybeScreenSimulcast = configObj.screenSimulcast;
+            if (isSet(maybeScreenSimulcast)) {
+                console.log("Server overrided screenSimulcast to", maybeScreenSimulcast)
+                this.screenSimulcast = maybeScreenSimulcast;
+            } else {
+                this.screenSimulcast = getStoredScreenSimulcast();
+                console.log("Used screenSimulcast from localstorage", this.screenSimulcast)
+            }
+
+            const maybeRoomDynacast = configObj.roomDynacast;
+            if (isSet(maybeRoomDynacast)) {
+                console.log("Server overrided roomDynacast to", maybeRoomDynacast)
+                this.roomDynacast = maybeRoomDynacast;
+            } else {
+                this.roomDynacast = getStoredRoomDynacast();
+                console.log("Used roomDynacast from localstorage", this.roomDynacast)
+            }
+
+            const maybeRoomAdaptiveStream = configObj.roomAdaptiveStream;
+            if (isSet(maybeRoomAdaptiveStream)) {
+                console.log("Server overrided roomAdaptiveStream to", maybeRoomAdaptiveStream)
+                this.roomAdaptiveStream = maybeRoomAdaptiveStream;
+            } else {
+                this.roomAdaptiveStream = getStoredRoomAdaptiveStream();
+                console.log("Used roomAdaptiveStream from localstorage", this.roomAdaptiveStream)
+            }
         },
 
         handleTrackMuted(trackPublication, participant) {
@@ -294,13 +334,16 @@ export default {
             } catch (e) {
                 this.makeError(e, "Error during fetching config");
             }
+
+            console.log("Creating room with dynacast", this.roomDynacast, "adaptiveStream", this.roomAdaptiveStream);
+
             // creates a new room with options
             this.room = new Room({
                 // automatically manage subscribed video quality
-                adaptiveStream: true,
+                adaptiveStream: this.roomAdaptiveStream,
 
                 // optimize publishing bandwidth and CPU for simulcasted tracks
-                dynacast: true,
+                dynacast: this.roomDynacast,
             });
 
             // set up event listeners
@@ -390,6 +433,9 @@ export default {
         async createLocalMediaTracks(videoId, audioId, isScreen) {
             let tracks = [];
 
+            const videoSimulcast = this.videoSimulcast;
+            const screenSimulcast = this.screenSimulcast;
+
             try {
                 const videoResolution = VideoPresets[this.videoResolution].resolution;
                 const screenResolution = VideoPresets[this.screenResolution].resolution;
@@ -402,7 +448,11 @@ export default {
                     return Promise.reject('No media configured');
                 }
 
-                console.info("Creating media tracks", "audioId", audioId, "videoid", videoId, "videoResolution", videoResolution, "screenResolution", screenResolution);
+                console.info(
+                    "Creating media tracks", "audioId", audioId, "videoid", videoId,
+                    "videoResolution", videoResolution, "screenResolution", screenResolution,
+                    "videoSimulcast", videoSimulcast, "screenSimulcast", screenSimulcast,
+                );
 
                 if (isScreen) {
                     tracks = await createLocalScreenTracks({
@@ -428,11 +478,15 @@ export default {
 
             try {
                 const isMobileFirefox = isMobileFireFox();
-                console.log("isMobileFirefox = ", isMobileFirefox, " in case Mobile Firefox simulcast for video tracks will be disabled");
+                console.debug("isMobileFirefox = ", isMobileFirefox, " in case Mobile Firefox simulcast for video tracks will be disabled");
                 for (const track of tracks) {
+                    const normalizedScreen = !!isScreen;
+                    const trackName = "track_" + track.kind + "__screen_" + normalizedScreen + "_" + this.getNewId();
+                    const simulcast = !isMobileFirefox && (normalizedScreen ? screenSimulcast : videoSimulcast);
+                    console.log(`Publishing local ${track.kind} screen=${normalizedScreen} track with name ${trackName} and simulcast ${simulcast}`);
                     const publication = await this.room.localParticipant.publishTrack(track, {
-                        name: "track_" + track.kind + "__screen_" + isScreen + "_" + this.getNewId(),
-                        simulcast: !isMobileFirefox,
+                        name: trackName,
+                        simulcast: simulcast,
                     });
                     if (track.kind == 'audio' && defaultAudioMute) {
                         await publication.mute();
