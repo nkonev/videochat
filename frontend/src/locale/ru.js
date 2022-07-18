@@ -98,5 +98,5 @@ export default {
     screen_share: "Демонстрация экрана",
     apply: "Применить",
     create_call: "Звонок",
-    stop_call: "Прервать звонок"
+    leave_call: "Покинуть звонок"
 }

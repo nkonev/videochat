@@ -92,7 +92,7 @@
                 <v-btn v-if="showCallButton" icon @click="createCall()" :title="$vuetify.lang.t('$vuetify.create_call')">
                     <v-icon color="green">mdi-phone</v-icon>
                 </v-btn>
-                <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.stop_call')">
+                <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
                     <v-icon color="red">mdi-phone</v-icon>
                 </v-btn>
             </v-badge>

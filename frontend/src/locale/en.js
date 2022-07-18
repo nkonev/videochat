@@ -98,5 +98,5 @@ export default {
     screen_share: "Screen sharing",
     apply: "Apply",
     create_call: "Call",
-    stop_call: "Stop call"
+    leave_call: "Leave call"
 }
