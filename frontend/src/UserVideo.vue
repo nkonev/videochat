@@ -1,5 +1,5 @@
 <template>
-    <div class="video-container-element" @mouseenter="showControls=true" @mouseleave="showControls=false">
+    <div class="video-container-element" @mouseenter="showControls=true; muteAudioBlink=false" @mouseleave="showControls=false">
         <div class="video-container-element-control" v-show="showControls">
             <v-badge
                 v-if="isLocal"
@@ -9,7 +9,7 @@
                 transition="slide-y-transition"
             >
                 <v-hover v-model="muteAudioHover">
-                    <v-btn icon @click="doMuteAudio(!audioMute)"><v-icon large class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
+                    <v-btn icon @click="doMuteAudio(!audioMute)"><v-icon large :class="['video-container-element-control-item', muteAudioBlink && audioMute ? 'info-blink' : '']">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
                 </v-hover>
             </v-badge>
 
@@ -77,10 +77,11 @@ export default {
             audioPublication: null,
             videoPublication: null,
             speakingTimer: null,
-            muteAudioHover: true,
+            muteAudioHover: false,
             muteVideoHover: false,
             fullscreenHover: false,
             closeHover: false,
+            muteAudioBlink: true,
         }
     },
 
@@ -275,4 +276,14 @@ export default {
     .video-container-element-caption-errored {
         text-shadow: -2px 0 #ff9c9c, 0 2px #ff9c9c, 2px 0 #ff9c9c, 0 -2px #ff9c9c;
     }
+
+    .info-blink {
+        animation: blink 0.5s;
+        animation-iteration-count: 5;
+    }
+
+    @keyframes blink {
+        50% { opacity: 10% }
+    }
+
 </style>
