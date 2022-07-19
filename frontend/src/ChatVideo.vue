@@ -51,22 +51,19 @@ import bus, {
 } from "@/bus";
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
 import {chat_name, videochat_name} from "@/routes";
+import videoServerSettingsMixin from "@/videoServerSettingsMixin";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
 export default {
+    mixins: [videoServerSettingsMixin()],
+
     data() {
         return {
             chatId: null,
             room: null,
             videoContainerDiv: null,
             userVideoComponents: new ChatVideoUserComponentHolder(),
-            videoResolution: null,
-            screenResolution: null,
-            videoSimulcast: true,
-            screenSimulcast: true,
-            roomDynacast: true,
-            roomAdaptiveStream: true,
             showMessage: false,
             messageText: "",
             messageColor: null,
@@ -224,61 +221,7 @@ export default {
         },
 
         async setConfig() {
-            const configObj = await axios
-                .get(`/api/video/${this.chatId}/config`)
-                .then(response => response.data)
-            const maybeVideoResolution = configObj.videoResolution;
-            if (hasLength(maybeVideoResolution)) {
-                console.log("Server overrided videoResolution to", maybeVideoResolution)
-                this.videoResolution = maybeVideoResolution;
-            } else {
-                this.videoResolution = getVideoResolution();
-                console.log("Used videoResolution from localstorage", this.videoResolution)
-            }
-            const maybeScreenResolution = configObj.screenResolution;
-            if (hasLength(maybeScreenResolution)) {
-                console.log("Server overrided screenResolution to", maybeScreenResolution)
-                this.screenResolution = maybeScreenResolution;
-            } else {
-                this.screenResolution = getScreenResolution();
-                console.log("Used screenResolution from localstorage", this.screenResolution)
-            }
-
-            const maybeVideoSimulcast = configObj.videoSimulcast;
-            if (isSet(maybeVideoSimulcast)) {
-                console.log("Server overrided videoSimulcast to", maybeVideoSimulcast)
-                this.videoSimulcast = maybeVideoSimulcast;
-            } else {
-                this.videoSimulcast = getStoredVideoSimulcast();
-                console.log("Used videoSimulcast from localstorage", this.videoSimulcast)
-            }
-
-            const maybeScreenSimulcast = configObj.screenSimulcast;
-            if (isSet(maybeScreenSimulcast)) {
-                console.log("Server overrided screenSimulcast to", maybeScreenSimulcast)
-                this.screenSimulcast = maybeScreenSimulcast;
-            } else {
-                this.screenSimulcast = getStoredScreenSimulcast();
-                console.log("Used screenSimulcast from localstorage", this.screenSimulcast)
-            }
-
-            const maybeRoomDynacast = configObj.roomDynacast;
-            if (isSet(maybeRoomDynacast)) {
-                console.log("Server overrided roomDynacast to", maybeRoomDynacast)
-                this.roomDynacast = maybeRoomDynacast;
-            } else {
-                this.roomDynacast = getStoredRoomDynacast();
-                console.log("Used roomDynacast from localstorage", this.roomDynacast)
-            }
-
-            const maybeRoomAdaptiveStream = configObj.roomAdaptiveStream;
-            if (isSet(maybeRoomAdaptiveStream)) {
-                console.log("Server overrided roomAdaptiveStream to", maybeRoomAdaptiveStream)
-                this.roomAdaptiveStream = maybeRoomAdaptiveStream;
-            } else {
-                this.roomAdaptiveStream = getStoredRoomAdaptiveStream();
-                console.log("Used roomAdaptiveStream from localstorage", this.roomAdaptiveStream)
-            }
+            await this.initServerData()
         },
 
         handleTrackMuted(trackPublication, participant) {
@@ -433,9 +376,6 @@ export default {
         async createLocalMediaTracks(videoId, audioId, isScreen) {
             let tracks = [];
 
-            const videoSimulcast = this.videoSimulcast;
-            const screenSimulcast = this.screenSimulcast;
-
             try {
                 const videoResolution = VideoPresets[this.videoResolution].resolution;
                 const screenResolution = VideoPresets[this.screenResolution].resolution;
@@ -451,7 +391,7 @@ export default {
                 console.info(
                     "Creating media tracks", "audioId", audioId, "videoid", videoId,
                     "videoResolution", videoResolution, "screenResolution", screenResolution,
-                    "videoSimulcast", videoSimulcast, "screenSimulcast", screenSimulcast,
+                    "videoSimulcast", this.videoSimulcast, "screenSimulcast", this.screenSimulcast,
                 );
 
                 if (isScreen) {
@@ -482,7 +422,7 @@ export default {
                 for (const track of tracks) {
                     const normalizedScreen = !!isScreen;
                     const trackName = "track_" + track.kind + "__screen_" + normalizedScreen + "_" + this.getNewId();
-                    const simulcast = !isMobileFirefox && (normalizedScreen ? screenSimulcast : videoSimulcast);
+                    const simulcast = !isMobileFirefox && (normalizedScreen ? this.screenSimulcast : this.videoSimulcast);
                     console.log(`Publishing local ${track.kind} screen=${normalizedScreen} track with name ${trackName} and simulcast ${simulcast}`);
                     const publication = await this.room.localParticipant.publishTrack(track, {
                         name: trackName,

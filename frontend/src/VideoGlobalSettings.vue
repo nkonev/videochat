@@ -34,7 +34,7 @@
                         dense
                         solo
                         @change="changeVideoResolution"
-                        v-model="videoQuality"
+                        v-model="videoResolution"
                     ></v-select>
 
                     <v-select
@@ -44,7 +44,7 @@
                         dense
                         solo
                         @change="changeScreenResolution"
-                        v-model="screenQuality"
+                        v-model="screenResolution"
                     ></v-select>
 
                     <v-row no-gutters>
@@ -116,25 +116,22 @@
         VIDEO_PARAMETERS_CHANGED,
     } from "./bus";
     import {
-        getVideoResolution,
         setVideoResolution,
         getStoredAudioDevicePresents,
         setStoredAudioPresents,
         getStoredVideoDevicePresents,
         setStoredVideoPresents,
-        hasLength,
         setScreenResolution,
-        getScreenResolution,
         setStoredVideoSimulcast,
         setStoredScreenSimulcast,
-        getStoredRoomDynacast,
-        getStoredVideoSimulcast,
-        getStoredScreenSimulcast, setStoredRoomDynacast, isSet, setStoredRoomAdaptiveStream, getStoredRoomAdaptiveStream
+        setStoredRoomDynacast,
+        setStoredRoomAdaptiveStream
     } from "./utils";
-    import axios from "axios";
     import {videochat_name} from "./routes";
+    import videoServerSettingsMixin from "@/videoServerSettingsMixin";
 
     export default {
+        mixins: [videoServerSettingsMixin()],
         data () {
             return {
                 changing: false,
@@ -142,22 +139,6 @@
 
                 audioPresents: null,
                 videoPresents: null,
-
-                serverPreferredVideoResolution: false,
-                serverPreferredScreenResolution: false,
-                videoQuality: null,
-                screenQuality: null,
-
-                serverPreferredVideoSimulcast: false,
-                serverPreferredScreenSimulcast: false,
-                videoSimulcast: true,
-                screenSimulcast: true,
-
-                serverPreferredRoomDynacast: false,
-                roomDynacast: true,
-
-                serverPreferredRoomAdaptiveStream: false,
-                roomAdaptiveStream: true,
             }
         },
         methods: {
@@ -165,53 +146,9 @@
                 this.audioPresents = getStoredAudioDevicePresents();
                 this.videoPresents = getStoredVideoDevicePresents();
 
-                this.videoQuality = getVideoResolution();
-                this.screenQuality = getScreenResolution();
-                this.serverPreferredVideoResolution = false;
-                this.serverPreferredScreenResolution = false;
-
-                this.videoSimulcast = getStoredVideoSimulcast();
-                this.screenSimulcast = getStoredScreenSimulcast()
-                this.serverPreferredVideoSimulcast = false;
-                this.serverPreferredScreenSimulcast = false;
-
-                this.roomDynacast = getStoredRoomDynacast();
-                this.serverPreferredRoomDynacast = false;
-
-                this.roomAdaptiveStream = getStoredRoomAdaptiveStream();
-                this.serverPreferredRoomAdaptiveStream = false;
+                this.initServerData();
 
                 this.show = true;
-                axios
-                    .get(`/api/video/${this.chatId}/config`)
-                    .then(response => response.data)
-                    .then(respData => {
-                        if (hasLength(respData.videoResolution)) {
-                            this.serverPreferredVideoResolution = true;
-                            this.videoQuality = respData.videoResolution;
-                        }
-                        if (hasLength(respData.screenResolution)) {
-                            this.serverPreferredScreenResolution = true;
-                            this.screenQuality = respData.screenResolution;
-                        }
-                        if (isSet(respData.videoSimulcast)) {
-                            this.serverPreferredVideoSimulcast = true;
-                            this.videoSimulcast = respData.videoSimulcast;
-                        }
-                        if (isSet(respData.screenSimulcast)) {
-                            this.serverPreferredScreenSimulcast = true;
-                            this.screenSimulcast = respData.screenSimulcast;
-                        }
-                        if (isSet(respData.roomDynacast)) {
-                            this.serverPreferredRoomDynacast = true;
-                            this.roomDynacast = respData.roomDynacast;
-                        }
-                        if (isSet(respData.roomAdaptiveStream)) {
-                            this.serverPreferredRoomAdaptiveStream = true;
-                            this.roomAdaptiveStream = respData.roomAdaptiveStream;
-                        }
-                    })
-
             },
             closeModal() {
                 this.show = false;
