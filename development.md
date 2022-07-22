@@ -282,10 +282,6 @@ docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjM
 ## Explanation of two peer connections (livekit has their own fork of ion-sfu)
 https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
 
-## There was a problem when jaeger all-in-one ate too much memory - one of participants didn't see other
-
-## Another problem can be in Mobile Chrome 101.0.4951.41 - swap it up helps when video isn't connected from Mobile Chrome.
-
 ## Checking limits
 ```
 cat /proc/$(pgrep livekit)/limits
