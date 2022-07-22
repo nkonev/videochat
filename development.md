@@ -279,6 +279,12 @@ docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjM
 * [Reconnect policy](https://github.com/livekit/client-sdk-js/pull/266)
 * [Screensharing quality](https://github.com/livekit/livekit/issues/761)
 
+## Monitoring
+```
+docker exec -it $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_livekit --filter desired-state=running -q)) sh
+watch -n 1 ./livekit-server --config /etc/livekit.yaml list-nodes
+```
+
 ## Explanation of two peer connections (livekit has their own fork of ion-sfu)
 https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
 
