@@ -2,10 +2,10 @@ package listener
 
 import (
 	"encoding/json"
-	"nkonev.name/chat/handlers/dto"
-	"nkonev.name/chat/notifications"
-	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/db"
+	"nkonev.name/chat/handlers/dto"
+	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/notifications"
 )
 
 type VideoListener func(data []byte) error
@@ -21,7 +21,7 @@ func CreateVideoListener(not notifications.Notifications, db db.DB) VideoListene
 			Logger.Errorf("Error during deserialize ChatNotifyDto %v", err)
 			return nil
 		}
-		ids, err := db.GetParticipantIds(bindTo.ChatId)
+		ids, err := db.GetAllParticipantIds(bindTo.ChatId)
 		if err != nil {
 			Logger.Warnf("Error during get participants of chat %v", bindTo.ChatId)
 			return err

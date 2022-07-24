@@ -7,6 +7,7 @@ import (
 	"github.com/guregu/null"
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/utils"
 	"time"
 )
 
@@ -22,8 +23,9 @@ type Chat struct {
 
 type ChatWithParticipants struct {
 	Chat
-	ParticipantsIds []int64
-	IsAdmin         bool
+	ParticipantsIds   []int64
+	ParticipantsCount int
+	IsAdmin           bool
 }
 
 // CreateChat creates a new chat.
@@ -115,18 +117,23 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 	}
 }
 
-func convertToWithParticipants(db CommonOperations, chat *Chat, behalfUserId int64) (*ChatWithParticipants, error) {
-	if ids, err := db.GetParticipantIds(chat.Id); err != nil {
+func convertToWithParticipants(db CommonOperations, chat *Chat, behalfUserId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	if ids, err := db.GetParticipantIds(chat.Id, participantsSize, participantsOffset); err != nil {
 		return nil, err
 	} else {
 		admin, err := db.IsAdmin(behalfUserId, chat.Id)
 		if err != nil {
 			return nil, err
 		}
+		participantsCount, err := db.GetParticipantsCount(chat.Id)
+		if err != nil {
+			return nil, err
+		}
 		ccc := &ChatWithParticipants{
-			Chat:            *chat,
-			ParticipantsIds: ids,
-			IsAdmin:         admin,
+			Chat:              *chat,
+			ParticipantsIds:   ids,
+			IsAdmin:           admin,
+			ParticipantsCount: participantsCount,
 		}
 		return ccc, nil
 	}
@@ -141,7 +148,7 @@ type ChatQueryByIds struct {
 	Ids []int64
 }
 
-func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, searchString string, userPrincipalDto *auth.AuthResult) ([]*ChatWithParticipants, error) {
+func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, searchString string, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
 	var err error
 	var chats []*Chat
 
@@ -154,9 +161,11 @@ func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, s
 	if err != nil {
 		return nil, err
 	} else {
+		fixedParticipantsSize := utils.FixSize(participantsSize)
 		list := make([]*ChatWithParticipants, 0)
 		for _, cc := range chats {
-			if ccc, err := convertToWithParticipants(db, cc, userPrincipalDto.UserId); err != nil {
+
+			if ccc, err := convertToWithParticipants(db, cc, userPrincipalDto.UserId, fixedParticipantsSize, participantsOffset); err != nil {
 				return nil, err
 			} else {
 				list = append(list, ccc)
@@ -166,21 +175,21 @@ func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, s
 	}
 }
 
-func (tx *Tx) GetChatWithParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
-	return getChatWithParticipantsCommon(tx, behalfParticipantId, chatId)
+func (tx *Tx) GetChatWithParticipants(behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	return getChatWithParticipantsCommon(tx, behalfParticipantId, chatId, participantsSize, participantsOffset)
 }
 
-func (db *DB) GetChatWithParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
-	return getChatWithParticipantsCommon(db, behalfParticipantId, chatId)
+func (db *DB) GetChatWithParticipants(behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	return getChatWithParticipantsCommon(db, behalfParticipantId, chatId, participantsSize, participantsOffset)
 }
 
-func getChatWithParticipantsCommon(commonOps CommonOperations, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
+func getChatWithParticipantsCommon(commonOps CommonOperations, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
 	if chat, err := commonOps.GetChat(behalfParticipantId, chatId); err != nil {
 		return nil, err
 	} else if chat == nil {
 		return nil, nil
 	} else {
-		return convertToWithParticipants(commonOps, chat, behalfParticipantId)
+		return convertToWithParticipants(commonOps, chat, behalfParticipantId, participantsSize, participantsOffset)
 	}
 }
 

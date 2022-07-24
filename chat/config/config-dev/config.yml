@@ -35,6 +35,7 @@ aaa:
   url:
     base: "http://localhost:8060"
     getUsers: "/internal/user/list"
+    searchUsers: "/internal/user/search"
 
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"

@@ -34,10 +34,12 @@ type CommonOperations interface {
 	Query(query string, args ...interface{}) (*dbP.Rows, error)
 	QueryRow(query string, args ...interface{}) *dbP.Row
 	Exec(query string, args ...interface{}) (sql.Result, error)
-	GetParticipantIds(chatId int64) ([]int64, error)
+	GetParticipantIds(chatId int64, participantsSize, participantsOffset int) ([]int64, error)
+	GetAllParticipantIds(chatId int64) ([]int64, error)
+	GetParticipantsCount(chatId int64) (int, error)
 	IsAdmin(userId int64, chatId int64) (bool, error)
 	GetChat(participantId, chatId int64) (*Chat, error)
-	GetChatWithParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error)
+	GetChatWithParticipants(behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error)
 	GetMessage(chatId int64, userId int64, messageId int64) (*Message, error)
 	GetUnreadMessagesCount(chatId int64, userId int64) (int64, error)
 	GetAllUnreadMessagesCount(chatId int64) (int64, error)
@@ -102,7 +104,7 @@ var embeddedFiles embed.FS
 
 func migrateInternal(db *sql.DB, path, migrationTable string) {
 	staticDir := http.FS(embeddedFiles)
-	src, err := httpfs.New(staticDir, "migrations" + path)
+	src, err := httpfs.New(staticDir, "migrations"+path)
 	if err != nil {
 		Logger.Fatal(err)
 	}

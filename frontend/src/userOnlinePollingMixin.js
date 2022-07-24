@@ -27,8 +27,10 @@ export default () => {
                 }, pollingInterval);
             },
             stopPolling() {
-                console.debug("Stopping user polling");
-                clearInterval(intervalId)
+                if (intervalId) {
+                    console.debug("Stopping user polling");
+                    clearInterval(intervalId)
+                }
             },
         },
 

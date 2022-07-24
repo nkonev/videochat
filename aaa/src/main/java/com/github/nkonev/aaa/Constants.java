@@ -22,6 +22,9 @@ public class Constants {
         public static final String PASSWORD_RESET = "/password-reset"; // html for handle link from email
         public static final String USER = "/user";
         public static final String LIST = "/list";
+
+        public static final String SEARCH = "/search";
+
         public static final String LOCK = "/lock";
         public static final String USER_ID = "/{"+PathVariables.USER_ID+"}";
         public static final String REQUEST_PASSWORD_RESET = "/request-password-reset";

@@ -21,6 +21,7 @@ type BaseChatDto struct {
 	CanChangeChatAdmins bool        `json:"canChangeChatAdmins"`
 	IsTetATet           bool        `json:"tetATet"`
 	CanAudioMute        bool        `json:"canAudioMute"`
+	ParticipantsCount   int         `json:"participantsCount"`
 }
 
 type ChatDto struct {
@@ -70,5 +71,6 @@ func (r *BaseChatDto) GetIsTetATet() bool {
 // copied view for GET /chat/:id
 type ChatDtoWithAdmin struct {
 	BaseChatDto
-	Participants []*UserWithAdmin `json:"participants"`
+	Participants      []*UserWithAdmin `json:"participants"`
+	ParticipantsCount int              `json:"participantsCount"`
 }

@@ -94,3 +94,61 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	}
 	return *users, nil
 }
+
+func (rc RestClient) SearchGetUsers(searchString string, excludingIds []int64, c context.Context) ([]*dto.User, error) {
+	contentType := "application/json;charset=UTF-8"
+	url0 := viper.GetString("aaa.url.base")
+	url1 := viper.GetString("aaa.url.searchUsers")
+	fullUrl := url0 + url1
+
+	var userIdsString []string
+	for _, userIdInt := range excludingIds {
+		userIdsString = append(userIdsString, utils.Int64ToString(userIdInt))
+	}
+
+	excludingUserIdsJoinedToString := strings.Join(userIdsString, ",")
+
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl + "?excludingUserId=" + excludingUserIdsJoinedToString + "&searchString=" + searchString)
+	if err != nil {
+		Logger.Errorln("Failed during parse aaa url:", err)
+		return nil, err
+	}
+	request := &http.Request{
+		Method: "GET",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+
+	ctx, span := rc.tracer.Start(c, "users.Search")
+	defer span.End()
+	request = request.WithContext(ctx)
+	resp, err := rc.Do(request)
+	if err != nil {
+		Logger.Warningln("Failed to request get users response:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		Logger.Warningln("Users response responded non-200 code: ", code)
+		return nil, err
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		Logger.Errorln("Failed to decode get users response:", err)
+		return nil, err
+	}
+
+	users := &[]*dto.User{}
+	if err := json.Unmarshal(bodyBytes, users); err != nil {
+		Logger.Errorln("Failed to parse users:", err)
+		return nil, err
+	}
+	return *users, nil
+}

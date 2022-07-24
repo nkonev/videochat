@@ -131,6 +131,24 @@ public class UserProfileController {
         );
     }
 
+    @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH)
+    public List<Record> searchUserInternal(
+            @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
+            @RequestParam(value = "page", required=false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required=false, defaultValue = "0") int size,
+            @RequestParam(value = "excludingUserId") List<Long> userIds,
+            @RequestParam(value = "searchString") String searchString
+    ) {
+        LOGGER.info("Searching internal users");
+        PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(page), PageUtils.fixSize(size), Sort.Direction.ASC, "id");
+        searchString = searchString.trim();
+
+        final String forDbSearch = "%" + searchString + "%";
+        List<UserAccount> resultPage = userAccountRepository.findByUsernameContainsIgnoreCaseAndIdNotIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, userIds);
+
+        return resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList());
+    }
+
     private Function<UserAccount, Record> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(currentUser, userAccount);
     }

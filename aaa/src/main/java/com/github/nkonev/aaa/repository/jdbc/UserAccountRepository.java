@@ -22,6 +22,9 @@ public interface UserAccountRepository extends CrudRepository<UserAccount, Long>
     @Query("select * from users u where u.username ilike :userName order by id limit :limit offset :offset")
     List<UserAccount> findByUsernameContainsIgnoreCase(@Param("limit")long limit, @Param("offset")long offset, @Param("userName")String login);
 
+    @Query("select * from users u where u.username ilike :userName and id not in (:excludingUserIds) order by id limit :limit offset :offset")
+    List<UserAccount> findByUsernameContainsIgnoreCaseAndIdNotIn(@Param("limit")int pageSize, @Param("offset")long offset, @Param("userName") String forDbSearch, @Param("excludingUserIds")List<Long> userIds);
+
     @Query("select count(id) from users u where u.username ilike :userName")
     long findByUsernameContainsIgnoreCaseCount(@Param("limit")long limit, @Param("offset")long offset, @Param("userName")String searchString);
 

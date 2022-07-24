@@ -55,7 +55,13 @@
                 </v-card-title>
 
                 <v-card-text  class="ma-0 pa-0">
-                    <v-list v-if="dto.participants.length > 0">
+                    <v-pagination
+                        v-if="shouldShowPagination"
+                        v-model="participantsPage"
+                        :length="participantsPagesCount"
+                    ></v-pagination>
+
+                    <v-list v-if="dto.participants && dto.participants.length > 0">
                         <template v-for="(item, index) in dto.participants">
                             <v-list-item class="pl-2 ml-1 pr-0 mr-1 mb-1 mt-1">
                                 <v-badge
@@ -154,6 +160,9 @@
     import debounce from "lodash/debounce";
     import userOnlinePollingMixin from "./userOnlinePollingMixin";
 
+    const firstPage = 1;
+    const pageSize = 20;
+
     const dtoFactory = ()=>{
         return {
             id: null,
@@ -175,10 +184,19 @@
                 newParticipantIds: [],
                 people: [  ], // available person to chat with
                 search: null,
+                participantsPage: firstPage,
             }
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
+            participantsPagesCount() {
+                const count = Math.ceil(this.dto.participantsCount / pageSize);
+                console.debug("Calc pages count", count);
+                return count;
+            },
+            shouldShowPagination() {
+                return this.dto != null && this.dto.participantsCount > pageSize
+            }
         },
 
         methods: {
@@ -193,14 +211,25 @@
                 }
             },
             transformParticipants(tmp) {
-                tmp.participants.forEach(item => {
-                    item.adminLoading = false;
-                    item.online = false;
-                });
+                if (tmp.participants != null) {
+                    tmp.participants.forEach(item => {
+                        item.adminLoading = false;
+                        item.online = false;
+                    });
+                }
+            },
+            translatePage() {
+                return this.participantsPage - 1;
             },
             loadData() {
+                this.stopPolling();
                 console.log("Getting info about chat id in modal, chatId=", this.chatId);
-                axios.get('/api/chat/' + this.chatId)
+                axios.get('/api/chat/' + this.chatId, {
+                    params: {
+                        page: this.translatePage(),
+                        size: pageSize,
+                    },
+                })
                     .then((response) => {
                         const tmp = response.data;
                         this.transformParticipants(tmp);
@@ -247,7 +276,12 @@
                     title: this.$vuetify.lang.t('$vuetify.delete_participant', participant.id),
                     text: this.$vuetify.lang.t('$vuetify.delete_participant_text', participant.id, participant.login),
                     actionFunction: ()=> {
-                        axios.delete(`/api/chat/${this.dto.id}/user/${participant.id}`)
+                        axios.delete(`/api/chat/${this.dto.id}/user/${participant.id}`, {
+                                params: {
+                                    page: this.translatePage(),
+                                    size: pageSize,
+                                },
+                            })
                             .then(() => {
                                 bus.$emit(CLOSE_SIMPLE_MODAL);
                             })
@@ -263,6 +297,7 @@
                 this.dto = dtoFactory();
                 this.newParticipantIdsIsLoading = false;
                 this.search = null;
+                this.participantsPage = firstPage;
                 this.stopPolling();
             },
             removeNewSelected (item) {
@@ -279,16 +314,21 @@
 
                 this.newParticipantIdsIsLoading = true;
 
-                axios.get(`/api/user?searchString=${searchString}`)
+                axios.get(`/api/chat/${this.dto.id}/user?searchString=${searchString}`)
                     .then((response) => {
-                      console.log("Fetched users", response.data.data);
-                      this.people = [...this.people, ...response.data.data].filter(value => !this.dto.participantIds.includes(value.id));
+                      console.debug("Fetched users", response.data);
+                      this.people = response.data;
                     })
                     .finally(() => (this.newParticipantIdsIsLoading = false))
             },
             addSelectedParticipants() {
                 axios.put(`/api/chat/${this.dto.id}/users`, {
                   addParticipantIds: this.newParticipantIds
+                }, {
+                    params: {
+                        page: this.translatePage(),
+                        size: pageSize,
+                    },
                 }).then(value => {
                     this.newParticipantIds = [];
                     this.search = null;
@@ -300,14 +340,16 @@
                 }
             },
             onUserOnlineChanged(dtos) {
-                this.dto.participants.forEach(item => {
-                    dtos.forEach(dtoItem => {
-                        if (dtoItem.userId == item.id) {
-                            item.online = dtoItem.online;
-                        }
+                if (this.dto.participants) {
+                    this.dto.participants.forEach(item => {
+                        dtos.forEach(dtoItem => {
+                            if (dtoItem.userId == item.id) {
+                                item.online = dtoItem.online;
+                            }
+                        })
                     })
-                })
-                this.$forceUpdate()
+                    this.$forceUpdate();
+                }
             }
         },
         watch: {
@@ -320,6 +362,12 @@
                     if (from.name == chat_name || from.name == videochat_name) {
                         this.closeModal();
                     }
+                }
+            },
+            participantsPage(newValue) {
+                if (this.show) {
+                    console.debug("SettingNewPage", newValue);
+                    this.loadData();
                 }
             }
         },

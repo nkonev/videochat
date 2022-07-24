@@ -214,7 +214,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return err
 		}
 
-		participantIds, err := tx.GetParticipantIds(chatId)
+		participantIds, err := tx.GetAllParticipantIds(chatId)
 		if err != nil {
 			return err
 		}
@@ -274,7 +274,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		ids, err := tx.GetParticipantIds(chatId)
+		ids, err := tx.GetAllParticipantIds(chatId)
 		if err != nil {
 			return err
 		}
@@ -327,7 +327,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 		cd := &dto.DisplayMessageDto{
 			Id: messageId,
 		}
-		if ids, err := mc.db.GetParticipantIds(chatId); err != nil {
+		if ids, err := mc.db.GetAllParticipantIds(chatId); err != nil {
 			return err
 		} else {
 			mc.notificator.NotifyAboutDeleteMessage(c, ids, chatId, cd)
@@ -429,7 +429,7 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 	}
 
 	// notifying
-	ids, err := mc.db.GetParticipantIds(chatId)
+	ids, err := mc.db.GetAllParticipantIds(chatId)
 	if err != nil {
 		return err
 	}

@@ -311,7 +311,7 @@ func getNextRefreshTime() int64 {
 
 func checkPermissions(dbs db.DB, userId string, channelId int64, channelName string) error {
 	if utils.CHANNEL_PREFIX_CHAT_MESSAGES == channelName {
-		if ids, err := dbs.GetParticipantIds(channelId); err != nil {
+		if ids, err := dbs.GetAllParticipantIds(channelId); err != nil {
 			return err
 		} else {
 			for _, uid := range ids {

@@ -21,7 +21,34 @@ func (tx *Tx) DeleteParticipant(userId int64, chatId int64) error {
 	return err
 }
 
-func getParticipantIdsCommon(qq CommonOperations, chatId int64) ([]int64, error) {
+func getParticipantIdsCommon(qq CommonOperations, chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
+	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 LIMIT $2 OFFSET $3", chatId, participantsSize, participantsOffset); err != nil {
+		return nil, err
+	} else {
+		defer rows.Close()
+		list := make([]int64, 0)
+		for rows.Next() {
+			var participantId int64
+			if err := rows.Scan(&participantId); err != nil {
+				Logger.Errorf("Error during scan chat rows %v", err)
+				return nil, err
+			} else {
+				list = append(list, participantId)
+			}
+		}
+		return list, nil
+	}
+}
+
+func (tx *Tx) GetParticipantIds(chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
+	return getParticipantIdsCommon(tx, chatId, participantsSize, participantsOffset)
+}
+
+func (db *DB) GetParticipantIds(chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
+	return getParticipantIdsCommon(db, chatId, participantsSize, participantsOffset)
+}
+
+func getAllParticipantIdsCommon(qq CommonOperations, chatId int64) ([]int64, error) {
 	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1", chatId); err != nil {
 		return nil, err
 	} else {
@@ -40,12 +67,31 @@ func getParticipantIdsCommon(qq CommonOperations, chatId int64) ([]int64, error)
 	}
 }
 
-func (tx *Tx) GetParticipantIds(chatId int64) ([]int64, error) {
-	return getParticipantIdsCommon(tx, chatId)
+func (tx *Tx) GetAllParticipantIds(chatId int64) ([]int64, error) {
+	return getAllParticipantIdsCommon(tx, chatId)
 }
 
-func (db *DB) GetParticipantIds(chatId int64) ([]int64, error) {
-	return getParticipantIdsCommon(db, chatId)
+func (db *DB) GetAllParticipantIds(chatId int64) ([]int64, error) {
+	return getAllParticipantIdsCommon(db, chatId)
+}
+
+func getParticipantsCountCommon(qq CommonOperations, chatId int64) (int, error) {
+	var count int
+	row := qq.QueryRow("SELECT count(*) FROM chat_participant WHERE chat_id = $1", chatId)
+
+	if err := row.Scan(&count); err != nil {
+		return 0, err
+	} else {
+		return count, nil
+	}
+}
+
+func (tx *Tx) GetParticipantsCount(chatId int64) (int, error) {
+	return getParticipantsCountCommon(tx, chatId)
+}
+
+func (db *DB) GetParticipantsCount(chatId int64) (int, error) {
+	return getParticipantsCountCommon(db, chatId)
 }
 
 func getIsAdminCommon(qq CommonOperations, userId int64, chatId int64) (bool, error) {

@@ -158,6 +158,7 @@ func configureEcho(
 	e.DELETE("/chat/:id/user/:participantId", ch.DeleteParticipant)
 	e.DELETE("/internal/delete-all-participants", ch.RemoveAllParticipants) // TODO to separated executable
 	e.PUT("/chat/:id/users", ch.AddParticipants)
+	e.GET("/chat/:id/user", ch.SearchForUsersToAdd)
 	e.PUT("/chat/tet-a-tet/:participantId", ch.TetATet)
 	e.GET("/internal/access", ch.CheckAccess)
 	e.GET("/internal/is-admin", ch.IsAdmin)
