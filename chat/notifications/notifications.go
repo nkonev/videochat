@@ -16,7 +16,7 @@ import (
 type Notifications interface {
 	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
 	NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx)
-	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
+	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, changingParticipantPage int, tx *db.Tx)
 	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
@@ -64,12 +64,14 @@ type ForceMute struct {
 	ChatId int64 `json:"chatId"`
 }
 
+const NoPagePlaceholder = -1
+
 func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
-	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", tx)
+	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", NoPagePlaceholder, tx)
 }
 
-func (not *notifictionsImpl) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
-	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", tx)
+func (not *notifictionsImpl) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, changingParticipantPage int, tx *db.Tx) {
+	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", changingParticipantPage, tx)
 }
 
 func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx) {
@@ -78,10 +80,10 @@ func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64,
 			Id: chatId,
 		},
 	}
-	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", tx)
+	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", NoPagePlaceholder, tx)
 }
 
-func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, tx *db.Tx) {
+func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, changingParticipantPage int, tx *db.Tx) {
 	for _, participantId := range userIds {
 		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 		GetLogEntry(c.Request()).Infof("Sending notification about %v the chat to participantChannel: %v", eventType, participantChannel)
@@ -113,6 +115,8 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 		copied.CanVideoKick = admin
 		copied.CanAudioMute = admin
 		copied.CanChangeChatAdmins = admin && !copied.IsTetATet
+		copied.ParticipantsCount = newChatDto.ParticipantsCount
+		copied.ChangingParticipantsPage = changingParticipantPage
 		//copied.CanBroadcast = admin
 		for _, participant := range copied.Participants {
 			utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)

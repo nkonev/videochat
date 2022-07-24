@@ -159,6 +159,7 @@
     import {chat_name, videochat_name} from "./routes";
     import debounce from "lodash/debounce";
     import userOnlinePollingMixin from "./userOnlinePollingMixin";
+    import {noPagePlaceholder} from "@/utils";
 
     const firstPage = 1;
     const pageSize = 20;
@@ -262,17 +263,33 @@
             },
             onChatChange(dto) {
                 if (this.show && dto.id == this.chatId) {
+                    const oldParticipants = this.dto.participants;
+                    const oldParticipantIds = this.dto.participantIds;
+
+                    const clonedDto = Object.assign({}, dto);
+                    delete clonedDto.participants;
+                    delete clonedDto.participantIds;
+                    delete clonedDto.changingParticipantsPage;
+
+                    const serverPage = this.translatePage();
+
                     this.dto = dtoFactory();
                     this.$nextTick(()=> {
-                        if (dto.participants) {
-                            const tmp = dto;
-                            this.transformParticipants(tmp);
-                            this.dto = tmp;
-                        } else { // no participants means that we need switch page back
-                            if (this.participantsPage > firstPage) {
-                                this.participantsPage--;
-                                this.loadData();
+                        this.dto = clonedDto;
+                        if (dto.changingParticipantsPage == serverPage) {
+                            if (dto.participants) {
+                                const tmp = dto;
+                                this.transformParticipants(tmp);
+                                this.dto = tmp;
+                            } else { // no participants means that we need switch page back
+                                if (this.participantsPage > firstPage) {
+                                    this.participantsPage--;
+                                    this.loadData();
+                                }
                             }
+                        } else { // restore old participants - keep untouched
+                            this.dto.participants = oldParticipants;
+                            this.dto.participantIds = oldParticipantIds;
                         }
                     });
                 }

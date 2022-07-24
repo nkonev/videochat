@@ -418,7 +418,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 
 			ch.notificator.NotifyAboutNewChat(c, copiedChat, userIdsToNotifyAboutChatCreated, tx)
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, userIdsToNotifyAboutChatDeleted, tx)
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, notifications.NoPagePlaceholder, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})
@@ -456,7 +456,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, notifications.NoPagePlaceholder, tx)
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
@@ -534,7 +534,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, notifications.NoPagePlaceholder, tx)
 		}
 		responseDto := ChangeAdminResponseDto{Admin: isAdmin}
 
@@ -597,7 +597,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 				return c.NoContent(http.StatusInternalServerError)
 			}
 
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, participantsPage, tx)
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{interestingUserId}, tx)
 		}
 
@@ -669,7 +669,7 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, participantsPage, tx)
 		}
 
 		return c.NoContent(http.StatusAccepted)
