@@ -264,9 +264,16 @@
                 if (this.show && dto.id == this.chatId) {
                     this.dto = dtoFactory();
                     this.$nextTick(()=> {
-                        const tmp = dto;
-                        this.transformParticipants(tmp);
-                        this.dto = tmp;
+                        if (dto.participants) {
+                            const tmp = dto;
+                            this.transformParticipants(tmp);
+                            this.dto = tmp;
+                        } else { // no participants means that we need switch page back
+                            if (this.participantsPage > firstPage) {
+                                this.participantsPage--;
+                                this.loadData();
+                            }
+                        }
                     });
                 }
             },
@@ -367,6 +374,7 @@
             participantsPage(newValue) {
                 if (this.show) {
                     console.debug("SettingNewPage", newValue);
+                    this.dto = dtoFactory();
                     this.loadData();
                 }
             }
