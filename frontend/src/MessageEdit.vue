@@ -25,7 +25,7 @@
                         @click="$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()">
                         <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'italic' }"></font-awesome-icon>
                     </button>
-                    <button class="richText__menu-item"
+                    <button
                         :class="{
                           'richText__menu-item': true,
                           active: $refs.tipTapRef.$data.editor.isActive('underline')
@@ -34,7 +34,7 @@
                     >
                         <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'underline' }"></font-awesome-icon>
                     </button>
-                    <button class="richText__menu-item"
+                    <button
                         :class="{
                           'richText__menu-item': true,
                           active: $refs.tipTapRef.$data.editor.isActive('strike'),
