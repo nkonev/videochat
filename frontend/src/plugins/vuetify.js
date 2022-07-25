@@ -17,9 +17,10 @@ import { faBold } from '@fortawesome/free-solid-svg-icons/faBold'
 import { faItalic } from '@fortawesome/free-solid-svg-icons/faItalic'
 import { faStrikethrough } from '@fortawesome/free-solid-svg-icons/faStrikethrough'
 import { faUnderline } from '@fortawesome/free-solid-svg-icons/faUnderline'
+import { faLink } from '@fortawesome/free-solid-svg-icons/faLink'
 import { faImage } from '@fortawesome/free-solid-svg-icons/faImage'
 
-library.add(faFacebook, faVk, faGoogle, faKey, faBold, faItalic, faStrikethrough, faUnderline, faImage);
+library.add(faFacebook, faVk, faGoogle, faKey, faBold, faItalic, faStrikethrough, faUnderline, faLink, faImage);
 Vue.component('font-awesome-icon', FontAwesomeIcon) // Register component globally
 
 Vue.use(Vuetify);

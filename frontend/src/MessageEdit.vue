@@ -45,7 +45,17 @@
                     </button>
                     <select class="ql-color" v-if="false"></select>
                     <select class="ql-background" v-if="false"></select>
-                    <button class="richText__menu-item" v-if="false">link</button>
+                    <button
+                        :disabled="linkButtonDisabled()"
+                        :class="{
+                          'richText__menu-item': !linkButtonDisabled(),
+                          'richText__menu-item-disabled': linkButtonDisabled(),
+                          active: $refs.tipTapRef.$data.editor.isActive('link'),
+                        }"
+                            @click="setLink()"
+                    >
+                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'link' }"></font-awesome-icon>
+                    </button>
                     <button
                         class="richText__menu-item"
                         @click="$refs.tipTapRef.addImage()"
@@ -87,7 +97,7 @@
     } from "./bus";
     import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
-    import {GET_USER, SET_TITLE} from "./store";
+    import {GET_USER} from "./store";
     import Tiptap from './TipTapEditor.vue'
 
     const dtoFactory = () => {
@@ -173,12 +183,45 @@
                     this.editMessageDto.fileItemUuid = null;
                 }
             },
+            setLink() {
+                const previousUrl = this.$refs.tipTapRef.$data.editor.getAttributes('link').href;
+                const url = window.prompt('URL', previousUrl);
+                if (url === null) {
+                    return
+                }
+
+                // empty
+                if (url === '') {
+                    this.$refs.tipTapRef.$data.editor
+                        .chain()
+                        .focus()
+                        .extendMarkRange('link')
+                        .unsetLink()
+                        .run()
+
+                    return
+                }
+
+                // update link
+                this.$refs.tipTapRef.$data.editor
+                    .chain()
+                    .focus()
+                    .extendMarkRange('link')
+                    .setLink({ href: url })
+                    .run()
+            },
+            linkButtonDisabled() {
+                const empty = this.$refs.tipTapRef.$data.editor.view.state.selection.empty;
+                const disabled = empty;
+                console.debug("linkButtonDisabled", disabled);
+                return disabled;
+            }
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}),
             messageEditHeight() {
                 return this.fullHeight ? 'calc(100vh - 56px - 90px)' : '100%'
-            }
+            },
         },
         mounted() {
             bus.$on(SET_EDIT_MESSAGE, this.onSetMessage);
@@ -252,6 +295,17 @@ $borderColor = rgba(0, 0, 0, 0.2)
 .custom-toolbar-format {
     display: flex;
     flex-grow: 0;
+
+    .richText__menu-item-disabled {
+        min-width: 1.75rem;
+        color: rgba(128, 128, 128, 0.6);
+        border: none;
+        background-color: transparent;
+        border-radius: 0.4rem;
+        padding: 0.25rem;
+        margin-right: 0.35rem;
+        cursor: pointer;
+    }
 
     .richText__menu-item {
         min-width: 1.75rem;
