@@ -44,30 +44,30 @@ type abstractAvatarHandler struct {
 func (h *abstractAvatarHandler) PutAvatar(c echo.Context) error {
 	filePart, err := c.FormFile(FormFile)
 	if err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during extracting form %v parameter: %v", FormFile, err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during extracting form %v parameter: %v", FormFile, err)
 		return err
 	}
 
 	bucketName, err := h.delegate.ensureAndGetAvatarBucket()
 	if err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during get bucket: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during get bucket: %v", err)
 		return err
 	}
 
 	contentType := filePart.Header.Get("Content-Type")
 
-	GetLogEntry(c.Request()).Debugf("Determined content type: %v", contentType)
+	GetLogEntry(c.Request().Context()).Debugf("Determined content type: %v", contentType)
 
 	src, err := filePart.Open()
 	if err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during opening multipart file: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during opening multipart file: %v", err)
 		return err
 	}
 	defer src.Close()
 
 	srcImage, _, err := image.Decode(src)
 	if err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during decoding image: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during decoding image: %v", err)
 		return err
 	}
 
@@ -89,16 +89,16 @@ func (h *abstractAvatarHandler) putSizedFile(c echo.Context, srcImage image.Imag
 	byteBuffer := new(bytes.Buffer)
 	err = jpeg.Encode(byteBuffer, dstImage, nil)
 	if err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during encoding image: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during encoding image: %v", err)
 		return "", "", err
 	}
 	filename, err := h.getAvatarFileName(c, avatarType)
 	if err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during get avatar filename: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during get avatar filename: %v", err)
 		return "", "", err
 	}
 	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, byteBuffer, int64(byteBuffer.Len()), minio.PutObjectOptions{ContentType: contentType}); err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during upload object: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
 		return "", "", err
 	}
 	relativeUrl := fmt.Sprintf("%v%v/%v?time=%v", viper.GetString("server.contextPath"), h.delegate.GetUrlPath(), filename, currTime)
@@ -113,7 +113,7 @@ func (r *abstractAvatarHandler) getAvatarFileName(c echo.Context, avatarType Ava
 func (h *abstractAvatarHandler) Download(c echo.Context) error {
 	bucketName, err := h.delegate.ensureAndGetAvatarBucket()
 	if err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during get bucket: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during get bucket: %v", err)
 		return err
 	}
 
@@ -158,7 +158,7 @@ func (h *UserAvatarHandler) ensureAndGetAvatarBucket() (string, error) {
 func (r *UserAvatarHandler) getAvatarFileName(c echo.Context, avatarType AvatarType) (string, error) {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return "", errors.New("Error during getting auth context")
 	}
 	return fmt.Sprintf("%v_%v.jpg", userPrincipalDto.UserId, avatarType), nil

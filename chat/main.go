@@ -108,7 +108,7 @@ func configureOpentelemetryMiddleware(tp *sdktrace.TracerProvider) echo.Middlewa
 func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) {
 	originalHandler := e.DefaultHTTPErrorHandler
 	return func(err error, c echo.Context) {
-		GetLogEntry(c.Request()).Errorf("Unhandled error: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Unhandled error: %v", err)
 		originalHandler(err, c)
 	}
 }

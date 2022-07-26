@@ -39,7 +39,7 @@ func NewEmbedHandler(
 func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -56,7 +56,7 @@ func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 
 	formFile, err := c.FormFile(embedMultipartKey)
 	if err != nil {
-		Logger.Errorf("Error during getting multipart part: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting multipart part: %v", err)
 		return err
 	}
 
@@ -71,7 +71,7 @@ func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 	contentType := formFile.Header.Get("Content-Type")
 	dotExt := getDotExtension(formFile)
 
-	Logger.Debugf("Determined content type: %v", contentType)
+	GetLogEntry(c.Request().Context()).Debugf("Determined content type: %v", contentType)
 
 	src, err := formFile.Open()
 	if err != nil {
@@ -85,7 +85,7 @@ func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 	var userMetadata = serializeMetadata(formFile, userPrincipalDto, chatId)
 
 	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, formFile.Size, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
-		Logger.Errorf("Error during upload object: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
 		return err
 	}
 
@@ -97,7 +97,7 @@ func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -108,7 +108,7 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 	chatIdString := c.Param("chatId")
 	chatId, err := utils.ParseInt64(chatIdString)
 	if err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during parsing chatId")
+		GetLogEntry(c.Request().Context()).Errorf("Error during parsing chatId")
 		return err
 	}
 
@@ -119,23 +119,23 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 
 	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
 	if err != nil {
-		Logger.Errorf("Error during checking user auth to chat %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		Logger.Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
 
 	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
 	if err != nil {
-		Logger.Errorf("Error during getting object %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	_, _, fileName, err := deserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
-		Logger.Errorf("Error during deserializing object metadata %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 

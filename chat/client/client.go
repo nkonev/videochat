@@ -58,7 +58,7 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 
 	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
 	if err != nil {
-		Logger.Errorln("Failed during parse aaa url:", err)
+		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -72,24 +72,24 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	request = request.WithContext(ctx)
 	resp, err := rc.Do(request)
 	if err != nil {
-		Logger.Warningln("Failed to request get users response:", err)
+		GetLogEntry(c).Warningln("Failed to request get users response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		Logger.Warningln("Users response responded non-200 code: ", code)
+		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Logger.Errorln("Failed to decode get users response:", err)
+		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
 		return nil, err
 	}
 
 	users := &[]*dto.User{}
 	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		Logger.Errorln("Failed to parse users:", err)
+		GetLogEntry(c).Errorln("Failed to parse users:", err)
 		return nil, err
 	}
 	return *users, nil
@@ -116,7 +116,7 @@ func (rc RestClient) SearchGetUsers(searchString string, excludingIds []int64, c
 
 	parsedUrl, err := url.Parse(fullUrl + "?excludingUserId=" + excludingUserIdsJoinedToString + "&searchString=" + searchString)
 	if err != nil {
-		Logger.Errorln("Failed during parse aaa url:", err)
+		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -130,24 +130,24 @@ func (rc RestClient) SearchGetUsers(searchString string, excludingIds []int64, c
 	request = request.WithContext(ctx)
 	resp, err := rc.Do(request)
 	if err != nil {
-		Logger.Warningln("Failed to request get users response:", err)
+		GetLogEntry(c).Warningln("Failed to request get users response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		Logger.Warningln("Users response responded non-200 code: ", code)
+		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Logger.Errorln("Failed to decode get users response:", err)
+		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
 		return nil, err
 	}
 
 	users := &[]*dto.User{}
 	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		Logger.Errorln("Failed to parse users:", err)
+		GetLogEntry(c).Errorln("Failed to parse users:", err)
 		return nil, err
 	}
 	return *users, nil

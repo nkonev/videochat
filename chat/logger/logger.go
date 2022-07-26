@@ -1,8 +1,9 @@
 package logger
 
 import (
+	"context"
 	log "github.com/sirupsen/logrus"
-	"net/http"
+	"go.opentelemetry.io/otel/trace"
 	"os"
 )
 
@@ -14,10 +15,13 @@ func init() {
 	Logger.SetOutput(os.Stdout)
 }
 
-func GetLogEntry(request *http.Request) *log.Entry {
-	traceId := request.Header.Get("Uber-Trace-Id")
-	return Logger.WithFields(
-		log.Fields{
-			"traceId": traceId,
-		})
+func GetLogEntry(context context.Context) *log.Entry {
+	if p := trace.SpanFromContext(context); p != nil {
+		return Logger.WithFields(
+			log.Fields{
+				"traceId": p.SpanContext().TraceID(),
+			})
+	} else {
+		return Logger.WithContext(context)
+	}
 }

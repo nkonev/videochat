@@ -39,7 +39,7 @@ func getUsersRemotely(userIdSet map[int64]bool, restClient client.RestClient, c 
 
 func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient client.RestClient, c echo.Context) map[int64]*dto.User {
 	if remoteUsers, err := getUsersRemotely(userIdSet, restClient, c); err != nil {
-		GetLogEntry(c.Request()).Warn("Error during getting users from aaa")
+		GetLogEntry(c.Request().Context()).Warn("Error during getting users from aaa")
 		return map[int64]*dto.User{}
 	} else {
 		return remoteUsers
@@ -51,7 +51,7 @@ type AuthMiddleware echo.MiddlewareFunc
 func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 	expiresInString := request.Header.Get("X-Auth-ExpiresIn") // in GMT. in milliseconds from java
 	t, err := dateparse.ParseIn(expiresInString, time.UTC)
-	GetLogEntry(request).Infof("Extracted session expiration time: %v", t)
+	GetLogEntry(request.Context()).Infof("Extracted session expiration time: %v", t)
 
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 		UserId:    i,
 		UserLogin: string(decodedString),
 		ExpiresAt: t.Unix(),
-		Roles: roles,
+		Roles:     roles,
 		SessionId: sessionIdString,
 	}, nil
 }
@@ -102,10 +102,10 @@ func authorize(request *http.Request) (*auth.AuthResult, bool, error) {
 	}
 	auth, err := ExtractAuth(request)
 	if err != nil {
-		GetLogEntry(request).Infof("Error during extract AuthResult: %v", err)
+		GetLogEntry(request.Context()).Infof("Error during extract AuthResult: %v", err)
 		return nil, false, nil
 	}
-	GetLogEntry(request).Infof("Success AuthResult: %v", *auth)
+	GetLogEntry(request.Context()).Infof("Success AuthResult: %v", *auth)
 	return auth, false, nil
 }
 
@@ -129,7 +129,7 @@ func ConfigureAuthMiddleware() AuthMiddleware {
 }
 
 type ExtendedCreds struct {
-	Login string `json:"login"`
+	Login     string `json:"login"`
 	SessionId string `json:"sessionId"`
 }
 

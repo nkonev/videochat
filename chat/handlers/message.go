@@ -49,7 +49,7 @@ func NewMessageHandler(dbR db.DB, policy *bluemonday.Policy, notificator notific
 func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -76,7 +76,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	}
 
 	if messages, err := mc.db.GetMessages(chatId, userPrincipalDto.UserId, size, startingFromItemId, reverse, searchString); err != nil {
-		GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 		return err
 	} else {
 		var ownersSet = map[int64]bool{}
@@ -89,14 +89,14 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 			messageDtos = append(messageDtos, convertToMessageDto(c, owners, userPrincipalDto.UserId))
 		}
 
-		GetLogEntry(c.Request()).Infof("Successfully returning %v messages", len(messageDtos))
+		GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
 		return c.JSON(http.StatusOK, messageDtos)
 	}
 }
 
 func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {
 	if message, err := co.GetMessage(chatId, behalfUserId, messageId); err != nil {
-		GetLogEntry(c.Request()).Errorf("Error get messages from db %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 		return nil, err
 	} else {
 		if message == nil {
@@ -112,7 +112,7 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestCl
 func (mc *MessageHandler) GetMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -133,7 +133,7 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 	if message == nil {
 		return c.NoContent(http.StatusNotFound)
 	}
-	GetLogEntry(c.Request()).Infof("Successfully returning message %v", message)
+	GetLogEntry(c.Request().Context()).Infof("Successfully returning message %v", message)
 	return c.JSON(http.StatusOK, message)
 }
 
@@ -173,7 +173,7 @@ func noContent(c echo.Context) error {
 func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	var bindTo = new(CreateMessageDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -183,7 +183,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -200,7 +200,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		}
 		creatableMessage := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
 		if creatableMessage.Text == "" {
-			GetLogEntry(c.Request()).Infof("Empty message doesn't save")
+			GetLogEntry(c.Request().Context()).Infof("Empty message doesn't save")
 			return noContent(c)
 		}
 		id, _, _, err := tx.CreateMessage(creatableMessage)
@@ -228,7 +228,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		return c.JSON(http.StatusCreated, message)
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
+		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
 }
@@ -245,7 +245,7 @@ func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthRe
 func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	var bindTo = new(EditMessageDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -255,7 +255,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -267,7 +267,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
 		editableMessage := convertToEditableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
 		if editableMessage.Text == "" {
-			GetLogEntry(c.Request()).Infof("Empty message doesn't save")
+			GetLogEntry(c.Request().Context()).Infof("Empty message doesn't save")
 			return noContent(c)
 		}
 		err := tx.EditMessage(editableMessage)
@@ -288,7 +288,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		return c.JSON(http.StatusCreated, &utils.H{"id": bindTo.Id})
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request()).Errorf("Error during act transaction %v", errOuter)
+		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
 }
@@ -307,7 +307,7 @@ func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResul
 func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -339,7 +339,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 func (mc *MessageHandler) TypeMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -349,10 +349,10 @@ func (mc *MessageHandler) TypeMessage(c echo.Context) error {
 	}
 
 	if participant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during checking participant")
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking participant")
 		return err
 	} else if !participant {
-		GetLogEntry(c.Request()).Infof("User %v is not participant of chat %v, skipping", userPrincipalDto.UserId, chatId)
+		GetLogEntry(c.Request().Context()).Infof("User %v is not participant of chat %v, skipping", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusAccepted)
 	}
 
@@ -372,7 +372,7 @@ type BroadcastDto struct {
 func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -386,16 +386,16 @@ func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 	}
 
 	if participant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
-		GetLogEntry(c.Request()).Errorf("Error during checking participant")
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking participant")
 		return err
 	} else if !participant {
-		GetLogEntry(c.Request()).Infof("User %v is not participant of chat %v, skipping", userPrincipalDto.UserId, chatId)
+		GetLogEntry(c.Request().Context()).Infof("User %v is not participant of chat %v, skipping", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusAccepted)
 	}
 
 	var bindTo = new(BroadcastDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -418,13 +418,13 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 	}
 	if !isParticipant {
 		msg := "user " + c.QueryParam("userId") + " is not belongs to chat " + c.QueryParam("chatId")
-		GetLogEntry(c.Request()).Warnf(msg)
+		GetLogEntry(c.Request().Context()).Warnf(msg)
 		return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
 	}
 	fileItemUuid := c.QueryParam("fileItemUuid")
 	messageId, err := mc.db.SetFileItemUuidToNull(userId, chatId, fileItemUuid)
 	if err != nil {
-		GetLogEntry(c.Request()).Errorf("Unable to set FileItemUuid to full for fileItemUuid=%v, chatId=%v", fileItemUuid, chatId)
+		GetLogEntry(c.Request().Context()).Errorf("Unable to set FileItemUuid to full for fileItemUuid=%v, chatId=%v", fileItemUuid, chatId)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -455,12 +455,12 @@ func (rec Tuple) String() string {
 func (mc *MessageHandler) CheckEmbeddedFiles(c echo.Context) error {
 	requestMap := new(map[int64][]*Tuple)
 	if err := c.Bind(requestMap); err != nil {
-		GetLogEntry(c.Request()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
-	GetLogEntry(c.Request()).Debugf("Got request %v", requestMap)
+	GetLogEntry(c.Request().Context()).Debugf("Got request %v", requestMap)
 	for chatIdKey, tupleValues := range *requestMap {
-		GetLogEntry(c.Request()).Infof("Processing %v=%v", chatIdKey, tupleValues)
+		GetLogEntry(c.Request().Context()).Infof("Processing %v=%v", chatIdKey, tupleValues)
 		exists, err := mc.db.IsChatExists(chatIdKey)
 		if err != nil {
 			Logger.Warnf("Error during checking existence of %v, skipping: %v", chatIdKey, err)

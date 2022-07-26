@@ -9,7 +9,7 @@ import (
 
 func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, error) {
 	if err := v.Validate(); err != nil {
-		logger.GetLogEntry(c.Request()).Debugf("Error during validation: %v", err)
+		logger.GetLogEntry(c.Request().Context()).Debugf("Error during validation: %v", err)
 		return false, c.JSON(http.StatusBadRequest, err)
 	}
 	return true, nil

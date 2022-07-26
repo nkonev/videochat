@@ -67,7 +67,7 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) 
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		Logger.Error(err, "Error during create GET")
+		GetLogEntry(c).Error(err, "Error during create GET")
 		return false, err
 	}
 
@@ -77,7 +77,7 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) 
 
 	response, err := h.client.Do(req)
 	if err != nil {
-		Logger.Error(err, "Transport error during checking access")
+		GetLogEntry(c).Error(err, "Transport error during checking access")
 		return false, err
 	}
 	defer response.Body.Close()
@@ -87,7 +87,7 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) 
 		return false, nil
 	} else {
 		err := errors.New("Unexpected status on checkAccess")
-		Logger.Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
+		GetLogEntry(c).Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
 		return false, err
 	}
 }
@@ -97,7 +97,7 @@ func (h *RestClient) RemoveFileItem(chatId int64, fileItemUuid string, userId in
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		Logger.Errorln("Failed during parse chat url:", err)
+		GetLogEntry(c).Errorln("Failed during parse chat url:", err)
 		return
 	}
 
@@ -112,14 +112,14 @@ func (h *RestClient) RemoveFileItem(chatId int64, fileItemUuid string, userId in
 
 	response, err := h.client.Do(request)
 	if err != nil {
-		Logger.Error(err, "Transport error during removing file item")
+		GetLogEntry(c).Error(err, "Transport error during removing file item")
 		return
 	}
 	defer response.Body.Close()
 	if response.StatusCode == http.StatusOK {
 		return
 	} else {
-		Logger.Error(err, "Unexpected status on removing file item", "httpCode", response.StatusCode)
+		GetLogEntry(c).Error(err, "Unexpected status on removing file item", "httpCode", response.StatusCode)
 		return
 	}
 
@@ -144,7 +144,7 @@ func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 
 	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
 	if err != nil {
-		Logger.Errorln("Failed during parse aaa url:", err)
+		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -159,24 +159,24 @@ func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		Logger.Warningln("Failed to request get users response:", err)
+		GetLogEntry(c).Warningln("Failed to request get users response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		Logger.Warningln("Users response responded non-200 code: ", code)
+		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Logger.Errorln("Failed to decode get users response:", err)
+		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
 		return nil, err
 	}
 
 	users := &[]*dto.User{}
 	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		Logger.Errorln("Failed to parse users:", err)
+		GetLogEntry(c).Errorln("Failed to parse users:", err)
 		return nil, err
 	}
 	return *users, nil
@@ -187,13 +187,13 @@ func (h *RestClient) CheckFilesInChat(input map[int64][]utils.Tuple, c context.C
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		Logger.Errorln("Failed during parse chat url:", err)
+		GetLogEntry(c).Errorln("Failed during parse chat url:", err)
 		return nil, err
 	}
 
 	bytesArray, err := json.Marshal(input)
 	if err != nil {
-		Logger.Errorln("Failed during marshall body:", err)
+		GetLogEntry(c).Errorln("Failed during marshall body:", err)
 		return nil, err
 	}
 
@@ -212,7 +212,7 @@ func (h *RestClient) CheckFilesInChat(input map[int64][]utils.Tuple, c context.C
 
 	response, err := h.client.Do(request)
 	if err != nil {
-		Logger.Error(err, "Transport error during checking embedded file")
+		GetLogEntry(c).Error(err, "Transport error during checking embedded file")
 		return nil, err
 	}
 	defer response.Body.Close()
@@ -223,13 +223,13 @@ func (h *RestClient) CheckFilesInChat(input map[int64][]utils.Tuple, c context.C
 
 	bodyBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		Logger.Errorln("Failed to decode get users response:", err)
+		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
 		return nil, err
 	}
 
 	resultMap := new(map[int64][]utils.Tuple)
 	if err := json.Unmarshal(bodyBytes, resultMap); err != nil {
-		Logger.Errorln("Failed to parse result:", err)
+		GetLogEntry(c).Errorln("Failed to parse result:", err)
 		return nil, err
 	}
 	return *resultMap, nil
@@ -244,7 +244,7 @@ func (h *RestClient) CheckIsChatExists(chatId int64, c context.Context) (bool, e
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		Logger.Errorln("Failed during parse chat url:", err)
+		GetLogEntry(c).Errorln("Failed during parse chat url:", err)
 		return false, err
 	}
 
@@ -262,7 +262,7 @@ func (h *RestClient) CheckIsChatExists(chatId int64, c context.Context) (bool, e
 
 	response, err := h.client.Do(request)
 	if err != nil {
-		Logger.Error(err, "Transport error during checking chat presence")
+		GetLogEntry(c).Error(err, "Transport error during checking chat presence")
 		return false, err
 	}
 	defer response.Body.Close()
@@ -273,13 +273,13 @@ func (h *RestClient) CheckIsChatExists(chatId int64, c context.Context) (bool, e
 
 	bodyBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		Logger.Errorln("Failed to decode get chat presence response:", err)
+		GetLogEntry(c).Errorln("Failed to decode get chat presence response:", err)
 		return false, err
 	}
 
 	resultMap := new(ChatExists)
 	if err := json.Unmarshal(bodyBytes, resultMap); err != nil {
-		Logger.Errorln("Failed to parse result:", err)
+		GetLogEntry(c).Errorln("Failed to parse result:", err)
 		return false, err
 	}
 	return resultMap.Exists, nil

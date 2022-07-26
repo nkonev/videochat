@@ -17,7 +17,7 @@ type AuthMiddleware echo.MiddlewareFunc
 func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 	expiresInString := request.Header.Get("X-Auth-ExpiresIn") // in GMT. in milliseconds from java
 	t, err := dateparse.ParseIn(expiresInString, time.UTC)
-	GetLogEntry(request).Infof("Extracted session expiration time: %v", t)
+	GetLogEntry(request.Context()).Infof("Extracted session expiration time: %v", t)
 
 	if err != nil {
 		return nil, err
@@ -67,10 +67,10 @@ func authorize(config *config.ExtendedConfig, request *http.Request) (*auth.Auth
 	}
 	auth, err := ExtractAuth(request)
 	if err != nil {
-		GetLogEntry(request).Infof("Error during extract AuthResult: %v", err)
+		GetLogEntry(request.Context()).Infof("Error during extract AuthResult: %v", err)
 		return nil, false, nil
 	}
-	GetLogEntry(request).Infof("Success AuthResult: %v", *auth)
+	GetLogEntry(request.Context()).Infof("Success AuthResult: %v", *auth)
 	return auth, false, nil
 }
 

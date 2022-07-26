@@ -31,7 +31,7 @@ type CountUsersResponse struct {
 func (h *UserHandler) GetVideoUsers(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -57,7 +57,7 @@ func (h *UserHandler) GetVideoUsers(c echo.Context) error {
 func (h *UserHandler) Kick(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -110,7 +110,7 @@ func (h *UserHandler) Kick(c echo.Context) error {
 func (h *UserHandler) Mute(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))

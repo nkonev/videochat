@@ -86,23 +86,23 @@ func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64,
 func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, changingParticipantPage int, tx *db.Tx) {
 	for _, participantId := range userIds {
 		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-		GetLogEntry(c.Request()).Infof("Sending notification about %v the chat to participantChannel: %v", eventType, participantChannel)
+		GetLogEntry(c.Request().Context()).Infof("Sending notification about %v the chat to participantChannel: %v", eventType, participantChannel)
 
 		var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
 		if err := deepcopy.Copy(copied, newChatDto); err != nil {
-			GetLogEntry(c.Request()).Errorf("error during performing deep copy: %s", err)
+			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
 			continue
 		}
 
 		admin, err := tx.IsAdmin(participantId, newChatDto.Id)
 		if err != nil {
-			GetLogEntry(c.Request()).Errorf("error during checking is admin for userId=%v: %s", participantId, err)
+			GetLogEntry(c.Request().Context()).Errorf("error during checking is admin for userId=%v: %s", participantId, err)
 			continue
 		}
 
 		unreadMessages, err := tx.GetUnreadMessagesCount(newChatDto.Id, participantId)
 		if err != nil {
-			GetLogEntry(c.Request()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
+			GetLogEntry(c.Request().Context()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
 			continue
 		}
 
@@ -127,11 +127,11 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 			EventType: eventType,
 		}
 		if marshalledBytes, err := json.Marshal(notification); err != nil {
-			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err)
+			GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created notification: %s", err)
 		} else {
 			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
 			if err != nil {
-				GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
+				GetLogEntry(c.Request().Context()).Errorf("error publishing to personal channel: %s", err)
 			}
 		}
 	}
@@ -145,11 +145,11 @@ type ChatUnreadMessageChanged struct {
 func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx) {
 	for _, participantId := range userIds {
 		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-		GetLogEntry(c.Request()).Infof("Sending notification about unread messages to participantChannel: %v", participantChannel)
+		GetLogEntry(c.Request().Context()).Infof("Sending notification about unread messages to participantChannel: %v", participantChannel)
 
 		unreadMessages, err := tx.GetUnreadMessagesCount(chatId, participantId)
 		if err != nil {
-			GetLogEntry(c.Request()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
+			GetLogEntry(c.Request().Context()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
 			continue
 		}
 
@@ -163,11 +163,11 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 			EventType: "unread_messages_changed",
 		}
 		if marshalledBytes, err := json.Marshal(notification); err != nil {
-			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err)
+			GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created notification: %s", err)
 		} else {
 			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
 			if err != nil {
-				GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
+				GetLogEntry(c.Request().Context()).Errorf("error publishing to personal channel: %s", err)
 			}
 		}
 	}
@@ -176,11 +176,11 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx) {
 	for _, participantId := range userIds {
 		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-		GetLogEntry(c.Request()).Infof("Sending notification about all unread messages to participantChannel: %v", participantChannel)
+		GetLogEntry(c.Request().Context()).Infof("Sending notification about all unread messages to participantChannel: %v", participantChannel)
 
 		unreadMessages, err := tx.GetAllUnreadMessagesCount(participantId)
 		if err != nil {
-			GetLogEntry(c.Request()).Errorf("error during get all unread messages for userId=%v: %s", participantId, err)
+			GetLogEntry(c.Request().Context()).Errorf("error during get all unread messages for userId=%v: %s", participantId, err)
 			continue
 		}
 
@@ -193,11 +193,11 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 			EventType: "all_unread_messages_changed",
 		}
 		if marshalledBytes, err := json.Marshal(notification); err != nil {
-			GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err)
+			GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created notification: %s", err)
 		} else {
 			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
 			if err != nil {
-				GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
+				GetLogEntry(c.Request().Context()).Errorf("error publishing to personal channel: %s", err)
 			}
 		}
 	}
@@ -210,12 +210,12 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 	chatChannel := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
 	presence, err := not.centrifuge.Presence(chatChannel)
 	if err != nil {
-		GetLogEntry(c.Request()).Errorf("error during get chat presence for participantId : %s", err)
+		GetLogEntry(c.Request().Context()).Errorf("error during get chat presence for participantId : %s", err)
 		return
 	}
 	for _, ci := range presence.Presence {
 		if parseInt64, err := utils.ParseInt64(ci.UserID); err != nil {
-			GetLogEntry(c.Request()).Errorf("error during parse participantId : %s", err)
+			GetLogEntry(c.Request().Context()).Errorf("error during parse participantId : %s", err)
 		} else {
 			activeChatUsers = append(activeChatUsers, parseInt64)
 		}
@@ -225,11 +225,11 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 		if utils.Contains(activeChatUsers, participantId) {
 
 			participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-			GetLogEntry(c.Request()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
+			GetLogEntry(c.Request().Context()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
 
 			var copied *dto.DisplayMessageDto = &dto.DisplayMessageDto{}
 			if err := deepcopy.Copy(copied, message); err != nil {
-				GetLogEntry(c.Request()).Errorf("error during performing deep copy: %s", err)
+				GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
 				continue
 			}
 
@@ -245,15 +245,15 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				EventType: eventType,
 			}
 			if marshalledBytes, err := json.Marshal(notification); err != nil {
-				GetLogEntry(c.Request()).Errorf("error during marshalling chat created notification: %s", err)
+				GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created notification: %s", err)
 			} else {
 				_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
 				if err != nil {
-					GetLogEntry(c.Request()).Errorf("error publishing to personal channel: %s", err)
+					GetLogEntry(c.Request().Context()).Errorf("error publishing to personal channel: %s", err)
 				}
 			}
 		} else {
-			GetLogEntry(c.Request()).Warnf("User %v is not present in chat %v, skipping notification", participantId, chatId)
+			GetLogEntry(c.Request().Context()).Warnf("User %v is not present in chat %v, skipping notification", participantId, chatId)
 		}
 	}
 }
@@ -272,7 +272,7 @@ func (not *notifictionsImpl) NotifyAboutEditMessage(c echo.Context, userIds []in
 
 func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User) {
 	if user == nil {
-		GetLogEntry(c.Request()).Errorf("user cannot be null")
+		GetLogEntry(c.Request().Context()).Errorf("user cannot be null")
 		return
 	}
 
@@ -289,11 +289,11 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 	}
 
 	if marshalledBytes, err := json.Marshal(notification); err != nil {
-		GetLogEntry(c.Request()).Errorf("error during marshalling chat created UserTypingNotification: %s", err)
+		GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created UserTypingNotification: %s", err)
 	} else {
 		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
 		if err != nil {
-			GetLogEntry(c.Request()).Errorf("error publishing to public channel: %s", err)
+			GetLogEntry(c.Request().Context()).Errorf("error publishing to public channel: %s", err)
 		}
 	}
 }
@@ -361,7 +361,7 @@ func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId in
 	participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(userId)
 
 	if marshalledBytes, err := json.Marshal(notification); err != nil {
-		GetLogEntry(c.Request()).Errorf("error during marshalling VideoCallInvitation: %s", err)
+		GetLogEntry(c.Request().Context()).Errorf("error during marshalling VideoCallInvitation: %s", err)
 	} else {
 		Logger.Infof("Sending notification about video_call_invitation to participantChannel: %v", participantChannel)
 		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
@@ -393,11 +393,11 @@ func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId
 	}
 
 	if marshalledBytes, err := json.Marshal(notification); err != nil {
-		GetLogEntry(c.Request()).Errorf("error during marshalling chat created UserBroadcastNotification: %s", err)
+		GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created UserBroadcastNotification: %s", err)
 	} else {
 		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
 		if err != nil {
-			GetLogEntry(c.Request()).Errorf("error publishing to public channel: %s", err)
+			GetLogEntry(c.Request().Context()).Errorf("error publishing to public channel: %s", err)
 		}
 	}
 

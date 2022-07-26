@@ -56,7 +56,7 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) 
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		Logger.Error(err, "Error during create GET")
+		GetLogEntry(c).Error(err, "Error during create GET")
 		return false, err
 	}
 
@@ -66,7 +66,7 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) 
 
 	response, err := h.client.Do(req)
 	if err != nil {
-		Logger.Error(err, "Transport error during checking access")
+		GetLogEntry(c).Error(err, "Transport error during checking access")
 		return false, err
 	}
 	defer response.Body.Close()
@@ -76,7 +76,7 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) 
 		return false, nil
 	} else {
 		err := errors.New("Unexpected status on checkAccess")
-		Logger.Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
+		GetLogEntry(c).Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
 		return false, err
 	}
 }
@@ -86,7 +86,7 @@ func (h *RestClient) IsAdmin(userId int64, chatId int64, c context.Context) (boo
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		Logger.Error(err, "Error during create GET")
+		GetLogEntry(c).Error(err, "Error during create GET")
 		return false, err
 	}
 
@@ -96,7 +96,7 @@ func (h *RestClient) IsAdmin(userId int64, chatId int64, c context.Context) (boo
 
 	response, err := h.client.Do(req)
 	if err != nil {
-		Logger.Error(err, "Transport error during checking access")
+		GetLogEntry(c).Error(err, "Transport error during checking access")
 		return false, err
 	}
 	defer response.Body.Close()
@@ -106,7 +106,7 @@ func (h *RestClient) IsAdmin(userId int64, chatId int64, c context.Context) (boo
 		return false, nil
 	} else {
 		err := errors.New("Unexpected status on checkAccess")
-		Logger.Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
+		GetLogEntry(c).Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
 		return false, err
 	}
 }
@@ -130,7 +130,7 @@ func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 
 	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
 	if err != nil {
-		Logger.Errorln("Failed during parse aaa url:", err)
+		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -145,24 +145,24 @@ func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		Logger.Warningln("Failed to request get users response:", err)
+		GetLogEntry(c).Warningln("Failed to request get users response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		Logger.Warningln("Users response responded non-200 code: ", code)
+		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Logger.Errorln("Failed to decode get users response:", err)
+		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
 		return nil, err
 	}
 
 	users := &[]*dto.User{}
 	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		Logger.Errorln("Failed to parse users:", err)
+		GetLogEntry(c).Errorln("Failed to parse users:", err)
 		return nil, err
 	}
 	return *users, nil

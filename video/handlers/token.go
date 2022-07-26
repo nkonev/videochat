@@ -32,7 +32,7 @@ func NewTokenHandler(chatClient *client.RestClient, cfg *config.ExtendedConfig) 
 func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
