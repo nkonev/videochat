@@ -36,9 +36,9 @@ See [screenshots](./screenshots.md)
 * Open ports to traefik and livekit, described in deploy/docker-compose-infra.template.yml
 
 # Troubleshooting
-## Reasons of not showing video
-* There was a problem when jaeger all-in-one ate too much memory - one of participants didn't see other
-* Mobile Chrome 101.0.4951.41 - swap it up (e. g. close application and open again) helps when video isn't connected from Mobile Chrome.
-* Desktop Firefox - try to reload tab or restart entire browser - it helps when Desktop Firefox isn't able to show video from Mobile Chrome
 * Poor quality of screen sharing - a) Disable [simulcast](https://github.com/livekit/livekit/issues/761), b) Increase its resolution
 * Connection to livekit interrupts only with Firefox and enabled UPD mux. Solution is to disable UDP muxing and pass multiple UDP ports of webrtc ice udp port range.
+## Reasons of not showing video
+* jaeger all-in-one ate too much memory - one of participants didn't see other - restart jaeger.
+* Mobile Chrome 101.0.4951.41 - swap it up (e. g. close application and open again) helps when video isn't connected from Mobile Chrome.
+* Desktop Firefox - try to reload tab or restart entire browser - it helps when Desktop Firefox isn't able to show video from Mobile Chrome
