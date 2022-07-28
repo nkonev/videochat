@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" @click:outside="closeModal()">
+        <v-dialog v-model="show" max-width="640">
             <v-card>
                 <v-card-title>{{ $vuetify.lang.t('$vuetify.find_user') }}</v-card-title>
 
@@ -59,6 +59,11 @@
             search (searchString) {
                 this.doSearch(searchString);
             },
+            show(newValue) {
+                if (!newValue) {
+                    this.closeModal();
+                }
+            }
         },
         methods: {
             showModal() {

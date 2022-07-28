@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="show" @click:outside="closeModal()" fullscreen>
+    <v-dialog v-model="show" fullscreen>
         <v-card>
             <v-toolbar
                 dark
@@ -42,6 +42,13 @@ import MessageEdit from "@/MessageEdit";
             },
             closeModal() {
                 this.show = false;
+            }
+        },
+        watch: {
+            show(newValue) {
+                if (!newValue) {
+                    this.closeModal();
+                }
             }
         },
         components: {

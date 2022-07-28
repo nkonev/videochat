@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="700" scrollable @click:outside="closeModal()">
+        <v-dialog v-model="show" max-width="700" scrollable>
             <v-card>
                 <v-card-title class="pl-0 ml-0">
                   <v-btn class="mx-2" icon @click="closeModal()"><v-icon>mdi-arrow-left</v-icon></v-btn>
@@ -393,6 +393,11 @@
                     console.debug("SettingNewPage", newValue);
                     this.dto = dtoFactory();
                     this.loadData();
+                }
+            },
+            show(newValue) {
+                if (!newValue) {
+                    this.closeModal();
                 }
             }
         },
