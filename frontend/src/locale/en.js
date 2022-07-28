@@ -98,5 +98,6 @@ export default {
     screen_share: "Screen sharing",
     apply: "Apply",
     create_call: "Call",
-    leave_call: "Leave call"
+    leave_call: "Leave call",
+    leave_call_text: "Are you sure to leave this video call ?"
 }

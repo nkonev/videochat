@@ -98,5 +98,6 @@ export default {
     screen_share: "Демонстрация экрана",
     apply: "Применить",
     create_call: "Звонок",
-    leave_call: "Покинуть звонок"
+    leave_call: "Покинуть звонок",
+    leave_call_text: "Вы действительно хотите покинуть видео звонок ?"
 }

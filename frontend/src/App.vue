@@ -206,7 +206,7 @@
         OPEN_VIDEO_SETTINGS,
         OPEN_LANGUAGE_MODAL,
         ADD_VIDEO_SOURCE_DIALOG,
-        ADD_SCREEN_SOURCE, SEARCH_STRING_CHANGED,
+        ADD_SCREEN_SOURCE, SEARCH_STRING_CHANGED, OPEN_SIMPLE_MODAL, CLOSE_SIMPLE_MODAL,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -287,12 +287,12 @@
                 bus.$emit(OPEN_CHAT_EDIT, this.chatId);
             },
             createCall() {
-                console.log("createCall");
+                console.debug("createCall");
                 this.$router.push({ name: videochat_name});
             },
             stopCall() {
-                console.log("stopping Call");
-                this.$router.push({ name: chat_name});
+                console.debug("stopping Call");
+                this.$router.push({ name: chat_name, params: { leavingVideoAcceptableParam: true } });
             },
             onChangeWsStatus({connected, wasInitialized}) {
                 console.log("onChangeWsStatus: connected", connected, "wasInitialized", wasInitialized)
@@ -401,6 +401,23 @@
             bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             this.doSearch = debounce(this.doSearch, 700, {leading:false, trailing:true});
+
+            this.$router.beforeEach((to, from, next) => {
+
+                if (from.name == videochat_name && to.params.leavingVideoAcceptableParam != true) {
+                    bus.$emit(OPEN_SIMPLE_MODAL, {
+                        buttonName: this.$vuetify.lang.t('$vuetify.ok'),
+                        title: this.$vuetify.lang.t('$vuetify.leave_call'),
+                        text: this.$vuetify.lang.t('$vuetify.leave_call_text'),
+                        actionFunction: ()=> {
+                            next();
+                            bus.$emit(CLOSE_SIMPLE_MODAL);
+                        }
+                    });
+                } else {
+                    next();
+                }
+            })
         },
         watch: {
             searchString (searchString) {
