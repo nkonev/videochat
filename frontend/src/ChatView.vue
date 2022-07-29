@@ -96,7 +96,7 @@
 
     const pageSize = 40;
 
-    const scrollingThreshold = 100; // px
+    const scrollingThreshold = 200; // px
 
     let timerId;
 
@@ -565,7 +565,7 @@
             },
         },
         created() {
-            this.onResizedListener = debounce(this.onResizedListener, 200, {leading:true, trailing:true});
+            this.onResizedListener = debounce(this.onResizedListener, 100, {leading:true, trailing:true});
             this.onScroll = throttle(this.onScroll, 400, {leading:false, trailing:true});
         },
         mounted() {
