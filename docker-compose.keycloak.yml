@@ -6,7 +6,7 @@ services:
   # https://habr.com/en/amp/post/552346/
   keycloak:
     # https://quay.io/repository/keycloak/keycloak
-    image: quay.io/keycloak/keycloak:18.0.0
+    image: quay.io/keycloak/keycloak:19.0.1
     volumes:
       - ./docker/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro,z
     # https://www.keycloak.org/server/containers
