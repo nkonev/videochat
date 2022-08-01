@@ -11,6 +11,9 @@ export const FETCH_USER_PROFILE = 'fetchUserProfile';
 export const FETCH_AVAILABLE_OAUTH2_PROVIDERS = 'fetchAvailableOauth2';
 export const GET_AVAILABLE_OAUTH2_PROVIDERS = 'getAvailableOauth2';
 export const SET_AVAILABLE_OAUTH2_PROVIDERS = 'setAvailableOauth2';
+export const GET_SEARCH_STRING = 'getSearchString';
+export const SET_SEARCH_STRING = 'setSearchString';
+export const UNSET_SEARCH_STRING = 'unsetSearchString';
 
 export const GET_TITLE = 'getTitle';
 export const SET_TITLE = 'setTitle';
@@ -32,6 +35,7 @@ export const SET_SHOW_CHAT_EDIT_BUTTON = 'setChatEditButton';
 const store = new Vuex.Store({
     state: {
         currentUser: null,
+        searchString: null,
         muteVideo: false,
         muteAudio: false,
         title: "",
@@ -50,8 +54,14 @@ const store = new Vuex.Store({
         [SET_USER](state, payload) {
             state.currentUser = payload;
         },
+        [SET_SEARCH_STRING](state, payload) {
+            state.searchString = payload;
+        },
         [UNSET_USER](state) {
             state.currentUser = null;
+        },
+        [UNSET_SEARCH_STRING](state) {
+            state.searchString = "";
         },
         [SET_SHOW_CALL_BUTTON](state, payload) {
             state.showCallButton = payload;
@@ -84,6 +94,9 @@ const store = new Vuex.Store({
     getters: {
         [GET_USER](state) {
             return state.currentUser;
+        },
+        [GET_SEARCH_STRING](state) {
+            return state.searchString;
         },
         [GET_SHOW_CALL_BUTTON](state) {
             return state.showCallButton;

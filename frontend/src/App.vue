@@ -184,13 +184,13 @@
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
     import {
-        FETCH_USER_PROFILE, GET_CHAT_ID, GET_CHAT_USERS_COUNT,
+        FETCH_USER_PROFILE, GET_CHAT_ID, GET_CHAT_USERS_COUNT, GET_SEARCH_STRING,
         GET_SHOW_CALL_BUTTON,
         GET_SHOW_CHAT_EDIT_BUTTON,
         GET_SHOW_HANG_BUTTON, GET_SHOW_SEARCH,
         GET_TITLE,
         GET_USER,
-        GET_VIDEO_CHAT_USERS_COUNT,
+        GET_VIDEO_CHAT_USERS_COUNT, SET_CHAT_USERS_COUNT, SET_SEARCH_STRING,
         UNSET_USER
     } from "./store";
     import bus, {
@@ -206,7 +206,7 @@
         OPEN_VIDEO_SETTINGS,
         OPEN_LANGUAGE_MODAL,
         ADD_VIDEO_SOURCE_DIALOG,
-        ADD_SCREEN_SOURCE, SEARCH_STRING_CHANGED, OPEN_SIMPLE_MODAL, CLOSE_SIMPLE_MODAL,
+        ADD_SCREEN_SOURCE, OPEN_SIMPLE_MODAL, CLOSE_SIMPLE_MODAL,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -223,8 +223,9 @@
     import LanguageModal from "./LanguageModal";
     import {getData} from "@/centrifugeConnection";
     import VideoAddNewSource from "@/VideoAddNewSource";
-    import debounce from "lodash/debounce";
     import MessageEditModal from "@/MessageEditModal";
+
+    const searchQueryParameter = 'q';
 
     const audio = new Audio("/call.mp3");
 
@@ -240,7 +241,6 @@
                 invitedVideoChatAlert: false,
                 callReblinkCounter: 0,
                 showWebsocketRestored: false,
-                searchString: "",
             }
         },
         components:{
@@ -369,14 +369,6 @@
             openLocale() {
                 bus.$emit(OPEN_LANGUAGE_MODAL);
             },
-            doSearch(searchString) {
-                if (!searchString || searchString == "") {
-                    bus.$emit(SEARCH_STRING_CHANGED, null);
-                    return;
-                }
-                searchString = searchString.trim();
-                bus.$emit(SEARCH_STRING_CHANGED, searchString);
-            }
         },
         computed: {
             ...mapGetters({
@@ -393,6 +385,15 @@
             currentUserAvatar() {
                 return this.currentUser.avatar;
             },
+            searchString: {
+                get(){
+                    return this.$store.getters[GET_SEARCH_STRING];
+                },
+                set(newVal){
+                    this.$store.commit(SET_SEARCH_STRING, newVal);
+                    return newVal;
+                }
+            }
         },
         mounted() {
             this.$store.dispatch(FETCH_USER_PROFILE);
@@ -400,9 +401,9 @@
         created() {
             bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
-            this.doSearch = debounce(this.doSearch, 700, {leading:false, trailing:true});
 
             this.$router.beforeEach((to, from, next) => {
+                console.debug("beforeEach", to);
 
                 if (from.name == videochat_name && to.params.leavingVideoAcceptableParam != true) {
                     bus.$emit(OPEN_SIMPLE_MODAL, {
@@ -417,11 +418,19 @@
                 } else {
                     next();
                 }
-            })
+            });
         },
         watch: {
-            searchString (searchString) {
-                this.doSearch(searchString);
+            searchString (searchString, searchStringOld) {
+                // Update query basing on store (through computed) change
+                console.debug("doSearch", searchString);
+
+                const currentRouteName = this.$route.name;
+                const routerNewState = {name: currentRouteName};
+                if (searchString && searchString != "") {
+                    routerNewState.query = {[searchQueryParameter]: searchString};
+                }
+                this.$router.push(routerNewState).catch(()=>{});
             },
         },
     }

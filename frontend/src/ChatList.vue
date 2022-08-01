@@ -52,28 +52,45 @@ import bus, {
     USER_PROFILE_CHANGED,
     CLOSE_SIMPLE_MODAL,
     REFRESH_ON_WEBSOCKET_RESTORED,
-    VIDEO_CALL_CHANGED, SEARCH_STRING_CHANGED
+    VIDEO_CALL_CHANGED
 } from "./bus";
     import {chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
     import { findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition } from "./utils";
     import axios from "axios";
+    import debounce from "lodash/debounce";
+
     import {
+        GET_SEARCH_STRING,
         SET_CHAT_ID,
-        SET_CHAT_USERS_COUNT,
+        SET_CHAT_USERS_COUNT, SET_SEARCH_STRING,
         SET_SHOW_CHAT_EDIT_BUTTON,
         SET_SHOW_SEARCH,
         SET_TITLE
     } from "./store";
+
     import ChatListContextMenu from "@/ChatListContextMenu";
 
     const pageSize = 40;
+
+    let unsubscribe;
+
+    const searchQueryParameter = 'q';
 
     export default {
         computed: {
             chatRoute() {
                 return chat_name;
             },
+            searchString: {
+                get(){
+                    return this.$store.getters[GET_SEARCH_STRING];
+                },
+                set(newVal){
+                    this.$store.commit(SET_SEARCH_STRING, newVal);
+                    return newVal;
+                }
+            }
         },
         data() {
             return {
@@ -81,7 +98,6 @@ import bus, {
                 items: [],
                 itemsTotal: 0,
                 infiniteId: +new Date(),
-                searchString: null,
                 group: -1,
             }
         },
@@ -96,7 +112,6 @@ import bus, {
                 console.log("Resetting infinite loader", this.infiniteId);
             },
             searchStringChanged(searchString) {
-                this.searchString = searchString;
                 this.items = [];
                 this.page = 0;
                 this.reloadItems();
@@ -137,6 +152,7 @@ import bus, {
             },
 
             infiniteHandler($state) {
+                console.debug("infiniteHandler", '"' + this.searchString + '"');
                 axios.get('/api/chat', {
                     params: {
                         page: this.page,
@@ -230,6 +246,8 @@ import bus, {
             },
         },
         created() {
+            this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
+
             bus.$on(LOGGED_IN, this.reloadItems);
             bus.$on(CHAT_ADD, this.addItem);
             bus.$on(CHAT_EDITED, this.changeItem);
@@ -238,7 +256,24 @@ import bus, {
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
-            bus.$on(SEARCH_STRING_CHANGED, this.searchStringChanged);
+
+            // Initialize store from query
+            const gotQuery = this.$route.query[searchQueryParameter];
+            console.debug("gotQuery", gotQuery);
+            this.searchString = gotQuery ? gotQuery : "";
+            console.debug("this.searchString", this.searchString);
+
+            // set watcher on store change - trigger server request
+            unsubscribe = this.$store.subscribe((mutation, state) => {
+                // console.debug("mutation.type", mutation.type);
+                // console.debug("mutation.payload", mutation.payload);
+                if (mutation.type == SET_SEARCH_STRING) {
+                    this.searchStringChanged(mutation.payload);
+                }
+            });
+        },
+        beforeDestroy() {
+            unsubscribe();
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadItems);
@@ -249,7 +284,6 @@ import bus, {
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
-            bus.$off(SEARCH_STRING_CHANGED, this.searchStringChanged);
         },
         mounted() {
             this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
@@ -263,9 +297,8 @@ import bus, {
             handler: function (newValue, oldValue) {
               this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
             },
-          }
+          },
         },
-
     }
 </script>
 

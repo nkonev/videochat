@@ -57,14 +57,16 @@
         LOGGED_OUT,
         VIDEO_CALL_CHANGED,
         MESSAGE_BROADCAST,
-        REFRESH_ON_WEBSOCKET_RESTORED, SEARCH_STRING_CHANGED, OPEN_EDIT_MESSAGE,
+        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE,
     } from "./bus";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
     import ChatVideo from "./ChatVideo";
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
+
     import {
-        GET_USER, SET_CHAT_ID, SET_CHAT_USERS_COUNT,
+        GET_SEARCH_STRING,
+        GET_USER, SET_CHAT_ID, SET_CHAT_USERS_COUNT, SET_SEARCH_STRING,
         SET_SHOW_CALL_BUTTON, SET_SHOW_CHAT_EDIT_BUTTON,
         SET_SHOW_HANG_BUTTON, SET_SHOW_SEARCH, SET_TITLE,
         SET_VIDEO_CHAT_USERS_COUNT
@@ -100,6 +102,10 @@
 
     let timerId;
 
+    let unsubscribe;
+
+    const searchQueryParameter = 'q';
+
     export default {
         data() {
             return {
@@ -107,7 +113,6 @@
                 items: [],
                 itemsTotal: 0,
                 infiniteId: +new Date(),
-                searchString: null,
 
                 chatMessagesSubscription: null,
                 chatDto: {
@@ -195,6 +200,15 @@
                     return stored[1]
                 }
             },
+            searchString: {
+                get(){
+                    return this.$store.getters[GET_SEARCH_STRING];
+                },
+                set(newVal){
+                    this.$store.commit(SET_SEARCH_STRING, newVal);
+                    return newVal;
+                }
+            }
         },
         methods: {
             // not working until you will change this.items list
@@ -203,7 +217,6 @@
               console.log("Resetting infinite loader", this.infiniteId);
             },
             searchStringChanged(searchString) {
-                this.searchString = searchString;
                 this.resetVariables();
                 this.reloadItems();
             },
@@ -565,10 +578,27 @@
             },
         },
         created() {
+            this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
+
             this.onResizedListener = debounce(this.onResizedListener, 100, {leading:true, trailing:true});
             this.onPanelResized = debounce(this.onPanelResized, 100, {leading:true, trailing:true});
 
             this.onScroll = throttle(this.onScroll, 400, {leading:false, trailing:true});
+
+            // Initialize store from query
+            const gotQuery = this.$route.query[searchQueryParameter];
+            console.debug("gotQuery", gotQuery);
+            this.searchString = gotQuery ? gotQuery : "";
+            console.debug("this.searchString", this.searchString);
+
+            // set watcher on store change - trigger server request
+            unsubscribe = this.$store.subscribe((mutation, state) => {
+                // console.debug("mutation.type", mutation.type);
+                // console.debug("mutation.payload", mutation.payload);
+                if (mutation.type == SET_SEARCH_STRING) {
+                    this.searchStringChanged(mutation.payload);
+                }
+            });
         },
         mounted() {
             window.addEventListener('resize', this.onResizedListener);
@@ -596,7 +626,6 @@
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
-            bus.$on(SEARCH_STRING_CHANGED, this.searchStringChanged);
 
             bus.$on(USER_TYPING, this.onUserTyping);
             bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
@@ -621,7 +650,6 @@
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
-            bus.$off(SEARCH_STRING_CHANGED, this.searchStringChanged);
 
             bus.$off(USER_TYPING, this.onUserTyping);
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
@@ -629,6 +657,8 @@
             clearInterval(timerId);
 
             this.unsubscribe();
+
+            unsubscribe();
         },
         destroyed() {
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
