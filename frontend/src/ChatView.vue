@@ -65,8 +65,7 @@
     import {mapGetters} from "vuex";
 
     import {
-        GET_SEARCH_STRING,
-        GET_USER, SET_CHAT_ID, SET_CHAT_USERS_COUNT, SET_SEARCH_STRING,
+        GET_USER, SET_CHAT_ID, SET_CHAT_USERS_COUNT,
         SET_SHOW_CALL_BUTTON, SET_SHOW_CHAT_EDIT_BUTTON,
         SET_SHOW_HANG_BUTTON, SET_SHOW_SEARCH, SET_TITLE,
         SET_VIDEO_CHAT_USERS_COUNT
@@ -77,6 +76,7 @@
     // import 'splitpanes/dist/splitpanes.css';
     import debounce from "lodash/debounce";
     import throttle from "lodash/throttle";
+    import queryMixin from "@/queryMixin";
 
 
     const defaultDesktopWithoutVideo = [80, 20];
@@ -102,11 +102,8 @@
 
     let timerId;
 
-    let unsubscribe;
-
-    const searchQueryParameter = 'q';
-
     export default {
+        mixins: [queryMixin()],
         data() {
             return {
                 startingFromItemId: null,
@@ -198,15 +195,6 @@
                     return stored[2]
                 } else {
                     return stored[1]
-                }
-            },
-            searchString: {
-                get(){
-                    return this.$store.getters[GET_SEARCH_STRING];
-                },
-                set(newVal){
-                    this.$store.commit(SET_SEARCH_STRING, newVal);
-                    return newVal;
                 }
             }
         },
@@ -585,20 +573,7 @@
 
             this.onScroll = throttle(this.onScroll, 400, {leading:false, trailing:true});
 
-            // Initialize store from query
-            const gotQuery = this.$route.query[searchQueryParameter];
-            console.debug("gotQuery", gotQuery);
-            this.searchString = gotQuery ? gotQuery : "";
-            console.debug("this.searchString", this.searchString);
-
-            // set watcher on store change - trigger server request
-            unsubscribe = this.$store.subscribe((mutation, state) => {
-                // console.debug("mutation.type", mutation.type);
-                // console.debug("mutation.payload", mutation.payload);
-                if (mutation.type == SET_SEARCH_STRING) {
-                    this.searchStringChanged(mutation.payload);
-                }
-            });
+            this.initQueryAndWatcher();
         },
         mounted() {
             window.addEventListener('resize', this.onResizedListener);
@@ -658,7 +633,7 @@
 
             this.unsubscribe();
 
-            unsubscribe();
+            this.closeQueryWatcher();
         },
         destroyed() {
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);

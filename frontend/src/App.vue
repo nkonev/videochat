@@ -225,7 +225,7 @@
     import VideoAddNewSource from "@/VideoAddNewSource";
     import MessageEditModal from "@/MessageEditModal";
 
-    const searchQueryParameter = 'q';
+    import {searchQueryParameter} from "@/queryMixin";
 
     const audio = new Audio("/call.mp3");
 

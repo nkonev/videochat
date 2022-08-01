@@ -59,11 +59,11 @@ import bus, {
     import { findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition } from "./utils";
     import axios from "axios";
     import debounce from "lodash/debounce";
+    import queryMixin from "@/queryMixin";
 
     import {
-        GET_SEARCH_STRING,
         SET_CHAT_ID,
-        SET_CHAT_USERS_COUNT, SET_SEARCH_STRING,
+        SET_CHAT_USERS_COUNT,
         SET_SHOW_CHAT_EDIT_BUTTON,
         SET_SHOW_SEARCH,
         SET_TITLE
@@ -73,24 +73,13 @@ import bus, {
 
     const pageSize = 40;
 
-    let unsubscribe;
-
-    const searchQueryParameter = 'q';
-
     export default {
+        mixins: [queryMixin()],
+
         computed: {
             chatRoute() {
                 return chat_name;
             },
-            searchString: {
-                get(){
-                    return this.$store.getters[GET_SEARCH_STRING];
-                },
-                set(newVal){
-                    this.$store.commit(SET_SEARCH_STRING, newVal);
-                    return newVal;
-                }
-            }
         },
         data() {
             return {
@@ -257,23 +246,10 @@ import bus, {
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
 
-            // Initialize store from query
-            const gotQuery = this.$route.query[searchQueryParameter];
-            console.debug("gotQuery", gotQuery);
-            this.searchString = gotQuery ? gotQuery : "";
-            console.debug("this.searchString", this.searchString);
-
-            // set watcher on store change - trigger server request
-            unsubscribe = this.$store.subscribe((mutation, state) => {
-                // console.debug("mutation.type", mutation.type);
-                // console.debug("mutation.payload", mutation.payload);
-                if (mutation.type == SET_SEARCH_STRING) {
-                    this.searchStringChanged(mutation.payload);
-                }
-            });
+            this.initQueryAndWatcher();
         },
         beforeDestroy() {
-            unsubscribe();
+            this.closeQueryWatcher();
         },
         destroyed() {
             bus.$off(LOGGED_IN, this.reloadItems);
