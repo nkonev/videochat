@@ -418,6 +418,9 @@
                         actionFunction: ()=> {
                             next();
                             bus.$emit(CLOSE_SIMPLE_MODAL);
+                        },
+                        cancelFunction: ()=>{
+                            next(false)
                         }
                     });
                 } else {

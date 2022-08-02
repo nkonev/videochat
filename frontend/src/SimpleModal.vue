@@ -26,7 +26,8 @@
                 title: "",
                 text: "",
                 buttonName: "",
-                actionFunction: ()=>{}
+                actionFunction: ()=>{},
+                cancelFunction: null,
             }
         },
         methods: {
@@ -34,12 +35,17 @@
                 this.$data.title = newData.title;
                 this.$data.text = newData.text;
                 this.$data.actionFunction = newData.actionFunction;
+                this.$data.cancelFunction = newData.cancelFunction;
                 this.$data.buttonName = newData.buttonName;
                 this.$data.show = true;
             },
             lightClose() {
+                if (this.$data.cancelFunction) {
+                    this.$data.cancelFunction();
+                }
                 this.$data.show = false;
                 this.$data.actionFunction = ()=>{};
+                this.$data.cancelFunction = null;
             },
             hideModal() {
                 this.lightClose();
