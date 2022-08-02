@@ -160,6 +160,7 @@
     import debounce from "lodash/debounce";
     import userOnlinePollingMixin from "./userOnlinePollingMixin";
     import {noPagePlaceholder} from "@/utils";
+    import queryMixin from "@/queryMixin";
 
     const firstPage = 1;
     const pageSize = 20;
@@ -174,7 +175,7 @@
     };
 
     export default {
-        mixins: [userOnlinePollingMixin()],
+        mixins: [userOnlinePollingMixin(), queryMixin()],
         data () {
             return {
                 show: false,
@@ -251,7 +252,8 @@
                 axios.put(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`).then(value => {
                     console.log("Inviting to video chat");
                     if (this.$route.name != videochat_name) {
-                        this.$router.push({name: videochat_name});
+                        const routerNewState = { name: videochat_name};
+                        this.navigateToWithPreservingSearchStringInQuery(routerNewState);
                     }
                 })
             },

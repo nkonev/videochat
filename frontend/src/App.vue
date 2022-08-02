@@ -225,11 +225,13 @@
     import VideoAddNewSource from "@/VideoAddNewSource";
     import MessageEditModal from "@/MessageEditModal";
 
-    import {searchQueryParameter} from "@/queryMixin";
+    import queryMixin, {searchQueryParameter} from "@/queryMixin";
 
     const audio = new Audio("/call.mp3");
 
     export default {
+        mixins: [queryMixin()],
+
         data () {
             return {
                 drawer: this.$vuetify.breakpoint.lgAndUp,
@@ -288,7 +290,8 @@
             },
             createCall() {
                 console.debug("createCall");
-                this.$router.push({ name: videochat_name});
+                const routerNewState = { name: videochat_name};
+                this.navigateToWithPreservingSearchStringInQuery(routerNewState);
             },
             stopCall() {
                 console.debug("stopping Call");
@@ -330,7 +333,8 @@
                 })
             },
             onClickInvitation() {
-                this.$router.push({ name: videochat_name, params: { id: this.invitedVideoChatId }});
+                const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
+                this.navigateToWithPreservingSearchStringInQuery(routerNewState);
                 this.invitedVideoChatId = 0;
                 this.invitedVideoChatName = null;
                 this.invitedVideoChatAlert = false;

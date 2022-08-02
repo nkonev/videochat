@@ -1,4 +1,5 @@
 import {GET_SEARCH_STRING, SET_SEARCH_STRING} from "@/store";
+import {videochat_name} from "@/routes";
 
 export const searchQueryParameter = 'q';
 
@@ -27,6 +28,12 @@ export default () => {
             },
             closeQueryWatcher() {
                 unsubscribe();
+            },
+            navigateToWithPreservingSearchStringInQuery(routerNewState) {
+                if (this.searchString && this.searchString != "") {
+                    routerNewState.query = {[searchQueryParameter]: this.searchString};
+                }
+                this.$router.push(routerNewState);
             }
         },
         computed: {
