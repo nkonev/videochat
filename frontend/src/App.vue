@@ -295,7 +295,8 @@
             },
             stopCall() {
                 console.debug("stopping Call");
-                this.$router.push({ name: chat_name, params: { leavingVideoAcceptableParam: true } });
+                const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
+                this.navigateToWithPreservingSearchStringInQuery(routerNewState);
             },
             onChangeWsStatus({connected, wasInitialized}) {
                 console.log("onChangeWsStatus: connected", connected, "wasInitialized", wasInitialized)
@@ -409,7 +410,7 @@
             this.$router.beforeEach((to, from, next) => {
                 console.debug("beforeEach", to);
 
-                if (from.name == videochat_name && to.params.leavingVideoAcceptableParam != true) {
+                if (from.name == videochat_name && to.name != videochat_name && to.params.leavingVideoAcceptableParam != true) {
                     bus.$emit(OPEN_SIMPLE_MODAL, {
                         buttonName: this.$vuetify.lang.t('$vuetify.ok'),
                         title: this.$vuetify.lang.t('$vuetify.leave_call'),
