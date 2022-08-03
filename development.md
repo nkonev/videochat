@@ -101,6 +101,13 @@ nvm use v16.13.0
 ```
 Then restart (sic!) PC.
 
+## Check for package's updates
+ncu [package](https://www.npmjs.com/package/npm-check-updates)
+```
+npm install -g npm-check-updates
+ncu
+```
+
 ## Fixing fibers issue
 ```
 # npm install --global node-gyp
