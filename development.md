@@ -285,6 +285,9 @@ docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjM
 * [Disable simulcasted screen share for FF](https://github.com/livekit/client-sdk-js/commit/082bd301898b3ec925bc93c752bd7c6892f5c589)
 * [Reconnect policy](https://github.com/livekit/client-sdk-js/pull/266)
 * [Screensharing quality](https://github.com/livekit/livekit/issues/761)
+* [v1.2.3 Make local track publication timeout instead of waiting indefinitely for server response](https://github.com/livekit/client-sdk-js/pull/328)
+* [v1.2.5 Decrease publication timeout to 10s and clean local state on failed unpublish attempts](https://github.com/livekit/client-sdk-js/pull/363)
+
 
 ## Monitoring
 ```
