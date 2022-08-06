@@ -5,8 +5,14 @@
                 <v-card-title>{{ $vuetify.lang.t('$vuetify.attached_files') }}</v-card-title>
 
                 <v-card-text class="ma-0 pa-0">
+                    <v-pagination
+                        v-if="shouldShowPagination"
+                        v-model="filePage"
+                        :length="filePagesCount"
+                    ></v-pagination>
+
                     <v-list v-if="!loading">
-                        <template v-if="dto.files.length > 0">
+                        <template v-if="dto.count > 0">
                             <template v-for="(item, index) in dto.files">
                                 <v-list-item>
                                     <v-list-item-avatar class="ma-0 pa-0">
@@ -75,19 +81,33 @@ import {GET_USER} from "./store";
 import axios from "axios";
 import {replaceInArray} from "./utils";
 
+const firstPage = 1;
+const pageSize = 20;
+
+const dtoFactory = () => {return {files: []} };
+
 export default {
     data () {
         return {
             show: false,
-            dto: {files: []},
+            dto: dtoFactory(),
             chatId: null,
             fileItemUuid: null,
             loading: false,
-            messageEditing: false
+            messageEditing: false,
+            filePage: firstPage,
         }
     },
     computed: {
         ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
+        filePagesCount() {
+            const count = Math.ceil(this.dto.count / pageSize);
+            console.debug("Calc pages count", count);
+            return count;
+        },
+        shouldShowPagination() {
+            return this.dto != null && this.dto.files && this.dto.count > pageSize
+        }
     },
 
     methods: {
@@ -102,11 +122,20 @@ export default {
                 this.loading = false;
             })
         },
+        translatePage() {
+            return this.filePage - 1;
+        },
         updateFiles(callback) {
             if (!this.show) {
                 return
             }
-            axios.get(`/api/storage/${this.chatId}` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""))
+            axios.get(`/api/storage/${this.chatId}`, {
+                params: {
+                    page: this.translatePage(),
+                    size: pageSize,
+                    fileItemUuid : this.fileItemUuid ? this.fileItemUuid : ''
+                },
+            })
                 .then((response) => {
                     this.dto = response.data;
                 })
@@ -131,14 +160,27 @@ export default {
                 title: this.$vuetify.lang.t('$vuetify.delete_file_title'),
                 text: this.$vuetify.lang.t('$vuetify.delete_file_text', dto.filename),
                 actionFunction: ()=> {
-                    axios.delete(`/api/storage/${this.chatId}/file` + (this.fileItemUuid ? "?fileItemUuid="+this.fileItemUuid : ""), {data: {id: dto.id}})
+                    axios.delete(`/api/storage/${this.chatId}/file`, {
+                        data: {id: dto.id},
+                        params: {
+                            page: this.translatePage(),
+                            size: pageSize,
+                            fileItemUuid : this.fileItemUuid ? this.fileItemUuid : ''
+                        }
+                    })
                         .then((response) => {
                             this.dto = response.data;
                             if (this.$data.messageEditing) {
-                                bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: this.fileItemUuid, count: response.data.files.length});
+                                bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: this.fileItemUuid, count: response.data.count});
                             }
-                            if (this.dto.files.length == 0) {
-                                this.closeModal();
+
+                            if (this.dto.count == 0) {
+                                if (this.filePage > firstPage) {
+                                    this.filePage--;
+                                    this.updateFiles();
+                                } else {
+                                    this.closeModal();
+                                }
                             }
                             bus.$emit(CLOSE_SIMPLE_MODAL);
                         })
@@ -159,7 +201,15 @@ export default {
             bus.$emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});
         }
     },
-
+    watch: {
+        filePage(newValue) {
+            if (this.show) {
+                console.debug("SettingNewPage", newValue);
+                this.dto = dtoFactory();
+                this.updateFiles();
+            }
+        },
+    },
     created() {
         bus.$on(OPEN_VIEW_FILES_DIALOG, this.showModal);
         bus.$on(UPDATE_VIEW_FILES_DIALOG, this.updateFiles);
