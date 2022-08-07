@@ -571,7 +571,7 @@
             this.onResizedListener = debounce(this.onResizedListener, 100, {leading:true, trailing:true});
             this.onPanelResized = debounce(this.onPanelResized, 100, {leading:true, trailing:true});
 
-            this.onScroll = throttle(this.onScroll, 400, {leading:false, trailing:true});
+            this.onScroll = throttle(this.onScroll, 400, {leading:true, trailing:true});
 
             this.initQueryAndWatcher();
         },
