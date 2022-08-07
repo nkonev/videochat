@@ -220,7 +220,7 @@
         computed: {
             ...mapGetters({currentUser: GET_USER}),
             messageEditHeight() {
-                return this.fullHeight ? 'calc(100vh - 56px - 90px)' : '100%'
+                return this.fullHeight ? 'calc(100vh - 56px)' : '100%'
             },
         },
         mounted() {
