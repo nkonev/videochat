@@ -22,7 +22,7 @@ func (tx *Tx) DeleteParticipant(userId int64, chatId int64) error {
 }
 
 func getParticipantIdsCommon(qq CommonOperations, chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
-	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 LIMIT $2 OFFSET $3", chatId, participantsSize, participantsOffset); err != nil {
+	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 ORDER BY user_id LIMIT $2 OFFSET $3", chatId, participantsSize, participantsOffset); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
@@ -49,7 +49,7 @@ func (db *DB) GetParticipantIds(chatId int64, participantsSize, participantsOffs
 }
 
 func getAllParticipantIdsCommon(qq CommonOperations, chatId int64) ([]int64, error) {
-	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1", chatId); err != nil {
+	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 ORDER BY user_id", chatId); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
@@ -141,7 +141,7 @@ func (tx *Tx) GetFirstParticipant(chatId int64) (int64, error) {
 }
 
 func (db *DB) GetCoChattedParticipantIdsCommon(participantId int64) ([]int64, error) {
-	if rows, err := db.Query("SELECT DISTINCT user_id FROM chat_participant WHERE chat_id IN (SELECT chat_id FROM chat_participant WHERE user_id = $1)", participantId); err != nil {
+	if rows, err := db.Query("SELECT DISTINCT user_id FROM chat_participant WHERE chat_id IN (SELECT chat_id FROM chat_participant WHERE user_id = $1) ORDER BY user_id", participantId); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()

@@ -483,6 +483,10 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
+	participantsPage := utils.FixPageString(c.QueryParam("page"))
+	participantsSize := utils.FixSizeString(c.QueryParam("size"))
+	participantsOffset := utils.GetOffset(participantsPage, participantsSize)
+
 	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
 
 		// check that I am admin
@@ -527,14 +531,14 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, participantIdFromRequest)
 		}
 
-		if responseDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, 0, 0); err != nil {
+		if responseDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsSize, participantsOffset); err != nil {
 			return err
 		} else {
 			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, notifications.NoPagePlaceholder, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, participantsPage, tx)
 		}
 		responseDto := ChangeAdminResponseDto{Admin: isAdmin}
 

@@ -246,7 +246,13 @@
             changeChatAdmin(item) {
                 item.adminLoading = true;
                 this.$forceUpdate();
-                axios.put(`/api/chat/${this.dto.id}/user/${item.id}?admin=${!item.admin}`);
+                axios.put(`/api/chat/${this.dto.id}/user/${item.id}`, null, {
+                    params: {
+                        admin: !item.admin,
+                        page: this.translatePage(),
+                        size: pageSize,
+                    },
+                });
             },
             inviteToVideoCall(userId) {
                 axios.put(`/api/chat/${this.dto.id}/video/invite?userId=${userId}`).then(value => {
