@@ -7,6 +7,7 @@ import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +20,10 @@ import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +40,9 @@ public class AaaUserDetailsService implements UserDetailsService {
 
     @Autowired
     private RedisIndexedSessionRepository redisOperationsSessionRepository;
+
+    @Value("${custom.online-estimation}")
+    private Duration onlineEstimatedDuration;
 
     /**
      * load UserAccountDetailsDTO from database, or throws UsernameNotFoundException
@@ -79,7 +87,15 @@ public class AaaUserDetailsService implements UserDetailsService {
         if (userIds == null){
             throw new RuntimeException("userIds cannon be null");
         }
-        return StreamSupport.stream(userAccountRepository.findAllById(userIds).spliterator(), false).map(u -> new UserProfileController.UserOnlineResponse(u.id(), !getSessions(u.username()).isEmpty())).toList();
+        return StreamSupport.stream(userAccountRepository.findAllById(userIds).spliterator(), false)
+                .map(u -> new UserProfileController.UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
+                .toList();
+    }
+
+    private boolean calcOnline(Map<String, Session> sessions) {
+        return sessions.entrySet().stream().anyMatch(session -> {
+            return session.getValue().getLastAccessedTime().plus(onlineEstimatedDuration).isAfter(Instant.now(Clock.systemUTC()));
+        });
     }
 
     public UserAccount getUserAccount(long userId){

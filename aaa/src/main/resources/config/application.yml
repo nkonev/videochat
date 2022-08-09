@@ -77,6 +77,7 @@ custom:
       subject: "Password reset"
     token:
       ttl-minutes: 5
+  online-estimation: 10m
 
 server.tomcat.accesslog.enabled: false
 server.tomcat.accesslog.pattern: '%t %a "%r" %s (%D ms)'

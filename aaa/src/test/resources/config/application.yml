@@ -55,7 +55,7 @@ custom:
       subject: "Password reset"
     token:
       ttl-minutes: 5
-
+  online-estimation: 10m
 
 server.port: 9080
 
