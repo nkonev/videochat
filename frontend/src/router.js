@@ -3,7 +3,7 @@ import Router from 'vue-router'
 import {chat_list_name, root, chat_name, profile_self_name, videochat_name, profile_name} from "./routes";
 import Error404 from "./Error404";
 import ChatList from "./ChatList";
-import ChatView from "./ChatView.vue";
+const ChatView = () => import("./ChatView.vue");
 const UserSelfProfile = () => import("./UserSelfProfile");
 const UserProfile = () => import("./UserProfile");
 

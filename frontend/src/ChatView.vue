@@ -60,7 +60,9 @@
         REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE,
     } from "./bus";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
+    import MessageEdit from "./MessageEdit";
     import ChatVideo from "./ChatVideo";
+
     import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
 
@@ -642,7 +644,7 @@
         },
         components: {
             InfiniteLoading,
-            MessageEdit: () => import("./MessageEdit"),
+            MessageEdit,
             ChatVideo,
             Splitpanes, Pane,
             MessageItem

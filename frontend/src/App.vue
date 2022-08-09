@@ -170,7 +170,7 @@
                 <FileTextEditModal/>
                 <LanguageModal/>
                 <VideoAddNewSource/>
-                <MessageEditModal/>
+                <MessageEditModal v-if="!$vuetify.breakpoint.smAndUp"/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>

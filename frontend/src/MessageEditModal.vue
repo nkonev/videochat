@@ -22,8 +22,7 @@
 </template>
 
 <script>
-import bus, {CLOSE_EDIT_MESSAGE, OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "@/bus";
-import MessageEdit from "@/MessageEdit";
+    import bus, {CLOSE_EDIT_MESSAGE, OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "@/bus";
 
     export default {
         data() {
@@ -52,7 +51,7 @@ import MessageEdit from "@/MessageEdit";
             }
         },
         components: {
-            MessageEdit
+            MessageEdit: () => import("./MessageEdit"),
         },
         computed: {
             chatId() {
