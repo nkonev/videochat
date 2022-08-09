@@ -10,24 +10,26 @@ import (
 
 const aaaEventsQueue = "aaa-events"
 const videoNotificationsQueue = "video-notifications"
+const videoInviteQueue = "video-invite"
 
+type AaaEventsQueue struct{ *amqp.Queue }
+type VideoNotificationsQueue struct{ *amqp.Queue }
+type VideoInviteQueue struct{ *amqp.Queue }
 
-type AaaEventsQueue struct {*amqp.Queue}
-type VideoNotificationsQueue struct {*amqp.Queue}
-
-type AaaEventsChannel struct {*rabbitmq.Channel}
-type VideoNotificationsChannel struct {*rabbitmq.Channel}
+type AaaEventsChannel struct{ *rabbitmq.Channel }
+type VideoNotificationsChannel struct{ *rabbitmq.Channel }
+type VideoInviteChannel struct{ *rabbitmq.Channel }
 
 func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
-		name, // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
+		name,  // name
+		false, // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
 	)
 	if err != nil {
 		Logger.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
@@ -36,20 +38,28 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	return &q
 }
 
-func CreateAaaChannel(connection *rabbitmq.Connection) AaaEventsChannel{
+func CreateAaaChannel(connection *rabbitmq.Connection) AaaEventsChannel {
 	return AaaEventsChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
 
-func CreateVideoChannel(connection *rabbitmq.Connection) VideoNotificationsChannel{
+func CreateVideoNotificationsChannel(connection *rabbitmq.Connection) VideoNotificationsChannel {
 	return VideoNotificationsChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
 
-func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue{
+func CreateVideoInviteChannel(connection *rabbitmq.Connection) VideoInviteChannel {
+	return VideoInviteChannel{myRabbit.CreateRabbitMqChannel(connection)}
+}
+
+func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue {
 	return AaaEventsQueue{create(aaaEventsQueue, consumeCh.Channel)}
 }
 
-func CreateVideoQueue(consumeCh VideoNotificationsChannel) VideoNotificationsQueue{
+func CreateVideoNotificationsQueue(consumeCh VideoNotificationsChannel) VideoNotificationsQueue {
 	return VideoNotificationsQueue{create(videoNotificationsQueue, consumeCh.Channel)}
+}
+
+func CreateVideoInviteQueue(consumeCh VideoNotificationsChannel) VideoInviteQueue {
+	return VideoInviteQueue{create(videoInviteQueue, consumeCh.Channel)}
 }
 
 func listen(
@@ -85,10 +95,19 @@ func ListenAaaQueue(
 	listen(channel.Channel, queue.Queue, onMessage, lc)
 }
 
-func ListenVideoQueue(
+func ListenVideoNotificationsQueue(
 	channel VideoNotificationsChannel,
 	queue VideoNotificationsQueue,
-	onMessage VideoListener,
+	onMessage VideoNotificationsListener,
+	lc fx.Lifecycle) {
+
+	listen(channel.Channel, queue.Queue, onMessage, lc)
+}
+
+func ListenVideoInviteQueue(
+	channel VideoInviteChannel,
+	queue VideoInviteQueue,
+	onMessage VideoInviteListener,
 	lc fx.Lifecycle) {
 
 	listen(channel.Channel, queue.Queue, onMessage, lc)

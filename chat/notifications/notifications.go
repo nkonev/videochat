@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/centrifugal/centrifuge"
@@ -25,7 +26,7 @@ type Notifications interface {
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutVideoCallChanged(dto dto.ChatNotifyDto, participantIds []int64)
 	NotifyAboutProfileChanged(user *dto.User)
-	NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64, chatName string)
+	NotifyAboutCallInvitation(c context.Context, chatId int64, userId int64, chatName string)
 	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
 }
 
@@ -349,7 +350,7 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 	}
 }
 
-func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId int64, userId int64, chatName string) {
+func (not *notifictionsImpl) NotifyAboutCallInvitation(c context.Context, chatId int64, userId int64, chatName string) {
 	notification := dto.CentrifugeNotification{
 		Payload: VideoCallInvitation{
 			ChatId:   chatId,
@@ -361,7 +362,7 @@ func (not *notifictionsImpl) NotifyAboutCallInvitation(c echo.Context, chatId in
 	participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(userId)
 
 	if marshalledBytes, err := json.Marshal(notification); err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("error during marshalling VideoCallInvitation: %s", err)
+		GetLogEntry(c).Errorf("error during marshalling VideoCallInvitation: %s", err)
 	} else {
 		Logger.Infof("Sending notification about video_call_invitation to participantChannel: %v", participantChannel)
 		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)

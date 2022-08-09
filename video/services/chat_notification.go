@@ -8,10 +8,10 @@ import (
 )
 
 type NotificationService struct {
-	rabbitMqPublisher *producer.RabbitPublisher
+	rabbitMqPublisher *producer.RabbitNotificationsPublisher
 }
 
-func NewNotificationService(producer *producer.RabbitPublisher) *NotificationService {
+func NewNotificationService(producer *producer.RabbitNotificationsPublisher) *NotificationService {
 	return &NotificationService{
 		rabbitMqPublisher: producer,
 	}

@@ -41,7 +41,6 @@ func main() {
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
-			handlers.NewVideoHandler,
 			configureEcho,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
@@ -49,19 +48,23 @@ func main() {
 			db.ConfigureDb,
 			notifications.NewNotifications,
 			listener.CreateAaaUserProfileUpdateListener,
-			listener.CreateVideoListener,
+			listener.CreateVideoCallChangedListener,
+			listener.CreateVideoInviteListener,
 			rabbitmq.CreateRabbitMqConnection,
 			listener.CreateAaaChannel,
-			listener.CreateVideoChannel,
+			listener.CreateVideoNotificationsChannel,
+			listener.CreateVideoInviteChannel,
 			listener.CreateAaaQueue,
-			listener.CreateVideoQueue,
+			listener.CreateVideoNotificationsQueue,
+			listener.CreateVideoInviteQueue,
 		),
 		fx.Invoke(
 			runMigrations,
 			runCentrifuge,
 			runEcho,
 			listener.ListenAaaQueue,
-			listener.ListenVideoQueue,
+			listener.ListenVideoNotificationsQueue,
+			listener.ListenVideoInviteQueue,
 		),
 	)
 	app.Run()
@@ -120,7 +123,6 @@ func configureEcho(
 	node *centrifuge.Node,
 	ch *handlers.ChatHandler,
 	mc *handlers.MessageHandler,
-	vh *handlers.VideoHandler,
 	tp *sdktrace.TracerProvider,
 ) *echo.Echo {
 
@@ -173,8 +175,6 @@ func configureEcho(
 	e.PUT("/chat/:id/broadcast", mc.BroadcastMessage)
 	e.DELETE("/internal/remove-file-item", mc.RemoveFileItem)
 	e.POST("/internal/check-embedded-files", mc.CheckEmbeddedFiles)
-
-	e.PUT("/chat/:id/video/invite", vh.NotifyAboutCallInvitation)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

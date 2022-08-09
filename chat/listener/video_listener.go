@@ -1,16 +1,20 @@
 package listener
 
 import (
+	"context"
 	"encoding/json"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/utils"
 )
 
-type VideoListener func(data []byte) error
+type VideoNotificationsListener func(data []byte) error
 
-func CreateVideoListener(not notifications.Notifications, db db.DB) VideoListener {
+type VideoInviteListener func(data []byte) error
+
+func CreateVideoCallChangedListener(not notifications.Notifications, db db.DB) VideoNotificationsListener {
 	return func(data []byte) error {
 		s := string(data)
 		Logger.Infof("Received %v", s)
@@ -28,6 +32,63 @@ func CreateVideoListener(not notifications.Notifications, db db.DB) VideoListene
 		}
 
 		not.NotifyAboutVideoCallChanged(*bindTo, ids)
+
+		return nil
+	}
+}
+
+type simpleChat struct {
+	Id        int64  `json:"id"`
+	Name      string `json:"name"`
+	IsTetATet bool   `json:"tetATet"`
+}
+
+func (r *simpleChat) GetId() int64 {
+	return r.Id
+}
+
+func (r *simpleChat) GetName() string {
+	return r.Name
+}
+
+func (r *simpleChat) SetName(s string) {
+	r.Name = s
+}
+
+func (r *simpleChat) GetIsTetATet() bool {
+	return r.IsTetATet
+}
+
+func CreateVideoInviteListener(not notifications.Notifications, db db.DB) VideoInviteListener {
+	return func(data []byte) error {
+		s := string(data)
+		Logger.Infof("Received %v", s)
+
+		var bindTo = new(dto.VideoInviteDto)
+		err := json.Unmarshal(data, &bindTo)
+		if err != nil {
+			Logger.Errorf("Error during deserialize VideoInviteDto %v", err)
+			return nil
+		}
+
+		chat, err := db.GetChat(bindTo.BehalfUserId, bindTo.ChatId)
+		if err != nil {
+			return err
+		}
+
+		meAsUser := dto.User{Id: bindTo.BehalfUserId, Login: bindTo.BehalfLogin}
+		var sch dto.ChatDtoWithTetATet = &simpleChat{
+			Id:        chat.Id,
+			Name:      chat.Title,
+			IsTetATet: chat.TetATet,
+		}
+		utils.ReplaceChatNameToLoginForTetATet(
+			sch,
+			&meAsUser,
+			bindTo.BehalfUserId,
+		)
+
+		not.NotifyAboutCallInvitation(context.Background(), bindTo.ChatId, bindTo.UserId, sch.GetName())
 
 		return nil
 	}

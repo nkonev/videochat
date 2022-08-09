@@ -9,10 +9,11 @@ import (
 )
 
 const videoNotificationsQueue = "video-notifications"
+const videoInviteQueue = "video-invite"
 
-func (rp *RabbitPublisher) Publish(bytea []byte) error {
+func (rp *RabbitNotificationsPublisher) Publish(bytea []byte) error {
 	msg := amqp.Publishing{
-		DeliveryMode: amqp.Persistent,
+		DeliveryMode: amqp.Transient,
 		Timestamp:    time.Now(),
 		ContentType:  "application/json",
 		Body:         bytea,
@@ -26,12 +27,38 @@ func (rp *RabbitPublisher) Publish(bytea []byte) error {
 	}
 }
 
-type RabbitPublisher struct {
+type RabbitNotificationsPublisher struct {
 	channel *rabbitmq.Channel
 }
 
-func NewRabbitPublisher(connection *rabbitmq.Connection) *RabbitPublisher {
-	return &RabbitPublisher{
+func (rp *RabbitInvitePublisher) Publish(bytea []byte) error {
+	msg := amqp.Publishing{
+		DeliveryMode: amqp.Transient,
+		Timestamp:    time.Now(),
+		ContentType:  "application/json",
+		Body:         bytea,
+	}
+
+	if err := rp.channel.Publish("", videoInviteQueue, false, false, msg); err != nil {
+		Logger.Error(err, "Error during publishing")
+		return err
+	} else {
+		return nil
+	}
+}
+
+type RabbitInvitePublisher struct {
+	channel *rabbitmq.Channel
+}
+
+func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection) *RabbitNotificationsPublisher {
+	return &RabbitNotificationsPublisher{
+		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+	}
+}
+
+func NewRabbitInvitePublisher(connection *rabbitmq.Connection) *RabbitInvitePublisher {
+	return &RabbitInvitePublisher{
 		channel: myRabbitmq.CreateRabbitMqChannel(connection),
 	}
 }

@@ -47,8 +47,10 @@ func main() {
 			handlers.ConfigureAuthMiddleware,
 			handlers.NewTokenHandler,
 			handlers.NewLivekitWebhookHandler,
+			handlers.NewInviteHandler,
 			rabbitmq.CreateRabbitMqConnection,
-			producer.NewRabbitPublisher,
+			producer.NewRabbitNotificationsPublisher,
+			producer.NewRabbitInvitePublisher,
 			services.NewNotificationService,
 			services.NewUserService,
 			services.NewScheduledService,
@@ -105,6 +107,7 @@ func configureEcho(
 	uh *handlers.UserHandler,
 	ch *handlers.ConfigHandler,
 	lhf *handlers.LivekitWebhookHandler,
+	ih *handlers.InviteHandler,
 	tp *sdktrace.TracerProvider,
 ) *echo.Echo {
 
@@ -136,6 +139,8 @@ func configureEcho(
 	e.POST("/internal/livekit-webhook", lhf.GetLivekitWebhookHandler())
 	e.PUT("/video/:chatId/kick", uh.Kick)
 	e.PUT("/video/:chatId/mute", uh.Mute)
+
+	e.PUT("/video/:id/invite", ih.NotifyAboutCallInvitation)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
