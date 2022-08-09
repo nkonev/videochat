@@ -3,6 +3,8 @@ module nkonev.name/video
 require (
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
+	github.com/ehsaniara/gointerlock v1.1.1
+	github.com/go-redis/redis/v8 v8.11.4
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/lithammer/shortuuid/v3 v3.0.7 // indirect

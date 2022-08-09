@@ -29,6 +29,7 @@ services:
       - VIDEO_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - VIDEO_JAEGER.HOST=jaeger
       - VIDEO_JAEGER.PORT=6831
+      - VIDEO_REDIS.ADDRESS=redis:6379
 
     logging:
       driver: "journald"

@@ -23,8 +23,8 @@ import (
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 	"nkonev.name/video/rabbitmq"
+	"nkonev.name/video/redis"
 	"nkonev.name/video/services"
-	"time"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -54,6 +54,9 @@ func main() {
 			services.NewNotificationService,
 			services.NewUserService,
 			services.NewScheduledService,
+			redis.RedisV8,
+			redis.NewChatNotifierService,
+			redis.ChatNotifierScheduler,
 		),
 		fx.Invoke(
 			runEcho,
@@ -203,26 +206,14 @@ func runEcho(e *echo.Echo, cfg *config.ExtendedConfig) {
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func runScheduler(scheduleService *services.ScheduledService, conf *config.ExtendedConfig) *chan struct{} {
-	if conf.SyncNotificationPeriod == 0 {
-		Logger.Info("Sheduler is disabled")
-		return nil
-	}
-	ticker := time.NewTicker(conf.SyncNotificationPeriod)
-	quit := make(chan struct{})
+func runScheduler(chatNotifierTask *redis.ChatNotifierTask) {
 	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				Logger.Info("Invoked chats periodic notificator")
-				scheduleService.NotifyAllChats()
-			case <-quit:
-				ticker.Stop()
-				return
-			}
+		err := chatNotifierTask.Run(context.Background())
+		if err != nil {
+			Logger.Errorf("Error during working chatNotifierTask: %s", err)
 		}
 	}()
-	return &quit
+	Logger.Infof("Schedulers are started")
 }
 
 func createTypedConfig() (*config.ExtendedConfig, error) {

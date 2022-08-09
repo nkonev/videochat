@@ -42,3 +42,8 @@ rabbitmq:
   debug: true
 
 syncNotificationPeriod: 2s
+
+redis:
+  address: :36379
+  password: ""
+  db: 4
