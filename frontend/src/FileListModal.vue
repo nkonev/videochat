@@ -150,6 +150,7 @@ export default {
             this.chatId = null;
             this.fileItemUuid = null;
             this.messageEditing = false;
+            this.filePage = firstPage;
         },
         openUploadModal() {
             bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.fileItemUuid, this.messageEditing, true);
