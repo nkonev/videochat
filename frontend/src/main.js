@@ -16,7 +16,7 @@ import bus, {
     LOGGED_OUT,
     LOGGED_IN,
     VIDEO_CALL_INVITED,
-    VIDEO_CALL_CHANGED,
+    VIDEO_CALL_CHANGED, VIDEO_DIAL_STATUS_CHANGED,
 } from './bus';
 import store, {FETCH_AVAILABLE_OAUTH2_PROVIDERS, FETCH_USER_PROFILE, UNSET_USER} from './store'
 import router from './router.js'
@@ -130,6 +130,9 @@ vm = new Vue({
       } else if (getData(ctx).type === "video_call_changed") {
         const d = getProperData(ctx);
         bus.$emit(VIDEO_CALL_CHANGED, d);
+      } else if (getData(ctx).type === "video_dial_status_changed") {
+        const d = getProperData(ctx);
+        bus.$emit(VIDEO_DIAL_STATUS_CHANGED, d);
       }
 
     });

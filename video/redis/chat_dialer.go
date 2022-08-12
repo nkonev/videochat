@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
 	"nkonev.name/video/config"
@@ -13,16 +12,18 @@ import (
 )
 
 type ChatDialerService struct {
-	redisService      *services.DialRedisService
-	conf              *config.ExtendedConfig
-	rabbitMqPublisher *producer.RabbitInvitePublisher
+	redisService            *services.DialRedisRepository
+	conf                    *config.ExtendedConfig
+	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
+	dialStatusPublisher     *producer.RabbitDialStatusPublisher
 }
 
-func NewChatDialerService(scheduleService *services.DialRedisService, conf *config.ExtendedConfig, rabbitMqPublisher *producer.RabbitInvitePublisher) *ChatDialerService {
+func NewChatDialerService(scheduleService *services.DialRedisRepository, conf *config.ExtendedConfig, rabbitMqInvitePublisher *producer.RabbitInvitePublisher, dialStatusPublisher *producer.RabbitDialStatusPublisher) *ChatDialerService {
 	return &ChatDialerService{
-		redisService:      scheduleService,
-		conf:              conf,
-		rabbitMqPublisher: rabbitMqPublisher,
+		redisService:            scheduleService,
+		conf:                    conf,
+		rabbitMqInvitePublisher: rabbitMqInvitePublisher,
+		dialStatusPublisher:     dialStatusPublisher,
 	}
 }
 
@@ -61,19 +62,25 @@ func (srv *ChatDialerService) doJob() {
 				BehalfLogin:  behalfUserLogin,
 			}
 
-			marshal, err := json.Marshal(inviteDto)
-			if err != nil {
-				Logger.Error(err, "Failed during marshal chatNotifyDto")
-				continue
-			}
-
 			Logger.Infof("Calling userId %v from chat %v", userId, chatId)
-			err = srv.rabbitMqPublisher.Publish(marshal)
+			err = srv.rabbitMqInvitePublisher.Publish(&inviteDto)
 			if err != nil {
 				Logger.Error(err, "Failed during marshal chatNotifyDto")
 				continue
 			}
+		}
 
+		// send state changes
+		var videoIsInvitingDto = dto.VideoIsInvitingDto{
+			ChatId:       chatId,
+			UserIds:      userIdsToDial,
+			Status:       true,
+			BehalfUserId: behalfUserId,
+		}
+		err = srv.dialStatusPublisher.Publish(&videoIsInvitingDto)
+		if err != nil {
+			Logger.Error(err, "Failed during marshal chatNotifyDto")
+			continue
 		}
 	}
 

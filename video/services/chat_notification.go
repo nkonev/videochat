@@ -1,7 +1,6 @@
 package services
 
 import (
-	"encoding/json"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
@@ -17,15 +16,8 @@ func NewNotificationService(producer *producer.RabbitNotificationsPublisher) *No
 	}
 }
 
-// sent to chat through RabbitMQ
-type chatNotifyDto struct {
-	Data       *dto.NotifyDto `json:"data"`
-	UsersCount int64          `json:"usersCount"`
-	ChatId     int64          `json:"chatId"`
-}
-
 func (h *NotificationService) Notify(chatId, usersCount int64, data *dto.NotifyDto) error {
-	var chatNotifyDto = chatNotifyDto{}
+	var chatNotifyDto = dto.ChatNotifyDto{}
 	if data != nil {
 		Logger.Infof("Notifying with data chat_id=%v, login=%v, userId=%v", chatId, data.Login, data.UserId)
 		chatNotifyDto.Data = data
@@ -35,11 +27,5 @@ func (h *NotificationService) Notify(chatId, usersCount int64, data *dto.NotifyD
 	chatNotifyDto.UsersCount = usersCount
 	chatNotifyDto.ChatId = chatId
 
-	marshal, err := json.Marshal(chatNotifyDto)
-	if err != nil {
-		Logger.Error(err, "Failed during marshal chatNotifyDto")
-		return err
-	}
-
-	return h.rabbitMqPublisher.Publish(marshal)
+	return h.rabbitMqPublisher.Publish(&chatNotifyDto)
 }

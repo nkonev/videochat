@@ -153,7 +153,7 @@
                     {{ $vuetify.lang.t('$vuetify.you_called', invitedVideoChatId, invitedVideoChatName) }}
                     <template v-slot:action="{ attrs }">
                         <v-btn icon v-bind="attrs" @click="onClickInvitation()"><v-icon color="white">mdi-phone</v-icon></v-btn>
-                        <v-btn icon v-bind="attrs" @click="invitedVideoChatAlert = false"><v-icon color="white">mdi-close-circle</v-icon></v-btn>
+                        <v-btn icon v-bind="attrs" @click="onClickCancelInvitation()"><v-icon color="white">mdi-close-circle</v-icon></v-btn>
                     </template>
                 </v-snackbar>
 
@@ -336,9 +336,14 @@
             onClickInvitation() {
                 const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
                 this.navigateToWithPreservingSearchStringInQuery(routerNewState);
+                axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`)
                 this.invitedVideoChatId = 0;
                 this.invitedVideoChatName = null;
                 this.invitedVideoChatAlert = false;
+            },
+            onClickCancelInvitation() {
+                this.invitedVideoChatAlert = false;
+                axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`)
             },
             isVideoRoute() {
                 return this.$route.name == videochat_name

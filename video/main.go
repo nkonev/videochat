@@ -51,10 +51,11 @@ func main() {
 			rabbitmq.CreateRabbitMqConnection,
 			producer.NewRabbitNotificationsPublisher,
 			producer.NewRabbitInvitePublisher,
+			producer.NewRabbitDialStatusPublisher,
 			services.NewNotificationService,
 			services.NewUserService,
 			services.NewStateChangedNotificationService,
-			services.NewDialRedisService,
+			services.NewDialRedisRepository,
 			redis.RedisV8,
 			redis.NewChatNotifierService,
 			redis.ChatNotifierScheduler,
@@ -145,8 +146,8 @@ func configureEcho(
 	e.POST("/internal/livekit-webhook", lhf.GetLivekitWebhookHandler())
 	e.PUT("/video/:chatId/kick", uh.Kick)
 	e.PUT("/video/:chatId/mute", uh.Mute)
-
-	e.PUT("/video/:id/dial", ih.NotifyAboutCallInvitation)
+	e.PUT("/video/:id/dial", ih.ProcessCallInvitation)
+	e.PUT("/video/:id/dial/cancel", ih.ProcessCancelInvitation)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

@@ -11,14 +11,17 @@ import (
 const aaaEventsQueue = "aaa-events"
 const videoNotificationsQueue = "video-notifications"
 const videoInviteQueue = "video-invite"
+const videoDialStatusQueue = "video-dial-statuses"
 
 type AaaEventsQueue struct{ *amqp.Queue }
 type VideoNotificationsQueue struct{ *amqp.Queue }
 type VideoInviteQueue struct{ *amqp.Queue }
+type VideoDialStatusQueue struct{ *amqp.Queue }
 
 type AaaEventsChannel struct{ *rabbitmq.Channel }
 type VideoNotificationsChannel struct{ *rabbitmq.Channel }
 type VideoInviteChannel struct{ *rabbitmq.Channel }
+type VideoDialStatusChannel struct{ *rabbitmq.Channel }
 
 func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
@@ -50,6 +53,10 @@ func CreateVideoInviteChannel(connection *rabbitmq.Connection) VideoInviteChanne
 	return VideoInviteChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
 
+func CreateVideoDialStatusChannel(connection *rabbitmq.Connection) VideoDialStatusChannel {
+	return VideoDialStatusChannel{myRabbit.CreateRabbitMqChannel(connection)}
+}
+
 func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue {
 	return AaaEventsQueue{create(aaaEventsQueue, consumeCh.Channel)}
 }
@@ -60,6 +67,10 @@ func CreateVideoNotificationsQueue(consumeCh VideoNotificationsChannel) VideoNot
 
 func CreateVideoInviteQueue(consumeCh VideoNotificationsChannel) VideoInviteQueue {
 	return VideoInviteQueue{create(videoInviteQueue, consumeCh.Channel)}
+}
+
+func CreateVideoDialStatusQueue(consumeCh VideoDialStatusChannel) VideoDialStatusQueue {
+	return VideoDialStatusQueue{create(videoDialStatusQueue, consumeCh.Channel)}
 }
 
 func listen(
@@ -108,6 +119,15 @@ func ListenVideoInviteQueue(
 	channel VideoInviteChannel,
 	queue VideoInviteQueue,
 	onMessage VideoInviteListener,
+	lc fx.Lifecycle) {
+
+	listen(channel.Channel, queue.Queue, onMessage, lc)
+}
+
+func ListenVideoDialStatusQueue(
+	channel VideoDialStatusChannel,
+	queue VideoDialStatusQueue,
+	onMessage VideoDialStatusListener,
 	lc fx.Lifecycle) {
 
 	listen(channel.Channel, queue.Queue, onMessage, lc)

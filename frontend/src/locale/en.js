@@ -57,6 +57,7 @@ export default {
     admin: "Admin",
     you_brackets: "(you)",
     call: "Call",
+    stop_call: "Stop call",
     force_mute: "Force mute",
     kick: "Kick from call",
     please_allow_audio_policy_bypass: "Please allow audio autoplay. If not, it will be enabled after unmute.",

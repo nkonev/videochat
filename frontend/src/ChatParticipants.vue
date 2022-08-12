@@ -142,7 +142,7 @@
                                     <template v-slot:activator="{ on, attrs }">
                                         <v-btn v-bind="attrs" v-on="on" icon @click="startCalling(item)"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
                                     </template>
-                                    <span>{{ $vuetify.lang.t('$vuetify.call') }}</span>
+                                    <span>{{ item.callingTo ? $vuetify.lang.t('$vuetify.stop_call') : $vuetify.lang.t('$vuetify.call') }}</span>
                                 </v-tooltip>
                             </v-list-item>
                             <v-divider></v-divider>
@@ -166,7 +166,7 @@
         CHAT_EDITED,
         CLOSE_SIMPLE_MODAL,
         OPEN_PARTICIPANTS_DIALOG,
-        OPEN_SIMPLE_MODAL,
+        OPEN_SIMPLE_MODAL, VIDEO_DIAL_STATUS_CHANGED,
     } from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
@@ -270,11 +270,18 @@
                 });
             },
             startCalling(dto) {
-                axios.put(`/api/video/${this.dto.id}/dial?userId=${dto.id}&call=${!dto.callingTo}`).then(value => {
-                    console.log("Inviting to video chat", !dto.callingTo);
+                const call = !dto.callingTo;
+                axios.put(`/api/video/${this.dto.id}/dial?userId=${dto.id}&call=${call}`).then(value => {
+                    console.log("Inviting to video chat", !call);
                     if (this.$route.name != videochat_name) {
                         const routerNewState = { name: videochat_name};
                         this.navigateToWithPreservingSearchStringInQuery(routerNewState);
+                    }
+                    for (const participant of this.dto.participants) {
+                        if (participant.id == dto.id) {
+                            participant.callingTo = call;
+                            break
+                        }
                     }
                 })
             },
@@ -397,19 +404,25 @@
                     })
                     this.$forceUpdate();
                 }
+            },
+            onChatDialStatusChange(dto) {
+                if (!this.show || dto.chatId != this.chatId || !this.dto.participants) {
+                    return;
+                }
+                for (const participant of this.dto.participants) {
+                    innerLoop:
+                    for (const videoDialChanged of dto.dials) {
+                        if (participant.id == videoDialChanged.userId) {
+                            participant.callingTo = videoDialChanged.status;
+                            break innerLoop
+                        }
+                    }
+                }
             }
         },
         watch: {
             search (searchString) {
               this.doNewSearch(searchString);
-            },
-            '$route' (to, from) {
-                if (this.show) {
-                    console.debug("Listening route from", from, "to", to);
-                    if (from.name == chat_name || from.name == videochat_name) {
-                        this.closeModal();
-                    }
-                }
             },
             participantsPage(newValue) {
                 if (this.show) {
@@ -430,11 +443,13 @@
             bus.$on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
             bus.$on(CHAT_EDITED, this.onChatChange);
             bus.$on(CHAT_DELETED, this.onChatDelete);
+            bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
         },
         destroyed() {
             bus.$off(OPEN_PARTICIPANTS_DIALOG, this.showModal);
             bus.$off(CHAT_EDITED, this.onChatChange);
             bus.$off(CHAT_DELETED, this.onChatDelete);
+            bus.$off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
         },
     }
 </script>

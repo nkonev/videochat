@@ -50,13 +50,16 @@ func main() {
 			listener.CreateAaaUserProfileUpdateListener,
 			listener.CreateVideoCallChangedListener,
 			listener.CreateVideoInviteListener,
+			listener.CreateVideoDialStatusListener,
 			rabbitmq.CreateRabbitMqConnection,
 			listener.CreateAaaChannel,
 			listener.CreateVideoNotificationsChannel,
 			listener.CreateVideoInviteChannel,
+			listener.CreateVideoDialStatusChannel,
 			listener.CreateAaaQueue,
 			listener.CreateVideoNotificationsQueue,
 			listener.CreateVideoInviteQueue,
+			listener.CreateVideoDialStatusQueue,
 		),
 		fx.Invoke(
 			runMigrations,
@@ -65,6 +68,7 @@ func main() {
 			listener.ListenAaaQueue,
 			listener.ListenVideoNotificationsQueue,
 			listener.ListenVideoInviteQueue,
+			listener.ListenVideoDialStatusQueue,
 		),
 	)
 	app.Run()
@@ -158,7 +162,7 @@ func configureEcho(
 	e.PUT("/chat/:id/leave", ch.LeaveChat)
 	e.PUT("/chat/:id/user/:participantId", ch.ChangeParticipant)
 	e.DELETE("/chat/:id/user/:participantId", ch.DeleteParticipant)
-	e.DELETE("/internal/delete-all-participants", ch.RemoveAllParticipants) // TODO to separated executable
+	e.DELETE("/internal/delete-all-participants", ch.RemoveAllParticipants)
 	e.PUT("/chat/:id/users", ch.AddParticipants)
 	e.GET("/chat/:id/user", ch.SearchForUsersToAdd)
 	e.PUT("/chat/tet-a-tet/:participantId", ch.TetATet)

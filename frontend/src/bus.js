@@ -24,6 +24,7 @@ export const CHANGE_WEBSOCKET_STATUS = "changeWebsocket";
 export const OPEN_PARTICIPANTS_DIALOG = "openInfo";
 export const VIDEO_CALL_CHANGED = "videoCallChanged";
 export const VIDEO_CALL_INVITED = "videoCallInvited";
+export const VIDEO_DIAL_STATUS_CHANGED = "videoDialStatusChanged";
 export const OPEN_PERMISSIONS_WARNING_MODAL = "openPermissionsWarningModal";
 export const REFRESH_ON_WEBSOCKET_RESTORED = "refreshOnWsRestored";
 export const REQUEST_CHANGE_VIDEO_PARAMETERS = "requestChangeVideoParameters";

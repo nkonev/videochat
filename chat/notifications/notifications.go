@@ -28,6 +28,7 @@ type Notifications interface {
 	NotifyAboutProfileChanged(user *dto.User)
 	NotifyAboutCallInvitation(c context.Context, chatId int64, userId int64, chatName string)
 	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
+	NotifyAboutDialStatus(c context.Context, chatId, behalfUserId int64, status bool, usersId []int64)
 }
 
 type notifictionsImpl struct {
@@ -63,6 +64,16 @@ type VideoKick struct {
 
 type ForceMute struct {
 	ChatId int64 `json:"chatId"`
+}
+
+type VideoDialChanged struct {
+	UserId int64 `json:"userId"`
+	Status bool  `json:"status"`
+}
+
+type VideoDialChanges struct {
+	ChatId int64               `json:"chatId"`
+	Dials  []*VideoDialChanged `json:"dials"`
 }
 
 const NoPagePlaceholder = -1
@@ -402,4 +413,33 @@ func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId
 		}
 	}
 
+}
+
+func (not *notifictionsImpl) NotifyAboutDialStatus(c context.Context, chatId, behalfUserId int64, status bool, usersIds []int64) {
+	participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(behalfUserId)
+
+	var dials = []*VideoDialChanged{}
+	for _, userId := range usersIds {
+		dials = append(dials, &VideoDialChanged{
+			UserId: userId,
+			Status: status,
+		})
+	}
+
+	notification := dto.CentrifugeNotification{
+		Payload: &VideoDialChanges{
+			ChatId: chatId,
+			Dials:  dials,
+		},
+		EventType: "video_dial_status_changed",
+	}
+
+	if marshalledBytes, err := json.Marshal(notification); err != nil {
+		Logger.Errorf("error during marshalling chat created VideoDialStatusChanged: %s", err)
+	} else {
+		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
+		if err != nil {
+			Logger.Errorf("error publishing to public channel: %s", err)
+		}
+	}
 }

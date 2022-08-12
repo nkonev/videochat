@@ -14,6 +14,8 @@ type VideoNotificationsListener func(data []byte) error
 
 type VideoInviteListener func(data []byte) error
 
+type VideoDialStatusListener func(data []byte) error
+
 func CreateVideoCallChangedListener(not notifications.Notifications, db db.DB) VideoNotificationsListener {
 	return func(data []byte) error {
 		s := string(data)
@@ -89,6 +91,24 @@ func CreateVideoInviteListener(not notifications.Notifications, db db.DB) VideoI
 		)
 
 		not.NotifyAboutCallInvitation(context.Background(), bindTo.ChatId, bindTo.UserId, sch.GetName())
+
+		return nil
+	}
+}
+
+func CreateVideoDialStatusListener(not notifications.Notifications, db db.DB) VideoDialStatusListener {
+	return func(data []byte) error {
+		s := string(data)
+		Logger.Infof("Received %v", s)
+
+		var bindTo = new(dto.VideoIsInvitingDto)
+		err := json.Unmarshal(data, &bindTo)
+		if err != nil {
+			Logger.Errorf("Error during deserialize VideoIsInvitingDto %v", err)
+			return nil
+		}
+
+		not.NotifyAboutDialStatus(context.Background(), bindTo.ChatId, bindTo.BehalfUserId, bindTo.Status, bindTo.UserIds)
 
 		return nil
 	}
