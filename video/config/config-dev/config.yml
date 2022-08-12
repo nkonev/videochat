@@ -42,6 +42,7 @@ rabbitmq:
   debug: true
 
 syncNotificationPeriod: 2s
+dialPeriod: 5s
 
 redis:
   address: :36379

@@ -53,10 +53,13 @@ func main() {
 			producer.NewRabbitInvitePublisher,
 			services.NewNotificationService,
 			services.NewUserService,
-			services.NewScheduledService,
+			services.NewStateChangedNotificationService,
+			services.NewDialRedisService,
 			redis.RedisV8,
 			redis.NewChatNotifierService,
 			redis.ChatNotifierScheduler,
+			redis.NewChatDialerService,
+			redis.ChatDialerScheduler,
 		),
 		fx.Invoke(
 			runEcho,
@@ -143,7 +146,7 @@ func configureEcho(
 	e.PUT("/video/:chatId/kick", uh.Kick)
 	e.PUT("/video/:chatId/mute", uh.Mute)
 
-	e.PUT("/video/:id/invite", ih.NotifyAboutCallInvitation)
+	e.PUT("/video/:id/dial", ih.NotifyAboutCallInvitation)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -206,13 +209,20 @@ func runEcho(e *echo.Echo, cfg *config.ExtendedConfig) {
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func runScheduler(chatNotifierTask *redis.ChatNotifierTask) {
+func runScheduler(chatNotifierTask *redis.ChatNotifierTask, chatDialerTask *redis.ChatDialerTask) {
 	go func() {
 		err := chatNotifierTask.Run(context.Background())
 		if err != nil {
 			Logger.Errorf("Error during working chatNotifierTask: %s", err)
 		}
 	}()
+	go func() {
+		err := chatDialerTask.Run(context.Background())
+		if err != nil {
+			Logger.Errorf("Error during working chatDialerTask: %s", err)
+		}
+	}()
+
 	Logger.Infof("Schedulers are started")
 }
 

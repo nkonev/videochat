@@ -9,11 +9,11 @@ import (
 )
 
 type ChatNotifierService struct {
-	scheduleService *services.ScheduledService
+	scheduleService *services.StateChangedNotificationService
 	conf            *config.ExtendedConfig
 }
 
-func NewChatNotifierService(scheduleService *services.ScheduledService, conf *config.ExtendedConfig) *ChatNotifierService {
+func NewChatNotifierService(scheduleService *services.StateChangedNotificationService, conf *config.ExtendedConfig) *ChatNotifierService {
 	return &ChatNotifierService{
 		scheduleService: scheduleService,
 		conf:            conf,

@@ -1,27 +1,26 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
-	"nkonev.name/video/dto"
+	"nkonev.name/video/logger"
 	. "nkonev.name/video/logger"
-	"nkonev.name/video/producer"
+	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
 )
 
 type InviteHandler struct {
-	rabbitMqPublisher *producer.RabbitInvitePublisher
-	chatClient        *client.RestClient
+	dialService *services.DialRedisService
+	chatClient  *client.RestClient
 }
 
-func NewInviteHandler(rabbitMqPublisher *producer.RabbitInvitePublisher, chatClient *client.RestClient) *InviteHandler {
+func NewInviteHandler(dialService *services.DialRedisService, chatClient *client.RestClient) *InviteHandler {
 	return &InviteHandler{
-		rabbitMqPublisher: rabbitMqPublisher,
-		chatClient:        chatClient,
+		dialService: dialService,
+		chatClient:  chatClient,
 	}
 }
 
@@ -42,6 +41,11 @@ func (vh *InviteHandler) NotifyAboutCallInvitation(c echo.Context) error {
 		return err0
 	}
 
+	call, err0 := utils.ParseBoolean(c.QueryParam("call"))
+	if err0 != nil {
+		return err0
+	}
+
 	// check my access to chat
 	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
@@ -56,23 +60,14 @@ func (vh *InviteHandler) NotifyAboutCallInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	inviteDto := dto.VideoInviteDto{
-		ChatId:       chatId,
-		UserId:       userId,
-		BehalfUserId: userPrincipalDto.UserId,
-		BehalfLogin:  userPrincipalDto.UserLogin,
+	if call {
+		err = vh.dialService.AddToDialList(c.Request().Context(), userId, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
+	} else {
+		err = vh.dialService.RemoveFromDialList(c.Request().Context(), userId, chatId)
 	}
-
-	marshal, err := json.Marshal(inviteDto)
 	if err != nil {
-		Logger.Error(err, "Failed during marshal chatNotifyDto")
-		return err
-	}
-
-	err = vh.rabbitMqPublisher.Publish(marshal)
-	if err != nil {
-		Logger.Error(err, "Failed during marshal chatNotifyDto")
-		return err
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.NoContent(http.StatusOK)

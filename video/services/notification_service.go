@@ -9,18 +9,18 @@ import (
 	"nkonev.name/video/utils"
 )
 
-type ScheduledService struct {
+type StateChangedNotificationService struct {
 	conf                *config.ExtendedConfig
 	livekitRoomClient   *lksdk.RoomServiceClient
 	userService         *UserService
 	notificationService *NotificationService
 }
 
-func NewScheduledService(conf *config.ExtendedConfig, livekitRoomClient *lksdk.RoomServiceClient, userService *UserService, notificationService *NotificationService) *ScheduledService {
-	return &ScheduledService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService}
+func NewStateChangedNotificationService(conf *config.ExtendedConfig, livekitRoomClient *lksdk.RoomServiceClient, userService *UserService, notificationService *NotificationService) *StateChangedNotificationService {
+	return &StateChangedNotificationService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService}
 }
 
-func (h *ScheduledService) NotifyAllChats() {
+func (h *StateChangedNotificationService) NotifyAllChats() {
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := h.livekitRoomClient.ListRooms(context.Background(), listRoomReq)
 	if err != nil {

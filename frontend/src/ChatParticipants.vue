@@ -140,7 +140,7 @@
                                 </v-tooltip>
                                 <v-tooltip bottom v-if="item.id != currentUser.id">
                                     <template v-slot:activator="{ on, attrs }">
-                                        <v-btn v-bind="attrs" v-on="on" icon @click="inviteToVideoCall(item.id)"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
+                                        <v-btn v-bind="attrs" v-on="on" icon @click="startCalling(item)"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
                                     </template>
                                     <span>{{ $vuetify.lang.t('$vuetify.call') }}</span>
                                 </v-tooltip>
@@ -231,7 +231,7 @@
                     tmp.participants.forEach(item => {
                         item.adminLoading = false;
                         item.online = false;
-                        item.callingTo = true;
+                        item.callingTo = false;
                     });
                 }
             },
@@ -269,9 +269,9 @@
                     },
                 });
             },
-            inviteToVideoCall(userId) {
-                axios.put(`/api/video/${this.dto.id}/invite?userId=${userId}`).then(value => {
-                    console.log("Inviting to video chat");
+            startCalling(dto) {
+                axios.put(`/api/video/${this.dto.id}/dial?userId=${dto.id}&call=${!dto.callingTo}`).then(value => {
+                    console.log("Inviting to video chat", !dto.callingTo);
                     if (this.$route.name != videochat_name) {
                         const routerNewState = { name: videochat_name};
                         this.navigateToWithPreservingSearchStringInQuery(routerNewState);

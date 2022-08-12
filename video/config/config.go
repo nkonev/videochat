@@ -124,4 +124,5 @@ type ExtendedConfig struct {
 	HttpServerConfig       HttpServerConfig `mapstructure:"server"`
 	RabbitMqConfig         RabbitMqConfig   `mapstructure:"rabbitmq"`
 	SyncNotificationPeriod time.Duration    `mapstructure:"syncNotificationPeriod"`
+	DialPeriod             time.Duration    `mapstructure:"dialPeriod"`
 }
