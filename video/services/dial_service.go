@@ -55,6 +55,8 @@ func (s *DialRedisService) GerDialMetadata(ctx context.Context, chatId int64) (i
 
 func (s *DialRedisService) RemoveFromDialList(ctx context.Context, userId, chatId int64) error {
 	add := s.redisClient.SRem(ctx, fmt.Sprintf("dialchat%v", chatId), userId)
+	// TODO remove "dialchat%v" on zero members
+	// TODO "dialmeta%v" on zero members
 	return add.Err()
 }
 
