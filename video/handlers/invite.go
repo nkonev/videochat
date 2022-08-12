@@ -125,6 +125,9 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	if behalfUserId == services.NoUser {
+		return c.NoContent(http.StatusOK)
+	}
 
 	err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
