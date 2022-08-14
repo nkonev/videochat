@@ -97,17 +97,32 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 		return err
 	}
 	if card == 0 {
-		// remove "dialchat%v" on zero members
+		// remove "dialchat" on zero members
 		err = s.redisClient.Del(ctx, dialChatMembersKey(chatId)).Err()
 		if err != nil {
 			return err
 		}
 
-		// "dialmeta%v" on zero members
+		// remove "dialmeta" on zero members
 		err = s.redisClient.Del(ctx, dialMetaKey(chatId)).Err()
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (s *DialRedisRepository) RemoveDial(ctx context.Context, chatId int64) error {
+	// remove "dialchat"
+	err := s.redisClient.Del(ctx, dialChatMembersKey(chatId)).Err()
+	if err != nil {
+		return err
+	}
+
+	// remove "dialmeta"
+	err = s.redisClient.Del(ctx, dialMetaKey(chatId)).Err()
+	if err != nil {
+		return err
 	}
 	return nil
 }
