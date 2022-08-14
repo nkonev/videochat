@@ -1,4 +1,4 @@
-FROM nginx:1.16.0
+FROM nginx:1.23.1
 ARG GIT_HASH=not_set
 ARG STATIC_PATH=/usr/share/nginx/html/build
 RUN mkdir $STATIC_PATH

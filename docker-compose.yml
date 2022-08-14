@@ -28,7 +28,7 @@ services:
 
   # static server
   frontend:
-    image: nginx:1.16.0
+    image: nginx:1.23.1
     restart: unless-stopped
     ports:
       - 8082:8082
@@ -41,7 +41,7 @@ services:
         max-size: "50m"
         max-file: "1"
   postgresql:
-    image: postgres:14.1-alpine3.14
+    image: postgres:14.5-alpine3.16
     restart: unless-stopped
     ports:
       - 35432:5432
