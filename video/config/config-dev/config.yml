@@ -17,6 +17,7 @@ chat:
     base: "http://localhost:1235"
     access: "/internal/access"
     isChatAdmin: "/internal/is-admin"
+    doesParticipantBelongToChat: "/internal/does-participant-belong-to-chat"
 
 aaa:
   url:

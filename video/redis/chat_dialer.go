@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
+	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
@@ -16,25 +17,27 @@ type ChatDialerService struct {
 	conf                    *config.ExtendedConfig
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
 	dialStatusPublisher     *producer.RabbitDialStatusPublisher
+	chatClient              *client.RestClient
 }
 
-func NewChatDialerService(scheduleService *services.DialRedisRepository, conf *config.ExtendedConfig, rabbitMqInvitePublisher *producer.RabbitInvitePublisher, dialStatusPublisher *producer.RabbitDialStatusPublisher) *ChatDialerService {
+func NewChatDialerService(scheduleService *services.DialRedisRepository, conf *config.ExtendedConfig, rabbitMqInvitePublisher *producer.RabbitInvitePublisher, dialStatusPublisher *producer.RabbitDialStatusPublisher, chatClient *client.RestClient) *ChatDialerService {
 	return &ChatDialerService{
 		redisService:            scheduleService,
 		conf:                    conf,
 		rabbitMqInvitePublisher: rabbitMqInvitePublisher,
 		dialStatusPublisher:     dialStatusPublisher,
+		chatClient:              chatClient,
 	}
 }
 
 func (srv *ChatDialerService) doJob() {
 
 	if srv.conf.SyncNotificationPeriod == 0 {
-		Logger.Info("Scheduler in ChatDialerService is disabled")
+		Logger.Debugf("Scheduler in ChatDialerService is disabled")
 		return
 	}
 
-	Logger.Info("Invoked periodic ChatDialer")
+	Logger.Debugf("Invoked periodic ChatDialer")
 	ctx := context.Background()
 	chats, err := srv.redisService.GetDialChats(ctx)
 	if err != nil {
@@ -43,48 +46,75 @@ func (srv *ChatDialerService) doJob() {
 	}
 
 	for _, chatId := range chats {
-		behalfUserId, behalfUserLogin, err := srv.redisService.GerDialMetadata(ctx, chatId)
-		if err != nil {
-			Logger.Warnf("Error %v", err)
-			continue
-		}
-		userIdsToDial, err := srv.redisService.GetUsersToDial(ctx, chatId)
-		if err != nil {
-			Logger.Warnf("Error %v", err)
-			continue
-		}
+		srv.makeDial(ctx, chatId)
+		srv.checkAndRemoveRedundants(ctx, chatId)
+	}
 
-		for _, userId := range userIdsToDial {
-			inviteDto := dto.VideoInviteDto{
-				ChatId:       chatId,
-				UserId:       userId,
-				BehalfUserId: behalfUserId,
-				BehalfLogin:  behalfUserLogin,
-			}
+	Logger.Debugf("End of ChatNotifier")
+}
 
-			Logger.Infof("Calling userId %v from chat %v", userId, chatId)
-			err = srv.rabbitMqInvitePublisher.Publish(&inviteDto)
-			if err != nil {
-				Logger.Error(err, "Failed during marshal chatNotifyDto")
-				continue
-			}
-		}
+func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
+	behalfUserId, behalfUserLogin, err := srv.redisService.GetDialMetadata(ctx, chatId)
+	if err != nil {
+		Logger.Warnf("Error %v", err)
+		return
+	}
+	userIdsToDial, err := srv.redisService.GetUsersToDial(ctx, chatId)
+	if err != nil {
+		Logger.Warnf("Error %v", err)
+		return
+	}
 
-		// send state changes
-		var videoIsInvitingDto = dto.VideoIsInvitingDto{
+	for _, userId := range userIdsToDial {
+		inviteDto := dto.VideoInviteDto{
 			ChatId:       chatId,
-			UserIds:      userIdsToDial,
-			Status:       true,
+			UserId:       userId,
 			BehalfUserId: behalfUserId,
+			BehalfLogin:  behalfUserLogin,
 		}
-		err = srv.dialStatusPublisher.Publish(&videoIsInvitingDto)
+
+		Logger.Infof("Calling userId %v from chat %v", userId, chatId)
+		err = srv.rabbitMqInvitePublisher.Publish(&inviteDto)
 		if err != nil {
-			Logger.Error(err, "Failed during marshal chatNotifyDto")
+			Logger.Error(err, "Failed during marshal VideoInviteDto")
 			continue
 		}
 	}
 
-	Logger.Infof("End of ChatNotifier")
+	// send state changes
+	var videoIsInvitingDto = dto.VideoIsInvitingDto{
+		ChatId:       chatId,
+		UserIds:      userIdsToDial,
+		Status:       true,
+		BehalfUserId: behalfUserId,
+	}
+	err = srv.dialStatusPublisher.Publish(&videoIsInvitingDto)
+	if err != nil {
+		Logger.Error(err, "Failed during marshal VideoIsInvitingDto")
+		return
+	}
+}
+
+func (srv *ChatDialerService) checkAndRemoveRedundants(ctx context.Context, chatId int64) {
+	userIdsToDial, err := srv.redisService.GetUsersToDial(ctx, chatId)
+	if err != nil {
+		Logger.Warnf("Error %v", err)
+		return
+	}
+	participantBelongToChat, err := srv.chatClient.DoesParticipantBelongToChat(chatId, userIdsToDial, ctx)
+	if err != nil {
+		Logger.Warnf("Error %v", err)
+		return
+	}
+
+	for _, userBelongsInfo := range participantBelongToChat {
+		if !userBelongsInfo.Belongs {
+			err := srv.redisService.RemoveFromDialList(ctx, userBelongsInfo.UserId, chatId)
+			if err != nil {
+				Logger.Warnf("Error %v", err)
+			}
+		}
+	}
 }
 
 type ChatDialerTask struct {

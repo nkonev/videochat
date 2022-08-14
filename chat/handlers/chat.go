@@ -838,3 +838,43 @@ func (ch *ChatHandler) RemoveAllParticipants(c echo.Context) error {
 	GetLogEntry(c.Request().Context()).Warnf("Removing ALL participants")
 	return ch.db.DeleteAllParticipants()
 }
+
+type ParticipantBelongsToChat struct {
+	UserId  int64 `json:"userId"`
+	Belongs bool  `json:"belongs"`
+}
+
+type ParticipantsBelongToChat struct {
+	Users []*ParticipantBelongsToChat `json:"users"`
+}
+
+func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
+	GetLogEntry(c.Request().Context()).Infof("Checking if participant belongs")
+	chatId, err := GetQueryParamAsInt64(c, "chatId")
+	if err != nil {
+		return err
+	}
+	userIds, err := GetQueryParamsAsInt64Slice(c, "userId")
+	if err != nil {
+		return err
+	}
+
+	participantIds, err := ch.db.GetAllParticipantIds(chatId)
+	if err != nil {
+		return err
+	}
+
+	var users = []*ParticipantBelongsToChat{}
+	for _, userId := range userIds {
+		var belongs = &ParticipantBelongsToChat{
+			UserId:  userId,
+			Belongs: false,
+		}
+		if utils.Contains(participantIds, userId) {
+			belongs.Belongs = true
+		}
+		users = append(users, belongs)
+	}
+
+	return c.JSON(http.StatusOK, &ParticipantsBelongToChat{Users: users})
+}

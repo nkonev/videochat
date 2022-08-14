@@ -163,6 +163,7 @@ func configureEcho(
 	e.PUT("/chat/:id/user/:participantId", ch.ChangeParticipant)
 	e.DELETE("/chat/:id/user/:participantId", ch.DeleteParticipant)
 	e.DELETE("/internal/delete-all-participants", ch.RemoveAllParticipants)
+	e.GET("/internal/does-participant-belong-to-chat", ch.DoesParticipantBelongToChat)
 	e.PUT("/chat/:id/users", ch.AddParticipants)
 	e.GET("/chat/:id/user", ch.SearchForUsersToAdd)
 	e.PUT("/chat/tet-a-tet/:participantId", ch.TetATet)

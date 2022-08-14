@@ -20,13 +20,14 @@ import (
 )
 
 type RestClient struct {
-	client         *http.Client
-	baseUrl        string
-	accessPath     string
-	isAdminPath    string
-	aaaBaseUrl     string
-	aaaGetUsersUrl string
-	tracer         trace.Tracer
+	client                          *http.Client
+	chatBaseUrl                     string
+	accessPath                      string
+	isAdminPath                     string
+	doesParticipantBelongToChatPath string
+	aaaBaseUrl                      string
+	aaaGetUsersUrl                  string
+	tracer                          trace.Tracer
 }
 
 func NewRestClient(config *config.ExtendedConfig) *RestClient {
@@ -41,18 +42,19 @@ func NewRestClient(config *config.ExtendedConfig) *RestClient {
 	trcr := otel.Tracer("rest/client")
 
 	return &RestClient{
-		client:         client,
-		baseUrl:        config.ChatConfig.ChatUrlConfig.Base,
-		accessPath:     config.ChatConfig.ChatUrlConfig.Access,
-		isAdminPath:    config.ChatConfig.ChatUrlConfig.IsChatAdmin,
-		aaaBaseUrl:     config.AaaConfig.AaaUrlConfig.Base,
-		aaaGetUsersUrl: config.AaaConfig.AaaUrlConfig.GetUsers,
-		tracer:         trcr,
+		client:                          client,
+		chatBaseUrl:                     config.ChatConfig.ChatUrlConfig.Base,
+		accessPath:                      config.ChatConfig.ChatUrlConfig.Access,
+		isAdminPath:                     config.ChatConfig.ChatUrlConfig.IsChatAdmin,
+		doesParticipantBelongToChatPath: config.ChatConfig.ChatUrlConfig.DoesParticipantBelongToChat,
+		aaaBaseUrl:                      config.AaaConfig.AaaUrlConfig.Base,
+		aaaGetUsersUrl:                  config.AaaConfig.AaaUrlConfig.GetUsers,
+		tracer:                          trcr,
 	}
 }
 
 func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) (bool, error) {
-	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.baseUrl, h.accessPath, userId, chatId)
+	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.chatBaseUrl, h.accessPath, userId, chatId)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -82,7 +84,7 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) 
 }
 
 func (h *RestClient) IsAdmin(userId int64, chatId int64, c context.Context) (bool, error) {
-	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.baseUrl, h.isAdminPath, userId, chatId)
+	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.chatBaseUrl, h.isAdminPath, userId, chatId)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -166,4 +168,61 @@ func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 		return nil, err
 	}
 	return *users, nil
+}
+
+func (h *RestClient) DoesParticipantBelongToChat(chatId int64, userIds []int64, c context.Context) ([]*dto.ParticipantBelongsToChat, error) {
+	contentType := "application/json;charset=UTF-8"
+	fullUrl := h.chatBaseUrl + h.doesParticipantBelongToChatPath
+
+	var userIdsString []string
+	for _, userIdInt := range userIds {
+		userIdsString = append(userIdsString, utils.Int64ToString(userIdInt))
+	}
+
+	join := strings.Join(userIdsString, ",")
+
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join + "&chatId=" + fmt.Sprintf("%v", chatId))
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during parse chat url:", err)
+		return nil, err
+	}
+	request := &http.Request{
+		Method: "GET",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+
+	ctx, span := h.tracer.Start(c, "chat.DoesParticipantBelongToChat")
+	defer span.End()
+	request = request.WithContext(ctx)
+
+	resp, err := h.client.Do(request)
+	if err != nil {
+		GetLogEntry(c).Warningln("Failed to request DoesParticipantBelongToChat response:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		GetLogEntry(c).Warningln("DoesParticipantBelongToChat response responded non-200 code: ", code)
+		return nil, err
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed to decode DoesParticipantBelongToChat response:", err)
+		return nil, err
+	}
+
+	users := &dto.ParticipantsBelongToChat{}
+	if err := json.Unmarshal(bodyBytes, users); err != nil {
+		GetLogEntry(c).Errorln("Failed to parse DoesParticipantBelongToChat:", err)
+		return nil, err
+	}
+	return users.Users, nil
 }

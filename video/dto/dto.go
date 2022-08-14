@@ -26,3 +26,12 @@ type VideoIsInvitingDto struct {
 	Status       bool    `json:"status"`  // true means inviting in process for this person(it sends it periodically), false means inviteng stopped (it is sent one time)
 	BehalfUserId int64   `json:"behalfUserId"`
 }
+
+type ParticipantBelongsToChat struct {
+	UserId  int64 `json:"userId"`
+	Belongs bool  `json:"belongs"`
+}
+
+type ParticipantsBelongToChat struct {
+	Users []*ParticipantBelongsToChat `json:"users"`
+}

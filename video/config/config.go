@@ -58,9 +58,10 @@ type AaaConfig struct {
 }
 
 type ChatUrlConfig struct {
-	Base        string `mapstructure:"base"`
-	Access      string `mapstructure:"access"`
-	IsChatAdmin string `mapstructure:"isChatAdmin"`
+	Base                        string `mapstructure:"base"`
+	Access                      string `mapstructure:"access"`
+	IsChatAdmin                 string `mapstructure:"isChatAdmin"`
+	DoesParticipantBelongToChat string `mapstructure:"doesParticipantBelongToChat"`
 }
 
 type AaaUrlConfig struct {

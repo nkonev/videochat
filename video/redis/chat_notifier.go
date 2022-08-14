@@ -23,14 +23,14 @@ func NewChatNotifierService(scheduleService *services.StateChangedNotificationSe
 func (srv *ChatNotifierService) doJob() {
 
 	if srv.conf.SyncNotificationPeriod == 0 {
-		Logger.Info("Scheduler in ChatNotifierService is disabled")
+		Logger.Debugf("Scheduler in ChatNotifierService is disabled")
 		return
 	}
 
-	Logger.Info("Invoked periodic ChatNotifier")
+	Logger.Debugf("Invoked periodic ChatNotifier")
 	srv.scheduleService.NotifyAllChats()
 
-	Logger.Infof("End of ChatNotifier")
+	Logger.Debugf("End of ChatNotifier")
 }
 
 type ChatNotifierTask struct {

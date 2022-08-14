@@ -64,7 +64,7 @@ func chatIdFromKey(key string) (int64, error) {
 	return parseInt64, nil
 }
 
-func (s *DialRedisRepository) GerDialMetadata(ctx context.Context, chatId int64) (int64, string, error) {
+func (s *DialRedisRepository) GetDialMetadata(ctx context.Context, chatId int64) (int64, string, error) {
 	val, err := s.redisClient.HGetAll(ctx, dialMetaKey(chatId)).Result()
 	//if err == redisV8.Nil {
 	//	return -1, "", nil
