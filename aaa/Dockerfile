@@ -1,4 +1,4 @@
-FROM bellsoft/liberica-openjdk-alpine:17.0.1
+FROM bellsoft/liberica-openjdk-alpine:17.0.4
 ARG APP_HOME=/opt/aaa
 RUN mkdir -p ${APP_HOME}
 WORKDIR ${APP_HOME}
