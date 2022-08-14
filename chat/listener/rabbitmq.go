@@ -28,7 +28,7 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
 		name,  // name
-		false, // durable
+		true,  // durable - it prevents queue loss on rabbitmq restart
 		false, // delete when unused
 		false, // exclusive
 		false, // no-wait
