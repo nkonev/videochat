@@ -1,7 +1,6 @@
 package com.github.nkonev.aaa.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -16,11 +15,6 @@ public class RabbitMqConfig {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @Bean
-    public Queue aaaEvents() {
-        return new Queue(QUEUE_EVENTS_NAME, false);
-    }
 
     @Bean
     public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory) {
