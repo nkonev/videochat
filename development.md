@@ -325,12 +325,6 @@ for x in range(35200, 35401):
 ```
 
 
-# Show minio content
-```
-mc stat local/files/chat/111/e4a37493-c6ff-4bd7-9d81-ffc9558af447/0a583bad-23c0-4c3d-8e8d-3a0591653603.jpg
-```
-
-
 # Keycloak
 
 Problem: Keycloak renders 'Invalid parameter: redirect_uri'
@@ -418,6 +412,11 @@ sudo yum install -y httpd-tools
 
 # generate password
 htpasswd -bnBC 10 "" password | tr -d ':'
+```
+
+# Show minio content
+```
+mc stat local/files/chat/111/e4a37493-c6ff-4bd7-9d81-ffc9558af447/0a583bad-23c0-4c3d-8e8d-3a0591653603.jpg
 ```
 
 # Migrating minio from official to bitnami

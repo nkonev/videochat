@@ -4,7 +4,7 @@ version: '3.7'
 
 services:
   traefik:
-    image: traefik:v2.7.2
+    image: traefik:v2.8.3
     hostname: traefik
     restart: unless-stopped
     # The Static Configuration
@@ -59,7 +59,7 @@ services:
         max-file: "1"
 
   redis:
-    image: redis:6.2.6
+    image: redis:7.0.4-alpine3.16
     hostname: redis
     restart: unless-stopped
     ports:
@@ -75,7 +75,7 @@ services:
         max-file: "1"
 
   minio:
-    image: bitnami/minio:2021.11.24-debian-10-r2
+    image: bitnami/minio:2022.8.11-debian-11-r0
     hostname: minio
     restart: unless-stopped
     ports:
@@ -83,8 +83,8 @@ services:
     networks:
       backend:
     environment:
-      - MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
-      - MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      - MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE
+      - MINIO_ROOT_PASSWORD=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
     volumes:
       - minio_data:/data:z
     logging:
@@ -94,7 +94,7 @@ services:
         max-file: "1"
 
   rabbitmq:
-    image: rabbitmq:3.9.8-management
+    image: rabbitmq:3.9.22-management-alpine
     hostname: rabbitmq
     restart: unless-stopped
     ports:
