@@ -49,3 +49,4 @@ redis:
   address: :36379
   password: ""
   db: 4
+  maxRetries: 10000

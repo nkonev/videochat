@@ -10,9 +10,10 @@ import (
 
 func RedisV8(lc fx.Lifecycle) *redisV8.Client {
 	rv8 := redisV8.NewClient(&redisV8.Options{
-		Addr:     viper.GetString("redis.address"),
-		Password: viper.GetString("redis.password"),
-		DB:       viper.GetInt("redis.db"),
+		Addr:       viper.GetString("redis.address"),
+		Password:   viper.GetString("redis.password"),
+		DB:         viper.GetInt("redis.db"),
+		MaxRetries: viper.GetInt("redis.maxRetries"),
 	})
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
