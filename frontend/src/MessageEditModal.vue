@@ -32,9 +32,7 @@
         },
         methods: {
             showModal(dto) {
-                if (!this.$vuetify.breakpoint.smAndUp) {
-                    this.show = true;
-                }
+                this.show = true;
                 this.$nextTick(()=>{
                     bus.$emit(SET_EDIT_MESSAGE, dto);
                 })
