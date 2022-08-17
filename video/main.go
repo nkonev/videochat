@@ -148,6 +148,7 @@ func configureEcho(
 	e.PUT("/video/:chatId/mute", uh.Mute)
 	e.PUT("/video/:id/dial", ih.ProcessCallInvitation)
 	e.PUT("/video/:id/dial/cancel", ih.ProcessCancelInvitation)
+	e.PUT("/video/:id/dial/stop", ih.ProcessAsOwnerLeave)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

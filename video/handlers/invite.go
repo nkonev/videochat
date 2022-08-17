@@ -150,3 +150,59 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 
 	return c.NoContent(http.StatusOK)
 }
+
+func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		Logger.Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	// check my access to chat
+	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	behalfUserId, _, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if behalfUserId == services.NoUser {
+		return c.NoContent(http.StatusOK)
+	}
+
+	if behalfUserId != userPrincipalDto.UserId {
+		return c.NoContent(http.StatusOK)
+	}
+
+	usersToDial, err := vh.dialRedisRepository.GetUsersToDial(c.Request().Context(), chatId)
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	err = vh.dialRedisRepository.RemoveDial(c.Request().Context(), chatId)
+
+	var videoIsInvitingDto = dto.VideoIsInvitingDto{
+		ChatId:       chatId,
+		UserIds:      usersToDial,
+		Status:       false,
+		BehalfUserId: behalfUserId,
+	}
+	err = vh.dialStatusPublisher.Publish(&videoIsInvitingDto)
+
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.NoContent(http.StatusOK)
+}

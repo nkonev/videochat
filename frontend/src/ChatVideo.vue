@@ -452,6 +452,7 @@ export default {
         this.startRoom();
     },
     beforeDestroy() {
+        axios.put(`/api/video/${this.chatId}/dial/stop`);
         this.stopRoom();
 
         this.videoContainerDiv = null;

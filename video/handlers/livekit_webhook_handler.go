@@ -18,7 +18,6 @@ type LivekitWebhookHandler struct {
 	notificationService *services.NotificationService
 	livekitRoomClient   *lksdk.RoomServiceClient
 	userService         *services.UserService
-	dialRepository      *services.DialRedisRepository
 }
 
 func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, livekitRoomClient *lksdk.RoomServiceClient, userService *services.UserService, dialRepository *services.DialRedisRepository) *LivekitWebhookHandler {
@@ -27,7 +26,6 @@ func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService
 		notificationService: notificationService,
 		livekitRoomClient:   livekitRoomClient,
 		userService:         userService,
-		dialRepository:      dialRepository,
 	}
 }
 
@@ -70,14 +68,6 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 			}
 
 			usersCount := int64(event.Room.NumParticipants)
-
-			if usersCount == 0 {
-				Logger.Infof("Removing dial for chatId=%v", chatId)
-				err := h.dialRepository.RemoveDial(c.Request().Context(), chatId)
-				if err != nil {
-					Logger.Errorf("got error during removing dial: %v", err)
-				}
-			}
 
 			Logger.Infof("Sending notificationDto userId=%v, chatId=%v", md.UserId, chatId)
 			err = h.notificationService.Notify(chatId, usersCount, notificationDto)
