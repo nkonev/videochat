@@ -120,12 +120,14 @@ func (s *DialRedisRepository) RemoveDial(ctx context.Context, chatId int64) erro
 	// remove "dialchat"
 	err := s.redisClient.Del(ctx, dialChatMembersKey(chatId)).Err()
 	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during performing SREM %v", err)
 		return err
 	}
 
 	// remove "dialmeta"
 	err = s.redisClient.Del(ctx, dialMetaKey(chatId)).Err()
 	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
 		return err
 	}
 	return nil
