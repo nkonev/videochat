@@ -87,25 +87,29 @@ func (s *DialRedisRepository) GetDialMetadata(ctx context.Context, chatId int64)
 }
 
 func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, chatId int64) error {
-	add := s.redisClient.SRem(ctx, dialChatMembersKey(chatId), userId)
-	if add.Err() != nil {
-		return add.Err()
+	_, err := s.redisClient.SRem(ctx, dialChatMembersKey(chatId), userId).Result()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during performing SREM %v", err)
+		return err
 	}
 
 	card, err := s.redisClient.ZCard(ctx, dialChatMembersKey(chatId)).Result()
 	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during performing ZCARD %v", err)
 		return err
 	}
 	if card == 0 {
 		// remove "dialchat" on zero members
 		err = s.redisClient.Del(ctx, dialChatMembersKey(chatId)).Err()
 		if err != nil {
+			logger.GetLogEntry(ctx).Errorf("Error during deleting ChatMembers %v", err)
 			return err
 		}
 
 		// remove "dialmeta" on zero members
 		err = s.redisClient.Del(ctx, dialMetaKey(chatId)).Err()
 		if err != nil {
+			logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
 			return err
 		}
 	}
