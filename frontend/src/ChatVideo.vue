@@ -154,7 +154,8 @@ export default {
                     return candidateToAppendAudio
                 }
             }
-            console.warn("something wrong");
+            this.makeError(null, "Unable to draw track", participantTrackPublications);
+
             return null
         },
 
@@ -244,8 +245,12 @@ export default {
             this.inRestarting = false;
         },
 
-        makeError(e, txt) {
-            console.error(txt, e);
+        makeError(e, txt, details) {
+            if (details) {
+                console.error(txt, e, details);
+            } else {
+                console.error(txt, e);
+            }
             this.showMessage = true;
             this.messageText = txt + ": " + e;
             this.messageColor = "error";
