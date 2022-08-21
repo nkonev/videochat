@@ -477,3 +477,4 @@ npx playwright test --headed --project=chromium -g "login vkontakte"
 # Droid cam
 * https://askubuntu.com/questions/1235731/can-i-use-an-android-phone-as-webcam-for-an-ubuntu-device
 * https://play.google.com/store/apps/details?id=com.dev47apps.droidcam
+
