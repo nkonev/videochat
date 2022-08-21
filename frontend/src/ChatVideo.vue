@@ -41,7 +41,7 @@ import {
     getVideoResolution,
     getWebsocketUrlPrefix,
     hasLength,
-    isMobileFireFox, isSet, getStoredRoomAdaptiveStream
+    isSet, getStoredRoomAdaptiveStream
 } from "@/utils";
 import bus, {
     ADD_SCREEN_SOURCE,
@@ -422,12 +422,10 @@ export default {
             }
 
             try {
-                const isMobileFirefox = isMobileFireFox();
-                console.debug("isMobileFirefox = ", isMobileFirefox, " in case Mobile Firefox simulcast for video tracks will be disabled");
                 for (const track of tracks) {
                     const normalizedScreen = !!isScreen;
                     const trackName = "track_" + track.kind + "__screen_" + normalizedScreen + "_" + this.getNewId();
-                    const simulcast = !isMobileFirefox && (normalizedScreen ? this.screenSimulcast : this.videoSimulcast);
+                    const simulcast = normalizedScreen ? this.screenSimulcast : this.videoSimulcast;
                     console.log(`Publishing local ${track.kind} screen=${normalizedScreen} track with name ${trackName} and simulcast ${simulcast}`);
                     const publication = await this.room.localParticipant.publishTrack(track, {
                         name: trackName,
