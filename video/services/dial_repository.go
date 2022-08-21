@@ -93,9 +93,9 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 		return err
 	}
 
-	card, err := s.redisClient.ZCard(ctx, dialChatMembersKey(chatId)).Result()
+	card, err := s.redisClient.SCard(ctx, dialChatMembersKey(chatId)).Result()
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during performing ZCARD %v", err)
+		logger.GetLogEntry(ctx).Errorf("Error during performing SCARD %v", err)
 		return err
 	}
 	if card == 0 {
