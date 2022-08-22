@@ -458,10 +458,11 @@ export default {
     },
     beforeDestroy() {
         axios.put(`/api/video/${this.chatId}/dial/stop`);
-        this.stopRoom();
-
-        this.videoContainerDiv = null;
-        this.inRestarting = false;
+        this.stopRoom().then(()=>{
+            console.log("Cleaning videoContainerDiv");
+            this.videoContainerDiv = null;
+            this.inRestarting = false;
+        });
 
         this.$store.commit(SET_SHOW_CALL_BUTTON, true);
         this.$store.commit(SET_SHOW_HANG_BUTTON, false);
