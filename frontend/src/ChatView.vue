@@ -215,18 +215,16 @@
                 this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
                 this.scrollerProbePrevious = this.scrollerProbeCurrent;
                 this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
-                console.log("onScroll prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
+                console.debug("onScroll prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
                 if (!this.forbidChangeScrollDirection) {
-                    Vue.nextTick(() => {
-                        this.switchDirection();
-                    })
+                    this.trySwitchDirection();
                 }
             },
             isTopDirection() {
                 return this.aDirection === directionTop
             },
-            switchDirection() {
+            trySwitchDirection() {
                 if (this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
                     this.aDirection = directionBottom;
                     this.infinityKey++;
@@ -235,6 +233,8 @@
                     this.aDirection = directionTop;
                     this.infinityKey++;
                     console.log("Infinity scrolling direction has been changed to top");
+                } else {
+                    console.log("Infinity scrolling direction has been remained untouched");
                 }
             },
             getStored() {
