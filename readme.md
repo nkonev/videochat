@@ -42,4 +42,4 @@ See [screenshots](./screenshots.md)
 ## Reasons of not showing video
 * jaeger all-in-one ate too much memory - one of participants didn't see other - restart jaeger.
 * Mobile Chrome 101.0.4951.41 - swap it up (e. g. close application and open again) helps when video isn't connected from Mobile Chrome.
-* Desktop Firefox - try to reload tab or restart entire browser - it helps when Desktop Firefox isn't able to show video from Mobile Chrome
+* Desktop Firefox - try to reload tab or restart entire browser - it helps when Desktop Firefox isn't able to show video. It can be in long-idled firefox window.
