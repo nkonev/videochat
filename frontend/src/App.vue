@@ -149,7 +149,7 @@
 
                     </template>
                 </v-snackbar>
-                <v-snackbar v-model="invitedVideoChatAlert" class="call-blink" color="success" timeout="-1" :multi-line="true" :key="callReblinkCounter" top :transition="false">
+                <v-snackbar v-model="invitedVideoChatAlert" class="call-blink" color="success" timeout="-1" :multi-line="true" top :transition="false">
                     {{ $vuetify.lang.t('$vuetify.you_called', invitedVideoChatId, invitedVideoChatName) }}
                     <template v-slot:action="{ attrs }">
                         <v-btn icon v-bind="attrs" @click="onClickInvitation()"><v-icon color="white">mdi-phone</v-icon></v-btn>
@@ -241,7 +241,6 @@
                 invitedVideoChatId: 0,
                 invitedVideoChatName: null,
                 invitedVideoChatAlert: false,
-                callReblinkCounter: 0,
                 showWebsocketRestored: false,
             }
         },
@@ -327,7 +326,6 @@
                 this.invitedVideoChatId = data.chatId;
                 this.invitedVideoChatName = data.chatName;
                 this.invitedVideoChatAlert = true;
-                ++this.callReblinkCounter;
                 audio.play().catch(error => {
                     console.warn("Unable to play sound", error);
                   bus.$emit(OPEN_PERMISSIONS_WARNING_MODAL);
@@ -463,8 +461,7 @@
 
 <style scoped lang="stylus">
     .call-blink {
-        animation: blink 1s;
-        animation-iteration-count: 5;
+        animation: blink 1s infinite;
     }
 
     @keyframes blink {
