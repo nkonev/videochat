@@ -122,7 +122,7 @@
 
         <v-main>
             <v-container fluid class="ma-0 pa-0">
-                <v-snackbar v-model="showAlert" color="error" timeout="-1" :multi-line="true">
+                <v-snackbar v-model="showAlert" color="error" timeout="-1" :multi-line="true" :transition="false">
                     {{ lastError }}
 
                     <template v-slot:action="{ attrs }">
@@ -135,7 +135,7 @@
                         </v-btn>
                     </template>
                 </v-snackbar>
-                <v-snackbar v-model="showWebsocketRestored" color="black" timeout="-1" :multi-line="true">
+                <v-snackbar v-model="showWebsocketRestored" color="black" timeout="-1" :multi-line="true" :transition="false">
                     {{ $vuetify.lang.t('$vuetify.websocket_restored') }}
                     <template v-slot:action="{ attrs }">
                         <v-btn
@@ -149,7 +149,7 @@
 
                     </template>
                 </v-snackbar>
-                <v-snackbar v-model="invitedVideoChatAlert" class="call-blink" color="success" timeout="-1" :multi-line="true" :key="callReblinkCounter" top>
+                <v-snackbar v-model="invitedVideoChatAlert" class="call-blink" color="success" timeout="-1" :multi-line="true" :key="callReblinkCounter" top :transition="false">
                     {{ $vuetify.lang.t('$vuetify.you_called', invitedVideoChatId, invitedVideoChatName) }}
                     <template v-slot:action="{ attrs }">
                         <v-btn icon v-bind="attrs" @click="onClickInvitation()"><v-icon color="white">mdi-phone</v-icon></v-btn>
