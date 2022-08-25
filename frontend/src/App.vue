@@ -463,11 +463,11 @@
 
 <style scoped lang="stylus">
     .call-blink {
-        animation: blink 0.5s;
+        animation: blink 1s;
         animation-iteration-count: 5;
     }
 
     @keyframes blink {
-        50% { opacity: 10% }
+        50% { opacity: 30% }
     }
 </style>
