@@ -7,46 +7,9 @@
                 @keyup.native.ctrl.enter="sendMessageToChat"
                 @keyup.native.esc="resetInput"
             />
-            <v-slide-group
-                multiple
-                show-arrows
-            >
 
-            <v-btn-toggle
-                v-model="toggle_multiple"
-                dense
-                background-color="primary"
-                dark
-                multiple
-            >
-                <v-btn>
-                    <v-icon>mdi-format-bold</v-icon>
-                </v-btn>
-
-                <v-btn>
-                    <v-icon>mdi-format-italic</v-icon>
-                </v-btn>
-
-                <v-btn>
-                    <v-icon>mdi-format-underline</v-icon>
-                </v-btn>
-
-                <v-btn>
-                    <v-icon>mdi-format-strikethrough-variant</v-icon>
-                </v-btn>
-
-                <v-btn>
-                    <v-icon>mdi-link-variant</v-icon>
-                </v-btn>
-
-                <v-btn>
-                    <v-icon>mdi-format-color-fill</v-icon>
-                </v-btn>
-
-            </v-btn-toggle>
-            </v-slide-group>
             <div id="custom-toolbar">
-                <div class="custom-toolbar-format" v-if="$refs.tipTapRef != null && $refs.tipTapRef.$data.editor != null">
+                <!--<div class="custom-toolbar-format" v-if="$refs.tipTapRef != null && $refs.tipTapRef.$data.editor != null">
                     <button
                         :class="{
                           'richText__menu-item': true,
@@ -100,25 +63,93 @@
                     >
                         <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'image' }"></font-awesome-icon>
                     </button>
-                </div>
-                <div class="custom-toolbar-send">
-                    <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
-                    <template v-if="this.editMessageDto.fileItemUuid">
-                        <v-badge
-                            :value="fileCount"
-                            :content="fileCount"
-                            color="green"
-                            overlap
-                            left
+                </div>-->
+                <!--<div class="d-flex flex-nowrap flex-row">-->
+                <div class="d-flex flex-wrap flex-row">
+                    <div class="flex-grow-1" style="max-width: 100%">
+                        <v-slide-group
+                            multiple
+                            show-arrows
                         >
-                            <v-btn icon tile @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
-                        </v-badge>
-                    </template>
-                    <v-btn icon tile class="mr-2" @click="resetInput()"><v-icon>mdi-delete</v-icon></v-btn>
-                    <v-switch v-if="canBroadcast && $vuetify.breakpoint.smAndUp" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
-                        :label="$vuetify.breakpoint.smAndUp ? $vuetify.lang.t('$vuetify.message_broadcast') : null"
-                    ></v-switch>
-                    <v-btn color="primary" @click="sendMessageToChat" small class="mr-1"><v-icon color="white">mdi-send</v-icon></v-btn>
+                            <v-btn-toggle
+                                v-model="toggle_multiple"
+                                dense
+                                multiple
+                            >
+                                <v-btn>
+                                    <v-icon>mdi-format-bold</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-format-italic</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-format-underline</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-format-strikethrough-variant</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-link-variant</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-format-color-fill</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-format-color-fill</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-format-color-fill</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-format-color-fill</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-format-color-fill</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-format-color-fill</v-icon>
+                                </v-btn>
+
+                                <v-btn>
+                                    <v-icon>mdi-format-color-fill</v-icon>
+                                </v-btn>
+
+                            </v-btn-toggle>
+                        </v-slide-group>
+                    </div>
+
+                    <div class="">
+                        <div class="custom-toolbar-send">
+                            <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
+                            <template v-if="this.editMessageDto.fileItemUuid">
+                                <v-badge
+                                    :value="fileCount"
+                                    :content="fileCount"
+                                    color="green"
+                                    overlap
+                                    left
+                                >
+                                    <v-btn icon tile @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
+                                </v-badge>
+                            </template>
+                            <v-btn icon tile class="mr-2" @click="resetInput()"><v-icon>mdi-delete</v-icon></v-btn>
+                            <v-switch v-if="canBroadcast && $vuetify.breakpoint.smAndUp" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
+                                :label="$vuetify.breakpoint.smAndUp ? $vuetify.lang.t('$vuetify.message_broadcast') : null"
+                            ></v-switch>
+                            <v-btn color="primary" @click="sendMessageToChat" small class="mr-1"><v-icon color="white">mdi-send</v-icon></v-btn>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -316,9 +347,6 @@ $borderColor = rgba(0, 0, 0, 0.2)
 }
 
 #custom-toolbar {
-    display: flex;
-    align-items: center
-    justify-content: space-between
     border-top-width: 0
     border-bottom-style dashed
     border-left-style dashed
@@ -338,7 +366,7 @@ $borderColor = rgba(0, 0, 0, 0.2)
 }
 
 .custom-toolbar-format {
-    display: flex;
+    display: inline-flex;
     flex-grow: 0;
 
     .richText__menu-item-disabled {
