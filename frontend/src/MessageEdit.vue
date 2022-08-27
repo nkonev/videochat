@@ -66,7 +66,7 @@
                 </div>-->
                 <!--<div class="d-flex flex-nowrap flex-row">-->
                 <div class="d-flex flex-wrap flex-row">
-                    <div class="flex-grow-1" style="max-width: 100%">
+                    <div style="max-width: 100%">
                         <v-slide-group
                             multiple
                             show-arrows
@@ -128,7 +128,7 @@
                         </v-slide-group>
                     </div>
 
-                    <div class="">
+                    <div class="flex-grow-1">
                         <div class="custom-toolbar-send">
                             <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
                             <template v-if="this.editMessageDto.fileItemUuid">
