@@ -33,7 +33,7 @@ import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import { retry } from '@lifeomic/attempt';
-import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
+import {GET_USER, SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
 import {
     defaultAudioMute, getScreenResolution,
     getStoredAudioDevicePresents, getStoredScreenDynacast, getStoredScreenSimulcast,
@@ -52,6 +52,7 @@ import bus, {
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
 import {chat_name, videochat_name} from "@/routes";
 import videoServerSettingsMixin from "@/videoServerSettingsMixin";
+import {mapGetters} from "vuex";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
@@ -240,8 +241,11 @@ export default {
 
         async tryRestartVideoProcess() {
             this.inRestarting = true;
-            await this.stopRoom();
-            await this.startRoom();
+            for (const publication of this.room.localParticipant.tracks.values()) {
+                this.room.localParticipant.unpublishTrack(publication.track, true);
+            }
+            await this.createLocalMediaTracks(null, null);
+            bus.$emit(VIDEO_PARAMETERS_CHANGED);
             this.inRestarting = false;
         },
 
@@ -313,7 +317,7 @@ export default {
                     try {
                         console.log("LocalTrackPublished to room.name", this.room.name);
                         console.debug("LocalTrackPublished to room", this.room);
-                        bus.$emit(VIDEO_PARAMETERS_CHANGED);
+
                         const localVideoProperties = {
                             localParticipant: this.room.localParticipant
                         };
