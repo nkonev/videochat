@@ -7,6 +7,44 @@
                 @keyup.native.ctrl.enter="sendMessageToChat"
                 @keyup.native.esc="resetInput"
             />
+            <v-slide-group
+                multiple
+                show-arrows
+            >
+
+            <v-btn-toggle
+                v-model="toggle_multiple"
+                dense
+                background-color="primary"
+                dark
+                multiple
+            >
+                <v-btn>
+                    <v-icon>mdi-format-bold</v-icon>
+                </v-btn>
+
+                <v-btn>
+                    <v-icon>mdi-format-italic</v-icon>
+                </v-btn>
+
+                <v-btn>
+                    <v-icon>mdi-format-underline</v-icon>
+                </v-btn>
+
+                <v-btn>
+                    <v-icon>mdi-format-strikethrough-variant</v-icon>
+                </v-btn>
+
+                <v-btn>
+                    <v-icon>mdi-link-variant</v-icon>
+                </v-btn>
+
+                <v-btn>
+                    <v-icon>mdi-format-color-fill</v-icon>
+                </v-btn>
+
+            </v-btn-toggle>
+            </v-slide-group>
             <div id="custom-toolbar">
                 <div class="custom-toolbar-format" v-if="$refs.tipTapRef != null && $refs.tipTapRef.$data.editor != null">
                     <button
@@ -117,6 +155,7 @@
                 fileCount: null,
 
                 sendBroadcast: false,
+                toggle_multiple: [0, 1, 2]
             }
         },
         methods: {
