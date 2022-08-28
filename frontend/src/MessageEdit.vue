@@ -1,16 +1,17 @@
 <template>
-    <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid :style="{height: messageEditHeight}">
+    <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid :style="{height: messageEditHeight}"
+                 @keyup.ctrl.enter="sendMessageToChat"
+                 @keyup.esc="resetInput"
+    >
             <tiptap
                 :key="editorKey"
                 v-model="editMessageDto.text"
                 ref="tipTapRef"
-                @keyup.native.ctrl.enter="sendMessageToChat"
-                @keyup.native.esc="resetInput"
             />
 
             <div id="custom-toolbar">
                 <div class="d-flex flex-wrap flex-row">
-                    <div style="max-width: 100%">
+                    <div style="max-width: 100%" v-if="$refs.tipTapRef">
                         <v-slide-group
                             multiple
                             show-arrows
@@ -175,25 +176,25 @@
                 }
             },
             boldValue() {
-                return this.$refs.tipTapRef?.$data.editor.isActive('bold')
+                return this.$refs.tipTapRef.$data.editor.isActive('bold')
             },
             boldClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleBold().run()
             },
             italicValue() {
-                return this.$refs.tipTapRef?.$data.editor.isActive('italic')
+                return this.$refs.tipTapRef.$data.editor.isActive('italic')
             },
             italicClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()
             },
             underlineValue() {
-                return this.$refs.tipTapRef?.$data.editor.isActive('underline')
+                return this.$refs.tipTapRef.$data.editor.isActive('underline')
             },
             underlineClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleUnderline().run()
             },
             strikeValue() {
-                return this.$refs.tipTapRef?.$data.editor.isActive('strike')
+                return this.$refs.tipTapRef.$data.editor.isActive('strike')
             },
             strikeClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()
@@ -226,10 +227,10 @@
                     .run()
             },
             linkValue() {
-                return this.$refs.tipTapRef?.$data.editor.isActive('link')
+                return this.$refs.tipTapRef.$data.editor.isActive('link')
             },
             imageClick() {
-                this.$refs.tipTapRef?.addImage()
+                this.$refs.tipTapRef.addImage()
             }
         },
         computed: {
@@ -244,6 +245,7 @@
                 bus.$on(OPEN_EDIT_MESSAGE, this.onSetMessage);
             }
             bus.$on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            this.resetInput();
         },
         beforeDestroy() {
             bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
