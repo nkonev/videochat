@@ -103,7 +103,11 @@
                                 </v-btn>
 
                                 <v-btn icon>
-                                    <v-icon>mdi-format-color-fill</v-icon>
+                                    <v-icon>mdi-palette</v-icon>
+                                </v-btn>
+
+                                <v-btn icon>
+                                    <v-icon>mdi-select-color</v-icon>
                                 </v-btn>
 
                             </v-btn-toggle>
