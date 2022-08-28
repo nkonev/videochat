@@ -71,55 +71,35 @@
                             multiple
                             show-arrows
                         >
-                            <v-btn icon tile :input-value="boldValue()" @click="boldClick" width="4em" :color="boldValue() ? 'black' : ''">
+                            <v-btn icon tile :input-value="boldValue()" @click="boldClick" width="48px" :color="boldValue() ? 'black' : ''">
                                 <v-icon>mdi-format-bold</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="italicValue()" @click="italicClick" width="4em" :color="italicValue() ? 'black' : ''">
+                            <v-btn icon tile :input-value="italicValue()" @click="italicClick" width="48px" :color="italicValue() ? 'black' : ''">
                                 <v-icon>mdi-format-italic</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="underlineValue()" @click="underlineClick" width="4em" :color="underlineValue() ? 'black' : ''">
+                            <v-btn icon tile :input-value="underlineValue()" @click="underlineClick" width="48px" :color="underlineValue() ? 'black' : ''">
                                 <v-icon>mdi-format-underline</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="strikeValue()" @click="strikeClick" width="4em" :color="strikeValue() ? 'black' : ''">
+                            <v-btn icon tile :input-value="strikeValue()" @click="strikeClick" width="48px" :color="strikeValue() ? 'black' : ''">
                                 <v-icon>mdi-format-strikethrough-variant</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile width="4em">
+                            <v-btn icon tile width="48px">
                                 <v-icon>mdi-link-variant</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile width="4em">
+                            <v-btn icon tile width="48px">
                                 <v-icon>mdi-image-outline</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile width="4em">
+                            <v-btn icon tile width="48px">
                                 <v-icon>mdi-palette</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile width="4em">
-                                <v-icon>mdi-select-color</v-icon>
-                            </v-btn>
-
-                            <v-btn icon tile width="4em">
-                                <v-icon>mdi-select-color</v-icon>
-                            </v-btn>
-
-                            <v-btn icon tile width="4em">
-                                <v-icon>mdi-select-color</v-icon>
-                            </v-btn>
-
-                            <v-btn icon tile width="4em">
-                                <v-icon>mdi-select-color</v-icon>
-                            </v-btn>
-
-                            <v-btn icon tile width="4em">
-                                <v-icon>mdi-select-color</v-icon>
-                            </v-btn>
-
-                            <v-btn icon tile width="4em">
+                            <v-btn icon tile width="48px">
                                 <v-icon>mdi-select-color</v-icon>
                             </v-btn>
 
@@ -128,7 +108,7 @@
 
                     <div class="flex-grow-1">
                         <div class="custom-toolbar-send">
-                            <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile class="mr-4" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
+                            <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile width="48px" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
                             <template v-if="this.editMessageDto.fileItemUuid">
                                 <v-badge
                                     :value="fileCount"
@@ -140,7 +120,7 @@
                                     <v-btn icon tile @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
                                 </v-badge>
                             </template>
-                            <v-btn icon tile class="mr-4" @click="resetInput()"><v-icon>mdi-delete</v-icon></v-btn>
+                            <v-btn icon tile width="48px" class="mr-2" @click="resetInput()"><v-icon>mdi-delete</v-icon></v-btn>
                             <v-switch dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                                 :label="$vuetify.lang.t('$vuetify.message_broadcast')"
                             ></v-switch>
