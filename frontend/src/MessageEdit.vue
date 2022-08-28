@@ -134,7 +134,6 @@
                 } else {
                     this.editMessageDto = dto;
                 }
-                this.editorKey++;
                 if (this.editMessageDto.fileItemUuid) {
                     axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
                         .then((response) => {
