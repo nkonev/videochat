@@ -86,11 +86,11 @@
                                     <v-icon>mdi-format-italic</v-icon>
                                 </v-btn>
 
-                                <v-btn icon>
+                                <v-btn icon :input-value="underlineValue()" @click="underlineClick">
                                     <v-icon>mdi-format-underline</v-icon>
                                 </v-btn>
 
-                                <v-btn icon>
+                                <v-btn icon :input-value="strikeValue()" @click="strikeClick">
                                     <v-icon>mdi-format-strikethrough-variant</v-icon>
                                 </v-btn>
 
@@ -282,6 +282,18 @@
             },
             italicClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()
+            },
+            underlineValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('underline')
+            },
+            underlineClick() {
+                this.$refs.tipTapRef.$data.editor.chain().focus().toggleUnderline().run()
+            },
+            strikeValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('strike')
+            },
+            strikeClick() {
+                this.$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()
             },
         },
         computed: {
