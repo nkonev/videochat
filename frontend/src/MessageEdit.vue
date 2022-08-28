@@ -9,62 +9,6 @@
             />
 
             <div id="custom-toolbar">
-                <!--<div class="custom-toolbar-format" v-if="$refs.tipTapRef != null && $refs.tipTapRef.$data.editor != null">
-                    <button
-                        :class="{
-                          'richText__menu-item': true,
-                          active: $refs.tipTapRef.$data.editor.isActive('bold'),
-                        }"
-                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleBold().run()">
-                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'bold' }"></font-awesome-icon>
-                    </button>
-                    <button
-                        :class="{
-                          'richText__menu-item': true,
-                          active: $refs.tipTapRef.$data.editor.isActive('italic'),
-                        }"
-                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()">
-                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'italic' }"></font-awesome-icon>
-                    </button>
-                    <button
-                        :class="{
-                          'richText__menu-item': true,
-                          active: $refs.tipTapRef.$data.editor.isActive('underline')
-                        }"
-                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleUnderline().run()"
-                    >
-                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'underline' }"></font-awesome-icon>
-                    </button>
-                    <button
-                        :class="{
-                          'richText__menu-item': true,
-                          active: $refs.tipTapRef.$data.editor.isActive('strike'),
-                        }"
-                        @click="$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()"
-                    >
-                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'strikethrough' }"></font-awesome-icon>
-                    </button>
-                    <select class="ql-color" v-if="false"></select>
-                    <select class="ql-background" v-if="false"></select>
-                    <button
-                        :disabled="linkButtonDisabled()"
-                        :class="{
-                          'richText__menu-item': !linkButtonDisabled(),
-                          'richText__menu-item-disabled': linkButtonDisabled(),
-                          active: $refs.tipTapRef.$data.editor.isActive('link'),
-                        }"
-                            @click="setLink()"
-                    >
-                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'link' }"></font-awesome-icon>
-                    </button>
-                    <button
-                        class="richText__menu-item"
-                        @click="$refs.tipTapRef.addImage()"
-                    >
-                        <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'image' }"></font-awesome-icon>
-                    </button>
-                </div>-->
-                <!--<div class="d-flex flex-nowrap flex-row">-->
                 <div class="d-flex flex-wrap flex-row">
                     <div style="max-width: 100%">
                         <v-slide-group
@@ -87,14 +31,15 @@
                                 <v-icon>mdi-format-strikethrough-variant</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile width="48px">
+                            <v-btn icon tile :input-value="linkValue()" @click="linkClick" width="48px" :color="linkValue() ? 'black' : ''">
                                 <v-icon>mdi-link-variant</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile width="48px">
+                            <v-btn icon tile @click="imageClick" width="48px">
                                 <v-icon>mdi-image-outline</v-icon>
                             </v-btn>
 
+                            <!--
                             <v-btn icon tile width="48px">
                                 <v-icon>mdi-palette</v-icon>
                             </v-btn>
@@ -102,7 +47,7 @@
                             <v-btn icon tile width="48px">
                                 <v-icon>mdi-select-color</v-icon>
                             </v-btn>
-
+                            -->
                         </v-slide-group>
                     </div>
 
@@ -144,7 +89,7 @@
     } from "./bus";
     import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
-    import {GET_SEARCH_STRING, GET_USER, SET_SEARCH_STRING} from "./store";
+    import {GET_USER} from "./store";
     import Tiptap from './TipTapEditor.vue'
 
     const dtoFactory = () => {
@@ -229,7 +174,31 @@
                     this.editMessageDto.fileItemUuid = null;
                 }
             },
-            setLink() {
+            boldValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('bold')
+            },
+            boldClick() {
+                this.$refs.tipTapRef.$data.editor.chain().focus().toggleBold().run()
+            },
+            italicValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('italic')
+            },
+            italicClick() {
+                this.$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()
+            },
+            underlineValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('underline')
+            },
+            underlineClick() {
+                this.$refs.tipTapRef.$data.editor.chain().focus().toggleUnderline().run()
+            },
+            strikeValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('strike')
+            },
+            strikeClick() {
+                this.$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()
+            },
+            linkClick() {
                 const previousUrl = this.$refs.tipTapRef.$data.editor.getAttributes('link').href;
                 const url = window.prompt('URL', previousUrl);
                 if (url === null) {
@@ -256,36 +225,12 @@
                     .setLink({ href: url })
                     .run()
             },
-            linkButtonDisabled() {
-                const empty = this.$refs.tipTapRef.$data.editor.view.state.selection.empty;
-                const disabled = empty;
-                // console.debug("linkButtonDisabled", disabled);
-                return disabled;
+            linkValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('link')
             },
-            boldValue() {
-                return this.$refs.tipTapRef?.$data.editor.isActive('bold')
-            },
-            boldClick() {
-                this.$refs.tipTapRef.$data.editor.chain().focus().toggleBold().run()
-            },
-            italicValue() {
-                return this.$refs.tipTapRef?.$data.editor.isActive('italic')
-            },
-            italicClick() {
-                this.$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()
-            },
-            underlineValue() {
-                return this.$refs.tipTapRef?.$data.editor.isActive('underline')
-            },
-            underlineClick() {
-                this.$refs.tipTapRef.$data.editor.chain().focus().toggleUnderline().run()
-            },
-            strikeValue() {
-                return this.$refs.tipTapRef?.$data.editor.isActive('strike')
-            },
-            strikeClick() {
-                this.$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()
-            },
+            imageClick() {
+                this.$refs.tipTapRef?.addImage()
+            }
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}),

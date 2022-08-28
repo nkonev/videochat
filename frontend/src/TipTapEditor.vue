@@ -108,6 +108,7 @@ export default {
           }),
           Text,
           Image.configure({
+              inline: true,
               HTMLAttributes: {
                   class: 'image-custom-class',
               },
