@@ -70,7 +70,7 @@
                             <v-switch dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                                 :label="$vuetify.lang.t('$vuetify.message_broadcast')"
                             ></v-switch>
-                            <v-btn color="primary" @click="sendMessageToChat" tile class="mr-0"><v-icon color="white">mdi-send</v-icon></v-btn>
+                            <v-btn color="primary" @click="sendMessageToChat" tile class="mr-0" :title="$vuetify.lang.t('$vuetify.message_edit_send')"><v-icon color="white">mdi-send</v-icon></v-btn>
                         </div>
                     </div>
 
@@ -276,6 +276,7 @@
             '$vuetify.lang.current': {
                 handler: function (newValue, oldValue) {
                     this.editorKey++;
+                    this.resetInput();
                 },
             },
         },

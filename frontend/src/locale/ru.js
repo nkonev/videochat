@@ -109,5 +109,6 @@ export default {
     message_edit_image: "Добавить картинку",
     message_edit_file: "Добавить файл",
     message_edit_attached_files: "Прикреплённые файлы",
-    message_edit_clear: "Очистить"
+    message_edit_clear: "Очистить",
+    message_edit_send: "Отправить (Ctrl+Enter)"
 }

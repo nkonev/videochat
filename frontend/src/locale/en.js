@@ -109,5 +109,6 @@ export default {
     message_edit_image: "Add image",
     message_edit_file: "Add file",
     message_edit_attached_files: "Attached files",
-    message_edit_clear: "Clear"
+    message_edit_clear: "Clear",
+    message_edit_send: "Send (Ctrl+Enter)"
 }
