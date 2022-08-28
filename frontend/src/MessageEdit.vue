@@ -99,6 +99,10 @@
                                 </v-btn>
 
                                 <v-btn icon>
+                                    <v-icon>mdi-image-outline</v-icon>
+                                </v-btn>
+
+                                <v-btn icon>
                                     <v-icon>mdi-format-color-fill</v-icon>
                                 </v-btn>
 
