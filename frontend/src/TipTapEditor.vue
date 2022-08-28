@@ -1,6 +1,6 @@
 <template>
   <div class="richText">
-    <input id="file-input" type="file" style="display: none;" accept="image/*" />
+    <input id="image-file-input" type="file" style="display: none;" accept="image/*" />
     <div class="richText__content">
       <editor-content :editor="editor" />
     </div>
@@ -128,7 +128,7 @@ export default {
       onSelectionUpdate: () => this.updateHtml(),
     });
 
-    this.imageFileInput = document.getElementById('file-input');
+    this.imageFileInput = document.getElementById('image-file-input');
     this.imageFileInput.onchange = e => {
       if (e.target.files.length) {
           const file = e.target.files[0];
