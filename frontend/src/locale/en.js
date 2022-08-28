@@ -100,5 +100,14 @@ export default {
     apply: "Apply",
     create_call: "Call",
     leave_call: "Leave call",
-    leave_call_text: "Are you sure to leave this video call ?"
+    leave_call_text: "Are you sure to leave this video call ?",
+    message_edit_bold: "Bold (Ctrl+B)",
+    message_edit_italic: "Italic (Ctrl+I)",
+    message_edit_underline: "Underline (Ctrl+U)",
+    message_edit_strike: "Strike",
+    message_edit_link: "Add link",
+    message_edit_image: "Add image",
+    message_edit_file: "Add file",
+    message_edit_attached_files: "Attached files",
+    message_edit_clear: "Clear"
 }

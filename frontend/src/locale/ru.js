@@ -100,5 +100,14 @@ export default {
     apply: "Применить",
     create_call: "Звонок",
     leave_call: "Покинуть звонок",
-    leave_call_text: "Вы действительно хотите покинуть видео звонок ?"
+    leave_call_text: "Вы действительно хотите покинуть видео звонок ?",
+    message_edit_bold: "Жирный (Ctrl+B)",
+    message_edit_italic: "Курсив (Ctrl+I)",
+    message_edit_underline: "Подчёкрнутый (Ctrl+U)",
+    message_edit_strike: "Зачёркрутый",
+    message_edit_link: "Добавить ссылку",
+    message_edit_image: "Добавить картинку",
+    message_edit_file: "Добавить файл",
+    message_edit_attached_files: "Прикреплённые файлы",
+    message_edit_clear: "Очистить"
 }
