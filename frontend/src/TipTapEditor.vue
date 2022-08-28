@@ -35,54 +35,34 @@ const embedUploadFunction = (chatId, fileObj) => {
         })
 }
 
+const empty = "";
+
 export default {
   components: {
     EditorContent,
   },
 
-  props: {
-    value: {
-      type: String,
-      default: "",
-    },
-  },
-
   data() {
     return {
       editor: null,
-      html: "",
       imageFileInput: null,
     };
   },
 
-  watch: {
-    html: {
-      immediate: true,
-      deep: true,
-      handler(value) {
-        if (value != "<p></p>") {
-            this.$emit("input", value);
-        }
-      },
-    },
-    value(value) {
-        const isSame = this.html === value;
-
-        if (isSame) {
-            return;
-        }
-
-      this.editor.commands.setContent(value, false);
-    },
-  },
   computed: {
     chatId() {
       return this.$route.params.id
     },
   },
   methods: {
-    updateHtml() {
-      this.html = this.editor.getHTML();
+    setContent(value) {
+        this.editor.commands.setContent(value, false);
+    },
+    clearContent() {
+      this.editor.commands.setContent(empty, false);
+    },
+    getContent() {
+      return this.editor.getHTML();
     },
     addImage() {
       this.imageFileInput.click();
@@ -122,10 +102,7 @@ export default {
               linkOnPaste: false
           })
       ],
-      content: this.value,
-      onCreate: () => this.updateHtml(),
-      onUpdate: () => this.updateHtml(),
-      onSelectionUpdate: () => this.updateHtml(),
+      content: empty,
     });
 
     this.imageFileInput = document.getElementById('image-file-input');

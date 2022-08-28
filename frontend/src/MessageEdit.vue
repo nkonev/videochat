@@ -5,7 +5,6 @@
     >
             <tiptap
                 :key="editorKey"
-                v-model="editMessageDto.text"
                 ref="tipTapRef"
             />
 
@@ -113,6 +112,8 @@
         },
         methods: {
             sendMessageToChat() {
+                const content = this.$refs.tipTapRef.getContent();
+                this.editMessageDto.text = content;
                 if (this.messageTextIsPresent()) {
                     (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto)).then(response => {
                         this.resetInput();
@@ -122,6 +123,7 @@
             },
             resetInput() {
               console.log("Resetting text input");
+              this.$refs.tipTapRef.clearContent();
               this.editMessageDto = dtoFactory();
               this.fileCount = null;
             },
@@ -130,10 +132,11 @@
             },
             onSetMessage(dto) {
                 if (!dto) {
-                    this.editMessageDto = dtoFactory()
+                    this.editMessageDto = dtoFactory();
                 } else {
                     this.editMessageDto = dto;
                 }
+                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
                 if (this.editMessageDto.fileItemUuid) {
                     axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
                         .then((response) => {
@@ -258,11 +261,12 @@
             this.notifyAboutBroadcast = debounce(this.notifyAboutBroadcast, 100, {leading:true, trailing:true});
         },
         watch: {
-            'editMessageDto.text': {
-                handler: function (newValue, oldValue) {
-                    this.sendNotification();
-                },
-            },
+            // TODO
+            // 'editMessageDto.text': {
+            //     handler: function (newValue, oldValue) {
+            //         this.sendNotification();
+            //     },
+            // },
             sendBroadcast: {
                 handler: function (newValue, oldValue) {
                     if (!newValue) {
