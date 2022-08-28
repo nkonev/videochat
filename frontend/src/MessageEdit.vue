@@ -71,46 +71,58 @@
                             multiple
                             show-arrows
                         >
-                            <v-btn-toggle
-                                v-model="pressedButtons"
-                                dense
-                                tile
-                                borderless
-                                multiple
-                            >
-                                <v-btn icon :input-value="boldValue()" @click="boldClick">
-                                    <v-icon>mdi-format-bold</v-icon>
-                                </v-btn>
+                            <v-btn icon tile :input-value="boldValue()" @click="boldClick" width="4em">
+                                <v-icon>mdi-format-bold</v-icon>
+                            </v-btn>
 
-                                <v-btn icon :input-value="italicValue()" @click="italicClick">
-                                    <v-icon>mdi-format-italic</v-icon>
-                                </v-btn>
+                            <v-btn icon tile :input-value="italicValue()" @click="italicClick" width="4em">
+                                <v-icon>mdi-format-italic</v-icon>
+                            </v-btn>
 
-                                <v-btn icon :input-value="underlineValue()" @click="underlineClick">
-                                    <v-icon>mdi-format-underline</v-icon>
-                                </v-btn>
+                            <v-btn icon tile :input-value="underlineValue()" @click="underlineClick" width="4em">
+                                <v-icon>mdi-format-underline</v-icon>
+                            </v-btn>
 
-                                <v-btn icon :input-value="strikeValue()" @click="strikeClick">
-                                    <v-icon>mdi-format-strikethrough-variant</v-icon>
-                                </v-btn>
+                            <v-btn icon tile :input-value="strikeValue()" @click="strikeClick" width="4em">
+                                <v-icon>mdi-format-strikethrough-variant</v-icon>
+                            </v-btn>
 
-                                <v-btn icon>
-                                    <v-icon>mdi-link-variant</v-icon>
-                                </v-btn>
+                            <v-btn icon tile width="4em">
+                                <v-icon>mdi-link-variant</v-icon>
+                            </v-btn>
 
-                                <v-btn icon>
-                                    <v-icon>mdi-image-outline</v-icon>
-                                </v-btn>
+                            <v-btn icon tile width="4em">
+                                <v-icon>mdi-image-outline</v-icon>
+                            </v-btn>
 
-                                <v-btn icon>
-                                    <v-icon>mdi-palette</v-icon>
-                                </v-btn>
+                            <v-btn icon tile width="4em">
+                                <v-icon>mdi-palette</v-icon>
+                            </v-btn>
 
-                                <v-btn icon>
-                                    <v-icon>mdi-select-color</v-icon>
-                                </v-btn>
+                            <v-btn icon tile width="4em">
+                                <v-icon>mdi-select-color</v-icon>
+                            </v-btn>
 
-                            </v-btn-toggle>
+                            <v-btn icon tile width="4em">
+                                <v-icon>mdi-select-color</v-icon>
+                            </v-btn>
+
+                            <v-btn icon tile width="4em">
+                                <v-icon>mdi-select-color</v-icon>
+                            </v-btn>
+
+                            <v-btn icon tile width="4em">
+                                <v-icon>mdi-select-color</v-icon>
+                            </v-btn>
+
+                            <v-btn icon tile width="4em">
+                                <v-icon>mdi-select-color</v-icon>
+                            </v-btn>
+
+                            <v-btn icon tile width="4em">
+                                <v-icon>mdi-select-color</v-icon>
+                            </v-btn>
+
                         </v-slide-group>
                     </div>
 
@@ -171,7 +183,6 @@
                 editMessageDto: dtoFactory(),
                 fileCount: null,
                 sendBroadcast: false,
-                pressedButtons: []
             }
         },
         methods: {
