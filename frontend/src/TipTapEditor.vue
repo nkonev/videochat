@@ -66,6 +66,11 @@ export default {
       },
     },
     value(value) {
+        const isSame = this.html === value;
+
+        if (isSame) {
+            return;
+        }
 
       this.editor.commands.setContent(value, false);
     },
