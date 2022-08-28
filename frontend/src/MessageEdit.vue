@@ -71,19 +71,19 @@
                             multiple
                             show-arrows
                         >
-                            <v-btn icon tile :input-value="boldValue()" @click="boldClick" width="4em">
+                            <v-btn icon tile :input-value="boldValue()" @click="boldClick" width="4em" :color="boldValue() ? 'black' : ''">
                                 <v-icon>mdi-format-bold</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="italicValue()" @click="italicClick" width="4em">
+                            <v-btn icon tile :input-value="italicValue()" @click="italicClick" width="4em" :color="italicValue() ? 'black' : ''">
                                 <v-icon>mdi-format-italic</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="underlineValue()" @click="underlineClick" width="4em">
+                            <v-btn icon tile :input-value="underlineValue()" @click="underlineClick" width="4em" :color="underlineValue() ? 'black' : ''">
                                 <v-icon>mdi-format-underline</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="strikeValue()" @click="strikeClick" width="4em">
+                            <v-btn icon tile :input-value="strikeValue()" @click="strikeClick" width="4em" :color="strikeValue() ? 'black' : ''">
                                 <v-icon>mdi-format-strikethrough-variant</v-icon>
                             </v-btn>
 
