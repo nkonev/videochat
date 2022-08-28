@@ -67,6 +67,10 @@ export default {
     addImage() {
       this.imageFileInput.click();
     },
+    onUpdateContent() {
+      const value = this.getContent();
+      this.$emit("input", value);
+    }
   },
   mounted() {
     this.editor = new Editor({
@@ -103,6 +107,7 @@ export default {
           })
       ],
       content: empty,
+      onUpdate: () => this.onUpdateContent(),
     });
 
     this.imageFileInput = document.getElementById('image-file-input');

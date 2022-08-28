@@ -6,6 +6,7 @@
             <tiptap
                 :key="editorKey"
                 ref="tipTapRef"
+                @input="sendNotification"
             />
 
             <div id="custom-toolbar">
@@ -111,10 +112,12 @@
             }
         },
         methods: {
+            getContent(){
+                return this.$refs.tipTapRef.getContent();
+            },
             sendMessageToChat() {
-                const content = this.$refs.tipTapRef.getContent();
-                this.editMessageDto.text = content;
-                if (this.messageTextIsPresent()) {
+                this.editMessageDto.text = this.getContent();
+                if (this.messageTextIsPresent(this.editMessageDto.text)) {
                     (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto)).then(response => {
                         this.resetInput();
                         bus.$emit(CLOSE_EDIT_MESSAGE);
@@ -127,8 +130,8 @@
               this.editMessageDto = dtoFactory();
               this.fileCount = null;
             },
-            messageTextIsPresent() {
-                return this.editMessageDto.text && this.editMessageDto.text !== "" && this.editMessageDto.text !== '<p><br></p>'
+            messageTextIsPresent(text) {
+                return text && text !== "" && text !== '<p><br></p>'
             },
             onSetMessage(dto) {
                 if (!dto) {
@@ -144,23 +147,23 @@
                         });
                 }
             },
-            notifyAboutBroadcast(clear) {
+            notifyAboutBroadcast(clear, val) {
                 if (clear) {
                     axios.put(`/api/chat/`+this.chatId+'/broadcast', {text: null});
-                } else if (this.messageTextIsPresent()) {
-                    axios.put(`/api/chat/`+this.chatId+'/broadcast', {text: this.editMessageDto.text});
+                } else if (this.messageTextIsPresent(val)) {
+                    axios.put(`/api/chat/`+this.chatId+'/broadcast', {text: val});
                 }
             },
-            notifyAboutTyping() {
-                if (this.messageTextIsPresent()) {
+            notifyAboutTyping(val) {
+                if (this.messageTextIsPresent(val)) {
                     axios.put(`/api/chat/` + this.chatId + '/typing');
                 }
             },
-            sendNotification() {
+            sendNotification(val) {
                 if (this.sendBroadcast) {
-                    this.notifyAboutBroadcast();
+                    this.notifyAboutBroadcast(false, val);
                 } else {
-                    this.notifyAboutTyping();
+                    this.notifyAboutTyping(val);
                 }
             },
 
@@ -261,18 +264,12 @@
             this.notifyAboutBroadcast = debounce(this.notifyAboutBroadcast, 100, {leading:true, trailing:true});
         },
         watch: {
-            // TODO
-            // 'editMessageDto.text': {
-            //     handler: function (newValue, oldValue) {
-            //         this.sendNotification();
-            //     },
-            // },
             sendBroadcast: {
                 handler: function (newValue, oldValue) {
                     if (!newValue) {
                         this.notifyAboutBroadcast(true);
                     } else {
-                        this.notifyAboutBroadcast();
+                        this.notifyAboutBroadcast(false, this.getContent());
                     }
                 }
             },
