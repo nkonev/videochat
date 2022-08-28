@@ -74,53 +74,31 @@
                             <v-btn-toggle
                                 v-model="toggle_multiple"
                                 dense
+                                tile
+                                borderless
                                 multiple
                             >
-                                <v-btn>
+                                <v-btn icon>
                                     <v-icon>mdi-format-bold</v-icon>
                                 </v-btn>
 
-                                <v-btn>
+                                <v-btn icon>
                                     <v-icon>mdi-format-italic</v-icon>
                                 </v-btn>
 
-                                <v-btn>
+                                <v-btn icon>
                                     <v-icon>mdi-format-underline</v-icon>
                                 </v-btn>
 
-                                <v-btn>
+                                <v-btn icon>
                                     <v-icon>mdi-format-strikethrough-variant</v-icon>
                                 </v-btn>
 
-                                <v-btn>
+                                <v-btn icon>
                                     <v-icon>mdi-link-variant</v-icon>
                                 </v-btn>
 
-                                <v-btn>
-                                    <v-icon>mdi-format-color-fill</v-icon>
-                                </v-btn>
-
-                                <v-btn>
-                                    <v-icon>mdi-format-color-fill</v-icon>
-                                </v-btn>
-
-                                <v-btn>
-                                    <v-icon>mdi-format-color-fill</v-icon>
-                                </v-btn>
-
-                                <v-btn>
-                                    <v-icon>mdi-format-color-fill</v-icon>
-                                </v-btn>
-
-                                <v-btn>
-                                    <v-icon>mdi-format-color-fill</v-icon>
-                                </v-btn>
-
-                                <v-btn>
-                                    <v-icon>mdi-format-color-fill</v-icon>
-                                </v-btn>
-
-                                <v-btn>
+                                <v-btn icon>
                                     <v-icon>mdi-format-color-fill</v-icon>
                                 </v-btn>
 
@@ -130,7 +108,7 @@
 
                     <div class="flex-grow-1">
                         <div class="custom-toolbar-send">
-                            <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
+                            <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile class="mr-4" @click="openFileUpload()"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
                             <template v-if="this.editMessageDto.fileItemUuid">
                                 <v-badge
                                     :value="fileCount"
@@ -142,11 +120,11 @@
                                     <v-btn icon tile @click="onFilesClicked()"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
                                 </v-badge>
                             </template>
-                            <v-btn icon tile class="mr-2" @click="resetInput()"><v-icon>mdi-delete</v-icon></v-btn>
-                            <v-switch v-if="canBroadcast && $vuetify.breakpoint.smAndUp" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
-                                :label="$vuetify.breakpoint.smAndUp ? $vuetify.lang.t('$vuetify.message_broadcast') : null"
+                            <v-btn icon tile class="mr-4" @click="resetInput()"><v-icon>mdi-delete</v-icon></v-btn>
+                            <v-switch dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
+                                :label="$vuetify.lang.t('$vuetify.message_broadcast')"
                             ></v-switch>
-                            <v-btn color="primary" @click="sendMessageToChat" small class="mr-1"><v-icon color="white">mdi-send</v-icon></v-btn>
+                            <v-btn color="primary" @click="sendMessageToChat" tile class="mr-0"><v-icon color="white">mdi-send</v-icon></v-btn>
                         </div>
                     </div>
 
@@ -186,7 +164,7 @@
                 fileCount: null,
 
                 sendBroadcast: false,
-                toggle_multiple: [0, 1, 2]
+                toggle_multiple: [1, 2]
             }
         },
         methods: {
