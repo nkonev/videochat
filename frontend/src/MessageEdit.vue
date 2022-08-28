@@ -65,7 +65,7 @@
                     </button>
                 </div>-->
                 <!--<div class="d-flex flex-nowrap flex-row">-->
-                <div class="d-flex flex-wrap flex-row" v-if="$refs.tipTapRef != null && $refs.tipTapRef.$data.editor != null">
+                <div class="d-flex flex-wrap flex-row">
                     <div style="max-width: 100%">
                         <v-slide-group
                             multiple
@@ -272,13 +272,13 @@
                 return disabled;
             },
             boldValue() {
-                return this.$refs.tipTapRef.$data.editor.isActive('bold')
+                return this.$refs.tipTapRef?.$data.editor.isActive('bold')
             },
             boldClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleBold().run()
             },
             italicValue() {
-                return this.$refs.tipTapRef.$data.editor.isActive('italic')
+                return this.$refs.tipTapRef?.$data.editor.isActive('italic')
             },
             italicClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()
