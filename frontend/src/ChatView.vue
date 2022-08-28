@@ -688,14 +688,14 @@
 <style lang="stylus">
 .splitpanes {background-color: #f8f8f8;}
 
-.splitpanes__splitter {background-color: #ccc;position: relative; cursor: crosshair}
+.splitpanes__splitter {background-color: #ccc;position: relative; cursor: ns-resize}
 .splitpanes__splitter:before {
     content: '';
     position: absolute;
     left: 0;
     top: 0;
     transition: opacity 0.4s;
-    background-color: rgba(255, 0, 0, 0.3);
+    background-color: #e4efff;
     opacity: 0;
     z-index: 1;
 }
