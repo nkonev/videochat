@@ -17,8 +17,7 @@ Your open source self-hosted videoconference platform.
 * File [sharing](./screenshots.md#chat-files).
 * Persistent text chats with simple formatting. Messages are persisted regardless video-call session.
 * [Tet-a-tet](./screenshots.md#open-tet-a-tet-chat) private chats for two.
-* Horizontal scaling particular video rooms (chats) by servers.
-* Horizontal scaling other microservices.
+* Horizontal scaling.
 * Supports [login](./screenshots.md#login) through OpedID Connect providers: Facebook, VK.com, Google, Keycloak. Not required can be disabled.
 * LDAP login integration.
 * Internationalization: English and Russian UI.
