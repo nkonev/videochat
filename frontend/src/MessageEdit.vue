@@ -131,7 +131,7 @@
               this.fileCount = null;
             },
             messageTextIsPresent(text) {
-                return text && text !== "" && text !== '<p><br></p>'
+                return text && text !== ""
             },
             onSetMessage(dto) {
                 if (!dto) {

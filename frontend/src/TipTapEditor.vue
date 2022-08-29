@@ -62,10 +62,18 @@ export default {
       this.editor.commands.setContent(empty, false);
     },
     getContent() {
-      return this.editor.getHTML();
+      const value = this.editor.getHTML();
+      if (this.messageTextIsNotEmpty(value)) {
+        return value
+      } else {
+        return empty
+      }
     },
     addImage() {
       this.imageFileInput.click();
+    },
+    messageTextIsNotEmpty(text) {
+       return text && text !== "" && text !== '<p><br></p>' && text !== '<p></p>'
     },
     onUpdateContent() {
       const value = this.getContent();
