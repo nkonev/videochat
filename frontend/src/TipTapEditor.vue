@@ -70,6 +70,9 @@ export default {
     onUpdateContent() {
       const value = this.getContent();
       this.$emit("input", value);
+    },
+    setCursorToEnd() {
+      this.editor.commands.focus('end')
     }
   },
   mounted() {

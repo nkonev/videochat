@@ -146,6 +146,9 @@
                             this.onFileItemUuid({fileItemUuid: this.editMessageDto.fileItemUuid, count: response.data.count})
                         });
                 }
+                this.$nextTick(()=>{
+                    this.$refs.tipTapRef.setCursorToEnd()
+                })
             },
             notifyAboutBroadcast(clear, val) {
                 if (clear) {
