@@ -4,6 +4,7 @@
             <v-toolbar
                 dark
                 color="indigo"
+                dense
             >
                 <v-btn
                     icon
@@ -66,14 +67,3 @@
         }
     }
 </script>
-
-<style lang="stylus">
-    .message-edit-dialog {
-        // TODO format it
-        //display flex
-        //align-items: stretch
-        //height 100%
-        //position: relative;
-        //align-self: stretch
-    }
-</style>

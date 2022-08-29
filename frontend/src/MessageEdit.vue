@@ -247,7 +247,7 @@
                 canBroadcast: GET_CAN_BROADCAST_TEXT_MESSAGE,
             }),
             messageEditHeight() {
-                return this.fullHeight ? 'calc(100vh - 56px - 56px)' : '100%'
+                return this.fullHeight ? 'calc(100vh - 56px - 48px)' : '100%'
             }
         },
         mounted() {
