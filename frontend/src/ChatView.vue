@@ -20,7 +20,7 @@
                 </div>
             </pane>
             <pane max-size="70" min-size="12" v-bind:size="editSize" v-if="$vuetify.breakpoint.smAndUp">
-                <MessageEdit :chatId="chatId" :canBroadcast="canBroadcast"/>
+                <MessageEdit :chatId="chatId"/>
             </pane>
         </splitpanes>
         <v-btn v-if="!$vuetify.breakpoint.smAndUp"
@@ -67,7 +67,7 @@
     import {mapGetters} from "vuex";
 
     import {
-        GET_USER, SET_CHAT_ID, SET_CHAT_USERS_COUNT,
+        GET_USER, SET_CAN_BROADCAST_TEXT_MESSAGE, SET_CHAT_ID, SET_CHAT_USERS_COUNT,
         SET_SHOW_CALL_BUTTON, SET_SHOW_CHAT_EDIT_BUTTON,
         SET_SHOW_HANG_BUTTON, SET_SHOW_SEARCH, SET_TITLE,
         SET_VIDEO_CHAT_USERS_COUNT
@@ -102,7 +102,7 @@
 
     const scrollingThreshold = 200; // px
 
-    let timerId;
+    let writingUsersTimerId;
 
     export default {
         mixins: [queryMixin()],
@@ -135,9 +135,6 @@
         computed: {
             chatId() {
                 return this.$route.params.id
-            },
-            canBroadcast() {
-                return this.chatDto.canBroadcast;
             },
             ...mapGetters({currentUser: GET_USER}),
             videoSize() {
@@ -443,7 +440,7 @@
                     this.$store.commit(SET_CHAT_USERS_COUNT, data.participantsCount);
                     this.$store.commit(SET_CHAT_ID, this.chatId);
                     this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, data.canEdit);
-
+                    this.$store.commit(SET_CAN_BROADCAST_TEXT_MESSAGE, data.canBroadcast);
                     this.chatDto = data;
                 }).catch(reason => {
                     if (reason.response.status == 404) {
@@ -607,7 +604,7 @@
             bus.$on(USER_TYPING, this.onUserTyping);
             bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
 
-            timerId = setInterval(()=>{
+            writingUsersTimerId = setInterval(()=>{
                 const curr = + new Date();
                 this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
             }, 500);
@@ -631,7 +628,7 @@
             bus.$off(USER_TYPING, this.onUserTyping);
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
 
-            clearInterval(timerId);
+            clearInterval(writingUsersTimerId);
 
             this.unsubscribe();
 
@@ -641,6 +638,7 @@
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
             this.$store.commit(SET_SHOW_HANG_BUTTON, false);
             this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
+            this.$store.commit(SET_CAN_BROADCAST_TEXT_MESSAGE, false);
         },
         components: {
             InfiniteLoading,

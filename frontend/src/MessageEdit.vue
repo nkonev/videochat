@@ -90,7 +90,7 @@
     } from "./bus";
     import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
-    import {GET_USER} from "./store";
+    import {GET_CAN_BROADCAST_TEXT_MESSAGE, GET_USER} from "./store";
     import Tiptap from './TipTapEditor.vue'
 
     const dtoFactory = () => {
@@ -102,7 +102,7 @@
     };
 
     export default {
-        props:['chatId', 'canBroadcast', 'fullHeight'],
+        props:['chatId', 'fullHeight'],
         data() {
             return {
                 editorKey: +new Date(),
@@ -242,7 +242,10 @@
             }
         },
         computed: {
-            ...mapGetters({currentUser: GET_USER}),
+            ...mapGetters({
+                currentUser: GET_USER,
+                canBroadcast: GET_CAN_BROADCAST_TEXT_MESSAGE,
+            }),
             messageEditHeight() {
                 return this.fullHeight ? 'calc(100vh - 56px - 56px)' : '100%'
             }

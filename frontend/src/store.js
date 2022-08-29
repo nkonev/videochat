@@ -31,6 +31,8 @@ export const GET_SHOW_HANG_BUTTON = 'getShowHangButton';
 export const SET_SHOW_HANG_BUTTON = 'setShowHangButton';
 export const GET_SHOW_CHAT_EDIT_BUTTON = 'getChatEditButton';
 export const SET_SHOW_CHAT_EDIT_BUTTON = 'setChatEditButton';
+export const GET_CAN_BROADCAST_TEXT_MESSAGE = 'setCanBroadcastText';
+export const SET_CAN_BROADCAST_TEXT_MESSAGE = 'getCanBroadcastText';
 
 const store = new Vuex.Store({
     state: {
@@ -48,7 +50,8 @@ const store = new Vuex.Store({
         showHangButton: false,
         shareScreen: false,
         showChatEditButton: false,
-        availableOAuth2Providers: []
+        availableOAuth2Providers: [],
+        canBroadcastTextMessage: false,
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -90,6 +93,9 @@ const store = new Vuex.Store({
         [SET_AVAILABLE_OAUTH2_PROVIDERS](state, payload) {
             state.availableOAuth2Providers = payload;
         },
+        [SET_CAN_BROADCAST_TEXT_MESSAGE](state, payload) {
+            state.canBroadcastTextMessage = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -124,6 +130,9 @@ const store = new Vuex.Store({
         },
         [GET_AVAILABLE_OAUTH2_PROVIDERS](state) {
             return state.availableOAuth2Providers;
+        },
+        [GET_CAN_BROADCAST_TEXT_MESSAGE](state) {
+            return state.canBroadcastTextMessage;
         },
     },
     actions: {
