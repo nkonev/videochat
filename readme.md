@@ -6,8 +6,6 @@ Your open source self-hosted videoconference platform.
 [![Chat image](./.screenshots/2_chat_participants_management.png)](./screenshots.md)
 
 # Key features:
-* No vendor lock on cloud provider.
-* Familiar infrastructure which you know - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, NGINX. No unique exotic solutions.
 * Well-integrated video calls into entire platform UI, no separated video rooms, text chats, etc...
 * No installation on client PC - only modern browser with video camera or microphone required.
 * Screen [sharing](./screenshots.md#screen-sharing).
@@ -17,6 +15,7 @@ Your open source self-hosted videoconference platform.
 * Calling to user to [invite](./screenshots.md#inviting-user-to-videoconference) his or her to video conference.
 * User is [speaking indication](./screenshots.md#user-is-speaking-indication-green-nickname-and-microphone).
 * File [sharing](./screenshots.md#chat-files).
+* Persistent text chats with simple formatting. Messages are persisted regardless video-call session.
 * [Tet-a-tet](./screenshots.md#open-tet-a-tet-chat) private chats for two.
 * Horizontal scaling particular video rooms (chats) by servers.
 * Horizontal scaling other microservices.
@@ -24,6 +23,8 @@ Your open source self-hosted videoconference platform.
 * LDAP login integration.
 * Internationalization: English and Russian UI.
 * Simple setup with docker swarm or docker-compose.
+* No vendor lock on cloud provider.
+* Familiar infrastructure which you know - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, NGINX. No unique exotic solutions.
 * Self-contained frontend bundle without any CDN downloads.
 * No need to edit `/etc/hosts` for development.
 
