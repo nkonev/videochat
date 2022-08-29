@@ -32,7 +32,7 @@
                                 <v-icon>mdi-format-strikethrough-variant</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="linkValue()" @click="linkClick" width="48px" :color="linkValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_link')">
+                            <v-btn icon tile :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" width="48px" :color="linkValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_link')">
                                 <v-icon>mdi-link-variant</v-icon>
                             </v-btn>
 
@@ -236,6 +236,9 @@
             },
             linkValue() {
                 return this.$refs.tipTapRef.$data.editor.isActive('link')
+            },
+            linkButtonDisabled() {
+                return this.$refs.tipTapRef.$data.editor.view.state.selection.empty;
             },
             imageClick() {
                 this.$refs.tipTapRef.addImage()
