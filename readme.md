@@ -6,6 +6,8 @@ Your open source self-hosted videoconference platform.
 [![Chat image](./.screenshots/2_chat_participants_management.png)](./screenshots.md)
 
 # Key features:
+* No vendor lock on cloud provider.
+* Familiar infrastructure which you know - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, NGINX. No unique exotic solutions.
 * Well-integrated video calls into entire platform UI, no separated video rooms, text chats, etc...
 * No installation on client PC - only modern browser with video camera or microphone required.
 * Screen [sharing](./screenshots.md#screen-sharing).
@@ -19,6 +21,7 @@ Your open source self-hosted videoconference platform.
 * Horizontal scaling particular video rooms (chats) by servers.
 * Horizontal scaling other microservices.
 * Supports [login](./screenshots.md#login) through OpedID Connect providers: Facebook, VK.com, Google, Keycloak. Not required can be disabled.
+* LDAP login integration.
 * Internationalization: English and Russian UI.
 * Simple setup with docker swarm or docker-compose.
 * Self-contained frontend bundle without any CDN downloads.
