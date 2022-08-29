@@ -26,7 +26,7 @@
         CLOSE_SIMPLE_MODAL,
         OPEN_SIMPLE_MODAL,
         OPEN_VIEW_FILES_DIALOG,
-        OPEN_EDIT_MESSAGE
+        OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE
     } from "./bus";
     import debounce from "lodash/debounce";
     import { format, parseISO, differenceInDays } from 'date-fns';
@@ -65,7 +65,11 @@
             },
             editMessage(dto){
                 const editMessageDto = {id: dto.id, text: dto.text, fileItemUuid: dto.fileItemUuid};
-                bus.$emit(OPEN_EDIT_MESSAGE, editMessageDto);
+                if (this.$vuetify.breakpoint.smAndUp) {
+                    bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
+                } else {
+                    bus.$emit(OPEN_EDIT_MESSAGE, editMessageDto);
+                }
             },
             getOwner(item) {
                 return item.owner.login
