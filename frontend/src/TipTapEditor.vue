@@ -24,7 +24,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
 import TextStyle from "@tiptap/extension-text-style";
 import Color from '@tiptap/extension-color';
-import Highlight from "@tiptap/extension-highlight";
+import Highlight from "@/TiptapHighlight";
 import axios from "axios";
 
 const embedUploadFunction = (chatId, fileObj) => {
