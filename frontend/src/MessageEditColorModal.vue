@@ -1,10 +1,10 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="320">
+        <v-dialog v-model="show" max-width="640">
             <v-card>
                 <v-card-title>{{ getTitle() }}</v-card-title>
 
-                <v-card-text class="px-4 py-0">
+                <v-card-text class="px-0 py-0">
                     <v-color-picker
                         dot-size="25"
                         hide-canvas
@@ -13,13 +13,14 @@
                         show-swatches
                         swatches-max-height="300"
                         v-model="color"
+                        width="100%"
                     ></v-color-picker>
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
                     <v-spacer/>
-                    <v-btn color="primary" class="mr-4" @click="accept()">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
-                    <v-btn class="mr-4" @click="clear()">{{ $vuetify.lang.t('$vuetify.clear') }}</v-btn>
+                    <v-btn color="primary" class="mr-2" @click="accept()">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
+                    <v-btn class="mr-2" @click="clear()">{{ $vuetify.lang.t('$vuetify.clear') }}</v-btn>
                     <v-btn color="error" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>

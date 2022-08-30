@@ -112,6 +112,6 @@ export default {
     message_edit_attached_files: "Прикреплённые файлы",
     message_edit_clear: "Очистить",
     message_edit_send: "Отправить (Ctrl+Enter)",
-    message_edit_text_color: "Цыет текста",
+    message_edit_text_color: "Цвет текста",
     message_edit_background_color: "Цвет фона",
 }
