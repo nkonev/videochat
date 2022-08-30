@@ -25,6 +25,7 @@ export default {
     chat_name: "Название чата",
     edit: "Редактировать",
     ok: "Ok",
+    clear: "Очистить",
     select_users_to_add_to_chat: "Выберите пользователей для добавления в чат",
     chat_name_required: "Нужно ввести имя чата",
     video_i_have_microphone: "У меня есть микрофон",

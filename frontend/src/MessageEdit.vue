@@ -83,8 +83,8 @@
 <script>
     import axios from "axios";
     import bus, {
-        CLOSE_EDIT_MESSAGE,
-        OPEN_FILE_UPLOAD_MODAL,
+        CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_LINK_SET,
+        OPEN_FILE_UPLOAD_MODAL, OPEN_MESSAGE_EDIT_LINK,
         OPEN_VIEW_FILES_DIALOG,
         SET_EDIT_MESSAGE, SET_FILE_ITEM_UUID,
     } from "./bus";
@@ -209,11 +209,9 @@
             },
             linkClick() {
                 const previousUrl = this.$refs.tipTapRef.$data.editor.getAttributes('link').href;
-                const url = window.prompt('URL', previousUrl);
-                if (url === null) {
-                    return
-                }
-
+                bus.$emit(OPEN_MESSAGE_EDIT_LINK, previousUrl);
+            },
+            onMessageLinkSet(url) {
                 // empty
                 if (url === '') {
                     this.$refs.tipTapRef.$data.editor
@@ -222,7 +220,6 @@
                         .extendMarkRange('link')
                         .unsetLink()
                         .run()
-
                     return
                 }
 
@@ -256,11 +253,13 @@
         mounted() {
             bus.$on(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.$on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            bus.$on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             this.resetInput();
         },
         beforeDestroy() {
             bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.$off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            bus.$off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
         },
         created(){
             this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});

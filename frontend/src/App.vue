@@ -171,6 +171,7 @@
                 <LanguageModal/>
                 <VideoAddNewSource/>
                 <MessageEditModal v-if="!$vuetify.breakpoint.smAndUp"/>
+                <MessageEditLinkModal/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -224,6 +225,7 @@
     import {getData} from "@/centrifugeConnection";
     import VideoAddNewSource from "@/VideoAddNewSource";
     import MessageEditModal from "@/MessageEditModal";
+    import MessageEditLinkModal from "@/MessageEditLinkModal";
 
     import queryMixin, {searchQueryParameter} from "@/queryMixin";
 
@@ -259,6 +261,7 @@
             LanguageModal,
             VideoAddNewSource,
             MessageEditModal,
+            MessageEditLinkModal,
         },
         methods:{
             toggleLeftNavigation() {

@@ -6,5 +6,6 @@ func CreateSanitizer() *bluemonday.Policy {
 	policy := bluemonday.UGCPolicy()
 	policy.AllowAttrs("style").OnElements("span", "p", "strong", "em", "s", "u", "img")
 	policy.AllowAttrs("class").OnElements("img")
+	policy.AllowAttrs("target").OnElements("a")
 	return policy
 }

@@ -25,6 +25,7 @@ export default {
     chat_name: "Chat name",
     edit: "Edit",
     ok: "Ok",
+    clear: "Clear",
     select_users_to_add_to_chat: "Select users for add to chat",
     chat_name_required: "Chat name is required",
     video_i_have_microphone: "I have a microphone",

@@ -42,3 +42,5 @@ export const OPEN_LANGUAGE_MODAL = "openLocaleModal";
 export const ADD_VIDEO_SOURCE_DIALOG = "addVideoSourceDialog";
 export const ADD_VIDEO_SOURCE = "addVideoSource";
 export const ADD_SCREEN_SOURCE = "addScreenSource";
+export const OPEN_MESSAGE_EDIT_LINK = "openMessageEditLink";
+export const MESSAGE_EDIT_LINK_SET = "messageEditLinkSet";
