@@ -111,5 +111,7 @@ export default {
     message_edit_file: "Add file",
     message_edit_attached_files: "Attached files",
     message_edit_clear: "Clear",
-    message_edit_send: "Send (Ctrl+Enter)"
+    message_edit_send: "Send (Ctrl+Enter)",
+    message_edit_text_color: "Text color",
+    message_edit_background_color: "Background color",
 }

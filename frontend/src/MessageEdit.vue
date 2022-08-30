@@ -40,15 +40,14 @@
                                 <v-icon>mdi-image-outline</v-icon>
                             </v-btn>
 
-                            <!--
-                            <v-btn icon tile width="48px">
+                            <v-btn icon tile @click="textColorClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_text_color')">
                                 <v-icon>mdi-palette</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile width="48px">
+                            <v-btn icon tile @click="backgroundColorClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_background_color')">
                                 <v-icon>mdi-select-color</v-icon>
                             </v-btn>
-                            -->
+
                         </v-slide-group>
                     </div>
 
@@ -83,8 +82,8 @@
 <script>
     import axios from "axios";
     import bus, {
-        CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_LINK_SET,
-        OPEN_FILE_UPLOAD_MODAL, OPEN_MESSAGE_EDIT_LINK,
+        CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_COLOR_SET, MESSAGE_EDIT_LINK_SET,
+        OPEN_FILE_UPLOAD_MODAL, OPEN_MESSAGE_EDIT_COLOR, OPEN_MESSAGE_EDIT_LINK,
         OPEN_VIEW_FILES_DIALOG,
         SET_EDIT_MESSAGE, SET_FILE_ITEM_UUID,
     } from "./bus";
@@ -92,6 +91,7 @@
     import {mapGetters} from "vuex";
     import {GET_CAN_BROADCAST_TEXT_MESSAGE, GET_USER} from "./store";
     import Tiptap from './TipTapEditor.vue'
+    import {colorBackground, colorText} from "@/utils";
 
     const dtoFactory = () => {
         return {
@@ -239,6 +239,28 @@
             },
             imageClick() {
                 this.$refs.tipTapRef.addImage()
+            },
+            textColorClick(){
+                bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorText);
+            },
+            backgroundColorClick() {
+                bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorBackground);
+            },
+            onColorSet(color, colorMode) {
+                console.debug("Setting color", color, colorMode);
+                if (colorMode == colorText) {
+                    if (color) {
+                        this.$refs.tipTapRef.$data.editor.chain().focus().setColor(color.hex).run()
+                    } else {
+                        this.$refs.tipTapRef.$data.editor.chain().focus().unsetColor().run()
+                    }
+                } else if (colorMode == colorBackground) {
+                    if (color) {
+                        this.$refs.tipTapRef.$data.editor.chain().focus().setHighlight({ color: color.hex }).run()
+                    } else {
+                        this.$refs.tipTapRef.$data.editor.chain().focus().unsetHighlight().run()
+                    }
+                }
             }
         },
         computed: {
@@ -254,12 +276,14 @@
             bus.$on(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.$on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.$on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
+            bus.$on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
             this.resetInput();
         },
         beforeDestroy() {
             bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.$off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.$off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
+            bus.$off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
         },
         created(){
             this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});

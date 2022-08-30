@@ -22,6 +22,9 @@ import Text from "@tiptap/extension-text";
 import History from '@tiptap/extension-history';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
+import TextStyle from "@tiptap/extension-text-style";
+import Color from '@tiptap/extension-color';
+import Highlight from "@tiptap/extension-highlight";
 import axios from "axios";
 
 const embedUploadFunction = (chatId, fileObj) => {
@@ -115,7 +118,10 @@ export default {
           Link.configure({
               openOnClick: false,
               linkOnPaste: false
-          })
+          }),
+          TextStyle,
+          Color,
+          Highlight.configure({ multicolor: true })
       ],
       content: empty,
       onUpdate: () => this.onUpdateContent(),

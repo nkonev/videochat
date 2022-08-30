@@ -220,3 +220,6 @@ export const isMobileFireFox = () => {
 }
 
 export const noPagePlaceholder = -1;
+
+export const colorText = 'colorText';
+export const colorBackground = 'colorBackground';
