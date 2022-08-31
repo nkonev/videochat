@@ -69,6 +69,7 @@ vm = new Vue({
     },
     disconnectCentrifuge() {
       this.centrifuge.disconnect();
+      Vue.prototype.centrifugeInitialized = false;
     }
   },
   created(){
