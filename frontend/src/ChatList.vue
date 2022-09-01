@@ -52,7 +52,7 @@ import bus, {
     USER_PROFILE_CHANGED,
     CLOSE_SIMPLE_MODAL,
     REFRESH_ON_WEBSOCKET_RESTORED,
-    VIDEO_CALL_CHANGED
+    VIDEO_CALL_CHANGED, LOGGED_OUT
 } from "./bus";
     import {chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
@@ -85,7 +85,6 @@ import bus, {
             return {
                 page: 0,
                 items: [],
-                itemsTotal: 0,
                 infiniteId: +new Date(),
                 group: -1,
             }
@@ -101,9 +100,20 @@ import bus, {
                 console.log("Resetting infinite loader", this.infiniteId);
             },
             searchStringChanged(searchString) {
+                this.resetVariables();
+                this.reloadItems();
+            },
+            onLoggedIn() {
+                if (this.items.length === 0) {
+                    this.reloadItems();
+                }
+            },
+            onLoggedOut() {
+                this.resetVariables();
+            },
+            resetVariables() {
                 this.items = [];
                 this.page = 0;
-                this.reloadItems();
             },
             addItem(dto) {
                 console.log("Adding item", dto);
@@ -150,7 +160,6 @@ import bus, {
                     },
                 }).then(({ data }) => {
                     const list = data.data;
-                    this.itemsTotal = data.totalCount;
                     if (list.length) {
                         this.page += 1;
                         //this.items = [...this.items, ...list];
@@ -237,7 +246,8 @@ import bus, {
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
 
-            bus.$on(LOGGED_IN, this.reloadItems);
+            bus.$on(LOGGED_IN, this.onLoggedIn);
+            bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(CHAT_ADD, this.addItem);
             bus.$on(CHAT_EDITED, this.changeItem);
             bus.$on(CHAT_DELETED, this.removeItem);
@@ -252,7 +262,8 @@ import bus, {
             this.closeQueryWatcher();
         },
         destroyed() {
-            bus.$off(LOGGED_IN, this.reloadItems);
+            bus.$off(LOGGED_IN, this.onLoggedIn);
+            bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(CHAT_ADD, this.addItem);
             bus.$off(CHAT_EDITED, this.changeItem);
             bus.$off(CHAT_DELETED, this.removeItem);
