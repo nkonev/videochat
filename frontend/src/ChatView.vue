@@ -684,6 +684,11 @@
 </style>
 
 <style lang="stylus">
+$dot-size = 2px;
+$dot-space = 4px;
+$bg-color = #e4efff;
+$dot-color = darkgrey;
+
 .splitpanes {background-color: #f8f8f8;}
 
 .splitpanes__splitter {background-color: #ccc;position: relative; cursor: ns-resize}
@@ -692,8 +697,15 @@
     position: absolute;
     left: 0;
     top: 0;
-    transition: opacity 0.4s;
-    background-color: #e4efff;
+    transition: opacity 0.1s;
+
+    // https://www.w3resource.com/html-css-exercise/html-css-practical-exercises/html-css-practical-exercise-28.php
+    background-color: $bg-color;
+    background-image: radial-gradient($bg-color 20%, transparent 40%), radial-gradient($dot-color 20%, transparent 40%);
+    background-size: $dot-space $dot-space;
+    background-position: 0 0, $dot-size $dot-size;
+    background-repeat: repeat;
+
     opacity: 0;
     z-index: 1;
 }
