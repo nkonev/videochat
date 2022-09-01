@@ -27,9 +27,6 @@
 import bus, {
     OPEN_TEXT_EDIT_MODAL,
     CLOSE_TEXT_EDIT_MODAL,
-    SET_FILE_ITEM_UUID,
-    CLOSE_SIMPLE_MODAL,
-    UPDATE_VIEW_FILES_DIALOG
 } from "./bus";
     import axios from "axios";
 

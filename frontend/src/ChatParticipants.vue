@@ -170,10 +170,9 @@
     } from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import {chat_name, videochat_name} from "./routes";
+    import {videochat_name} from "./routes";
     import debounce from "lodash/debounce";
     import userOnlinePollingMixin from "./userOnlinePollingMixin";
-    import {noPagePlaceholder} from "@/utils";
     import queryMixin from "@/queryMixin";
 
     const firstPage = 1;

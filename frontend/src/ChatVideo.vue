@@ -35,13 +35,11 @@ import axios from "axios";
 import { retry } from '@lifeomic/attempt';
 import {GET_USER, SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
 import {
-    defaultAudioMute, getScreenResolution,
-    getStoredAudioDevicePresents, getStoredScreenDynacast, getStoredScreenSimulcast,
-    getStoredVideoDevicePresents, getStoredRoomDynacast, getStoredVideoSimulcast,
-    getVideoResolution,
+    defaultAudioMute,
+    getStoredAudioDevicePresents,
+    getStoredVideoDevicePresents,
     getWebsocketUrlPrefix,
-    hasLength,
-    isMobileFireFox, isSet, getStoredRoomAdaptiveStream
+    isMobileFireFox
 } from "@/utils";
 import bus, {
     ADD_SCREEN_SOURCE,

@@ -76,11 +76,6 @@ import bus, {
     export default {
         mixins: [queryMixin()],
 
-        computed: {
-            chatRoute() {
-                return chat_name;
-            },
-        },
         data() {
             return {
                 page: 0,
