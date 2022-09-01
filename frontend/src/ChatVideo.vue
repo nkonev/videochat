@@ -53,11 +53,12 @@ import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
 import {chat_name, videochat_name} from "@/routes";
 import videoServerSettingsMixin from "@/videoServerSettingsMixin";
 import {mapGetters} from "vuex";
+import queryMixin from "@/queryMixin";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
 export default {
-    mixins: [videoServerSettingsMixin()],
+    mixins: [videoServerSettingsMixin(), queryMixin()],
 
     data() {
         return {
@@ -218,7 +219,10 @@ export default {
 
             // handles kick
             if (this.$route.name == videochat_name && !this.inRestarting) {
-                this.$router.push({name: chat_name});
+                console.log('Handling kick');
+
+                const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
+                this.navigateToWithPreservingSearchStringInQuery(routerNewState);
             }
         },
 
