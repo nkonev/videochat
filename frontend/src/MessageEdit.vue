@@ -69,7 +69,7 @@
                             <v-switch v-if="canBroadcast" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                                 :label="$vuetify.lang.t('$vuetify.message_broadcast')"
                             ></v-switch>
-                            <v-btn color="primary" @click="sendMessageToChat" tile class="mr-0" :title="$vuetify.lang.t('$vuetify.message_edit_send')"><v-icon color="white">mdi-send</v-icon></v-btn>
+                            <v-btn color="primary" @click="sendMessageToChat" tile class="mr-0" :title="$vuetify.lang.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"><v-icon color="white">mdi-send</v-icon></v-btn>
                         </div>
                     </div>
 
@@ -109,6 +109,7 @@
                 editMessageDto: dtoFactory(),
                 fileCount: null,
                 sendBroadcast: false,
+                sending: false,
             }
         },
         methods: {
@@ -116,11 +117,15 @@
                 return this.$refs.tipTapRef.getContent();
             },
             sendMessageToChat() {
+                this.sending = true;
                 this.editMessageDto.text = this.getContent();
                 if (this.messageTextIsPresent(this.editMessageDto.text)) {
-                    (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto)).then(response => {
-                        this.resetInput();
-                        bus.$emit(CLOSE_EDIT_MESSAGE);
+                    (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto))
+                        .then(response => {
+                            this.resetInput();
+                            bus.$emit(CLOSE_EDIT_MESSAGE);
+                        }).finally(() => {
+                        this.sending = false;
                     })
                 }
             },
