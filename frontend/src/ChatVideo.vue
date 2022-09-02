@@ -50,7 +50,6 @@ import bus, {
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
 import {chat_name, videochat_name} from "@/routes";
 import videoServerSettingsMixin from "@/videoServerSettingsMixin";
-import {mapGetters} from "vuex";
 import queryMixin from "@/queryMixin";
 
 const UserVideoClass = Vue.extend(UserVideo);
