@@ -121,10 +121,13 @@ services:
       - ./docker/livekit/livekit.yaml:/etc/livekit.yaml
 
   egress:
-    image: livekit/egress:v1.2.0
-    command: --config /etc/livekit.yaml
+    image: livekit/egress:v1.3.0
     restart: unless-stopped
     network_mode: "host"
+    environment:
+      - EGRESS_CONFIG_FILE=/etc/egress/config.yaml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./docker/egress/config.yaml:/etc/egress/config.yaml
 

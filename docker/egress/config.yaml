@@ -1,16 +1,17 @@
-log_level: debug
-gst_debug: 1
-api_key: your-api-key
-api_secret: your-api-secret
-ws_url: wss://your-livekit-url.com
+# required fields
+api_key: "APIznJxWShGW3Kt"
+api_secret: "KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA"
+ws_url: "ws://host.docker.internal:7880"
+insecure: true
 redis:
-  address: 192.168.65.2:6379
-local_directory: /out/output
-room_name: your-room
-room_only: false
-track_composite_only: false
-track_only: false
-file_only: false
-stream_only: false
-segments_only: false
-muting: false
+  address: redis:6379
+  username: ""
+  password: ""
+  db: 2
+
+s3:
+  access_key: "AKIAIOSFODNN7EXAMPLE"
+  secret: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+  region: europe-east
+  endpoint: minio:9000
+  bucket: "files"
