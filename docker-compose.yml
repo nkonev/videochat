@@ -123,7 +123,8 @@ services:
   egress:
     image: livekit/egress:v1.3.0
     restart: unless-stopped
-    network_mode: "host"
+    networks:
+      backend:
     environment:
       - EGRESS_CONFIG_FILE=/etc/egress/config.yaml
     extra_hosts:
