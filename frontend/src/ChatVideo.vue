@@ -348,7 +348,7 @@ export default {
             try {
                 token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
                 console.debug("Got video token", token);
-            } catch (err) {
+            } catch (e) {
                 this.makeError(e, "Error during getting token");
                 return;
             }
@@ -366,7 +366,7 @@ export default {
                     console.log('connected to room', this.room.name);
                     return res
                 }, retryOptions);
-            } catch (err) {
+            } catch (e) {
                 // If the max number of attempts was exceeded then `err`
                 // will be the last error that was thrown.
                 //
