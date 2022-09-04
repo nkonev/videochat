@@ -243,6 +243,7 @@
 
     import queryMixin, {searchQueryParameter} from "@/queryMixin";
 
+    const reactOnAnswerThreshold = 3 * 1000; // ms
     const audio = new Audio("/call.mp3");
 
     export default {
@@ -256,6 +257,7 @@
                 invitedVideoChatName: null,
                 invitedVideoChatAlert: false,
                 showWebsocketRestored: false,
+                lastAnswered: 0,
             }
         },
         components:{
@@ -303,11 +305,13 @@
                 console.debug("createCall");
                 const routerNewState = { name: videochat_name};
                 this.navigateToWithPreservingSearchStringInQuery(routerNewState);
+                this.lastAnswered = +new Date();
             },
             stopCall() {
                 console.debug("stopping Call");
                 const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
                 this.navigateToWithPreservingSearchStringInQuery(routerNewState);
+                this.lastAnswered = +new Date();
             },
             onChangeWsStatus({connected, wasInitialized}) {
                 console.log("onChangeWsStatus: connected", connected, "wasInitialized", wasInitialized)
@@ -335,13 +339,15 @@
                 bus.$emit(ADD_SCREEN_SOURCE);
             },
             onVideoCallInvited(data) {
-                this.invitedVideoChatId = data.chatId;
-                this.invitedVideoChatName = data.chatName;
-                this.invitedVideoChatAlert = true;
-                audio.play().catch(error => {
-                    console.warn("Unable to play sound", error);
-                  bus.$emit(OPEN_PERMISSIONS_WARNING_MODAL);
-                })
+                if ((+new Date() - this.lastAnswered) > reactOnAnswerThreshold) {
+                    this.invitedVideoChatId = data.chatId;
+                    this.invitedVideoChatName = data.chatName;
+                    this.invitedVideoChatAlert = true;
+                    audio.play().catch(error => {
+                        console.warn("Unable to play sound", error);
+                        bus.$emit(OPEN_PERMISSIONS_WARNING_MODAL);
+                    })
+                }
             },
             onClickInvitation() {
                 const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
