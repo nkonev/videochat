@@ -125,6 +125,9 @@ module.exports = (env, argv) => {
             ]
         },
         plugins: pluginsArray,
+        optimization: {
+            minimize: false
+        },
     };
 
     if (isDevelopment(argv)) {
