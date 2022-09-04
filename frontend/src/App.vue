@@ -301,17 +301,20 @@
             editChat() {
                 bus.$emit(OPEN_CHAT_EDIT, this.chatId);
             },
+            updateLastAnsweredTimestamp() {
+                this.lastAnswered = +new Date();
+            },
             createCall() {
                 console.debug("createCall");
                 const routerNewState = { name: videochat_name};
                 this.navigateToWithPreservingSearchStringInQuery(routerNewState);
-                this.lastAnswered = +new Date();
+                this.updateLastAnsweredTimestamp();
             },
             stopCall() {
                 console.debug("stopping Call");
                 const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
                 this.navigateToWithPreservingSearchStringInQuery(routerNewState);
-                this.lastAnswered = +new Date();
+                this.updateLastAnsweredTimestamp();
             },
             onChangeWsStatus({connected, wasInitialized}) {
                 console.log("onChangeWsStatus: connected", connected, "wasInitialized", wasInitialized)
@@ -352,14 +355,16 @@
             onClickInvitation() {
                 const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
                 this.navigateToWithPreservingSearchStringInQuery(routerNewState);
-                axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`)
+                axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`);
                 this.invitedVideoChatId = 0;
                 this.invitedVideoChatName = null;
                 this.invitedVideoChatAlert = false;
+                this.updateLastAnsweredTimestamp();
             },
             onClickCancelInvitation() {
                 this.invitedVideoChatAlert = false;
-                axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`)
+                axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`);
+                this.updateLastAnsweredTimestamp();
             },
             isVideoRoute() {
                 return this.$route.name == videochat_name
