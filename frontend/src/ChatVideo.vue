@@ -1,19 +1,5 @@
 <template>
     <v-col cols="12" class="ma-0 pa-0" id="video-container">
-        <v-snackbar v-model="showMessage" :color="messageColor" timeout="-1" :multi-line="true" top>
-            {{ messageText }}
-
-            <template v-slot:action="{ attrs }">
-                <v-btn
-                    color="white"
-                    text
-                    v-bind="attrs"
-                    @click="closeMessage()"
-                >
-                    Close
-                </v-btn>
-            </template>
-        </v-snackbar>
     </v-col>
 </template>
 
@@ -62,9 +48,6 @@ export default {
             room: null,
             videoContainerDiv: null,
             userVideoComponents: new ChatVideoUserComponentHolder(),
-            showMessage: false,
-            messageText: "",
-            messageColor: null,
             inRestarting: false,
         }
     },
@@ -152,7 +135,7 @@ export default {
                     return candidateToAppendAudio
                 }
             }
-            this.makeError(null, "Unable to draw track", participantTrackPublications);
+            this.setError(null, "Unable to draw track", participantTrackPublications);
 
             return null
         },
@@ -249,42 +232,11 @@ export default {
             this.inRestarting = false;
         },
 
-        makeError(e, txt, details) {
-            if (details) {
-                console.error(txt, e, details);
-            } else {
-                console.error(txt, e);
-            }
-            this.showMessage = true;
-            this.messageText = txt + ": " + e;
-            this.messageColor = "error";
-        },
-
-        makeWarning(txt) {
-            console.warn(txt);
-            this.showMessage = true;
-            this.messageText = txt;
-            this.messageColor = "warning";
-        },
-
-        makeOk(txt) {
-            console.info(txt);
-            this.showMessage = true;
-            this.messageText = txt;
-            this.messageColor = "green";
-        },
-
-        closeMessage() {
-            this.showMessage = false;
-            this.messageText = "";
-            this.messageColor = null;
-        },
-
         async startRoom() {
             try {
                 await this.setConfig();
             } catch (e) {
-                this.makeError(e, "Error during fetching config");
+                this.setError(e, "Error during fetching config");
             }
 
             console.log("Creating room with dynacast", this.roomDynacast, "adaptiveStream", this.roomAdaptiveStream);
@@ -306,7 +258,7 @@ export default {
                         console.debug("TrackPublished to room", this.room);
                         this.drawNewComponentOrGetExisting(participant, [publication], false, null);
                     } catch (e) {
-                        this.makeError(e, "Error during reacting on remote track published");
+                        this.setError(e, "Error during reacting on remote track published");
                     }
                 })
                 .on(RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed)
@@ -324,16 +276,16 @@ export default {
                         const participantTracks = this.room.localParticipant.getTracks();
                         this.drawNewComponentOrGetExisting(this.room.localParticipant, participantTracks, true, localVideoProperties);
                     } catch (e) {
-                        this.makeError(e, "Error during reacting on local track published");
+                        this.setError(e, "Error during reacting on local track published");
                     }
                 })
                 .on(RoomEvent.TrackMuted, this.handleTrackMuted)
                 .on(RoomEvent.TrackUnmuted, this.handleTrackMuted)
                 .on(RoomEvent.Reconnecting, () => {
-                    this.makeWarning("Reconnecting to video server")
+                    this.setWarning("Reconnecting to video server")
                 })
                 .on(RoomEvent.Reconnected, () => {
-                    this.makeOk("Successfully reconnected to video server")
+                    this.setOk("Successfully reconnected to video server")
                 })
                 .on(RoomEvent.Disconnected, () => {
                     console.log("Disconnected from server")
@@ -348,7 +300,7 @@ export default {
                 token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
                 console.debug("Got video token", token);
             } catch (e) {
-                this.makeError(e, "Error during getting token");
+                this.setError(e, "Error during getting token");
                 return;
             }
 
@@ -364,7 +316,7 @@ export default {
                 //
                 // If error is due to timeout then `err.code` will be the
                 // string `ATTEMPT_TIMEOUT`.
-                this.makeError(e, "Error during connecting to room");
+                this.setError(e, "Error during connecting to room");
             }
         },
 
@@ -372,7 +324,6 @@ export default {
             console.log('Stopping room');
             await this.room.disconnect();
             this.room = null;
-            this.closeMessage();
         },
 
         async createLocalMediaTracks(videoId, audioId, isScreen) {
@@ -415,7 +366,7 @@ export default {
                     })
                 }
             } catch (e) {
-                this.makeError(e, "Error during creating local tracks");
+                this.setError(e, "Error during creating local tracks");
             }
 
             try {
@@ -436,7 +387,7 @@ export default {
                     console.info("Published track sid=", track.sid, " kind=", track.kind);
                 }
             } catch (e) {
-                this.makeError(e, "Error during publishing local tracks");
+                this.setError(e, "Error during publishing local tracks");
             }
         },
         onAddScreenSource() {

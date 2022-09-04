@@ -33,6 +33,12 @@ export const GET_SHOW_CHAT_EDIT_BUTTON = 'getChatEditButton';
 export const SET_SHOW_CHAT_EDIT_BUTTON = 'setChatEditButton';
 export const GET_CAN_BROADCAST_TEXT_MESSAGE = 'setCanBroadcastText';
 export const SET_CAN_BROADCAST_TEXT_MESSAGE = 'getCanBroadcastText';
+export const GET_SHOW_ALERT = 'getShowAlert';
+export const SET_SHOW_ALERT = 'setShowAlert';
+export const GET_LAST_ERROR = 'getLastError';
+export const SET_LAST_ERROR = 'setLastError';
+export const GET_ERROR_COLOR = 'getErrorColor';
+export const SET_ERROR_COLOR = 'setErrorColor';
 
 const store = new Vuex.Store({
     state: {
@@ -52,6 +58,9 @@ const store = new Vuex.Store({
         showChatEditButton: false,
         availableOAuth2Providers: [],
         canBroadcastTextMessage: false,
+        showAlert: false,
+        lastError: "",
+        errorColor: "",
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -96,6 +105,15 @@ const store = new Vuex.Store({
         [SET_CAN_BROADCAST_TEXT_MESSAGE](state, payload) {
             state.canBroadcastTextMessage = payload;
         },
+        [SET_SHOW_ALERT](state, payload) {
+            state.showAlert = payload;
+        },
+        [SET_LAST_ERROR](state, payload) {
+            state.lastError = payload;
+        },
+        [SET_ERROR_COLOR](state, payload) {
+            state.errorColor = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -133,6 +151,15 @@ const store = new Vuex.Store({
         },
         [GET_CAN_BROADCAST_TEXT_MESSAGE](state) {
             return state.canBroadcastTextMessage;
+        },
+        [GET_SHOW_ALERT](state) {
+            return state.showAlert;
+        },
+        [GET_LAST_ERROR](state) {
+            return state.lastError;
+        },
+        [GET_ERROR_COLOR](state) {
+            return state.errorColor;
         },
     },
     actions: {

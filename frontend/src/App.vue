@@ -122,14 +122,14 @@
 
         <v-main>
             <v-container fluid class="ma-0 pa-0">
-                <v-snackbar v-model="showAlert" color="error" timeout="-1" :multi-line="true" :transition="false">
+                <v-snackbar v-model="showAlert" :color="errorColor" timeout="-1" :multi-line="true" :transition="false">
                     {{ lastError }}
 
                     <template v-slot:action="{ attrs }">
                         <v-btn
                             text
                             v-bind="attrs"
-                            @click="showAlert = false"
+                            @click="closeError()"
                         >
                             Close
                         </v-btn>
@@ -188,13 +188,23 @@
     import LoginModal from "./LoginModal";
     import {mapGetters} from 'vuex'
     import {
-        FETCH_USER_PROFILE, GET_CHAT_ID, GET_CHAT_USERS_COUNT, GET_SEARCH_STRING,
+        FETCH_USER_PROFILE,
+        GET_CHAT_ID,
+        GET_CHAT_USERS_COUNT,
+        GET_ERROR_COLOR,
+        GET_LAST_ERROR,
+        GET_SEARCH_STRING,
+        GET_SHOW_ALERT,
         GET_SHOW_CALL_BUTTON,
         GET_SHOW_CHAT_EDIT_BUTTON,
-        GET_SHOW_HANG_BUTTON, GET_SHOW_SEARCH,
+        GET_SHOW_HANG_BUTTON,
+        GET_SHOW_SEARCH,
         GET_TITLE,
         GET_USER,
-        GET_VIDEO_CHAT_USERS_COUNT, SET_SEARCH_STRING,
+        GET_VIDEO_CHAT_USERS_COUNT,
+        SET_LAST_ERROR,
+        SET_SEARCH_STRING,
+        SET_SHOW_ALERT,
         UNSET_USER
     } from "./store";
     import bus, {
@@ -241,8 +251,6 @@
         data () {
             return {
                 drawer: this.$vuetify.breakpoint.lgAndUp,
-                lastError: "",
-                showAlert: false,
                 wsConnected: false,
                 invitedVideoChatId: 0,
                 invitedVideoChatName: null,
@@ -284,10 +292,6 @@
             },
             goProfile() {
                 this.$router.push(({ name: profile_self_name}))
-            },
-            onError(errText){
-                this.showAlert = true;
-                this.lastError = errText;
             },
             createChat() {
                 bus.$emit(OPEN_CHAT_EDIT, null);
@@ -397,6 +401,9 @@
                 title: GET_TITLE,
                 chatUsersCount: GET_CHAT_USERS_COUNT,
                 isShowSearch: GET_SHOW_SEARCH,
+                showAlert: GET_SHOW_ALERT,
+                lastError: GET_LAST_ERROR,
+                errorColor: GET_ERROR_COLOR,
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return this.currentUser.avatar;
