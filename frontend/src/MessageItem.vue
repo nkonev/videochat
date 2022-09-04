@@ -1,7 +1,7 @@
 <template>
     <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="'message-item-' + item.id">
         <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">
-            <v-list-item-avatar v-if="item.owner && item.owner.avatar">
+            <v-list-item-avatar v-if="item.owner && item.owner.avatar" class="pr-0 mr-3">
                 <v-img :src="item.owner.avatar"></v-img>
             </v-list-item-avatar>
         </router-link>
@@ -100,7 +100,7 @@
     line-height: 1rem;
   }
   .message-item-root {
-      align-items: center;
+      // align-items: center;
       display: flex;
       flex: 1 1 100%;
       letter-spacing: normal;
