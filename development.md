@@ -180,7 +180,6 @@ Correct output
 * Discord
 * OpenMeetings
 * BigBlueButton
-* LiveKit
 
 
 # SDP specification
@@ -304,6 +303,15 @@ https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
 ```
 cat /proc/$(pgrep livekit)/limits
 ```
+
+## Egress
+Article https://blog.livekit.io/livekit-universal-egress-launch/
+```
+curl -i -X PUT 'http://localhost:1237/video/1/record/start'
+curl -i -X PUT 'http://localhost:1237/video/1/record/stop?egressId=EG_6Kf4zXaq7ood'
+```
+
+
 
 # Run one test
 ```bash

@@ -41,6 +41,7 @@ func main() {
 			configureEcho,
 			client.NewRestClient,
 			client.NewLivekitClient,
+			client.NewEgressClient,
 			handlers.NewUserHandler,
 			handlers.NewConfigHandler,
 			handlers.ConfigureStaticMiddleware,
@@ -48,6 +49,7 @@ func main() {
 			handlers.NewTokenHandler,
 			handlers.NewLivekitWebhookHandler,
 			handlers.NewInviteHandler,
+			handlers.NewRecordHandler,
 			rabbitmq.CreateRabbitMqConnection,
 			producer.NewRabbitNotificationsPublisher,
 			producer.NewRabbitInvitePublisher,
@@ -115,6 +117,7 @@ func configureEcho(
 	ch *handlers.ConfigHandler,
 	lhf *handlers.LivekitWebhookHandler,
 	ih *handlers.InviteHandler,
+	rh *handlers.RecordHandler,
 	tp *sdktrace.TracerProvider,
 ) *echo.Echo {
 
@@ -149,6 +152,8 @@ func configureEcho(
 	e.PUT("/video/:id/dial", ih.ProcessCallInvitation)
 	e.PUT("/video/:id/dial/cancel", ih.ProcessCancelInvitation)
 	e.PUT("/video/:id/dial/stop", ih.ProcessAsOwnerLeave)
+	e.PUT("/video/:id/record/start", rh.StartRecording)
+	e.PUT("/video/:id/record/stop", rh.StopRecording)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

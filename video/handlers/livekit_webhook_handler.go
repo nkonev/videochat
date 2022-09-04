@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/webhook"
-	lksdk "github.com/livekit/server-sdk-go"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
@@ -16,15 +15,13 @@ import (
 type LivekitWebhookHandler struct {
 	config              *config.ExtendedConfig
 	notificationService *services.NotificationService
-	livekitRoomClient   *lksdk.RoomServiceClient
 	userService         *services.UserService
 }
 
-func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, livekitRoomClient *lksdk.RoomServiceClient, userService *services.UserService, dialRepository *services.DialRedisRepository) *LivekitWebhookHandler {
+func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, userService *services.UserService) *LivekitWebhookHandler {
 	return &LivekitWebhookHandler{
 		config:              config,
 		notificationService: notificationService,
-		livekitRoomClient:   livekitRoomClient,
 		userService:         userService,
 	}
 }
