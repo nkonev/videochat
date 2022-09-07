@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go"
@@ -25,17 +26,22 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 		return err
 	}
 	roomName := fmt.Sprintf("chat%v", chatId)
+	filePath := fmt.Sprintf("/files/chat/%v/recording_%v.mp4", chatId, time.Now().Unix())
 	streamRequest := &livekit.RoomCompositeEgressRequest{
 		RoomName: roomName,
 		Layout:   "speaker-dark",
 		Output: &livekit.RoomCompositeEgressRequest_File{
 			File: &livekit.EncodedFileOutput{
 				FileType: livekit.EncodedFileType_MP4,
-				Filepath: fmt.Sprintf("/files/chat/%v/recording_%v.mp4", chatId, time.Now()),
-				Output:   &livekit.EncodedFileOutput_S3{},
+				Filepath: filePath,
+				Output:   new(livekit.EncodedFileOutput_S3),
 			},
 		},
 	}
+
+	reqString, _ := proto.Marshal(streamRequest)
+	rss := string(reqString)
+	GetLogEntry(c.Request().Context()).Infof("Generated request %v", rss)
 
 	info, err := rh.egressClient.StartRoomCompositeEgress(c.Request().Context(), streamRequest)
 	if err != nil {

@@ -123,6 +123,12 @@ services:
   egress:
     image: livekit/egress:v1.3.0
     restart: unless-stopped
+    security_opt:
+      - apparmor=unconfined
+    cap_add:
+      - SYS_PTRACE
+    ports:
+      - 40000:40000
     networks:
       backend:
     environment:
