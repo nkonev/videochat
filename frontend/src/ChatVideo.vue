@@ -223,7 +223,7 @@ export default {
             }
         },
 
-        async tryRestartVideoProcess() {
+        async tryRestartVideoDevice() {
             this.inRestarting = true;
             for (const publication of this.room.localParticipant.tracks.values()) {
                 this.room.localParticipant.unpublishTrack(publication.track, true);
@@ -264,7 +264,6 @@ export default {
                 })
                 .on(RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed)
                 .on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakerChange)
-                .on(RoomEvent.Disconnected, this.handleDisconnect)
                 .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
                 .on(RoomEvent.LocalTrackPublished, () => {
                     try {
@@ -288,9 +287,7 @@ export default {
                 .on(RoomEvent.Reconnected, () => {
                     this.setOk("Successfully reconnected to video server")
                 })
-                .on(RoomEvent.Disconnected, () => {
-                    console.log("Disconnected from server")
-                })
+                .on(RoomEvent.Disconnected, this.handleDisconnect)
                 .on(RoomEvent.SignalConnected, () => {
                     this.createLocalMediaTracks(null, null);
                 })
@@ -310,6 +307,7 @@ export default {
                 maxAttempts: 5,
             };
             try {
+                this.inRestarting = true;
                 await retry(async (context) => {
                     const res = await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
                         // subscribe to other participants automatically
@@ -318,6 +316,7 @@ export default {
                     console.log('connected to room', this.room.name);
                     return res
                 }, retryOptions);
+                this.inRestarting = false;
             } catch (e) {
                 // If the max number of attempts was exceeded then `err`
                 // will be the last error that was thrown.
@@ -427,12 +426,12 @@ export default {
     created() {
         bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
-        bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
+        bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
     },
     destroyed() {
         bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
-        bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoProcess);
+        bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
     }
 }
 
