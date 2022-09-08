@@ -460,7 +460,7 @@
     }
 
     @keyframes blink {
-        50% { opacity: 10% }
+        50% { opacity: 30% }
     }
 
 </style>

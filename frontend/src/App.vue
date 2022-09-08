@@ -487,7 +487,7 @@
 
 <style scoped lang="stylus">
     .call-blink {
-        animation: blink 1s infinite;
+        animation: blink 0.5s infinite;
     }
 
     @keyframes blink {
