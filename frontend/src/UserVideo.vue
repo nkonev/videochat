@@ -228,6 +228,7 @@ export default {
     }
 
     .video-container-element-caption {
+        z-index 2
         display inherit
         margin: 0;
         left 0.4em
