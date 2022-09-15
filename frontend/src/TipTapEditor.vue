@@ -59,7 +59,8 @@ export default {
   },
   methods: {
     setContent(value) {
-        this.editor.commands.setContent(value, false);
+        // https://tiptap.dev/api/commands/set-content
+        this.editor.commands.setContent(value, false, { preserveWhitespace: "full" });
     },
     clearContent() {
       this.editor.commands.setContent(empty, false);
@@ -88,6 +89,7 @@ export default {
   },
   mounted() {
     this.editor = new Editor({
+      // https://github.com/ueberdosis/tiptap/issues/873#issuecomment-730147217
       parseOptions: {
         preserveWhitespace: "full",
       },
