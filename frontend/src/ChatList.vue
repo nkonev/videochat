@@ -30,7 +30,7 @@
             </v-list-item>
             </v-list-item-group>
         </v-list>
-        <ChatListContextMenu ref="contextMenuRef" :actionsHolder="this"/>
+        <ChatListContextMenu ref="contextMenuRef" @editChat="this.editChat" @deleteChat="this.deleteChat" @leaveChat="this.leaveChat"/>
         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
             <template slot="no-more"><span/></template>
             <template slot="no-results"><span/></template>
