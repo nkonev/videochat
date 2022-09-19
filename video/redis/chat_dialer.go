@@ -65,20 +65,21 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 		return
 	}
 
+	var userIds = []int64{}
 	for _, userId := range userIdsToDial {
-		inviteDto := dto.VideoInviteDto{
-			ChatId:       chatId,
-			UserId:       userId,
-			BehalfUserId: behalfUserId,
-			BehalfLogin:  behalfUserLogin,
-		}
+		userIds = append(userIds, userId)
+	}
+	inviteDto := dto.VideoInviteDto{
+		ChatId:       chatId,
+		UserIds:      userIds,
+		BehalfUserId: behalfUserId,
+		BehalfLogin:  behalfUserLogin,
+	}
 
-		Logger.Infof("Calling userId %v from chat %v", userId, chatId)
-		err = srv.rabbitMqInvitePublisher.Publish(&inviteDto)
-		if err != nil {
-			Logger.Error(err, "Failed during marshal VideoInviteDto")
-			continue
-		}
+	Logger.Infof("Calling userIds %v from chat %v", userIds, chatId)
+	err = srv.rabbitMqInvitePublisher.Publish(&inviteDto)
+	if err != nil {
+		Logger.Error(err, "Failed during marshal VideoInviteDto")
 	}
 
 	// send state changes

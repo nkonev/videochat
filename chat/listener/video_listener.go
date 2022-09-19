@@ -90,7 +90,7 @@ func CreateVideoInviteListener(not notifications.Notifications, db db.DB) VideoI
 			bindTo.BehalfUserId,
 		)
 
-		not.NotifyAboutCallInvitation(context.Background(), bindTo.ChatId, bindTo.UserId, sch.GetName())
+		not.NotifyAboutCallInvitation(context.Background(), bindTo.ChatId, bindTo.UserIds, sch.GetName())
 
 		return nil
 	}
