@@ -50,6 +50,10 @@ func (r *queryResolver) Links(ctx context.Context) ([]*model.Link, error) {
 	return links, nil
 }
 
+// subscription {
+//  subscribe(subscriber:"dodo")
+//}
+
 // Subscribe is the resolver for the subscribe field.
 // https://github.com/99designs/gqlgen/issues/953
 func (r *subscriptionResolver) Subscribe(ctx context.Context, subscriber string) (<-chan string, error) {
@@ -63,6 +67,10 @@ func (r *subscriptionResolver) Subscribe(ctx context.Context, subscriber string)
 			case <-ticker.C:
 				unix1 := time.Now().Unix()
 				cah <- fmt.Sprintf("A lorem_%v, %v", unix1, subscriber)
+			case <-ctx.Done():
+				fmt.Println("Channel closed.")
+				close(cah)
+				return
 			}
 		}
 	}()
