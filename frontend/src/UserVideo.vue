@@ -167,7 +167,7 @@ export default {
         }
     },
     created(){
-        this.showControls = this.isLocal && this.$vuetify.breakpoint.smAndUp;
+        this.showControls = this.isLocal && !this.isMobile();
     },
     destroyed() {
 
