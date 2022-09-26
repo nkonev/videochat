@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"nkonev.name/chat/graph/generated"
 	"nkonev.name/chat/graph/model"
@@ -49,11 +50,35 @@ func (r *queryResolver) Links(ctx context.Context) ([]*model.Link, error) {
 	return links, nil
 }
 
+// Subscribe is the resolver for the subscribe field.
+// https://github.com/99designs/gqlgen/issues/953
+func (r *subscriptionResolver) Subscribe(ctx context.Context, subscriber string) (<-chan string, error) {
+	duration, _ := time.ParseDuration("2s")
+	ticker := time.NewTicker(duration)
+	var cah = make(chan string)
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				unix1 := time.Now().Unix()
+				cah <- fmt.Sprintf("A lorem_%v, %v", unix1, subscriber)
+			}
+		}
+	}()
+
+	return cah, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// Subscription returns generated.SubscriptionResolver implementation.
+func (r *Resolver) Subscription() generated.SubscriptionResolver { return &subscriptionResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }

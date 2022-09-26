@@ -40,3 +40,7 @@ type Mutation {
     # we'll talk about this in authentication section
     refreshToken(input: RefreshTokenInput!): String!
 }
+
+type Subscription {
+    subscribe(subscriber: String!): String!
+}
