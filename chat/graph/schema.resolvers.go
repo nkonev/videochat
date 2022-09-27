@@ -50,12 +50,7 @@ func (r *queryResolver) Links(ctx context.Context) ([]*model.Link, error) {
 	return links, nil
 }
 
-// subscription {
-//  subscribe(subscriber:"dodo")
-//}
-
 // Subscribe is the resolver for the subscribe field.
-// https://github.com/99designs/gqlgen/issues/953
 func (r *subscriptionResolver) Subscribe(ctx context.Context, subscriber string) (<-chan string, error) {
 	duration, _ := time.ParseDuration("2s")
 	ticker := time.NewTicker(duration)
