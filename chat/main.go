@@ -2,7 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/centrifugal/centrifuge"
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/viper"
@@ -19,15 +24,20 @@ import (
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/db"
+	"nkonev.name/chat/graph"
+	"nkonev.name/chat/graph/generated"
 	"nkonev.name/chat/handlers"
 	"nkonev.name/chat/listener"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/rabbitmq"
+	"time"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
 const TRACE_RESOURCE = "chat"
+const GRAPHQL_PATH = "/query"
+const GRAPHQL_PLAYGROUND = "/playground"
 
 func main() {
 	config.InitViper()
@@ -36,6 +46,8 @@ func main() {
 		fx.Logger(Logger),
 		fx.Provide(
 			configureTracer,
+			configureGraphQlServer,
+			configureGraphQlPlayground,
 			client.NewRestClient,
 			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
@@ -128,6 +140,8 @@ func configureEcho(
 	ch *handlers.ChatHandler,
 	mc *handlers.MessageHandler,
 	tp *sdktrace.TracerProvider,
+	graphQlServer *handler.Server,
+	graphQlPlayground *GraphQlPlayground,
 ) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")
@@ -181,6 +195,9 @@ func configureEcho(
 	e.DELETE("/internal/remove-file-item", mc.RemoveFileItem)
 	e.POST("/internal/check-embedded-files", mc.CheckEmbeddedFiles)
 
+	e.Any(GRAPHQL_PATH, handlers.Convert(graphQlServer))
+	e.GET(GRAPHQL_PLAYGROUND, handlers.Convert(graphQlPlayground))
+
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			// do some work on application stop (like closing connections and files)
@@ -190,6 +207,49 @@ func configureEcho(
 	})
 
 	return e
+}
+
+func configureGraphQlServer() *handler.Server {
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	srv.AddTransport(transport.POST{})
+	srv.AddTransport(transport.Websocket{
+		KeepAlivePingInterval: 10 * time.Second,
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		},
+		InitFunc: func(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
+			return webSocketInit2(ctx, initPayload)
+		},
+	})
+	srv.Use(extension.Introspection{})
+	return srv
+}
+
+func webSocketInit2(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
+	// Get the token from payload
+	//any := initPayload["authToken"]
+	//token, ok := any.(string)
+	//if !ok || token == "" {
+	//	return nil, errors.New("authToken not found in transport payload")
+	//}
+
+	// Perform token verification and authentication...
+	userId := "john.doe" // e.g. userId, err := GetUserFromAuthentication(token)
+
+	// put it in context
+	ctxNew := context.WithValue(ctx, "username", userId)
+
+	return ctxNew, nil
+}
+
+type GraphQlPlayground struct {
+	http.HandlerFunc
+}
+
+func configureGraphQlPlayground() *GraphQlPlayground {
+	return &GraphQlPlayground{playground.Handler("GraphQL playground", GRAPHQL_PATH)}
 }
 
 func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
