@@ -485,3 +485,10 @@ About subscriptions https://github.com/99designs/gqlgen/issues/953
 go install github.com/99designs/gqlgen@v0.17.20
 gqlgen generate
 ```
+
+# Subscribing
+```
+subscription {
+  subscribe(subscriber:"dodo")
+}
+```
