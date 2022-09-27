@@ -482,5 +482,6 @@ npx playwright test --headed --project=chromium -g "login vkontakte"
 # Generate GraphQL
 About subscriptions https://github.com/99designs/gqlgen/issues/953
 ```
-go run github.com/99designs/gqlgen generate
+go install github.com/99designs/gqlgen@v0.17.20
+gqlgen generate
 ```
