@@ -4,7 +4,7 @@ version: '3.7'
 
 services:
   traefik:
-    image: traefik:v2.8.4
+    image: traefik:v2.8.7
     hostname: traefik
     restart: unless-stopped
     # The Static Configuration
@@ -113,7 +113,7 @@ services:
         max-size: "50m"
 
   livekit:
-    image: livekit/livekit-server:v1.2.1
+    image: livekit/livekit-server:v1.2.3
     command: --config /etc/livekit.yaml
     restart: unless-stopped
     network_mode: "host"
