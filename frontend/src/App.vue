@@ -79,7 +79,7 @@
                 dense
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
-            <v-btn v-if="showHangButton && $vuetify.breakpoint.smAndUp" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
+            <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
             <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
             <v-badge
                 v-if="showCallButton || showHangButton"
@@ -172,7 +172,7 @@
                 <FileTextEditModal/>
                 <LanguageModal/>
                 <VideoAddNewSource/>
-                <MessageEditModal v-if="!$vuetify.breakpoint.smAndUp"/>
+                <MessageEditModal v-if="isMobile()"/>
                 <MessageEditLinkModal/>
                 <MessageEditColorModal/>
 
@@ -487,7 +487,7 @@
 
 <style scoped lang="stylus">
     .call-blink {
-        animation: blink 1s infinite;
+        animation: blink 0.5s infinite;
     }
 
     @keyframes blink {

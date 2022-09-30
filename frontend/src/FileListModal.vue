@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" persistent scrollable>
+        <v-dialog v-model="show" max-width="640" scrollable>
             <v-card>
                 <v-card-title>{{ $vuetify.lang.t('$vuetify.attached_files') }}</v-card-title>
 
@@ -210,6 +210,11 @@ export default {
                 this.updateFiles();
             }
         },
+        show(newValue) {
+            if (!newValue) {
+                this.closeModal();
+            }
+        }
     },
     created() {
         bus.$on(OPEN_VIEW_FILES_DIALOG, this.showModal);

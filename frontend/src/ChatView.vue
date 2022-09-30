@@ -19,11 +19,11 @@
                     </infinite-loading>
                 </div>
             </pane>
-            <pane max-size="70" min-size="12" v-bind:size="editSize" v-if="$vuetify.breakpoint.smAndUp">
+            <pane max-size="70" min-size="12" v-bind:size="editSize" v-if="!isMobile()">
                 <MessageEdit :chatId="chatId"/>
             </pane>
         </splitpanes>
-        <v-btn v-if="!$vuetify.breakpoint.smAndUp"
+        <v-btn v-if="isMobile()"
             color="primary"
             fab
             dark
@@ -140,7 +140,7 @@
             videoSize() {
                 let defaultWithVideo;
                 let defaultWithoutVideo;
-                if (this.$vuetify.breakpoint.smAndUp) {
+                if (!this.isMobile()) {
                     defaultWithVideo = defaultDesktopWithVideo;
                     defaultWithoutVideo = defaultDesktopWithoutVideo;
                 } else {
@@ -163,7 +163,7 @@
             messagesSize() {
                 let defaultWithVideo;
                 let defaultWithoutVideo;
-                if (this.$vuetify.breakpoint.smAndUp) {
+                if (!this.isMobile()) {
                     defaultWithVideo = defaultDesktopWithVideo;
                     defaultWithoutVideo = defaultDesktopWithoutVideo;
                 } else {
@@ -237,7 +237,7 @@
             getStored() {
                 let keyWithVideo;
                 let keyWithoutVideo;
-                if (this.$vuetify.breakpoint.smAndUp) {
+                if (!this.isMobile()) {
                     keyWithVideo = KEY_DESKTOP_WITH_VIDEO_PANELS;
                     keyWithoutVideo = KEY_DESKTOP_WITHOUT_VIDEO_PANELS;
                 } else {
@@ -255,7 +255,7 @@
             saveToStored(arr) {
                 let keyWithVideo;
                 let keyWithoutVideo;
-                if (this.$vuetify.breakpoint.smAndUp) {
+                if (!this.isMobile()) {
                     keyWithVideo = KEY_DESKTOP_WITH_VIDEO_PANELS;
                     keyWithoutVideo = KEY_DESKTOP_WITHOUT_VIDEO_PANELS;
                 } else {

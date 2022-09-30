@@ -111,6 +111,9 @@ vm = new Vue({
     }
   },
   created(){
+    Vue.prototype.isMobile = () => {
+      return !this.$vuetify.breakpoint.smAndUp
+    };
     Vue.prototype.centrifugeInitialized = false;
     const setCentrifugeSession = (cs) => {
       Vue.prototype.centrifugeSessionId = cs;

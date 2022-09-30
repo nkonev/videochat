@@ -22,7 +22,6 @@
 
 <script>
 export default {
-    props: [ 'actionsHolder' ],
     data(){
         return {
             showContextMenu: false,
@@ -49,13 +48,13 @@ export default {
             const ret = [];
             if (this.menuableItem) {
                 if (this.menuableItem.canEdit) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.actionsHolder.editChat(this.menuableItem) });
+                    ret.push({title: this.$vuetify.lang.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.$emit('editChat', this.menuableItem) });
                 }
                 if (this.menuableItem.canDelete) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.delete_btn'), icon: 'mdi-delete', iconColor: 'error', action: () => this.actionsHolder.deleteChat(this.menuableItem) });
+                    ret.push({title: this.$vuetify.lang.t('$vuetify.delete_btn'), icon: 'mdi-delete', iconColor: 'error', action: () => this.$emit('deleteChat', this.menuableItem) });
                 }
                 if (this.menuableItem.canLeave) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.leave_btn'), icon: 'mdi-exit-run', action: () => this.actionsHolder.leaveChat(this.menuableItem) });
+                    ret.push({title: this.$vuetify.lang.t('$vuetify.leave_btn'), icon: 'mdi-exit-run', action: () => this.$emit('leaveChat', this.menuableItem) });
                 }
             }
             return ret;

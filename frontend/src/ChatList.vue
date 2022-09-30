@@ -20,7 +20,7 @@
                     </v-list-item-title>
                     <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
-                <v-list-item-action v-if="$vuetify.breakpoint.smAndUp">
+                <v-list-item-action v-if="!isMobile()">
                     <v-container class="mb-0 mt-0 pl-0 pr-0 pb-0 pt-0">
                         <v-btn v-if="item.canEdit" icon color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
                         <v-btn v-if="item.canDelete" icon @click="deleteChat(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
@@ -30,7 +30,7 @@
             </v-list-item>
             </v-list-item-group>
         </v-list>
-        <ChatListContextMenu ref="contextMenuRef" :actionsHolder="this"/>
+        <ChatListContextMenu ref="contextMenuRef" @editChat="this.editChat" @deleteChat="this.deleteChat" @leaveChat="this.leaveChat"/>
         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
             <template slot="no-more"><span/></template>
             <template slot="no-results"><span/></template>

@@ -6,6 +6,7 @@
             <v-btn icon @click="onEnterFullscreen" :title="$vuetify.lang.t('$vuetify.fullscreen')"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
             <v-btn v-if="isLocal" icon @click="onClose()" :title="$vuetify.lang.t('$vuetify.close')"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
+        <span class="video-container-element-hint">If you don't see the video and camera is ok then try to reload tab</span>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef"/>
         <p @click="showControls=!showControls" v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
@@ -166,7 +167,7 @@ export default {
         }
     },
     created(){
-        this.showControls = this.isLocal && this.$vuetify.breakpoint.smAndUp;
+        this.showControls = this.isLocal && !this.isMobile();
     },
     destroyed() {
 
@@ -198,6 +199,7 @@ export default {
         // object-fit: contain;
         //box-sizing: border-box;
         height 100% !important
+        z-index 2
     }
 
     .video-container-element-control {
@@ -210,8 +212,23 @@ export default {
         text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
     }
 
+    .video-container-element-hint {
+        z-index 1
+        display inherit
+        margin: 0;
+        top 2em
+        left 0.4em
+        text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
+        position: absolute
+        width: 90%;
+        //word-wrap: break-word;
+        //overflow-wrap: break-all
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
     .video-container-element-caption {
+        z-index 2
         display inherit
         margin: 0;
         left 0.4em
