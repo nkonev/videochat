@@ -26,6 +26,15 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	}
 	roomName := fmt.Sprintf("chat%v", chatId)
 	filePath := fmt.Sprintf("/files/chat/%v/recording_%v.mp4", chatId, time.Now().Unix())
+	s3u := livekit.EncodedFileOutput_S3{
+		S3: &livekit.S3Upload{
+			AccessKey: "AKIAIOSFODNN7EXAMPLE",
+			Secret:    "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+			Region:    "europe-east",
+			Endpoint:  "127.0.0.1:9000",
+			Bucket:    "files",
+		},
+	}
 	streamRequest := &livekit.RoomCompositeEgressRequest{
 		RoomName: roomName,
 		Layout:   "speaker-dark",
@@ -33,7 +42,7 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 			File: &livekit.EncodedFileOutput{
 				FileType: livekit.EncodedFileType_MP4,
 				Filepath: filePath,
-				Output:   new(livekit.EncodedFileOutput_S3),
+				Output:   &s3u,
 			},
 		},
 		AudioOnly: false,
