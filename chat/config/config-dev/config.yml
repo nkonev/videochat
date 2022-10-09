@@ -13,8 +13,6 @@ auth:
   exclude:
     - "^/chat/public.*"
     - "^/internal.*"
-    - "^/playground.*"
-    - "^/query.*"
 
 postgresql:
   # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING

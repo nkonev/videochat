@@ -493,26 +493,17 @@ subscription {
 }
 ```
 
-Resolvers go
-```
-	var copied *dto.DisplayMessageDto = &dto.DisplayMessageDto{}
-	if err := deepcopy.Copy(copied, message); err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
-		continue
-	}
-	// TODO get participantId from subscriber
-	// TODO move to better place
-	copied.CanEdit = message.OwnerId == participantId
+You need to open it through Traefik
+http://localhost:8081/playground
 
-	subscribe, err := r.Bus.Subscribe(notifications.MESSAGE_NOTIFY_COMMON, func(e eventbus.Event, t time.Time) {
-		switch e := e.(type) {
-		case ProcessStarted:
-			fmt.Printf("[%s] Process %d started\n", t, e.Pid)
-		case ProcessExited:
-			fmt.Printf("[%s] Process %d exited with code %d\n", t, e.Pid, e.ExitCode)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
+```
+subscription{
+  chatMessageEvents(chatId: 1) {
+    Type
+    MessageNotification {
+      id
+      text
+    }
+  }
+}
 ```
