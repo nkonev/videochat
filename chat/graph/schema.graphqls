@@ -25,6 +25,9 @@ type MessageNotify {
     MessageNotification: DisplayMessageDto
 }
 
+type Query {
+    ping: Boolean
+}
 
 type Subscription {
     chatMessageEvents(chatId: Int64!): MessageNotify!
