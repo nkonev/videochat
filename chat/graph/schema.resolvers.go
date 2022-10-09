@@ -13,6 +13,7 @@ import (
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/graph/generated"
 	"nkonev.name/chat/graph/model"
+	"nkonev.name/chat/handlers/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/utils"
@@ -44,7 +45,7 @@ func (r *subscriptionResolver) ChatMessageEvents(ctx context.Context, chatID int
 	subscribeHandler, err := r.Bus.Subscribe(notifications.MESSAGE_NOTIFY_COMMON, func(e eventbus.Event, t time.Time) {
 		switch e := e.(type) {
 		case notifications.MessageNotify:
-			cam <- convert(&e, authResult.UserId)
+			cam <- convertMessageNotify(&e, authResult.UserId)
 		}
 	})
 
@@ -78,26 +79,31 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convert(e *notifications.MessageNotify, participantId int64) *model.MessageNotify {
-	notificat := e.MessageNotification
-	var CanEdit = notificat.OwnerId == participantId
-
+func convertMessageNotify(e *notifications.MessageNotify, participantId int64) *model.MessageNotify {
+	displayMessageDto := e.MessageNotification
+	var CanEdit = displayMessageDto.OwnerId == participantId
 	return &model.MessageNotify{
 		Type: &e.Type,
 		MessageNotification: &model.DisplayMessageDto{
-			ID:             notificat.Id,
-			Text:           notificat.Text,
-			ChatID:         notificat.ChatId,
-			OwnerID:        notificat.OwnerId,
-			CreateDateTime: &notificat.CreateDateTime,
-			EditDateTime:   notificat.EditDateTime.Ptr(),
-			Owner: &model.User{
-				ID:     notificat.Owner.Id,
-				Login:  notificat.Owner.Login,
-				Avatar: notificat.Owner.Avatar.Ptr(),
-			},
-			CanEdit:      CanEdit,
-			FileItemUUID: notificat.FileItemUuid,
+			ID:             displayMessageDto.Id,
+			Text:           displayMessageDto.Text,
+			ChatID:         displayMessageDto.ChatId,
+			OwnerID:        displayMessageDto.OwnerId,
+			CreateDateTime: displayMessageDto.CreateDateTime,
+			EditDateTime:   displayMessageDto.EditDateTime.Ptr(),
+			Owner:          convertOwner(displayMessageDto.Owner),
+			CanEdit:        CanEdit,
+			FileItemUUID:   displayMessageDto.FileItemUuid,
 		},
+	}
+}
+func convertOwner(owner *dto.User) *model.User {
+	if owner == nil {
+		return nil
+	}
+	return &model.User{
+		ID:     owner.Id,
+		Login:  owner.Login,
+		Avatar: owner.Avatar.Ptr(),
 	}
 }

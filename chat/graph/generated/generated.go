@@ -164,14 +164,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DisplayMessageDto.Text(childComplexity), true
 
-	case "MessageNotify.MessageNotification":
+	case "MessageNotify.messageNotification":
 		if e.complexity.MessageNotify.MessageNotification == nil {
 			break
 		}
 
 		return e.complexity.MessageNotify.MessageNotification(childComplexity), true
 
-	case "MessageNotify.Type":
+	case "MessageNotify.type":
 		if e.complexity.MessageNotify.Type == nil {
 			break
 		}
@@ -302,16 +302,16 @@ type DisplayMessageDto {
     text:           String!
     chatId:         Int64!
     ownerId:        Int64!
-    createDateTime: Time
+    createDateTime: Time!
     editDateTime:   Time
-    owner:          User!
+    owner:          User
     canEdit:        Boolean!
     fileItemUuid:    UUID
 }
 
 type MessageNotify {
-    Type:                String
-    MessageNotification: DisplayMessageDto
+    type:                String
+    messageNotification: DisplayMessageDto
 }
 
 type Query {
@@ -593,11 +593,14 @@ func (ec *executionContext) _DisplayMessageDto_createDateTime(ctx context.Contex
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*time.Time)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_createDateTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -675,14 +678,11 @@ func (ec *executionContext) _DisplayMessageDto_owner(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -791,8 +791,8 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_fileItemUuid(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageNotify_Type(ctx context.Context, field graphql.CollectedField, obj *model.MessageNotify) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MessageNotify_Type(ctx, field)
+func (ec *executionContext) _MessageNotify_type(ctx context.Context, field graphql.CollectedField, obj *model.MessageNotify) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageNotify_type(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -819,7 +819,7 @@ func (ec *executionContext) _MessageNotify_Type(ctx context.Context, field graph
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MessageNotify_Type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MessageNotify_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MessageNotify",
 		Field:      field,
@@ -832,8 +832,8 @@ func (ec *executionContext) fieldContext_MessageNotify_Type(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageNotify_MessageNotification(ctx context.Context, field graphql.CollectedField, obj *model.MessageNotify) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MessageNotify_MessageNotification(ctx, field)
+func (ec *executionContext) _MessageNotify_messageNotification(ctx context.Context, field graphql.CollectedField, obj *model.MessageNotify) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageNotify_messageNotification(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -860,7 +860,7 @@ func (ec *executionContext) _MessageNotify_MessageNotification(ctx context.Conte
 	return ec.marshalODisplayMessageDto2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐDisplayMessageDto(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MessageNotify_MessageNotification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MessageNotify_messageNotification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MessageNotify",
 		Field:      field,
@@ -1116,10 +1116,10 @@ func (ec *executionContext) fieldContext_Subscription_chatMessageEvents(ctx cont
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Type":
-				return ec.fieldContext_MessageNotify_Type(ctx, field)
-			case "MessageNotification":
-				return ec.fieldContext_MessageNotify_MessageNotification(ctx, field)
+			case "type":
+				return ec.fieldContext_MessageNotify_type(ctx, field)
+			case "messageNotification":
+				return ec.fieldContext_MessageNotify_messageNotification(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MessageNotify", field.Name)
 		},
@@ -3090,6 +3090,9 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 
 			out.Values[i] = ec._DisplayMessageDto_createDateTime(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "editDateTime":
 
 			out.Values[i] = ec._DisplayMessageDto_editDateTime(ctx, field, obj)
@@ -3098,9 +3101,6 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 
 			out.Values[i] = ec._DisplayMessageDto_owner(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "canEdit":
 
 			out.Values[i] = ec._DisplayMessageDto_canEdit(ctx, field, obj)
@@ -3133,13 +3133,13 @@ func (ec *executionContext) _MessageNotify(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("MessageNotify")
-		case "Type":
+		case "type":
 
-			out.Values[i] = ec._MessageNotify_Type(ctx, field, obj)
+			out.Values[i] = ec._MessageNotify_type(ctx, field, obj)
 
-		case "MessageNotification":
+		case "messageNotification":
 
-			out.Values[i] = ec._MessageNotify_MessageNotification(ctx, field, obj)
+			out.Values[i] = ec._MessageNotify_messageNotification(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -3650,14 +3650,19 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNUser2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
-	if v == nil {
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
-		return graphql.Null
 	}
-	return ec._User(ctx, sel, v)
+	return res
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -3992,6 +3997,13 @@ func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(
 	}
 	res := types.MarshalUUID(v)
 	return res
+}
+
+func (ec *executionContext) marshalOUser2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

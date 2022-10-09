@@ -499,8 +499,8 @@ http://localhost:8081/chat/playground
 ```
 subscription{
   chatMessageEvents(chatId: 1) {
-    Type
-    MessageNotification {
+    type
+    messageNotification {
       id
       text
     }

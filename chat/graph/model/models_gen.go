@@ -13,7 +13,7 @@ type DisplayMessageDto struct {
 	Text           string     `json:"text"`
 	ChatID         int64      `json:"chatId"`
 	OwnerID        int64      `json:"ownerId"`
-	CreateDateTime *time.Time `json:"createDateTime"`
+	CreateDateTime time.Time  `json:"createDateTime"`
 	EditDateTime   *time.Time `json:"editDateTime"`
 	Owner          *User      `json:"owner"`
 	CanEdit        bool       `json:"canEdit"`
@@ -21,8 +21,8 @@ type DisplayMessageDto struct {
 }
 
 type MessageNotify struct {
-	Type                *string            `json:"Type"`
-	MessageNotification *DisplayMessageDto `json:"MessageNotification"`
+	Type                *string            `json:"type"`
+	MessageNotification *DisplayMessageDto `json:"messageNotification"`
 }
 
 type User struct {

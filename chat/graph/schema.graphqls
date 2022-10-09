@@ -13,16 +13,16 @@ type DisplayMessageDto {
     text:           String!
     chatId:         Int64!
     ownerId:        Int64!
-    createDateTime: Time
+    createDateTime: Time!
     editDateTime:   Time
-    owner:          User!
+    owner:          User
     canEdit:        Boolean!
     fileItemUuid:    UUID
 }
 
 type MessageNotify {
-    Type:                String
-    MessageNotification: DisplayMessageDto
+    type:                String
+    messageNotification: DisplayMessageDto
 }
 
 type Query {
