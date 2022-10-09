@@ -44,7 +44,7 @@ http:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
     chat-graphql-router:
-      rule: "PathPrefix(`/playground`) || PathPrefix(`/query`)"
+      rule: "PathPrefix(`/chat/playground`) || PathPrefix(`/chat/graphql`)"
       service: chat-service
       middlewares:
         - "auth-middleware"

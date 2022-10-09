@@ -37,8 +37,8 @@ import (
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
 const TRACE_RESOURCE = "chat"
-const GRAPHQL_PATH = "/query"
-const GRAPHQL_PLAYGROUND = "/playground"
+const GRAPHQL_PATH = "/chat/graphql"
+const GRAPHQL_PLAYGROUND = "/chat/playground"
 
 func main() {
 	config.InitViper()
