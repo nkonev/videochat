@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -86,14 +87,14 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 //
 // Parameters:
 //
-//  - `request` : http request to check
-//  - `httpClient` : client to check authorization
+//   - `request` : http request to check
+//   - `httpClient` : client to check authorization
 //
 // Returns:
 //
-//  - *AuthResult pointer or nil
-//  - is whitelisted
-//  - error
+//   - *AuthResult pointer or nil
+//   - is whitelisted
+//   - error
 func authorize(request *http.Request) (*auth.AuthResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
@@ -122,6 +123,9 @@ func ConfigureAuthMiddleware() AuthMiddleware {
 				return c.JSON(http.StatusUnauthorized, &utils.H{"status": "unauthorized"})
 			} else {
 				c.Set(utils.USER_PRINCIPAL_DTO, authResult)
+				httpContext := context.WithValue(c.Request().Context(), utils.USER_PRINCIPAL_DTO, authResult)
+				httpRequestWithContext := c.Request().WithContext(httpContext)
+				c.SetRequest(httpRequestWithContext)
 				return next(c)
 			}
 		}

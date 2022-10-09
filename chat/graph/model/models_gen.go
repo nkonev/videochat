@@ -2,33 +2,29 @@
 
 package model
 
-type Link struct {
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	Address string `json:"address"`
-	User    *User  `json:"user"`
+import (
+	"time"
+)
+
+type DisplayMessageDto struct {
+	ID             int64      `json:"id"`
+	Text           string     `json:"text"`
+	ChatID         int64      `json:"chatId"`
+	OwnerID        int64      `json:"ownerId"`
+	CreateDateTime *time.Time `json:"createDateTime"`
+	EditDateTime   *time.Time `json:"editDateTime"`
+	Owner          *User      `json:"owner"`
+	CanEdit        bool       `json:"canEdit"`
+	FileItemUUID   *string    `json:"fileItemUuid"`
 }
 
-type Login struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type NewLink struct {
-	Title   string `json:"title"`
-	Address string `json:"address"`
-}
-
-type NewUser struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type RefreshTokenInput struct {
-	Token string `json:"token"`
+type MessageNotify struct {
+	Type                *string            `json:"Type"`
+	MessageNotification *DisplayMessageDto `json:"MessageNotification"`
 }
 
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID     int64   `json:"id"`
+	Login  string  `json:"login"`
+	Avatar *string `json:"avatar"`
 }

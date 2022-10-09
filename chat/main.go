@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/montag451/go-eventbus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
@@ -54,6 +55,7 @@ func main() {
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
 			configureEcho,
+			configureEventBus,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			configureMigrations,
@@ -209,8 +211,8 @@ func configureEcho(
 	return e
 }
 
-func configureGraphQlServer() *handler.Server {
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+func configureGraphQlServer(bus *eventbus.Bus, dBase db.DB) *handler.Server {
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{bus, dBase}}))
 	srv.AddTransport(transport.POST{})
 	srv.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 10 * time.Second,
@@ -219,30 +221,30 @@ func configureGraphQlServer() *handler.Server {
 				return true
 			},
 		},
-		InitFunc: func(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
-			return webSocketInit2(ctx, initPayload)
-		},
+		//InitFunc: func(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
+		//	return webSocketInit2(ctx, initPayload)
+		//},
 	})
 	srv.Use(extension.Introspection{})
 	return srv
 }
 
-func webSocketInit2(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
-	// Get the token from payload
-	//any := initPayload["authToken"]
-	//token, ok := any.(string)
-	//if !ok || token == "" {
-	//	return nil, errors.New("authToken not found in transport payload")
-	//}
-
-	// Perform token verification and authentication...
-	userId := "john.doe" // e.g. userId, err := GetUserFromAuthentication(token)
-
-	// put it in context
-	ctxNew := context.WithValue(ctx, "username", userId)
-
-	return ctxNew, nil
-}
+//func webSocketInit2(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
+//	// Get the token from payload
+//	//any := initPayload["authToken"]
+//	//token, ok := any.(string)
+//	//if !ok || token == "" {
+//	//	return nil, errors.New("authToken not found in transport payload")
+//	//}
+//
+//	// Perform token verification and authentication...
+//	userId := "john.doe" // e.g. userId, err := GetUserFromAuthentication(token)
+//
+//	// put it in context
+//	ctxNew := context.WithValue(ctx, "username", userId)
+//
+//	return ctxNew, nil
+//}
 
 type GraphQlPlayground struct {
 	http.HandlerFunc
@@ -286,6 +288,19 @@ func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	})
 
 	return tp, nil
+}
+
+func configureEventBus(lc fx.Lifecycle) *eventbus.Bus {
+	b := eventbus.New()
+	Logger.Infof("Starting event bus")
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			Logger.Infof("Stopping event bus")
+			b.Close()
+			return nil
+		},
+	})
+	return b
 }
 
 func configureMigrations() db.MigrationsConfig {

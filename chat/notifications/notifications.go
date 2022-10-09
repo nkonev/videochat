@@ -8,6 +8,7 @@ import (
 	"github.com/getlantern/deepcopy"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
+	"github.com/montag451/go-eventbus"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
@@ -18,9 +19,11 @@ type Notifications interface {
 	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
 	NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx)
 	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, changingParticipantPage int, tx *db.Tx)
+
 	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
+
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
@@ -33,12 +36,14 @@ type Notifications interface {
 
 type notifictionsImpl struct {
 	centrifuge *centrifuge.Node
+	bus        *eventbus.Bus
 	db         db.DB
 }
 
-func NewNotifications(node *centrifuge.Node, db db.DB) Notifications {
+func NewNotifications(node *centrifuge.Node, bus *eventbus.Bus, db db.DB) Notifications {
 	return &notifictionsImpl{
 		centrifuge: node,
+		bus:        bus,
 		db:         db,
 	}
 }
@@ -215,7 +220,30 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 	}
 }
 
+const MESSAGE_NOTIFY_COMMON = "message.notify.common"
+
+type MessageNotify struct {
+	Type                string
+	MessageNotification *dto.DisplayMessageDto
+}
+
+func (MessageNotify) Name() eventbus.EventName {
+	return MESSAGE_NOTIFY_COMMON
+}
+
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
+
+	// TODO set CanEdit in Subscriber
+	//dn := &DisplayMessageDtoNotification{
+	//	*message,
+	//	chatId,
+	//}
+
+	not.bus.PublishAsync(MessageNotify{
+		Type:                eventType,
+		MessageNotification: message,
+	})
+
 	// we send a notification only to those people who are currently reading the chat
 	// if this is not done - when the user has many chats, he will receive many notifications and filter them on js
 	activeChatUsers := []int64{}

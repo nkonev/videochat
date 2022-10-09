@@ -1,46 +1,32 @@
-type Link {
-    id: ID!
-    title: String!
-    address: String!
-    user: User!
-}
+scalar Time
+scalar Int64
+#scalar UUID
 
 type User {
-    id: ID!
-    name: String!
+    id:     Int64!
+    login:  String!
+    avatar: String
 }
 
-type Query {
-    links: [Link!]!
+type DisplayMessageDto {
+    id:             Int64!
+    text:           String!
+    chatId:         Int64!
+    ownerId:        Int64!
+    createDateTime: Time
+    editDateTime:   Time
+    owner:          User!
+    canEdit:        Boolean!
+    #fileItemUuid:    UUID
+    fileItemUuid:    String
 }
 
-input NewLink {
-    title: String!
-    address: String!
+type MessageNotify {
+    Type:                String
+    MessageNotification: DisplayMessageDto
 }
 
-input RefreshTokenInput{
-    token: String!
-}
-
-input NewUser {
-    username: String!
-    password: String!
-}
-
-input Login {
-    username: String!
-    password: String!
-}
-
-type Mutation {
-    createLink(input: NewLink!): Link!
-    createUser(input: NewUser!): String!
-    login(input: Login!): String!
-    # we'll talk about this in authentication section
-    refreshToken(input: RefreshTokenInput!): String!
-}
 
 type Subscription {
-    subscribe(subscriber: String!): String!
+    chatMessageEvents(chatId: Int64!): MessageNotify!
 }
