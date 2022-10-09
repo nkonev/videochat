@@ -1,6 +1,6 @@
 scalar Time
 scalar Int64
-#scalar UUID
+scalar UUID
 
 type User {
     id:     Int64!
@@ -17,8 +17,7 @@ type DisplayMessageDto {
     editDateTime:   Time
     owner:          User!
     canEdit:        Boolean!
-    #fileItemUuid:    UUID
-    fileItemUuid:    String
+    fileItemUuid:    UUID
 }
 
 type MessageNotify {

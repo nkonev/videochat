@@ -17,6 +17,7 @@ import (
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 	"nkonev.name/chat/graph/model"
+	"nkonev.name/chat/types"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -275,7 +276,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "../schema.graphqls", Input: `scalar Time
 scalar Int64
-#scalar UUID
+scalar UUID
 
 type User {
     id:     Int64!
@@ -292,8 +293,7 @@ type DisplayMessageDto {
     editDateTime:   Time
     owner:          User!
     canEdit:        Boolean!
-    #fileItemUuid:    UUID
-    fileItemUuid:    String
+    fileItemUuid:    UUID
 }
 
 type MessageNotify {
@@ -757,9 +757,9 @@ func (ec *executionContext) _DisplayMessageDto_fileItemUuid(ctx context.Context,
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*types.UUID)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOUUID2ᚖnkonevᚗnameᚋchatᚋtypesᚐUUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_fileItemUuid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -769,7 +769,7 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_fileItemUuid(ctx cont
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3899,6 +3899,22 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	}
 	res := graphql.MarshalTime(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOUUID2ᚖnkonevᚗnameᚋchatᚋtypesᚐUUID(ctx context.Context, v interface{}) (*types.UUID, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(types.UUID)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUUID2ᚖnkonevᚗnameᚋchatᚋtypesᚐUUID(ctx context.Context, sel ast.SelectionSet, v *types.UUID) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
