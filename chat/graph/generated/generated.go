@@ -14,6 +14,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/google/uuid"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 	"nkonev.name/chat/graph/model"
@@ -757,9 +758,9 @@ func (ec *executionContext) _DisplayMessageDto_fileItemUuid(ctx context.Context,
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*types.UUID)
+	res := resTmp.(*uuid.UUID)
 	fc.Result = res
-	return ec.marshalOUUID2ᚖnkonevᚗnameᚋchatᚋtypesᚐUUID(ctx, field.Selections, res)
+	return ec.marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_fileItemUuid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3901,20 +3902,20 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return res
 }
 
-func (ec *executionContext) unmarshalOUUID2ᚖnkonevᚗnameᚋchatᚋtypesᚐUUID(ctx context.Context, v interface{}) (*types.UUID, error) {
+func (ec *executionContext) unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, v interface{}) (*uuid.UUID, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(types.UUID)
-	err := res.UnmarshalGQL(v)
+	res, err := types.UnmarshalUUID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOUUID2ᚖnkonevᚗnameᚋchatᚋtypesᚐUUID(ctx context.Context, sel ast.SelectionSet, v *types.UUID) graphql.Marshaler {
+func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, sel ast.SelectionSet, v *uuid.UUID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return v
+	res := types.MarshalUUID(v)
+	return res
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

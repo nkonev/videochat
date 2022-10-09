@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/google/uuid"
 	"io"
 	. "nkonev.name/chat/logger"
@@ -11,33 +12,29 @@ import (
 // Most common scalars
 //
 
-type UUID uuid.UUID
+//type UUID uuid.UUID
 
 // UnmarshalGQL implements the graphql.Unmarshaler interface
-func (y *UUID) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("UUID must be a string")
+func UnmarshalUUID(v interface{}) (*uuid.UUID, error) {
+	switch v := v.(type) {
+	case string:
+		parsed, err := uuid.Parse(v)
+		if err != nil {
+			Logger.Errorf("Error during unmarshalling uuid %v", err)
+			return nil, err
+		}
+		return &parsed, nil
+	default:
+		return nil, fmt.Errorf("%T is not a uuid or string", v)
 	}
-
-	parsed, err := uuid.Parse(str)
-
-	if err != nil {
-		Logger.Errorf("Error during unmarshalling uuid %v", err)
-		return err
-	}
-
-	var va UUID = UUID(parsed)
-	*y = va
-
-	return nil
 }
 
 // MarshalGQL implements the graphql.Marshaler interface
-func (y UUID) MarshalGQL(w io.Writer) {
-	var va = uuid.UUID(y)
-	_, err := fmt.Fprintf(w, "%v", va)
-	if err != nil {
-		Logger.Errorf("Error during marshalling uuid %v", err)
-	}
+func MarshalUUID(u *uuid.UUID) graphql.Marshaler {
+	return graphql.WriterFunc(func(w io.Writer) {
+		_, err := fmt.Fprintf(w, "%v", u)
+		if err != nil {
+			Logger.Errorf("Error during marshalling uuid %v", err)
+		}
+	})
 }

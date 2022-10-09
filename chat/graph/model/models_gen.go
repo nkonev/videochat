@@ -5,19 +5,19 @@ package model
 import (
 	"time"
 
-	"nkonev.name/chat/types"
+	"github.com/google/uuid"
 )
 
 type DisplayMessageDto struct {
-	ID             int64       `json:"id"`
-	Text           string      `json:"text"`
-	ChatID         int64       `json:"chatId"`
-	OwnerID        int64       `json:"ownerId"`
-	CreateDateTime *time.Time  `json:"createDateTime"`
-	EditDateTime   *time.Time  `json:"editDateTime"`
-	Owner          *User       `json:"owner"`
-	CanEdit        bool        `json:"canEdit"`
-	FileItemUUID   *types.UUID `json:"fileItemUuid"`
+	ID             int64      `json:"id"`
+	Text           string     `json:"text"`
+	ChatID         int64      `json:"chatId"`
+	OwnerID        int64      `json:"ownerId"`
+	CreateDateTime *time.Time `json:"createDateTime"`
+	EditDateTime   *time.Time `json:"editDateTime"`
+	Owner          *User      `json:"owner"`
+	CanEdit        bool       `json:"canEdit"`
+	FileItemUUID   *uuid.UUID `json:"fileItemUuid"`
 }
 
 type MessageNotify struct {
