@@ -121,7 +121,7 @@ services:
       - ./docker/livekit/livekit.yaml:/etc/livekit.yaml
 
   egress:
-    image: livekit/egress:v1.4.2
+    image: livekit/egress:v1.4.3
     restart: unless-stopped
     security_opt:
       - apparmor=unconfined
@@ -135,6 +135,7 @@ services:
       - EGRESS_CONFIG_FILE=/etc/egress/config.yaml
     extra_hosts:
       - "host.docker.internal:host-gateway"
+#      - "files.minio:minio"
     volumes:
       - ./docker/egress/config.yaml:/etc/egress/config.yaml
 

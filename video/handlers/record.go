@@ -31,8 +31,8 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 			AccessKey: "AKIAIOSFODNN7EXAMPLE",
 			Secret:    "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
 			Region:    "europe-east",
-			Endpoint:  "127.0.0.1:9000",
-			Bucket:    "files",
+			Endpoint:  "http://:9000",
+			Bucket:    "minio", // It's crutch for aws s3, actually not a bucket, it's hostname of minio
 		},
 	}
 	streamRequest := &livekit.RoomCompositeEgressRequest{
