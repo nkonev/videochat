@@ -117,9 +117,9 @@
                 return this.$refs.tipTapRef.getContent();
             },
             sendMessageToChat() {
-                this.sending = true;
                 this.editMessageDto.text = this.getContent();
                 if (this.messageTextIsPresent(this.editMessageDto.text)) {
+                    this.sending = true;
                     (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto))
                         .then(response => {
                             this.resetInput();
