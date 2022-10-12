@@ -240,6 +240,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 		GetLogEntry(c.Request().Context()).Errorf("Error during sending to bus : %s", err)
 	}
 
+	// TODO remove rest part
 	// we send a notification only to those people who are currently reading the chat
 	// if this is not done - when the user has many chats, he will receive many notifications and filter them on js
 	activeChatUsers := []int64{}
