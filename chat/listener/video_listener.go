@@ -6,7 +6,7 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 )
 
@@ -16,7 +16,7 @@ type VideoInviteListener func(data []byte) error
 
 type VideoDialStatusListener func(data []byte) error
 
-func CreateVideoCallChangedListener(not notifications.Notifications, db db.DB) VideoNotificationsListener {
+func CreateVideoCallChangedListener(not services.Notifications, db db.DB) VideoNotificationsListener {
 	return func(data []byte) error {
 		s := string(data)
 		Logger.Infof("Received %v", s)
@@ -61,7 +61,7 @@ func (r *simpleChat) GetIsTetATet() bool {
 	return r.IsTetATet
 }
 
-func CreateVideoInviteListener(not notifications.Notifications, db db.DB) VideoInviteListener {
+func CreateVideoInviteListener(not services.Notifications, db db.DB) VideoInviteListener {
 	return func(data []byte) error {
 		s := string(data)
 		Logger.Infof("Received %v", s)
@@ -96,7 +96,7 @@ func CreateVideoInviteListener(not notifications.Notifications, db db.DB) VideoI
 	}
 }
 
-func CreateVideoDialStatusListener(not notifications.Notifications, db db.DB) VideoDialStatusListener {
+func CreateVideoDialStatusListener(not services.Notifications, db db.DB) VideoDialStatusListener {
 	return func(data []byte) error {
 		s := string(data)
 		Logger.Infof("Received %v", s)

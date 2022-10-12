@@ -16,7 +16,7 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"strings"
 	"time"
@@ -36,11 +36,11 @@ type CreateMessageDto struct {
 type MessageHandler struct {
 	db          db.DB
 	policy      *bluemonday.Policy
-	notificator notifications.Notifications
+	notificator services.Notifications
 	restClient  client.RestClient
 }
 
-func NewMessageHandler(dbR db.DB, policy *bluemonday.Policy, notificator notifications.Notifications, restClient client.RestClient) *MessageHandler {
+func NewMessageHandler(dbR db.DB, policy *bluemonday.Policy, notificator services.Notifications, restClient client.RestClient) *MessageHandler {
 	return &MessageHandler{
 		db: dbR, policy: policy, notificator: notificator, restClient: restClient,
 	}

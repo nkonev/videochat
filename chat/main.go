@@ -30,8 +30,8 @@ import (
 	"nkonev.name/chat/handlers"
 	"nkonev.name/chat/listener"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
 	"nkonev.name/chat/rabbitmq"
+	"nkonev.name/chat/services"
 	"time"
 )
 
@@ -60,7 +60,7 @@ func main() {
 			handlers.ConfigureAuthMiddleware,
 			configureMigrations,
 			db.ConfigureDb,
-			notifications.NewNotifications,
+			services.NewNotifications,
 			listener.CreateAaaUserProfileUpdateListener,
 			listener.CreateVideoCallChangedListener,
 			listener.CreateVideoInviteListener,

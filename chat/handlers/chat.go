@@ -14,7 +14,7 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"strings"
 )
@@ -38,12 +38,12 @@ type CreateChatDto struct {
 
 type ChatHandler struct {
 	db          db.DB
-	notificator notifications.Notifications
+	notificator services.Notifications
 	restClient  client.RestClient
 	policy      *bluemonday.Policy
 }
 
-func NewChatHandler(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient, policy *bluemonday.Policy) *ChatHandler {
+func NewChatHandler(dbR db.DB, notificator services.Notifications, restClient client.RestClient, policy *bluemonday.Policy) *ChatHandler {
 	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
 }
 
@@ -418,7 +418,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 
 			ch.notificator.NotifyAboutNewChat(c, copiedChat, userIdsToNotifyAboutChatCreated, tx)
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, userIdsToNotifyAboutChatDeleted, tx)
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, notifications.NoPagePlaceholder, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, services.NoPagePlaceholder, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})
@@ -456,7 +456,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, notifications.NoPagePlaceholder, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, services.NoPagePlaceholder, tx)
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}

@@ -1,4 +1,4 @@
-package notifications
+package services
 
 import (
 	"context"
@@ -232,17 +232,13 @@ func (MessageNotify) Name() eventbus.EventName {
 }
 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
-
-	// TODO set CanEdit in Subscriber
-	//dn := &DisplayMessageDtoNotification{
-	//	*message,
-	//	chatId,
-	//}
-
-	not.bus.PublishAsync(MessageNotify{
+	err := not.bus.PublishAsync(MessageNotify{
 		Type:                eventType,
 		MessageNotification: message,
 	})
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during sending to bus : %s", err)
+	}
 
 	// we send a notification only to those people who are currently reading the chat
 	// if this is not done - when the user has many chats, he will receive many notifications and filter them on js
@@ -273,7 +269,6 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				continue
 			}
 
-			// TODO move to better place
 			copied.CanEdit = message.OwnerId == participantId
 
 			dn := &DisplayMessageDtoNotification{
