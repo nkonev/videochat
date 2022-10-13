@@ -1,10 +1,11 @@
 package listener
 
 import (
-	"github.com/isayme/go-amqp-reconnect/rabbitmq"
+	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/producer"
 	myRabbit "nkonev.name/chat/rabbitmq"
 )
 
@@ -17,11 +18,13 @@ type AaaEventsQueue struct{ *amqp.Queue }
 type VideoNotificationsQueue struct{ *amqp.Queue }
 type VideoInviteQueue struct{ *amqp.Queue }
 type VideoDialStatusQueue struct{ *amqp.Queue }
+type FanoutNotificationsQueue struct{ *amqp.Queue }
 
 type AaaEventsChannel struct{ *rabbitmq.Channel }
 type VideoNotificationsChannel struct{ *rabbitmq.Channel }
 type VideoInviteChannel struct{ *rabbitmq.Channel }
 type VideoDialStatusChannel struct{ *rabbitmq.Channel }
+type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
 
 func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
@@ -57,6 +60,10 @@ func CreateVideoDialStatusChannel(connection *rabbitmq.Connection) VideoDialStat
 	return VideoDialStatusChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
 
+func CreateFanoutNotificationsChannel(connection *rabbitmq.Connection) FanoutNotificationsChannel {
+	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannel(connection)}
+}
+
 func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue {
 	return AaaEventsQueue{create(aaaEventsQueue, consumeCh.Channel)}
 }
@@ -73,10 +80,14 @@ func CreateVideoDialStatusQueue(consumeCh VideoDialStatusChannel) VideoDialStatu
 	return VideoDialStatusQueue{create(videoDialStatusQueue, consumeCh.Channel)}
 }
 
+func CreateFanoutNotificationsQueue(consumeCh FanoutNotificationsChannel) FanoutNotificationsQueue {
+	return FanoutNotificationsQueue{create(producer.FanoutNotificationsQueue, consumeCh.Channel)}
+}
+
 func listen(
 	channel *rabbitmq.Channel,
 	queue *amqp.Queue,
-	onMessage func(data []byte) error,
+	onMessage func(*amqp.Delivery) error,
 	lc fx.Lifecycle) {
 	Logger.Infof("Listening queue %v", queue.Name)
 	go func() {
@@ -91,7 +102,7 @@ func listen(
 		}
 
 		for msg := range deliveries {
-			onMessage(msg.Body)
+			onMessage(&msg)
 			msg.Ack(true)
 		}
 	}()

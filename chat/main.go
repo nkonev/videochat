@@ -30,6 +30,7 @@ import (
 	"nkonev.name/chat/handlers"
 	"nkonev.name/chat/listener"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
 	"time"
@@ -40,7 +41,7 @@ const TRACE_RESOURCE = "chat"
 const GRAPHQL_PATH = "/chat/graphql"
 const GRAPHQL_PLAYGROUND = "/chat/playground"
 
-func main() {
+func main1() {
 	config.InitViper()
 
 	app := fx.New(
@@ -61,19 +62,23 @@ func main() {
 			configureMigrations,
 			db.ConfigureDb,
 			services.NewNotifications,
+			producer.NewRabbitNotificationsPublisher,
 			listener.CreateAaaUserProfileUpdateListener,
 			listener.CreateVideoCallChangedListener,
 			listener.CreateVideoInviteListener,
 			listener.CreateVideoDialStatusListener,
+			listener.CreateNotificationsListener,
 			rabbitmq.CreateRabbitMqConnection,
 			listener.CreateAaaChannel,
 			listener.CreateVideoNotificationsChannel,
 			listener.CreateVideoInviteChannel,
 			listener.CreateVideoDialStatusChannel,
+			listener.CreateFanoutNotificationsChannel,
 			listener.CreateAaaQueue,
 			listener.CreateVideoNotificationsQueue,
 			listener.CreateVideoInviteQueue,
 			listener.CreateVideoDialStatusQueue,
+			listener.CreateFanoutNotificationsQueue,
 		),
 		fx.Invoke(
 			runMigrations,

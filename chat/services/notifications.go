@@ -12,6 +12,7 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/producer"
 	"nkonev.name/chat/utils"
 )
 
@@ -35,16 +36,16 @@ type Notifications interface {
 }
 
 type notifictionsImpl struct {
-	centrifuge *centrifuge.Node
-	bus        *eventbus.Bus
-	db         db.DB
+	centrifuge      *centrifuge.Node
+	rabbitPublisher *producer.RabbitFanoutNotificationsPublisher
+	db              db.DB
 }
 
-func NewNotifications(node *centrifuge.Node, bus *eventbus.Bus, db db.DB) Notifications {
+func NewNotifications(node *centrifuge.Node, rabbitPublisher *producer.RabbitFanoutNotificationsPublisher, db db.DB) Notifications {
 	return &notifictionsImpl{
-		centrifuge: node,
-		bus:        bus,
-		db:         db,
+		centrifuge:      node,
+		rabbitPublisher: rabbitPublisher,
+		db:              db,
 	}
 }
 
@@ -232,12 +233,12 @@ func (MessageNotify) Name() eventbus.EventName {
 }
 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
-	err := not.bus.PublishAsync(MessageNotify{
+	err := not.rabbitPublisher.Publish(MessageNotify{
 		Type:                eventType,
 		MessageNotification: message,
 	})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during sending to bus : %s", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 
 	// TODO remove rest part

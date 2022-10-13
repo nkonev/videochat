@@ -3,6 +3,7 @@ package listener
 import (
 	"context"
 	"encoding/json"
+	"github.com/streadway/amqp"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
@@ -10,14 +11,15 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-type VideoNotificationsListener func(data []byte) error
+type VideoNotificationsListener func(*amqp.Delivery) error
 
-type VideoInviteListener func(data []byte) error
+type VideoInviteListener func(*amqp.Delivery) error
 
-type VideoDialStatusListener func(data []byte) error
+type VideoDialStatusListener func(*amqp.Delivery) error
 
 func CreateVideoCallChangedListener(not services.Notifications, db db.DB) VideoNotificationsListener {
-	return func(data []byte) error {
+	return func(msg *amqp.Delivery) error {
+		data := msg.Body
 		s := string(data)
 		Logger.Infof("Received %v", s)
 
@@ -62,7 +64,8 @@ func (r *simpleChat) GetIsTetATet() bool {
 }
 
 func CreateVideoInviteListener(not services.Notifications, db db.DB) VideoInviteListener {
-	return func(data []byte) error {
+	return func(msg *amqp.Delivery) error {
+		data := msg.Body
 		s := string(data)
 		Logger.Infof("Received %v", s)
 
@@ -97,7 +100,8 @@ func CreateVideoInviteListener(not services.Notifications, db db.DB) VideoInvite
 }
 
 func CreateVideoDialStatusListener(not services.Notifications, db db.DB) VideoDialStatusListener {
-	return func(data []byte) error {
+	return func(msg *amqp.Delivery) error {
+		data := msg.Body
 		s := string(data)
 		Logger.Infof("Received %v", s)
 
