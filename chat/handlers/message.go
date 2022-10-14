@@ -14,7 +14,7 @@ import (
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
-	"nkonev.name/chat/handlers/dto"
+	dto2 "nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
@@ -84,7 +84,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 			ownersSet[c.OwnerId] = true
 		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
-		messageDtos := make([]*dto.DisplayMessageDto, 0)
+		messageDtos := make([]*dto2.DisplayMessageDto, 0)
 		for _, c := range messages {
 			messageDtos = append(messageDtos, convertToMessageDto(c, owners, userPrincipalDto.UserId))
 		}
@@ -94,7 +94,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	}
 }
 
-func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {
+func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto2.DisplayMessageDto, error) {
 	if message, err := co.GetMessage(chatId, behalfUserId, messageId); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 		return nil, err
@@ -137,12 +137,12 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, message)
 }
 
-func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, behalfUserId int64) *dto.DisplayMessageDto {
+func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto2.User, behalfUserId int64) *dto2.DisplayMessageDto {
 	user := owners[dbMessage.OwnerId]
 	if user == nil {
-		user = &dto.User{Login: fmt.Sprintf("user%v", dbMessage.OwnerId), Id: dbMessage.OwnerId}
+		user = &dto2.User{Login: fmt.Sprintf("user%v", dbMessage.OwnerId), Id: dbMessage.OwnerId}
 	}
-	return &dto.DisplayMessageDto{
+	return &dto2.DisplayMessageDto{
 		Id:             dbMessage.Id,
 		Text:           dbMessage.Text,
 		ChatId:         dbMessage.ChatId,
@@ -324,7 +324,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	if err := mc.db.DeleteMessage(messageId, userPrincipalDto.UserId, chatId); err != nil {
 		return err
 	} else {
-		cd := &dto.DisplayMessageDto{
+		cd := &dto2.DisplayMessageDto{
 			Id: messageId,
 		}
 		if ids, err := mc.db.GetAllParticipantIds(chatId); err != nil {

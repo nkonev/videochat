@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
-	"nkonev.name/chat/handlers/dto"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
 	"strings"

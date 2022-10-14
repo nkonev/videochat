@@ -7,13 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	dto2 "nkonev.name/chat/dto"
 	"time"
 
 	"github.com/montag451/go-eventbus"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/graph/generated"
 	"nkonev.name/chat/graph/model"
-	"nkonev.name/chat/handlers/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
 )
@@ -41,9 +41,9 @@ func (r *subscriptionResolver) ChatMessageEvents(ctx context.Context, chatID int
 	}
 
 	var cam = make(chan *model.MessageNotify)
-	subscribeHandler, err := r.Bus.Subscribe(dto.MESSAGE_NOTIFY_COMMON, func(event eventbus.Event, t time.Time) {
+	subscribeHandler, err := r.Bus.Subscribe(dto2.MESSAGE_NOTIFY_COMMON, func(event eventbus.Event, t time.Time) {
 		switch typedEvent := event.(type) {
-		case dto.MessageNotify:
+		case dto2.MessageNotify:
 			cam <- convertMessageNotify(&typedEvent, authResult.UserId)
 		}
 	})
@@ -78,7 +78,7 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convertMessageNotify(e *dto.MessageNotify, participantId int64) *model.MessageNotify {
+func convertMessageNotify(e *dto2.MessageNotify, participantId int64) *model.MessageNotify {
 	displayMessageDto := e.MessageNotification
 	// TODO move to better place
 	var canEdit = displayMessageDto.OwnerId == participantId
@@ -97,7 +97,7 @@ func convertMessageNotify(e *dto.MessageNotify, participantId int64) *model.Mess
 		},
 	}
 }
-func convertOwner(owner *dto.User) *model.User {
+func convertOwner(owner *dto2.User) *model.User {
 	if owner == nil {
 		return nil
 	}

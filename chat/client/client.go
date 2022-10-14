@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"nkonev.name/chat/handlers/dto"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
 	"strings"

@@ -9,26 +9,26 @@ import (
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"nkonev.name/chat/db"
-	"nkonev.name/chat/handlers/dto"
+	dto2 "nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/producer"
 	"nkonev.name/chat/utils"
 )
 
 type Notifications interface {
-	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
+	NotifyAboutNewChat(c echo.Context, newChatDto *dto2.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
 	NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx)
-	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, changingParticipantPage int, tx *db.Tx)
+	NotifyAboutChangeChat(c echo.Context, chatDto *dto2.ChatDtoWithAdmin, userIds []int64, changingParticipantPage int, tx *db.Tx)
 
-	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
-	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
-	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
+	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto2.DisplayMessageDto)
+	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto2.DisplayMessageDto)
+	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto2.DisplayMessageDto)
 
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
-	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
-	NotifyAboutVideoCallChanged(dto dto.ChatNotifyDto, participantIds []int64)
-	NotifyAboutProfileChanged(user *dto.User)
+	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto2.User)
+	NotifyAboutVideoCallChanged(dto dto2.ChatNotifyDto, participantIds []int64)
+	NotifyAboutProfileChanged(user *dto2.User)
 	NotifyAboutCallInvitation(c context.Context, chatId int64, userIds []int64, chatName string)
 	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
 	NotifyAboutDialStatus(c context.Context, chatId, behalfUserId int64, status bool, usersId []int64)
@@ -49,7 +49,7 @@ func NewNotifications(node *centrifuge.Node, rabbitPublisher *producer.RabbitFan
 }
 
 type DisplayMessageDtoNotification struct {
-	dto.DisplayMessageDto
+	dto2.DisplayMessageDto
 	ChatId int64 `json:"chatId"`
 }
 
@@ -83,29 +83,29 @@ type VideoDialChanges struct {
 
 const NoPagePlaceholder = -1
 
-func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
+func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto2.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
 	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", NoPagePlaceholder, tx)
 }
 
-func (not *notifictionsImpl) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, changingParticipantPage int, tx *db.Tx) {
+func (not *notifictionsImpl) NotifyAboutChangeChat(c echo.Context, chatDto *dto2.ChatDtoWithAdmin, userIds []int64, changingParticipantPage int, tx *db.Tx) {
 	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", changingParticipantPage, tx)
 }
 
 func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx) {
-	chatDto := dto.ChatDtoWithAdmin{
-		BaseChatDto: dto.BaseChatDto{
+	chatDto := dto2.ChatDtoWithAdmin{
+		BaseChatDto: dto2.BaseChatDto{
 			Id: chatId,
 		},
 	}
 	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", NoPagePlaceholder, tx)
 }
 
-func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, changingParticipantPage int, tx *db.Tx) {
+func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto2.ChatDtoWithAdmin, eventType string, changingParticipantPage int, tx *db.Tx) {
 	for _, participantId := range userIds {
 		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 		GetLogEntry(c.Request().Context()).Infof("Sending notification about %v the chat to participantChannel: %v", eventType, participantChannel)
 
-		var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
+		var copied *dto2.ChatDtoWithAdmin = &dto2.ChatDtoWithAdmin{}
 		if err := deepcopy.Copy(copied, newChatDto); err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
 			continue
@@ -139,7 +139,7 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 			utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)
 		}
 
-		notification := dto.CentrifugeNotification{
+		notification := dto2.CentrifugeNotification{
 			Payload:   copied,
 			EventType: eventType,
 		}
@@ -175,7 +175,7 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 			UnreadMessages: unreadMessages,
 		}
 
-		notification := dto.CentrifugeNotification{
+		notification := dto2.CentrifugeNotification{
 			Payload:   payload,
 			EventType: "unread_messages_changed",
 		}
@@ -201,11 +201,11 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 			continue
 		}
 
-		payload := &dto.AllUnreadMessages{
+		payload := &dto2.AllUnreadMessages{
 			MessagesCount: unreadMessages,
 		}
 
-		notification := dto.CentrifugeNotification{
+		notification := dto2.CentrifugeNotification{
 			Payload:   payload,
 			EventType: "all_unread_messages_changed",
 		}
@@ -220,8 +220,8 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 	}
 }
 
-func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
-	err := not.rabbitPublisher.Publish(dto.MessageNotify{
+func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto2.DisplayMessageDto, not *notifictionsImpl, eventType string) {
+	err := not.rabbitPublisher.Publish(dto2.MessageNotify{
 		EventType:           eventType,
 		MessageNotification: message,
 	})
@@ -253,7 +253,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 			participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 			GetLogEntry(c.Request().Context()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
 
-			var copied *dto.DisplayMessageDto = &dto.DisplayMessageDto{}
+			var copied *dto2.DisplayMessageDto = &dto2.DisplayMessageDto{}
 			if err := deepcopy.Copy(copied, message); err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
 				continue
@@ -265,7 +265,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				*copied,
 				chatId,
 			}
-			notification := dto.CentrifugeNotification{
+			notification := dto2.CentrifugeNotification{
 				Payload:   dn,
 				EventType: eventType,
 			}
@@ -283,19 +283,19 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 	}
 }
 
-func (not *notifictionsImpl) NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+func (not *notifictionsImpl) NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto2.DisplayMessageDto) {
 	messageNotifyCommon(c, userIds, chatId, message, not, "message_created")
 }
 
-func (not *notifictionsImpl) NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+func (not *notifictionsImpl) NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto2.DisplayMessageDto) {
 	messageNotifyCommon(c, userIds, chatId, message, not, "message_deleted")
 }
 
-func (not *notifictionsImpl) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+func (not *notifictionsImpl) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto2.DisplayMessageDto) {
 	messageNotifyCommon(c, userIds, chatId, message, not, "message_edited")
 }
 
-func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User) {
+func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto2.User) {
 	if user == nil {
 		GetLogEntry(c.Request().Context()).Errorf("user cannot be null")
 		return
@@ -308,7 +308,7 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 		ParticipantId: user.Id,
 	}
 
-	notification := dto.CentrifugeNotification{
+	notification := dto2.CentrifugeNotification{
 		Payload:   ut,
 		EventType: "user_typing",
 	}
@@ -323,13 +323,13 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 	}
 }
 
-func (not *notifictionsImpl) NotifyAboutVideoCallChanged(cn dto.ChatNotifyDto, participantIds []int64) {
+func (not *notifictionsImpl) NotifyAboutVideoCallChanged(cn dto2.ChatNotifyDto, participantIds []int64) {
 	// TODO potential bad performance on frontend, consider batching
 	for _, participantId := range participantIds {
 		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 		Logger.Infof("Sending notification about change video chat the chat to participantChannel: %v", participantChannel)
 
-		notification := dto.CentrifugeNotification{
+		notification := dto2.CentrifugeNotification{
 			Payload:   cn,
 			EventType: "video_call_changed",
 		}
@@ -345,7 +345,7 @@ func (not *notifictionsImpl) NotifyAboutVideoCallChanged(cn dto.ChatNotifyDto, p
 	}
 }
 
-func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
+func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto2.User) {
 	if user == nil {
 		Logger.Errorf("user cannot be null")
 		return
@@ -357,7 +357,7 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 	}
 
 	for _, participantId := range coChatters {
-		notification := dto.CentrifugeNotification{
+		notification := dto2.CentrifugeNotification{
 			Payload:   user,
 			EventType: "user_profile_changed",
 		}
@@ -375,7 +375,7 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 }
 
 func (not *notifictionsImpl) NotifyAboutCallInvitation(c context.Context, chatId int64, userIds []int64, chatName string) {
-	notification := dto.CentrifugeNotification{
+	notification := dto2.CentrifugeNotification{
 		Payload: VideoCallInvitation{
 			ChatId:   chatId,
 			ChatName: chatName,
@@ -414,7 +414,7 @@ func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId
 		Text:   text,
 	}
 
-	notification := dto.CentrifugeNotification{
+	notification := dto2.CentrifugeNotification{
 		Payload:   ut,
 		EventType: "user_broadcast",
 	}
@@ -441,7 +441,7 @@ func (not *notifictionsImpl) NotifyAboutDialStatus(c context.Context, chatId, be
 		})
 	}
 
-	notification := dto.CentrifugeNotification{
+	notification := dto2.CentrifugeNotification{
 		Payload: &VideoDialChanges{
 			ChatId: chatId,
 			Dials:  dials,

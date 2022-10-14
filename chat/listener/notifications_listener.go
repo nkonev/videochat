@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/montag451/go-eventbus"
 	"github.com/streadway/amqp"
-	"nkonev.name/chat/handlers/dto"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/type_registry"
 )

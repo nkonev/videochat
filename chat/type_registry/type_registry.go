@@ -2,7 +2,7 @@ package type_registry
 
 import (
 	"fmt"
-	"nkonev.name/chat/handlers/dto"
+	"nkonev.name/chat/dto"
 	"reflect"
 )
 
