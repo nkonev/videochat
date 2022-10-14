@@ -46,13 +46,12 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 		return nil, errors.New("Unable to get auth context")
 	}
 
-	var correctChatId int64 = int64(chatID)
-	isParticipant, err := r.Db.IsParticipant(authResult.UserId, correctChatId)
+	isParticipant, err := r.Db.IsParticipant(authResult.UserId, chatID)
 	if err != nil {
 		return nil, err
 	}
 	if !isParticipant {
-		logger.GetLogEntry(ctx).Infof("User %v is not participant of chat %v", authResult.UserId, correctChatId)
+		logger.GetLogEntry(ctx).Infof("User %v is not participant of chat %v", authResult.UserId, chatID)
 		return nil, errors.New("Unauthorized")
 	}
 
