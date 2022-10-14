@@ -20,8 +20,8 @@ type DisplayMessageDto {
     fileItemUuid:    UUID
 }
 
-type MessageNotify {
-    eventType:                String
+type ChatEvent {
+    eventType:                String!
     messageNotification: DisplayMessageDto
 }
 
@@ -30,5 +30,5 @@ type Query {
 }
 
 type Subscription {
-    chatMessageEvents(chatId: Int64!): MessageNotify!
+    chatEvents(chatId: Int64!): ChatEvent!
 }

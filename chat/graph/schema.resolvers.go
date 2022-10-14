@@ -7,11 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	dto2 "nkonev.name/chat/dto"
 	"time"
 
 	"github.com/montag451/go-eventbus"
 	"nkonev.name/chat/auth"
+	dto2 "nkonev.name/chat/dto"
 	"nkonev.name/chat/graph/generated"
 	"nkonev.name/chat/graph/model"
 	"nkonev.name/chat/logger"
@@ -23,8 +23,24 @@ func (r *queryResolver) Ping(ctx context.Context) (*bool, error) {
 	panic(fmt.Errorf("not implemented: Ping - ping"))
 }
 
-// ChatMessageEvents is the resolver for the chatMessageEvents field.
-func (r *subscriptionResolver) ChatMessageEvents(ctx context.Context, chatID int64) (<-chan *model.MessageNotify, error) {
+// Query returns generated.QueryResolver implementation.
+func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
+
+// Subscription returns generated.SubscriptionResolver implementation.
+func (r *Resolver) Subscription() generated.SubscriptionResolver { return &subscriptionResolver{r} }
+
+type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+
+// ChatEvents is the resolver for the chatEvents field.
+func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-chan *model.ChatEvent, error) {
 	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		return nil, errors.New("Unable to get auth context")
@@ -40,10 +56,10 @@ func (r *subscriptionResolver) ChatMessageEvents(ctx context.Context, chatID int
 		return nil, errors.New("Unauthorized")
 	}
 
-	var cam = make(chan *model.MessageNotify)
+	var cam = make(chan *model.ChatEvent)
 	subscribeHandler, err := r.Bus.Subscribe(dto2.MESSAGE_NOTIFY_COMMON, func(event eventbus.Event, t time.Time) {
 		switch typedEvent := event.(type) {
-		case dto2.MessageNotify:
+		case dto2.ChatEvent:
 			cam <- convertMessageNotify(&typedEvent, authResult.UserId)
 		}
 	})
@@ -62,28 +78,12 @@ func (r *subscriptionResolver) ChatMessageEvents(ctx context.Context, chatID int
 
 	return cam, nil
 }
-
-// Query returns generated.QueryResolver implementation.
-func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
-
-// Subscription returns generated.SubscriptionResolver implementation.
-func (r *Resolver) Subscription() generated.SubscriptionResolver { return &subscriptionResolver{r} }
-
-type queryResolver struct{ *Resolver }
-type subscriptionResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convertMessageNotify(e *dto2.MessageNotify, participantId int64) *model.MessageNotify {
+func convertMessageNotify(e *dto2.ChatEvent, participantId int64) *model.ChatEvent {
 	displayMessageDto := e.MessageNotification
 	// TODO move to better place
 	var canEdit = displayMessageDto.OwnerId == participantId
-	return &model.MessageNotify{
-		EventType: &e.EventType,
+	return &model.ChatEvent{
+		EventType: e.EventType,
 		MessageNotification: &model.DisplayMessageDto{
 			ID:             displayMessageDto.Id,
 			Text:           displayMessageDto.Text,

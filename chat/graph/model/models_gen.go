@@ -8,6 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type ChatEvent struct {
+	EventType           string             `json:"eventType"`
+	MessageNotification *DisplayMessageDto `json:"messageNotification"`
+}
+
 type DisplayMessageDto struct {
 	ID             int64      `json:"id"`
 	Text           string     `json:"text"`
@@ -18,11 +23,6 @@ type DisplayMessageDto struct {
 	Owner          *User      `json:"owner"`
 	CanEdit        bool       `json:"canEdit"`
 	FileItemUUID   *uuid.UUID `json:"fileItemUuid"`
-}
-
-type MessageNotify struct {
-	EventType           *string            `json:"eventType"`
-	MessageNotification *DisplayMessageDto `json:"messageNotification"`
 }
 
 type User struct {

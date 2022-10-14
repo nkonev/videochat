@@ -47,6 +47,11 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	ChatEvent struct {
+		EventType           func(childComplexity int) int
+		MessageNotification func(childComplexity int) int
+	}
+
 	DisplayMessageDto struct {
 		CanEdit        func(childComplexity int) int
 		ChatID         func(childComplexity int) int
@@ -59,17 +64,12 @@ type ComplexityRoot struct {
 		Text           func(childComplexity int) int
 	}
 
-	MessageNotify struct {
-		EventType           func(childComplexity int) int
-		MessageNotification func(childComplexity int) int
-	}
-
 	Query struct {
 		Ping func(childComplexity int) int
 	}
 
 	Subscription struct {
-		ChatMessageEvents func(childComplexity int, chatID int64) int
+		ChatEvents func(childComplexity int, chatID int64) int
 	}
 
 	User struct {
@@ -83,7 +83,7 @@ type QueryResolver interface {
 	Ping(ctx context.Context) (*bool, error)
 }
 type SubscriptionResolver interface {
-	ChatMessageEvents(ctx context.Context, chatID int64) (<-chan *model.MessageNotify, error)
+	ChatEvents(ctx context.Context, chatID int64) (<-chan *model.ChatEvent, error)
 }
 
 type executableSchema struct {
@@ -100,6 +100,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "ChatEvent.eventType":
+		if e.complexity.ChatEvent.EventType == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.EventType(childComplexity), true
+
+	case "ChatEvent.messageNotification":
+		if e.complexity.ChatEvent.MessageNotification == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.MessageNotification(childComplexity), true
 
 	case "DisplayMessageDto.canEdit":
 		if e.complexity.DisplayMessageDto.CanEdit == nil {
@@ -164,20 +178,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DisplayMessageDto.Text(childComplexity), true
 
-	case "MessageNotify.eventType":
-		if e.complexity.MessageNotify.EventType == nil {
-			break
-		}
-
-		return e.complexity.MessageNotify.EventType(childComplexity), true
-
-	case "MessageNotify.messageNotification":
-		if e.complexity.MessageNotify.MessageNotification == nil {
-			break
-		}
-
-		return e.complexity.MessageNotify.MessageNotification(childComplexity), true
-
 	case "Query.ping":
 		if e.complexity.Query.Ping == nil {
 			break
@@ -185,17 +185,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Ping(childComplexity), true
 
-	case "Subscription.chatMessageEvents":
-		if e.complexity.Subscription.ChatMessageEvents == nil {
+	case "Subscription.chatEvents":
+		if e.complexity.Subscription.ChatEvents == nil {
 			break
 		}
 
-		args, err := ec.field_Subscription_chatMessageEvents_args(context.TODO(), rawArgs)
+		args, err := ec.field_Subscription_chatEvents_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Subscription.ChatMessageEvents(childComplexity, args["chatId"].(int64)), true
+		return e.complexity.Subscription.ChatEvents(childComplexity, args["chatId"].(int64)), true
 
 	case "User.avatar":
 		if e.complexity.User.Avatar == nil {
@@ -309,8 +309,8 @@ type DisplayMessageDto {
     fileItemUuid:    UUID
 }
 
-type MessageNotify {
-    eventType:                String
+type ChatEvent {
+    eventType:                String!
     messageNotification: DisplayMessageDto
 }
 
@@ -319,7 +319,7 @@ type Query {
 }
 
 type Subscription {
-    chatMessageEvents(chatId: Int64!): MessageNotify!
+    chatEvents(chatId: Int64!): ChatEvent!
 }
 `, BuiltIn: false},
 }
@@ -344,7 +344,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Subscription_chatMessageEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Subscription_chatEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int64
@@ -396,6 +396,111 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _ChatEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_eventType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EventType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_eventType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatEvent_messageNotification(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_messageNotification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MessageNotification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DisplayMessageDto)
+	fc.Result = res
+	return ec.marshalODisplayMessageDto2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐDisplayMessageDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_messageNotification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DisplayMessageDto_id(ctx, field)
+			case "text":
+				return ec.fieldContext_DisplayMessageDto_text(ctx, field)
+			case "chatId":
+				return ec.fieldContext_DisplayMessageDto_chatId(ctx, field)
+			case "ownerId":
+				return ec.fieldContext_DisplayMessageDto_ownerId(ctx, field)
+			case "createDateTime":
+				return ec.fieldContext_DisplayMessageDto_createDateTime(ctx, field)
+			case "editDateTime":
+				return ec.fieldContext_DisplayMessageDto_editDateTime(ctx, field)
+			case "owner":
+				return ec.fieldContext_DisplayMessageDto_owner(ctx, field)
+			case "canEdit":
+				return ec.fieldContext_DisplayMessageDto_canEdit(ctx, field)
+			case "fileItemUuid":
+				return ec.fieldContext_DisplayMessageDto_fileItemUuid(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _DisplayMessageDto_id(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DisplayMessageDto_id(ctx, field)
@@ -792,108 +897,6 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_fileItemUuid(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageNotify_eventType(ctx context.Context, field graphql.CollectedField, obj *model.MessageNotify) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MessageNotify_eventType(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.EventType, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MessageNotify_eventType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MessageNotify",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MessageNotify_messageNotification(ctx context.Context, field graphql.CollectedField, obj *model.MessageNotify) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MessageNotify_messageNotification(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.MessageNotification, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.DisplayMessageDto)
-	fc.Result = res
-	return ec.marshalODisplayMessageDto2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐDisplayMessageDto(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MessageNotify_messageNotification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MessageNotify",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_DisplayMessageDto_id(ctx, field)
-			case "text":
-				return ec.fieldContext_DisplayMessageDto_text(ctx, field)
-			case "chatId":
-				return ec.fieldContext_DisplayMessageDto_chatId(ctx, field)
-			case "ownerId":
-				return ec.fieldContext_DisplayMessageDto_ownerId(ctx, field)
-			case "createDateTime":
-				return ec.fieldContext_DisplayMessageDto_createDateTime(ctx, field)
-			case "editDateTime":
-				return ec.fieldContext_DisplayMessageDto_editDateTime(ctx, field)
-			case "owner":
-				return ec.fieldContext_DisplayMessageDto_owner(ctx, field)
-			case "canEdit":
-				return ec.fieldContext_DisplayMessageDto_canEdit(ctx, field)
-			case "fileItemUuid":
-				return ec.fieldContext_DisplayMessageDto_fileItemUuid(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_ping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_ping(ctx, field)
 	if err != nil {
@@ -1064,8 +1067,8 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Subscription_chatMessageEvents(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
-	fc, err := ec.fieldContext_Subscription_chatMessageEvents(ctx, field)
+func (ec *executionContext) _Subscription_chatEvents(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_chatEvents(ctx, field)
 	if err != nil {
 		return nil
 	}
@@ -1078,7 +1081,7 @@ func (ec *executionContext) _Subscription_chatMessageEvents(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().ChatMessageEvents(rctx, fc.Args["chatId"].(int64))
+		return ec.resolvers.Subscription().ChatEvents(rctx, fc.Args["chatId"].(int64))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1092,7 +1095,7 @@ func (ec *executionContext) _Subscription_chatMessageEvents(ctx context.Context,
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan *model.MessageNotify):
+		case res, ok := <-resTmp.(<-chan *model.ChatEvent):
 			if !ok {
 				return nil
 			}
@@ -1100,7 +1103,7 @@ func (ec *executionContext) _Subscription_chatMessageEvents(ctx context.Context,
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNMessageNotify2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐMessageNotify(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalNChatEvent2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐChatEvent(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -1109,7 +1112,7 @@ func (ec *executionContext) _Subscription_chatMessageEvents(ctx context.Context,
 	}
 }
 
-func (ec *executionContext) fieldContext_Subscription_chatMessageEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
 		Field:      field,
@@ -1118,11 +1121,11 @@ func (ec *executionContext) fieldContext_Subscription_chatMessageEvents(ctx cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "eventType":
-				return ec.fieldContext_MessageNotify_eventType(ctx, field)
+				return ec.fieldContext_ChatEvent_eventType(ctx, field)
 			case "messageNotification":
-				return ec.fieldContext_MessageNotify_messageNotification(ctx, field)
+				return ec.fieldContext_ChatEvent_messageNotification(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type MessageNotify", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ChatEvent", field.Name)
 		},
 	}
 	defer func() {
@@ -1132,7 +1135,7 @@ func (ec *executionContext) fieldContext_Subscription_chatMessageEvents(ctx cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Subscription_chatMessageEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Subscription_chatEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -3049,6 +3052,38 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** object.gotpl ****************************
 
+var chatEventImplementors = []string{"ChatEvent"}
+
+func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet, obj *model.ChatEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, chatEventImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChatEvent")
+		case "eventType":
+
+			out.Values[i] = ec._ChatEvent_eventType(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "messageNotification":
+
+			out.Values[i] = ec._ChatEvent_messageNotification(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var displayMessageDtoImplementors = []string{"DisplayMessageDto"}
 
 func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.SelectionSet, obj *model.DisplayMessageDto) graphql.Marshaler {
@@ -3112,35 +3147,6 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 		case "fileItemUuid":
 
 			out.Values[i] = ec._DisplayMessageDto_fileItemUuid(ctx, field, obj)
-
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var messageNotifyImplementors = []string{"MessageNotify"}
-
-func (ec *executionContext) _MessageNotify(ctx context.Context, sel ast.SelectionSet, obj *model.MessageNotify) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, messageNotifyImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("MessageNotify")
-		case "eventType":
-
-			out.Values[i] = ec._MessageNotify_eventType(ctx, field, obj)
-
-		case "messageNotification":
-
-			out.Values[i] = ec._MessageNotify_messageNotification(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -3228,8 +3234,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 
 	switch fields[0].Name {
-	case "chatMessageEvents":
-		return ec._Subscription_chatMessageEvents(ctx, fields[0])
+	case "chatEvents":
+		return ec._Subscription_chatEvents(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -3607,6 +3613,20 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNChatEvent2nkonevᚗnameᚋchatᚋgraphᚋmodelᚐChatEvent(ctx context.Context, sel ast.SelectionSet, v model.ChatEvent) graphql.Marshaler {
+	return ec._ChatEvent(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChatEvent2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐChatEvent(ctx context.Context, sel ast.SelectionSet, v *model.ChatEvent) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChatEvent(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNInt642int64(ctx context.Context, v interface{}) (int64, error) {
 	res, err := graphql.UnmarshalInt64(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3620,20 +3640,6 @@ func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.Sel
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNMessageNotify2nkonevᚗnameᚋchatᚋgraphᚋmodelᚐMessageNotify(ctx context.Context, sel ast.SelectionSet, v model.MessageNotify) graphql.Marshaler {
-	return ec._MessageNotify(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNMessageNotify2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐMessageNotify(ctx context.Context, sel ast.SelectionSet, v *model.MessageNotify) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._MessageNotify(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
