@@ -11,7 +11,7 @@ import (
 
 	"github.com/montag451/go-eventbus"
 	"nkonev.name/chat/auth"
-	dto2 "nkonev.name/chat/dto"
+	"nkonev.name/chat/dto"
 	"nkonev.name/chat/graph/generated"
 	"nkonev.name/chat/graph/model"
 	"nkonev.name/chat/logger"
@@ -57,9 +57,9 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 	}
 
 	var cam = make(chan *model.ChatEvent)
-	subscribeHandler, err := r.Bus.Subscribe(dto2.MESSAGE_NOTIFY_COMMON, func(event eventbus.Event, t time.Time) {
+	subscribeHandler, err := r.Bus.Subscribe(dto.MESSAGE_NOTIFY_COMMON, func(event eventbus.Event, t time.Time) {
 		switch typedEvent := event.(type) {
-		case dto2.ChatEvent:
+		case dto.ChatEvent:
 			cam <- convertMessageNotify(&typedEvent, authResult.UserId)
 		}
 	})
@@ -78,7 +78,7 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 
 	return cam, nil
 }
-func convertMessageNotify(e *dto2.ChatEvent, participantId int64) *model.ChatEvent {
+func convertMessageNotify(e *dto.ChatEvent, participantId int64) *model.ChatEvent {
 	displayMessageDto := e.MessageNotification
 	// TODO move to better place
 	var canEdit = displayMessageDto.OwnerId == participantId
@@ -97,7 +97,7 @@ func convertMessageNotify(e *dto2.ChatEvent, participantId int64) *model.ChatEve
 		},
 	}
 }
-func convertOwner(owner *dto2.User) *model.User {
+func convertOwner(owner *dto.User) *model.User {
 	if owner == nil {
 		return nil
 	}

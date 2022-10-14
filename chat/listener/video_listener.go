@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/streadway/amqp"
 	"nkonev.name/chat/db"
-	dto2 "nkonev.name/chat/dto"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
@@ -23,7 +23,7 @@ func CreateVideoCallChangedListener(not services.Notifications, db db.DB) VideoN
 		s := string(data)
 		Logger.Infof("Received %v", s)
 
-		var bindTo = new(dto2.ChatNotifyDto)
+		var bindTo = new(dto.ChatNotifyDto)
 		err := json.Unmarshal(data, &bindTo)
 		if err != nil {
 			Logger.Errorf("Error during deserialize ChatNotifyDto %v", err)
@@ -69,7 +69,7 @@ func CreateVideoInviteListener(not services.Notifications, db db.DB) VideoInvite
 		s := string(data)
 		Logger.Infof("Received %v", s)
 
-		var bindTo = new(dto2.VideoInviteDto)
+		var bindTo = new(dto.VideoInviteDto)
 		err := json.Unmarshal(data, &bindTo)
 		if err != nil {
 			Logger.Errorf("Error during deserialize VideoInviteDto %v", err)
@@ -81,8 +81,8 @@ func CreateVideoInviteListener(not services.Notifications, db db.DB) VideoInvite
 			return err
 		}
 
-		meAsUser := dto2.User{Id: bindTo.BehalfUserId, Login: bindTo.BehalfLogin}
-		var sch dto2.ChatDtoWithTetATet = &simpleChat{
+		meAsUser := dto.User{Id: bindTo.BehalfUserId, Login: bindTo.BehalfLogin}
+		var sch dto.ChatDtoWithTetATet = &simpleChat{
 			Id:        chat.Id,
 			Name:      chat.Title,
 			IsTetATet: chat.TetATet,
@@ -105,7 +105,7 @@ func CreateVideoDialStatusListener(not services.Notifications, db db.DB) VideoDi
 		s := string(data)
 		Logger.Infof("Received %v", s)
 
-		var bindTo = new(dto2.VideoIsInvitingDto)
+		var bindTo = new(dto.VideoIsInvitingDto)
 		err := json.Unmarshal(data, &bindTo)
 		if err != nil {
 			Logger.Errorf("Error during deserialize VideoIsInvitingDto %v", err)

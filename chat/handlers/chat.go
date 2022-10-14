@@ -12,7 +12,7 @@ import (
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
-	dto2 "nkonev.name/chat/dto"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
@@ -20,8 +20,8 @@ import (
 )
 
 type ChatWrapper struct {
-	Data  []*dto2.ChatDto `json:"data"`
-	Count int64           `json:"totalCount"` // total chat number for this user
+	Data  []*dto.ChatDto `json:"data"`
+	Count int64          `json:"totalCount"` // total chat number for this user
 }
 
 type EditChatDto struct {
@@ -79,13 +79,13 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		return err
 	}
 
-	chatDtos := make([]*dto2.ChatDto, 0)
+	chatDtos := make([]*dto.ChatDto, 0)
 	for _, cc := range dbChats {
 		messages, err := ch.db.GetUnreadMessagesCount(cc.Id, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
-		cd := convertToDto(cc, []*dto2.User{}, messages)
+		cd := convertToDto(cc, []*dto.User{}, messages)
 		chatDtos = append(chatDtos, cd)
 	}
 
@@ -122,7 +122,7 @@ func getChat(
 	behalfParticipantId int64,
 	authResult *auth.AuthResult,
 	participantsSize, participantsOffset int,
-) (*dto2.ChatDto, error) {
+) (*dto.ChatDto, error) {
 	fixedParticipantsSize := utils.FixSize(participantsSize)
 
 	if cc, err := dbR.GetChatWithParticipants(behalfParticipantId, chatId, fixedParticipantsSize, participantsOffset); err != nil {
@@ -134,7 +134,7 @@ func getChat(
 
 		users, err := restClient.GetUsers(cc.ParticipantsIds, c.Request().Context())
 		if err != nil {
-			users = []*dto2.User{}
+			users = []*dto.User{}
 			GetLogEntry(c.Request().Context()).Warn("Error during getting users from aaa")
 		}
 
@@ -188,17 +188,17 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
-func (ch *ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto2.ChatDto, commonDbOperations db.CommonOperations) (*dto2.ChatDtoWithAdmin, error) {
-	var copiedChat = &dto2.ChatDtoWithAdmin{}
+func (ch *ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto, commonDbOperations db.CommonOperations) (*dto.ChatDtoWithAdmin, error) {
+	var copiedChat = &dto.ChatDtoWithAdmin{}
 	err := deepcopy.Copy(copiedChat, chat)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy chat: %s", err)
 		return nil, err
 	}
 
-	var adminedUsers []*dto2.UserWithAdmin
+	var adminedUsers []*dto.UserWithAdmin
 	for _, participant := range copiedChat.Participants {
-		var copied = &dto2.UserWithAdmin{}
+		var copied = &dto.UserWithAdmin{}
 		if err := deepcopy.Copy(copied, participant); err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy user: %s", err)
 		} else {
@@ -215,8 +215,8 @@ func (ch *ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto2.ChatDt
 	return copiedChat, nil
 }
 
-func convertToDto(c *db.ChatWithParticipants, users []*dto2.User, unreadMessages int64) *dto2.ChatDto {
-	b := dto2.BaseChatDto{
+func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64) *dto.ChatDto {
+	b := dto.BaseChatDto{
 		Id:             c.Id,
 		Name:           c.Title,
 		ParticipantIds: c.ParticipantsIds,
@@ -234,7 +234,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto2.User, unreadMessages
 		CanChangeChatAdmins: c.IsAdmin && !c.TetATet,
 		ParticipantsCount:   c.ParticipantsCount,
 	}
-	return &dto2.ChatDto{
+	return &dto.ChatDto{
 		BaseChatDto:  b,
 		Participants: users,
 	}

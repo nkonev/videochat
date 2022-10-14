@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	dto2 "nkonev.name/chat/dto"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"regexp"
 	"strconv"
@@ -152,7 +152,7 @@ func SecondsToStringMilliseconds(seconds int64) string {
 	return fmt.Sprintf("%v000", seconds)
 }
 
-func ReplaceChatNameToLoginForTetATet(chatDto dto2.ChatDtoWithTetATet, participant *dto2.User, behalfParticipantId int64) {
+func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participant *dto.User, behalfParticipantId int64) {
 	if chatDto.GetIsTetATet() && participant.Id != behalfParticipantId {
 		chatDto.SetName(participant.Login)
 	}
