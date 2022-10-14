@@ -142,7 +142,6 @@ volumes:
   redis_data_dir:
   minio_data:
   rabbitmq_data_dir:
-  es_data_dir:
 
 networks:
   backend:
