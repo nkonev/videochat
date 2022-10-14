@@ -2,6 +2,7 @@ package listener
 
 import (
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
+	"github.com/google/uuid"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
 	. "nkonev.name/chat/logger"
@@ -44,6 +45,29 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	return &q
 }
 
+func createAndBind(name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+	var err error
+	var q amqp.Queue
+	q, err = consumeCh.QueueDeclare(
+		name,  // name
+		true,  // durable - it prevents queue loss on rabbitmq restart
+		true,  // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		Logger.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
+		Logger.Panic(err)
+	}
+	err = consumeCh.QueueBind(q.Name, key, exchange, false, nil)
+	if err != nil {
+		Logger.Warnf("Unable to bind to queue %v, restarting. error %v", name, err)
+		Logger.Panic(err)
+	}
+	return &q
+}
+
 func CreateAaaChannel(connection *rabbitmq.Connection) AaaEventsChannel {
 	return AaaEventsChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
@@ -60,8 +84,18 @@ func CreateVideoDialStatusChannel(connection *rabbitmq.Connection) VideoDialStat
 	return VideoDialStatusChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
 
-func CreateFanoutNotificationsChannel(connection *rabbitmq.Connection) FanoutNotificationsChannel {
-	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannel(connection)}
+func CreateFanoutNotificationsChannel(connection *rabbitmq.Connection, onMessage FanoutNotificationsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
+	var fanoutQueueName = "notifications-instance-" + uuid.New().String()
+
+	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
+		connection,
+		func(channel *rabbitmq.Channel) error {
+			tempQueue := createAndBind(fanoutQueueName, "", producer.DefaultFanoutExchange, channel)
+			fanoutQueueName = tempQueue.Name
+			listen(channel, tempQueue, onMessage, lc)
+			return nil
+		},
+	)}
 }
 
 func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue {
@@ -80,9 +114,11 @@ func CreateVideoDialStatusQueue(consumeCh VideoDialStatusChannel) VideoDialStatu
 	return VideoDialStatusQueue{create(videoDialStatusQueue, consumeCh.Channel)}
 }
 
-func CreateFanoutNotificationsQueue(consumeCh FanoutNotificationsChannel) FanoutNotificationsQueue {
-	return FanoutNotificationsQueue{create(producer.FanoutNotificationsQueue, consumeCh.Channel)}
-}
+//func CreateFanoutNotificationsQueue(consumeCh FanoutNotificationsChannel) FanoutNotificationsQueue {
+//	fanoutQueue := createAndBind("", "", producer.DefaultFanoutExchange, consumeCh.Channel)
+//	fanoutNotificationsQueueName = fanoutQueue.Name
+//	return FanoutNotificationsQueue{fanoutQueue}
+//}
 
 func listen(
 	channel *rabbitmq.Channel,
@@ -144,11 +180,11 @@ func ListenVideoDialStatusQueue(
 	listen(channel.Channel, queue.Queue, onMessage, lc)
 }
 
-func ListenFanoutNotificationsQueue(
-	channel FanoutNotificationsChannel,
-	queue FanoutNotificationsQueue,
-	onMessage FanoutNotificationsListener,
-	lc fx.Lifecycle) {
-
-	listen(channel.Channel, queue.Queue, onMessage, lc)
-}
+//func ListenFanoutNotificationsQueue(
+//	channel FanoutNotificationsChannel,
+//	queue FanoutNotificationsQueue,
+//	onMessage FanoutNotificationsListener,
+//	lc fx.Lifecycle) {
+//
+//	listen(channel.Channel, queue.Queue, onMessage, lc)
+//}

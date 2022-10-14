@@ -74,12 +74,12 @@ func main() {
 			listener.CreateVideoNotificationsChannel,
 			listener.CreateVideoInviteChannel,
 			listener.CreateVideoDialStatusChannel,
-			listener.CreateFanoutNotificationsChannel,
+			//listener.CreateFanoutNotificationsChannel,
 			listener.CreateAaaQueue,
 			listener.CreateVideoNotificationsQueue,
 			listener.CreateVideoInviteQueue,
 			listener.CreateVideoDialStatusQueue,
-			listener.CreateFanoutNotificationsQueue,
+			//listener.CreateFanoutNotificationsQueue,
 			type_registry.NewTypeRegistryInstance,
 		),
 		fx.Invoke(
@@ -90,7 +90,8 @@ func main() {
 			listener.ListenVideoNotificationsQueue,
 			listener.ListenVideoInviteQueue,
 			listener.ListenVideoDialStatusQueue,
-			listener.ListenFanoutNotificationsQueue,
+			//listener.ListenFanoutNotificationsQueue,
+			listener.CreateFanoutNotificationsChannel,
 		),
 	)
 	app.Run()
