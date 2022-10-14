@@ -21,7 +21,7 @@ type DisplayMessageDto {
 }
 
 type MessageNotify {
-    type:                String
+    eventType:                String
     messageNotification: DisplayMessageDto
 }
 

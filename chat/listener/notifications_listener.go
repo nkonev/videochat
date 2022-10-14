@@ -15,30 +15,32 @@ type NotificationsListener func(*amqp.Delivery) error
 
 func CreateNotificationsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeRegistryInstance) NotificationsListener {
 	return func(msg *amqp.Delivery) error {
-		data := msg.Body
-		s := string(data)
-		typ := msg.Type
-		Logger.Infof("Received %v with type %v", s, typ)
+		bytesData := msg.Body
+		strData := string(bytesData)
+		aType := msg.Type
+		Logger.Infof("Received %v with type %v", strData, aType)
 
-		if !typeRegistry.HasType(typ) {
-			return errors.New(fmt.Sprintf("Unexpected type in tabbit fanout notifications: %v", typ))
+		if !typeRegistry.HasType(aType) {
+			return errors.New(fmt.Sprintf("Unexpected type in tabbit fanout notifications: %v", aType))
 		}
 
-		instance := typeRegistry.MakeInstance(typ)
+		anInstance := typeRegistry.MakeInstance(aType)
 
-		switch instance.(type) {
+		switch bindTo := anInstance.(type) {
 		case dto.MessageNotify:
-			bindTo := instance.(dto.MessageNotify)
-			err := json.Unmarshal(data, &bindTo)
+			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
 				Logger.Errorf("Error during deserialize notification %v", err)
-				return nil
+				return err
 			}
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
-				Logger.Errorf("Error during sending to bus : %s", err)
+				Logger.Errorf("Error during sending to bus : %v", err)
+				return err
 			}
+		default:
+			Logger.Errorf("Unexpected type : %v", anInstance)
 		}
 
 		return nil

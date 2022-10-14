@@ -21,7 +21,7 @@ type DisplayMessageDto struct {
 }
 
 type MessageNotify struct {
-	Type                *string            `json:"type"`
+	EventType           *string            `json:"eventType"`
 	MessageNotification *DisplayMessageDto `json:"messageNotification"`
 }
 

@@ -24,7 +24,7 @@ import (
 	"nkonev.name/chat/handlers"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"os"
 	"strings"
@@ -213,7 +213,7 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			handlers.ConfigureAuthMiddleware,
 			configureTestMigrations,
 			db.ConfigureDb,
-			notifications.NewNotifications,
+			services.NewNotifications,
 		),
 		fx.Invoke(
 			runMigrations,
@@ -245,7 +245,7 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 			handlers.ConfigureAuthMiddleware,
 			configureTestMigrations,
 			db.ConfigureDb,
-			notifications.NewNotifications,
+			services.NewNotifications,
 		),
 		fx.Invoke(
 			runMigrations,

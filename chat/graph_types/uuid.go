@@ -1,4 +1,4 @@
-package types
+package graph_types
 
 import (
 	"fmt"
@@ -11,8 +11,6 @@ import (
 //
 // Most common scalars
 //
-
-//type UUID uuid.UUID
 
 // UnmarshalGQL implements the graphql.Unmarshaler interface
 func UnmarshalUUID(v interface{}) (*uuid.UUID, error) {

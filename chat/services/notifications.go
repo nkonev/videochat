@@ -222,7 +222,7 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
 	err := not.rabbitPublisher.Publish(dto.MessageNotify{
-		Type:                eventType,
+		EventType:           eventType,
 		MessageNotification: message,
 	})
 	if err != nil {

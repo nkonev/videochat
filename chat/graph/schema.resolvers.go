@@ -41,10 +41,10 @@ func (r *subscriptionResolver) ChatMessageEvents(ctx context.Context, chatID int
 	}
 
 	var cam = make(chan *model.MessageNotify)
-	subscribeHandler, err := r.Bus.Subscribe(dto.MESSAGE_NOTIFY_COMMON, func(e eventbus.Event, t time.Time) {
-		switch e := e.(type) {
+	subscribeHandler, err := r.Bus.Subscribe(dto.MESSAGE_NOTIFY_COMMON, func(event eventbus.Event, t time.Time) {
+		switch typedEvent := event.(type) {
 		case dto.MessageNotify:
-			cam <- convertMessageNotify(&e, authResult.UserId)
+			cam <- convertMessageNotify(&typedEvent, authResult.UserId)
 		}
 	})
 
@@ -83,7 +83,7 @@ func convertMessageNotify(e *dto.MessageNotify, participantId int64) *model.Mess
 	// TODO move to better place
 	var canEdit = displayMessageDto.OwnerId == participantId
 	return &model.MessageNotify{
-		Type: &e.Type,
+		EventType: &e.EventType,
 		MessageNotification: &model.DisplayMessageDto{
 			ID:             displayMessageDto.Id,
 			Text:           displayMessageDto.Text,

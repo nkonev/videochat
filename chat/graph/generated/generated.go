@@ -18,7 +18,7 @@ import (
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 	"nkonev.name/chat/graph/model"
-	"nkonev.name/chat/types"
+	"nkonev.name/chat/graph_types"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -60,8 +60,8 @@ type ComplexityRoot struct {
 	}
 
 	MessageNotify struct {
+		EventType           func(childComplexity int) int
 		MessageNotification func(childComplexity int) int
-		Type                func(childComplexity int) int
 	}
 
 	Query struct {
@@ -164,19 +164,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DisplayMessageDto.Text(childComplexity), true
 
+	case "MessageNotify.eventType":
+		if e.complexity.MessageNotify.EventType == nil {
+			break
+		}
+
+		return e.complexity.MessageNotify.EventType(childComplexity), true
+
 	case "MessageNotify.messageNotification":
 		if e.complexity.MessageNotify.MessageNotification == nil {
 			break
 		}
 
 		return e.complexity.MessageNotify.MessageNotification(childComplexity), true
-
-	case "MessageNotify.type":
-		if e.complexity.MessageNotify.Type == nil {
-			break
-		}
-
-		return e.complexity.MessageNotify.Type(childComplexity), true
 
 	case "Query.ping":
 		if e.complexity.Query.Ping == nil {
@@ -310,7 +310,7 @@ type DisplayMessageDto {
 }
 
 type MessageNotify {
-    type:                String
+    eventType:                String
     messageNotification: DisplayMessageDto
 }
 
@@ -320,7 +320,8 @@ type Query {
 
 type Subscription {
     chatMessageEvents(chatId: Int64!): MessageNotify!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -791,8 +792,8 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_fileItemUuid(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageNotify_type(ctx context.Context, field graphql.CollectedField, obj *model.MessageNotify) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MessageNotify_type(ctx, field)
+func (ec *executionContext) _MessageNotify_eventType(ctx context.Context, field graphql.CollectedField, obj *model.MessageNotify) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageNotify_eventType(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -805,7 +806,7 @@ func (ec *executionContext) _MessageNotify_type(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
+		return obj.EventType, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -819,7 +820,7 @@ func (ec *executionContext) _MessageNotify_type(ctx context.Context, field graph
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MessageNotify_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MessageNotify_eventType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MessageNotify",
 		Field:      field,
@@ -1116,8 +1117,8 @@ func (ec *executionContext) fieldContext_Subscription_chatMessageEvents(ctx cont
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "type":
-				return ec.fieldContext_MessageNotify_type(ctx, field)
+			case "eventType":
+				return ec.fieldContext_MessageNotify_eventType(ctx, field)
 			case "messageNotification":
 				return ec.fieldContext_MessageNotify_messageNotification(ctx, field)
 			}
@@ -3133,9 +3134,9 @@ func (ec *executionContext) _MessageNotify(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("MessageNotify")
-		case "type":
+		case "eventType":
 
-			out.Values[i] = ec._MessageNotify_type(ctx, field, obj)
+			out.Values[i] = ec._MessageNotify_eventType(ctx, field, obj)
 
 		case "messageNotification":
 
@@ -3987,7 +3988,7 @@ func (ec *executionContext) unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUI
 	if v == nil {
 		return nil, nil
 	}
-	res, err := types.UnmarshalUUID(v)
+	res, err := graph_types.UnmarshalUUID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -3995,7 +3996,7 @@ func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(
 	if v == nil {
 		return graphql.Null
 	}
-	res := types.MarshalUUID(v)
+	res := graph_types.MarshalUUID(v)
 	return res
 }
 

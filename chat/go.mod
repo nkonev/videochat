@@ -3,6 +3,7 @@ module nkonev.name/chat
 require (
 	github.com/99designs/gqlgen v0.17.20
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
+	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
 	github.com/centrifugal/centrifuge v0.21.1
 	github.com/centrifugal/protocol v0.8.4
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
@@ -12,7 +13,6 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/guregu/null v4.0.0+incompatible
-	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/microcosm-cc/bluemonday v1.0.3
