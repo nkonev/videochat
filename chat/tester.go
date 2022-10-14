@@ -2,34 +2,37 @@ package main
 
 import (
 	"fmt"
-	"go/types"
 	"nkonev.name/chat/handlers/dto"
 	"nkonev.name/chat/services"
 	"reflect"
 )
 
+var typeRegistry = make(map[string]reflect.Type)
+
 func main() {
 	cd := &dto.DisplayMessageDto{
 		Id: 123,
 	}
-	fmt.Printf("The type of name is: %T\n", cd)
-	fmt.Println(reflect.TypeOf(cd)) // main.rectangle
-	//
 	aDto := services.MessageNotify{
 		Type:                "eventTypeCreatedPepyake",
 		MessageNotification: cd,
 	}
 
-	aTypeStr := reflect.TypeOf(aDto).String()
-	// 	newPackage := types.NewPackage("nkonev.name/chat", "services")
-	newPackage := types.NewPackage("nkonev.name/chat", "utils")
-	id := types.Id(newPackage, aTypeStr)
+	strName := addToRegistry(aDto)
+	fmt.Printf("> %v\n", strName)
 
-	fmt.Printf("A type is str -> %v , id -> %v\n", aTypeStr, id)
+	notify := makeInstance("services.MessageNotify").(services.MessageNotify)
+	notify.Type = "sty"
+	fmt.Printf(">> %v\n", notify)
+}
 
-	intType := types.NewType()
-	bindTo := reflect.New(intType)
+func addToRegistry(aDto interface{}) (strName string) {
+	strName = fmt.Sprintf("%T", aDto)
+	typeRegistry[strName] = reflect.TypeOf(aDto)
+	return
+}
 
-	fmt.Printf("A reconstructed type is %v %v\n", intType, bindTo)
-
+func makeInstance(name string) interface{} {
+	v := reflect.New(typeRegistry[name]).Elem()
+	return v.Interface()
 }
