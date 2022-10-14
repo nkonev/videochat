@@ -144,10 +144,10 @@ func ListenVideoDialStatusQueue(
 	listen(channel.Channel, queue.Queue, onMessage, lc)
 }
 
-func ListenChatFanoutNotificationsQueue(
+func ListenFanoutNotificationsQueue(
 	channel FanoutNotificationsChannel,
 	queue FanoutNotificationsQueue,
-	onMessage NotificationsListener,
+	onMessage FanoutNotificationsListener,
 	lc fx.Lifecycle) {
 
 	listen(channel.Channel, queue.Queue, onMessage, lc)

@@ -68,7 +68,7 @@ func main() {
 			listener.CreateVideoCallChangedListener,
 			listener.CreateVideoInviteListener,
 			listener.CreateVideoDialStatusListener,
-			listener.CreateNotificationsListener,
+			listener.CreateFanoutNotificationsListener,
 			rabbitmq.CreateRabbitMqConnection,
 			listener.CreateAaaChannel,
 			listener.CreateVideoNotificationsChannel,
@@ -90,7 +90,7 @@ func main() {
 			listener.ListenVideoNotificationsQueue,
 			listener.ListenVideoInviteQueue,
 			listener.ListenVideoDialStatusQueue,
-			listener.ListenChatFanoutNotificationsQueue,
+			listener.ListenFanoutNotificationsQueue,
 		),
 	)
 	app.Run()

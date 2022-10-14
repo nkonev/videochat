@@ -11,9 +11,9 @@ import (
 	"nkonev.name/chat/type_registry"
 )
 
-type NotificationsListener func(*amqp.Delivery) error
+type FanoutNotificationsListener func(*amqp.Delivery) error
 
-func CreateNotificationsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeRegistryInstance) NotificationsListener {
+func CreateFanoutNotificationsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeRegistryInstance) FanoutNotificationsListener {
 	return func(msg *amqp.Delivery) error {
 		bytesData := msg.Body
 		strData := string(bytesData)
