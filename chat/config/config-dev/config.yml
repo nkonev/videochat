@@ -1,5 +1,5 @@
 server:
-  address: ":1239"
+  address: ":1235"
   shutdown.timeout: "10s"
   body.limit: "100G"
 
