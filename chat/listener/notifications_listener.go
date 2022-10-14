@@ -41,6 +41,7 @@ func CreateNotificationsListener(bus *eventbus.Bus, typeRegistry *type_registry.
 			}
 		default:
 			Logger.Errorf("Unexpected type : %v", anInstance)
+			return errors.New(fmt.Sprintf("Unexpected type : %v", anInstance))
 		}
 
 		return nil
