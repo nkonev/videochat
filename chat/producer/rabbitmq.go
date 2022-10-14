@@ -6,20 +6,21 @@ import (
 	"github.com/streadway/amqp"
 	. "nkonev.name/chat/logger"
 	myRabbitmq "nkonev.name/chat/rabbitmq"
-	"reflect"
+	"nkonev.name/chat/type_registry"
 	"time"
 )
 
 const FanoutNotificationsQueue = "chat-fanout-notifications"
 
 func (rp *RabbitFanoutNotificationsPublisher) Publish(aDto interface{}) error {
+	aType := rp.typeRegistry.GetType(aDto)
+
 	bytea, err := json.Marshal(aDto)
 	if err != nil {
 		Logger.Error(err, "Failed during marshal dto")
 		return err
 	}
 
-	aType := reflect.TypeOf(aDto).Name()
 	msg := amqp.Publishing{
 		DeliveryMode: amqp.Transient,
 		Timestamp:    time.Now(),
@@ -37,11 +38,13 @@ func (rp *RabbitFanoutNotificationsPublisher) Publish(aDto interface{}) error {
 }
 
 type RabbitFanoutNotificationsPublisher struct {
-	channel *rabbitmq.Channel
+	channel      *rabbitmq.Channel
+	typeRegistry *type_registry.TypeRegistryInstance
 }
 
-func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection) *RabbitFanoutNotificationsPublisher {
+func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection, typeRegistry *type_registry.TypeRegistryInstance) *RabbitFanoutNotificationsPublisher {
 	return &RabbitFanoutNotificationsPublisher{
-		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+		channel:      myRabbitmq.CreateRabbitMqChannel(connection),
+		typeRegistry: typeRegistry,
 	}
 }

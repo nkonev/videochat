@@ -8,7 +8,6 @@ import (
 	"github.com/getlantern/deepcopy"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
-	"github.com/montag451/go-eventbus"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
@@ -221,19 +220,8 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 	}
 }
 
-const MESSAGE_NOTIFY_COMMON = "message.notify.common"
-
-type MessageNotify struct {
-	Type                string
-	MessageNotification *dto.DisplayMessageDto
-}
-
-func (MessageNotify) Name() eventbus.EventName {
-	return MESSAGE_NOTIFY_COMMON
-}
-
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
-	err := not.rabbitPublisher.Publish(MessageNotify{
+	err := not.rabbitPublisher.Publish(dto.MessageNotify{
 		Type:                eventType,
 		MessageNotification: message,
 	})

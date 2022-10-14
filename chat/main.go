@@ -33,6 +33,7 @@ import (
 	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
+	"nkonev.name/chat/type_registry"
 	"time"
 )
 
@@ -41,7 +42,7 @@ const TRACE_RESOURCE = "chat"
 const GRAPHQL_PATH = "/chat/graphql"
 const GRAPHQL_PLAYGROUND = "/chat/playground"
 
-func main1() {
+func main() {
 	config.InitViper()
 
 	app := fx.New(
@@ -79,6 +80,7 @@ func main1() {
 			listener.CreateVideoInviteQueue,
 			listener.CreateVideoDialStatusQueue,
 			listener.CreateFanoutNotificationsQueue,
+			type_registry.NewTypeRegistryInstance,
 		),
 		fx.Invoke(
 			runMigrations,
@@ -88,6 +90,7 @@ func main1() {
 			listener.ListenVideoNotificationsQueue,
 			listener.ListenVideoInviteQueue,
 			listener.ListenVideoDialStatusQueue,
+			listener.ListenChatFanoutNotificationsQueue,
 		),
 	)
 	app.Run()
