@@ -113,7 +113,7 @@ services:
         max-size: "50m"
 
   livekit:
-    image: livekit/livekit-server:v1.2.3
+    image: livekit/livekit-server:v1.2.4
     command: --config /etc/livekit.yaml
     restart: unless-stopped
     network_mode: "host"
@@ -161,7 +161,6 @@ volumes:
   redis_data_dir:
   minio_data:
   rabbitmq_data_dir:
-  es_data_dir:
 
 networks:
   backend:
