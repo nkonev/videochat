@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const DefaultFanoutExchange = "amq.fanout"
+const AsyncEventsFanoutExchange = "async-events-exchange"
 
 func (rp *RabbitFanoutNotificationsPublisher) Publish(aDto interface{}) error {
 	aType := rp.typeRegistry.GetType(aDto)
@@ -29,7 +29,7 @@ func (rp *RabbitFanoutNotificationsPublisher) Publish(aDto interface{}) error {
 		Type:         aType,
 	}
 
-	if err := rp.channel.Publish(DefaultFanoutExchange, "", false, false, msg); err != nil {
+	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
 		Logger.Error(err, "Error during publishing dto")
 		return err
 	} else {

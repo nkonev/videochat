@@ -19,7 +19,8 @@ type AaaEventsQueue struct{ *amqp.Queue }
 type VideoNotificationsQueue struct{ *amqp.Queue }
 type VideoInviteQueue struct{ *amqp.Queue }
 type VideoDialStatusQueue struct{ *amqp.Queue }
-type FanoutNotificationsQueue struct{ *amqp.Queue }
+
+// type FanoutNotificationsQueue struct{ *amqp.Queue }
 
 type AaaEventsChannel struct{ *rabbitmq.Channel }
 type VideoNotificationsChannel struct{ *rabbitmq.Channel }
@@ -90,7 +91,12 @@ func CreateFanoutNotificationsChannel(connection *rabbitmq.Connection, onMessage
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		connection,
 		func(channel *rabbitmq.Channel) error {
-			tempQueue := createAndBind(fanoutQueueName, "", producer.DefaultFanoutExchange, channel)
+			err := channel.ExchangeDeclare(producer.AsyncEventsFanoutExchange, "fanout", true, false, false, false, nil)
+			if err != nil {
+				return err
+			}
+
+			tempQueue := createAndBind(fanoutQueueName, "", producer.AsyncEventsFanoutExchange, channel)
 			listen(channel, tempQueue, onMessage, lc)
 			return nil
 		},
