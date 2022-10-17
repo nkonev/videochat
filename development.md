@@ -508,4 +508,23 @@ subscription{
     }
   }
 }
+
+subscription{
+  globalEvents {
+    eventType
+    chatEvent {
+      id
+      name
+      avatar
+      avatarBig
+      participantIds
+      participants {
+        id
+        login
+        avatar
+        admin
+      }
+    }
+  }
+}
 ```
