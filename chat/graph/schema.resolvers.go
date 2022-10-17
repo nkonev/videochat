@@ -43,10 +43,10 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 	}
 
 	var cam = make(chan *model.ChatEvent)
-	subscribeHandler, err := r.Bus.Subscribe(dto.NOTIFY_COMMON, func(event eventbus.Event, t time.Time) {
+	subscribeHandler, err := r.Bus.Subscribe(dto.CHAT_EVENTS, func(event eventbus.Event, t time.Time) {
 		switch typedEvent := event.(type) {
-		case dto.EventBusEvent:
-			if isReceiverOfEvent(typedEvent, authResult) {
+		case dto.ChatEvent:
+			if isReceiverOfEvent(typedEvent.UserIds, authResult) {
 				cam <- convertToChatEvent(&typedEvent, authResult.UserId)
 			}
 			break
@@ -82,10 +82,10 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 	}
 
 	var cam = make(chan *model.GlobalEvent)
-	subscribeHandler, err := r.Bus.Subscribe(dto.NOTIFY_COMMON, func(event eventbus.Event, t time.Time) {
+	subscribeHandler, err := r.Bus.Subscribe(dto.GLOBAL_EVENTS, func(event eventbus.Event, t time.Time) {
 		switch typedEvent := event.(type) {
-		case dto.EventBusEvent:
-			if isReceiverOfEvent(typedEvent, authResult) {
+		case dto.GlobalEvent:
+			if isReceiverOfEvent(typedEvent.UserIds, authResult) {
 				notificationDto := typedEvent.ChatNotification
 				admin, err := r.Db.IsAdmin(authResult.UserId, notificationDto.Id)
 				if err != nil {
@@ -141,10 +141,10 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convertToChatEvent(e *dto.EventBusEvent, participantId int64) *model.ChatEvent {
+func convertToChatEvent(e *dto.ChatEvent, participantId int64) *model.ChatEvent {
 	notificationDto := e.MessageNotification
 	// TODO move to better place
-	var canEdit = notificationDto != nil && notificationDto.OwnerId == participantId
+	var canEdit = notificationDto.OwnerId == participantId
 	return &model.ChatEvent{
 		EventType: e.EventType,
 		MessageEvent: &model.DisplayMessageDto{ // dto.DisplayMessageDto
@@ -223,8 +223,8 @@ func convertUsers(participants []*dto.UserWithAdmin) []*model.UserWithAdmin {
 	return usrs
 }
 
-func isReceiverOfEvent(event dto.EventBusEvent, authResult *auth.AuthResult) bool {
-	for _, userId := range *event.UserIds {
+func isReceiverOfEvent(userIds *[]int64, authResult *auth.AuthResult) bool {
+	for _, userId := range *userIds {
 		if userId == authResult.UserId {
 			return true
 		}

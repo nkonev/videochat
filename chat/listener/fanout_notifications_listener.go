@@ -27,7 +27,7 @@ func CreateFanoutNotificationsListener(bus *eventbus.Bus, typeRegistry *type_reg
 		anInstance := typeRegistry.MakeInstance(aType)
 
 		switch bindTo := anInstance.(type) {
-		case dto.EventBusEvent:
+		case dto.ChatEvent:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
 				Logger.Errorf("Error during deserialize notification %v", err)

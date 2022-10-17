@@ -102,7 +102,7 @@ func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64,
 
 func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, changingParticipantPage int, tx *db.Tx) {
 
-	err := not.rabbitPublisher.Publish(dto.EventBusEvent{
+	err := not.rabbitPublisher.Publish(dto.GlobalEvent{
 		UserIds:          &userIds,
 		EventType:        eventType,
 		ChatNotification: newChatDto,
@@ -232,7 +232,7 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 }
 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
-	err := not.rabbitPublisher.Publish(dto.EventBusEvent{
+	err := not.rabbitPublisher.Publish(dto.ChatEvent{
 		EventType:           eventType,
 		MessageNotification: message,
 		UserIds:             &userIds,

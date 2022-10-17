@@ -16,7 +16,8 @@ func NewTypeRegistryInstance() *TypeRegistryInstance {
 		typeRegistry: typeRegistry,
 	}
 
-	res.AddToRegistryIfNeed(dto.EventBusEvent{})
+	res.AddToRegistryIfNeed(dto.ChatEvent{})
+	res.AddToRegistryIfNeed(dto.GlobalEvent{})
 
 	return res
 }
