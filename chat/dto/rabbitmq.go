@@ -6,6 +6,7 @@ const NOTIFY_COMMON = "notify.common"
 
 type EventBusEvent struct {
 	EventType           string
+	UserIds             *[]int64
 	MessageNotification *DisplayMessageDto
 	ChatNotification    *ChatDtoWithAdmin
 }

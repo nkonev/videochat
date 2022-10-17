@@ -102,8 +102,8 @@ func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64,
 
 func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, changingParticipantPage int, tx *db.Tx) {
 
-	// TODO take on account userIds to filter who is addressed person
 	err := not.rabbitPublisher.Publish(dto.EventBusEvent{
+		UserIds:          &userIds,
 		EventType:        eventType,
 		ChatNotification: newChatDto,
 	})
@@ -232,10 +232,10 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 }
 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
-	// TODO take on account userIds to filter who is addressed person
 	err := not.rabbitPublisher.Publish(dto.EventBusEvent{
 		EventType:           eventType,
 		MessageNotification: message,
+		UserIds:             &userIds,
 	})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)

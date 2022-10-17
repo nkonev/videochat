@@ -46,7 +46,10 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 	subscribeHandler, err := r.Bus.Subscribe(dto.NOTIFY_COMMON, func(event eventbus.Event, t time.Time) {
 		switch typedEvent := event.(type) {
 		case dto.EventBusEvent:
-			cam <- convertToChatEvent(&typedEvent, authResult.UserId)
+			if isReceiverOfEvent(typedEvent, authResult) {
+				cam <- convertToChatEvent(&typedEvent, authResult.UserId)
+			}
+			break
 		default:
 			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v, chat %v", typedEvent, authResult.UserId, chatID)
 		}
@@ -82,20 +85,23 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 	subscribeHandler, err := r.Bus.Subscribe(dto.NOTIFY_COMMON, func(event eventbus.Event, t time.Time) {
 		switch typedEvent := event.(type) {
 		case dto.EventBusEvent:
-			notificationDto := typedEvent.ChatNotification
-			admin, err := r.Db.IsAdmin(authResult.UserId, notificationDto.Id)
-			if err != nil {
-				logger.GetLogEntry(ctx).Errorf("error during checking is admin for userId=%v: %s", authResult.UserId, err)
-				return
-			}
+			if isReceiverOfEvent(typedEvent, authResult) {
+				notificationDto := typedEvent.ChatNotification
+				admin, err := r.Db.IsAdmin(authResult.UserId, notificationDto.Id)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("error during checking is admin for userId=%v: %s", authResult.UserId, err)
+					return
+				}
 
-			unreadMessages, err := r.Db.GetUnreadMessagesCount(notificationDto.Id, authResult.UserId)
-			if err != nil {
-				logger.GetLogEntry(ctx).Errorf("error during get unread messages for userId=%v: %s", authResult.UserId, err)
-				return
-			}
+				unreadMessages, err := r.Db.GetUnreadMessagesCount(notificationDto.Id, authResult.UserId)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("error during get unread messages for userId=%v: %s", authResult.UserId, err)
+					return
+				}
 
-			cam <- convertToGlobalEvent(typedEvent.EventType, notificationDto, admin, unreadMessages)
+				cam <- convertToGlobalEvent(typedEvent.EventType, notificationDto, admin, unreadMessages)
+			}
+			break
 		default:
 			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
@@ -138,7 +144,7 @@ type subscriptionResolver struct{ *Resolver }
 func convertToChatEvent(e *dto.EventBusEvent, participantId int64) *model.ChatEvent {
 	notificationDto := e.MessageNotification
 	// TODO move to better place
-	var canEdit = notificationDto.OwnerId == participantId
+	var canEdit = notificationDto != nil && notificationDto.OwnerId == participantId
 	return &model.ChatEvent{
 		EventType: e.EventType,
 		MessageEvent: &model.DisplayMessageDto{ // dto.DisplayMessageDto
@@ -215,4 +221,13 @@ func convertUsers(participants []*dto.UserWithAdmin) []*model.UserWithAdmin {
 		usrs = append(usrs, convertUserWithAdmin(user))
 	}
 	return usrs
+}
+
+func isReceiverOfEvent(event dto.EventBusEvent, authResult *auth.AuthResult) bool {
+	for _, userId := range *event.UserIds {
+		if userId == authResult.UserId {
+			return true
+		}
+	}
+	return false
 }
