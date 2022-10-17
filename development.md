@@ -500,9 +500,11 @@ http://localhost:8081/chat/playground
 subscription{
   chatEvents(chatId: 1) {
     eventType
-    messageNotification {
+    messageEvent {
       id
       text
+      chatId
+      ownerId
     }
   }
 }

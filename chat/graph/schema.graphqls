@@ -20,9 +20,42 @@ type DisplayMessageDto {
     fileItemUuid:    UUID
 }
 
+type UserWithAdmin {
+    id:     Int64!
+    login:  String!
+    avatar: String
+    admin: Boolean!
+}
+
+type ChatDto {
+    id:             Int64!
+    name:                String!
+    avatar:              String
+    avatarBig:           String
+    lastUpdateDateTime:  Time!
+    participantIds:      [Int64!]!
+    canEdit:             Boolean
+    canDelete:           Boolean
+    canLeave:            Boolean
+    unreadMessages:      Int64!
+    canBroadcast:        Boolean!
+    canVideoKick:        Boolean!
+    canChangeChatAdmins: Boolean!
+    tetATet:             Boolean!
+    canAudioMute:        Boolean!
+    participants:             [UserWithAdmin!]!
+    participantsCount:        Int!
+    changingParticipantsPage: Int!
+}
+
 type ChatEvent {
     eventType:                String!
-    messageNotification: DisplayMessageDto
+    messageEvent: DisplayMessageDto
+}
+
+type GlobalEvent {
+    eventType:                String!
+    chatEvent: ChatDto
 }
 
 type Query {
@@ -31,4 +64,5 @@ type Query {
 
 type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
+    globalEvents: GlobalEvent!
 }

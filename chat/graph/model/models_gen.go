@@ -8,9 +8,30 @@ import (
 	"github.com/google/uuid"
 )
 
+type ChatDto struct {
+	ID                       int64            `json:"id"`
+	Name                     string           `json:"name"`
+	Avatar                   *string          `json:"avatar"`
+	AvatarBig                *string          `json:"avatarBig"`
+	LastUpdateDateTime       time.Time        `json:"lastUpdateDateTime"`
+	ParticipantIds           []int64          `json:"participantIds"`
+	CanEdit                  *bool            `json:"canEdit"`
+	CanDelete                *bool            `json:"canDelete"`
+	CanLeave                 *bool            `json:"canLeave"`
+	UnreadMessages           int64            `json:"unreadMessages"`
+	CanBroadcast             bool             `json:"canBroadcast"`
+	CanVideoKick             bool             `json:"canVideoKick"`
+	CanChangeChatAdmins      bool             `json:"canChangeChatAdmins"`
+	TetATet                  bool             `json:"tetATet"`
+	CanAudioMute             bool             `json:"canAudioMute"`
+	Participants             []*UserWithAdmin `json:"participants"`
+	ParticipantsCount        int              `json:"participantsCount"`
+	ChangingParticipantsPage int              `json:"changingParticipantsPage"`
+}
+
 type ChatEvent struct {
-	EventType           string             `json:"eventType"`
-	MessageNotification *DisplayMessageDto `json:"messageNotification"`
+	EventType    string             `json:"eventType"`
+	MessageEvent *DisplayMessageDto `json:"messageEvent"`
 }
 
 type DisplayMessageDto struct {
@@ -25,8 +46,20 @@ type DisplayMessageDto struct {
 	FileItemUUID   *uuid.UUID `json:"fileItemUuid"`
 }
 
+type GlobalEvent struct {
+	EventType string   `json:"eventType"`
+	ChatEvent *ChatDto `json:"chatEvent"`
+}
+
 type User struct {
 	ID     int64   `json:"id"`
 	Login  string  `json:"login"`
 	Avatar *string `json:"avatar"`
+}
+
+type UserWithAdmin struct {
+	ID     int64   `json:"id"`
+	Login  string  `json:"login"`
+	Avatar *string `json:"avatar"`
+	Admin  bool    `json:"admin"`
 }

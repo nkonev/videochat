@@ -2,13 +2,14 @@ package dto
 
 import "github.com/montag451/go-eventbus"
 
-const MESSAGE_NOTIFY_COMMON = "message.notify.common"
+const NOTIFY_COMMON = "notify.common"
 
-type ChatEvent struct {
+type EventBusEvent struct {
 	EventType           string
 	MessageNotification *DisplayMessageDto
+	ChatNotification    *ChatDtoWithAdmin
 }
 
-func (ChatEvent) Name() eventbus.EventName {
-	return MESSAGE_NOTIFY_COMMON
+func (EventBusEvent) Name() eventbus.EventName {
+	return NOTIFY_COMMON
 }
