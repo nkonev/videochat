@@ -85,13 +85,12 @@ func CreateVideoDialStatusChannel(connection *rabbitmq.Connection) VideoDialStat
 }
 
 func CreateFanoutNotificationsChannel(connection *rabbitmq.Connection, onMessage FanoutNotificationsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
-	var fanoutQueueName = "notifications-instance-" + uuid.New().String()
+	var fanoutQueueName = "async-events-" + uuid.New().String()
 
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		connection,
 		func(channel *rabbitmq.Channel) error {
 			tempQueue := createAndBind(fanoutQueueName, "", producer.DefaultFanoutExchange, channel)
-			fanoutQueueName = tempQueue.Name
 			listen(channel, tempQueue, onMessage, lc)
 			return nil
 		},
