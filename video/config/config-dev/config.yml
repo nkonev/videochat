@@ -3,6 +3,12 @@ server:
   shutdownTimeout: "10s"
   bodyLimit: "100G"
 
+# Rest client
+http:
+  maxIdleConns: 2
+  idleConnTimeout: '10s'
+  disableCompression: false
+
 auth:
   exclude:
     - "^/video/public.*"
