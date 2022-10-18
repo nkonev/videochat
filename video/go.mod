@@ -7,8 +7,8 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.0
 	github.com/labstack/echo/v4 v4.7.2
-	github.com/livekit/protocol v1.1.3-0.20221007212651-d9bc6cd9cb77
-	github.com/livekit/server-sdk-go v1.0.3
+	github.com/livekit/protocol v1.1.3-0.20221013203258-19dd0a128e43
+	github.com/livekit/server-sdk-go v1.0.5-0.20221018015353-fdf5c8ff7168
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.7.0

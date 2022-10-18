@@ -25,14 +25,15 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 		return err
 	}
 	roomName := fmt.Sprintf("chat%v", chatId)
-	filePath := fmt.Sprintf("/files/chat/%v/recording_%v.mp4", chatId, time.Now().Unix())
+	filePath := fmt.Sprintf("/chat/%v/recording_%v.mp4", chatId, time.Now().Unix())
 	s3u := livekit.EncodedFileOutput_S3{
 		S3: &livekit.S3Upload{
-			AccessKey: "AKIAIOSFODNN7EXAMPLE",
-			Secret:    "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-			Region:    "europe-east",
-			Endpoint:  "http://:9000",
-			Bucket:    "minio", // It's crutch for aws s3, actually not a bucket, it's hostname of minio
+			AccessKey:      "AKIAIOSFODNN7EXAMPLE",
+			Secret:         "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+			Region:         "europe-east",
+			Endpoint:       "http://minio:9000",
+			Bucket:         "files",
+			ForcePathStyle: true,
 		},
 	}
 	streamRequest := &livekit.RoomCompositeEgressRequest{
@@ -51,10 +52,6 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 			Preset: livekit.EncodingOptionsPreset_H264_720P_30,
 		},
 	}
-
-	//reqString, _ := proto.Marshal(streamRequest)
-	//rss := string(reqString)
-	//GetLogEntry(c.Request().Context()).Infof("Generated request %v", rss)
 
 	info, err := rh.egressClient.StartRoomCompositeEgress(c.Request().Context(), streamRequest)
 	if err != nil {
