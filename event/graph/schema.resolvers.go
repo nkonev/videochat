@@ -6,17 +6,15 @@ package graph
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/guregu/null"
 	"time"
 
 	"github.com/montag451/go-eventbus"
-	"nkonev.name/chat/auth"
-	"nkonev.name/chat/dto"
-	"nkonev.name/chat/graph/generated"
-	"nkonev.name/chat/graph/model"
-	"nkonev.name/chat/logger"
-	"nkonev.name/chat/utils"
+	"nkonev.name/event/auth"
+	"nkonev.name/event/dto"
+	"nkonev.name/event/graph/generated"
+	"nkonev.name/event/graph/model"
+	"nkonev.name/event/logger"
+	"nkonev.name/event/utils"
 )
 
 // Ping is the resolver for the ping field.
@@ -32,12 +30,12 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 		return nil, errors.New("Unable to get auth context")
 	}
 
-	isParticipant, err := r.Db.IsParticipant(authResult.UserId, chatID)
+	hasAccess, err := r.HttpClient.CheckAccess(authResult.UserId, chatID, ctx)
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during checking participant user %v, chat %v", authResult.UserId, chatID)
 		return nil, err
 	}
-	if !isParticipant {
+	if !hasAccess {
 		logger.GetLogEntry(ctx).Infof("User %v is not participant of chat %v", authResult.UserId, chatID)
 		return nil, errors.New("Unauthorized")
 	}
@@ -63,9 +61,9 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 		for {
 			select {
 			case <-ctx.Done():
-				fmt.Println("Channel closed.")
-				close(cam)
+				logger.Logger.Println("Closing channel.")
 				r.Bus.Unsubscribe(subscribeHandler)
+				close(cam)
 				return
 			}
 		}
@@ -87,19 +85,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 		case dto.GlobalEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) {
 				notificationDto := typedEvent.ChatNotification
-				admin, err := r.Db.IsAdmin(authResult.UserId, notificationDto.Id)
-				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("error during checking is admin for userId=%v: %s", authResult.UserId, err)
-					return
-				}
-
-				unreadMessages, err := r.Db.GetUnreadMessagesCount(notificationDto.Id, authResult.UserId)
-				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("error during get unread messages for userId=%v: %s", authResult.UserId, err)
-					return
-				}
-
-				cam <- convertToGlobalEvent(typedEvent.EventType, notificationDto, admin, unreadMessages)
+				cam <- convertToGlobalEvent(typedEvent.EventType, notificationDto)
 			}
 			break
 		default:
@@ -115,9 +101,9 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 		for {
 			select {
 			case <-ctx.Done():
-				fmt.Println("Channel closed.")
-				close(cam)
+				logger.Logger.Println("Closing channel.")
 				r.Bus.Unsubscribe(subscribeHandler)
+				close(cam)
 				return
 			}
 		}
@@ -161,9 +147,7 @@ func convertToChatEvent(e *dto.ChatEvent, participantId int64) *model.ChatEvent 
 	}
 }
 
-func convertToGlobalEvent(eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin, admin bool, unreadMessages int64) *model.GlobalEvent {
-	// TODO move to better place
-	// see also handlers/chat.go:199 convertToDto()
+func convertToGlobalEvent(eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin) *model.GlobalEvent {
 	return &model.GlobalEvent{
 		EventType: eventType,
 		ChatEvent: &model.ChatDto{ // dto.ChatDtoWithAdmin
@@ -173,14 +157,14 @@ func convertToGlobalEvent(eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdm
 			AvatarBig:                chatDtoWithAdmin.AvatarBig.Ptr(),
 			LastUpdateDateTime:       chatDtoWithAdmin.LastUpdateDateTime,
 			ParticipantIds:           chatDtoWithAdmin.ParticipantIds,
-			CanEdit:                  null.BoolFrom(admin && !chatDtoWithAdmin.IsTetATet).Ptr(),
-			CanDelete:                null.BoolFrom(admin).Ptr(),
-			CanLeave:                 null.BoolFrom(!admin && !chatDtoWithAdmin.IsTetATet).Ptr(),
-			UnreadMessages:           unreadMessages,
-			CanBroadcast:             admin,
-			CanVideoKick:             admin,
-			CanAudioMute:             admin,
-			CanChangeChatAdmins:      admin && !chatDtoWithAdmin.IsTetATet,
+			CanEdit:                  chatDtoWithAdmin.CanEdit.Ptr(),
+			CanDelete:                chatDtoWithAdmin.CanDelete.Ptr(),
+			CanLeave:                 chatDtoWithAdmin.CanLeave.Ptr(),
+			UnreadMessages:           chatDtoWithAdmin.UnreadMessages,
+			CanBroadcast:             chatDtoWithAdmin.CanBroadcast,
+			CanVideoKick:             chatDtoWithAdmin.CanVideoKick,
+			CanAudioMute:             chatDtoWithAdmin.CanAudioMute,
+			CanChangeChatAdmins:      chatDtoWithAdmin.CanChangeChatAdmins,
 			TetATet:                  chatDtoWithAdmin.IsTetATet,
 			ParticipantsCount:        chatDtoWithAdmin.ParticipantsCount,
 			ChangingParticipantsPage: chatDtoWithAdmin.ChangingParticipantsPage,

@@ -24,6 +24,10 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:7880
+    event-service:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:1238
 
   routers:
     frontend-router:
@@ -44,8 +48,8 @@ http:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
     chat-graphql-router:
-      rule: "PathPrefix(`/chat/playground`) || PathPrefix(`/chat/graphql`)"
-      service: chat-service
+      rule: "PathPrefix(`/event/playground`) || PathPrefix(`/event/graphql`)"
+      service: event-service
       middlewares:
         - "auth-middleware"
         - "api-strip-prefix-middleware"

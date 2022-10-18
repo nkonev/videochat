@@ -17,8 +17,8 @@ import (
 	"github.com/google/uuid"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
-	"nkonev.name/chat/graph/model"
-	"nkonev.name/chat/graph_types"
+	"nkonev.name/event/graph/model"
+	"nkonev.name/event/graph_types"
 )
 
 // region    ************************** generated!.gotpl **************************

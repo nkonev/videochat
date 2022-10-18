@@ -2,11 +2,9 @@ package listener
 
 import (
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
-	"github.com/google/uuid"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/producer"
 	myRabbit "nkonev.name/chat/rabbitmq"
 )
 
@@ -20,13 +18,10 @@ type VideoNotificationsQueue struct{ *amqp.Queue }
 type VideoInviteQueue struct{ *amqp.Queue }
 type VideoDialStatusQueue struct{ *amqp.Queue }
 
-// type FanoutNotificationsQueue struct{ *amqp.Queue }
-
 type AaaEventsChannel struct{ *rabbitmq.Channel }
 type VideoNotificationsChannel struct{ *rabbitmq.Channel }
 type VideoInviteChannel struct{ *rabbitmq.Channel }
 type VideoDialStatusChannel struct{ *rabbitmq.Channel }
-type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
 
 func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
@@ -83,24 +78,6 @@ func CreateVideoInviteChannel(connection *rabbitmq.Connection) VideoInviteChanne
 
 func CreateVideoDialStatusChannel(connection *rabbitmq.Connection) VideoDialStatusChannel {
 	return VideoDialStatusChannel{myRabbit.CreateRabbitMqChannel(connection)}
-}
-
-func CreateFanoutNotificationsChannel(connection *rabbitmq.Connection, onMessage FanoutNotificationsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
-	var fanoutQueueName = "async-events-" + uuid.New().String()
-
-	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
-		connection,
-		func(channel *rabbitmq.Channel) error {
-			err := channel.ExchangeDeclare(producer.AsyncEventsFanoutExchange, "fanout", true, false, false, false, nil)
-			if err != nil {
-				return err
-			}
-
-			tempQueue := createAndBind(fanoutQueueName, "", producer.AsyncEventsFanoutExchange, channel)
-			listen(channel, tempQueue, onMessage, lc)
-			return nil
-		},
-	)}
 }
 
 func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue {
@@ -184,12 +161,3 @@ func ListenVideoDialStatusQueue(
 
 	listen(channel.Channel, queue.Queue, onMessage, lc)
 }
-
-//func ListenFanoutNotificationsQueue(
-//	channel FanoutNotificationsChannel,
-//	queue FanoutNotificationsQueue,
-//	onMessage FanoutNotificationsListener,
-//	lc fx.Lifecycle) {
-//
-//	listen(channel.Channel, queue.Queue, onMessage, lc)
-//}

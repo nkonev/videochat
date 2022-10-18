@@ -5,7 +5,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/google/uuid"
 	"io"
-	. "nkonev.name/chat/logger"
+	. "nkonev.name/event/logger"
 )
 
 //

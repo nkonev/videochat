@@ -494,7 +494,7 @@ subscription {
 ```
 
 You need to open it through Traefik
-http://localhost:8081/chat/playground
+http://localhost:8081/event/playground
 
 ```
 subscription{

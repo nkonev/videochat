@@ -4,6 +4,12 @@ server:
   body.limit: "100G"
   contextPath: "/api"
 
+# Rest client
+http:
+  maxIdleConns: 2
+  idleConnTimeout: '10s'
+  disableCompression: false
+
 auth:
   exclude:
     - "^/storage/public.*"
