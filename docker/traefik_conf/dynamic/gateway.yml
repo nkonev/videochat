@@ -47,14 +47,6 @@ http:
         - "auth-middleware"
         - "api-strip-prefix-middleware"
         - "retry-middleware"
-    chat-graphql-router:
-      rule: "PathPrefix(`/event/playground`) || PathPrefix(`/event/graphql`)"
-      service: event-service
-      middlewares:
-        - "auth-middleware"
-        - "api-strip-prefix-middleware"
-        - "retry-middleware"
-
     storage-router:
       rule: "PathPrefix(`/api/storage`)"
       service: storage-service
@@ -85,6 +77,19 @@ http:
       service: livekit-service
       middlewares:
         - "livekit-strip-prefix-middleware"
+        - "retry-middleware"
+    event-graphql-router:
+      rule: "PathPrefix(`/event/playground`) || PathPrefix(`/event/graphql`)"
+      service: event-service
+      middlewares:
+        - "auth-middleware"
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
+    event-public-router:
+      rule: "PathPrefix(`/api/event/public`)"
+      service: event-service
+      middlewares:
+        - "api-strip-prefix-middleware"
         - "retry-middleware"
 
   middlewares:
