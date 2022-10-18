@@ -101,17 +101,6 @@ func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64,
 }
 
 func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, changingParticipantPage int, tx *db.Tx) {
-
-	err := not.rabbitPublisher.Publish(dto.GlobalEvent{
-		UserIds:          &userIds,
-		EventType:        eventType,
-		ChatNotification: newChatDto,
-	})
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
-	}
-
-	// TODO remove rest part
 	for _, participantId := range userIds {
 		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 		GetLogEntry(c.Request().Context()).Infof("Sending notification about %v the chat to participantChannel: %v", eventType, participantChannel)
@@ -135,7 +124,7 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 		}
 
 		// TODO move to better place
-		// see also handlers/chat.go:199 convertToDto()
+		//  see also handlers/chat.go:199 convertToDto()
 		copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
 		copied.CanDelete = null.BoolFrom(admin)
 		copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet)
@@ -145,11 +134,21 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 		copied.CanChangeChatAdmins = admin && !copied.IsTetATet
 		copied.ParticipantsCount = newChatDto.ParticipantsCount
 		copied.ChangingParticipantsPage = changingParticipantPage
-		//copied.CanBroadcast = admin
+		copied.CanBroadcast = admin
 		for _, participant := range copied.Participants {
 			utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)
 		}
 
+		err = not.rabbitPublisher.Publish(dto.GlobalEvent{
+			UserId:           participantId,
+			EventType:        eventType,
+			ChatNotification: newChatDto,
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		}
+
+		// TODO remove rest part
 		notification := dto.CentrifugeNotification{
 			Payload:   copied,
 			EventType: eventType,
@@ -232,18 +231,8 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 }
 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
-	err := not.rabbitPublisher.Publish(dto.ChatEvent{
-		EventType:           eventType,
-		MessageNotification: message,
-		UserIds:             &userIds,
-	})
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
-	}
 
-	// TODO remove rest part
-	// we send a notification only to those people who are currently reading the chat
-	// if this is not done - when the user has many chats, he will receive many notifications and filter them on js
+	// TODO remove presence and activeChatUsers
 	activeChatUsers := []int64{}
 	chatChannel := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
 	presence, err := not.centrifuge.Presence(chatChannel)
@@ -260,8 +249,17 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 	}
 
 	for _, participantId := range userIds {
-		if utils.Contains(activeChatUsers, participantId) {
+		err := not.rabbitPublisher.Publish(dto.ChatEvent{
+			EventType:           eventType,
+			MessageNotification: message,
+			UserId:              participantId,
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		}
 
+		// TODO remove rest part
+		if utils.Contains(activeChatUsers, participantId) {
 			participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
 			GetLogEntry(c.Request().Context()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
 

@@ -46,7 +46,7 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 	subscribeHandler, err := r.Bus.Subscribe(dto.CHAT_EVENTS, func(event eventbus.Event, t time.Time) {
 		switch typedEvent := event.(type) {
 		case dto.ChatEvent:
-			if isReceiverOfEvent(typedEvent.UserIds, authResult) {
+			if isReceiverOfEvent(typedEvent.UserId, authResult) {
 				cam <- convertToChatEvent(&typedEvent, authResult.UserId)
 			}
 			break
@@ -85,7 +85,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 	subscribeHandler, err := r.Bus.Subscribe(dto.GLOBAL_EVENTS, func(event eventbus.Event, t time.Time) {
 		switch typedEvent := event.(type) {
 		case dto.GlobalEvent:
-			if isReceiverOfEvent(typedEvent.UserIds, authResult) {
+			if isReceiverOfEvent(typedEvent.UserId, authResult) {
 				notificationDto := typedEvent.ChatNotification
 				admin, err := r.Db.IsAdmin(authResult.UserId, notificationDto.Id)
 				if err != nil {
@@ -223,11 +223,6 @@ func convertUsers(participants []*dto.UserWithAdmin) []*model.UserWithAdmin {
 	return usrs
 }
 
-func isReceiverOfEvent(userIds *[]int64, authResult *auth.AuthResult) bool {
-	for _, userId := range *userIds {
-		if userId == authResult.UserId {
-			return true
-		}
-	}
-	return false
+func isReceiverOfEvent(userId int64, authResult *auth.AuthResult) bool {
+	return userId == authResult.UserId
 }

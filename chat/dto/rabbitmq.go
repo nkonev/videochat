@@ -7,7 +7,7 @@ const GLOBAL_EVENTS = "events.global"
 
 type ChatEvent struct {
 	EventType           string
-	UserIds             *[]int64
+	UserId              int64
 	MessageNotification *DisplayMessageDto
 }
 
@@ -17,7 +17,7 @@ func (ChatEvent) Name() eventbus.EventName {
 
 type GlobalEvent struct {
 	EventType        string
-	UserIds          *[]int64
+	UserId           int64
 	ChatNotification *ChatDtoWithAdmin
 }
 
