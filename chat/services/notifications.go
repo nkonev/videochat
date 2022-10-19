@@ -19,16 +19,15 @@ type Notifications interface {
 	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
 	NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx)
 	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, changingParticipantPage int, tx *db.Tx)
-
 	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
+	NotifyAboutProfileChanged(user *dto.User)
 
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutVideoCallChanged(dto dto.ChatNotifyDto, participantIds []int64)
-	NotifyAboutProfileChanged(user *dto.User)
 	NotifyAboutCallInvitation(c context.Context, chatId int64, userIds []int64, chatName string)
 	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
 	NotifyAboutDialStatus(c context.Context, chatId, behalfUserId int64, status bool, usersId []int64)
@@ -304,19 +303,13 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 	}
 
 	for _, participantId := range coChatters {
-		notification := dto.CentrifugeNotification{
-			Payload:   user,
-			EventType: "user_profile_changed",
-		}
-		if marshalledBytes, err := json.Marshal(notification); err != nil {
-			Logger.Errorf("error during marshalling user_profile_changed notification: %s", err)
-		} else {
-			participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-			Logger.Infof("Sending notification about user_profile_changed to participantChannel: %v", participantChannel)
-			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
-			if err != nil {
-				Logger.Errorf("error publishing to personal channel: %s", err)
-			}
+		err = not.rabbitPublisher.Publish(dto.GlobalEvent{
+			UserId:                  participantId,
+			EventType:               "user_profile_changed",
+			UserProfileNotification: user,
+		})
+		if err != nil {
+			Logger.Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }

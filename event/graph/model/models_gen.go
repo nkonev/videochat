@@ -49,6 +49,7 @@ type DisplayMessageDto struct {
 type GlobalEvent struct {
 	EventType string   `json:"eventType"`
 	ChatEvent *ChatDto `json:"chatEvent"`
+	UserEvent *User    `json:"userEvent"`
 }
 
 type User struct {

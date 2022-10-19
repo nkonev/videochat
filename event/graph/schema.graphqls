@@ -56,6 +56,7 @@ type ChatEvent {
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
+    userEvent: User
 }
 
 type Query {

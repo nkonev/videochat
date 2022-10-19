@@ -88,6 +88,7 @@ type ComplexityRoot struct {
 	GlobalEvent struct {
 		ChatEvent func(childComplexity int) int
 		EventType func(childComplexity int) int
+		UserEvent func(childComplexity int) int
 	}
 
 	Query struct {
@@ -353,6 +354,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalEvent.EventType(childComplexity), true
 
+	case "GlobalEvent.userEvent":
+		if e.complexity.GlobalEvent.UserEvent == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.UserEvent(childComplexity), true
+
 	case "Query.ping":
 		if e.complexity.Query.Ping == nil {
 			break
@@ -555,6 +563,7 @@ type ChatEvent {
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
+    userEvent: User
 }
 
 type Query {
@@ -1314,7 +1323,7 @@ func (ec *executionContext) _ChatDto_participants(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.UserWithAdmin)
 	fc.Result = res
-	return ec.marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx, field.Selections, res)
+	return ec.marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_participants(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1497,7 +1506,7 @@ func (ec *executionContext) _ChatEvent_messageEvent(ctx context.Context, field g
 	}
 	res := resTmp.(*model.DisplayMessageDto)
 	fc.Result = res
-	return ec.marshalODisplayMessageDto2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐDisplayMessageDto(ctx, field.Selections, res)
+	return ec.marshalODisplayMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDisplayMessageDto(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatEvent_messageEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1819,7 +1828,7 @@ func (ec *executionContext) _DisplayMessageDto_owner(ctx context.Context, field 
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1997,7 +2006,7 @@ func (ec *executionContext) _GlobalEvent_chatEvent(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.ChatDto)
 	fc.Result = res
-	return ec.marshalOChatDto2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐChatDto(ctx, field.Selections, res)
+	return ec.marshalOChatDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatDto(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2046,6 +2055,55 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(ctx context.Conte
 				return ec.fieldContext_ChatDto_changingParticipantsPage(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalEvent_userEvent(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_userEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_userEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "login":
+				return ec.fieldContext_User_login(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -2257,7 +2315,7 @@ func (ec *executionContext) _Subscription_chatEvents(ctx context.Context, field 
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNChatEvent2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐChatEvent(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalNChatEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatEvent(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -2332,7 +2390,7 @@ func (ec *executionContext) _Subscription_globalEvents(ctx context.Context, fiel
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNGlobalEvent2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐGlobalEvent(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalNGlobalEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐGlobalEvent(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -2353,6 +2411,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 				return ec.fieldContext_GlobalEvent_eventType(ctx, field)
 			case "chatEvent":
 				return ec.fieldContext_GlobalEvent_chatEvent(ctx, field)
+			case "userEvent":
+				return ec.fieldContext_GlobalEvent_userEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalEvent", field.Name)
 		},
@@ -4703,6 +4763,10 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._GlobalEvent_chatEvent(ctx, field, obj)
 
+		case "userEvent":
+
+			out.Values[i] = ec._GlobalEvent_userEvent(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5216,11 +5280,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNChatEvent2nkonevᚗnameᚋchatᚋgraphᚋmodelᚐChatEvent(ctx context.Context, sel ast.SelectionSet, v model.ChatEvent) graphql.Marshaler {
+func (ec *executionContext) marshalNChatEvent2nkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatEvent(ctx context.Context, sel ast.SelectionSet, v model.ChatEvent) graphql.Marshaler {
 	return ec._ChatEvent(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNChatEvent2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐChatEvent(ctx context.Context, sel ast.SelectionSet, v *model.ChatEvent) graphql.Marshaler {
+func (ec *executionContext) marshalNChatEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatEvent(ctx context.Context, sel ast.SelectionSet, v *model.ChatEvent) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5230,11 +5294,11 @@ func (ec *executionContext) marshalNChatEvent2ᚖnkonevᚗnameᚋchatᚋgraphᚋ
 	return ec._ChatEvent(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNGlobalEvent2nkonevᚗnameᚋchatᚋgraphᚋmodelᚐGlobalEvent(ctx context.Context, sel ast.SelectionSet, v model.GlobalEvent) graphql.Marshaler {
+func (ec *executionContext) marshalNGlobalEvent2nkonevᚗnameᚋeventᚋgraphᚋmodelᚐGlobalEvent(ctx context.Context, sel ast.SelectionSet, v model.GlobalEvent) graphql.Marshaler {
 	return ec._GlobalEvent(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGlobalEvent2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐGlobalEvent(ctx context.Context, sel ast.SelectionSet, v *model.GlobalEvent) graphql.Marshaler {
+func (ec *executionContext) marshalNGlobalEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐGlobalEvent(ctx context.Context, sel ast.SelectionSet, v *model.GlobalEvent) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5336,7 +5400,7 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserWithAdmin) graphql.Marshaler {
+func (ec *executionContext) marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserWithAdmin) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -5360,7 +5424,7 @@ func (ec *executionContext) marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋchatᚋg
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNUserWithAdmin2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐUserWithAdmin(ctx, sel, v[i])
+			ret[i] = ec.marshalNUserWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdmin(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5380,7 +5444,7 @@ func (ec *executionContext) marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋchatᚋg
 	return ret
 }
 
-func (ec *executionContext) marshalNUserWithAdmin2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐUserWithAdmin(ctx context.Context, sel ast.SelectionSet, v *model.UserWithAdmin) graphql.Marshaler {
+func (ec *executionContext) marshalNUserWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdmin(ctx context.Context, sel ast.SelectionSet, v *model.UserWithAdmin) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5669,14 +5733,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOChatDto2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐChatDto(ctx context.Context, sel ast.SelectionSet, v *model.ChatDto) graphql.Marshaler {
+func (ec *executionContext) marshalOChatDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatDto(ctx context.Context, sel ast.SelectionSet, v *model.ChatDto) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._ChatDto(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODisplayMessageDto2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐDisplayMessageDto(ctx context.Context, sel ast.SelectionSet, v *model.DisplayMessageDto) graphql.Marshaler {
+func (ec *executionContext) marshalODisplayMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDisplayMessageDto(ctx context.Context, sel ast.SelectionSet, v *model.DisplayMessageDto) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -5731,7 +5795,7 @@ func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(
 	return res
 }
 
-func (ec *executionContext) marshalOUser2ᚖnkonevᚗnameᚋchatᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

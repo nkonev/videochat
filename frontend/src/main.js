@@ -128,6 +128,9 @@ vm = new Vue({
             } else if (getGlobalEventsData(e).eventType === 'chat_deleted') {
                 const d = getGlobalEventsData(e).chatEvent;
                 bus.$emit(CHAT_DELETED, d);
+            } else if (getGlobalEventsData(e).eventType === 'user_profile_changed') {
+                const d = getGlobalEventsData(e).userEvent;
+                bus.$emit(USER_PROFILE_CHANGED, d);
             }
         }
         const onError = (e) => {
@@ -170,6 +173,11 @@ vm = new Vue({
                             avatar
                             admin
                           }
+                        }
+                        userEvent {
+                          id
+                          login
+                          avatar
                         }
                       }
                     }
@@ -230,9 +238,6 @@ vm = new Vue({
           const d = getProperData(ctx);
           const currentNewMessages = d.allUnreadMessages > 0;
           setIcon(currentNewMessages)
-      } else if (getData(ctx).type === 'user_profile_changed') {
-        const d = getProperData(ctx);
-        bus.$emit(USER_PROFILE_CHANGED, d);
       } else if (getData(ctx).type === 'video_call_invitation') {
         const d = getProperData(ctx);
         bus.$emit(VIDEO_CALL_INVITED, d);

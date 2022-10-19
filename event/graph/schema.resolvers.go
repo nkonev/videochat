@@ -45,7 +45,7 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 		switch typedEvent := event.(type) {
 		case dto.ChatEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) && typedEvent.ChatId == chatID {
-				cam <- convertToChatEvent(&typedEvent, authResult.UserId)
+				cam <- convertToChatEvent(&typedEvent)
 			}
 			break
 		default:
@@ -84,8 +84,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 		switch typedEvent := event.(type) {
 		case dto.GlobalEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) {
-				notificationDto := typedEvent.ChatNotification
-				cam <- convertToGlobalEvent(typedEvent.EventType, notificationDto)
+				cam <- convertToGlobalEvent(&typedEvent)
 			}
 			break
 		default:
@@ -127,13 +126,13 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convertToChatEvent(e *dto.ChatEvent, participantId int64) *model.ChatEvent {
-	notificationDto := e.MessageNotification
-	// TODO move to better place
-	var canEdit = notificationDto.OwnerId == participantId
-	return &model.ChatEvent{
+func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
+	var result = &model.ChatEvent{
 		EventType: e.EventType,
-		MessageEvent: &model.DisplayMessageDto{ // dto.DisplayMessageDto
+	}
+	notificationDto := e.MessageNotification
+	if notificationDto != nil {
+		result.MessageEvent = &model.DisplayMessageDto{ // dto.DisplayMessageDto
 			ID:             notificationDto.Id,
 			Text:           notificationDto.Text,
 			ChatID:         notificationDto.ChatId,
@@ -141,16 +140,20 @@ func convertToChatEvent(e *dto.ChatEvent, participantId int64) *model.ChatEvent 
 			CreateDateTime: notificationDto.CreateDateTime,
 			EditDateTime:   notificationDto.EditDateTime.Ptr(),
 			Owner:          convertUser(notificationDto.Owner),
-			CanEdit:        canEdit,
+			CanEdit:        notificationDto.CanEdit,
 			FileItemUUID:   notificationDto.FileItemUuid,
-		},
+		}
 	}
+	return result
 }
-
-func convertToGlobalEvent(eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin) *model.GlobalEvent {
-	return &model.GlobalEvent{
-		EventType: eventType,
-		ChatEvent: &model.ChatDto{ // dto.ChatDtoWithAdmin
+func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
+	//eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin
+	var ret = &model.GlobalEvent{
+		EventType: e.EventType,
+	}
+	chatDtoWithAdmin := e.ChatNotification
+	if chatDtoWithAdmin != nil {
+		ret.ChatEvent = &model.ChatDto{ // dto.ChatDtoWithAdmin
 			ID:                       chatDtoWithAdmin.Id,
 			Name:                     chatDtoWithAdmin.Name,
 			Avatar:                   chatDtoWithAdmin.Avatar.Ptr(),
@@ -169,10 +172,19 @@ func convertToGlobalEvent(eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdm
 			ParticipantsCount:        chatDtoWithAdmin.ParticipantsCount,
 			ChangingParticipantsPage: chatDtoWithAdmin.ChangingParticipantsPage,
 			Participants:             convertUsers(chatDtoWithAdmin.Participants),
-		},
+		}
 	}
-}
 
+	userProfileDto := e.UserProfileNotification
+	if userProfileDto != nil {
+		ret.UserEvent = &model.User{
+			ID:     userProfileDto.Id,
+			Login:  userProfileDto.Login,
+			Avatar: userProfileDto.Avatar.Ptr(),
+		}
+	}
+	return ret
+}
 func convertUser(owner *dto.User) *model.User {
 	if owner == nil {
 		return nil
@@ -183,7 +195,6 @@ func convertUser(owner *dto.User) *model.User {
 		Avatar: owner.Avatar.Ptr(),
 	}
 }
-
 func convertUserWithAdmin(owner *dto.UserWithAdmin) *model.UserWithAdmin {
 	if owner == nil {
 		return nil
@@ -195,7 +206,6 @@ func convertUserWithAdmin(owner *dto.UserWithAdmin) *model.UserWithAdmin {
 		Admin:  owner.Admin,
 	}
 }
-
 func convertUsers(participants []*dto.UserWithAdmin) []*model.UserWithAdmin {
 	if participants == nil {
 		return nil
@@ -206,7 +216,6 @@ func convertUsers(participants []*dto.UserWithAdmin) []*model.UserWithAdmin {
 	}
 	return usrs
 }
-
 func isReceiverOfEvent(userId int64, authResult *auth.AuthResult) bool {
 	return userId == authResult.UserId
 }
