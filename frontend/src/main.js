@@ -2,6 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
 import {setupCentrifuge} from "./centrifugeConnection"
+import graphQlClient from "./graphql"
 import axios from "axios";
 import bus, {
     CHAT_ADD,
@@ -26,7 +27,6 @@ import store, {
     UNSET_USER
 } from './store'
 import router from './router.js'
-import {getData, getProperData} from "./centrifugeConnection";
 import {setIcon} from "@/utils";
 
 let vm;
@@ -97,6 +97,18 @@ axios.interceptors.response.use((response) => {
   }
 });
 
+const getData = (message) => {
+    return message.data
+};
+
+const getProperData = (message) => {
+    return message.data.payload
+};
+
+const getGlobalEventsData = (message) => {
+    return message.data?.globalEvents
+};
+
 vm = new Vue({
   vuetify,
   store,
@@ -108,7 +120,77 @@ vm = new Vue({
     disconnectCentrifuge() {
       this.centrifuge.disconnect();
       Vue.prototype.centrifugeInitialized = false;
-    }
+    },
+    subscribeToGlobalEvents() {
+        const onNext = (e) => {
+            console.debug("Got event", e);
+            if (getGlobalEventsData(e).eventType === 'chat_created') {
+                const d = getGlobalEventsData(e).chatEvent;
+                bus.$emit(CHAT_ADD, d);
+            } else if (getGlobalEventsData(e).eventType === 'chat_edited') {
+                const d = getGlobalEventsData(e).chatEvent;
+                bus.$emit(CHAT_EDITED, d);
+            } else if (getGlobalEventsData(e).eventType === 'chat_deleted') {
+                const d = getGlobalEventsData(e).chatEvent;
+                bus.$emit(CHAT_DELETED, d);
+            }
+        }
+        const onError = (e) => {
+            console.error("Got err, reconnecting", e);
+            setTimeout(this.subscribeToGlobalEvents, 2000);
+        }
+        const onComplete = (e) => {
+            console.log("Got compete", e);
+        }
+
+        console.log("Subscribing to global events");
+        Vue.prototype.globalEventsUnsubscribe = graphQlClient.subscribe(
+            {
+                query: // ChatDtoWithAdmin
+                    `
+                    subscription {
+                      globalEvents {
+                        eventType
+                        chatEvent {
+                          id
+                          name
+                          avatar
+                          avatarBig
+                          lastUpdateDateTime
+                          participantIds
+                          canEdit
+                          canDelete
+                          canLeave
+                          unreadMessages
+                          canBroadcast
+                          canVideoKick
+                          canChangeChatAdmins
+                          tetATet
+                          canAudioMute
+                          participantsCount
+                          changingParticipantsPage
+                          participants {
+                            id
+                            login
+                            avatar
+                            admin
+                          }
+                        }
+                      }
+                    }
+                `,
+            },
+            {
+                next: onNext,
+                error: onError,
+                complete: onComplete,
+            },
+        );
+    },
+    unsubscribeFromGlobalEvents() {
+        Vue.prototype.globalEventsUnsubscribe();
+        Vue.prototype.globalEventsUnsubscribe = null;
+    },
   },
   created(){
     Vue.prototype.isMobile = () => {
@@ -126,9 +208,12 @@ vm = new Vue({
     };
     Vue.prototype.centrifuge = setupCentrifuge(setCentrifugeSession, onDisconnected);
     this.connectCentrifuge();
-
     bus.$on(LOGGED_IN, this.connectCentrifuge);
     bus.$on(LOGGED_OUT, this.disconnectCentrifuge);
+
+    this.subscribeToGlobalEvents();
+    bus.$on(LOGGED_IN, this.subscribeToGlobalEvents);
+    bus.$on(LOGGED_OUT, this.unsubscribeFromGlobalEvents);
   },
   destroyed() {
     this.disconnectCentrifuge();
@@ -138,16 +223,7 @@ vm = new Vue({
   mounted(){
     this.centrifuge.on('publish', (ctx)=>{
       console.debug("Got personal message", ctx);
-      if (getData(ctx).type === 'chat_created') {
-        const d = getProperData(ctx);
-        bus.$emit(CHAT_ADD, d);
-      } else if (getData(ctx).type === 'chat_edited') {
-        const d = getProperData(ctx);
-        bus.$emit(CHAT_EDITED, d);
-      } else if (getData(ctx).type === 'chat_deleted') {
-        const d = getProperData(ctx);
-        bus.$emit(CHAT_DELETED, d);
-      } else if (getData(ctx).type === 'message_created') {
+      if (getData(ctx).type === 'message_created') {
         const d = getProperData(ctx);
         bus.$emit(MESSAGE_ADD, d);
       } else if (getData(ctx).type === 'message_deleted') {

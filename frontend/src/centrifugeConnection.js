@@ -35,8 +35,6 @@ export const getProperData = (message) => {
     return message.data.payload
 };
 
-export const setProperData = (message) => {
-    return {
-        payload: message
-    }
+export const getGlobalEventsData = (message) => {
+    return message.data.globalEvents
 };
