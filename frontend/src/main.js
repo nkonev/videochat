@@ -216,10 +216,14 @@ vm = new Vue({
     bus.$on(LOGGED_OUT, this.unsubscribeFromGlobalEvents);
   },
   destroyed() {
-    this.unsubscribeFromGlobalEvents();
     this.disconnectCentrifuge();
     bus.$off(LOGGED_IN, this.connectCentrifuge);
     bus.$off(LOGGED_OUT, this.disconnectCentrifuge);
+
+    this.unsubscribeFromGlobalEvents();
+    graphQlClient.terminate();
+    bus.$off(LOGGED_IN, this.subscribeToGlobalEvents);
+    bus.$off(LOGGED_OUT, this.unsubscribeFromGlobalEvents);
   },
   mounted(){
     this.centrifuge.on('publish', (ctx)=>{
