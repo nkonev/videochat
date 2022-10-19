@@ -35,7 +35,7 @@ import (
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
 const TRACE_RESOURCE = "event"
-const GRAPHQL_PATH = "/event/graphql"
+const GRAPHQL_PATH = "/api/event/graphql"
 const GRAPHQL_PLAYGROUND = "/event/playground"
 
 func main() {

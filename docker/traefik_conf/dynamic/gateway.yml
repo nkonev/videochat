@@ -79,11 +79,10 @@ http:
         - "livekit-strip-prefix-middleware"
         - "retry-middleware"
     event-graphql-router:
-      rule: "PathPrefix(`/event/playground`) || PathPrefix(`/event/graphql`)"
+      rule: "PathPrefix(`/event/playground`) || PathPrefix(`/api/event/graphql`)"
       service: event-service
       middlewares:
         - "auth-middleware"
-        - "api-strip-prefix-middleware"
         - "retry-middleware"
     event-public-router:
       rule: "PathPrefix(`/api/event/public`)"
