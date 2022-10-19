@@ -147,20 +147,6 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
 		}
-
-		// TODO remove rest part
-		notification := dto.CentrifugeNotification{
-			Payload:   copied,
-			EventType: eventType,
-		}
-		if marshalledBytes, err := json.Marshal(notification); err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created notification: %s", err)
-		} else {
-			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
-			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error publishing to personal channel: %s", err)
-			}
-		}
 	}
 }
 
@@ -231,23 +217,6 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 }
 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
-
-	// TODO remove presence and activeChatUsers
-	activeChatUsers := []int64{}
-	chatChannel := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
-	presence, err := not.centrifuge.Presence(chatChannel)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("error during get chat presence for participantId : %s", err)
-		return
-	}
-	for _, ci := range presence.Presence {
-		if parseInt64, err := utils.ParseInt64(ci.UserID); err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during parse participantId : %s", err)
-		} else {
-			activeChatUsers = append(activeChatUsers, parseInt64)
-		}
-	}
-
 	for _, participantId := range userIds {
 		err := not.rabbitPublisher.Publish(dto.ChatEvent{
 			EventType:           eventType,
@@ -257,39 +226,6 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 		})
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
-		}
-
-		// TODO remove rest part
-		if utils.Contains(activeChatUsers, participantId) {
-			participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-			GetLogEntry(c.Request().Context()).Infof("Sending notification about create the chat to participantChannel: %v", participantChannel)
-
-			var copied *dto.DisplayMessageDto = &dto.DisplayMessageDto{}
-			if err := deepcopy.Copy(copied, message); err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
-				continue
-			}
-
-			copied.CanEdit = message.OwnerId == participantId
-
-			dn := &DisplayMessageDtoNotification{
-				*copied,
-				chatId,
-			}
-			notification := dto.CentrifugeNotification{
-				Payload:   dn,
-				EventType: eventType,
-			}
-			if marshalledBytes, err := json.Marshal(notification); err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created notification: %s", err)
-			} else {
-				_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
-				if err != nil {
-					GetLogEntry(c.Request().Context()).Errorf("error publishing to personal channel: %s", err)
-				}
-			}
-		} else {
-			GetLogEntry(c.Request().Context()).Warnf("User %v is not present in chat %v, skipping notification", participantId, chatId)
 		}
 	}
 }
