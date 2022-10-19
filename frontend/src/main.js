@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
-import {setupCentrifuge} from "./centrifugeConnection"
+import {getData, getProperData, setupCentrifuge} from "./centrifugeConnection"
 import graphQlClient from "./graphql"
 import axios from "axios";
 import bus, {
@@ -97,14 +97,6 @@ axios.interceptors.response.use((response) => {
   }
 });
 
-const getData = (message) => {
-    return message.data
-};
-
-const getProperData = (message) => {
-    return message.data.payload
-};
-
 const getGlobalEventsData = (message) => {
     return message.data?.globalEvents
 };
@@ -123,7 +115,10 @@ vm = new Vue({
     },
     subscribeToGlobalEvents() {
         const onNext = (e) => {
-            console.debug("Got event", e);
+            console.debug("Got global event", e);
+            if (e.errors != null && e.errors.length) {
+                this.setError(null, "Error in globalEvents subscription");
+            }
             if (getGlobalEventsData(e).eventType === 'chat_created') {
                 const d = getGlobalEventsData(e).chatEvent;
                 bus.$emit(CHAT_ADD, d);
@@ -136,11 +131,11 @@ vm = new Vue({
             }
         }
         const onError = (e) => {
-            console.error("Got err, reconnecting", e);
+            console.error("Got err in global event subscription, reconnecting", e);
             setTimeout(this.subscribeToGlobalEvents, 2000);
         }
         const onComplete = (e) => {
-            console.log("Got compete", e);
+            console.log("Got compete in global event subscription", e);
         }
 
         console.log("Subscribing to global events");
@@ -228,16 +223,7 @@ vm = new Vue({
   mounted(){
     this.centrifuge.on('publish', (ctx)=>{
       console.debug("Got personal message", ctx);
-      if (getData(ctx).type === 'message_created') {
-        const d = getProperData(ctx);
-        bus.$emit(MESSAGE_ADD, d);
-      } else if (getData(ctx).type === 'message_deleted') {
-        const d = getProperData(ctx);
-        bus.$emit(MESSAGE_DELETED, d);
-      } else if (getData(ctx).type === 'message_edited') {
-        const d = getProperData(ctx);
-        bus.$emit(MESSAGE_EDITED, d);
-      } else if (getData(ctx).type === 'unread_messages_changed') {
+      if (getData(ctx).type === 'unread_messages_changed') {
         const d = getProperData(ctx);
         bus.$emit(UNREAD_MESSAGES_CHANGED, d);
       } else if (getData(ctx).type === 'all_unread_messages_changed') {

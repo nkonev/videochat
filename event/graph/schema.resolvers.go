@@ -44,7 +44,7 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 	subscribeHandler, err := r.Bus.Subscribe(dto.CHAT_EVENTS, func(event eventbus.Event, t time.Time) {
 		switch typedEvent := event.(type) {
 		case dto.ChatEvent:
-			if isReceiverOfEvent(typedEvent.UserId, authResult) {
+			if isReceiverOfEvent(typedEvent.UserId, authResult) && typedEvent.ChatId == chatID {
 				cam <- convertToChatEvent(&typedEvent, authResult.UserId)
 			}
 			break

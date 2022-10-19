@@ -253,6 +253,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 			EventType:           eventType,
 			MessageNotification: message,
 			UserId:              participantId,
+			ChatId:              chatId,
 		})
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)

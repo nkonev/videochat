@@ -57,7 +57,7 @@
         LOGGED_OUT,
         VIDEO_CALL_CHANGED,
         MESSAGE_BROADCAST,
-        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE,
+        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE, CHAT_ADD,
     } from "./bus";
     import {chat_list_name, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
@@ -79,6 +79,7 @@
     import debounce from "lodash/debounce";
     import throttle from "lodash/throttle";
     import queryMixin from "@/queryMixin";
+    import graphQlClient from "@/graphql";
 
 
     const defaultDesktopWithoutVideo = [80, 20];
@@ -103,6 +104,10 @@
     const scrollingThreshold = 200; // px
 
     let writingUsersTimerId;
+
+    const getChatEventsData = (message) => {
+        return message.data?.chatEvents
+    };
 
     export default {
         mixins: [queryMixin()],
@@ -563,6 +568,72 @@
                     this.broadcastMessage = null;
                 }
             },
+
+
+            subscribeToChatEvents() {
+                const onNext = (e) => {
+                    console.debug("Got chat event", e);
+                    if (e.errors != null && e.errors.length) {
+                        this.setError(null, "Error in chatEvents subscription");
+                    }
+                    if (getChatEventsData(e).eventType === 'message_created') {
+                        const d = getChatEventsData(e).messageEvent;
+                        bus.$emit(MESSAGE_ADD, d);
+                    } else if (getChatEventsData(e).eventType === 'message_deleted') {
+                        const d = getChatEventsData(e).messageEvent;
+                        bus.$emit(MESSAGE_DELETED, d);
+                    } else if (getChatEventsData(e).eventType === 'message_edited') {
+                        const d = getChatEventsData(e).messageEvent;
+                        bus.$emit(MESSAGE_EDITED, d);
+                    }
+                }
+                const onError = (e) => {
+                    console.error("Got err in chatEvents subscription, reconnecting", e);
+                    setTimeout(this.subscribeToChatEvents, 2000);
+                }
+                const onComplete = (e) => {
+                    console.log("Got compete in chat event subscription", e);
+                }
+
+                console.log("Subscribing to chat events");
+                Vue.prototype.chatEventsUnsubscribe = graphQlClient.subscribe(
+                    {
+                        query: // DisplayMessageDto
+                            `
+                                subscription{
+                                  chatEvents(chatId: ${this.chatId}) {
+                                    eventType
+                                    messageEvent {
+                                      id
+                                      text
+                                      chatId
+                                      ownerId
+                                      createDateTime
+                                      editDateTime
+                                      owner {
+                                        id
+                                        login
+                                        avatar
+                                      }
+                                      canEdit
+                                      fileItemUuid
+                                    }
+                                  }
+                                }
+                `,
+                    },
+                    {
+                        next: onNext,
+                        error: onError,
+                        complete: onComplete,
+                    },
+                );
+            },
+            unsubscribeFromChatEvents() {
+                Vue.prototype.chatEventsUnsubscribe();
+                Vue.prototype.chatEventsUnsubscribe = null;
+            },
+
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -578,6 +649,10 @@
             window.addEventListener('resize', this.onResizedListener);
 
             this.subscribe();
+
+            this.subscribeToChatEvents()
+            bus.$on(LOGGED_IN, this.subscribeToChatEvents);
+            bus.$on(LOGGED_OUT, this.unsubscribeFromChatEvents);
 
             this.$store.commit(SET_TITLE, `Chat #${this.chatId}`);
             this.$store.commit(SET_CHAT_USERS_COUNT, 0);
@@ -631,6 +706,10 @@
             clearInterval(writingUsersTimerId);
 
             this.unsubscribe();
+
+            this.unsubscribeFromChatEvents();
+            bus.$off(LOGGED_IN, this.subscribeToChatEvents);
+            bus.$off(LOGGED_OUT, this.unsubscribeFromChatEvents);
 
             this.closeQueryWatcher();
         },
