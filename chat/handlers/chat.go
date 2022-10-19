@@ -839,6 +839,18 @@ func (ch *ChatHandler) RemoveAllParticipants(c echo.Context) error {
 	return ch.db.DeleteAllParticipants()
 }
 
+func (ch *ChatHandler) GetChatParticipants(c echo.Context) error {
+	chatId, err := GetQueryParamAsInt64(c, "chatId")
+	if err != nil {
+		return err
+	}
+	ids, err := ch.db.GetAllParticipantIds(chatId)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, ids)
+}
+
 type ParticipantBelongsToChat struct {
 	UserId  int64 `json:"userId"`
 	Belongs bool  `json:"belongs"`

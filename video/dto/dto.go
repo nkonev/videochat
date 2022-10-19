@@ -13,11 +13,9 @@ type VideoInviteDto struct {
 	BehalfLogin  string  `json:"behalfLogin"`
 }
 
-// sent to chat through RabbitMQ
 type ChatNotifyDto struct {
-	Data       *NotifyDto `json:"data"`
-	UsersCount int64      `json:"usersCount"`
-	ChatId     int64      `json:"chatId"`
+	UsersCount int64 `json:"usersCount"`
+	ChatId     int64 `json:"chatId"`
 }
 
 type VideoIsInvitingDto struct {

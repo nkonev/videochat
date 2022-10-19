@@ -5,7 +5,6 @@ import (
 	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/montag451/go-eventbus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
@@ -26,7 +25,6 @@ import (
 	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
-	"nkonev.name/chat/type_registry"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -45,7 +43,6 @@ func main() {
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
 			configureEcho,
-			configureEventBus,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			configureMigrations,
@@ -53,26 +50,21 @@ func main() {
 			services.NewNotifications,
 			producer.NewRabbitNotificationsPublisher,
 			listener.CreateAaaUserProfileUpdateListener,
-			listener.CreateVideoCallChangedListener,
 			listener.CreateVideoInviteListener,
 			listener.CreateVideoDialStatusListener,
 			rabbitmq.CreateRabbitMqConnection,
 			listener.CreateAaaChannel,
-			listener.CreateVideoNotificationsChannel,
 			listener.CreateVideoInviteChannel,
 			listener.CreateVideoDialStatusChannel,
 			listener.CreateAaaQueue,
-			listener.CreateVideoNotificationsQueue,
 			listener.CreateVideoInviteQueue,
 			listener.CreateVideoDialStatusQueue,
-			type_registry.NewTypeRegistryInstance,
 		),
 		fx.Invoke(
 			runMigrations,
 			runCentrifuge,
 			runEcho,
 			listener.ListenAaaQueue,
-			listener.ListenVideoNotificationsQueue,
 			listener.ListenVideoInviteQueue,
 			listener.ListenVideoDialStatusQueue,
 		),
@@ -174,6 +166,7 @@ func configureEcho(
 	e.GET("/chat/:id/user", ch.SearchForUsersToAdd)
 	e.PUT("/chat/tet-a-tet/:participantId", ch.TetATet)
 	e.GET("/internal/access", ch.CheckAccess)
+	e.GET("/internal/participant-ids", ch.GetChatParticipants)
 	e.GET("/internal/is-admin", ch.IsAdmin)
 	e.GET("/internal/is-chat-exists/:id", ch.IsExists)
 
@@ -232,19 +225,6 @@ func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	})
 
 	return tp, nil
-}
-
-func configureEventBus(lc fx.Lifecycle) *eventbus.Bus {
-	b := eventbus.New()
-	Logger.Infof("Starting event bus")
-	lc.Append(fx.Hook{
-		OnStop: func(ctx context.Context) error {
-			Logger.Infof("Stopping event bus")
-			b.Close()
-			return nil
-		},
-	})
-	return b
 }
 
 func configureMigrations() db.MigrationsConfig {

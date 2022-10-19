@@ -24,6 +24,7 @@ chat:
     access: "/internal/access"
     isChatAdmin: "/internal/is-admin"
     doesParticipantBelongToChat: "/internal/does-participant-belong-to-chat"
+    chatParticipants: "/internal/participant-ids"
 
 aaa:
   url:

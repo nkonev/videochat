@@ -1,39 +1,50 @@
 package producer
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/streadway/amqp"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	myRabbitmq "nkonev.name/video/rabbitmq"
+	"nkonev.name/video/utils"
 	"time"
 )
 
-const videoNotificationsQueue = "video-notifications"
 const videoInviteQueue = "video-invite"
 const videoDialStatusQueue = "video-dial-statuses"
+const AsyncEventsFanoutExchange = "async-events-exchange"
 
-func (rp *RabbitNotificationsPublisher) Publish(chatNotifyDto *dto.ChatNotifyDto) error {
-	bytea, err := json.Marshal(chatNotifyDto)
-	if err != nil {
-		Logger.Error(err, "Failed during marshal chatNotifyDto")
-		return err
-	}
+func (rp *RabbitNotificationsPublisher) Publish(participantIds []int64, chatNotifyDto *dto.ChatNotifyDto, ctx context.Context) error {
 
-	msg := amqp.Publishing{
-		DeliveryMode: amqp.Transient,
-		Timestamp:    time.Now(),
-		ContentType:  "application/json",
-		Body:         bytea,
-	}
+	for _, participantId := range participantIds {
+		event := dto.GlobalEvent{
+			EventType:         "video_call_changed",
+			UserId:            participantId,
+			VideoNotification: chatNotifyDto,
+		}
 
-	if err := rp.channel.Publish("", videoNotificationsQueue, false, false, msg); err != nil {
-		Logger.Error(err, "Error during publishing")
-		return err
-	} else {
-		return nil
+		bytea, err := json.Marshal(event)
+		if err != nil {
+			GetLogEntry(ctx).Error(err, "Failed during marshal chatNotifyDto")
+			continue
+		}
+
+		msg := amqp.Publishing{
+			DeliveryMode: amqp.Transient,
+			Timestamp:    time.Now(),
+			ContentType:  "application/json",
+			Body:         bytea,
+			Type:         utils.GetType(event),
+		}
+
+		if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
+			GetLogEntry(ctx).Error(err, "Error during publishing")
+			continue
+		}
 	}
+	return nil
 }
 
 type RabbitNotificationsPublisher struct {

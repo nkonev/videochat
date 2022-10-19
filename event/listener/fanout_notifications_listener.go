@@ -21,7 +21,9 @@ func CreateFanoutNotificationsListener(bus *eventbus.Bus, typeRegistry *type_reg
 		Logger.Debugf("Received %v with type %v", strData, aType)
 
 		if !typeRegistry.HasType(aType) {
-			return errors.New(fmt.Sprintf("Unexpected type in rabbit fanout notifications: %v", aType))
+			errStr := fmt.Sprintf("Unexpected type in rabbit fanout notifications: %v", aType)
+			Logger.Errorf(errStr)
+			return errors.New(errStr)
 		}
 
 		anInstance := typeRegistry.MakeInstance(aType)

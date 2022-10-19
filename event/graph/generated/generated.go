@@ -73,6 +73,11 @@ type ComplexityRoot struct {
 		MessageEvent func(childComplexity int) int
 	}
 
+	ChatNotifyDto struct {
+		ChatID     func(childComplexity int) int
+		UsersCount func(childComplexity int) int
+	}
+
 	DisplayMessageDto struct {
 		CanEdit        func(childComplexity int) int
 		ChatID         func(childComplexity int) int
@@ -86,9 +91,10 @@ type ComplexityRoot struct {
 	}
 
 	GlobalEvent struct {
-		ChatEvent func(childComplexity int) int
-		EventType func(childComplexity int) int
-		UserEvent func(childComplexity int) int
+		ChatEvent  func(childComplexity int) int
+		EventType  func(childComplexity int) int
+		UserEvent  func(childComplexity int) int
+		VideoEvent func(childComplexity int) int
 	}
 
 	Query struct {
@@ -277,6 +283,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatEvent.MessageEvent(childComplexity), true
 
+	case "ChatNotifyDto.chatId":
+		if e.complexity.ChatNotifyDto.ChatID == nil {
+			break
+		}
+
+		return e.complexity.ChatNotifyDto.ChatID(childComplexity), true
+
+	case "ChatNotifyDto.usersCount":
+		if e.complexity.ChatNotifyDto.UsersCount == nil {
+			break
+		}
+
+		return e.complexity.ChatNotifyDto.UsersCount(childComplexity), true
+
 	case "DisplayMessageDto.canEdit":
 		if e.complexity.DisplayMessageDto.CanEdit == nil {
 			break
@@ -360,6 +380,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalEvent.UserEvent(childComplexity), true
+
+	case "GlobalEvent.videoEvent":
+		if e.complexity.GlobalEvent.VideoEvent == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.VideoEvent(childComplexity), true
 
 	case "Query.ping":
 		if e.complexity.Query.Ping == nil {
@@ -560,10 +587,16 @@ type ChatEvent {
     messageEvent: DisplayMessageDto
 }
 
+type ChatNotifyDto {
+    usersCount: Int64!
+    chatId: Int64!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
     userEvent: User
+    videoEvent: ChatNotifyDto
 }
 
 type Query {
@@ -1542,6 +1575,94 @@ func (ec *executionContext) fieldContext_ChatEvent_messageEvent(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatNotifyDto_usersCount(ctx context.Context, field graphql.CollectedField, obj *model.ChatNotifyDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatNotifyDto_usersCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UsersCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatNotifyDto_usersCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatNotifyDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatNotifyDto_chatId(ctx context.Context, field graphql.CollectedField, obj *model.ChatNotifyDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatNotifyDto_chatId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatNotifyDto_chatId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatNotifyDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DisplayMessageDto_id(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DisplayMessageDto_id(ctx, field)
 	if err != nil {
@@ -2109,6 +2230,53 @@ func (ec *executionContext) fieldContext_GlobalEvent_userEvent(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _GlobalEvent_videoEvent(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_videoEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.VideoEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChatNotifyDto)
+	fc.Result = res
+	return ec.marshalOChatNotifyDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatNotifyDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_videoEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "usersCount":
+				return ec.fieldContext_ChatNotifyDto_usersCount(ctx, field)
+			case "chatId":
+				return ec.fieldContext_ChatNotifyDto_chatId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChatNotifyDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_ping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_ping(ctx, field)
 	if err != nil {
@@ -2413,6 +2581,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 				return ec.fieldContext_GlobalEvent_chatEvent(ctx, field)
 			case "userEvent":
 				return ec.fieldContext_GlobalEvent_userEvent(ctx, field)
+			case "videoEvent":
+				return ec.fieldContext_GlobalEvent_videoEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalEvent", field.Name)
 		},
@@ -4667,6 +4837,41 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 	return out
 }
 
+var chatNotifyDtoImplementors = []string{"ChatNotifyDto"}
+
+func (ec *executionContext) _ChatNotifyDto(ctx context.Context, sel ast.SelectionSet, obj *model.ChatNotifyDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, chatNotifyDtoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChatNotifyDto")
+		case "usersCount":
+
+			out.Values[i] = ec._ChatNotifyDto_usersCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "chatId":
+
+			out.Values[i] = ec._ChatNotifyDto_chatId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var displayMessageDtoImplementors = []string{"DisplayMessageDto"}
 
 func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.SelectionSet, obj *model.DisplayMessageDto) graphql.Marshaler {
@@ -4766,6 +4971,10 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 		case "userEvent":
 
 			out.Values[i] = ec._GlobalEvent_userEvent(ctx, field, obj)
+
+		case "videoEvent":
+
+			out.Values[i] = ec._GlobalEvent_videoEvent(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -5738,6 +5947,13 @@ func (ec *executionContext) marshalOChatDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋm
 		return graphql.Null
 	}
 	return ec._ChatDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOChatNotifyDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatNotifyDto(ctx context.Context, sel ast.SelectionSet, v *model.ChatNotifyDto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ChatNotifyDto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalODisplayMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDisplayMessageDto(ctx context.Context, sel ast.SelectionSet, v *model.DisplayMessageDto) graphql.Marshaler {

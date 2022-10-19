@@ -156,3 +156,8 @@ func GetRoomIdFromName(chatName string) (int64, error) {
 		return chatId, nil
 	}
 }
+
+func GetType(aDto interface{}) string {
+	strName := fmt.Sprintf("%T", aDto)
+	return strName
+}

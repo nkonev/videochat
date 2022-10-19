@@ -7,7 +7,6 @@ import (
 	"github.com/livekit/protocol/webhook"
 	lksdk "github.com/livekit/server-sdk-go"
 	"nkonev.name/video/config"
-	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
@@ -56,11 +55,6 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 				goto exit
 			}
 
-			notificationDto := &dto.NotifyDto{
-				UserId: md.UserId,
-				Login:  md.Login,
-			}
-
 			chatId, err := utils.GetRoomIdFromName(event.Room.Name)
 			if err != nil {
 				Logger.Error(err, "error during reading chat id from room name event=%v, %v", event.Room.Name)
@@ -70,7 +64,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 			usersCount := int64(event.Room.NumParticipants)
 
 			Logger.Infof("Sending notificationDto userId=%v, chatId=%v", md.UserId, chatId)
-			err = h.notificationService.Notify(chatId, usersCount, notificationDto)
+			err = h.notificationService.Notify(chatId, usersCount, c.Request().Context())
 			if err != nil {
 				Logger.Errorf("got error during notificationService.Notify event=%v, %v", event, err)
 				goto exit

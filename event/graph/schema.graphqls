@@ -53,10 +53,16 @@ type ChatEvent {
     messageEvent: DisplayMessageDto
 }
 
+type ChatNotifyDto {
+    usersCount: Int64!
+    chatId: Int64!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
     userEvent: User
+    videoEvent: ChatNotifyDto
 }
 
 type Query {

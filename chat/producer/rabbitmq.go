@@ -6,14 +6,14 @@ import (
 	"github.com/streadway/amqp"
 	. "nkonev.name/chat/logger"
 	myRabbitmq "nkonev.name/chat/rabbitmq"
-	"nkonev.name/chat/type_registry"
+	"nkonev.name/chat/utils"
 	"time"
 )
 
 const AsyncEventsFanoutExchange = "async-events-exchange"
 
 func (rp *RabbitFanoutNotificationsPublisher) Publish(aDto interface{}) error {
-	aType := rp.typeRegistry.GetType(aDto)
+	aType := utils.GetType(aDto)
 
 	bytea, err := json.Marshal(aDto)
 	if err != nil {
@@ -38,13 +38,11 @@ func (rp *RabbitFanoutNotificationsPublisher) Publish(aDto interface{}) error {
 }
 
 type RabbitFanoutNotificationsPublisher struct {
-	channel      *rabbitmq.Channel
-	typeRegistry *type_registry.TypeRegistryInstance
+	channel *rabbitmq.Channel
 }
 
-func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection, typeRegistry *type_registry.TypeRegistryInstance) *RabbitFanoutNotificationsPublisher {
+func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection) *RabbitFanoutNotificationsPublisher {
 	return &RabbitFanoutNotificationsPublisher{
-		channel:      myRabbitmq.CreateRabbitMqChannel(connection),
-		typeRegistry: typeRegistry,
+		channel: myRabbitmq.CreateRabbitMqChannel(connection),
 	}
 }

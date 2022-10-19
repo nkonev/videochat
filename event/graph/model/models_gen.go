@@ -34,6 +34,11 @@ type ChatEvent struct {
 	MessageEvent *DisplayMessageDto `json:"messageEvent"`
 }
 
+type ChatNotifyDto struct {
+	UsersCount int64 `json:"usersCount"`
+	ChatID     int64 `json:"chatId"`
+}
+
 type DisplayMessageDto struct {
 	ID             int64      `json:"id"`
 	Text           string     `json:"text"`
@@ -47,9 +52,10 @@ type DisplayMessageDto struct {
 }
 
 type GlobalEvent struct {
-	EventType string   `json:"eventType"`
-	ChatEvent *ChatDto `json:"chatEvent"`
-	UserEvent *User    `json:"userEvent"`
+	EventType  string         `json:"eventType"`
+	ChatEvent  *ChatDto       `json:"chatEvent"`
+	UserEvent  *User          `json:"userEvent"`
+	VideoEvent *ChatNotifyDto `json:"videoEvent"`
 }
 
 type User struct {

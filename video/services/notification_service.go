@@ -20,7 +20,7 @@ func NewStateChangedNotificationService(conf *config.ExtendedConfig, livekitRoom
 	return &StateChangedNotificationService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService}
 }
 
-func (h *StateChangedNotificationService) NotifyAllChats() {
+func (h *StateChangedNotificationService) NotifyAllChats(ctx context.Context) {
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := h.livekitRoomClient.ListRooms(context.Background(), listRoomReq)
 	if err != nil {
@@ -39,8 +39,8 @@ func (h *StateChangedNotificationService) NotifyAllChats() {
 			Logger.Errorf("got error during counting users in scheduler, %v", err)
 			continue
 		}
-		Logger.Infof("Sending notificationDto chatId=%v", chatId)
-		err = h.notificationService.Notify(chatId, usersCount, nil)
+		Logger.Infof("Sending notificationDto chatId=%v, usersCount=%v", chatId, usersCount)
+		err = h.notificationService.Notify(chatId, usersCount, ctx)
 		if err != nil {
 			Logger.Errorf("got error during notificationService.Notify, %v", err)
 			continue

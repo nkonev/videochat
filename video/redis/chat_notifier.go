@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
 	"nkonev.name/video/config"
@@ -28,7 +29,8 @@ func (srv *ChatNotifierService) doJob() {
 	}
 
 	Logger.Debugf("Invoked periodic ChatNotifier")
-	srv.scheduleService.NotifyAllChats()
+	ctx := context.Background()
+	srv.scheduleService.NotifyAllChats(ctx)
 
 	Logger.Debugf("End of ChatNotifier")
 }

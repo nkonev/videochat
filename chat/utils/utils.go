@@ -157,3 +157,8 @@ func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participan
 		chatDto.SetName(participant.Login)
 	}
 }
+
+func GetType(aDto interface{}) string {
+	strName := fmt.Sprintf("%T", aDto)
+	return strName
+}

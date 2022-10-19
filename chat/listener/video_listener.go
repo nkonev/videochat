@@ -11,35 +11,9 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-type VideoNotificationsListener func(*amqp.Delivery) error
-
 type VideoInviteListener func(*amqp.Delivery) error
 
 type VideoDialStatusListener func(*amqp.Delivery) error
-
-func CreateVideoCallChangedListener(not services.Notifications, db db.DB) VideoNotificationsListener {
-	return func(msg *amqp.Delivery) error {
-		data := msg.Body
-		s := string(data)
-		Logger.Infof("Received %v", s)
-
-		var bindTo = new(dto.ChatNotifyDto)
-		err := json.Unmarshal(data, &bindTo)
-		if err != nil {
-			Logger.Errorf("Error during deserialize ChatNotifyDto %v", err)
-			return nil
-		}
-		ids, err := db.GetAllParticipantIds(bindTo.ChatId)
-		if err != nil {
-			Logger.Warnf("Error during get participants of chat %v", bindTo.ChatId)
-			return err
-		}
-
-		not.NotifyAboutVideoCallChanged(*bindTo, ids)
-
-		return nil
-	}
-}
 
 type simpleChat struct {
 	Id        int64  `json:"id"`

@@ -14,12 +14,10 @@ const videoInviteQueue = "video-invite"
 const videoDialStatusQueue = "video-dial-statuses"
 
 type AaaEventsQueue struct{ *amqp.Queue }
-type VideoNotificationsQueue struct{ *amqp.Queue }
 type VideoInviteQueue struct{ *amqp.Queue }
 type VideoDialStatusQueue struct{ *amqp.Queue }
 
 type AaaEventsChannel struct{ *rabbitmq.Channel }
-type VideoNotificationsChannel struct{ *rabbitmq.Channel }
 type VideoInviteChannel struct{ *rabbitmq.Channel }
 type VideoDialStatusChannel struct{ *rabbitmq.Channel }
 
@@ -68,10 +66,6 @@ func CreateAaaChannel(connection *rabbitmq.Connection) AaaEventsChannel {
 	return AaaEventsChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
 
-func CreateVideoNotificationsChannel(connection *rabbitmq.Connection) VideoNotificationsChannel {
-	return VideoNotificationsChannel{myRabbit.CreateRabbitMqChannel(connection)}
-}
-
 func CreateVideoInviteChannel(connection *rabbitmq.Connection) VideoInviteChannel {
 	return VideoInviteChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
@@ -84,11 +78,7 @@ func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue {
 	return AaaEventsQueue{create(aaaEventsQueue, consumeCh.Channel)}
 }
 
-func CreateVideoNotificationsQueue(consumeCh VideoNotificationsChannel) VideoNotificationsQueue {
-	return VideoNotificationsQueue{create(videoNotificationsQueue, consumeCh.Channel)}
-}
-
-func CreateVideoInviteQueue(consumeCh VideoNotificationsChannel) VideoInviteQueue {
+func CreateVideoInviteQueue(consumeCh VideoInviteChannel) VideoInviteQueue {
 	return VideoInviteQueue{create(videoInviteQueue, consumeCh.Channel)}
 }
 
@@ -130,15 +120,6 @@ func ListenAaaQueue(
 	channel AaaEventsChannel,
 	queue AaaEventsQueue,
 	onMessage AaaUserProfileUpdateListener,
-	lc fx.Lifecycle) {
-
-	listen(channel.Channel, queue.Queue, onMessage, lc)
-}
-
-func ListenVideoNotificationsQueue(
-	channel VideoNotificationsChannel,
-	queue VideoNotificationsQueue,
-	onMessage VideoNotificationsListener,
 	lc fx.Lifecycle) {
 
 	listen(channel.Channel, queue.Queue, onMessage, lc)

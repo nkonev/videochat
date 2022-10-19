@@ -27,7 +27,6 @@ type Notifications interface {
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
-	NotifyAboutVideoCallChanged(dto dto.ChatNotifyDto, participantIds []int64)
 	NotifyAboutCallInvitation(c context.Context, chatId int64, userIds []int64, chatName string)
 	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
 	NotifyAboutDialStatus(c context.Context, chatId, behalfUserId int64, status bool, usersId []int64)
@@ -265,28 +264,6 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("error publishing to public channel: %s", err)
-		}
-	}
-}
-
-func (not *notifictionsImpl) NotifyAboutVideoCallChanged(cn dto.ChatNotifyDto, participantIds []int64) {
-	// TODO potential bad performance on frontend, consider batching
-	for _, participantId := range participantIds {
-		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-		Logger.Infof("Sending notification about change video chat the chat to participantChannel: %v", participantChannel)
-
-		notification := dto.CentrifugeNotification{
-			Payload:   cn,
-			EventType: "video_call_changed",
-		}
-
-		if marshalledBytes, err := json.Marshal(notification); err != nil {
-			Logger.Errorf("error during marshalling chat created VideoCallChanged: %s", err)
-		} else {
-			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
-			if err != nil {
-				Logger.Errorf("error publishing to public channel: %s", err)
-			}
 		}
 	}
 }

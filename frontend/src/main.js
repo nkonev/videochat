@@ -131,6 +131,9 @@ vm = new Vue({
             } else if (getGlobalEventsData(e).eventType === 'user_profile_changed') {
                 const d = getGlobalEventsData(e).userEvent;
                 bus.$emit(USER_PROFILE_CHANGED, d);
+            } else if (getGlobalEventsData(e).eventType === "video_call_changed") {
+                const d = getGlobalEventsData(e).videoEvent;
+                bus.$emit(VIDEO_CALL_CHANGED, d);
             }
         }
         const onError = (e) => {
@@ -178,6 +181,10 @@ vm = new Vue({
                           id
                           login
                           avatar
+                        }
+                        videoEvent {
+                          usersCount
+                          chatId
                         }
                       }
                     }
@@ -241,9 +248,6 @@ vm = new Vue({
       } else if (getData(ctx).type === 'video_call_invitation') {
         const d = getProperData(ctx);
         bus.$emit(VIDEO_CALL_INVITED, d);
-      } else if (getData(ctx).type === "video_call_changed") {
-        const d = getProperData(ctx);
-        bus.$emit(VIDEO_CALL_CHANGED, d);
       } else if (getData(ctx).type === "video_dial_status_changed") {
         const d = getProperData(ctx);
         bus.$emit(VIDEO_DIAL_STATUS_CHANGED, d);

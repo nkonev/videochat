@@ -183,6 +183,15 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 			Avatar: userProfileDto.Avatar.Ptr(),
 		}
 	}
+
+	videoEvent := e.VideoNotification
+	if videoEvent != nil {
+		ret.VideoEvent = &model.ChatNotifyDto{
+			UsersCount: videoEvent.UsersCount,
+			ChatID:     videoEvent.ChatId,
+		}
+	}
+
 	return ret
 }
 func convertUser(owner *dto.User) *model.User {

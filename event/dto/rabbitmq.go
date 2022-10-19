@@ -21,6 +21,7 @@ type GlobalEvent struct {
 	UserId                  int64             `json:"userId"`
 	ChatNotification        *ChatDtoWithAdmin `json:"chatNotification"`
 	UserProfileNotification *User             `json:"userProfileNotification"`
+	VideoNotification       *ChatNotifyDto    `json:"videoNotification"`
 }
 
 func (GlobalEvent) Name() eventbus.EventName {
