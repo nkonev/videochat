@@ -27,7 +27,6 @@ type Notifications interface {
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
-	NotifyAboutCallInvitation(c context.Context, chatId int64, userIds []int64, chatName string)
 	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
 	NotifyAboutDialStatus(c context.Context, chatId, behalfUserId int64, status bool, usersId []int64)
 }
@@ -287,30 +286,6 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 		})
 		if err != nil {
 			Logger.Errorf("Error during sending to rabbitmq : %s", err)
-		}
-	}
-}
-
-func (not *notifictionsImpl) NotifyAboutCallInvitation(c context.Context, chatId int64, userIds []int64, chatName string) {
-	notification := dto.CentrifugeNotification{
-		Payload: VideoCallInvitation{
-			ChatId:   chatId,
-			ChatName: chatName,
-		},
-		EventType: "video_call_invitation",
-	}
-
-	for _, userId := range userIds {
-		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(userId)
-
-		if marshalledBytes, err := json.Marshal(notification); err != nil {
-			GetLogEntry(c).Errorf("error during marshalling VideoCallInvitation: %s", err)
-		} else {
-			Logger.Infof("Sending notification about video_call_invitation to participantChannel: %v", participantChannel)
-			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
-			if err != nil {
-				Logger.Errorf("error publishing to personal channel: %s", err)
-			}
 		}
 	}
 }

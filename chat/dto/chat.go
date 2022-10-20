@@ -75,3 +75,8 @@ type ChatDtoWithAdmin struct {
 	ParticipantsCount        int              `json:"participantsCount"`
 	ChangingParticipantsPage int              `json:"changingParticipantsPage"`
 }
+
+type ChatName struct {
+	Name   string `json:"name"`   // chatName or userName in case tet-a-tet
+	UserId int64  `json:"userId"` // userId chatName for
+}

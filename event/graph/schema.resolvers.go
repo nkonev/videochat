@@ -192,6 +192,14 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 		}
 	}
 
+	videoChatInvite := e.VideoChatInvitation
+	if videoChatInvite != nil {
+		ret.VideoCallInvitation = &model.VideoCallInvitationDto{
+			ChatID:   videoChatInvite.ChatId,
+			ChatName: videoChatInvite.ChatName,
+		}
+	}
+
 	return ret
 }
 func convertUser(owner *dto.User) *model.User {

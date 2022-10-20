@@ -9,16 +9,12 @@ import (
 )
 
 const aaaEventsQueue = "aaa-events"
-const videoNotificationsQueue = "video-notifications"
-const videoInviteQueue = "video-invite"
 const videoDialStatusQueue = "video-dial-statuses"
 
 type AaaEventsQueue struct{ *amqp.Queue }
-type VideoInviteQueue struct{ *amqp.Queue }
 type VideoDialStatusQueue struct{ *amqp.Queue }
 
 type AaaEventsChannel struct{ *rabbitmq.Channel }
-type VideoInviteChannel struct{ *rabbitmq.Channel }
 type VideoDialStatusChannel struct{ *rabbitmq.Channel }
 
 func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
@@ -66,10 +62,6 @@ func CreateAaaChannel(connection *rabbitmq.Connection) AaaEventsChannel {
 	return AaaEventsChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
 
-func CreateVideoInviteChannel(connection *rabbitmq.Connection) VideoInviteChannel {
-	return VideoInviteChannel{myRabbit.CreateRabbitMqChannel(connection)}
-}
-
 func CreateVideoDialStatusChannel(connection *rabbitmq.Connection) VideoDialStatusChannel {
 	return VideoDialStatusChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
@@ -78,19 +70,9 @@ func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue {
 	return AaaEventsQueue{create(aaaEventsQueue, consumeCh.Channel)}
 }
 
-func CreateVideoInviteQueue(consumeCh VideoInviteChannel) VideoInviteQueue {
-	return VideoInviteQueue{create(videoInviteQueue, consumeCh.Channel)}
-}
-
 func CreateVideoDialStatusQueue(consumeCh VideoDialStatusChannel) VideoDialStatusQueue {
 	return VideoDialStatusQueue{create(videoDialStatusQueue, consumeCh.Channel)}
 }
-
-//func CreateFanoutNotificationsQueue(consumeCh FanoutNotificationsChannel) FanoutNotificationsQueue {
-//	fanoutQueue := createAndBind("", "", producer.DefaultFanoutExchange, consumeCh.Channel)
-//	fanoutNotificationsQueueName = fanoutQueue.Name
-//	return FanoutNotificationsQueue{fanoutQueue}
-//}
 
 func listen(
 	channel *rabbitmq.Channel,
@@ -120,15 +102,6 @@ func ListenAaaQueue(
 	channel AaaEventsChannel,
 	queue AaaEventsQueue,
 	onMessage AaaUserProfileUpdateListener,
-	lc fx.Lifecycle) {
-
-	listen(channel.Channel, queue.Queue, onMessage, lc)
-}
-
-func ListenVideoInviteQueue(
-	channel VideoInviteChannel,
-	queue VideoInviteQueue,
-	onMessage VideoInviteListener,
 	lc fx.Lifecycle) {
 
 	listen(channel.Channel, queue.Queue, onMessage, lc)

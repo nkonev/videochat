@@ -50,14 +50,11 @@ func main() {
 			services.NewNotifications,
 			producer.NewRabbitNotificationsPublisher,
 			listener.CreateAaaUserProfileUpdateListener,
-			listener.CreateVideoInviteListener,
 			listener.CreateVideoDialStatusListener,
 			rabbitmq.CreateRabbitMqConnection,
 			listener.CreateAaaChannel,
-			listener.CreateVideoInviteChannel,
 			listener.CreateVideoDialStatusChannel,
 			listener.CreateAaaQueue,
-			listener.CreateVideoInviteQueue,
 			listener.CreateVideoDialStatusQueue,
 		),
 		fx.Invoke(
@@ -65,7 +62,6 @@ func main() {
 			runCentrifuge,
 			runEcho,
 			listener.ListenAaaQueue,
-			listener.ListenVideoInviteQueue,
 			listener.ListenVideoDialStatusQueue,
 		),
 	)
@@ -169,6 +165,7 @@ func configureEcho(
 	e.GET("/internal/participant-ids", ch.GetChatParticipants)
 	e.GET("/internal/is-admin", ch.IsAdmin)
 	e.GET("/internal/is-chat-exists/:id", ch.IsExists)
+	e.GET("/internal/name-for-invite", ch.GetNameForInvite)
 
 	e.GET("/chat/:id/message", mc.GetMessages)
 	e.GET("/chat/:id/message/:messageId", mc.GetMessage)

@@ -26,6 +26,7 @@ type RestClient struct {
 	isAdminPath                     string
 	doesParticipantBelongToChatPath string
 	chatParticipantIdsPath          string
+	chatInviteNamePath              string
 	aaaBaseUrl                      string
 	aaaGetUsersUrl                  string
 	tracer                          trace.Tracer
@@ -49,6 +50,7 @@ func NewRestClient(config *config.ExtendedConfig) *RestClient {
 		isAdminPath:                     config.ChatConfig.ChatUrlConfig.IsChatAdmin,
 		doesParticipantBelongToChatPath: config.ChatConfig.ChatUrlConfig.DoesParticipantBelongToChat,
 		chatParticipantIdsPath:          config.ChatConfig.ChatUrlConfig.ChatParticipantIds,
+		chatInviteNamePath:              config.ChatConfig.ChatUrlConfig.ChatInviteName,
 		aaaBaseUrl:                      config.AaaConfig.AaaUrlConfig.Base,
 		aaaGetUsersUrl:                  config.AaaConfig.AaaUrlConfig.GetUsers,
 		tracer:                          trcr,
@@ -277,4 +279,61 @@ func (h *RestClient) GetChatParticipantIds(chatId int64, c context.Context) ([]i
 		return nil, err
 	}
 	return *userIds, nil
+}
+
+func (h *RestClient) GetChatNameForInvite(chatId int64, behalfUserId int64, participantIds []int64, c context.Context) ([]*dto.ChatName, error) {
+	contentType := "application/json;charset=UTF-8"
+	fullUrl := h.chatBaseUrl + h.chatInviteNamePath
+
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	var userIdsString []string
+	for _, userIdInt := range participantIds {
+		userIdsString = append(userIdsString, utils.Int64ToString(userIdInt))
+	}
+
+	joinedParticipantIds := strings.Join(userIdsString, ",")
+
+	parsedUrl, err := url.Parse(fullUrl + "?chatId=" + utils.Int64ToString(chatId) + "&behalfUserId=" + utils.Int64ToString(behalfUserId) + "&userIds=" + joinedParticipantIds)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during parse name for invite url:", err)
+		return nil, err
+	}
+	request := &http.Request{
+		Method: "GET",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+
+	ctx, span := h.tracer.Start(c, "chat.GetNameForInvite")
+	defer span.End()
+	request = request.WithContext(ctx)
+
+	resp, err := h.client.Do(request)
+	if err != nil {
+		GetLogEntry(c).Warningln("Failed to request name for invite response:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		GetLogEntry(c).Warningln("Chat name for invite response responded non-200 code: ", code)
+		return nil, err
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed to decode name for invite response:", err)
+		return nil, err
+	}
+
+	ret := new([]*dto.ChatName)
+	if err := json.Unmarshal(bodyBytes, ret); err != nil {
+		GetLogEntry(c).Errorln("Failed to parse name for invite:", err)
+		return nil, err
+	}
+	return *ret, nil
 }

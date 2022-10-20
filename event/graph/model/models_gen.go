@@ -47,10 +47,11 @@ type DisplayMessageDto struct {
 }
 
 type GlobalEvent struct {
-	EventType  string               `json:"eventType"`
-	ChatEvent  *ChatDto             `json:"chatEvent"`
-	UserEvent  *User                `json:"userEvent"`
-	VideoEvent *VideoCallChangedDto `json:"videoEvent"`
+	EventType           string                  `json:"eventType"`
+	ChatEvent           *ChatDto                `json:"chatEvent"`
+	UserEvent           *User                   `json:"userEvent"`
+	VideoEvent          *VideoCallChangedDto    `json:"videoEvent"`
+	VideoCallInvitation *VideoCallInvitationDto `json:"videoCallInvitation"`
 }
 
 type User struct {
@@ -69,4 +70,9 @@ type UserWithAdmin struct {
 type VideoCallChangedDto struct {
 	UsersCount int64 `json:"usersCount"`
 	ChatID     int64 `json:"chatId"`
+}
+
+type VideoCallInvitationDto struct {
+	ChatID   int64  `json:"chatId"`
+	ChatName string `json:"chatName"`
 }

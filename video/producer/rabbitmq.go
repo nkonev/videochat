@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-const videoInviteQueue = "video-invite"
 const videoDialStatusQueue = "video-dial-statuses"
 const AsyncEventsFanoutExchange = "async-events-exchange"
 
@@ -57,9 +56,16 @@ func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection) *RabbitNot
 	}
 }
 
-func (rp *RabbitInvitePublisher) Publish(dto *dto.VideoInviteDto) error {
-	bytea, err := json.Marshal(dto)
+func (rp *RabbitInvitePublisher) Publish(invitationDto *dto.VideoCallInvitation, toUserId int64) error {
+	event := dto.GlobalEvent{
+		EventType:           "video_call_invitation",
+		UserId:              toUserId,
+		VideoChatInvitation: invitationDto,
+	}
+
+	bytea, err := json.Marshal(event)
 	if err != nil {
+		Logger.Error(err, "Failed during marshal videoChatInvitationDto")
 		return err
 	}
 
@@ -68,14 +74,13 @@ func (rp *RabbitInvitePublisher) Publish(dto *dto.VideoInviteDto) error {
 		Timestamp:    time.Now(),
 		ContentType:  "application/json",
 		Body:         bytea,
+		Type:         utils.GetType(event),
 	}
 
-	if err := rp.channel.Publish("", videoInviteQueue, false, false, msg); err != nil {
+	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
 		Logger.Error(err, "Error during publishing")
-		return err
-	} else {
-		return nil
 	}
+	return err
 }
 
 type RabbitInvitePublisher struct {

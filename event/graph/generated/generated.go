@@ -86,10 +86,11 @@ type ComplexityRoot struct {
 	}
 
 	GlobalEvent struct {
-		ChatEvent  func(childComplexity int) int
-		EventType  func(childComplexity int) int
-		UserEvent  func(childComplexity int) int
-		VideoEvent func(childComplexity int) int
+		ChatEvent           func(childComplexity int) int
+		EventType           func(childComplexity int) int
+		UserEvent           func(childComplexity int) int
+		VideoCallInvitation func(childComplexity int) int
+		VideoEvent          func(childComplexity int) int
 	}
 
 	Query struct {
@@ -117,6 +118,11 @@ type ComplexityRoot struct {
 	VideoCallChangedDto struct {
 		ChatID     func(childComplexity int) int
 		UsersCount func(childComplexity int) int
+	}
+
+	VideoCallInvitationDto struct {
+		ChatID   func(childComplexity int) int
+		ChatName func(childComplexity int) int
 	}
 }
 
@@ -367,6 +373,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalEvent.UserEvent(childComplexity), true
 
+	case "GlobalEvent.videoCallInvitation":
+		if e.complexity.GlobalEvent.VideoCallInvitation == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.VideoCallInvitation(childComplexity), true
+
 	case "GlobalEvent.videoEvent":
 		if e.complexity.GlobalEvent.VideoEvent == nil {
 			break
@@ -462,6 +475,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.VideoCallChangedDto.UsersCount(childComplexity), true
+
+	case "VideoCallInvitationDto.chatId":
+		if e.complexity.VideoCallInvitationDto.ChatID == nil {
+			break
+		}
+
+		return e.complexity.VideoCallInvitationDto.ChatID(childComplexity), true
+
+	case "VideoCallInvitationDto.chatName":
+		if e.complexity.VideoCallInvitationDto.ChatName == nil {
+			break
+		}
+
+		return e.complexity.VideoCallInvitationDto.ChatName(childComplexity), true
 
 	}
 	return 0, false
@@ -592,11 +619,17 @@ type VideoCallChangedDto {
     chatId: Int64!
 }
 
+type VideoCallInvitationDto {
+    chatId: Int64!
+    chatName: String!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
     userEvent: User
     videoEvent: VideoCallChangedDto
+    videoCallInvitation: VideoCallInvitationDto
 }
 
 type Query {
@@ -2189,6 +2222,53 @@ func (ec *executionContext) fieldContext_GlobalEvent_videoEvent(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _GlobalEvent_videoCallInvitation(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_videoCallInvitation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.VideoCallInvitation, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.VideoCallInvitationDto)
+	fc.Result = res
+	return ec.marshalOVideoCallInvitationDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoCallInvitationDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_videoCallInvitation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "chatId":
+				return ec.fieldContext_VideoCallInvitationDto_chatId(ctx, field)
+			case "chatName":
+				return ec.fieldContext_VideoCallInvitationDto_chatName(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type VideoCallInvitationDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_ping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_ping(ctx, field)
 	if err != nil {
@@ -2495,6 +2575,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 				return ec.fieldContext_GlobalEvent_userEvent(ctx, field)
 			case "videoEvent":
 				return ec.fieldContext_GlobalEvent_videoEvent(ctx, field)
+			case "videoCallInvitation":
+				return ec.fieldContext_GlobalEvent_videoCallInvitation(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalEvent", field.Name)
 		},
@@ -2887,6 +2969,94 @@ func (ec *executionContext) fieldContext_VideoCallChangedDto_chatId(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VideoCallInvitationDto_chatId(ctx context.Context, field graphql.CollectedField, obj *model.VideoCallInvitationDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VideoCallInvitationDto_chatId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VideoCallInvitationDto_chatId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VideoCallInvitationDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VideoCallInvitationDto_chatName(ctx context.Context, field graphql.CollectedField, obj *model.VideoCallInvitationDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VideoCallInvitationDto_chatName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VideoCallInvitationDto_chatName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VideoCallInvitationDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4941,6 +5111,10 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._GlobalEvent_videoEvent(ctx, field, obj)
 
+		case "videoCallInvitation":
+
+			out.Values[i] = ec._GlobalEvent_videoCallInvitation(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5141,6 +5315,41 @@ func (ec *executionContext) _VideoCallChangedDto(ctx context.Context, sel ast.Se
 		case "chatId":
 
 			out.Values[i] = ec._VideoCallChangedDto_chatId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var videoCallInvitationDtoImplementors = []string{"VideoCallInvitationDto"}
+
+func (ec *executionContext) _VideoCallInvitationDto(ctx context.Context, sel ast.SelectionSet, obj *model.VideoCallInvitationDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, videoCallInvitationDtoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("VideoCallInvitationDto")
+		case "chatId":
+
+			out.Values[i] = ec._VideoCallInvitationDto_chatId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "chatName":
+
+			out.Values[i] = ec._VideoCallInvitationDto_chatName(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -6016,6 +6225,13 @@ func (ec *executionContext) marshalOVideoCallChangedDto2ᚖnkonevᚗnameᚋevent
 		return graphql.Null
 	}
 	return ec._VideoCallChangedDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOVideoCallInvitationDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoCallInvitationDto(ctx context.Context, sel ast.SelectionSet, v *model.VideoCallInvitationDto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._VideoCallInvitationDto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
