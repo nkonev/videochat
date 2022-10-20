@@ -69,8 +69,9 @@ type ComplexityRoot struct {
 	}
 
 	ChatEvent struct {
-		EventType    func(childComplexity int) int
-		MessageEvent func(childComplexity int) int
+		EventType       func(childComplexity int) int
+		MessageEvent    func(childComplexity int) int
+		UserTypingEvent func(childComplexity int) int
 	}
 
 	DisplayMessageDto struct {
@@ -107,6 +108,11 @@ type ComplexityRoot struct {
 		Avatar func(childComplexity int) int
 		ID     func(childComplexity int) int
 		Login  func(childComplexity int) int
+	}
+
+	UserTypingDto struct {
+		Login         func(childComplexity int) int
+		ParticipantID func(childComplexity int) int
 	}
 
 	UserWithAdmin struct {
@@ -300,6 +306,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatEvent.MessageEvent(childComplexity), true
 
+	case "ChatEvent.userTypingEvent":
+		if e.complexity.ChatEvent.UserTypingEvent == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.UserTypingEvent(childComplexity), true
+
 	case "DisplayMessageDto.canEdit":
 		if e.complexity.DisplayMessageDto.CanEdit == nil {
 			break
@@ -451,6 +464,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Login(childComplexity), true
+
+	case "UserTypingDto.login":
+		if e.complexity.UserTypingDto.Login == nil {
+			break
+		}
+
+		return e.complexity.UserTypingDto.Login(childComplexity), true
+
+	case "UserTypingDto.participantId":
+		if e.complexity.UserTypingDto.ParticipantID == nil {
+			break
+		}
+
+		return e.complexity.UserTypingDto.ParticipantID(childComplexity), true
 
 	case "UserWithAdmin.admin":
 		if e.complexity.UserWithAdmin.Admin == nil {
@@ -655,9 +682,15 @@ type ChatDto {
     changingParticipantsPage: Int!
 }
 
+type UserTypingDto {
+    login: String!
+    participantId: Int64!
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
+    userTypingEvent: UserTypingDto
 }
 
 type VideoCallChangedDto {
@@ -1665,6 +1698,53 @@ func (ec *executionContext) fieldContext_ChatEvent_messageEvent(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatEvent_userTypingEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_userTypingEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserTypingEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserTypingDto)
+	fc.Result = res
+	return ec.marshalOUserTypingDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserTypingDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_userTypingEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "login":
+				return ec.fieldContext_UserTypingDto_login(ctx, field)
+			case "participantId":
+				return ec.fieldContext_UserTypingDto_participantId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserTypingDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DisplayMessageDto_id(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DisplayMessageDto_id(ctx, field)
 	if err != nil {
@@ -2600,6 +2680,8 @@ func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Con
 				return ec.fieldContext_ChatEvent_eventType(ctx, field)
 			case "messageEvent":
 				return ec.fieldContext_ChatEvent_messageEvent(ctx, field)
+			case "userTypingEvent":
+				return ec.fieldContext_ChatEvent_userTypingEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatEvent", field.Name)
 		},
@@ -2814,6 +2896,94 @@ func (ec *executionContext) fieldContext_User_avatar(ctx context.Context, field 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserTypingDto_login(ctx context.Context, field graphql.CollectedField, obj *model.UserTypingDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserTypingDto_login(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Login, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserTypingDto_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserTypingDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserTypingDto_participantId(ctx context.Context, field graphql.CollectedField, obj *model.UserTypingDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserTypingDto_participantId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParticipantID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserTypingDto_participantId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserTypingDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5284,6 +5454,10 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._ChatEvent_messageEvent(ctx, field, obj)
 
+		case "userTypingEvent":
+
+			out.Values[i] = ec._ChatEvent_userTypingEvent(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5530,6 +5704,41 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 			out.Values[i] = ec._User_avatar(ctx, field, obj)
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var userTypingDtoImplementors = []string{"UserTypingDto"}
+
+func (ec *executionContext) _UserTypingDto(ctx context.Context, sel ast.SelectionSet, obj *model.UserTypingDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userTypingDtoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserTypingDto")
+		case "login":
+
+			out.Values[i] = ec._UserTypingDto_login(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "participantId":
+
+			out.Values[i] = ec._UserTypingDto_participantId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6634,6 +6843,13 @@ func (ec *executionContext) marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmode
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOUserTypingDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserTypingDto(ctx context.Context, sel ast.SelectionSet, v *model.UserTypingDto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UserTypingDto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOVideoCallChangedDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoCallChangedDto(ctx context.Context, sel ast.SelectionSet, v *model.VideoCallChangedDto) graphql.Marshaler {

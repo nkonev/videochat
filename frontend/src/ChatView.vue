@@ -505,9 +505,7 @@
                     const data = getData(message);
                     console.debug("Got message from channel", channel, data);
                     const properData = getProperData(message)
-                    if (data.type === "user_typing") {
-                        bus.$emit(USER_TYPING, properData);
-                    } else if (data.type === "user_broadcast") {
+                    if (data.type === "user_broadcast") {
                         bus.$emit(MESSAGE_BROADCAST, properData);
                     }
                 });
@@ -585,6 +583,9 @@
                     } else if (getChatEventsData(e).eventType === 'message_edited') {
                         const d = getChatEventsData(e).messageEvent;
                         bus.$emit(MESSAGE_EDITED, d);
+                    } else if (getChatEventsData(e).eventType === "user_typing") {
+                        const d = getChatEventsData(e).userTypingEvent;
+                        bus.$emit(USER_TYPING, d);
                     }
                 }
                 const onError = (e) => {
@@ -617,6 +618,10 @@
                                       }
                                       canEdit
                                       fileItemUuid
+                                    }
+                                    userTypingEvent {
+                                      login
+                                      participantId
                                     }
                                   }
                                 }

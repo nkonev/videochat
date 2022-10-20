@@ -48,9 +48,15 @@ type ChatDto {
     changingParticipantsPage: Int!
 }
 
+type UserTypingDto {
+    login: String!
+    participantId: Int64!
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
+    userTypingEvent: UserTypingDto
 }
 
 type VideoCallChangedDto {

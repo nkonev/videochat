@@ -144,6 +144,13 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 			FileItemUUID:   notificationDto.FileItemUuid,
 		}
 	}
+	userTypingEvent := e.UserTypingNotification
+	if userTypingEvent != nil {
+		result.UserTypingEvent = &model.UserTypingDto{
+			Login:         userTypingEvent.Login,
+			ParticipantID: userTypingEvent.ParticipantId,
+		}
+	}
 	return result
 }
 func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
@@ -251,7 +258,6 @@ func convertDials(dials []*dto.VideoDialChanged) []*model.VideoDialChanged {
 	}
 	return dls
 }
-
 func convertDial(dl *dto.VideoDialChanged) *model.VideoDialChanged {
 	if dl == nil {
 		return nil

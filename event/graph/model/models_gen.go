@@ -30,8 +30,9 @@ type ChatDto struct {
 }
 
 type ChatEvent struct {
-	EventType    string             `json:"eventType"`
-	MessageEvent *DisplayMessageDto `json:"messageEvent"`
+	EventType       string             `json:"eventType"`
+	MessageEvent    *DisplayMessageDto `json:"messageEvent"`
+	UserTypingEvent *UserTypingDto     `json:"userTypingEvent"`
 }
 
 type DisplayMessageDto struct {
@@ -59,6 +60,11 @@ type User struct {
 	ID     int64   `json:"id"`
 	Login  string  `json:"login"`
 	Avatar *string `json:"avatar"`
+}
+
+type UserTypingDto struct {
+	Login         string `json:"login"`
+	ParticipantID int64  `json:"participantId"`
 }
 
 type UserWithAdmin struct {

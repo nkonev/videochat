@@ -22,10 +22,10 @@ type Notifications interface {
 	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutProfileChanged(user *dto.User)
+	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
-	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
 }
 
@@ -46,11 +46,6 @@ func NewNotifications(node *centrifuge.Node, rabbitPublisher *producer.RabbitFan
 type DisplayMessageDtoNotification struct {
 	dto.DisplayMessageDto
 	ChatId int64 `json:"chatId"`
-}
-
-type UserTypingNotification struct {
-	Login         string `json:"login"`
-	ParticipantId int64  `json:"participantId"`
 }
 
 type VideoCallInvitation struct {
@@ -243,24 +238,26 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 		return
 	}
 
-	channelName := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
+	participantIds, err := not.db.GetAllParticipantIds(chatId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
+		return
+	}
 
-	ut := UserTypingNotification{
+	ut := dto.UserTypingNotification{
 		Login:         user.Login,
 		ParticipantId: user.Id,
 	}
 
-	notification := dto.CentrifugeNotification{
-		Payload:   ut,
-		EventType: "user_typing",
-	}
-
-	if marshalledBytes, err := json.Marshal(notification); err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created UserTypingNotification: %s", err)
-	} else {
-		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
+	for _, participantId := range participantIds {
+		err := not.rabbitPublisher.Publish(dto.ChatEvent{
+			EventType:              "user_typing",
+			UserTypingNotification: &ut,
+			UserId:                 participantId,
+			ChatId:                 chatId,
+		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error publishing to public channel: %s", err)
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
