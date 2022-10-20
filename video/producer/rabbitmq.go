@@ -93,9 +93,27 @@ func NewRabbitInvitePublisher(connection *rabbitmq.Connection) *RabbitInvitePubl
 	}
 }
 
-func (rp *RabbitDialStatusPublisher) Publish(dto *dto.VideoIsInvitingDto) error {
-	bytea, err := json.Marshal(dto)
+func (rp *RabbitDialStatusPublisher) Publish(req *dto.VideoIsInvitingDto) error {
+	var dials = []*dto.VideoDialChanged{}
+	for _, userId := range req.UserIds {
+		dials = append(dials, &dto.VideoDialChanged{
+			UserId: userId,
+			Status: req.Status,
+		})
+	}
+
+	event := dto.GlobalEvent{
+		EventType: "video_dial_status_changed",
+		UserId:    req.BehalfUserId,
+		VideoParticipantDialEvent: &dto.VideoDialChanges{
+			ChatId: req.ChatId,
+			Dials:  dials,
+		},
+	}
+
+	bytea, err := json.Marshal(event)
 	if err != nil {
+		Logger.Error(err, "Failed during marshal videoChatInvitationDto")
 		return err
 	}
 
@@ -104,14 +122,14 @@ func (rp *RabbitDialStatusPublisher) Publish(dto *dto.VideoIsInvitingDto) error 
 		Timestamp:    time.Now(),
 		ContentType:  "application/json",
 		Body:         bytea,
+		Type:         utils.GetType(event),
 	}
 
-	if err := rp.channel.Publish("", videoDialStatusQueue, false, false, msg); err != nil {
+	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
 		Logger.Error(err, "Error during publishing")
-		return err
-	} else {
-		return nil
 	}
+	return err
+
 }
 
 type RabbitDialStatusPublisher struct {

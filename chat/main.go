@@ -50,19 +50,15 @@ func main() {
 			services.NewNotifications,
 			producer.NewRabbitNotificationsPublisher,
 			listener.CreateAaaUserProfileUpdateListener,
-			listener.CreateVideoDialStatusListener,
 			rabbitmq.CreateRabbitMqConnection,
 			listener.CreateAaaChannel,
-			listener.CreateVideoDialStatusChannel,
 			listener.CreateAaaQueue,
-			listener.CreateVideoDialStatusQueue,
 		),
 		fx.Invoke(
 			runMigrations,
 			runCentrifuge,
 			runEcho,
 			listener.ListenAaaQueue,
-			listener.ListenVideoDialStatusQueue,
 		),
 	)
 	app.Run()

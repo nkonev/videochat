@@ -9,13 +9,10 @@ import (
 )
 
 const aaaEventsQueue = "aaa-events"
-const videoDialStatusQueue = "video-dial-statuses"
 
 type AaaEventsQueue struct{ *amqp.Queue }
-type VideoDialStatusQueue struct{ *amqp.Queue }
 
 type AaaEventsChannel struct{ *rabbitmq.Channel }
-type VideoDialStatusChannel struct{ *rabbitmq.Channel }
 
 func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
@@ -35,43 +32,12 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	return &q
 }
 
-func createAndBind(name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
-	var err error
-	var q amqp.Queue
-	q, err = consumeCh.QueueDeclare(
-		name,  // name
-		true,  // durable - it prevents queue loss on rabbitmq restart
-		true,  // delete when unused
-		false, // exclusive
-		false, // no-wait
-		nil,   // arguments
-	)
-	if err != nil {
-		Logger.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
-		Logger.Panic(err)
-	}
-	err = consumeCh.QueueBind(q.Name, key, exchange, false, nil)
-	if err != nil {
-		Logger.Warnf("Unable to bind to queue %v, restarting. error %v", name, err)
-		Logger.Panic(err)
-	}
-	return &q
-}
-
 func CreateAaaChannel(connection *rabbitmq.Connection) AaaEventsChannel {
 	return AaaEventsChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
 
-func CreateVideoDialStatusChannel(connection *rabbitmq.Connection) VideoDialStatusChannel {
-	return VideoDialStatusChannel{myRabbit.CreateRabbitMqChannel(connection)}
-}
-
 func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue {
 	return AaaEventsQueue{create(aaaEventsQueue, consumeCh.Channel)}
-}
-
-func CreateVideoDialStatusQueue(consumeCh VideoDialStatusChannel) VideoDialStatusQueue {
-	return VideoDialStatusQueue{create(videoDialStatusQueue, consumeCh.Channel)}
 }
 
 func listen(
@@ -102,15 +68,6 @@ func ListenAaaQueue(
 	channel AaaEventsChannel,
 	queue AaaEventsQueue,
 	onMessage AaaUserProfileUpdateListener,
-	lc fx.Lifecycle) {
-
-	listen(channel.Channel, queue.Queue, onMessage, lc)
-}
-
-func ListenVideoDialStatusQueue(
-	channel VideoDialStatusChannel,
-	queue VideoDialStatusQueue,
-	onMessage VideoDialStatusListener,
 	lc fx.Lifecycle) {
 
 	listen(channel.Channel, queue.Queue, onMessage, lc)

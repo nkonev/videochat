@@ -47,11 +47,12 @@ type DisplayMessageDto struct {
 }
 
 type GlobalEvent struct {
-	EventType           string                  `json:"eventType"`
-	ChatEvent           *ChatDto                `json:"chatEvent"`
-	UserEvent           *User                   `json:"userEvent"`
-	VideoEvent          *VideoCallChangedDto    `json:"videoEvent"`
-	VideoCallInvitation *VideoCallInvitationDto `json:"videoCallInvitation"`
+	EventType                 string                  `json:"eventType"`
+	ChatEvent                 *ChatDto                `json:"chatEvent"`
+	UserEvent                 *User                   `json:"userEvent"`
+	VideoEvent                *VideoCallChangedDto    `json:"videoEvent"`
+	VideoCallInvitation       *VideoCallInvitationDto `json:"videoCallInvitation"`
+	VideoParticipantDialEvent *VideoDialChanges       `json:"videoParticipantDialEvent"`
 }
 
 type User struct {
@@ -75,4 +76,14 @@ type VideoCallChangedDto struct {
 type VideoCallInvitationDto struct {
 	ChatID   int64  `json:"chatId"`
 	ChatName string `json:"chatName"`
+}
+
+type VideoDialChanged struct {
+	UserID int64 `json:"userId"`
+	Status bool  `json:"status"`
+}
+
+type VideoDialChanges struct {
+	ChatID int64               `json:"chatId"`
+	Dials  []*VideoDialChanged `json:"dials"`
 }

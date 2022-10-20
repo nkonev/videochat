@@ -86,11 +86,12 @@ type ComplexityRoot struct {
 	}
 
 	GlobalEvent struct {
-		ChatEvent           func(childComplexity int) int
-		EventType           func(childComplexity int) int
-		UserEvent           func(childComplexity int) int
-		VideoCallInvitation func(childComplexity int) int
-		VideoEvent          func(childComplexity int) int
+		ChatEvent                 func(childComplexity int) int
+		EventType                 func(childComplexity int) int
+		UserEvent                 func(childComplexity int) int
+		VideoCallInvitation       func(childComplexity int) int
+		VideoEvent                func(childComplexity int) int
+		VideoParticipantDialEvent func(childComplexity int) int
 	}
 
 	Query struct {
@@ -123,6 +124,16 @@ type ComplexityRoot struct {
 	VideoCallInvitationDto struct {
 		ChatID   func(childComplexity int) int
 		ChatName func(childComplexity int) int
+	}
+
+	VideoDialChanged struct {
+		Status func(childComplexity int) int
+		UserID func(childComplexity int) int
+	}
+
+	VideoDialChanges struct {
+		ChatID func(childComplexity int) int
+		Dials  func(childComplexity int) int
 	}
 }
 
@@ -387,6 +398,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalEvent.VideoEvent(childComplexity), true
 
+	case "GlobalEvent.videoParticipantDialEvent":
+		if e.complexity.GlobalEvent.VideoParticipantDialEvent == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.VideoParticipantDialEvent(childComplexity), true
+
 	case "Query.ping":
 		if e.complexity.Query.Ping == nil {
 			break
@@ -489,6 +507,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.VideoCallInvitationDto.ChatName(childComplexity), true
+
+	case "VideoDialChanged.status":
+		if e.complexity.VideoDialChanged.Status == nil {
+			break
+		}
+
+		return e.complexity.VideoDialChanged.Status(childComplexity), true
+
+	case "VideoDialChanged.userId":
+		if e.complexity.VideoDialChanged.UserID == nil {
+			break
+		}
+
+		return e.complexity.VideoDialChanged.UserID(childComplexity), true
+
+	case "VideoDialChanges.chatId":
+		if e.complexity.VideoDialChanges.ChatID == nil {
+			break
+		}
+
+		return e.complexity.VideoDialChanges.ChatID(childComplexity), true
+
+	case "VideoDialChanges.dials":
+		if e.complexity.VideoDialChanges.Dials == nil {
+			break
+		}
+
+		return e.complexity.VideoDialChanges.Dials(childComplexity), true
 
 	}
 	return 0, false
@@ -624,12 +670,23 @@ type VideoCallInvitationDto {
     chatName: String!
 }
 
+type VideoDialChanged {
+    userId: Int64!
+    status: Boolean!
+}
+
+type VideoDialChanges {
+    chatId: Int64!
+    dials: [VideoDialChanged!]!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
     userEvent: User
     videoEvent: VideoCallChangedDto
     videoCallInvitation: VideoCallInvitationDto
+    videoParticipantDialEvent: VideoDialChanges
 }
 
 type Query {
@@ -2269,6 +2326,53 @@ func (ec *executionContext) fieldContext_GlobalEvent_videoCallInvitation(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _GlobalEvent_videoParticipantDialEvent(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_videoParticipantDialEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.VideoParticipantDialEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.VideoDialChanges)
+	fc.Result = res
+	return ec.marshalOVideoDialChanges2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoDialChanges(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_videoParticipantDialEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "chatId":
+				return ec.fieldContext_VideoDialChanges_chatId(ctx, field)
+			case "dials":
+				return ec.fieldContext_VideoDialChanges_dials(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type VideoDialChanges", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_ping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_ping(ctx, field)
 	if err != nil {
@@ -2577,6 +2681,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 				return ec.fieldContext_GlobalEvent_videoEvent(ctx, field)
 			case "videoCallInvitation":
 				return ec.fieldContext_GlobalEvent_videoCallInvitation(ctx, field)
+			case "videoParticipantDialEvent":
+				return ec.fieldContext_GlobalEvent_videoParticipantDialEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalEvent", field.Name)
 		},
@@ -3057,6 +3163,188 @@ func (ec *executionContext) fieldContext_VideoCallInvitationDto_chatName(ctx con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VideoDialChanged_userId(ctx context.Context, field graphql.CollectedField, obj *model.VideoDialChanged) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VideoDialChanged_userId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VideoDialChanged_userId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VideoDialChanged",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VideoDialChanged_status(ctx context.Context, field graphql.CollectedField, obj *model.VideoDialChanged) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VideoDialChanged_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VideoDialChanged_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VideoDialChanged",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VideoDialChanges_chatId(ctx context.Context, field graphql.CollectedField, obj *model.VideoDialChanges) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VideoDialChanges_chatId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VideoDialChanges_chatId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VideoDialChanges",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VideoDialChanges_dials(ctx context.Context, field graphql.CollectedField, obj *model.VideoDialChanges) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VideoDialChanges_dials(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Dials, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.VideoDialChanged)
+	fc.Result = res
+	return ec.marshalNVideoDialChanged2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoDialChangedᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VideoDialChanges_dials(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VideoDialChanges",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_VideoDialChanged_userId(ctx, field)
+			case "status":
+				return ec.fieldContext_VideoDialChanged_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type VideoDialChanged", field.Name)
 		},
 	}
 	return fc, nil
@@ -5115,6 +5403,10 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._GlobalEvent_videoCallInvitation(ctx, field, obj)
 
+		case "videoParticipantDialEvent":
+
+			out.Values[i] = ec._GlobalEvent_videoParticipantDialEvent(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5350,6 +5642,76 @@ func (ec *executionContext) _VideoCallInvitationDto(ctx context.Context, sel ast
 		case "chatName":
 
 			out.Values[i] = ec._VideoCallInvitationDto_chatName(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var videoDialChangedImplementors = []string{"VideoDialChanged"}
+
+func (ec *executionContext) _VideoDialChanged(ctx context.Context, sel ast.SelectionSet, obj *model.VideoDialChanged) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, videoDialChangedImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("VideoDialChanged")
+		case "userId":
+
+			out.Values[i] = ec._VideoDialChanged_userId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "status":
+
+			out.Values[i] = ec._VideoDialChanged_status(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var videoDialChangesImplementors = []string{"VideoDialChanges"}
+
+func (ec *executionContext) _VideoDialChanges(ctx context.Context, sel ast.SelectionSet, obj *model.VideoDialChanges) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, videoDialChangesImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("VideoDialChanges")
+		case "chatId":
+
+			out.Values[i] = ec._VideoDialChanges_chatId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "dials":
+
+			out.Values[i] = ec._VideoDialChanges_dials(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -5872,6 +6234,60 @@ func (ec *executionContext) marshalNUserWithAdmin2ᚖnkonevᚗnameᚋeventᚋgra
 	return ec._UserWithAdmin(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNVideoDialChanged2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoDialChangedᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.VideoDialChanged) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNVideoDialChanged2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoDialChanged(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNVideoDialChanged2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoDialChanged(ctx context.Context, sel ast.SelectionSet, v *model.VideoDialChanged) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._VideoDialChanged(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
 	return ec.___Directive(ctx, sel, &v)
 }
@@ -6232,6 +6648,13 @@ func (ec *executionContext) marshalOVideoCallInvitationDto2ᚖnkonevᚗnameᚋev
 		return graphql.Null
 	}
 	return ec._VideoCallInvitationDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOVideoDialChanges2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoDialChanges(ctx context.Context, sel ast.SelectionSet, v *model.VideoDialChanges) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._VideoDialChanges(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

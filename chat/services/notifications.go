@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/centrifugal/centrifuge"
@@ -28,7 +27,6 @@ type Notifications interface {
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
-	NotifyAboutDialStatus(c context.Context, chatId, behalfUserId int64, status bool, usersId []int64)
 }
 
 type notifictionsImpl struct {
@@ -320,33 +318,4 @@ func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId
 		}
 	}
 
-}
-
-func (not *notifictionsImpl) NotifyAboutDialStatus(c context.Context, chatId, behalfUserId int64, status bool, usersIds []int64) {
-	participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(behalfUserId)
-
-	var dials = []*VideoDialChanged{}
-	for _, userId := range usersIds {
-		dials = append(dials, &VideoDialChanged{
-			UserId: userId,
-			Status: status,
-		})
-	}
-
-	notification := dto.CentrifugeNotification{
-		Payload: &VideoDialChanges{
-			ChatId: chatId,
-			Dials:  dials,
-		},
-		EventType: "video_dial_status_changed",
-	}
-
-	if marshalledBytes, err := json.Marshal(notification); err != nil {
-		Logger.Errorf("error during marshalling chat created VideoDialStatusChanged: %s", err)
-	} else {
-		_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
-		if err != nil {
-			Logger.Errorf("error publishing to public channel: %s", err)
-		}
-	}
 }

@@ -200,6 +200,14 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 		}
 	}
 
+	videoDial := e.VideoParticipantDialEvent
+	if videoDial != nil {
+		ret.VideoParticipantDialEvent = &model.VideoDialChanges{
+			ChatID: videoDial.ChatId,
+			Dials:  convertDials(videoDial.Dials),
+		}
+	}
+
 	return ret
 }
 func convertUser(owner *dto.User) *model.User {
@@ -232,6 +240,26 @@ func convertUsers(participants []*dto.UserWithAdmin) []*model.UserWithAdmin {
 		usrs = append(usrs, convertUserWithAdmin(user))
 	}
 	return usrs
+}
+func convertDials(dials []*dto.VideoDialChanged) []*model.VideoDialChanged {
+	if dials == nil {
+		return nil
+	}
+	dls := []*model.VideoDialChanged{}
+	for _, dl := range dials {
+		dls = append(dls, convertDial(dl))
+	}
+	return dls
+}
+
+func convertDial(dl *dto.VideoDialChanged) *model.VideoDialChanged {
+	if dl == nil {
+		return nil
+	}
+	return &model.VideoDialChanged{
+		UserID: dl.UserId,
+		Status: dl.Status,
+	}
 }
 func isReceiverOfEvent(userId int64, authResult *auth.AuthResult) bool {
 	return userId == authResult.UserId

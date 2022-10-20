@@ -22,3 +22,13 @@ type VideoCallInvitation struct {
 	ChatId   int64  `json:"chatId"`
 	ChatName string `json:"chatName"`
 }
+
+type VideoDialChanged struct {
+	UserId int64 `json:"userId"`
+	Status bool  `json:"status"`
+}
+
+type VideoDialChanges struct {
+	ChatId int64               `json:"chatId"`
+	Dials  []*VideoDialChanged `json:"dials"`
+}

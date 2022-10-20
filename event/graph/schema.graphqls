@@ -63,12 +63,23 @@ type VideoCallInvitationDto {
     chatName: String!
 }
 
+type VideoDialChanged {
+    userId: Int64!
+    status: Boolean!
+}
+
+type VideoDialChanges {
+    chatId: Int64!
+    dials: [VideoDialChanged!]!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
     userEvent: User
     videoEvent: VideoCallChangedDto
     videoCallInvitation: VideoCallInvitationDto
+    videoParticipantDialEvent: VideoDialChanges
 }
 
 type Query {
