@@ -21,7 +21,7 @@ func NewNotificationService(producer *producer.RabbitNotificationsPublisher, res
 }
 
 func (h *NotificationService) Notify(chatId, usersCount int64, ctx context.Context) error {
-	var chatNotifyDto = dto.ChatNotifyDto{}
+	var chatNotifyDto = dto.VideoCallChangedDto{}
 	Logger.Infof("Notifying without data chat_id=%v", chatId)
 
 	chatNotifyDto.UsersCount = usersCount

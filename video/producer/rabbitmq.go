@@ -16,7 +16,7 @@ const videoInviteQueue = "video-invite"
 const videoDialStatusQueue = "video-dial-statuses"
 const AsyncEventsFanoutExchange = "async-events-exchange"
 
-func (rp *RabbitNotificationsPublisher) Publish(participantIds []int64, chatNotifyDto *dto.ChatNotifyDto, ctx context.Context) error {
+func (rp *RabbitNotificationsPublisher) Publish(participantIds []int64, chatNotifyDto *dto.VideoCallChangedDto, ctx context.Context) error {
 
 	for _, participantId := range participantIds {
 		event := dto.GlobalEvent{

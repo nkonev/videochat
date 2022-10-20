@@ -1,11 +1,5 @@
 package dto
 
-// used for notifications
-type NotifyDto struct {
-	UserId int64  `json:"userId"`
-	Login  string `json:"login"`
-}
-
 type VideoInviteDto struct {
 	ChatId       int64   `json:"chatId"`
 	UserIds      []int64 `json:"userIds"`
@@ -13,7 +7,7 @@ type VideoInviteDto struct {
 	BehalfLogin  string  `json:"behalfLogin"`
 }
 
-type ChatNotifyDto struct {
+type VideoCallChangedDto struct {
 	UsersCount int64 `json:"usersCount"`
 	ChatId     int64 `json:"chatId"`
 }

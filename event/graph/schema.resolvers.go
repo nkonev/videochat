@@ -186,7 +186,7 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 
 	videoEvent := e.VideoNotification
 	if videoEvent != nil {
-		ret.VideoEvent = &model.ChatNotifyDto{
+		ret.VideoEvent = &model.VideoCallChangedDto{
 			UsersCount: videoEvent.UsersCount,
 			ChatID:     videoEvent.ChatId,
 		}
