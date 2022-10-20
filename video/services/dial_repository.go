@@ -18,20 +18,18 @@ func NewDialRedisRepository(redisClient *redisV8.Client) *DialRedisRepository {
 	}
 }
 
-const behalfLoginConstant = "behalfLogin"
-
 const behalfUserIdConstant = "behalfUserId" // also it is dial owner - person who starts the dial
 
 const NoUser = -1
 
-func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId int64, behalfUserId int64, behalfLogin string) error {
+func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId int64, behalfUserId int64) error {
 	add := s.redisClient.SAdd(ctx, dialChatMembersKey(chatId), userId)
 	err := add.Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
 		return err
 	}
-	err = s.redisClient.HSet(ctx, dialMetaKey(chatId), behalfUserIdConstant, behalfUserId, behalfLoginConstant, behalfLogin).Err()
+	err = s.redisClient.HSet(ctx, dialMetaKey(chatId), behalfUserIdConstant, behalfUserId).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata %v", err)
 		return err
@@ -64,26 +62,26 @@ func chatIdFromKey(key string) (int64, error) {
 	return parseInt64, nil
 }
 
-func (s *DialRedisRepository) GetDialMetadata(ctx context.Context, chatId int64) (int64, string, error) {
+func (s *DialRedisRepository) GetDialMetadata(ctx context.Context, chatId int64) (int64, error) {
 	val, err := s.redisClient.HGetAll(ctx, dialMetaKey(chatId)).Result()
 	//if err == redisV8.Nil {
 	//	return -1, "", nil
 	//}
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during getting dial metadata %v", err)
-		return 0, "", err
+		return 0, err
 	}
 	if len(val) == 0 {
-		return NoUser, "", nil
+		return NoUser, nil
 	}
 
 	s2 := val[behalfUserIdConstant]
 	parsedBehalfUserId, err := utils.ParseInt64(s2)
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during parsing userId %v", err)
-		return 0, "", err
+		return 0, err
 	}
-	return parsedBehalfUserId, val[behalfLoginConstant], nil
+	return parsedBehalfUserId, nil
 }
 
 func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, chatId int64) error {

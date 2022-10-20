@@ -54,7 +54,7 @@ func (srv *ChatDialerService) doJob() {
 }
 
 func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
-	behalfUserId, _, err := srv.redisService.GetDialMetadata(ctx, chatId)
+	behalfUserId, err := srv.redisService.GetDialMetadata(ctx, chatId)
 	if err != nil {
 		Logger.Warnf("Error %v", err)
 		return
