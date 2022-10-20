@@ -69,9 +69,10 @@ type ComplexityRoot struct {
 	}
 
 	ChatEvent struct {
-		EventType       func(childComplexity int) int
-		MessageEvent    func(childComplexity int) int
-		UserTypingEvent func(childComplexity int) int
+		EventType             func(childComplexity int) int
+		MessageBroadcastEvent func(childComplexity int) int
+		MessageEvent          func(childComplexity int) int
+		UserTypingEvent       func(childComplexity int) int
 	}
 
 	DisplayMessageDto struct {
@@ -93,6 +94,12 @@ type ComplexityRoot struct {
 		VideoCallInvitation       func(childComplexity int) int
 		VideoEvent                func(childComplexity int) int
 		VideoParticipantDialEvent func(childComplexity int) int
+	}
+
+	MessageBroadcastNotification struct {
+		Login  func(childComplexity int) int
+		Text   func(childComplexity int) int
+		UserID func(childComplexity int) int
 	}
 
 	Query struct {
@@ -299,6 +306,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatEvent.EventType(childComplexity), true
 
+	case "ChatEvent.messageBroadcastEvent":
+		if e.complexity.ChatEvent.MessageBroadcastEvent == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.MessageBroadcastEvent(childComplexity), true
+
 	case "ChatEvent.messageEvent":
 		if e.complexity.ChatEvent.MessageEvent == nil {
 			break
@@ -417,6 +431,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalEvent.VideoParticipantDialEvent(childComplexity), true
+
+	case "MessageBroadcastNotification.login":
+		if e.complexity.MessageBroadcastNotification.Login == nil {
+			break
+		}
+
+		return e.complexity.MessageBroadcastNotification.Login(childComplexity), true
+
+	case "MessageBroadcastNotification.text":
+		if e.complexity.MessageBroadcastNotification.Text == nil {
+			break
+		}
+
+		return e.complexity.MessageBroadcastNotification.Text(childComplexity), true
+
+	case "MessageBroadcastNotification.userId":
+		if e.complexity.MessageBroadcastNotification.UserID == nil {
+			break
+		}
+
+		return e.complexity.MessageBroadcastNotification.UserID(childComplexity), true
 
 	case "Query.ping":
 		if e.complexity.Query.Ping == nil {
@@ -687,10 +722,17 @@ type UserTypingDto {
     participantId: Int64!
 }
 
+type MessageBroadcastNotification {
+    login: String!
+    userId: Int64!
+    text: String!
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
     userTypingEvent: UserTypingDto
+    messageBroadcastEvent: MessageBroadcastNotification
 }
 
 type VideoCallChangedDto {
@@ -1745,6 +1787,55 @@ func (ec *executionContext) fieldContext_ChatEvent_userTypingEvent(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatEvent_messageBroadcastEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_messageBroadcastEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MessageBroadcastEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.MessageBroadcastNotification)
+	fc.Result = res
+	return ec.marshalOMessageBroadcastNotification2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐMessageBroadcastNotification(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_messageBroadcastEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "login":
+				return ec.fieldContext_MessageBroadcastNotification_login(ctx, field)
+			case "userId":
+				return ec.fieldContext_MessageBroadcastNotification_userId(ctx, field)
+			case "text":
+				return ec.fieldContext_MessageBroadcastNotification_text(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MessageBroadcastNotification", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DisplayMessageDto_id(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DisplayMessageDto_id(ctx, field)
 	if err != nil {
@@ -2453,6 +2544,138 @@ func (ec *executionContext) fieldContext_GlobalEvent_videoParticipantDialEvent(c
 	return fc, nil
 }
 
+func (ec *executionContext) _MessageBroadcastNotification_login(ctx context.Context, field graphql.CollectedField, obj *model.MessageBroadcastNotification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageBroadcastNotification_login(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Login, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MessageBroadcastNotification_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MessageBroadcastNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MessageBroadcastNotification_userId(ctx context.Context, field graphql.CollectedField, obj *model.MessageBroadcastNotification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageBroadcastNotification_userId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MessageBroadcastNotification_userId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MessageBroadcastNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MessageBroadcastNotification_text(ctx context.Context, field graphql.CollectedField, obj *model.MessageBroadcastNotification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageBroadcastNotification_text(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Text, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MessageBroadcastNotification_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MessageBroadcastNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_ping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_ping(ctx, field)
 	if err != nil {
@@ -2682,6 +2905,8 @@ func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Con
 				return ec.fieldContext_ChatEvent_messageEvent(ctx, field)
 			case "userTypingEvent":
 				return ec.fieldContext_ChatEvent_userTypingEvent(ctx, field)
+			case "messageBroadcastEvent":
+				return ec.fieldContext_ChatEvent_messageBroadcastEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatEvent", field.Name)
 		},
@@ -5458,6 +5683,10 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._ChatEvent_userTypingEvent(ctx, field, obj)
 
+		case "messageBroadcastEvent":
+
+			out.Values[i] = ec._ChatEvent_messageBroadcastEvent(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5581,6 +5810,48 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._GlobalEvent_videoParticipantDialEvent(ctx, field, obj)
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var messageBroadcastNotificationImplementors = []string{"MessageBroadcastNotification"}
+
+func (ec *executionContext) _MessageBroadcastNotification(ctx context.Context, sel ast.SelectionSet, obj *model.MessageBroadcastNotification) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, messageBroadcastNotificationImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MessageBroadcastNotification")
+		case "login":
+
+			out.Values[i] = ec._MessageBroadcastNotification_login(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "userId":
+
+			out.Values[i] = ec._MessageBroadcastNotification_userId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "text":
+
+			out.Values[i] = ec._MessageBroadcastNotification_text(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6788,6 +7059,13 @@ func (ec *executionContext) marshalODisplayMessageDto2ᚖnkonevᚗnameᚋevent�
 		return graphql.Null
 	}
 	return ec._DisplayMessageDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOMessageBroadcastNotification2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐMessageBroadcastNotification(ctx context.Context, sel ast.SelectionSet, v *model.MessageBroadcastNotification) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MessageBroadcastNotification(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

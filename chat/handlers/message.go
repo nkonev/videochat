@@ -399,7 +399,7 @@ func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 		return err
 	}
 
-	mc.notificator.NotifyAboutBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, strip.StripTags(bindTo.Text))
+	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, strip.StripTags(bindTo.Text))
 	return c.NoContent(http.StatusAccepted)
 }
 

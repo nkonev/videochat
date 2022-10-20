@@ -30,9 +30,10 @@ type ChatDto struct {
 }
 
 type ChatEvent struct {
-	EventType       string             `json:"eventType"`
-	MessageEvent    *DisplayMessageDto `json:"messageEvent"`
-	UserTypingEvent *UserTypingDto     `json:"userTypingEvent"`
+	EventType             string                        `json:"eventType"`
+	MessageEvent          *DisplayMessageDto            `json:"messageEvent"`
+	UserTypingEvent       *UserTypingDto                `json:"userTypingEvent"`
+	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
 }
 
 type DisplayMessageDto struct {
@@ -54,6 +55,12 @@ type GlobalEvent struct {
 	VideoEvent                *VideoCallChangedDto    `json:"videoEvent"`
 	VideoCallInvitation       *VideoCallInvitationDto `json:"videoCallInvitation"`
 	VideoParticipantDialEvent *VideoDialChanges       `json:"videoParticipantDialEvent"`
+}
+
+type MessageBroadcastNotification struct {
+	Login  string `json:"login"`
+	UserID int64  `json:"userId"`
+	Text   string `json:"text"`
 }
 
 type User struct {

@@ -151,6 +151,14 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 			ParticipantID: userTypingEvent.ParticipantId,
 		}
 	}
+	messageBroadcast := e.MessageBroadcastNotification
+	if messageBroadcast != nil {
+		result.MessageBroadcastEvent = &model.MessageBroadcastNotification{
+			Login:  messageBroadcast.Login,
+			UserID: messageBroadcast.UserId,
+			Text:   messageBroadcast.Text,
+		}
+	}
 	return result
 }
 func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {

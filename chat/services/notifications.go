@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/centrifugal/centrifuge"
 	"github.com/getlantern/deepcopy"
 	"github.com/guregu/null"
@@ -23,10 +22,10 @@ type Notifications interface {
 	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutProfileChanged(user *dto.User)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
+	NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string)
 
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
-	NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string)
 }
 
 type notifictionsImpl struct {
@@ -285,33 +284,28 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 	}
 }
 
-type UserBroadcastNotification struct {
-	Login  string `json:"login"`
-	UserId int64  `json:"userId"`
-	Text   string `json:"text"`
-}
-
-func (not *notifictionsImpl) NotifyAboutBroadcast(c echo.Context, chatId, userId int64, login, text string) {
-
-	channelName := fmt.Sprintf("%v%v", utils.CHANNEL_PREFIX_CHAT_MESSAGES, chatId)
-
-	ut := UserBroadcastNotification{
+func (not *notifictionsImpl) NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string) {
+	ut := dto.MessageBroadcastNotification{
 		Login:  login,
 		UserId: userId,
 		Text:   text,
 	}
 
-	notification := dto.CentrifugeNotification{
-		Payload:   ut,
-		EventType: "user_broadcast",
+	participantIds, err := not.db.GetAllParticipantIds(chatId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
+		return
 	}
 
-	if marshalledBytes, err := json.Marshal(notification); err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created UserBroadcastNotification: %s", err)
-	} else {
-		_, err := not.centrifuge.Publish(channelName, marshalledBytes)
+	for _, participantId := range participantIds {
+		err := not.rabbitPublisher.Publish(dto.ChatEvent{
+			EventType:                    "user_broadcast",
+			MessageBroadcastNotification: &ut,
+			UserId:                       participantId,
+			ChatId:                       chatId,
+		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error publishing to public channel: %s", err)
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 

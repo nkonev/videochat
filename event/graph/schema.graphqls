@@ -53,10 +53,17 @@ type UserTypingDto {
     participantId: Int64!
 }
 
+type MessageBroadcastNotification {
+    login: String!
+    userId: Int64!
+    text: String!
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
     userTypingEvent: UserTypingDto
+    messageBroadcastEvent: MessageBroadcastNotification
 }
 
 type VideoCallChangedDto {

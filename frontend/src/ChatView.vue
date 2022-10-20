@@ -63,7 +63,6 @@
     import MessageEdit from "./MessageEdit";
     import ChatVideo from "./ChatVideo";
 
-    import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
 
     import {
@@ -118,7 +117,6 @@
                 itemsTotal: 0,
                 infiniteId: +new Date(),
 
-                chatMessagesSubscription: null,
                 chatDto: {
                     participantIds:[],
                     participants:[],
@@ -487,32 +485,15 @@
             },
             onLoggedIn() {
                 this.getInfo();
-                this.subscribe();
                 // seems it need in order to mitigate bug with last login message
                 if (this.items.length === 0) {
                     this.reloadItems();
                 }
             },
             onLoggedOut() {
-                this.unsubscribe();
                 this.resetVariables();
             },
-            subscribe() {
-                const channel = "chatMessages" + this.chatId;
-                this.chatMessagesSubscription = this.centrifuge.subscribe(channel, (message) => {
-                    // actually it's used for tell server about presence of this client.
-                    // also will be used as a global notification, so we just log it
-                    const data = getData(message);
-                    console.debug("Got message from channel", channel, data);
-                    const properData = getProperData(message)
-                    if (data.type === "user_broadcast") {
-                        bus.$emit(MESSAGE_BROADCAST, properData);
-                    }
-                });
-            },
-            unsubscribe() {
-                this.chatMessagesSubscription.unsubscribe();
-            },
+
             onWsRestoredRefresh() {
                 this.resetVariables();
                 // Reset direction in order to fix bug when user relogin and after press button "update" all messages disappears due to non-initial direction.
@@ -586,6 +567,9 @@
                     } else if (getChatEventsData(e).eventType === "user_typing") {
                         const d = getChatEventsData(e).userTypingEvent;
                         bus.$emit(USER_TYPING, d);
+                    } else if (getChatEventsData(e).eventType === "user_broadcast") {
+                        const d = getChatEventsData(e).messageBroadcastEvent;
+                        bus.$emit(MESSAGE_BROADCAST, d);
                     }
                 }
                 const onError = (e) => {
@@ -623,6 +607,11 @@
                                       login
                                       participantId
                                     }
+                                    messageBroadcastEvent {
+                                      login
+                                      userId
+                                      text
+                                    }
                                   }
                                 }
                 `,
@@ -652,8 +641,6 @@
         },
         mounted() {
             window.addEventListener('resize', this.onResizedListener);
-
-            this.subscribe();
 
             this.subscribeToChatEvents()
             bus.$on(LOGGED_IN, this.subscribeToChatEvents);
@@ -709,8 +696,6 @@
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
 
             clearInterval(writingUsersTimerId);
-
-            this.unsubscribe();
 
             this.unsubscribeFromChatEvents();
             bus.$off(LOGGED_IN, this.subscribeToChatEvents);

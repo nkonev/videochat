@@ -22,3 +22,9 @@ type UserTypingNotification struct {
 	Login         string `json:"login"`
 	ParticipantId int64  `json:"participantId"`
 }
+
+type MessageBroadcastNotification struct {
+	Login  string `json:"login"`
+	UserId int64  `json:"userId"`
+	Text   string `json:"text"`
+}
