@@ -114,7 +114,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
       - name: Build & test chat
-        run: (cd chat; make check-env download generate test package)
+        run: (cd chat; sleep 15 && make check-env download generate test package)
       - name: Deploy chat
         if: github.ref == 'refs/heads/master'
         run: |
