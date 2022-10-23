@@ -322,7 +322,7 @@
                     this.showWebsocketRestored = true;
                 }
                 if (connected) {
-                    axios.put(`/api/chat/${this.chatId}/message/check-for-new`).then(({data}) => {
+                    axios.put(`/api/chat/message/check-for-new`).then(({data}) => {
                         console.debug("New messages response", data);
                         if (data) {
                             const currentNewMessages = data.allUnreadMessages > 0;
