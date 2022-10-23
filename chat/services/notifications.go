@@ -24,7 +24,6 @@ type Notifications interface {
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
-
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
 }
 
@@ -155,7 +154,7 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 
 		err = not.rabbitPublisher.Publish(dto.GlobalEvent{
 			UserId:                     participantId,
-			EventType:                  "unread_messages_changed",
+			EventType:                  "chat_unread_messages_changed",
 			UnreadMessagesNotification: payload,
 		})
 	}
