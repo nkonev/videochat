@@ -86,7 +86,7 @@ func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64,
 
 func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, changingParticipantPage int, tx *db.Tx) {
 	for _, participantId := range userIds {
-		GetLogEntry(c.Request().Context()).Infof("Sending notification about %v the chat to participant: %v", eventType, participantId)
+		GetLogEntry(c.Request().Context()).Debugf("Sending notification about %v the chat to participant: %v", eventType, participantId)
 
 		var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
 		if err := deepcopy.Copy(copied, newChatDto); err != nil {
@@ -135,7 +135,7 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 
 func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx) {
 	for _, participantId := range userIds {
-		GetLogEntry(c.Request().Context()).Infof("Sending notification about unread messages to participantChannel: %v", participantId)
+		GetLogEntry(c.Request().Context()).Debugf("Sending notification about unread messages to participantChannel: %v", participantId)
 
 		unreadMessages, err := tx.GetUnreadMessagesCount(chatId, participantId)
 		if err != nil {
@@ -158,7 +158,7 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 
 func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx) {
 	for _, participantId := range userIds {
-		GetLogEntry(c.Request().Context()).Infof("Sending notification about all unread messages to participantChannel: %v", participantId)
+		GetLogEntry(c.Request().Context()).Debugf("Sending notification about all unread messages to participantChannel: %v", participantId)
 
 		unreadMessages, err := tx.GetAllUnreadMessagesCount(participantId)
 		if err != nil {
