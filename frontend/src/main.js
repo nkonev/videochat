@@ -225,7 +225,9 @@ vm = new Vue({
         })
     },
     unsubscribeFromGlobalEvents() {
-        Vue.prototype.globalEventsUnsubscribe();
+        if (Vue.prototype.globalEventsUnsubscribe) {
+            Vue.prototype.globalEventsUnsubscribe();
+        }
         Vue.prototype.globalEventsUnsubscribe = null;
     },
   },
