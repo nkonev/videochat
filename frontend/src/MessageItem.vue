@@ -30,19 +30,16 @@
     } from "./bus";
     import debounce from "lodash/debounce";
     import { format, parseISO, differenceInDays } from 'date-fns';
-    import {getData} from "@/centrifugeConnection";
     import {setIcon} from "@/utils";
     import "./messageImage.styl";
-
-    const TYPE_MESSAGE_READ = "message_read";
 
     export default {
         props: ['item', 'chatId', 'highlight'],
         methods: {
             onMessageClick(dto) {
-                this.centrifuge.namedRPC(TYPE_MESSAGE_READ, { chatId: parseInt(this.chatId), messageId: dto.id}).then(value => {
-                    if (getData(value)) {
-                        const currentNewMessages = getData(value).allUnreadMessages > 0;
+                axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`).then(({data}) => {
+                    if (data) {
+                        const currentNewMessages = data.allUnreadMessages > 0;
                         setIcon(currentNewMessages)
                     }
                 })

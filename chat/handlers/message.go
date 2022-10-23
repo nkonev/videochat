@@ -336,6 +336,42 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	}
 }
 
+func getNewMessagesNotification(dbs db.DB, userId int64) (*dto.AllUnreadMessages, error) {
+	count, err := dbs.GetAllUnreadMessagesCount(userId)
+	if err != nil {
+		Logger.Errorf("Unable to get unread messages count from db %v", err)
+		return nil, err
+	} else {
+		return &dto.AllUnreadMessages{MessagesCount: count}, nil
+	}
+}
+func (mc MessageHandler) ReadMessage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	messageId, err := GetPathParamAsInt64(c, "messageId")
+	if err != nil {
+		return err
+	}
+
+	if err := mc.db.AddMessageRead(messageId, userPrincipalDto.UserId, chatId); err != nil {
+		return err
+	}
+
+	notification, err := getNewMessagesNotification(mc.db, userPrincipalDto.UserId)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusAccepted, notification)
+}
+
 func (mc *MessageHandler) TypeMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
