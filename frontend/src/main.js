@@ -137,6 +137,9 @@ vm = new Vue({
             } else if (getGlobalEventsData(e).eventType === "video_dial_status_changed") {
                 const d = getGlobalEventsData(e).videoParticipantDialEvent;
                 bus.$emit(VIDEO_DIAL_STATUS_CHANGED, d);
+            } else if (getGlobalEventsData(e).eventType === 'unread_messages_changed') {
+                const d = getGlobalEventsData(e).unreadMessagesNotification;
+                bus.$emit(UNREAD_MESSAGES_CHANGED, d);
             }
         }
         const onError = (e) => {
@@ -200,6 +203,10 @@ vm = new Vue({
                             status
                           }
                         }
+                        unreadMessagesNotification {
+                          chatId
+                          unreadMessages
+                        }
                       }
                     }
                 `,
@@ -252,10 +259,7 @@ vm = new Vue({
   mounted(){
     this.centrifuge.on('publish', (ctx)=>{
       console.debug("Got personal message", ctx);
-      if (getData(ctx).type === 'unread_messages_changed') {
-        const d = getProperData(ctx);
-        bus.$emit(UNREAD_MESSAGES_CHANGED, d);
-      } else if (getData(ctx).type === 'all_unread_messages_changed') {
+      if (getData(ctx).type === 'all_unread_messages_changed') {
           const d = getProperData(ctx);
           const currentNewMessages = d.allUnreadMessages > 0;
           setIcon(currentNewMessages)

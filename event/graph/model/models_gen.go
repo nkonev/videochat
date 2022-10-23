@@ -36,6 +36,11 @@ type ChatEvent struct {
 	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
 }
 
+type ChatUnreadMessageChanged struct {
+	ChatID         int64 `json:"chatId"`
+	UnreadMessages int64 `json:"unreadMessages"`
+}
+
 type DisplayMessageDto struct {
 	ID             int64      `json:"id"`
 	Text           string     `json:"text"`
@@ -49,12 +54,13 @@ type DisplayMessageDto struct {
 }
 
 type GlobalEvent struct {
-	EventType                 string                  `json:"eventType"`
-	ChatEvent                 *ChatDto                `json:"chatEvent"`
-	UserEvent                 *User                   `json:"userEvent"`
-	VideoEvent                *VideoCallChangedDto    `json:"videoEvent"`
-	VideoCallInvitation       *VideoCallInvitationDto `json:"videoCallInvitation"`
-	VideoParticipantDialEvent *VideoDialChanges       `json:"videoParticipantDialEvent"`
+	EventType                  string                    `json:"eventType"`
+	ChatEvent                  *ChatDto                  `json:"chatEvent"`
+	UserEvent                  *User                     `json:"userEvent"`
+	VideoEvent                 *VideoCallChangedDto      `json:"videoEvent"`
+	VideoCallInvitation        *VideoCallInvitationDto   `json:"videoCallInvitation"`
+	VideoParticipantDialEvent  *VideoDialChanges         `json:"videoParticipantDialEvent"`
+	UnreadMessagesNotification *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
 }
 
 type MessageBroadcastNotification struct {

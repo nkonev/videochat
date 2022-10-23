@@ -86,6 +86,11 @@ type VideoDialChanges {
     dials: [VideoDialChanged!]!
 }
 
+type ChatUnreadMessageChanged {
+    chatId: Int64!
+    unreadMessages: Int64!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
@@ -93,6 +98,7 @@ type GlobalEvent {
     videoEvent: VideoCallChangedDto
     videoCallInvitation: VideoCallInvitationDto
     videoParticipantDialEvent: VideoDialChanges
+    unreadMessagesNotification: ChatUnreadMessageChanged
 }
 
 type Query {

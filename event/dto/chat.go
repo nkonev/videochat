@@ -75,3 +75,8 @@ type ChatDtoWithAdmin struct {
 	ParticipantsCount        int              `json:"participantsCount"`
 	ChangingParticipantsPage int              `json:"changingParticipantsPage"`
 }
+
+type ChatUnreadMessageChanged struct {
+	ChatId         int64 `json:"chatId"`
+	UnreadMessages int64 `json:"unreadMessages"`
+}

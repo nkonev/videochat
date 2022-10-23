@@ -223,6 +223,14 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 		}
 	}
 
+	unreadMessages := e.UnreadMessagesNotification
+	if unreadMessages != nil {
+		ret.UnreadMessagesNotification = &model.ChatUnreadMessageChanged{
+			ChatID:         unreadMessages.ChatId,
+			UnreadMessages: unreadMessages.UnreadMessages,
+		}
+	}
+
 	return ret
 }
 func convertUser(owner *dto.User) *model.User {

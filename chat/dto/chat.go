@@ -80,3 +80,8 @@ type ChatName struct {
 	Name   string `json:"name"`   // chatName or userName in case tet-a-tet
 	UserId int64  `json:"userId"` // userId chatName for
 }
+
+type ChatUnreadMessageChanged struct {
+	ChatId         int64 `json:"chatId"`
+	UnreadMessages int64 `json:"unreadMessages"`
+}

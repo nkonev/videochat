@@ -23,8 +23,8 @@ type Notifications interface {
 	NotifyAboutProfileChanged(user *dto.User)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string)
-
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
+
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
 }
 
@@ -91,8 +91,7 @@ func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64,
 
 func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, changingParticipantPage int, tx *db.Tx) {
 	for _, participantId := range userIds {
-		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-		GetLogEntry(c.Request().Context()).Infof("Sending notification about %v the chat to participantChannel: %v", eventType, participantChannel)
+		GetLogEntry(c.Request().Context()).Infof("Sending notification about %v the chat to participant: %v", eventType, participantId)
 
 		var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
 		if err := deepcopy.Copy(copied, newChatDto); err != nil {
@@ -139,15 +138,9 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 	}
 }
 
-type ChatUnreadMessageChanged struct {
-	ChatId         int64 `json:"chatId"`
-	UnreadMessages int64 `json:"unreadMessages"`
-}
-
 func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx) {
 	for _, participantId := range userIds {
-		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-		GetLogEntry(c.Request().Context()).Infof("Sending notification about unread messages to participantChannel: %v", participantChannel)
+		GetLogEntry(c.Request().Context()).Infof("Sending notification about unread messages to participantChannel: %v", participantId)
 
 		unreadMessages, err := tx.GetUnreadMessagesCount(chatId, participantId)
 		if err != nil {
@@ -155,23 +148,16 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 			continue
 		}
 
-		payload := &ChatUnreadMessageChanged{
+		payload := &dto.ChatUnreadMessageChanged{
 			ChatId:         chatId,
 			UnreadMessages: unreadMessages,
 		}
 
-		notification := dto.CentrifugeNotification{
-			Payload:   payload,
-			EventType: "unread_messages_changed",
-		}
-		if marshalledBytes, err := json.Marshal(notification); err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created notification: %s", err)
-		} else {
-			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
-			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error publishing to personal channel: %s", err)
-			}
-		}
+		err = not.rabbitPublisher.Publish(dto.GlobalEvent{
+			UserId:                     participantId,
+			EventType:                  "unread_messages_changed",
+			UnreadMessagesNotification: payload,
+		})
 	}
 }
 
