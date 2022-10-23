@@ -744,23 +744,23 @@ type UserWithAdmin {
 
 type ChatDto {
     id:             Int64!
-    name:                String!
+    name:                String
     avatar:              String
     avatarBig:           String
-    lastUpdateDateTime:  Time!
-    participantIds:      [Int64!]!
+    lastUpdateDateTime:  Time
+    participantIds:      [Int64!]
     canEdit:             Boolean
     canDelete:           Boolean
     canLeave:            Boolean
-    unreadMessages:      Int64!
-    canBroadcast:        Boolean!
-    canVideoKick:        Boolean!
-    canChangeChatAdmins: Boolean!
-    tetATet:             Boolean!
-    canAudioMute:        Boolean!
-    participants:             [UserWithAdmin!]!
-    participantsCount:        Int!
-    changingParticipantsPage: Int!
+    unreadMessages:      Int64
+    canBroadcast:        Boolean
+    canVideoKick:        Boolean
+    canChangeChatAdmins: Boolean
+    tetATet:             Boolean
+    canAudioMute:        Boolean
+    participants:             [UserWithAdmin!]
+    participantsCount:        Int
+    changingParticipantsPage: Int
 }
 
 type UserTypingDto {
@@ -1014,14 +1014,11 @@ func (ec *executionContext) _ChatDto_name(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1140,14 +1137,11 @@ func (ec *executionContext) _ChatDto_lastUpdateDateTime(ctx context.Context, fie
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_lastUpdateDateTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1184,14 +1178,11 @@ func (ec *executionContext) _ChatDto_participantIds(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]int64)
 	fc.Result = res
-	return ec.marshalNInt642ᚕint64ᚄ(ctx, field.Selections, res)
+	return ec.marshalOInt642ᚕint64ᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_participantIds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1351,14 +1342,11 @@ func (ec *executionContext) _ChatDto_unreadMessages(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int64)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_unreadMessages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1395,14 +1383,11 @@ func (ec *executionContext) _ChatDto_canBroadcast(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_canBroadcast(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1439,14 +1424,11 @@ func (ec *executionContext) _ChatDto_canVideoKick(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_canVideoKick(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1483,14 +1465,11 @@ func (ec *executionContext) _ChatDto_canChangeChatAdmins(ctx context.Context, fi
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_canChangeChatAdmins(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1527,14 +1506,11 @@ func (ec *executionContext) _ChatDto_tetATet(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_tetATet(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1571,14 +1547,11 @@ func (ec *executionContext) _ChatDto_canAudioMute(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_canAudioMute(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1615,14 +1588,11 @@ func (ec *executionContext) _ChatDto_participants(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.UserWithAdmin)
 	fc.Result = res
-	return ec.marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx, field.Selections, res)
+	return ec.marshalOUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_participants(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1669,14 +1639,11 @@ func (ec *executionContext) _ChatDto_participantsCount(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_participantsCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1713,14 +1680,11 @@ func (ec *executionContext) _ChatDto_changingParticipantsPage(ctx context.Contex
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_changingParticipantsPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5860,9 +5824,6 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 
 			out.Values[i] = ec._ChatDto_name(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "avatar":
 
 			out.Values[i] = ec._ChatDto_avatar(ctx, field, obj)
@@ -5875,16 +5836,10 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 
 			out.Values[i] = ec._ChatDto_lastUpdateDateTime(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "participantIds":
 
 			out.Values[i] = ec._ChatDto_participantIds(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "canEdit":
 
 			out.Values[i] = ec._ChatDto_canEdit(ctx, field, obj)
@@ -5901,65 +5856,38 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 
 			out.Values[i] = ec._ChatDto_unreadMessages(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "canBroadcast":
 
 			out.Values[i] = ec._ChatDto_canBroadcast(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "canVideoKick":
 
 			out.Values[i] = ec._ChatDto_canVideoKick(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "canChangeChatAdmins":
 
 			out.Values[i] = ec._ChatDto_canChangeChatAdmins(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "tetATet":
 
 			out.Values[i] = ec._ChatDto_tetATet(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "canAudioMute":
 
 			out.Values[i] = ec._ChatDto_canAudioMute(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "participants":
 
 			out.Values[i] = ec._ChatDto_participants(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "participantsCount":
 
 			out.Values[i] = ec._ChatDto_participantsCount(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "changingParticipantsPage":
 
 			out.Values[i] = ec._ChatDto_changingParticipantsPage(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6924,21 +6852,6 @@ func (ec *executionContext) marshalNGlobalEvent2ᚖnkonevᚗnameᚋeventᚋgraph
 	return ec._GlobalEvent(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
-	res, err := graphql.UnmarshalInt(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) unmarshalNInt642int64(ctx context.Context, v interface{}) (int64, error) {
 	res, err := graphql.UnmarshalInt64(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6952,38 +6865,6 @@ func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.Sel
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNInt642ᚕint64ᚄ(ctx context.Context, v interface{}) ([]int64, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]int64, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNInt642int64(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNInt642ᚕint64ᚄ(ctx context.Context, sel ast.SelectionSet, v []int64) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNInt642int64(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -7014,50 +6895,6 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserWithAdmin) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUserWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdmin(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalNUserWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdmin(ctx context.Context, sel ast.SelectionSet, v *model.UserWithAdmin) graphql.Marshaler {
@@ -7431,6 +7268,76 @@ func (ec *executionContext) marshalODisplayMessageDto2ᚖnkonevᚗnameᚋevent�
 	return ec._DisplayMessageDto(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt642ᚕint64ᚄ(ctx context.Context, v interface{}) ([]int64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]int64, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNInt642int64(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOInt642ᚕint64ᚄ(ctx context.Context, sel ast.SelectionSet, v []int64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNInt642int64(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOInt642ᚖint64(ctx context.Context, v interface{}) (*int64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt64(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt642ᚖint64(ctx context.Context, sel ast.SelectionSet, v *int64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt64(*v)
+	return res
+}
+
 func (ec *executionContext) marshalOMessageBroadcastNotification2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐMessageBroadcastNotification(ctx context.Context, sel ast.SelectionSet, v *model.MessageBroadcastNotification) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -7498,6 +7405,53 @@ func (ec *executionContext) marshalOUserTypingDto2ᚖnkonevᚗnameᚋeventᚋgra
 		return graphql.Null
 	}
 	return ec._UserTypingDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserWithAdmin) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUserWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdmin(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOVideoCallChangedDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoCallChangedDto(ctx context.Context, sel ast.SelectionSet, v *model.VideoCallChangedDto) graphql.Marshaler {
