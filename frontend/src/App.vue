@@ -235,7 +235,6 @@
     import VideoGlobalSettings from './VideoGlobalSettings';
     import FileTextEditModal from "./FileTextEditModal";
     import LanguageModal from "./LanguageModal";
-    import {getData} from "@/centrifugeConnection";
     import VideoAddNewSource from "@/VideoAddNewSource";
     import MessageEditModal from "@/MessageEditModal";
     import MessageEditLinkModal from "@/MessageEditLinkModal";
@@ -323,10 +322,10 @@
                     this.showWebsocketRestored = true;
                 }
                 if (connected) {
-                    this.centrifuge.namedRPC("check_for_new_messages").then(value => {
-                        console.debug("New messages response", value);
-                        if (getData(value)) {
-                            const currentNewMessages = getData(value).allUnreadMessages > 0;
+                    axios.put(`/api/chat/${this.chatId}/message/check-for-new`).then(({data}) => {
+                        console.debug("New messages response", data);
+                        if (data) {
+                            const currentNewMessages = data.allUnreadMessages > 0;
                             setIcon(currentNewMessages)
                         }
                     })

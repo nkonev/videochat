@@ -169,6 +169,7 @@ func configureEcho(
 	e.PUT("/chat/:id/message", mc.EditMessage)
 	e.DELETE("/chat/:id/message/:messageId", mc.DeleteMessage)
 	e.PUT("/chat/:id/message/read/:messageId", mc.ReadMessage)
+	e.PUT("/chat/:id/message/check-for-new", mc.CheckForNew)
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
 	e.PUT("/chat/:id/broadcast", mc.BroadcastMessage)
 	e.DELETE("/internal/remove-file-item", mc.RemoveFileItem)

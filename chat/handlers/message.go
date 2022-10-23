@@ -372,6 +372,20 @@ func (mc MessageHandler) ReadMessage(c echo.Context) error {
 	return c.JSON(http.StatusAccepted, notification)
 }
 
+func (mc MessageHandler) CheckForNew(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	notification, err := getNewMessagesNotification(mc.db, userPrincipalDto.UserId)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusAccepted, notification)
+}
+
 func (mc *MessageHandler) TypeMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
