@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/oliveagle/jsonpath"
@@ -23,7 +24,7 @@ import (
 	"nkonev.name/chat/handlers"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/producer"
-	"nkonev.name/chat/rabbitmq"
+	myRabbitmq "nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"os"
@@ -214,7 +215,7 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			db.ConfigureDb,
 			services.NewNotifications,
 			producer.NewRabbitNotificationsPublisher,
-			rabbitmq.CreateRabbitMqConnection,
+			myRabbitmq.CreateRabbitMqConnection,
 		),
 		fx.Invoke(
 			runMigrations,
@@ -246,15 +247,29 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 			db.ConfigureDb,
 			services.NewNotifications,
 			producer.NewRabbitNotificationsPublisher,
-			rabbitmq.CreateRabbitMqConnection,
+			myRabbitmq.CreateRabbitMqConnection,
 		),
 		fx.Invoke(
+			createFanoutNotificationsChannel,
 			runMigrations,
 			runEcho,
 		),
 	)
 	waitForChatServer()
 	return app, s
+}
+
+func createFanoutNotificationsChannel(connection *rabbitmq.Connection, lc fx.Lifecycle) error {
+	consumeCh, err := connection.Channel(nil)
+	if err != nil {
+		return err
+	}
+
+	err = consumeCh.ExchangeDeclare(producer.AsyncEventsFanoutExchange, "fanout", true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func TestGetChats(t *testing.T) {
