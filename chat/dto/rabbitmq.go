@@ -10,9 +10,10 @@ type ChatEvent struct {
 }
 
 type GlobalEvent struct {
-	EventType                  string                    `json:"eventType"`
-	UserId                     int64                     `json:"userId"`
-	ChatNotification           *ChatDtoWithAdmin         `json:"chatNotification"`
-	UserProfileNotification    *User                     `json:"userProfileNotification"`
-	UnreadMessagesNotification *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
+	EventType                     string                    `json:"eventType"`
+	UserId                        int64                     `json:"userId"`
+	ChatNotification              *ChatDtoWithAdmin         `json:"chatNotification"`
+	UserProfileNotification       *User                     `json:"userProfileNotification"`
+	UnreadMessagesNotification    *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
+	AllUnreadMessagesNotification *AllUnreadMessages        `json:"allUnreadMessagesNotification"`
 }

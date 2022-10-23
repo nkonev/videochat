@@ -47,6 +47,10 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AllUnreadMessages struct {
+		AllUnreadMessages func(childComplexity int) int
+	}
+
 	ChatDto struct {
 		Avatar                   func(childComplexity int) int
 		AvatarBig                func(childComplexity int) int
@@ -93,13 +97,14 @@ type ComplexityRoot struct {
 	}
 
 	GlobalEvent struct {
-		ChatEvent                  func(childComplexity int) int
-		EventType                  func(childComplexity int) int
-		UnreadMessagesNotification func(childComplexity int) int
-		UserEvent                  func(childComplexity int) int
-		VideoCallInvitation        func(childComplexity int) int
-		VideoEvent                 func(childComplexity int) int
-		VideoParticipantDialEvent  func(childComplexity int) int
+		AllUnreadMessagesNotification func(childComplexity int) int
+		ChatEvent                     func(childComplexity int) int
+		EventType                     func(childComplexity int) int
+		UnreadMessagesNotification    func(childComplexity int) int
+		UserEvent                     func(childComplexity int) int
+		VideoCallInvitation           func(childComplexity int) int
+		VideoEvent                    func(childComplexity int) int
+		VideoParticipantDialEvent     func(childComplexity int) int
 	}
 
 	MessageBroadcastNotification struct {
@@ -178,6 +183,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "AllUnreadMessages.allUnreadMessages":
+		if e.complexity.AllUnreadMessages.AllUnreadMessages == nil {
+			break
+		}
+
+		return e.complexity.AllUnreadMessages.AllUnreadMessages(childComplexity), true
 
 	case "ChatDto.avatar":
 		if e.complexity.ChatDto.Avatar == nil {
@@ -409,6 +421,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DisplayMessageDto.Text(childComplexity), true
+
+	case "GlobalEvent.allUnreadMessagesNotification":
+		if e.complexity.GlobalEvent.AllUnreadMessagesNotification == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.AllUnreadMessagesNotification(childComplexity), true
 
 	case "GlobalEvent.chatEvent":
 		if e.complexity.GlobalEvent.ChatEvent == nil {
@@ -787,6 +806,10 @@ type ChatUnreadMessageChanged {
     unreadMessages: Int64!
 }
 
+type AllUnreadMessages {
+    allUnreadMessages: Int64!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
@@ -795,6 +818,7 @@ type GlobalEvent {
     videoCallInvitation: VideoCallInvitationDto
     videoParticipantDialEvent: VideoDialChanges
     unreadMessagesNotification: ChatUnreadMessageChanged
+    allUnreadMessagesNotification: AllUnreadMessages
 }
 
 type Query {
@@ -880,6 +904,50 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _AllUnreadMessages_allUnreadMessages(ctx context.Context, field graphql.CollectedField, obj *model.AllUnreadMessages) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AllUnreadMessages_allUnreadMessages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AllUnreadMessages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AllUnreadMessages_allUnreadMessages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AllUnreadMessages",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _ChatDto_id(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChatDto_id(ctx, field)
@@ -2712,6 +2780,51 @@ func (ec *executionContext) fieldContext_GlobalEvent_unreadMessagesNotification(
 	return fc, nil
 }
 
+func (ec *executionContext) _GlobalEvent_allUnreadMessagesNotification(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_allUnreadMessagesNotification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AllUnreadMessagesNotification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AllUnreadMessages)
+	fc.Result = res
+	return ec.marshalOAllUnreadMessages2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐAllUnreadMessages(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_allUnreadMessagesNotification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "allUnreadMessages":
+				return ec.fieldContext_AllUnreadMessages_allUnreadMessages(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AllUnreadMessages", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MessageBroadcastNotification_login(ctx context.Context, field graphql.CollectedField, obj *model.MessageBroadcastNotification) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MessageBroadcastNotification_login(ctx, field)
 	if err != nil {
@@ -3160,6 +3273,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 				return ec.fieldContext_GlobalEvent_videoParticipantDialEvent(ctx, field)
 			case "unreadMessagesNotification":
 				return ec.fieldContext_GlobalEvent_unreadMessagesNotification(ctx, field)
+			case "allUnreadMessagesNotification":
+				return ec.fieldContext_GlobalEvent_allUnreadMessagesNotification(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalEvent", field.Name)
 		},
@@ -5696,6 +5811,34 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** object.gotpl ****************************
 
+var allUnreadMessagesImplementors = []string{"AllUnreadMessages"}
+
+func (ec *executionContext) _AllUnreadMessages(ctx context.Context, sel ast.SelectionSet, obj *model.AllUnreadMessages) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, allUnreadMessagesImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AllUnreadMessages")
+		case "allUnreadMessages":
+
+			out.Values[i] = ec._AllUnreadMessages_allUnreadMessages(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var chatDtoImplementors = []string{"ChatDto"}
 
 func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, obj *model.ChatDto) graphql.Marshaler {
@@ -6018,6 +6161,10 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 		case "unreadMessagesNotification":
 
 			out.Values[i] = ec._GlobalEvent_unreadMessagesNotification(ctx, field, obj)
+
+		case "allUnreadMessagesNotification":
+
+			out.Values[i] = ec._GlobalEvent_allUnreadMessagesNotification(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -7228,6 +7375,13 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalOAllUnreadMessages2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐAllUnreadMessages(ctx context.Context, sel ast.SelectionSet, v *model.AllUnreadMessages) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AllUnreadMessages(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

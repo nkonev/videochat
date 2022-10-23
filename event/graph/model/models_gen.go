@@ -8,6 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type AllUnreadMessages struct {
+	AllUnreadMessages int64 `json:"allUnreadMessages"`
+}
+
 type ChatDto struct {
 	ID                       int64            `json:"id"`
 	Name                     string           `json:"name"`
@@ -54,13 +58,14 @@ type DisplayMessageDto struct {
 }
 
 type GlobalEvent struct {
-	EventType                  string                    `json:"eventType"`
-	ChatEvent                  *ChatDto                  `json:"chatEvent"`
-	UserEvent                  *User                     `json:"userEvent"`
-	VideoEvent                 *VideoCallChangedDto      `json:"videoEvent"`
-	VideoCallInvitation        *VideoCallInvitationDto   `json:"videoCallInvitation"`
-	VideoParticipantDialEvent  *VideoDialChanges         `json:"videoParticipantDialEvent"`
-	UnreadMessagesNotification *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
+	EventType                     string                    `json:"eventType"`
+	ChatEvent                     *ChatDto                  `json:"chatEvent"`
+	UserEvent                     *User                     `json:"userEvent"`
+	VideoEvent                    *VideoCallChangedDto      `json:"videoEvent"`
+	VideoCallInvitation           *VideoCallInvitationDto   `json:"videoCallInvitation"`
+	VideoParticipantDialEvent     *VideoDialChanges         `json:"videoParticipantDialEvent"`
+	UnreadMessagesNotification    *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
+	AllUnreadMessagesNotification *AllUnreadMessages        `json:"allUnreadMessagesNotification"`
 }
 
 type MessageBroadcastNotification struct {

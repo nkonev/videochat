@@ -1,7 +1,6 @@
 package services
 
 import (
-	"encoding/json"
 	"github.com/centrifugal/centrifuge"
 	"github.com/getlantern/deepcopy"
 	"github.com/guregu/null"
@@ -162,8 +161,7 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 
 func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx) {
 	for _, participantId := range userIds {
-		participantChannel := utils.PersonalChannelPrefix + utils.Int64ToString(participantId)
-		GetLogEntry(c.Request().Context()).Infof("Sending notification about all unread messages to participantChannel: %v", participantChannel)
+		GetLogEntry(c.Request().Context()).Infof("Sending notification about all unread messages to participantChannel: %v", participantId)
 
 		unreadMessages, err := tx.GetAllUnreadMessagesCount(participantId)
 		if err != nil {
@@ -175,18 +173,11 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 			MessagesCount: unreadMessages,
 		}
 
-		notification := dto.CentrifugeNotification{
-			Payload:   payload,
-			EventType: "all_unread_messages_changed",
-		}
-		if marshalledBytes, err := json.Marshal(notification); err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during marshalling chat created notification: %s", err)
-		} else {
-			_, err := not.centrifuge.Publish(participantChannel, marshalledBytes)
-			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error publishing to personal channel: %s", err)
-			}
-		}
+		err = not.rabbitPublisher.Publish(dto.GlobalEvent{
+			UserId:                        participantId,
+			EventType:                     "all_unread_messages_changed",
+			AllUnreadMessagesNotification: payload,
+		})
 	}
 }
 

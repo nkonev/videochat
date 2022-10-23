@@ -91,6 +91,10 @@ type ChatUnreadMessageChanged {
     unreadMessages: Int64!
 }
 
+type AllUnreadMessages {
+    allUnreadMessages: Int64!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
@@ -99,6 +103,7 @@ type GlobalEvent {
     videoCallInvitation: VideoCallInvitationDto
     videoParticipantDialEvent: VideoDialChanges
     unreadMessagesNotification: ChatUnreadMessageChanged
+    allUnreadMessagesNotification: AllUnreadMessages
 }
 
 type Query {

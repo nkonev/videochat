@@ -140,6 +140,10 @@ vm = new Vue({
             } else if (getGlobalEventsData(e).eventType === 'chat_unread_messages_changed') {
                 const d = getGlobalEventsData(e).unreadMessagesNotification;
                 bus.$emit(UNREAD_MESSAGES_CHANGED, d);
+            } else if (getGlobalEventsData(e).eventType === 'all_unread_messages_changed') {
+                const d = getGlobalEventsData(e).allUnreadMessagesNotification;
+                const currentNewMessages = d.allUnreadMessages > 0;
+                setIcon(currentNewMessages)
             }
         }
         const onError = (e) => {
@@ -207,6 +211,9 @@ vm = new Vue({
                           chatId
                           unreadMessages
                         }
+                        allUnreadMessagesNotification {
+                          allUnreadMessages
+                        }
                       }
                     }
                 `,
@@ -259,12 +266,6 @@ vm = new Vue({
   mounted(){
     this.centrifuge.on('publish', (ctx)=>{
       console.debug("Got personal message", ctx);
-      if (getData(ctx).type === 'all_unread_messages_changed') {
-          const d = getProperData(ctx);
-          const currentNewMessages = d.allUnreadMessages > 0;
-          setIcon(currentNewMessages)
-      }
-
     });
 
     this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS);
