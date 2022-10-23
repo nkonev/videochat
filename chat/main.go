@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/viper"
@@ -38,7 +37,6 @@ func main() {
 		fx.Provide(
 			configureTracer,
 			client.NewRestClient,
-			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
@@ -56,7 +54,6 @@ func main() {
 		),
 		fx.Invoke(
 			runMigrations,
-			runCentrifuge,
 			runEcho,
 			listener.ListenAaaQueue,
 		),
@@ -64,17 +61,6 @@ func main() {
 	app.Run()
 
 	Logger.Infof("Exit program")
-}
-
-func runCentrifuge(node *centrifuge.Node) {
-	// Run node.
-	Logger.Infof("Starting centrifuge...")
-	go func() {
-		if err := node.Run(); err != nil {
-			Logger.Fatalf("Error on start centrifuge: %v", err)
-		}
-	}()
-	Logger.Info("Centrifuge started.")
 }
 
 func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
@@ -114,7 +100,6 @@ func configureEcho(
 	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
-	node *centrifuge.Node,
 	ch *handlers.ChatHandler,
 	mc *handlers.MessageHandler,
 	tp *sdktrace.TracerProvider,
@@ -141,8 +126,6 @@ func configureEcho(
 	e.Use(middleware.LoggerWithConfig(accessLoggerConfig))
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
-
-	e.GET("/chat/websocket", handlers.Convert(handlers.CentrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
 
 	e.GET("/chat", ch.GetChats)
 	e.GET("/chat/:id", ch.GetChat)

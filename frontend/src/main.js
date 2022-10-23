@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
-import {getData, getProperData, setupCentrifuge} from "./centrifugeConnection"
 import graphQlClient from "./graphql"
 import axios from "axios";
 import bus, {
@@ -10,7 +9,6 @@ import bus, {
     CHAT_EDITED,
     UNREAD_MESSAGES_CHANGED,
     USER_PROFILE_CHANGED,
-    CHANGE_WEBSOCKET_STATUS,
     LOGGED_OUT,
     LOGGED_IN,
     VIDEO_CALL_INVITED,
@@ -103,13 +101,6 @@ vm = new Vue({
   store,
   router,
   methods: {
-    connectCentrifuge() {
-      this.centrifuge.connect();
-    },
-    disconnectCentrifuge() {
-      this.centrifuge.disconnect();
-      Vue.prototype.centrifugeInitialized = false;
-    },
     subscribeToGlobalEvents() {
         const onNext = (e) => {
             console.debug("Got global event", e);
@@ -224,6 +215,14 @@ vm = new Vue({
                 complete: onComplete,
             },
         );
+
+        axios.put(`/api/chat/message/check-for-new`).then(({data}) => {
+            console.debug("New messages response", data);
+            if (data) {
+                const currentNewMessages = data.allUnreadMessages > 0;
+                setIcon(currentNewMessages)
+            }
+        })
     },
     unsubscribeFromGlobalEvents() {
         Vue.prototype.globalEventsUnsubscribe();
@@ -234,40 +233,17 @@ vm = new Vue({
     Vue.prototype.isMobile = () => {
       return !this.$vuetify.breakpoint.smAndUp
     };
-    Vue.prototype.centrifugeInitialized = false;
-    const setCentrifugeSession = (cs) => {
-      Vue.prototype.centrifugeSessionId = cs;
-      bus.$emit(CHANGE_WEBSOCKET_STATUS, {connected: true, wasInitialized: Vue.prototype.centrifugeInitialized});
-      Vue.prototype.centrifugeInitialized = true;
-    };
-    const onDisconnected = () => {
-      Vue.prototype.centrifugeSessionId = null;
-      bus.$emit(CHANGE_WEBSOCKET_STATUS, {connected: false, wasInitialized: Vue.prototype.centrifugeInitialized});
-    };
-    Vue.prototype.centrifuge = setupCentrifuge(setCentrifugeSession, onDisconnected);
-    this.connectCentrifuge();
-    bus.$on(LOGGED_IN, this.connectCentrifuge);
-    bus.$on(LOGGED_OUT, this.disconnectCentrifuge);
-
     this.subscribeToGlobalEvents();
     bus.$on(LOGGED_IN, this.subscribeToGlobalEvents);
     bus.$on(LOGGED_OUT, this.unsubscribeFromGlobalEvents);
   },
   destroyed() {
-    this.disconnectCentrifuge();
-    bus.$off(LOGGED_IN, this.connectCentrifuge);
-    bus.$off(LOGGED_OUT, this.disconnectCentrifuge);
-
     this.unsubscribeFromGlobalEvents();
     graphQlClient.terminate();
     bus.$off(LOGGED_IN, this.subscribeToGlobalEvents);
     bus.$off(LOGGED_OUT, this.unsubscribeFromGlobalEvents);
   },
   mounted(){
-    this.centrifuge.on('publish', (ctx)=>{
-      console.debug("Got personal message", ctx);
-    });
-
     this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS);
   },
   // https://ru.vuejs.org/v2/guide/render-function.html

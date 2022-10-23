@@ -1,7 +1,6 @@
 package services
 
 import (
-	"github.com/centrifugal/centrifuge"
 	"github.com/getlantern/deepcopy"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
@@ -27,14 +26,12 @@ type Notifications interface {
 }
 
 type notifictionsImpl struct {
-	centrifuge      *centrifuge.Node
 	rabbitPublisher *producer.RabbitFanoutNotificationsPublisher
 	db              db.DB
 }
 
-func NewNotifications(node *centrifuge.Node, rabbitPublisher *producer.RabbitFanoutNotificationsPublisher, db db.DB) Notifications {
+func NewNotifications(rabbitPublisher *producer.RabbitFanoutNotificationsPublisher, db db.DB) Notifications {
 	return &notifictionsImpl{
-		centrifuge:      node,
 		rabbitPublisher: rabbitPublisher,
 		db:              db,
 	}

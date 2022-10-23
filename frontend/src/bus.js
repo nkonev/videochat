@@ -20,7 +20,6 @@ export const USER_TYPING = "userTyping";
 export const MESSAGE_BROADCAST = "messageBroadcast";
 export const OPEN_CHOOSE_AVATAR = "openChooseAvatar";
 export const USER_PROFILE_CHANGED = "userProfileChanged";
-export const CHANGE_WEBSOCKET_STATUS = "changeWebsocket";
 export const OPEN_PARTICIPANTS_DIALOG = "openInfo";
 export const VIDEO_CALL_CHANGED = "videoCallChanged";
 export const VIDEO_CALL_INVITED = "videoCallInvited";
