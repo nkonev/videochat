@@ -12,7 +12,7 @@ import bus, {
     LOGGED_OUT,
     LOGGED_IN,
     VIDEO_CALL_INVITED,
-    VIDEO_CALL_CHANGED, VIDEO_DIAL_STATUS_CHANGED,
+    VIDEO_CALL_CHANGED, VIDEO_DIAL_STATUS_CHANGED, PROFILE_SET,
 } from './bus';
 import store, {
     FETCH_AVAILABLE_OAUTH2_PROVIDERS,
@@ -235,18 +235,25 @@ vm = new Vue({
     Vue.prototype.isMobile = () => {
       return !this.$vuetify.breakpoint.smAndUp
     };
-    this.subscribeToGlobalEvents();
-    bus.$on(LOGGED_IN, this.subscribeToGlobalEvents);
+    bus.$on(PROFILE_SET, this.subscribeToGlobalEvents);
     bus.$on(LOGGED_OUT, this.unsubscribeFromGlobalEvents);
   },
   destroyed() {
     this.unsubscribeFromGlobalEvents();
     graphQlClient.terminate();
-    bus.$off(LOGGED_IN, this.subscribeToGlobalEvents);
+    bus.$off(PROFILE_SET, this.subscribeToGlobalEvents);
     bus.$off(LOGGED_OUT, this.unsubscribeFromGlobalEvents);
   },
   mounted(){
     this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS);
+  },
+  watch: {
+    '$store.state.currentUser': function(newUserValue, oldUserValue) {
+        console.debug("User new", newUserValue, "old" , oldUserValue);
+        if (newUserValue && !oldUserValue) {
+            bus.$emit(PROFILE_SET);
+        }
+    }
   },
   // https://ru.vuejs.org/v2/guide/render-function.html
   render: h => h(App)

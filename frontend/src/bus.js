@@ -1,6 +1,7 @@
 import Vue from 'vue';
 export default new Vue();
 export const LOGGED_OUT = "loggedOut";
+export const PROFILE_SET = "profileSetNotNull";
 export const LOGGED_IN = "loggedIn";
 export const CHAT_ADD = "chatAdd";
 export const CHAT_EDITED = "chatEdited";

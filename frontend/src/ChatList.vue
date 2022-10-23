@@ -52,7 +52,7 @@ import bus, {
     USER_PROFILE_CHANGED,
     CLOSE_SIMPLE_MODAL,
     REFRESH_ON_WEBSOCKET_RESTORED,
-    VIDEO_CALL_CHANGED, LOGGED_OUT
+    VIDEO_CALL_CHANGED, LOGGED_OUT, PROFILE_SET
 } from "./bus";
     import {chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
@@ -241,7 +241,7 @@ import bus, {
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
 
-            bus.$on(LOGGED_IN, this.onLoggedIn);
+            bus.$on(PROFILE_SET, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(CHAT_ADD, this.addItem);
             bus.$on(CHAT_EDITED, this.changeItem);
@@ -257,7 +257,7 @@ import bus, {
             this.closeQueryWatcher();
         },
         destroyed() {
-            bus.$off(LOGGED_IN, this.onLoggedIn);
+            bus.$off(PROFILE_SET, this.onLoggedIn);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(CHAT_ADD, this.addItem);
             bus.$off(CHAT_EDITED, this.changeItem);
