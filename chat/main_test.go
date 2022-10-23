@@ -22,6 +22,8 @@ import (
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/handlers"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/producer"
+	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"os"
@@ -202,7 +204,6 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 		fx.Provide(
 			configureTracer,
 			client.NewRestClient,
-			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
@@ -212,10 +213,11 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			configureTestMigrations,
 			db.ConfigureDb,
 			services.NewNotifications,
+			producer.NewRabbitNotificationsPublisher,
+			rabbitmq.CreateRabbitMqConnection,
 		),
 		fx.Invoke(
 			runMigrations,
-			runCentrifuge,
 			//runEcho,
 			testFunc,
 		),
@@ -234,7 +236,6 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 		fx.Provide(
 			configureTracer,
 			client.NewRestClient,
-			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
@@ -244,10 +245,11 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 			configureTestMigrations,
 			db.ConfigureDb,
 			services.NewNotifications,
+			producer.NewRabbitNotificationsPublisher,
+			rabbitmq.CreateRabbitMqConnection,
 		),
 		fx.Invoke(
 			runMigrations,
-			runCentrifuge,
 			runEcho,
 		),
 	)
@@ -371,38 +373,6 @@ func stringToReadCloser(s string) io.ReadCloser {
 	r := strings.NewReader(s)
 	rc := ioutil.NopCloser(r)
 	return rc
-}
-
-func TestCentrifugeThatCreationNewChatMakesNotification(t *testing.T) {
-	app, s := startAppFull(t)
-	defer app.RequireStart().RequireStop()
-
-	emu := startAaaEmu()
-	defer emu.Close()
-
-	expirationTime := utils.SecondsToStringMilliseconds(time.Now().Add(2 * time.Hour).Unix())
-	contentType := "application/json;charset=UTF-8"
-	requestHeaders := map[string][]string{
-		"Accept":           {contentType},
-		"Content-Type":     {contentType},
-		"X-Auth-Expiresin": {expirationTime},
-		"X-Auth-Username":  {"dGVzdGVy"},
-		"X-Auth-Userid":    {"1"},
-	}
-
-	request := &http.Request{
-		Method: "POST",
-		Header: requestHeaders,
-		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about new chat"}`),
-		URL:    stringToUrl("http://localhost:1235/chat"),
-	}
-
-	cl := client.NewRestClient()
-	resp, err := cl.Do(request)
-	assert.Nil(t, err)
-	assert.Equal(t, 201, resp.StatusCode)
-
-	assert.NoError(t, s.Shutdown(), "error in app shutdown")
 }
 
 func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
