@@ -42,15 +42,16 @@ export default class ChatList {
         await expect(form).not.toBeVisible();
     }
 
-    getRowsLocator() {
-        return this.page.locator('#chat-list-items .v-list-item .v-list-item__title');
+    getRowsLocator(text) {
+        let maybeText = text ? { hasText: text } : null
+        return this.page.locator('#chat-list-items .v-list-item .v-list-item__title', maybeText);
     }
 
-    async getChatItemCount() {
-        return await this.getRowsLocator().count();
+    async assertChatItemCount(expected) {
+        return await expect(this.getRowsLocator()).toHaveCount(expected);
     }
 
-    async getChatName(index) {
-        return (await this.getRowsLocator().nth(index).textContent()).trim()
+    async assertChatName(expected) {
+        return (await this.getRowsLocator(expected))
     }
 }
