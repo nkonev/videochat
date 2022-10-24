@@ -20,6 +20,11 @@ type DisplayMessageDto {
     fileItemUuid:    UUID
 }
 
+type MessageDeletedDto {
+    id:             Int64!
+    chatId:             Int64!
+}
+
 type UserWithAdmin {
     id:     Int64!
     login:  String!
@@ -48,6 +53,10 @@ type ChatDto {
     changingParticipantsPage: Int!
 }
 
+type ChatDeletedDto {
+    id:             Int64!
+}
+
 type UserTypingDto {
     login: String!
     participantId: Int64!
@@ -62,6 +71,7 @@ type MessageBroadcastNotification {
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
+    messageDeletedEvent: MessageDeletedDto
     userTypingEvent: UserTypingDto
     messageBroadcastEvent: MessageBroadcastNotification
 }
@@ -98,6 +108,7 @@ type AllUnreadMessages {
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
+    chatDeletedEvent: ChatDeletedDto
     userEvent: User
     videoEvent: VideoCallChangedDto
     videoCallInvitation: VideoCallInvitationDto

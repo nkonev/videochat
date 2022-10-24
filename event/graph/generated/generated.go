@@ -51,6 +51,10 @@ type ComplexityRoot struct {
 		AllUnreadMessages func(childComplexity int) int
 	}
 
+	ChatDeletedDto struct {
+		ID func(childComplexity int) int
+	}
+
 	ChatDto struct {
 		Avatar                   func(childComplexity int) int
 		AvatarBig                func(childComplexity int) int
@@ -75,6 +79,7 @@ type ComplexityRoot struct {
 	ChatEvent struct {
 		EventType             func(childComplexity int) int
 		MessageBroadcastEvent func(childComplexity int) int
+		MessageDeletedEvent   func(childComplexity int) int
 		MessageEvent          func(childComplexity int) int
 		UserTypingEvent       func(childComplexity int) int
 	}
@@ -98,6 +103,7 @@ type ComplexityRoot struct {
 
 	GlobalEvent struct {
 		AllUnreadMessagesNotification func(childComplexity int) int
+		ChatDeletedEvent              func(childComplexity int) int
 		ChatEvent                     func(childComplexity int) int
 		EventType                     func(childComplexity int) int
 		UnreadMessagesNotification    func(childComplexity int) int
@@ -111,6 +117,11 @@ type ComplexityRoot struct {
 		Login  func(childComplexity int) int
 		Text   func(childComplexity int) int
 		UserID func(childComplexity int) int
+	}
+
+	MessageDeletedDto struct {
+		ChatID func(childComplexity int) int
+		ID     func(childComplexity int) int
 	}
 
 	Query struct {
@@ -190,6 +201,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AllUnreadMessages.AllUnreadMessages(childComplexity), true
+
+	case "ChatDeletedDto.id":
+		if e.complexity.ChatDeletedDto.ID == nil {
+			break
+		}
+
+		return e.complexity.ChatDeletedDto.ID(childComplexity), true
 
 	case "ChatDto.avatar":
 		if e.complexity.ChatDto.Avatar == nil {
@@ -331,6 +349,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatEvent.MessageBroadcastEvent(childComplexity), true
 
+	case "ChatEvent.messageDeletedEvent":
+		if e.complexity.ChatEvent.MessageDeletedEvent == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.MessageDeletedEvent(childComplexity), true
+
 	case "ChatEvent.messageEvent":
 		if e.complexity.ChatEvent.MessageEvent == nil {
 			break
@@ -429,6 +454,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalEvent.AllUnreadMessagesNotification(childComplexity), true
 
+	case "GlobalEvent.chatDeletedEvent":
+		if e.complexity.GlobalEvent.ChatDeletedEvent == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.ChatDeletedEvent(childComplexity), true
+
 	case "GlobalEvent.chatEvent":
 		if e.complexity.GlobalEvent.ChatEvent == nil {
 			break
@@ -498,6 +530,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MessageBroadcastNotification.UserID(childComplexity), true
+
+	case "MessageDeletedDto.chatId":
+		if e.complexity.MessageDeletedDto.ChatID == nil {
+			break
+		}
+
+		return e.complexity.MessageDeletedDto.ChatID(childComplexity), true
+
+	case "MessageDeletedDto.id":
+		if e.complexity.MessageDeletedDto.ID == nil {
+			break
+		}
+
+		return e.complexity.MessageDeletedDto.ID(childComplexity), true
 
 	case "Query.ping":
 		if e.complexity.Query.Ping == nil {
@@ -735,6 +781,11 @@ type DisplayMessageDto {
     fileItemUuid:    UUID
 }
 
+type MessageDeletedDto {
+    id:             Int64!
+    chatId:             Int64!
+}
+
 type UserWithAdmin {
     id:     Int64!
     login:  String!
@@ -763,6 +814,10 @@ type ChatDto {
     changingParticipantsPage: Int!
 }
 
+type ChatDeletedDto {
+    id:             Int64!
+}
+
 type UserTypingDto {
     login: String!
     participantId: Int64!
@@ -777,6 +832,7 @@ type MessageBroadcastNotification {
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
+    messageDeletedEvent: MessageDeletedDto
     userTypingEvent: UserTypingDto
     messageBroadcastEvent: MessageBroadcastNotification
 }
@@ -813,6 +869,7 @@ type AllUnreadMessages {
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
+    chatDeletedEvent: ChatDeletedDto
     userEvent: User
     videoEvent: VideoCallChangedDto
     videoCallInvitation: VideoCallInvitationDto
@@ -939,6 +996,50 @@ func (ec *executionContext) _AllUnreadMessages_allUnreadMessages(ctx context.Con
 func (ec *executionContext) fieldContext_AllUnreadMessages_allUnreadMessages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AllUnreadMessages",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatDeletedDto_id(ctx context.Context, field graphql.CollectedField, obj *model.ChatDeletedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDeletedDto_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDeletedDto_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDeletedDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1841,6 +1942,53 @@ func (ec *executionContext) fieldContext_ChatEvent_messageEvent(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatEvent_messageDeletedEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_messageDeletedEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MessageDeletedEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.MessageDeletedDto)
+	fc.Result = res
+	return ec.marshalOMessageDeletedDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐMessageDeletedDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_messageDeletedEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MessageDeletedDto_id(ctx, field)
+			case "chatId":
+				return ec.fieldContext_MessageDeletedDto_chatId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MessageDeletedDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChatEvent_userTypingEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChatEvent_userTypingEvent(ctx, field)
 	if err != nil {
@@ -2543,6 +2691,51 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _GlobalEvent_chatDeletedEvent(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_chatDeletedEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatDeletedEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChatDeletedDto)
+	fc.Result = res
+	return ec.marshalOChatDeletedDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatDeletedDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_chatDeletedEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ChatDeletedDto_id(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChatDeletedDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _GlobalEvent_userEvent(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GlobalEvent_userEvent(ctx, field)
 	if err != nil {
@@ -2957,6 +3150,94 @@ func (ec *executionContext) fieldContext_MessageBroadcastNotification_text(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _MessageDeletedDto_id(ctx context.Context, field graphql.CollectedField, obj *model.MessageDeletedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageDeletedDto_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MessageDeletedDto_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MessageDeletedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MessageDeletedDto_chatId(ctx context.Context, field graphql.CollectedField, obj *model.MessageDeletedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageDeletedDto_chatId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MessageDeletedDto_chatId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MessageDeletedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_ping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_ping(ctx, field)
 	if err != nil {
@@ -3184,6 +3465,8 @@ func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Con
 				return ec.fieldContext_ChatEvent_eventType(ctx, field)
 			case "messageEvent":
 				return ec.fieldContext_ChatEvent_messageEvent(ctx, field)
+			case "messageDeletedEvent":
+				return ec.fieldContext_ChatEvent_messageDeletedEvent(ctx, field)
 			case "userTypingEvent":
 				return ec.fieldContext_ChatEvent_userTypingEvent(ctx, field)
 			case "messageBroadcastEvent":
@@ -3263,6 +3546,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 				return ec.fieldContext_GlobalEvent_eventType(ctx, field)
 			case "chatEvent":
 				return ec.fieldContext_GlobalEvent_chatEvent(ctx, field)
+			case "chatDeletedEvent":
+				return ec.fieldContext_GlobalEvent_chatDeletedEvent(ctx, field)
 			case "userEvent":
 				return ec.fieldContext_GlobalEvent_userEvent(ctx, field)
 			case "videoEvent":
@@ -5839,6 +6124,34 @@ func (ec *executionContext) _AllUnreadMessages(ctx context.Context, sel ast.Sele
 	return out
 }
 
+var chatDeletedDtoImplementors = []string{"ChatDeletedDto"}
+
+func (ec *executionContext) _ChatDeletedDto(ctx context.Context, sel ast.SelectionSet, obj *model.ChatDeletedDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, chatDeletedDtoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChatDeletedDto")
+		case "id":
+
+			out.Values[i] = ec._ChatDeletedDto_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var chatDtoImplementors = []string{"ChatDto"}
 
 func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, obj *model.ChatDto) graphql.Marshaler {
@@ -5992,6 +6305,10 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._ChatEvent_messageEvent(ctx, field, obj)
 
+		case "messageDeletedEvent":
+
+			out.Values[i] = ec._ChatEvent_messageDeletedEvent(ctx, field, obj)
+
 		case "userTypingEvent":
 
 			out.Values[i] = ec._ChatEvent_userTypingEvent(ctx, field, obj)
@@ -6142,6 +6459,10 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._GlobalEvent_chatEvent(ctx, field, obj)
 
+		case "chatDeletedEvent":
+
+			out.Values[i] = ec._GlobalEvent_chatDeletedEvent(ctx, field, obj)
+
 		case "userEvent":
 
 			out.Values[i] = ec._GlobalEvent_userEvent(ctx, field, obj)
@@ -6204,6 +6525,41 @@ func (ec *executionContext) _MessageBroadcastNotification(ctx context.Context, s
 		case "text":
 
 			out.Values[i] = ec._MessageBroadcastNotification_text(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var messageDeletedDtoImplementors = []string{"MessageDeletedDto"}
+
+func (ec *executionContext) _MessageDeletedDto(ctx context.Context, sel ast.SelectionSet, obj *model.MessageDeletedDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, messageDeletedDtoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MessageDeletedDto")
+		case "id":
+
+			out.Values[i] = ec._MessageDeletedDto_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "chatId":
+
+			out.Values[i] = ec._MessageDeletedDto_chatId(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -7410,6 +7766,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) marshalOChatDeletedDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatDeletedDto(ctx context.Context, sel ast.SelectionSet, v *model.ChatDeletedDto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ChatDeletedDto(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOChatDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatDto(ctx context.Context, sel ast.SelectionSet, v *model.ChatDto) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -7436,6 +7799,13 @@ func (ec *executionContext) marshalOMessageBroadcastNotification2ᚖnkonevᚗnam
 		return graphql.Null
 	}
 	return ec._MessageBroadcastNotification(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOMessageDeletedDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐMessageDeletedDto(ctx context.Context, sel ast.SelectionSet, v *model.MessageDeletedDto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MessageDeletedDto(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

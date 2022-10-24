@@ -325,7 +325,8 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 		return err
 	} else {
 		cd := &dto.DisplayMessageDto{
-			Id: messageId,
+			Id:     messageId,
+			ChatId: chatId,
 		}
 		if ids, err := mc.db.GetAllParticipantIds(chatId); err != nil {
 			return err

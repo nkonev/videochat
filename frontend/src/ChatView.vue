@@ -559,7 +559,7 @@
                         const d = getChatEventsData(e).messageEvent;
                         bus.$emit(MESSAGE_ADD, d);
                     } else if (getChatEventsData(e).eventType === 'message_deleted') {
-                        const d = getChatEventsData(e).messageEvent;
+                        const d = getChatEventsData(e).messageDeletedEvent;
                         bus.$emit(MESSAGE_DELETED, d);
                     } else if (getChatEventsData(e).eventType === 'message_edited') {
                         const d = getChatEventsData(e).messageEvent;
@@ -602,6 +602,10 @@
                                       }
                                       canEdit
                                       fileItemUuid
+                                    }
+                                    messageDeletedEvent {
+                                      id
+                                      chatId
                                     }
                                     userTypingEvent {
                                       login

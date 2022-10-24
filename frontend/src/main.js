@@ -114,7 +114,7 @@ vm = new Vue({
                 const d = getGlobalEventsData(e).chatEvent;
                 bus.$emit(CHAT_EDITED, d);
             } else if (getGlobalEventsData(e).eventType === 'chat_deleted') {
-                const d = getGlobalEventsData(e).chatEvent;
+                const d = getGlobalEventsData(e).chatDeletedEvent;
                 bus.$emit(CHAT_DELETED, d);
             } else if (getGlobalEventsData(e).eventType === 'user_profile_changed') {
                 const d = getGlobalEventsData(e).userEvent;
@@ -177,6 +177,9 @@ vm = new Vue({
                             avatar
                             admin
                           }
+                        }
+                        chatDeletedEvent {
+                          id
                         }
                         userEvent {
                           id

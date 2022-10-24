@@ -12,6 +12,10 @@ type AllUnreadMessages struct {
 	AllUnreadMessages int64 `json:"allUnreadMessages"`
 }
 
+type ChatDeletedDto struct {
+	ID int64 `json:"id"`
+}
+
 type ChatDto struct {
 	ID                       int64            `json:"id"`
 	Name                     string           `json:"name"`
@@ -36,6 +40,7 @@ type ChatDto struct {
 type ChatEvent struct {
 	EventType             string                        `json:"eventType"`
 	MessageEvent          *DisplayMessageDto            `json:"messageEvent"`
+	MessageDeletedEvent   *MessageDeletedDto            `json:"messageDeletedEvent"`
 	UserTypingEvent       *UserTypingDto                `json:"userTypingEvent"`
 	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
 }
@@ -60,6 +65,7 @@ type DisplayMessageDto struct {
 type GlobalEvent struct {
 	EventType                     string                    `json:"eventType"`
 	ChatEvent                     *ChatDto                  `json:"chatEvent"`
+	ChatDeletedEvent              *ChatDeletedDto           `json:"chatDeletedEvent"`
 	UserEvent                     *User                     `json:"userEvent"`
 	VideoEvent                    *VideoCallChangedDto      `json:"videoEvent"`
 	VideoCallInvitation           *VideoCallInvitationDto   `json:"videoCallInvitation"`
@@ -72,6 +78,11 @@ type MessageBroadcastNotification struct {
 	Login  string `json:"login"`
 	UserID int64  `json:"userId"`
 	Text   string `json:"text"`
+}
+
+type MessageDeletedDto struct {
+	ID     int64 `json:"id"`
+	ChatID int64 `json:"chatId"`
 }
 
 type User struct {
