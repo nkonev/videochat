@@ -322,6 +322,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator controller is up'
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:8060 -- echo 'aaa is up'
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1235 -- echo 'chat is up'
+          ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1238 -- echo 'event is up'
       - name: Run your Playwright tests
         run: (cd integration-test; npx playwright test)
       - name: Upload test results
