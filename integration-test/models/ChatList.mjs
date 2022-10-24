@@ -48,10 +48,10 @@ export default class ChatList {
     }
 
     async assertChatItemCount(expected) {
-        return await expect(this.getRowsLocator()).toHaveCount(expected);
+        return expect(this.getRowsLocator()).toHaveCount(expected);
     }
 
     async assertChatName(expected) {
-        return (await this.getRowsLocator(expected))
+        return this.getRowsLocator(expected)
     }
 }
