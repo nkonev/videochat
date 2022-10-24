@@ -42,29 +42,6 @@ type DisplayMessageDtoNotification struct {
 	ChatId int64 `json:"chatId"`
 }
 
-type VideoCallInvitation struct {
-	ChatId   int64  `json:"chatId"`
-	ChatName string `json:"chatName"`
-}
-
-type VideoKick struct {
-	ChatId int64 `json:"chatId"`
-}
-
-type ForceMute struct {
-	ChatId int64 `json:"chatId"`
-}
-
-type VideoDialChanged struct {
-	UserId int64 `json:"userId"`
-	Status bool  `json:"status"`
-}
-
-type VideoDialChanges struct {
-	ChatId int64               `json:"chatId"`
-	Dials  []*VideoDialChanged `json:"dials"`
-}
-
 const NoPagePlaceholder = -1
 
 func (not *notifictionsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
