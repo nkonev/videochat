@@ -14,23 +14,23 @@ type AllUnreadMessages struct {
 
 type ChatDto struct {
 	ID                       int64            `json:"id"`
-	Name                     *string          `json:"name"`
+	Name                     string           `json:"name"`
 	Avatar                   *string          `json:"avatar"`
 	AvatarBig                *string          `json:"avatarBig"`
-	LastUpdateDateTime       *time.Time       `json:"lastUpdateDateTime"`
+	LastUpdateDateTime       time.Time        `json:"lastUpdateDateTime"`
 	ParticipantIds           []int64          `json:"participantIds"`
 	CanEdit                  *bool            `json:"canEdit"`
 	CanDelete                *bool            `json:"canDelete"`
 	CanLeave                 *bool            `json:"canLeave"`
-	UnreadMessages           *int64           `json:"unreadMessages"`
-	CanBroadcast             *bool            `json:"canBroadcast"`
-	CanVideoKick             *bool            `json:"canVideoKick"`
-	CanChangeChatAdmins      *bool            `json:"canChangeChatAdmins"`
-	TetATet                  *bool            `json:"tetATet"`
-	CanAudioMute             *bool            `json:"canAudioMute"`
+	UnreadMessages           int64            `json:"unreadMessages"`
+	CanBroadcast             bool             `json:"canBroadcast"`
+	CanVideoKick             bool             `json:"canVideoKick"`
+	CanChangeChatAdmins      bool             `json:"canChangeChatAdmins"`
+	TetATet                  bool             `json:"tetATet"`
+	CanAudioMute             bool             `json:"canAudioMute"`
 	Participants             []*UserWithAdmin `json:"participants"`
-	ParticipantsCount        *int             `json:"participantsCount"`
-	ChangingParticipantsPage *int             `json:"changingParticipantsPage"`
+	ParticipantsCount        int              `json:"participantsCount"`
+	ChangingParticipantsPage int              `json:"changingParticipantsPage"`
 }
 
 type ChatEvent struct {

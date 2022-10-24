@@ -29,23 +29,23 @@ type UserWithAdmin {
 
 type ChatDto {
     id:             Int64!
-    name:                String
+    name:                String!
     avatar:              String
     avatarBig:           String
-    lastUpdateDateTime:  Time
-    participantIds:      [Int64!]
+    lastUpdateDateTime:  Time!
+    participantIds:      [Int64!]!
     canEdit:             Boolean
     canDelete:           Boolean
     canLeave:            Boolean
-    unreadMessages:      Int64
-    canBroadcast:        Boolean
-    canVideoKick:        Boolean
-    canChangeChatAdmins: Boolean
-    tetATet:             Boolean
-    canAudioMute:        Boolean
-    participants:             [UserWithAdmin!]
-    participantsCount:        Int
-    changingParticipantsPage: Int
+    unreadMessages:      Int64!
+    canBroadcast:        Boolean!
+    canVideoKick:        Boolean!
+    canChangeChatAdmins: Boolean!
+    tetATet:             Boolean!
+    canAudioMute:        Boolean!
+    participants:             [UserWithAdmin!]!
+    participantsCount:        Int!
+    changingParticipantsPage: Int!
 }
 
 type UserTypingDto {
