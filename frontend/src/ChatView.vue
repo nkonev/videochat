@@ -576,8 +576,8 @@
                     console.error("Got err in chatEvents subscription, reconnecting", e);
                     setTimeout(this.subscribeToChatEvents, 2000);
                 }
-                const onComplete = (e) => {
-                    console.log("Got compete in chat event subscription", e);
+                const onComplete = () => {
+                    console.log("Got compete in chat event subscription");
                 }
 
                 console.log("Subscribing to chat events");
@@ -628,6 +628,7 @@
                 );
             },
             unsubscribeFromChatEvents() {
+                console.log("Unsubscribing from chat events");
                 if (Vue.prototype.chatEventsUnsubscribe) {
                     Vue.prototype.chatEventsUnsubscribe();
                 }

@@ -141,8 +141,8 @@ vm = new Vue({
             console.error("Got err in global event subscription, reconnecting", e);
             setTimeout(this.subscribeToGlobalEvents, 2000);
         }
-        const onComplete = (e) => {
-            console.log("Got compete in global event subscription", e);
+        const onComplete = () => {
+            console.log("Got compete in global event subscription");
         }
 
         console.log("Subscribing to global events");
@@ -228,6 +228,7 @@ vm = new Vue({
         })
     },
     unsubscribeFromGlobalEvents() {
+        console.log("Unsubscribing from global events");
         if (Vue.prototype.globalEventsUnsubscribe) {
             Vue.prototype.globalEventsUnsubscribe();
         }
