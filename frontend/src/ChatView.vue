@@ -628,7 +628,9 @@
                 );
             },
             unsubscribeFromChatEvents() {
-                Vue.prototype.chatEventsUnsubscribe();
+                if (Vue.prototype.chatEventsUnsubscribe) {
+                    Vue.prototype.chatEventsUnsubscribe();
+                }
                 Vue.prototype.chatEventsUnsubscribe = null;
             },
 
@@ -683,6 +685,7 @@
             this.scrollerDiv = document.getElementById("messagesScroller");
         },
         beforeDestroy() {
+            this.unsubscribeFromChatEvents();
             window.removeEventListener('resize', this.onResizedListener);
 
             bus.$off(MESSAGE_ADD, this.onNewMessage);
