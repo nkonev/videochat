@@ -28,3 +28,7 @@ type MessageBroadcastNotification struct {
 	UserId int64  `json:"userId"`
 	Text   string `json:"text"`
 }
+
+type AllUnreadMessages struct {
+	MessagesCount int64 `json:"allUnreadMessages"`
+}
