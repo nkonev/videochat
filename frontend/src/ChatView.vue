@@ -658,15 +658,11 @@
         mounted() {
             window.addEventListener('resize', this.onResizedListener);
 
-            this.subscribeToChatEvents();
-
             this.$store.commit(SET_TITLE, `Chat #${this.chatId}`);
             this.$store.commit(SET_CHAT_USERS_COUNT, 0);
             this.$store.commit(SET_SHOW_SEARCH, true);
             this.$store.commit(SET_CHAT_ID, this.chatId);
             this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
-
-            this.getInfo();
 
             this.$store.commit(SET_SHOW_CALL_BUTTON, true);
             this.$store.commit(SET_SHOW_HANG_BUTTON, false);
