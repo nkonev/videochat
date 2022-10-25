@@ -104,6 +104,8 @@
 
     let writingUsersTimerId;
 
+    let subscriptionTimeoutId;
+
     const getChatEventsData = (message) => {
         return message.data?.chatEvents
     };
@@ -485,12 +487,14 @@
             },
             onLoggedIn() {
                 this.getInfo();
+                this.subscribeToChatEvents();
                 // seems it need in order to mitigate bug with last login message
                 if (this.items.length === 0) {
                     this.reloadItems();
                 }
             },
             onLoggedOut() {
+                this.unsubscribeFromChatEvents();
                 this.resetVariables();
             },
 
@@ -550,6 +554,11 @@
 
 
             subscribeToChatEvents() {
+                if (subscriptionTimeoutId) {
+                    clearInterval(subscriptionTimeoutId);
+                    subscriptionTimeoutId = null;
+                }
+
                 const onNext = (e) => {
                     console.debug("Got chat event", e);
                     if (e.errors != null && e.errors.length) {
@@ -574,7 +583,7 @@
                 }
                 const onError = (e) => {
                     console.error("Got err in chatEvents subscription, reconnecting", e);
-                    setTimeout(this.subscribeToChatEvents, 2000);
+                    subscriptionTimeoutId = setTimeout(this.subscribeToChatEvents, 2000);
                 }
                 const onComplete = () => {
                     console.log("Got compete in chat event subscription");
@@ -649,9 +658,7 @@
         mounted() {
             window.addEventListener('resize', this.onResizedListener);
 
-            this.subscribeToChatEvents()
-            bus.$on(LOGGED_IN, this.subscribeToChatEvents);
-            bus.$on(LOGGED_OUT, this.unsubscribeFromChatEvents);
+            this.subscribeToChatEvents();
 
             this.$store.commit(SET_TITLE, `Chat #${this.chatId}`);
             this.$store.commit(SET_CHAT_USERS_COUNT, 0);
@@ -670,7 +677,7 @@
             bus.$on(CHAT_DELETED, this.onChatDelete);
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
-            bus.$on(LOGGED_IN, this.onLoggedIn);
+            bus.$on(PROFILE_SET, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
@@ -704,9 +711,6 @@
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
 
             clearInterval(writingUsersTimerId);
-
-            bus.$off(PROFILE_SET, this.subscribeToChatEvents);
-            bus.$off(LOGGED_OUT, this.unsubscribeFromChatEvents);
 
             this.closeQueryWatcher();
         },
