@@ -667,9 +667,8 @@
             this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
 
             if (this.currentUser) {
-                this.getInfo();
-                this.subscribeToChatEvents();
-            } // else we rely on onLoggedIn()
+                this.onProfileSet();
+            } // else we rely on PROFILE_SET
 
             this.$store.commit(SET_SHOW_CALL_BUTTON, true);
             this.$store.commit(SET_SHOW_HANG_BUTTON, false);
