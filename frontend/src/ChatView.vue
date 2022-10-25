@@ -554,13 +554,9 @@
                 }
             },
 
-
             subscribeToChatEvents() {
-                if (subscriptionTimeoutId) {
-                    clearInterval(subscriptionTimeoutId);
-                    subscriptionTimeoutId = null;
-                }
-
+                // unsubscribe from the previous
+                this.unsubscribeFromChatEvents();
                 const onNext = (e) => {
                     console.debug("Got chat event", e);
                     if (e.errors != null && e.errors.length) {
@@ -640,6 +636,11 @@
             },
             unsubscribeFromChatEvents() {
                 console.log("Unsubscribing from chat events");
+                if (subscriptionTimeoutId) {
+                    clearInterval(subscriptionTimeoutId);
+                    subscriptionTimeoutId = null;
+                }
+
                 if (Vue.prototype.chatEventsUnsubscribe) {
                     Vue.prototype.chatEventsUnsubscribe();
                 }
