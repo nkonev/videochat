@@ -557,6 +557,7 @@
             subscribeToChatEvents() {
                 // unsubscribe from the previous
                 this.unsubscribeFromChatEvents();
+
                 const onNext = (e) => {
                     console.debug("Got chat event", e);
                     if (e.errors != null && e.errors.length) {

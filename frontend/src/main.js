@@ -96,12 +96,17 @@ const getGlobalEventsData = (message) => {
     return message.data?.globalEvents
 };
 
+let subscriptionTimeoutId;
+
 vm = new Vue({
   vuetify,
   store,
   router,
   methods: {
     subscribeToGlobalEvents() {
+        // unsubscribe from the previous
+        this.unsubscribeFromGlobalEvents();
+
         const onNext = (e) => {
             console.debug("Got global event", e);
             if (e.errors != null && e.errors.length) {
@@ -139,7 +144,7 @@ vm = new Vue({
         }
         const onError = (e) => {
             console.error("Got err in global event subscription, reconnecting", e);
-            setTimeout(this.subscribeToGlobalEvents, 2000);
+            subscriptionTimeoutId = setTimeout(this.subscribeToGlobalEvents, 2000);
         }
         const onComplete = () => {
             console.log("Got compete in global event subscription");
@@ -229,6 +234,10 @@ vm = new Vue({
     },
     unsubscribeFromGlobalEvents() {
         console.log("Unsubscribing from global events");
+        if (subscriptionTimeoutId) {
+            clearInterval(subscriptionTimeoutId);
+            subscriptionTimeoutId = null;
+        }
         if (Vue.prototype.globalEventsUnsubscribe) {
             Vue.prototype.globalEventsUnsubscribe();
         }
