@@ -486,6 +486,7 @@
                 });
             },
             onLoggedIn() {
+                console.log("ChatView onLoggedIn");
                 this.getInfo();
                 this.subscribeToChatEvents();
                 // seems it need in order to mitigate bug with last login message
@@ -663,6 +664,11 @@
             this.$store.commit(SET_SHOW_SEARCH, true);
             this.$store.commit(SET_CHAT_ID, this.chatId);
             this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
+
+            if (this.currentUser) {
+                this.getInfo();
+                this.subscribeToChatEvents();
+            } // else we rely on onLoggedIn()
 
             this.$store.commit(SET_SHOW_CALL_BUTTON, true);
             this.$store.commit(SET_SHOW_HANG_BUTTON, false);
