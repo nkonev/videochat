@@ -485,10 +485,11 @@
                     }
                 });
             },
-            onLoggedIn() {
-                console.log("ChatView onLoggedIn");
+            onProfileSet() {
                 this.getInfo();
                 this.subscribeToChatEvents();
+            },
+            onLoggedIn() {
                 // seems it need in order to mitigate bug with last login message
                 if (this.items.length === 0) {
                     this.reloadItems();
@@ -679,7 +680,8 @@
             bus.$on(CHAT_DELETED, this.onChatDelete);
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
-            bus.$on(PROFILE_SET, this.onLoggedIn);
+            bus.$on(PROFILE_SET, this.onProfileSet);
+            bus.$on(LOGGED_IN, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
@@ -704,7 +706,8 @@
             bus.$off(CHAT_DELETED, this.onChatDelete);
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
-            bus.$off(PROFILE_SET, this.onLoggedIn);
+            bus.$off(PROFILE_SET, this.onProfileSet);
+            bus.$off(LOGGED_IN, this.onLoggedIn);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
