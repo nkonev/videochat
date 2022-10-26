@@ -14,9 +14,9 @@ import (
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
-	"nkonev.name/chat/handlers/dto"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"strings"
 	"time"
@@ -36,11 +36,11 @@ type CreateMessageDto struct {
 type MessageHandler struct {
 	db          db.DB
 	policy      *bluemonday.Policy
-	notificator notifications.Notifications
+	notificator services.Notifications
 	restClient  client.RestClient
 }
 
-func NewMessageHandler(dbR db.DB, policy *bluemonday.Policy, notificator notifications.Notifications, restClient client.RestClient) *MessageHandler {
+func NewMessageHandler(dbR db.DB, policy *bluemonday.Policy, notificator services.Notifications, restClient client.RestClient) *MessageHandler {
 	return &MessageHandler{
 		db: dbR, policy: policy, notificator: notificator, restClient: restClient,
 	}
@@ -325,7 +325,8 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 		return err
 	} else {
 		cd := &dto.DisplayMessageDto{
-			Id: messageId,
+			Id:     messageId,
+			ChatId: chatId,
 		}
 		if ids, err := mc.db.GetAllParticipantIds(chatId); err != nil {
 			return err
@@ -334,6 +335,56 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 		}
 		return c.JSON(http.StatusAccepted, &utils.H{"id": messageId})
 	}
+}
+
+func getNewMessagesNotification(dbs db.DB, userId int64) (*dto.AllUnreadMessages, error) {
+	count, err := dbs.GetAllUnreadMessagesCount(userId)
+	if err != nil {
+		Logger.Errorf("Unable to get unread messages count from db %v", err)
+		return nil, err
+	} else {
+		return &dto.AllUnreadMessages{MessagesCount: count}, nil
+	}
+}
+func (mc MessageHandler) ReadMessage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	messageId, err := GetPathParamAsInt64(c, "messageId")
+	if err != nil {
+		return err
+	}
+
+	if err := mc.db.AddMessageRead(messageId, userPrincipalDto.UserId, chatId); err != nil {
+		return err
+	}
+
+	notification, err := getNewMessagesNotification(mc.db, userPrincipalDto.UserId)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusAccepted, notification)
+}
+
+func (mc MessageHandler) CheckForNew(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	notification, err := getNewMessagesNotification(mc.db, userPrincipalDto.UserId)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusAccepted, notification)
 }
 
 func (mc *MessageHandler) TypeMessage(c echo.Context) error {
@@ -399,7 +450,7 @@ func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 		return err
 	}
 
-	mc.notificator.NotifyAboutBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, strip.StripTags(bindTo.Text))
+	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, strip.StripTags(bindTo.Text))
 	return c.NoContent(http.StatusAccepted)
 }
 

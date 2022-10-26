@@ -1,7 +1,7 @@
 package listener
 
 import (
-	"github.com/isayme/go-amqp-reconnect/rabbitmq"
+	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
 	. "nkonev.name/chat/logger"
@@ -9,19 +9,10 @@ import (
 )
 
 const aaaEventsQueue = "aaa-events"
-const videoNotificationsQueue = "video-notifications"
-const videoInviteQueue = "video-invite"
-const videoDialStatusQueue = "video-dial-statuses"
 
 type AaaEventsQueue struct{ *amqp.Queue }
-type VideoNotificationsQueue struct{ *amqp.Queue }
-type VideoInviteQueue struct{ *amqp.Queue }
-type VideoDialStatusQueue struct{ *amqp.Queue }
 
 type AaaEventsChannel struct{ *rabbitmq.Channel }
-type VideoNotificationsChannel struct{ *rabbitmq.Channel }
-type VideoInviteChannel struct{ *rabbitmq.Channel }
-type VideoDialStatusChannel struct{ *rabbitmq.Channel }
 
 func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
@@ -45,38 +36,14 @@ func CreateAaaChannel(connection *rabbitmq.Connection) AaaEventsChannel {
 	return AaaEventsChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
 
-func CreateVideoNotificationsChannel(connection *rabbitmq.Connection) VideoNotificationsChannel {
-	return VideoNotificationsChannel{myRabbit.CreateRabbitMqChannel(connection)}
-}
-
-func CreateVideoInviteChannel(connection *rabbitmq.Connection) VideoInviteChannel {
-	return VideoInviteChannel{myRabbit.CreateRabbitMqChannel(connection)}
-}
-
-func CreateVideoDialStatusChannel(connection *rabbitmq.Connection) VideoDialStatusChannel {
-	return VideoDialStatusChannel{myRabbit.CreateRabbitMqChannel(connection)}
-}
-
 func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue {
 	return AaaEventsQueue{create(aaaEventsQueue, consumeCh.Channel)}
-}
-
-func CreateVideoNotificationsQueue(consumeCh VideoNotificationsChannel) VideoNotificationsQueue {
-	return VideoNotificationsQueue{create(videoNotificationsQueue, consumeCh.Channel)}
-}
-
-func CreateVideoInviteQueue(consumeCh VideoNotificationsChannel) VideoInviteQueue {
-	return VideoInviteQueue{create(videoInviteQueue, consumeCh.Channel)}
-}
-
-func CreateVideoDialStatusQueue(consumeCh VideoDialStatusChannel) VideoDialStatusQueue {
-	return VideoDialStatusQueue{create(videoDialStatusQueue, consumeCh.Channel)}
 }
 
 func listen(
 	channel *rabbitmq.Channel,
 	queue *amqp.Queue,
-	onMessage func(data []byte) error,
+	onMessage func(*amqp.Delivery) error,
 	lc fx.Lifecycle) {
 	Logger.Infof("Listening queue %v", queue.Name)
 	go func() {
@@ -91,7 +58,7 @@ func listen(
 		}
 
 		for msg := range deliveries {
-			onMessage(msg.Body)
+			onMessage(&msg)
 			msg.Ack(true)
 		}
 	}()
@@ -101,33 +68,6 @@ func ListenAaaQueue(
 	channel AaaEventsChannel,
 	queue AaaEventsQueue,
 	onMessage AaaUserProfileUpdateListener,
-	lc fx.Lifecycle) {
-
-	listen(channel.Channel, queue.Queue, onMessage, lc)
-}
-
-func ListenVideoNotificationsQueue(
-	channel VideoNotificationsChannel,
-	queue VideoNotificationsQueue,
-	onMessage VideoNotificationsListener,
-	lc fx.Lifecycle) {
-
-	listen(channel.Channel, queue.Queue, onMessage, lc)
-}
-
-func ListenVideoInviteQueue(
-	channel VideoInviteChannel,
-	queue VideoInviteQueue,
-	onMessage VideoInviteListener,
-	lc fx.Lifecycle) {
-
-	listen(channel.Channel, queue.Queue, onMessage, lc)
-}
-
-func ListenVideoDialStatusQueue(
-	channel VideoDialStatusChannel,
-	queue VideoDialStatusQueue,
-	onMessage VideoDialStatusListener,
 	lc fx.Lifecycle) {
 
 	listen(channel.Channel, queue.Queue, onMessage, lc)

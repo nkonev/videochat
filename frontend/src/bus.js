@@ -1,6 +1,7 @@
 import Vue from 'vue';
 export default new Vue();
 export const LOGGED_OUT = "loggedOut";
+export const PROFILE_SET = "profileSetNotNull";
 export const LOGGED_IN = "loggedIn";
 export const CHAT_ADD = "chatAdd";
 export const CHAT_EDITED = "chatEdited";
@@ -20,7 +21,6 @@ export const USER_TYPING = "userTyping";
 export const MESSAGE_BROADCAST = "messageBroadcast";
 export const OPEN_CHOOSE_AVATAR = "openChooseAvatar";
 export const USER_PROFILE_CHANGED = "userProfileChanged";
-export const CHANGE_WEBSOCKET_STATUS = "changeWebsocket";
 export const OPEN_PARTICIPANTS_DIALOG = "openInfo";
 export const VIDEO_CALL_CHANGED = "videoCallChanged";
 export const VIDEO_CALL_INVITED = "videoCallInvited";

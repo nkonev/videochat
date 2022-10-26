@@ -1,11 +1,5 @@
 package dto
 
-// used for notifications
-type NotifyDto struct {
-	UserId int64  `json:"userId"`
-	Login  string `json:"login"`
-}
-
 type VideoInviteDto struct {
 	ChatId       int64   `json:"chatId"`
 	UserIds      []int64 `json:"userIds"`
@@ -13,11 +7,9 @@ type VideoInviteDto struct {
 	BehalfLogin  string  `json:"behalfLogin"`
 }
 
-// sent to chat through RabbitMQ
-type ChatNotifyDto struct {
-	Data       *NotifyDto `json:"data"`
-	UsersCount int64      `json:"usersCount"`
-	ChatId     int64      `json:"chatId"`
+type VideoCallChangedDto struct {
+	UsersCount int64 `json:"usersCount"`
+	ChatId     int64 `json:"chatId"`
 }
 
 type VideoIsInvitingDto struct {
@@ -34,4 +26,24 @@ type ParticipantBelongsToChat struct {
 
 type ParticipantsBelongToChat struct {
 	Users []*ParticipantBelongsToChat `json:"users"`
+}
+
+type ChatName struct {
+	Name   string `json:"name"`   // chatName or userName in case tet-a-tet
+	UserId int64  `json:"userId"` // userId chatName for
+}
+
+type VideoCallInvitation struct {
+	ChatId   int64  `json:"chatId"`
+	ChatName string `json:"chatName"`
+}
+
+type VideoDialChanged struct {
+	UserId int64 `json:"userId"`
+	Status bool  `json:"status"`
+}
+
+type VideoDialChanges struct {
+	ChatId int64               `json:"chatId"`
+	Dials  []*VideoDialChanged `json:"dials"`
 }

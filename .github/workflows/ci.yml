@@ -114,7 +114,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
       - name: Build & test chat
-        run: (cd chat; make check-env download generate test package)
+        run: (cd chat; sleep 5 && make check-env download generate test package)
       - name: Deploy chat
         if: github.ref == 'refs/heads/master'
         run: |
@@ -123,6 +123,40 @@ jobs:
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}"
           (cd chat; make push-docker && echo "Will deploy chat" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.ChatUpdateCommand }} )
+
+  event:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-event-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Install software
+        run: |
+          mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
+      - name: Start & wait docker-compose environment
+        run: |
+          docker-compose up -d postgresql redis rabbitmq
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+      - name: Build & test event
+        run: (cd event; make check-env download generate test package)
+      - name: Deploy event
+        if: github.ref == 'refs/heads/master'
+        run: |
+          mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
+          chmod 600 ~/.ssh/id_rsa
+          echo "Will login to docker" &&
+          docker login -u="nkonev" -p="${{ secrets.DockerPassword }}"
+          (cd event; make push-docker && echo "Will deploy event" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.EventUpdateCommand }} )
 
   storage:
     runs-on: ubuntu-22.04
@@ -267,7 +301,7 @@ jobs:
           docker-compose up -d postgresql redis rabbitmq jaeger minio frontend traefik
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          sleep 5 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8082 -- echo 'frontend nginx is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'
@@ -277,15 +311,18 @@ jobs:
           (cd aaa; ./mvnw -DskipTests clean package)
           (cd frontend; npm install && npm run build)
           (cd chat; make check-env download generate package-go)
+          (cd event; make check-env download generate package-go)
       - name: Run microservices
         run: |
           (cd aaa; ./run-oauth2-emu.sh & ./run-with-oauth2.sh &)
           (cd chat; ./chat &)
+          (cd event; ./event &)
       - name: Wait for microservices
         run: |
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator controller is up'
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:8060 -- echo 'aaa is up'
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1235 -- echo 'chat is up'
+          ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1238 -- echo 'event is up'
       - name: Run your Playwright tests
         run: (cd integration-test; npx playwright test)
       - name: Upload test results

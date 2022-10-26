@@ -1,18 +1,16 @@
 package handlers
 
 import (
+	"context"
 	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"github.com/araddon/dateparse"
-	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
-	"nkonev.name/chat/handlers/dto"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
 	"strings"
@@ -86,14 +84,14 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 //
 // Parameters:
 //
-//  - `request` : http request to check
-//  - `httpClient` : client to check authorization
+//   - `request` : http request to check
+//   - `httpClient` : client to check authorization
 //
 // Returns:
 //
-//  - *AuthResult pointer or nil
-//  - is whitelisted
-//  - error
+//   - *AuthResult pointer or nil
+//   - is whitelisted
+//   - error
 func authorize(request *http.Request) (*auth.AuthResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
@@ -122,45 +120,13 @@ func ConfigureAuthMiddleware() AuthMiddleware {
 				return c.JSON(http.StatusUnauthorized, &utils.H{"status": "unauthorized"})
 			} else {
 				c.Set(utils.USER_PRINCIPAL_DTO, authResult)
+				httpContext := context.WithValue(c.Request().Context(), utils.USER_PRINCIPAL_DTO, authResult)
+				httpRequestWithContext := c.Request().WithContext(httpContext)
+				c.SetRequest(httpRequestWithContext)
 				return next(c)
 			}
 		}
 	}
-}
-
-type ExtendedCreds struct {
-	Login     string `json:"login"`
-	SessionId string `json:"sessionId"`
-}
-
-func CentrifugeAuthMiddleware(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authResult, _, err := authorize(r)
-		if err != nil {
-			Logger.Errorf("Error during try to authenticate centrifuge request: %v", err)
-			return
-		} else if authResult == nil {
-			Logger.Errorf("Not authenticated centrifuge request")
-			return
-		} else {
-			marshal, err := json.Marshal(authResult)
-			if err != nil {
-				Logger.Errorf("Unable to serialize authResult %v in centrifuge auth middleware", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			ctx := r.Context()
-			newCtx := centrifuge.SetCredentials(ctx, &centrifuge.Credentials{
-				UserID:   fmt.Sprintf("%v", authResult.UserId),
-				ExpireAt: authResult.ExpiresAt,
-				Info:     marshal,
-			})
-
-			r = r.WithContext(newCtx)
-			h.ServeHTTP(w, r)
-		}
-	})
 }
 
 func Convert(h http.Handler) echo.HandlerFunc {

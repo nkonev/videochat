@@ -4,8 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/centrifugal/protocol"
-	"github.com/gorilla/websocket"
+	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/oliveagle/jsonpath"
@@ -21,10 +20,12 @@ import (
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/db"
+	"nkonev.name/chat/dto"
 	"nkonev.name/chat/handlers"
-	"nkonev.name/chat/handlers/dto"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/producer"
+	myRabbitmq "nkonev.name/chat/rabbitmq"
+	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"os"
 	"strings"
@@ -204,7 +205,6 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 		fx.Provide(
 			configureTracer,
 			client.NewRestClient,
-			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
@@ -213,11 +213,12 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			handlers.ConfigureAuthMiddleware,
 			configureTestMigrations,
 			db.ConfigureDb,
-			notifications.NewNotifications,
+			services.NewNotifications,
+			producer.NewRabbitNotificationsPublisher,
+			myRabbitmq.CreateRabbitMqConnection,
 		),
 		fx.Invoke(
 			runMigrations,
-			runCentrifuge,
 			//runEcho,
 			testFunc,
 		),
@@ -236,7 +237,6 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 		fx.Provide(
 			configureTracer,
 			client.NewRestClient,
-			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
@@ -245,16 +245,31 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 			handlers.ConfigureAuthMiddleware,
 			configureTestMigrations,
 			db.ConfigureDb,
-			notifications.NewNotifications,
+			services.NewNotifications,
+			producer.NewRabbitNotificationsPublisher,
+			myRabbitmq.CreateRabbitMqConnection,
 		),
 		fx.Invoke(
+			createFanoutNotificationsChannel,
 			runMigrations,
-			runCentrifuge,
 			runEcho,
 		),
 	)
 	waitForChatServer()
 	return app, s
+}
+
+func createFanoutNotificationsChannel(connection *rabbitmq.Connection, lc fx.Lifecycle) error {
+	consumeCh, err := connection.Channel(nil)
+	if err != nil {
+		return err
+	}
+
+	err = consumeCh.ExchangeDeclare(producer.AsyncEventsFanoutExchange, "fanout", true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func TestGetChats(t *testing.T) {
@@ -364,41 +379,6 @@ func TestChatCrud(t *testing.T) {
 	})
 }
 
-// https://github.com/centrifugal/centrifuge/blob/429f81a611ef8dbb6ba27e7c695e34b9fd83965f/handler_websocket_test.go#L36
-func newRealConnJSON(b testing.TB, channel string, url string, requestHeader http.Header) *websocket.Conn {
-	conn, resp, err := websocket.DefaultDialer.Dial(url+"/chat/websocket", requestHeader)
-	assert.NoError(b, err)
-	defer resp.Body.Close()
-
-	connectRequest := &protocol.ConnectRequest{}
-	params, _ := json.Marshal(connectRequest)
-	cmd := &protocol.Command{
-		Id:     1,
-		Method: protocol.Command_CONNECT,
-		Params: params,
-	}
-	cmdBytes, _ := json.Marshal(cmd)
-
-	_ = conn.WriteMessage(websocket.TextMessage, cmdBytes)
-	_, _, err = conn.ReadMessage()
-	assert.NoError(b, err)
-
-	//subscribeRequest := &protocol.SubscribeRequest{
-	//	Channel: channel,
-	//}
-	//params, _ = json.Marshal(subscribeRequest)
-	//cmd = &protocol.Command{
-	//	Id:     2,
-	//	Method: protocol.Command_SUBSCRIBE,
-	//	Params: params,
-	//}
-	//cmdBytes, _ = json.Marshal(cmd)
-	//_ = conn.WriteMessage(websocket.TextMessage, cmdBytes)
-	_, _, err = conn.ReadMessage()
-	assert.NoError(b, err)
-	return conn
-}
-
 func stringToUrl(s string) *url.URL {
 	u, _ := url.Parse(s)
 	return u
@@ -408,63 +388,6 @@ func stringToReadCloser(s string) io.ReadCloser {
 	r := strings.NewReader(s)
 	rc := ioutil.NopCloser(r)
 	return rc
-}
-
-func TestCentrifugeThatCreationNewChatMakesNotification(t *testing.T) {
-	app, s := startAppFull(t)
-	defer app.RequireStart().RequireStop()
-
-	emu := startAaaEmu()
-	defer emu.Close()
-
-	expirationTime := utils.SecondsToStringMilliseconds(time.Now().Add(2 * time.Hour).Unix())
-	contentType := "application/json;charset=UTF-8"
-	requestHeaders := map[string][]string{
-		"Accept":           {contentType},
-		"Content-Type":     {contentType},
-		"X-Auth-Expiresin": {expirationTime},
-		"X-Auth-Username":  {"dGVzdGVy"},
-		"X-Auth-Userid":    {"1"},
-	}
-
-	websocketConnection := newRealConnJSON(t, "#1", "ws://localhost:1235", requestHeaders)
-	defer websocketConnection.Close()
-
-	request := &http.Request{
-		Method: "POST",
-		Header: requestHeaders,
-		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about new chat"}`),
-		URL:    stringToUrl("http://localhost:1235/chat"),
-	}
-
-	cl := client.NewRestClient()
-	resp, err := cl.Do(request)
-	assert.Nil(t, err)
-	assert.Equal(t, 201, resp.StatusCode)
-
-	// check websocket message for admin participant
-	_, data, err := websocketConnection.ReadMessage()
-	if err != nil {
-		assert.Fail(t, err.Error())
-	}
-
-	strData := string(data)
-	nameString := interfaceToString(getJsonPathResult(t, strData, "$.result.data.data.payload.name").(interface{}))
-	assert.Equal(t, "Chat for test the Centrifuge notifications about new chat", nameString)
-
-	canEditBoolean := getJsonPathRaw(t, strData, "$.result.data.data.payload.canEdit").(interface{})
-	assert.Equal(t, true, canEditBoolean)
-
-	canLeaveBoolean := getJsonPathRaw(t, strData, "$.result.data.data.payload.canLeave").(interface{})
-	assert.Equal(t, false, canLeaveBoolean)
-
-	participantIdsArray := getJsonPathRaw(t, strData, "$.result.data.data.payload.participantIds").([]interface{})
-	assert.Equal(t, float64(1), participantIdsArray[0])
-
-	typeString := interfaceToString(getJsonPathResult(t, strData, "$.result.data.data.type").(interface{}))
-	assert.Equal(t, "chat_created", typeString)
-
-	assert.NoError(t, s.Shutdown(), "error in app shutdown")
 }
 
 func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
@@ -484,17 +407,6 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		"X-Auth-Userid":    {"1"},
 	}
 
-	requestHeaders2 := map[string][]string{
-		"Accept":           {contentType},
-		"Content-Type":     {contentType},
-		"X-Auth-Expiresin": {expirationTime},
-		"X-Auth-Username":  {"dGVzdGVy"},
-		"X-Auth-Userid":    {"2"},
-	}
-
-	websocketConnection := newRealConnJSON(t, "#2", "ws://localhost:1235", requestHeaders2)
-	defer websocketConnection.Close()
-
 	createChatRequest := &http.Request{
 		Method: "POST",
 		Header: requestHeaders1,
@@ -507,33 +419,13 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 201, createChatResponse.StatusCode)
 
-	// check websocket message for second participant
-	_, data, err := websocketConnection.ReadMessage()
-	if err != nil {
-		assert.Fail(t, err.Error())
-	}
+	var responseDto *dto.ChatDto = new(dto.ChatDto)
+	body, err := ioutil.ReadAll(createChatResponse.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(body, responseDto)
+	assert.Nil(t, err)
 
-	strData := string(data)
-	nameString := interfaceToString(getJsonPathResult(t, strData, "$.result.data.data.payload.name").(interface{}))
-	assert.Equal(t, "Chat for test the Centrifuge notifications about unread messages", nameString)
-
-	chatIdFloat := getJsonPathResult(t, strData, "$.result.data.data.payload.id").(interface{})
-	var chatId int64 = int64(chatIdFloat.(float64))
-	assert.NotZero(t, chatId)
-	var chatIdString = fmt.Sprintf("%v", chatId)
-
-	canEditBoolean := getJsonPathRaw(t, strData, "$.result.data.data.payload.canEdit").(interface{})
-	assert.Equal(t, false, canEditBoolean)
-
-	canLeaveBoolean := getJsonPathRaw(t, strData, "$.result.data.data.payload.canLeave").(interface{})
-	assert.Equal(t, true, canLeaveBoolean)
-
-	participantIdsArray := getJsonPathRaw(t, strData, "$.result.data.data.payload.participantIds").([]interface{})
-	assert.Equal(t, float64(1), participantIdsArray[0])
-	assert.Equal(t, float64(2), participantIdsArray[1])
-
-	typeString := interfaceToString(getJsonPathResult(t, strData, "$.result.data.data.type").(interface{}))
-	assert.Equal(t, "chat_created", typeString)
+	var chatIdString = fmt.Sprintf("%v", responseDto.Id)
 
 	// send message to chat
 	messageRequest := &http.Request{
@@ -546,33 +438,6 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 201, messageResponse.StatusCode)
 
-	// read notification
-	_, data, err = websocketConnection.ReadMessage()
-	if err != nil {
-		assert.Fail(t, err.Error())
-	}
-	strDataAboutUnreadMessage := string(data)
-
-	typeStringUnreadMessage := interfaceToString(getJsonPathResult(t, strDataAboutUnreadMessage, "$.result.data.data.type").(interface{}))
-	assert.Equal(t, "unread_messages_changed", typeStringUnreadMessage)
-
-	countUnreadMessageFloat := getJsonPathResult(t, strDataAboutUnreadMessage, "$.result.data.data.payload.unreadMessages").(interface{})
-	var countUnreadMessage int64 = int64(countUnreadMessageFloat.(float64))
-	assert.Equal(t, int64(1), countUnreadMessage)
-
-	_, data, err = websocketConnection.ReadMessage()
-	if err != nil {
-		assert.Fail(t, err.Error())
-	}
-	strDataAboutUnreadMessage2 := string(data)
-
-	typeStringUnreadMessage2 := interfaceToString(getJsonPathResult(t, strDataAboutUnreadMessage2, "$.result.data.data.type").(interface{}))
-	assert.Equal(t, "all_unread_messages_changed", typeStringUnreadMessage2)
-
-	countUnreadMessageFloat2 := getJsonPathResult(t, strDataAboutUnreadMessage2, "$.result.data.data.payload.allUnreadMessages").(interface{})
-	var countUnreadMessage2 int64 = int64(countUnreadMessageFloat2.(float64))
-	assert.Equal(t, int64(1), countUnreadMessage2)
-
 	// send message to chat again
 	messageRequest2 := &http.Request{
 		Method: "POST",
@@ -583,20 +448,6 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 	messageResponse2, err := cl.Do(messageRequest2)
 	assert.Nil(t, err)
 	assert.Equal(t, 201, messageResponse2.StatusCode)
-
-	// read notification again
-	_, data, err = websocketConnection.ReadMessage()
-	if err != nil {
-		assert.Fail(t, err.Error())
-	}
-	strDataAboutUnreadMessage3 := string(data)
-
-	typeStringUnreadMessage3 := interfaceToString(getJsonPathResult(t, strDataAboutUnreadMessage3, "$.result.data.data.type").(interface{}))
-	assert.Equal(t, "unread_messages_changed", typeStringUnreadMessage3)
-
-	countUnreadMessageFloat3 := getJsonPathResult(t, strDataAboutUnreadMessage3, "$.result.data.data.payload.unreadMessages").(interface{})
-	var countUnreadMessage3 int64 = int64(countUnreadMessageFloat3.(float64))
-	assert.Equal(t, int64(2), countUnreadMessage3)
 
 	assert.NoError(t, s.Shutdown(), "error in app shutdown")
 }

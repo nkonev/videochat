@@ -64,7 +64,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	behalfUserId, _, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -77,7 +77,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 	}
 
 	if call {
-		err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), userId, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
+		err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), userId, chatId, userPrincipalDto.UserId)
 	} else {
 		err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userId, chatId)
 		if err != nil {
@@ -120,7 +120,7 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	behalfUserId, _, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -170,7 +170,7 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	behalfUserId, _, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return c.NoContent(http.StatusInternalServerError)

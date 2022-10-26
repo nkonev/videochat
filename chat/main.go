@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/viper"
@@ -22,8 +21,9 @@ import (
 	"nkonev.name/chat/handlers"
 	"nkonev.name/chat/listener"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
+	"nkonev.name/chat/services"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -37,7 +37,6 @@ func main() {
 		fx.Provide(
 			configureTracer,
 			client.NewRestClient,
-			handlers.ConfigureCentrifuge,
 			handlers.CreateSanitizer,
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
@@ -46,45 +45,22 @@ func main() {
 			handlers.ConfigureAuthMiddleware,
 			configureMigrations,
 			db.ConfigureDb,
-			notifications.NewNotifications,
+			services.NewNotifications,
+			producer.NewRabbitNotificationsPublisher,
 			listener.CreateAaaUserProfileUpdateListener,
-			listener.CreateVideoCallChangedListener,
-			listener.CreateVideoInviteListener,
-			listener.CreateVideoDialStatusListener,
 			rabbitmq.CreateRabbitMqConnection,
 			listener.CreateAaaChannel,
-			listener.CreateVideoNotificationsChannel,
-			listener.CreateVideoInviteChannel,
-			listener.CreateVideoDialStatusChannel,
 			listener.CreateAaaQueue,
-			listener.CreateVideoNotificationsQueue,
-			listener.CreateVideoInviteQueue,
-			listener.CreateVideoDialStatusQueue,
 		),
 		fx.Invoke(
 			runMigrations,
-			runCentrifuge,
 			runEcho,
 			listener.ListenAaaQueue,
-			listener.ListenVideoNotificationsQueue,
-			listener.ListenVideoInviteQueue,
-			listener.ListenVideoDialStatusQueue,
 		),
 	)
 	app.Run()
 
 	Logger.Infof("Exit program")
-}
-
-func runCentrifuge(node *centrifuge.Node) {
-	// Run node.
-	Logger.Infof("Starting centrifuge...")
-	go func() {
-		if err := node.Run(); err != nil {
-			Logger.Fatalf("Error on start centrifuge: %v", err)
-		}
-	}()
-	Logger.Info("Centrifuge started.")
 }
 
 func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
@@ -124,7 +100,6 @@ func configureEcho(
 	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
-	node *centrifuge.Node,
 	ch *handlers.ChatHandler,
 	mc *handlers.MessageHandler,
 	tp *sdktrace.TracerProvider,
@@ -152,8 +127,6 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/chat/websocket", handlers.Convert(handlers.CentrifugeAuthMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{}))))
-
 	e.GET("/chat", ch.GetChats)
 	e.GET("/chat/:id", ch.GetChat)
 	e.POST("/chat", ch.CreateChat)
@@ -168,14 +141,18 @@ func configureEcho(
 	e.GET("/chat/:id/user", ch.SearchForUsersToAdd)
 	e.PUT("/chat/tet-a-tet/:participantId", ch.TetATet)
 	e.GET("/internal/access", ch.CheckAccess)
+	e.GET("/internal/participant-ids", ch.GetChatParticipants)
 	e.GET("/internal/is-admin", ch.IsAdmin)
 	e.GET("/internal/is-chat-exists/:id", ch.IsExists)
+	e.GET("/internal/name-for-invite", ch.GetNameForInvite)
 
 	e.GET("/chat/:id/message", mc.GetMessages)
 	e.GET("/chat/:id/message/:messageId", mc.GetMessage)
 	e.POST("/chat/:id/message", mc.PostMessage)
 	e.PUT("/chat/:id/message", mc.EditMessage)
 	e.DELETE("/chat/:id/message/:messageId", mc.DeleteMessage)
+	e.PUT("/chat/:id/message/read/:messageId", mc.ReadMessage)
+	e.PUT("/chat/message/check-for-new", mc.CheckForNew)
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
 	e.PUT("/chat/:id/broadcast", mc.BroadcastMessage)
 	e.DELETE("/internal/remove-file-item", mc.RemoveFileItem)

@@ -1,22 +1,18 @@
 import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
-import {setupCentrifuge} from "./centrifugeConnection"
+import graphQlClient from "./graphql"
 import axios from "axios";
 import bus, {
     CHAT_ADD,
     CHAT_DELETED,
     CHAT_EDITED,
-    MESSAGE_ADD,
-    MESSAGE_DELETED,
-    MESSAGE_EDITED,
     UNREAD_MESSAGES_CHANGED,
     USER_PROFILE_CHANGED,
-    CHANGE_WEBSOCKET_STATUS,
     LOGGED_OUT,
     LOGGED_IN,
     VIDEO_CALL_INVITED,
-    VIDEO_CALL_CHANGED, VIDEO_DIAL_STATUS_CHANGED,
+    VIDEO_CALL_CHANGED, VIDEO_DIAL_STATUS_CHANGED, PROFILE_SET,
 } from './bus';
 import store, {
     FETCH_AVAILABLE_OAUTH2_PROVIDERS,
@@ -26,8 +22,10 @@ import store, {
     UNSET_USER
 } from './store'
 import router from './router.js'
-import {getData, getProperData} from "./centrifugeConnection";
 import {setIcon} from "@/utils";
+import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
+
+const CheckForNewUrl = '/api/chat/message/check-for-new';
 
 let vm;
 
@@ -88,7 +86,7 @@ axios.interceptors.response.use((response) => {
     store.commit(UNSET_USER);
     bus.$emit(LOGGED_OUT, null);
     return Promise.reject(error)
-  } else {
+  } else if (error.config.url != CheckForNewUrl) {
     const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
     console.error(consoleErrorMessage);
     const errorMessage  = "Http error. Check the console";
@@ -97,89 +95,145 @@ axios.interceptors.response.use((response) => {
   }
 });
 
+const getGlobalEventsData = (message) => {
+    return message.data?.globalEvents
+};
+
 vm = new Vue({
   vuetify,
   store,
   router,
+  mixins: [graphqlSubscriptionMixin('globalEvents')],
   methods: {
-    connectCentrifuge() {
-      this.centrifuge.connect();
+    getGraphQlSubscriptionQuery() {
+      return `
+                subscription {
+                  globalEvents {
+                    eventType
+                    chatEvent {
+                      id
+                      name
+                      avatar
+                      avatarBig
+                      lastUpdateDateTime
+                      participantIds
+                      canEdit
+                      canDelete
+                      canLeave
+                      unreadMessages
+                      canBroadcast
+                      canVideoKick
+                      canChangeChatAdmins
+                      tetATet
+                      canAudioMute
+                      participantsCount
+                      changingParticipantsPage
+                      participants {
+                        id
+                        login
+                        avatar
+                        admin
+                      }
+                    }
+                    chatDeletedEvent {
+                      id
+                    }
+                    userEvent {
+                      id
+                      login
+                      avatar
+                    }
+                    videoEvent {
+                      usersCount
+                      chatId
+                    }
+                    videoCallInvitation {
+                      chatId
+                      chatName
+                    }
+                    videoParticipantDialEvent {
+                      chatId
+                      dials {
+                        userId
+                        status
+                      }
+                    }
+                    unreadMessagesNotification {
+                      chatId
+                      unreadMessages
+                    }
+                    allUnreadMessagesNotification {
+                      allUnreadMessages
+                    }
+                  }
+                }
+            `
     },
-    disconnectCentrifuge() {
-      this.centrifuge.disconnect();
-      Vue.prototype.centrifugeInitialized = false;
-    }
+    onNextSubscriptionElement(e) {
+      if (getGlobalEventsData(e).eventType === 'chat_created') {
+          const d = getGlobalEventsData(e).chatEvent;
+          bus.$emit(CHAT_ADD, d);
+      } else if (getGlobalEventsData(e).eventType === 'chat_edited') {
+          const d = getGlobalEventsData(e).chatEvent;
+          bus.$emit(CHAT_EDITED, d);
+      } else if (getGlobalEventsData(e).eventType === 'chat_deleted') {
+          const d = getGlobalEventsData(e).chatDeletedEvent;
+          bus.$emit(CHAT_DELETED, d);
+      } else if (getGlobalEventsData(e).eventType === 'user_profile_changed') {
+          const d = getGlobalEventsData(e).userEvent;
+          bus.$emit(USER_PROFILE_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === "video_call_changed") {
+          const d = getGlobalEventsData(e).videoEvent;
+          bus.$emit(VIDEO_CALL_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === 'video_call_invitation') {
+          const d = getGlobalEventsData(e).videoCallInvitation;
+          bus.$emit(VIDEO_CALL_INVITED, d);
+      } else if (getGlobalEventsData(e).eventType === "video_dial_status_changed") {
+          const d = getGlobalEventsData(e).videoParticipantDialEvent;
+          bus.$emit(VIDEO_DIAL_STATUS_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === 'chat_unread_messages_changed') {
+          const d = getGlobalEventsData(e).unreadMessagesNotification;
+          bus.$emit(UNREAD_MESSAGES_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === 'all_unread_messages_changed') {
+          const d = getGlobalEventsData(e).allUnreadMessagesNotification;
+          const currentNewMessages = d.allUnreadMessages > 0;
+          setIcon(currentNewMessages)
+      }
+    },
+    additionalActionAfterGraphQlSubscription() {
+        axios.put(CheckForNewUrl).then((resp) => {
+            const data = resp?.data;
+            console.debug("New messages response", data);
+            if (data) {
+                const currentNewMessages = data.allUnreadMessages > 0;
+                setIcon(currentNewMessages)
+            }
+        })
+    },
   },
   created(){
     Vue.prototype.isMobile = () => {
       return !this.$vuetify.breakpoint.smAndUp
     };
-    Vue.prototype.centrifugeInitialized = false;
-    const setCentrifugeSession = (cs) => {
-      Vue.prototype.centrifugeSessionId = cs;
-      bus.$emit(CHANGE_WEBSOCKET_STATUS, {connected: true, wasInitialized: Vue.prototype.centrifugeInitialized});
-      Vue.prototype.centrifugeInitialized = true;
-    };
-    const onDisconnected = () => {
-      Vue.prototype.centrifugeSessionId = null;
-      bus.$emit(CHANGE_WEBSOCKET_STATUS, {connected: false, wasInitialized: Vue.prototype.centrifugeInitialized});
-    };
-    Vue.prototype.centrifuge = setupCentrifuge(setCentrifugeSession, onDisconnected);
-    this.connectCentrifuge();
-
-    bus.$on(LOGGED_IN, this.connectCentrifuge);
-    bus.$on(LOGGED_OUT, this.disconnectCentrifuge);
+    bus.$on(PROFILE_SET, this.graphQlSubscribe);
+    bus.$on(LOGGED_OUT, this.graphQlUnsubscribe);
   },
   destroyed() {
-    this.disconnectCentrifuge();
-    bus.$off(LOGGED_IN, this.connectCentrifuge);
-    bus.$off(LOGGED_OUT, this.disconnectCentrifuge);
+    this.graphQlUnsubscribe();
+    graphQlClient.terminate();
+    bus.$off(PROFILE_SET, this.graphQlSubscribe);
+    bus.$off(LOGGED_OUT, this.graphQlUnsubscribe);
   },
   mounted(){
-    this.centrifuge.on('publish', (ctx)=>{
-      console.debug("Got personal message", ctx);
-      if (getData(ctx).type === 'chat_created') {
-        const d = getProperData(ctx);
-        bus.$emit(CHAT_ADD, d);
-      } else if (getData(ctx).type === 'chat_edited') {
-        const d = getProperData(ctx);
-        bus.$emit(CHAT_EDITED, d);
-      } else if (getData(ctx).type === 'chat_deleted') {
-        const d = getProperData(ctx);
-        bus.$emit(CHAT_DELETED, d);
-      } else if (getData(ctx).type === 'message_created') {
-        const d = getProperData(ctx);
-        bus.$emit(MESSAGE_ADD, d);
-      } else if (getData(ctx).type === 'message_deleted') {
-        const d = getProperData(ctx);
-        bus.$emit(MESSAGE_DELETED, d);
-      } else if (getData(ctx).type === 'message_edited') {
-        const d = getProperData(ctx);
-        bus.$emit(MESSAGE_EDITED, d);
-      } else if (getData(ctx).type === 'unread_messages_changed') {
-        const d = getProperData(ctx);
-        bus.$emit(UNREAD_MESSAGES_CHANGED, d);
-      } else if (getData(ctx).type === 'all_unread_messages_changed') {
-          const d = getProperData(ctx);
-          const currentNewMessages = d.allUnreadMessages > 0;
-          setIcon(currentNewMessages)
-      } else if (getData(ctx).type === 'user_profile_changed') {
-        const d = getProperData(ctx);
-        bus.$emit(USER_PROFILE_CHANGED, d);
-      } else if (getData(ctx).type === 'video_call_invitation') {
-        const d = getProperData(ctx);
-        bus.$emit(VIDEO_CALL_INVITED, d);
-      } else if (getData(ctx).type === "video_call_changed") {
-        const d = getProperData(ctx);
-        bus.$emit(VIDEO_CALL_CHANGED, d);
-      } else if (getData(ctx).type === "video_dial_status_changed") {
-        const d = getProperData(ctx);
-        bus.$emit(VIDEO_DIAL_STATUS_CHANGED, d);
-      }
-
-    });
-
     this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS);
+  },
+  watch: {
+    '$store.state.currentUser': function(newUserValue, oldUserValue) {
+        console.debug("User new", newUserValue, "old" , oldUserValue);
+        if (newUserValue && !oldUserValue) {
+            bus.$emit(PROFILE_SET);
+        }
+    }
   },
   // https://ru.vuejs.org/v2/guide/render-function.html
   render: h => h(App)

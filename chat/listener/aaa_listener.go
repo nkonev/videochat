@@ -2,15 +2,17 @@ package listener
 
 import (
 	"encoding/json"
-	"nkonev.name/chat/handlers/dto"
+	"github.com/streadway/amqp"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/services"
 )
 
-type AaaUserProfileUpdateListener func(data []byte) error
+type AaaUserProfileUpdateListener func(*amqp.Delivery) error
 
-func CreateAaaUserProfileUpdateListener(not notifications.Notifications) AaaUserProfileUpdateListener {
-	return func(data []byte) error {
+func CreateAaaUserProfileUpdateListener(not services.Notifications) AaaUserProfileUpdateListener {
+	return func(msg *amqp.Delivery) error {
+		data := msg.Body
 		s := string(data)
 		Logger.Infof("Received %v", s)
 

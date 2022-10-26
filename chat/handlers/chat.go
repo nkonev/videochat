@@ -12,9 +12,9 @@ import (
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
-	"nkonev.name/chat/handlers/dto"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/notifications"
+	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"strings"
 )
@@ -38,12 +38,12 @@ type CreateChatDto struct {
 
 type ChatHandler struct {
 	db          db.DB
-	notificator notifications.Notifications
+	notificator services.Notifications
 	restClient  client.RestClient
 	policy      *bluemonday.Policy
 }
 
-func NewChatHandler(dbR db.DB, notificator notifications.Notifications, restClient client.RestClient, policy *bluemonday.Policy) *ChatHandler {
+func NewChatHandler(dbR db.DB, notificator services.Notifications, restClient client.RestClient, policy *bluemonday.Policy) *ChatHandler {
 	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
 }
 
@@ -418,7 +418,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 
 			ch.notificator.NotifyAboutNewChat(c, copiedChat, userIdsToNotifyAboutChatCreated, tx)
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, userIdsToNotifyAboutChatDeleted, tx)
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, notifications.NoPagePlaceholder, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, services.NoPagePlaceholder, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})
@@ -456,7 +456,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, notifications.NoPagePlaceholder, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, services.NoPagePlaceholder, tx)
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
@@ -834,9 +834,96 @@ func (ch *ChatHandler) IsExists(c echo.Context) error {
 	return c.JSON(http.StatusOK, ChatExists{exists})
 }
 
+type simpleChat struct {
+	Id        int64  `json:"id"`
+	Name      string `json:"name"`
+	IsTetATet bool   `json:"tetATet"`
+}
+
+func (r *simpleChat) GetId() int64 {
+	return r.Id
+}
+
+func (r *simpleChat) GetName() string {
+	return r.Name
+}
+
+func (r *simpleChat) SetName(s string) {
+	r.Name = s
+}
+
+func (r *simpleChat) GetIsTetATet() bool {
+	return r.IsTetATet
+}
+
+func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
+	chatId, err := GetQueryParamAsInt64(c, "chatId")
+	if err != nil {
+		return err
+	}
+	behalfUserId, err := GetQueryParamAsInt64(c, "behalfUserId")
+	if err != nil {
+		return err
+	}
+	participantIds, err := GetQueryParamsAsInt64Slice(c, "userIds")
+	if err != nil {
+		return err
+	}
+
+	chat, err := ch.db.GetChat(behalfUserId, chatId)
+	if err != nil {
+		return err
+	}
+
+	behalfUsers, err := ch.restClient.GetUsers([]int64{behalfUserId}, c.Request().Context())
+	if err != nil {
+		return err
+	}
+	if len(behalfUsers) != 1 {
+		GetLogEntry(c.Request().Context()).Errorf("Behalf user is not found")
+		return c.NoContent(http.StatusNotFound)
+	}
+	behalfUserLogin := behalfUsers[0].Login
+
+	users, err := ch.restClient.GetUsers(participantIds, c.Request().Context())
+	if err != nil {
+		return err
+	}
+
+	ret := []dto.ChatName{}
+
+	for _, user := range users {
+		meAsUser := dto.User{Id: behalfUserId, Login: behalfUserLogin}
+		var sch dto.ChatDtoWithTetATet = &simpleChat{
+			Id:        chat.Id,
+			Name:      chat.Title,
+			IsTetATet: chat.TetATet,
+		}
+		utils.ReplaceChatNameToLoginForTetATet(
+			sch,
+			&meAsUser,
+			user.Id,
+		)
+		ret = append(ret, dto.ChatName{Name: sch.GetName(), UserId: user.Id})
+	}
+	return c.JSON(http.StatusOK, ret)
+}
+
 func (ch *ChatHandler) RemoveAllParticipants(c echo.Context) error {
 	GetLogEntry(c.Request().Context()).Warnf("Removing ALL participants")
 	return ch.db.DeleteAllParticipants()
+}
+
+func (ch *ChatHandler) GetChatParticipants(c echo.Context) error {
+	chatId, err := GetQueryParamAsInt64(c, "chatId")
+	if err != nil {
+		return err
+	}
+	ids, err := ch.db.GetAllParticipantIds(chatId)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, ids)
 }
 
 type ParticipantBelongsToChat struct {

@@ -487,3 +487,52 @@ npx playwright test --headed --project=chromium -g "login vkontakte"
 * https://askubuntu.com/questions/1235731/can-i-use-an-android-phone-as-webcam-for-an-ubuntu-device
 * https://play.google.com/store/apps/details?id=com.dev47apps.droidcam
 
+# Generate GraphQL
+About subscriptions https://github.com/99designs/gqlgen/issues/953
+```
+go install github.com/99designs/gqlgen@v0.17.20
+gqlgen generate
+```
+
+# Subscribing
+```
+subscription {
+  subscribe(subscriber:"dodo")
+}
+```
+
+You need to open it through Traefik
+http://localhost:8081/event/playground
+
+```
+subscription{
+  chatEvents(chatId: 1) {
+    eventType
+    messageEvent {
+      id
+      text
+      chatId
+      ownerId
+    }
+  }
+}
+
+subscription{
+  globalEvents {
+    eventType
+    chatEvent {
+      id
+      name
+      avatar
+      avatarBig
+      participantIds
+      participants {
+        id
+        login
+        avatar
+        admin
+      }
+    }
+  }
+}
+```

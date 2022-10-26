@@ -57,13 +57,12 @@
         LOGGED_OUT,
         VIDEO_CALL_CHANGED,
         MESSAGE_BROADCAST,
-        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE,
+        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE, CHAT_ADD, PROFILE_SET,
     } from "./bus";
     import {chat_list_name, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
     import ChatVideo from "./ChatVideo";
 
-    import {getData, getProperData} from "./centrifugeConnection";
     import {mapGetters} from "vuex";
 
     import {
@@ -79,6 +78,7 @@
     import debounce from "lodash/debounce";
     import throttle from "lodash/throttle";
     import queryMixin from "@/queryMixin";
+    import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
 
 
     const defaultDesktopWithoutVideo = [80, 20];
@@ -104,8 +104,15 @@
 
     let writingUsersTimerId;
 
+    const getChatEventsData = (message) => {
+        return message.data?.chatEvents
+    };
+
     export default {
-        mixins: [queryMixin()],
+        mixins: [
+            queryMixin(),
+            graphqlSubscriptionMixin('chatEvents')
+        ],
         data() {
             return {
                 startingFromItemId: null,
@@ -113,7 +120,6 @@
                 itemsTotal: 0,
                 infiniteId: +new Date(),
 
-                chatMessagesSubscription: null,
                 chatDto: {
                     participantIds:[],
                     participants:[],
@@ -480,36 +486,21 @@
                     }
                 });
             },
-            onLoggedIn() {
+            onProfileSet() {
                 this.getInfo();
-                this.subscribe();
+                this.graphQlSubscribe();
+            },
+            onLoggedIn() {
                 // seems it need in order to mitigate bug with last login message
                 if (this.items.length === 0) {
                     this.reloadItems();
                 }
             },
             onLoggedOut() {
-                this.unsubscribe();
+                this.graphQlUnsubscribe();
                 this.resetVariables();
             },
-            subscribe() {
-                const channel = "chatMessages" + this.chatId;
-                this.chatMessagesSubscription = this.centrifuge.subscribe(channel, (message) => {
-                    // actually it's used for tell server about presence of this client.
-                    // also will be used as a global notification, so we just log it
-                    const data = getData(message);
-                    console.debug("Got message from channel", channel, data);
-                    const properData = getProperData(message)
-                    if (data.type === "user_typing") {
-                        bus.$emit(USER_TYPING, properData);
-                    } else if (data.type === "user_broadcast") {
-                        bus.$emit(MESSAGE_BROADCAST, properData);
-                    }
-                });
-            },
-            unsubscribe() {
-                this.chatMessagesSubscription.unsubscribe();
-            },
+
             onWsRestoredRefresh() {
                 this.resetVariables();
                 // Reset direction in order to fix bug when user relogin and after press button "update" all messages disappears due to non-initial direction.
@@ -563,6 +554,61 @@
                     this.broadcastMessage = null;
                 }
             },
+            getGraphQlSubscriptionQuery() {
+                return `
+                                subscription{
+                                  chatEvents(chatId: ${this.chatId}) {
+                                    eventType
+                                    messageEvent {
+                                      id
+                                      text
+                                      chatId
+                                      ownerId
+                                      createDateTime
+                                      editDateTime
+                                      owner {
+                                        id
+                                        login
+                                        avatar
+                                      }
+                                      canEdit
+                                      fileItemUuid
+                                    }
+                                    messageDeletedEvent {
+                                      id
+                                      chatId
+                                    }
+                                    userTypingEvent {
+                                      login
+                                      participantId
+                                    }
+                                    messageBroadcastEvent {
+                                      login
+                                      userId
+                                      text
+                                    }
+                                  }
+                                }
+                `
+            },
+            onNextSubscriptionElement(e) {
+                if (getChatEventsData(e).eventType === 'message_created') {
+                    const d = getChatEventsData(e).messageEvent;
+                    bus.$emit(MESSAGE_ADD, d);
+                } else if (getChatEventsData(e).eventType === 'message_deleted') {
+                    const d = getChatEventsData(e).messageDeletedEvent;
+                    bus.$emit(MESSAGE_DELETED, d);
+                } else if (getChatEventsData(e).eventType === 'message_edited') {
+                    const d = getChatEventsData(e).messageEvent;
+                    bus.$emit(MESSAGE_EDITED, d);
+                } else if (getChatEventsData(e).eventType === "user_typing") {
+                    const d = getChatEventsData(e).userTypingEvent;
+                    bus.$emit(USER_TYPING, d);
+                } else if (getChatEventsData(e).eventType === "user_broadcast") {
+                    const d = getChatEventsData(e).messageBroadcastEvent;
+                    bus.$emit(MESSAGE_BROADCAST, d);
+                }
+            }
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -577,15 +623,15 @@
         mounted() {
             window.addEventListener('resize', this.onResizedListener);
 
-            this.subscribe();
-
             this.$store.commit(SET_TITLE, `Chat #${this.chatId}`);
             this.$store.commit(SET_CHAT_USERS_COUNT, 0);
             this.$store.commit(SET_SHOW_SEARCH, true);
             this.$store.commit(SET_CHAT_ID, this.chatId);
             this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
 
-            this.getInfo();
+            if (this.currentUser) {
+                this.onProfileSet();
+            } // else we rely on PROFILE_SET
 
             this.$store.commit(SET_SHOW_CALL_BUTTON, true);
             this.$store.commit(SET_SHOW_HANG_BUTTON, false);
@@ -596,6 +642,7 @@
             bus.$on(CHAT_DELETED, this.onChatDelete);
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.$on(PROFILE_SET, this.onProfileSet);
             bus.$on(LOGGED_IN, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
@@ -612,6 +659,7 @@
             this.scrollerDiv = document.getElementById("messagesScroller");
         },
         beforeDestroy() {
+            this.graphQlUnsubscribe();
             window.removeEventListener('resize', this.onResizedListener);
 
             bus.$off(MESSAGE_ADD, this.onNewMessage);
@@ -620,6 +668,7 @@
             bus.$off(CHAT_DELETED, this.onChatDelete);
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.$off(PROFILE_SET, this.onProfileSet);
             bus.$off(LOGGED_IN, this.onLoggedIn);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
@@ -629,8 +678,6 @@
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
 
             clearInterval(writingUsersTimerId);
-
-            this.unsubscribe();
 
             this.closeQueryWatcher();
         },

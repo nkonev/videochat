@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"nkonev.name/chat/handlers/dto"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"regexp"
 	"strconv"
@@ -156,4 +156,9 @@ func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participan
 	if chatDto.GetIsTetATet() && participant.Id != behalfParticipantId {
 		chatDto.SetName(participant.Login)
 	}
+}
+
+func GetType(aDto interface{}) string {
+	strName := fmt.Sprintf("%T", aDto)
+	return strName
 }

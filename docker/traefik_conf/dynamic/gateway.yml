@@ -24,6 +24,10 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:7880
+    event-service:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:1238
 
   routers:
     frontend-router:
@@ -73,6 +77,18 @@ http:
       service: livekit-service
       middlewares:
         - "livekit-strip-prefix-middleware"
+        - "retry-middleware"
+    event-graphql-router:
+      rule: "PathPrefix(`/event/playground`) || PathPrefix(`/api/event/graphql`)"
+      service: event-service
+      middlewares:
+        - "auth-middleware"
+        - "retry-middleware"
+    event-public-router:
+      rule: "PathPrefix(`/api/event/public`)"
+      service: event-service
+      middlewares:
+        - "api-strip-prefix-middleware"
         - "retry-middleware"
 
   middlewares:

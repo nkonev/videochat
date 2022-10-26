@@ -46,8 +46,8 @@ export default class ChatList {
         return this.page.locator('#chat-list-items .v-list-item .v-list-item__title');
     }
 
-    async getChatItemCount() {
-        return await this.getRowsLocator().count();
+    async assertChatItemCount(expected) {
+        return expect(this.getRowsLocator()).toHaveCount(expected);
     }
 
     async getChatName(index) {

@@ -1,0 +1,127 @@
+scalar Time
+scalar Int64
+scalar UUID
+
+type User {
+    id:     Int64!
+    login:  String!
+    avatar: String
+}
+
+type DisplayMessageDto {
+    id:             Int64!
+    text:           String!
+    chatId:         Int64!
+    ownerId:        Int64!
+    createDateTime: Time!
+    editDateTime:   Time
+    owner:          User
+    canEdit:        Boolean!
+    fileItemUuid:    UUID
+}
+
+type MessageDeletedDto {
+    id:             Int64!
+    chatId:             Int64!
+}
+
+type UserWithAdmin {
+    id:     Int64!
+    login:  String!
+    avatar: String
+    admin: Boolean!
+}
+
+type ChatDto {
+    id:             Int64!
+    name:                String!
+    avatar:              String
+    avatarBig:           String
+    lastUpdateDateTime:  Time!
+    participantIds:      [Int64!]!
+    canEdit:             Boolean
+    canDelete:           Boolean
+    canLeave:            Boolean
+    unreadMessages:      Int64!
+    canBroadcast:        Boolean!
+    canVideoKick:        Boolean!
+    canChangeChatAdmins: Boolean!
+    tetATet:             Boolean!
+    canAudioMute:        Boolean!
+    participants:             [UserWithAdmin!]!
+    participantsCount:        Int!
+    changingParticipantsPage: Int!
+}
+
+type ChatDeletedDto {
+    id:             Int64!
+}
+
+type UserTypingDto {
+    login: String!
+    participantId: Int64!
+}
+
+type MessageBroadcastNotification {
+    login: String!
+    userId: Int64!
+    text: String!
+}
+
+type ChatEvent {
+    eventType:                String!
+    messageEvent: DisplayMessageDto
+    messageDeletedEvent: MessageDeletedDto
+    userTypingEvent: UserTypingDto
+    messageBroadcastEvent: MessageBroadcastNotification
+}
+
+type VideoCallChangedDto {
+    usersCount: Int64!
+    chatId: Int64!
+}
+
+type VideoCallInvitationDto {
+    chatId: Int64!
+    chatName: String!
+}
+
+type VideoDialChanged {
+    userId: Int64!
+    status: Boolean!
+}
+
+type VideoDialChanges {
+    chatId: Int64!
+    dials: [VideoDialChanged!]!
+}
+
+type ChatUnreadMessageChanged {
+    chatId: Int64!
+    unreadMessages: Int64!
+}
+
+type AllUnreadMessages {
+    allUnreadMessages: Int64!
+}
+
+type GlobalEvent {
+    eventType:                String!
+    chatEvent: ChatDto
+    chatDeletedEvent: ChatDeletedDto
+    userEvent: User
+    videoEvent: VideoCallChangedDto
+    videoCallInvitation: VideoCallInvitationDto
+    videoParticipantDialEvent: VideoDialChanges
+    unreadMessagesNotification: ChatUnreadMessageChanged
+    allUnreadMessagesNotification: AllUnreadMessages
+}
+
+type Query {
+    ping: Boolean
+}
+
+type Subscription {
+    chatEvents(chatId: Int64!): ChatEvent!
+    globalEvents: GlobalEvent!
+}

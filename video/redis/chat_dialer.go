@@ -54,7 +54,7 @@ func (srv *ChatDialerService) doJob() {
 }
 
 func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
-	behalfUserId, behalfUserLogin, err := srv.redisService.GetDialMetadata(ctx, chatId)
+	behalfUserId, err := srv.redisService.GetDialMetadata(ctx, chatId)
 	if err != nil {
 		Logger.Warnf("Error %v", err)
 		return
@@ -69,17 +69,24 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 	for _, userId := range userIdsToDial {
 		userIds = append(userIds, userId)
 	}
-	inviteDto := dto.VideoInviteDto{
-		ChatId:       chatId,
-		UserIds:      userIds,
-		BehalfUserId: behalfUserId,
-		BehalfLogin:  behalfUserLogin,
+	Logger.Infof("Calling userIds %v from chat %v", userIds, chatId)
+
+	inviteNames, err := srv.chatClient.GetChatNameForInvite(chatId, behalfUserId, userIds, ctx)
+	if err != nil {
+		Logger.Error(err, "Failed during getting chat invite names")
+		return
 	}
 
-	Logger.Infof("Calling userIds %v from chat %v", userIds, chatId)
-	err = srv.rabbitMqInvitePublisher.Publish(&inviteDto)
-	if err != nil {
-		Logger.Error(err, "Failed during marshal VideoInviteDto")
+	for _, chatInviteName := range inviteNames {
+		invitation := dto.VideoCallInvitation{
+			ChatId:   chatId,
+			ChatName: chatInviteName.Name,
+		}
+
+		err = srv.rabbitMqInvitePublisher.Publish(&invitation, chatInviteName.UserId)
+		if err != nil {
+			Logger.Error(err, "Failed during marshal VideoInviteDto")
+		}
 	}
 
 	// send state changes

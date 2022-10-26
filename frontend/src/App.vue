@@ -71,7 +71,7 @@
 
 
         <v-app-bar
-                :color="wsConnected ? 'indigo' : 'error'"
+                color='indigo'
                 dark
                 app
                 id="myAppBar"
@@ -110,13 +110,6 @@
             <v-card light v-if="isShowSearch">
                 <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" clearable clear-icon="mdi-close-circle"></v-text-field>
             </v-card>
-
-            <v-tooltip bottom v-if="!wsConnected">
-                <template v-slot:activator="{ on, attrs }">
-                    <v-icon color="white" class="ml-2" v-bind="attrs" v-on="on">mdi-lan-disconnect</v-icon>
-                </template>
-                <span>{{ $vuetify.lang.t('$vuetify.websocket_not_connected') }}</span>
-            </v-tooltip>
         </v-app-bar>
 
 
@@ -208,7 +201,6 @@
         UNSET_USER
     } from "./store";
     import bus, {
-        CHANGE_WEBSOCKET_STATUS,
         LOGGED_OUT,
         OPEN_CHAT_EDIT,
         OPEN_PARTICIPANTS_DIALOG,
@@ -235,7 +227,6 @@
     import VideoGlobalSettings from './VideoGlobalSettings';
     import FileTextEditModal from "./FileTextEditModal";
     import LanguageModal from "./LanguageModal";
-    import {getData} from "@/centrifugeConnection";
     import VideoAddNewSource from "@/VideoAddNewSource";
     import MessageEditModal from "@/MessageEditModal";
     import MessageEditLinkModal from "@/MessageEditLinkModal";
@@ -252,7 +243,6 @@
         data () {
             return {
                 drawer: this.$vuetify.breakpoint.lgAndUp,
-                wsConnected: false,
                 invitedVideoChatId: 0,
                 invitedVideoChatName: null,
                 invitedVideoChatAlert: false,
@@ -315,22 +305,6 @@
                 const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
                 this.navigateToWithPreservingSearchStringInQuery(routerNewState);
                 this.updateLastAnsweredTimestamp();
-            },
-            onChangeWsStatus({connected, wasInitialized}) {
-                console.log("onChangeWsStatus: connected", connected, "wasInitialized", wasInitialized)
-                this.wsConnected = connected;
-                if (connected && wasInitialized) {
-                    this.showWebsocketRestored = true;
-                }
-                if (connected) {
-                    this.centrifuge.namedRPC("check_for_new_messages").then(value => {
-                        console.debug("New messages response", value);
-                        if (getData(value)) {
-                            const currentNewMessages = getData(value).allUnreadMessages > 0;
-                            setIcon(currentNewMessages)
-                        }
-                    })
-                }
             },
             onInfoClicked() {
                 bus.$emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
@@ -433,7 +407,6 @@
             this.$store.dispatch(FETCH_USER_PROFILE);
         },
         created() {
-            bus.$on(CHANGE_WEBSOCKET_STATUS, this.onChangeWsStatus);
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
 
             this.$router.beforeEach((to, from, next) => {

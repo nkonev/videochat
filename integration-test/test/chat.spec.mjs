@@ -32,8 +32,7 @@ test('login vkontakte and google and create chat', async ({ browser }) => {
     await vkChatList.createAndSubmit(chatName+" trash", []);
 
     // https://playwright.dev/docs/locators
-    const vkCount = await vkChatList.getChatItemCount()
-    expect(vkCount).toBe(2);
+    await vkChatList.assertChatItemCount(2);
     const vkSecondRow = await vkChatList.getChatName(1);
     expect(vkSecondRow).toBe(chatName);
 

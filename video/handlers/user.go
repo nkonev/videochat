@@ -26,6 +26,7 @@ func NewUserHandler(chatClient *client.RestClient, userService *services.UserSer
 
 type CountUsersResponse struct {
 	UsersCount int64 `json:"usersCount"`
+	ChatId     int64 `json:"chatId"`
 }
 
 func (h *UserHandler) GetVideoUsers(c echo.Context) error {
@@ -51,7 +52,7 @@ func (h *UserHandler) GetVideoUsers(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.JSON(http.StatusOK, CountUsersResponse{UsersCount: usersCount})
+	return c.JSON(http.StatusOK, CountUsersResponse{UsersCount: usersCount, ChatId: chatId})
 }
 
 func (h *UserHandler) Kick(c echo.Context) error {

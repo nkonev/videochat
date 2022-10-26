@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+  event:
+    image: nkonev/event:latest
+    networks:
+      backend:
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 20s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.event-service.loadbalancer.server.port=1238"
+        - "traefik.http.routers.event-router.rule=PathPrefix(`/api/event/graphql`)"
+        - "traefik.http.routers.event-router.entrypoints=http"
+        - "traefik.http.routers.event-router.middlewares=auth-middleware@file,retry-middleware@file"
+
+        - "traefik.http.routers.event-public-router.rule=PathPrefix(`/api/event/public`)"
+        - "traefik.http.routers.event-public-router.entrypoints=http"
+        - "traefik.http.routers.event-public-router.middlewares=api-strip-prefix-middleware@file,retry-middleware@file"
+
+        - "traefik.http.middlewares.event-stripprefix-middleware.stripprefix.prefixes=/event"
+        - "traefik.http.routers.event-version-router.rule=Path(`/event/git.json`)"
+        - "traefik.http.routers.event-version-router.entrypoints=http"
+        - "traefik.http.routers.event-version-router.middlewares=event-stripprefix-middleware"
+
+    environment:
+      - EVENT_SERVER.BODY.LIMIT=100G
+      - EVENT_CHAT.URL.BASE=http://chat:1235
+      - EVENT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
+      - EVENT_JAEGER.HOST=jaeger
+      - EVENT_JAEGER.PORT=6831
+    logging:
+      driver: "journald"
+      options:
+        tag: event
+
+networks:
+  backend:
+    driver: overlay
