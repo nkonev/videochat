@@ -23,6 +23,7 @@ import store, {
 } from './store'
 import router from './router.js'
 import {setIcon} from "@/utils";
+import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
 
 const CheckForNewUrl = '/api/chat/message/check-for-new';
 
@@ -98,135 +99,108 @@ const getGlobalEventsData = (message) => {
     return message.data?.globalEvents
 };
 
-let subscriptionTimeoutId;
-
 vm = new Vue({
   vuetify,
   store,
   router,
+  mixins: [graphqlSubscriptionMixin('globalEvents')],
   methods: {
-    subscribeToGlobalEvents() {
-        // unsubscribe from the previous
-        this.unsubscribeFromGlobalEvents();
-
-        const onNext = (e) => {
-            console.debug("Got global event", e);
-            if (e.errors != null && e.errors.length) {
-                this.setError(null, "Error in globalEvents subscription");
-                return
-            }
-            if (getGlobalEventsData(e).eventType === 'chat_created') {
-                const d = getGlobalEventsData(e).chatEvent;
-                bus.$emit(CHAT_ADD, d);
-            } else if (getGlobalEventsData(e).eventType === 'chat_edited') {
-                const d = getGlobalEventsData(e).chatEvent;
-                bus.$emit(CHAT_EDITED, d);
-            } else if (getGlobalEventsData(e).eventType === 'chat_deleted') {
-                const d = getGlobalEventsData(e).chatDeletedEvent;
-                bus.$emit(CHAT_DELETED, d);
-            } else if (getGlobalEventsData(e).eventType === 'user_profile_changed') {
-                const d = getGlobalEventsData(e).userEvent;
-                bus.$emit(USER_PROFILE_CHANGED, d);
-            } else if (getGlobalEventsData(e).eventType === "video_call_changed") {
-                const d = getGlobalEventsData(e).videoEvent;
-                bus.$emit(VIDEO_CALL_CHANGED, d);
-            } else if (getGlobalEventsData(e).eventType === 'video_call_invitation') {
-                const d = getGlobalEventsData(e).videoCallInvitation;
-                bus.$emit(VIDEO_CALL_INVITED, d);
-            } else if (getGlobalEventsData(e).eventType === "video_dial_status_changed") {
-                const d = getGlobalEventsData(e).videoParticipantDialEvent;
-                bus.$emit(VIDEO_DIAL_STATUS_CHANGED, d);
-            } else if (getGlobalEventsData(e).eventType === 'chat_unread_messages_changed') {
-                const d = getGlobalEventsData(e).unreadMessagesNotification;
-                bus.$emit(UNREAD_MESSAGES_CHANGED, d);
-            } else if (getGlobalEventsData(e).eventType === 'all_unread_messages_changed') {
-                const d = getGlobalEventsData(e).allUnreadMessagesNotification;
-                const currentNewMessages = d.allUnreadMessages > 0;
-                setIcon(currentNewMessages)
-            }
-        }
-        const onError = (e) => {
-            console.error("Got err in global event subscription, reconnecting", e);
-            subscriptionTimeoutId = setTimeout(this.subscribeToGlobalEvents, 2000);
-        }
-        const onComplete = () => {
-            console.log("Got compete in global event subscription");
-        }
-
-        console.log("Subscribing to global events");
-        Vue.prototype.globalEventsUnsubscribe = graphQlClient.subscribe(
-            {
-                query: // ChatDtoWithAdmin
-                    `
-                    subscription {
-                      globalEvents {
-                        eventType
-                        chatEvent {
-                          id
-                          name
-                          avatar
-                          avatarBig
-                          lastUpdateDateTime
-                          participantIds
-                          canEdit
-                          canDelete
-                          canLeave
-                          unreadMessages
-                          canBroadcast
-                          canVideoKick
-                          canChangeChatAdmins
-                          tetATet
-                          canAudioMute
-                          participantsCount
-                          changingParticipantsPage
-                          participants {
-                            id
-                            login
-                            avatar
-                            admin
-                          }
-                        }
-                        chatDeletedEvent {
-                          id
-                        }
-                        userEvent {
-                          id
-                          login
-                          avatar
-                        }
-                        videoEvent {
-                          usersCount
-                          chatId
-                        }
-                        videoCallInvitation {
-                          chatId
-                          chatName
-                        }
-                        videoParticipantDialEvent {
-                          chatId
-                          dials {
-                            userId
-                            status
-                          }
-                        }
-                        unreadMessagesNotification {
-                          chatId
-                          unreadMessages
-                        }
-                        allUnreadMessagesNotification {
-                          allUnreadMessages
-                        }
+    getGraphQlSubscriptionQuery() {
+      return `
+                subscription {
+                  globalEvents {
+                    eventType
+                    chatEvent {
+                      id
+                      name
+                      avatar
+                      avatarBig
+                      lastUpdateDateTime
+                      participantIds
+                      canEdit
+                      canDelete
+                      canLeave
+                      unreadMessages
+                      canBroadcast
+                      canVideoKick
+                      canChangeChatAdmins
+                      tetATet
+                      canAudioMute
+                      participantsCount
+                      changingParticipantsPage
+                      participants {
+                        id
+                        login
+                        avatar
+                        admin
                       }
                     }
-                `,
-            },
-            {
-                next: onNext,
-                error: onError,
-                complete: onComplete,
-            },
-        );
-
+                    chatDeletedEvent {
+                      id
+                    }
+                    userEvent {
+                      id
+                      login
+                      avatar
+                    }
+                    videoEvent {
+                      usersCount
+                      chatId
+                    }
+                    videoCallInvitation {
+                      chatId
+                      chatName
+                    }
+                    videoParticipantDialEvent {
+                      chatId
+                      dials {
+                        userId
+                        status
+                      }
+                    }
+                    unreadMessagesNotification {
+                      chatId
+                      unreadMessages
+                    }
+                    allUnreadMessagesNotification {
+                      allUnreadMessages
+                    }
+                  }
+                }
+            `
+    },
+    onNextSubscriptionElement(e) {
+      if (getGlobalEventsData(e).eventType === 'chat_created') {
+          const d = getGlobalEventsData(e).chatEvent;
+          bus.$emit(CHAT_ADD, d);
+      } else if (getGlobalEventsData(e).eventType === 'chat_edited') {
+          const d = getGlobalEventsData(e).chatEvent;
+          bus.$emit(CHAT_EDITED, d);
+      } else if (getGlobalEventsData(e).eventType === 'chat_deleted') {
+          const d = getGlobalEventsData(e).chatDeletedEvent;
+          bus.$emit(CHAT_DELETED, d);
+      } else if (getGlobalEventsData(e).eventType === 'user_profile_changed') {
+          const d = getGlobalEventsData(e).userEvent;
+          bus.$emit(USER_PROFILE_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === "video_call_changed") {
+          const d = getGlobalEventsData(e).videoEvent;
+          bus.$emit(VIDEO_CALL_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === 'video_call_invitation') {
+          const d = getGlobalEventsData(e).videoCallInvitation;
+          bus.$emit(VIDEO_CALL_INVITED, d);
+      } else if (getGlobalEventsData(e).eventType === "video_dial_status_changed") {
+          const d = getGlobalEventsData(e).videoParticipantDialEvent;
+          bus.$emit(VIDEO_DIAL_STATUS_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === 'chat_unread_messages_changed') {
+          const d = getGlobalEventsData(e).unreadMessagesNotification;
+          bus.$emit(UNREAD_MESSAGES_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === 'all_unread_messages_changed') {
+          const d = getGlobalEventsData(e).allUnreadMessagesNotification;
+          const currentNewMessages = d.allUnreadMessages > 0;
+          setIcon(currentNewMessages)
+      }
+    },
+    additionalActionAfterGraphQlSubscription() {
         axios.put(CheckForNewUrl).then((resp) => {
             const data = resp?.data;
             console.debug("New messages response", data);
@@ -236,30 +210,19 @@ vm = new Vue({
             }
         })
     },
-    unsubscribeFromGlobalEvents() {
-        console.log("Unsubscribing from global events");
-        if (subscriptionTimeoutId) {
-            clearInterval(subscriptionTimeoutId);
-            subscriptionTimeoutId = null;
-        }
-        if (Vue.prototype.globalEventsUnsubscribe) {
-            Vue.prototype.globalEventsUnsubscribe();
-        }
-        Vue.prototype.globalEventsUnsubscribe = null;
-    },
   },
   created(){
     Vue.prototype.isMobile = () => {
       return !this.$vuetify.breakpoint.smAndUp
     };
-    bus.$on(PROFILE_SET, this.subscribeToGlobalEvents);
-    bus.$on(LOGGED_OUT, this.unsubscribeFromGlobalEvents);
+    bus.$on(PROFILE_SET, this.graphQlSubscribe);
+    bus.$on(LOGGED_OUT, this.graphQlUnsubscribe);
   },
   destroyed() {
-    this.unsubscribeFromGlobalEvents();
+    this.graphQlUnsubscribe();
     graphQlClient.terminate();
-    bus.$off(PROFILE_SET, this.subscribeToGlobalEvents);
-    bus.$off(LOGGED_OUT, this.unsubscribeFromGlobalEvents);
+    bus.$off(PROFILE_SET, this.graphQlSubscribe);
+    bus.$off(LOGGED_OUT, this.graphQlUnsubscribe);
   },
   mounted(){
     this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS);

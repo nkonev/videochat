@@ -78,7 +78,7 @@
     import debounce from "lodash/debounce";
     import throttle from "lodash/throttle";
     import queryMixin from "@/queryMixin";
-    import graphQlClient from "@/graphql";
+    import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
 
 
     const defaultDesktopWithoutVideo = [80, 20];
@@ -104,14 +104,15 @@
 
     let writingUsersTimerId;
 
-    let subscriptionTimeoutId;
-
     const getChatEventsData = (message) => {
         return message.data?.chatEvents
     };
 
     export default {
-        mixins: [queryMixin()],
+        mixins: [
+            queryMixin(),
+            graphqlSubscriptionMixin('chatEvents')
+        ],
         data() {
             return {
                 startingFromItemId: null,
@@ -487,7 +488,7 @@
             },
             onProfileSet() {
                 this.getInfo();
-                this.subscribeToChatEvents();
+                this.graphQlSubscribe();
             },
             onLoggedIn() {
                 // seems it need in order to mitigate bug with last login message
@@ -496,7 +497,7 @@
                 }
             },
             onLoggedOut() {
-                this.unsubscribeFromChatEvents();
+                this.graphQlUnsubscribe();
                 this.resetVariables();
             },
 
@@ -553,47 +554,8 @@
                     this.broadcastMessage = null;
                 }
             },
-
-            subscribeToChatEvents() {
-                // unsubscribe from the previous
-                this.unsubscribeFromChatEvents();
-
-                const onNext = (e) => {
-                    console.debug("Got chat event", e);
-                    if (e.errors != null && e.errors.length) {
-                        this.setError(null, "Error in chatEvents subscription");
-                        return
-                    }
-                    if (getChatEventsData(e).eventType === 'message_created') {
-                        const d = getChatEventsData(e).messageEvent;
-                        bus.$emit(MESSAGE_ADD, d);
-                    } else if (getChatEventsData(e).eventType === 'message_deleted') {
-                        const d = getChatEventsData(e).messageDeletedEvent;
-                        bus.$emit(MESSAGE_DELETED, d);
-                    } else if (getChatEventsData(e).eventType === 'message_edited') {
-                        const d = getChatEventsData(e).messageEvent;
-                        bus.$emit(MESSAGE_EDITED, d);
-                    } else if (getChatEventsData(e).eventType === "user_typing") {
-                        const d = getChatEventsData(e).userTypingEvent;
-                        bus.$emit(USER_TYPING, d);
-                    } else if (getChatEventsData(e).eventType === "user_broadcast") {
-                        const d = getChatEventsData(e).messageBroadcastEvent;
-                        bus.$emit(MESSAGE_BROADCAST, d);
-                    }
-                }
-                const onError = (e) => {
-                    console.error("Got err in chatEvents subscription, reconnecting", e);
-                    subscriptionTimeoutId = setTimeout(this.subscribeToChatEvents, 2000);
-                }
-                const onComplete = () => {
-                    console.log("Got compete in chat event subscription");
-                }
-
-                console.log("Subscribing to chat events");
-                Vue.prototype.chatEventsUnsubscribe = graphQlClient.subscribe(
-                    {
-                        query: // DisplayMessageDto
-                            `
+            getGraphQlSubscriptionQuery() {
+                return `
                                 subscription{
                                   chatEvents(chatId: ${this.chatId}) {
                                     eventType
@@ -627,28 +589,26 @@
                                     }
                                   }
                                 }
-                `,
-                    },
-                    {
-                        next: onNext,
-                        error: onError,
-                        complete: onComplete,
-                    },
-                );
+                `
             },
-            unsubscribeFromChatEvents() {
-                console.log("Unsubscribing from chat events");
-                if (subscriptionTimeoutId) {
-                    clearInterval(subscriptionTimeoutId);
-                    subscriptionTimeoutId = null;
+            onNextSubscriptionElement(e) {
+                if (getChatEventsData(e).eventType === 'message_created') {
+                    const d = getChatEventsData(e).messageEvent;
+                    bus.$emit(MESSAGE_ADD, d);
+                } else if (getChatEventsData(e).eventType === 'message_deleted') {
+                    const d = getChatEventsData(e).messageDeletedEvent;
+                    bus.$emit(MESSAGE_DELETED, d);
+                } else if (getChatEventsData(e).eventType === 'message_edited') {
+                    const d = getChatEventsData(e).messageEvent;
+                    bus.$emit(MESSAGE_EDITED, d);
+                } else if (getChatEventsData(e).eventType === "user_typing") {
+                    const d = getChatEventsData(e).userTypingEvent;
+                    bus.$emit(USER_TYPING, d);
+                } else if (getChatEventsData(e).eventType === "user_broadcast") {
+                    const d = getChatEventsData(e).messageBroadcastEvent;
+                    bus.$emit(MESSAGE_BROADCAST, d);
                 }
-
-                if (Vue.prototype.chatEventsUnsubscribe) {
-                    Vue.prototype.chatEventsUnsubscribe();
-                }
-                Vue.prototype.chatEventsUnsubscribe = null;
-            },
-
+            }
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -699,7 +659,7 @@
             this.scrollerDiv = document.getElementById("messagesScroller");
         },
         beforeDestroy() {
-            this.unsubscribeFromChatEvents();
+            this.graphQlUnsubscribe();
             window.removeEventListener('resize', this.onResizedListener);
 
             bus.$off(MESSAGE_ADD, this.onNewMessage);
