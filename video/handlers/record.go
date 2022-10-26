@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go"
@@ -25,7 +26,15 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 		return err
 	}
 	roomName := fmt.Sprintf("chat%v", chatId)
-	filePath := fmt.Sprintf("/chat/%v/recording_%v.mp4", chatId, time.Now().Unix())
+	fileUuid := uuid.New().String()
+	fileItemUuid := uuid.New().String()
+	filename := fmt.Sprintf("/chat/%v/%v/%v%v", chatId, fileItemUuid, fileUuid, ".mp4")
+
+	flnm := fmt.Sprintf("recording_%v.mp4", time.Now().Unix())
+	mtd := map[string]string{}
+	mtd["filename"] = flnm
+	mtd["ownerid"] = utils.Int64ToString(2) // TODO from auth
+	mtd["chatid"] = utils.Int64ToString(chatId)
 	s3u := livekit.EncodedFileOutput_S3{
 		S3: &livekit.S3Upload{
 			AccessKey:      "AKIAIOSFODNN7EXAMPLE",
@@ -34,6 +43,7 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 			Endpoint:       "http://minio:9000",
 			Bucket:         "files",
 			ForcePathStyle: true,
+			Metadata:       mtd,
 		},
 	}
 	streamRequest := &livekit.RoomCompositeEgressRequest{
@@ -42,7 +52,7 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 		Output: &livekit.RoomCompositeEgressRequest_File{
 			File: &livekit.EncodedFileOutput{
 				FileType: livekit.EncodedFileType_MP4,
-				Filepath: filePath,
+				Filepath: filename,
 				Output:   &s3u,
 			},
 		},
