@@ -1,7 +1,5 @@
 module nkonev.name/video
 
-replace github.com/livekit/protocol v1.1.3-0.20221013203258-19dd0a128e43 => github.com/livekit/protocol v1.1.3-0.20221017221212-9b09be77efec
-
 require (
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
@@ -9,8 +7,8 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.0
 	github.com/labstack/echo/v4 v4.7.2
-	github.com/livekit/protocol v1.1.3-0.20221013203258-19dd0a128e43
-	github.com/livekit/server-sdk-go v1.0.5-0.20221018015353-fdf5c8ff7168
+	github.com/livekit/protocol v1.1.3-0.20221026061756-e5d7144e26da
+	github.com/livekit/server-sdk-go v1.0.5-0.20221026203935-50afcd3c10ed
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.7.0
