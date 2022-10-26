@@ -39,6 +39,7 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 		logger.GetLogEntry(ctx).Infof("User %v is not participant of chat %v", authResult.UserId, chatID)
 		return nil, errors.New("Unauthorized")
 	}
+	logger.GetLogEntry(ctx).Infof("Subscribing to chatEvents channel as user %v", authResult.UserId)
 
 	var cam = make(chan *model.ChatEvent)
 	subscribeHandler, err := r.Bus.Subscribe(dto.CHAT_EVENTS, func(event eventbus.Event, t time.Time) {
@@ -61,7 +62,7 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 		for {
 			select {
 			case <-ctx.Done():
-				logger.Logger.Println("Closing channel.")
+				logger.GetLogEntry(ctx).Infof("Closing chatEvents channel for user %v", authResult.UserId)
 				r.Bus.Unsubscribe(subscribeHandler)
 				close(cam)
 				return
@@ -78,6 +79,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 	if !ok {
 		return nil, errors.New("Unable to get auth context")
 	}
+	logger.GetLogEntry(ctx).Infof("Subscribing to globalEvents channel as user %v", authResult.UserId)
 
 	var cam = make(chan *model.GlobalEvent)
 	subscribeHandler, err := r.Bus.Subscribe(dto.GLOBAL_EVENTS, func(event eventbus.Event, t time.Time) {
@@ -100,7 +102,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 		for {
 			select {
 			case <-ctx.Done():
-				logger.Logger.Println("Closing channel.")
+				logger.GetLogEntry(ctx).Infof("Closing globalEvents channel for user %v", authResult.UserId)
 				r.Bus.Unsubscribe(subscribeHandler)
 				close(cam)
 				return
