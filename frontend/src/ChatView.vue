@@ -562,6 +562,7 @@
                     console.debug("Got chat event", e);
                     if (e.errors != null && e.errors.length) {
                         this.setError(null, "Error in chatEvents subscription");
+                        return
                     }
                     if (getChatEventsData(e).eventType === 'message_created') {
                         const d = getChatEventsData(e).messageEvent;

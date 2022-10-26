@@ -24,6 +24,8 @@ import store, {
 import router from './router.js'
 import {setIcon} from "@/utils";
 
+const CheckForNewUrl = '/api/chat/message/check-for-new';
+
 let vm;
 
 function getCsrfCookie(name) {
@@ -83,7 +85,7 @@ axios.interceptors.response.use((response) => {
     store.commit(UNSET_USER);
     bus.$emit(LOGGED_OUT, null);
     return Promise.reject(error)
-  } else {
+  } else if (error.config.url != CheckForNewUrl) {
     const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
     console.error(consoleErrorMessage);
     const errorMessage  = "Http error. Check the console";
@@ -111,6 +113,7 @@ vm = new Vue({
             console.debug("Got global event", e);
             if (e.errors != null && e.errors.length) {
                 this.setError(null, "Error in globalEvents subscription");
+                return
             }
             if (getGlobalEventsData(e).eventType === 'chat_created') {
                 const d = getGlobalEventsData(e).chatEvent;
@@ -224,7 +227,8 @@ vm = new Vue({
             },
         );
 
-        axios.put(`/api/chat/message/check-for-new`).then(({data}) => {
+        axios.put(CheckForNewUrl).then((resp) => {
+            const data = resp?.data;
             console.debug("New messages response", data);
             if (data) {
                 const currentNewMessages = data.allUnreadMessages > 0;
