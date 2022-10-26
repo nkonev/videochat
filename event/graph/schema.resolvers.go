@@ -63,7 +63,10 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 			select {
 			case <-ctx.Done():
 				logger.GetLogEntry(ctx).Infof("Closing chatEvents channel for user %v", authResult.UserId)
-				r.Bus.Unsubscribe(subscribeHandler)
+				err := r.Bus.Unsubscribe(subscribeHandler)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in chatEvents channel for user %v", authResult.UserId)
+				}
 				close(cam)
 				return
 			}
@@ -103,7 +106,10 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 			select {
 			case <-ctx.Done():
 				logger.GetLogEntry(ctx).Infof("Closing globalEvents channel for user %v", authResult.UserId)
-				r.Bus.Unsubscribe(subscribeHandler)
+				err := r.Bus.Unsubscribe(subscribeHandler)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in globalEvents channel for user %v", authResult.UserId)
+				}
 				close(cam)
 				return
 			}
