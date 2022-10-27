@@ -121,7 +121,7 @@ services:
       - ./docker/livekit/livekit.yaml:/etc/livekit.yaml
 
   egress:
-    image: livekit/egress:v1.5.1-pre
+    image: livekit/egress:v1.5.1-pre-2
     restart: unless-stopped
     ports:
       - 40000:40000
