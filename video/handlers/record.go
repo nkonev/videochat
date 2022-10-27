@@ -51,9 +51,10 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 		Layout:   "speaker-dark",
 		Output: &livekit.RoomCompositeEgressRequest_File{
 			File: &livekit.EncodedFileOutput{
-				FileType: livekit.EncodedFileType_MP4,
-				Filepath: filename,
-				Output:   &s3u,
+				FileType:        livekit.EncodedFileType_MP4,
+				Filepath:        filename,
+				Output:          &s3u,
+				DisableManifest: true,
 			},
 		},
 		AudioOnly: false,
