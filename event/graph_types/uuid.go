@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"io"
 	. "nkonev.name/event/logger"
+	"strings"
 )
 
 //
@@ -16,7 +17,8 @@ import (
 func UnmarshalUUID(v interface{}) (*uuid.UUID, error) {
 	switch v := v.(type) {
 	case string:
-		parsed, err := uuid.Parse(v)
+		withoutDoubleQuotes := strings.ReplaceAll(v, "\"", "")
+		parsed, err := uuid.Parse(withoutDoubleQuotes)
 		if err != nil {
 			Logger.Errorf("Error during unmarshalling uuid %v", err)
 			return nil, err
@@ -30,7 +32,7 @@ func UnmarshalUUID(v interface{}) (*uuid.UUID, error) {
 // MarshalGQL implements the graphql.Marshaler interface
 func MarshalUUID(u *uuid.UUID) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
-		_, err := fmt.Fprintf(w, "%v", u)
+		_, err := fmt.Fprintf(w, "\"%v\"", u)
 		if err != nil {
 			Logger.Errorf("Error during marshalling uuid %v", err)
 		}
