@@ -123,8 +123,6 @@ services:
   egress:
     image: livekit/egress:v1.5.1-pre-3
     restart: unless-stopped
-    ports:
-      - 40000:40000
     networks:
       backend:
     environment:
