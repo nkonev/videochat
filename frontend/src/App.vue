@@ -81,6 +81,12 @@
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
             <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
             <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
+            <v-btn v-if="showRecordStartButton" icon @click="startRecord()" :title="$vuetify.lang.t('$vuetify.start_record')">
+                <v-icon>mdi-record-rec</v-icon>
+            </v-btn>
+            <v-btn v-if="showRecordStopButton" icon @click="stopRecord()" :title="$vuetify.lang.t('$vuetify.stop_record')">
+                <v-icon color="red">mdi-record-rec</v-icon>
+            </v-btn>
             <v-badge
                 v-if="showCallButton || showHangButton"
                 :content="videoChatUsersCount"
@@ -198,7 +204,9 @@
         SET_LAST_ERROR,
         SET_SEARCH_STRING,
         SET_SHOW_ALERT,
-        UNSET_USER
+        UNSET_USER,
+        GET_SHOW_RECORD_START_BUTTON,
+        GET_SHOW_RECORD_STOP_BUTTON
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -212,7 +220,7 @@
         OPEN_VIDEO_SETTINGS,
         OPEN_LANGUAGE_MODAL,
         ADD_VIDEO_SOURCE_DIALOG,
-        ADD_SCREEN_SOURCE, OPEN_SIMPLE_MODAL, CLOSE_SIMPLE_MODAL,
+        ADD_SCREEN_SOURCE, OPEN_SIMPLE_MODAL, CLOSE_SIMPLE_MODAL, START_RECORD, STOP_RECORD,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -374,12 +382,20 @@
             openLocale() {
                 bus.$emit(OPEN_LANGUAGE_MODAL);
             },
+            startRecord() {
+                bus.$emit(START_RECORD);
+            },
+            stopRecord() {
+                bus.$emit(STOP_RECORD);
+            },
         },
         computed: {
             ...mapGetters({
                 currentUser: GET_USER,
                 showCallButton: GET_SHOW_CALL_BUTTON,
                 showHangButton: GET_SHOW_HANG_BUTTON,
+                showRecordStartButton: GET_SHOW_RECORD_START_BUTTON,
+                showRecordStopButton: GET_SHOW_RECORD_STOP_BUTTON,
                 videoChatUsersCount: GET_VIDEO_CHAT_USERS_COUNT,
                 showChatEditButton: GET_SHOW_CHAT_EDIT_BUTTON,
                 chatId: GET_CHAT_ID,

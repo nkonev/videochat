@@ -66,9 +66,9 @@
     import {mapGetters} from "vuex";
 
     import {
-        GET_USER, SET_CAN_BROADCAST_TEXT_MESSAGE, SET_CHAT_ID, SET_CHAT_USERS_COUNT,
+        GET_USER, SET_CAN_BROADCAST_TEXT_MESSAGE, SET_CAN_MAKE_RECORD, SET_CHAT_ID, SET_CHAT_USERS_COUNT,
         SET_SHOW_CALL_BUTTON, SET_SHOW_CHAT_EDIT_BUTTON,
-        SET_SHOW_HANG_BUTTON, SET_SHOW_SEARCH, SET_TITLE,
+        SET_SHOW_HANG_BUTTON, SET_SHOW_RECORD_START_BUTTON, SET_SHOW_RECORD_STOP_BUTTON, SET_SHOW_SEARCH, SET_TITLE,
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
@@ -657,6 +657,16 @@
             }, 500);
 
             this.scrollerDiv = document.getElementById("messagesScroller");
+
+            axios.get(`/api/video/${this.chatId}/record/status`).then(({data}) => {
+                this.$store.commit(SET_CAN_MAKE_RECORD, data.canMakeRecord);
+                if (data.canMakeRecord) {
+                    const record = data.recordInProcess;
+                    if (record) {
+                        this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, true);
+                    }
+                }
+            })
         },
         beforeDestroy() {
             this.graphQlUnsubscribe();
@@ -686,6 +696,8 @@
             this.$store.commit(SET_SHOW_HANG_BUTTON, false);
             this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
             this.$store.commit(SET_CAN_BROADCAST_TEXT_MESSAGE, false);
+            this.$store.commit(SET_SHOW_RECORD_START_BUTTON, false);
+            this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, false);
         },
         components: {
             InfiniteLoading,

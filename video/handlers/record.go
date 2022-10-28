@@ -86,3 +86,16 @@ func (rh *RecordHandler) StopRecording(c echo.Context) error {
 
 	return c.NoContent(http.StatusAccepted)
 }
+
+type StatusResponse struct {
+	RecordInProcess bool `json:"recordInProcess"`
+	CanMakeRecord   bool `json:"canMakeRecord"`
+}
+
+func (rh *RecordHandler) StatusRecording(c echo.Context) error {
+
+	return c.JSON(http.StatusOK, StatusResponse{
+		RecordInProcess: false,
+		CanMakeRecord:   true,
+	})
+}

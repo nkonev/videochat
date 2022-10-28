@@ -19,7 +19,13 @@ import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import { retry } from '@lifeomic/attempt';
-import {SET_SHOW_CALL_BUTTON, SET_SHOW_HANG_BUTTON, SET_VIDEO_CHAT_USERS_COUNT} from "@/store";
+import {
+    SET_SHOW_CALL_BUTTON,
+    SET_SHOW_HANG_BUTTON,
+    SET_SHOW_RECORD_START_BUTTON,
+    GET_SHOW_RECORD_STOP_BUTTON,
+    SET_VIDEO_CHAT_USERS_COUNT, SET_SHOW_RECORD_STOP_BUTTON, GET_USER, SET_CAN_MAKE_RECORD, GET_CAN_MAKE_RECORD
+} from "@/store";
 import {
     defaultAudioMute,
     getStoredAudioDevicePresents,
@@ -30,7 +36,7 @@ import {
 import bus, {
     ADD_SCREEN_SOURCE,
     ADD_VIDEO_SOURCE,
-    REQUEST_CHANGE_VIDEO_PARAMETERS,
+    REQUEST_CHANGE_VIDEO_PARAMETERS, START_RECORD, STOP_RECORD,
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus";
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
@@ -419,12 +425,25 @@ export default {
         onAddScreenSource() {
             this.createLocalMediaTracks(null, null, true);
         },
+        onStartRecord() {
+
+        },
+        onStopRecord() {
+
+        },
     },
     async mounted() {
         this.chatId = this.$route.params.id;
 
         this.$store.commit(SET_SHOW_CALL_BUTTON, false);
         this.$store.commit(SET_SHOW_HANG_BUTTON, true);
+
+        const inRecordingProcess = this.$store.getters[GET_SHOW_RECORD_STOP_BUTTON];
+        const canMakeRecord = this.$store.getters[GET_CAN_MAKE_RECORD];
+        if (!inRecordingProcess && canMakeRecord) {
+            this.$store.commit(SET_SHOW_RECORD_START_BUTTON, true);
+            this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, false);
+        }
 
         this.videoContainerDiv = document.getElementById("video-container");
 
@@ -441,16 +460,21 @@ export default {
         this.$store.commit(SET_SHOW_CALL_BUTTON, true);
         this.$store.commit(SET_SHOW_HANG_BUTTON, false);
         this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
+        this.$store.commit(SET_SHOW_RECORD_START_BUTTON, false);
     },
     created() {
         bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
+        bus.$on(START_RECORD, this.onStartRecord);
+        bus.$on(STOP_RECORD, this.onStopRecord);
     },
     destroyed() {
         bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
+        bus.$off(START_RECORD, this.onStartRecord);
+        bus.$off(STOP_RECORD, this.onStopRecord);
     }
 }
 

@@ -114,4 +114,6 @@ export default {
     message_edit_send: "Отправить (Ctrl+Enter)",
     message_edit_text_color: "Цвет текста",
     message_edit_background_color: "Цвет фона",
+    start_record: "Начать запись",
+    stop_record: "Остановить запись"
 }

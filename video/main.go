@@ -154,6 +154,7 @@ func configureEcho(
 	e.PUT("/video/:id/dial/stop", ih.ProcessAsOwnerLeave)
 	e.PUT("/video/:id/record/start", rh.StartRecording)
 	e.PUT("/video/:id/record/stop", rh.StopRecording)
+	e.GET("/video/:id/record/status", rh.StatusRecording)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

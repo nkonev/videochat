@@ -114,4 +114,6 @@ export default {
     message_edit_send: "Send (Ctrl+Enter)",
     message_edit_text_color: "Text color",
     message_edit_background_color: "Background color",
+    start_record: "Start record",
+    stop_record: "Stop record"
 }
