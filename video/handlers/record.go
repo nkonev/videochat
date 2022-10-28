@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go"
 	"net/http"
+	"nkonev.name/video/auth"
+	"nkonev.name/video/client"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 	"time"
@@ -14,10 +17,11 @@ import (
 
 type RecordHandler struct {
 	egressClient *lksdk.EgressClient
+	chatClient   *client.RestClient
 }
 
-func NewRecordHandler(egressClient *lksdk.EgressClient) *RecordHandler {
-	return &RecordHandler{egressClient: egressClient}
+func NewRecordHandler(egressClient *lksdk.EgressClient, chatClient *client.RestClient) *RecordHandler {
+	return &RecordHandler{egressClient: egressClient, chatClient: chatClient}
 }
 
 func (rh *RecordHandler) StartRecording(c echo.Context) error {
@@ -93,9 +97,47 @@ type StatusResponse struct {
 }
 
 func (rh *RecordHandler) StatusRecording(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := utils.ParseInt64(c.Param("id"))
+	if err != nil {
+		return err
+	}
+	if ok, err := rh.chatClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else {
+		if !ok {
+			return c.JSON(http.StatusOK, StatusResponse{
+				RecordInProcess: false,
+				CanMakeRecord:   false,
+			})
+		}
+	}
+
+	aRoomId := utils.GetRoomNameFromId(chatId)
+
+	listRequest := livekit.ListEgressRequest{
+		RoomName: aRoomId,
+	}
+	egresses, err := rh.egressClient.ListEgress(c.Request().Context(), &listRequest)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Unable to get egresses")
+		return errors.New("Unable to get egresses")
+	}
+
+	recordInProgress := false
+	for _, egress := range egresses.Items {
+		if egress.Status == livekit.EgressStatus_EGRESS_ACTIVE {
+			recordInProgress = true
+			break
+		}
+	}
 
 	return c.JSON(http.StatusOK, StatusResponse{
-		RecordInProcess: false,
+		RecordInProcess: recordInProgress,
 		CanMakeRecord:   true,
 	})
 }

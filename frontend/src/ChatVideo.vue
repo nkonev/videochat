@@ -5,6 +5,7 @@
 
 <script>
 import Vue from 'vue';
+import {mapGetters} from 'vuex';
 // https://dev.to/hulyakarakaya/how-to-fix-regeneratorruntime-is-not-defined-doj
 import 'regenerator-runtime/runtime';
 import {
@@ -432,15 +433,19 @@ export default {
 
         },
     },
+    computed: {
+        ...mapGetters({
+            inRecordingProcess: GET_SHOW_RECORD_STOP_BUTTON,
+            canMakeRecord: GET_CAN_MAKE_RECORD,
+        })
+    },
     async mounted() {
         this.chatId = this.$route.params.id;
 
         this.$store.commit(SET_SHOW_CALL_BUTTON, false);
         this.$store.commit(SET_SHOW_HANG_BUTTON, true);
 
-        const inRecordingProcess = this.$store.getters[GET_SHOW_RECORD_STOP_BUTTON];
-        const canMakeRecord = this.$store.getters[GET_CAN_MAKE_RECORD];
-        if (!inRecordingProcess && canMakeRecord) {
+        if (!this.inRecordingProcess && this.canMakeRecord) {
             this.$store.commit(SET_SHOW_RECORD_START_BUTTON, true);
             this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, false);
         }
