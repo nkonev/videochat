@@ -8,10 +8,3 @@ redis:
   username: ""
   password: ""
   db: 2
-
-#s3:
-#  access_key: "AKIAIOSFODNN7EXAMPLE"
-#  secret: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-#  region: europe-east
-#  endpoint: minio:9000
-#  bucket: "files"
