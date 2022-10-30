@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go"
@@ -18,12 +17,12 @@ import (
 
 type RecordHandler struct {
 	egressClient  *lksdk.EgressClient
-	chatClient    *client.RestClient
+	restClient    *client.RestClient
 	egressService *services.EgressService
 }
 
-func NewRecordHandler(egressClient *lksdk.EgressClient, chatClient *client.RestClient, egressService *services.EgressService) *RecordHandler {
-	return &RecordHandler{egressClient: egressClient, chatClient: chatClient, egressService: egressService}
+func NewRecordHandler(egressClient *lksdk.EgressClient, restClient *client.RestClient, egressService *services.EgressService) *RecordHandler {
+	return &RecordHandler{egressClient: egressClient, restClient: restClient, egressService: egressService}
 }
 
 func (rh *RecordHandler) StartRecording(c echo.Context) error {
@@ -36,7 +35,7 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := rh.chatClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := rh.restClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else {
 		if !ok {
@@ -44,25 +43,23 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 		}
 	}
 
-	roomName := fmt.Sprintf("chat%v", chatId)
-	fileUuid := uuid.New().String()
-	fileItemUuid := uuid.New().String()
-	filename := fmt.Sprintf("/chat/%v/%v/%v%v", chatId, fileItemUuid, fileUuid, ".mp4")
+	roomName := utils.GetRoomNameFromId(chatId)
+	fileName := fmt.Sprintf("recording_%v.mp4", time.Now().Unix())
+	s3, err := rh.restClient.GetS3(fileName, chatId, userPrincipalDto.UserId, c.Request().Context())
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during gettting s3 %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
-	flnm := fmt.Sprintf("recording_%v.mp4", time.Now().Unix())
-	mtd := map[string]string{}
-	mtd["filename"] = flnm
-	mtd["ownerid"] = utils.Int64ToString(userPrincipalDto.UserId)
-	mtd["chatid"] = utils.Int64ToString(chatId)
 	s3u := livekit.EncodedFileOutput_S3{
 		S3: &livekit.S3Upload{
-			AccessKey:      "AKIAIOSFODNN7EXAMPLE",
-			Secret:         "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-			Region:         "europe-east",
-			Endpoint:       "http://minio:9000",
-			Bucket:         "files",
+			AccessKey:      s3.AccessKey,
+			Secret:         s3.Secret,
+			Region:         s3.Region,
+			Endpoint:       s3.Endpoint,
+			Bucket:         s3.Bucket,
 			ForcePathStyle: true,
-			Metadata:       mtd,
+			Metadata:       s3.Metadata,
 		},
 	}
 	streamRequest := &livekit.RoomCompositeEgressRequest{
@@ -71,7 +68,7 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 		Output: &livekit.RoomCompositeEgressRequest_File{
 			File: &livekit.EncodedFileOutput{
 				FileType:        livekit.EncodedFileType_MP4,
-				Filepath:        filename,
+				Filepath:        s3.Filepath,
 				Output:          &s3u,
 				DisableManifest: true,
 			},
@@ -103,7 +100,7 @@ func (rh *RecordHandler) StopRecording(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := rh.chatClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := rh.restClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else {
 		if !ok {
@@ -141,7 +138,7 @@ func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := rh.chatClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := rh.restClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else {
 		if !ok {

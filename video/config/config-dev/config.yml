@@ -32,6 +32,11 @@ aaa:
     base: "http://localhost:8060"
     getUsers: "/internal/user/list"
 
+storage:
+  url:
+    base: "http://localhost:1236"
+    s3: "/internal/s3"
+
 livekit:
   api:
     key: "APIznJxWShGW3Kt"

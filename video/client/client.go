@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -29,6 +30,8 @@ type RestClient struct {
 	chatInviteNamePath              string
 	aaaBaseUrl                      string
 	aaaGetUsersUrl                  string
+	storageBaseUrl                  string
+	storageS3Path                   string
 	tracer                          trace.Tracer
 }
 
@@ -53,6 +56,8 @@ func NewRestClient(config *config.ExtendedConfig) *RestClient {
 		chatInviteNamePath:              config.ChatConfig.ChatUrlConfig.ChatInviteName,
 		aaaBaseUrl:                      config.AaaConfig.AaaUrlConfig.Base,
 		aaaGetUsersUrl:                  config.AaaConfig.AaaUrlConfig.GetUsers,
+		storageBaseUrl:                  config.StorageConfig.StorageUrlConfig.Base,
+		storageS3Path:                   config.StorageConfig.StorageUrlConfig.S3,
 		tracer:                          trcr,
 	}
 }
@@ -336,4 +341,77 @@ func (h *RestClient) GetChatNameForInvite(chatId int64, behalfUserId int64, part
 		return nil, err
 	}
 	return *ret, nil
+}
+
+type S3Request struct {
+	FileName string `json:"fileName"`
+	ChatId   int64  `json:"chatId"`
+	OwnerId  int64  `json:"ownerId"`
+}
+
+func (h *RestClient) GetS3(filename string, chatId int64, userId int64, c context.Context) (*dto.S3Response, error) {
+	contentType := "application/json;charset=UTF-8"
+	fullUrl := h.storageBaseUrl + h.storageS3Path
+
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during parse storage s3 url:", err)
+		return nil, err
+	}
+
+	req := S3Request{
+		FileName: filename,
+		ChatId:   chatId,
+		OwnerId:  userId,
+	}
+
+	bytesData, err := json.Marshal(req)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during marshalling:", err)
+		return nil, err
+	}
+	reader := bytes.NewReader(bytesData)
+
+	nopCloser := ioutil.NopCloser(reader)
+
+	request := &http.Request{
+		Method: "POST",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+		Body:   nopCloser,
+	}
+
+	ctx, span := h.tracer.Start(c, "storage.GetS3")
+	defer span.End()
+	request = request.WithContext(ctx)
+
+	resp, err := h.client.Do(request)
+	if err != nil {
+		GetLogEntry(c).Warningln("Failed to request s3 response:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		GetLogEntry(c).Warningln("Chat name for s3 response responded non-200 code: ", code)
+		return nil, err
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed to decode s3 response:", err)
+		return nil, err
+	}
+
+	ret := new(dto.S3Response)
+	if err := json.Unmarshal(bodyBytes, ret); err != nil {
+		GetLogEntry(c).Errorln("Failed to parse s3:", err)
+		return nil, err
+	}
+	return ret, nil
 }

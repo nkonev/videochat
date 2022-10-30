@@ -57,6 +57,10 @@ type AaaConfig struct {
 	AaaUrlConfig AaaUrlConfig `mapstructure:"url"`
 }
 
+type StorageConfig struct {
+	StorageUrlConfig StorageUrlConfig `mapstructure:"url"`
+}
+
 type ChatUrlConfig struct {
 	Base                        string `mapstructure:"base"`
 	Access                      string `mapstructure:"access"`
@@ -69,6 +73,11 @@ type ChatUrlConfig struct {
 type AaaUrlConfig struct {
 	Base     string `mapstructure:"base"`
 	GetUsers string `mapstructure:"getUsers"`
+}
+
+type StorageUrlConfig struct {
+	Base string `mapstructure:"base"`
+	S3   string `mapstructure:"s3"`
 }
 
 type HttpServerConfig struct {
@@ -121,6 +130,7 @@ type ExtendedConfig struct {
 	RestClientConfig                      RestClientConfig `mapstructure:"http"`
 	ChatConfig                            ChatConfig       `mapstructure:"chat"`
 	AaaConfig                             AaaConfig        `mapstructure:"aaa"`
+	StorageConfig                         StorageConfig    `mapstructure:"storage"`
 	AuthConfig                            AuthConfig       `mapstructure:"auth"`
 	LivekitConfig                         LivekitConfig    `mapstructure:"livekit"`
 	JaegerConfig                          JaegerConfig     `mapstructure:"jaeger"`

@@ -55,14 +55,14 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 //
 // Parameters:
 //
-//  - `request` : http request to check
-//  - `httpClient` : client to check authorization
+//   - `request` : http request to check
+//   - `httpClient` : client to check authorization
 //
 // Returns:
 //
-//  - *AuthResult pointer or nil
-//  - is whitelisted
-//  - error
+//   - *AuthResult pointer or nil
+//   - is whitelisted
+//   - error
 func authorize(request *http.Request) (*auth.AuthResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
@@ -126,9 +126,13 @@ func serializeMetadata(file *multipart.FileHeader, userPrincipalDto *auth.AuthRe
 }
 
 func serializeMetadataByArgs(filename string, userPrincipalDto *auth.AuthResult, chatId int64) map[string]string {
+	return serializeMetadataSimple(filename, userPrincipalDto.UserId, chatId)
+}
+
+func serializeMetadataSimple(filename string, userId int64, chatId int64) map[string]string {
 	var userMetadata = map[string]string{}
 	userMetadata[filenameKey] = filename
-	userMetadata[ownerIdKey] = utils.Int64ToString(userPrincipalDto.UserId)
+	userMetadata[ownerIdKey] = utils.Int64ToString(userId)
 	userMetadata[chatIdKey] = utils.Int64ToString(chatId)
 	return userMetadata
 }

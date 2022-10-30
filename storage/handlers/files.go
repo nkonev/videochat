@@ -845,3 +845,51 @@ func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "used": consumption, "available": available})
 	}
 }
+
+type S3Response struct {
+	AccessKey string            `json:"accessKey"`
+	Secret    string            `json:"secret"`
+	Region    string            `json:"region"`
+	Endpoint  string            `json:"endpoint"`
+	Bucket    string            `json:"bucket"`
+	Metadata  map[string]string `json:"metadata"`
+	Filepath  string            `json:"filepath"`
+}
+
+type S3Request struct {
+	FileName string `json:"fileName"`
+	ChatId   int64  `json:"chatId"`
+	OwnerId  int64  `json:"ownerId"`
+}
+
+func (h *FilesHandler) S3Handler(c echo.Context) error {
+	bindTo := new(S3Request)
+	if err := c.Bind(bindTo); err != nil {
+		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+
+	endpoint := viper.GetString("minio.containerEndpoint")
+	accessKeyID := viper.GetString("minio.accessKeyId")
+	secretAccessKey := viper.GetString("minio.secretAccessKey")
+
+	metadata := serializeMetadataSimple(bindTo.FileName, bindTo.OwnerId, bindTo.ChatId)
+
+	fileItemUuid := uuid.New().String()
+	fileUuid := uuid.New().String()
+	dotExt := getDotExtensionStr(bindTo.FileName)
+
+	minioFilename := fmt.Sprintf("/chat/%v/%v/%v%v", bindTo.ChatId, fileItemUuid, fileUuid, dotExt)
+
+	response := S3Response{
+		AccessKey: accessKeyID,
+		Secret:    secretAccessKey,
+		Region:    viper.GetString("minio.location"),
+		Endpoint:  endpoint,
+		Bucket:    h.minioConfig.Files,
+		Metadata:  metadata,
+		Filepath:  minioFilename,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}

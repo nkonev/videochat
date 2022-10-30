@@ -13,6 +13,7 @@ http:
 auth:
   exclude:
     - "^/storage/public.*"
+    - "^/internal.*"
 
 jaeger:
   host: "localhost"
@@ -20,6 +21,7 @@ jaeger:
 
 minio:
   endpoint: 127.0.0.1:9000
+  containerEndpoint: http://minio:9000
   accessKeyId: AKIAIOSFODNN7EXAMPLE
   secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   location: "europe-east"

@@ -133,6 +133,7 @@ func configureEcho(
 	e.POST("/storage/chat/:chatId/avatar", cha.PutAvatar)
 	e.GET(fmt.Sprintf("%v/:filename", cha.GetUrlPath()), cha.Download)
 	e.POST("/storage/:chatId/file", fh.UploadHandler)
+	e.POST("/internal/s3", fh.S3Handler)
 	e.POST("/storage/:chatId/file/:fileItemUuid", fh.UploadHandler)
 	e.PUT("/storage/:chatId/replace/file", fh.ReplaceHandler)
 	e.GET("/storage/:chatId", fh.ListHandler)

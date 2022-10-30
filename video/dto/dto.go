@@ -52,3 +52,13 @@ type VideoDialChanges struct {
 	ChatId int64               `json:"chatId"`
 	Dials  []*VideoDialChanged `json:"dials"`
 }
+
+type S3Response struct {
+	AccessKey string            `json:"accessKey"`
+	Secret    string            `json:"secret"`
+	Region    string            `json:"region"`
+	Endpoint  string            `json:"endpoint"`
+	Bucket    string            `json:"bucket"`
+	Metadata  map[string]string `json:"metadata"`
+	Filepath  string            `json:"filepath"`
+}
