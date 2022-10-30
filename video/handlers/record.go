@@ -87,7 +87,7 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	}
 	egressId := info.EgressId
 	GetLogEntry(c.Request().Context()).Infof("Starting recording %v", egressId)
-	return c.JSON(http.StatusAccepted, utils.H{"egressId": egressId, "recordInProcess": true})
+	return c.JSON(http.StatusAccepted, utils.H{"egressId": egressId})
 }
 
 func (rh *RecordHandler) StopRecording(c echo.Context) error {
@@ -120,7 +120,7 @@ func (rh *RecordHandler) StopRecording(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusAccepted, utils.H{"recordInProcess": false})
+	return c.NoContent(http.StatusAccepted)
 }
 
 type StatusResponse struct {
