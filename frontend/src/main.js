@@ -12,7 +12,7 @@ import bus, {
     LOGGED_OUT,
     LOGGED_IN,
     VIDEO_CALL_INVITED,
-    VIDEO_CALL_CHANGED, VIDEO_DIAL_STATUS_CHANGED, PROFILE_SET,
+    VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED, PROFILE_SET, VIDEO_RECORDING_CHANGED,
 } from './bus';
 import store, {
     FETCH_AVAILABLE_OAUTH2_PROVIDERS,
@@ -143,8 +143,12 @@ vm = new Vue({
                       login
                       avatar
                     }
-                    videoEvent {
+                    videoUserCountChangedEvent {
                       usersCount
+                      chatId
+                    }
+                    videoRecordingChangedEvent {
+                      recordInProgress
                       chatId
                     }
                     videoCallInvitation {
@@ -182,9 +186,12 @@ vm = new Vue({
       } else if (getGlobalEventsData(e).eventType === 'user_profile_changed') {
           const d = getGlobalEventsData(e).userEvent;
           bus.$emit(USER_PROFILE_CHANGED, d);
-      } else if (getGlobalEventsData(e).eventType === "video_call_changed") {
-          const d = getGlobalEventsData(e).videoEvent;
-          bus.$emit(VIDEO_CALL_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === "video_user_count_changed") {
+          const d = getGlobalEventsData(e).videoUserCountChangedEvent;
+          bus.$emit(VIDEO_CALL_USER_COUNT_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === "video_recording_changed") {
+          const d = getGlobalEventsData(e).videoRecordingChangedEvent;
+          bus.$emit(VIDEO_RECORDING_CHANGED, d);
       } else if (getGlobalEventsData(e).eventType === 'video_call_invitation') {
           const d = getGlobalEventsData(e).videoCallInvitation;
           bus.$emit(VIDEO_CALL_INVITED, d);

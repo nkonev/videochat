@@ -1,9 +1,10 @@
 package dto
 
-type VideoCallChangedDto struct {
+type VideoCallUserCountChangedDto struct {
 	UsersCount int64 `json:"usersCount"`
 	ChatId     int64 `json:"chatId"`
 }
+
 type VideoInviteDto struct {
 	ChatId       int64   `json:"chatId"`
 	UserIds      []int64 `json:"userIds"`
@@ -31,4 +32,9 @@ type VideoDialChanged struct {
 type VideoDialChanges struct {
 	ChatId int64               `json:"chatId"`
 	Dials  []*VideoDialChanged `json:"dials"`
+}
+
+type VideoCallRecordingChangedDto struct {
+	RecordInProgress bool  `json:"recordInProgress"`
+	ChatId           int64 `json:"chatId"`
 }

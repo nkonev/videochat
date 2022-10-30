@@ -37,7 +37,7 @@ import {
 import bus, {
     ADD_SCREEN_SOURCE,
     ADD_VIDEO_SOURCE,
-    REQUEST_CHANGE_VIDEO_PARAMETERS, START_RECORD, STOP_RECORD,
+    REQUEST_CHANGE_VIDEO_PARAMETERS,
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus";
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";

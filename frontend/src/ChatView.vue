@@ -55,9 +55,9 @@
         USER_PROFILE_CHANGED,
         LOGGED_IN,
         LOGGED_OUT,
-        VIDEO_CALL_CHANGED,
+        VIDEO_CALL_USER_COUNT_CHANGED,
         MESSAGE_BROADCAST,
-        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE, CHAT_ADD, PROFILE_SET, START_RECORD, STOP_RECORD,
+        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE, CHAT_ADD, PROFILE_SET,
     } from "./bus";
     import {chat_list_name, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
@@ -458,7 +458,7 @@
                         axios.get(`/api/video/${chatId}/users`)
                             .then(response => response.data)
                             .then(data => {
-                                bus.$emit(VIDEO_CALL_CHANGED, data);
+                                bus.$emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
                                 this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, data.usersCount);
                             });
                     }
@@ -609,18 +609,6 @@
                     bus.$emit(MESSAGE_BROADCAST, d);
                 }
             },
-            onStartRecord() {
-                axios.put(`/api/video/${this.chatId}/record/start`).then(({data}) => {
-                    this.$store.commit(SET_SHOW_RECORD_START_BUTTON, !data.recordInProcess);
-                    this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, data.recordInProcess);
-                })
-            },
-            onStopRecord() {
-                axios.put(`/api/video/${this.chatId}/record/stop`).then(({data}) => {
-                    this.$store.commit(SET_SHOW_RECORD_START_BUTTON, !data.recordInProcess);
-                    this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, data.recordInProcess);
-                })
-            },
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -658,13 +646,10 @@
             bus.$on(LOGGED_IN, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
-            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
 
             bus.$on(USER_TYPING, this.onUserTyping);
             bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
-
-            bus.$on(START_RECORD, this.onStartRecord);
-            bus.$on(STOP_RECORD, this.onStopRecord);
 
             writingUsersTimerId = setInterval(()=>{
                 const curr = + new Date();
@@ -697,13 +682,10 @@
             bus.$off(LOGGED_IN, this.onLoggedIn);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
-            bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
 
             bus.$off(USER_TYPING, this.onUserTyping);
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
-
-            bus.$off(START_RECORD, this.onStartRecord);
-            bus.$off(STOP_RECORD, this.onStopRecord);
 
             clearInterval(writingUsersTimerId);
 

@@ -81,10 +81,10 @@
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
             <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
             <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
-            <v-btn v-if="showRecordStartButton" icon @click="startRecord()" :title="$vuetify.lang.t('$vuetify.start_record')">
+            <v-btn v-if="showRecordStartButton" icon @click="startRecord()" :loading="initializingStaringVideoRecord" :title="$vuetify.lang.t('$vuetify.start_record')">
                 <v-icon>mdi-record-rec</v-icon>
             </v-btn>
-            <v-btn v-if="showRecordStopButton" icon @click="stopRecord()" :title="$vuetify.lang.t('$vuetify.stop_record')">
+            <v-btn v-if="showRecordStopButton" icon @click="stopRecord()" :loading="initializingStoppingVideoRecord" :title="$vuetify.lang.t('$vuetify.stop_record')">
                 <v-icon color="red">mdi-record-rec</v-icon>
             </v-btn>
             <v-badge
@@ -206,7 +206,7 @@
         SET_SHOW_ALERT,
         UNSET_USER,
         GET_SHOW_RECORD_START_BUTTON,
-        GET_SHOW_RECORD_STOP_BUTTON
+        GET_SHOW_RECORD_STOP_BUTTON, SET_SHOW_RECORD_START_BUTTON, SET_SHOW_RECORD_STOP_BUTTON
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -220,13 +220,12 @@
         OPEN_VIDEO_SETTINGS,
         OPEN_LANGUAGE_MODAL,
         ADD_VIDEO_SOURCE_DIALOG,
-        ADD_SCREEN_SOURCE, OPEN_SIMPLE_MODAL, CLOSE_SIMPLE_MODAL, START_RECORD, STOP_RECORD,
+        ADD_SCREEN_SOURCE, OPEN_SIMPLE_MODAL, CLOSE_SIMPLE_MODAL, VIDEO_RECORDING_CHANGED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
     import SimpleModal from "./SimpleModal";
     import ChooseAvatar from "./ChooseAvatar";
-    import {setIcon} from "./utils";
     import ChatParticipants from "./ChatParticipants";
     import PermissionsWarning from "./PermissionsWarning";
     import FindUser from "./FindUser";
@@ -256,6 +255,8 @@
                 invitedVideoChatAlert: false,
                 showWebsocketRestored: false,
                 lastAnswered: 0,
+                initializingStaringVideoRecord: false,
+                initializingStoppingVideoRecord: false,
             }
         },
         components:{
@@ -383,10 +384,27 @@
                 bus.$emit(OPEN_LANGUAGE_MODAL);
             },
             startRecord() {
-                bus.$emit(START_RECORD);
+                axios.put(`/api/video/${this.chatId}/record/start`);
+                this.initializingStaringVideoRecord = true;
             },
             stopRecord() {
-                bus.$emit(STOP_RECORD);
+                axios.put(`/api/video/${this.chatId}/record/stop`);
+                this.initializingStoppingVideoRecord = true;
+            },
+            onVideRecordingChanged(e) {
+                if (this.isVideoRoute()) {
+                    this.$store.commit(SET_SHOW_RECORD_START_BUTTON, !e.recordInProgress);
+                    this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, e.recordInProgress);
+                } else if (e.recordInProcess) {
+                    this.$store.commit(SET_SHOW_RECORD_START_BUTTON, !e.recordInProgress);
+                    this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, e.recordInProgress);
+                }
+                if (this.initializingStaringVideoRecord && e.recordInProgress) {
+                    this.initializingStaringVideoRecord = false;
+                }
+                if (this.initializingStoppingVideoRecord && !e.recordInProgress) {
+                    this.initializingStoppingVideoRecord = false;
+                }
             },
         },
         computed: {
@@ -424,6 +442,7 @@
         },
         created() {
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
+            bus.$on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
 
             this.$router.beforeEach((to, from, next) => {
                 console.debug("beforeEach", to);

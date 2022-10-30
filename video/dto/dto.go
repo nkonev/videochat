@@ -7,9 +7,14 @@ type VideoInviteDto struct {
 	BehalfLogin  string  `json:"behalfLogin"`
 }
 
-type VideoCallChangedDto struct {
+type VideoCallUserCountChangedDto struct {
 	UsersCount int64 `json:"usersCount"`
 	ChatId     int64 `json:"chatId"`
+}
+
+type VideoCallRecordingChangedDto struct {
+	RecordInProgress bool  `json:"recordInProgress"`
+	ChatId           int64 `json:"chatId"`
 }
 
 type VideoIsInvitingDto struct {

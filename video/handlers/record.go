@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
@@ -12,17 +11,19 @@ import (
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
 	. "nkonev.name/video/logger"
+	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
 	"time"
 )
 
 type RecordHandler struct {
-	egressClient *lksdk.EgressClient
-	chatClient   *client.RestClient
+	egressClient  *lksdk.EgressClient
+	chatClient    *client.RestClient
+	egressService *services.EgressService
 }
 
-func NewRecordHandler(egressClient *lksdk.EgressClient, chatClient *client.RestClient) *RecordHandler {
-	return &RecordHandler{egressClient: egressClient, chatClient: chatClient}
+func NewRecordHandler(egressClient *lksdk.EgressClient, chatClient *client.RestClient, egressService *services.EgressService) *RecordHandler {
+	return &RecordHandler{egressClient: egressClient, chatClient: chatClient, egressService: egressService}
 }
 
 func (rh *RecordHandler) StartRecording(c echo.Context) error {
@@ -110,7 +111,7 @@ func (rh *RecordHandler) StopRecording(c echo.Context) error {
 		}
 	}
 
-	egresses, err := rh.getActiveEgresses(chatId, c.Request().Context())
+	egresses, err := rh.egressService.GetActiveEgresses(chatId, c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -151,44 +152,15 @@ func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 		}
 	}
 
-	recordInProgress, err := rh.getRecordInProgress(chatId, c.Request().Context())
+	egresses, err := rh.egressService.GetActiveEgresses(chatId, c.Request().Context())
 	if err != nil {
 		return err
 	}
+
+	recordInProgress := len(egresses) > 0
 
 	return c.JSON(http.StatusOK, StatusResponse{
 		RecordInProcess: recordInProgress,
 		CanMakeRecord:   true,
 	})
-}
-
-func (rh *RecordHandler) getActiveEgresses(chatId int64, ctx context.Context) ([]string, error) {
-	aRoomId := utils.GetRoomNameFromId(chatId)
-
-	listRequest := livekit.ListEgressRequest{
-		RoomName: aRoomId,
-	}
-	egresses, err := rh.egressClient.ListEgress(ctx, &listRequest)
-	if err != nil {
-		GetLogEntry(ctx).Errorf("Unable to get egresses")
-		return nil, errors.New("Unable to get egresses")
-	}
-
-	ret := []string{}
-	for _, egress := range egresses.Items {
-		if egress.Status == livekit.EgressStatus_EGRESS_ACTIVE {
-			ret = append(ret, egress.EgressId)
-		}
-	}
-
-	return ret, nil
-}
-
-func (rh *RecordHandler) getRecordInProgress(chatId int64, ctx context.Context) (bool, error) {
-	egresses, err := rh.getActiveEgresses(chatId, ctx)
-	if err != nil {
-		return false, err
-	}
-
-	return len(egresses) > 0, nil
 }

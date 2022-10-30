@@ -19,15 +19,16 @@ func (ChatEvent) Name() eventbus.EventName {
 }
 
 type GlobalEvent struct {
-	EventType                     string                    `json:"eventType"`
-	UserId                        int64                     `json:"userId"`
-	ChatNotification              *ChatDtoWithAdmin         `json:"chatNotification"`
-	UserProfileNotification       *User                     `json:"userProfileNotification"`
-	VideoNotification             *VideoCallChangedDto      `json:"videoNotification"`
-	VideoChatInvitation           *VideoCallInvitation      `json:"videoCallInvitation"`
-	VideoParticipantDialEvent     *VideoDialChanges         `json:"videoParticipantDialEvent"`
-	UnreadMessagesNotification    *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
-	AllUnreadMessagesNotification *AllUnreadMessages        `json:"allUnreadMessagesNotification"`
+	EventType                     string                        `json:"eventType"`
+	UserId                        int64                         `json:"userId"`
+	ChatNotification              *ChatDtoWithAdmin             `json:"chatNotification"`
+	UserProfileNotification       *User                         `json:"userProfileNotification"`
+	VideoCallUserCountEvent       *VideoCallUserCountChangedDto `json:"videoCallUserCountEvent"`
+	VideoChatInvitation           *VideoCallInvitation          `json:"videoCallInvitation"`
+	VideoParticipantDialEvent     *VideoDialChanges             `json:"videoParticipantDialEvent"`
+	UnreadMessagesNotification    *ChatUnreadMessageChanged     `json:"unreadMessagesNotification"`
+	AllUnreadMessagesNotification *AllUnreadMessages            `json:"allUnreadMessagesNotification"`
+	VideoCallRecordingEvent       *VideoCallRecordingChangedDto `json:"videoCallRecordingEvent"`
 }
 
 func (GlobalEvent) Name() eventbus.EventName {

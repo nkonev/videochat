@@ -9,23 +9,26 @@ import (
 )
 
 type NotificationService struct {
-	rabbitMqPublisher *producer.RabbitNotificationsPublisher
-	restClient        *client.RestClient
+	rabbitMqUserCountPublisher *producer.RabbitUserCountPublisher
+	rabbitMqRecordPublisher    *producer.RabbitRecordingPublisher
+	restClient                 *client.RestClient
 }
 
-func NewNotificationService(producer *producer.RabbitNotificationsPublisher, restClient *client.RestClient) *NotificationService {
+func NewNotificationService(producer *producer.RabbitUserCountPublisher, restClient *client.RestClient, rabbitMqRecordPublisher *producer.RabbitRecordingPublisher) *NotificationService {
 	return &NotificationService{
-		rabbitMqPublisher: producer,
-		restClient:        restClient,
+		rabbitMqUserCountPublisher: producer,
+		rabbitMqRecordPublisher:    rabbitMqRecordPublisher,
+		restClient:                 restClient,
 	}
 }
 
-func (h *NotificationService) Notify(chatId, usersCount int64, ctx context.Context) error {
-	var chatNotifyDto = dto.VideoCallChangedDto{}
-	Logger.Infof("Notifying without data chat_id=%v", chatId)
+func (h *NotificationService) NotifyVideoUserCountChanged(chatId, usersCount int64, ctx context.Context) error {
+	Logger.Infof("Notifying video call chat_id=%v", chatId)
 
-	chatNotifyDto.UsersCount = usersCount
-	chatNotifyDto.ChatId = chatId
+	var chatNotifyDto = dto.VideoCallUserCountChangedDto{
+		UsersCount: usersCount,
+		ChatId:     chatId,
+	}
 
 	participantIds, err := h.restClient.GetChatParticipantIds(chatId, ctx)
 	if err != nil {
@@ -33,5 +36,22 @@ func (h *NotificationService) Notify(chatId, usersCount int64, ctx context.Conte
 		return err
 	}
 
-	return h.rabbitMqPublisher.Publish(participantIds, &chatNotifyDto, ctx)
+	return h.rabbitMqUserCountPublisher.Publish(participantIds, &chatNotifyDto, ctx)
+}
+
+func (h *NotificationService) NotifyRecordingChanged(chatId int64, recordInProgress bool, ctx context.Context) error {
+	Logger.Infof("Notifying video call chat_id=%v", chatId)
+
+	var chatNotifyDto = dto.VideoCallRecordingChangedDto{
+		RecordInProgress: recordInProgress,
+		ChatId:           chatId,
+	}
+
+	participantIds, err := h.restClient.GetChatParticipantIds(chatId, ctx)
+	if err != nil {
+		Logger.Error(err, "Failed during getting chat participantIds")
+		return err
+	}
+
+	return h.rabbitMqRecordPublisher.Publish(participantIds, &chatNotifyDto, ctx)
 }

@@ -67,7 +67,8 @@ type GlobalEvent struct {
 	ChatEvent                     *ChatDto                  `json:"chatEvent"`
 	ChatDeletedEvent              *ChatDeletedDto           `json:"chatDeletedEvent"`
 	UserEvent                     *User                     `json:"userEvent"`
-	VideoEvent                    *VideoCallChangedDto      `json:"videoEvent"`
+	VideoUserCountChangedEvent    *VideoUserCountChangedDto `json:"videoUserCountChangedEvent"`
+	VideoRecordingChangedEvent    *VideoRecordingChangedDto `json:"videoRecordingChangedEvent"`
 	VideoCallInvitation           *VideoCallInvitationDto   `json:"videoCallInvitation"`
 	VideoParticipantDialEvent     *VideoDialChanges         `json:"videoParticipantDialEvent"`
 	UnreadMessagesNotification    *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
@@ -103,11 +104,6 @@ type UserWithAdmin struct {
 	Admin  bool    `json:"admin"`
 }
 
-type VideoCallChangedDto struct {
-	UsersCount int64 `json:"usersCount"`
-	ChatID     int64 `json:"chatId"`
-}
-
 type VideoCallInvitationDto struct {
 	ChatID   int64  `json:"chatId"`
 	ChatName string `json:"chatName"`
@@ -121,4 +117,14 @@ type VideoDialChanged struct {
 type VideoDialChanges struct {
 	ChatID int64               `json:"chatId"`
 	Dials  []*VideoDialChanged `json:"dials"`
+}
+
+type VideoRecordingChangedDto struct {
+	RecordInProgress bool  `json:"recordInProgress"`
+	ChatID           int64 `json:"chatId"`
+}
+
+type VideoUserCountChangedDto struct {
+	UsersCount int64 `json:"usersCount"`
+	ChatID     int64 `json:"chatId"`
 }

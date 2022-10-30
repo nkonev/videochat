@@ -52,7 +52,7 @@ import bus, {
     USER_PROFILE_CHANGED,
     CLOSE_SIMPLE_MODAL,
     REFRESH_ON_WEBSOCKET_RESTORED,
-    VIDEO_CALL_CHANGED, LOGGED_OUT, PROFILE_SET
+    VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET
 } from "./bus";
     import {chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
@@ -249,7 +249,7 @@ import bus, {
             bus.$on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
-            bus.$on(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
 
             this.initQueryAndWatcher();
         },
@@ -265,7 +265,7 @@ import bus, {
             bus.$off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
-            bus.$off(VIDEO_CALL_CHANGED, this.onVideoCallChanged);
+            bus.$off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
         },
         mounted() {
             this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));

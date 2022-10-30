@@ -220,11 +220,19 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 		}
 	}
 
-	videoEvent := e.VideoNotification
-	if videoEvent != nil {
-		ret.VideoEvent = &model.VideoCallChangedDto{
-			UsersCount: videoEvent.UsersCount,
-			ChatID:     videoEvent.ChatId,
+	videoUserCountEvent := e.VideoCallUserCountEvent
+	if videoUserCountEvent != nil {
+		ret.VideoUserCountChangedEvent = &model.VideoUserCountChangedDto{
+			UsersCount: videoUserCountEvent.UsersCount,
+			ChatID:     videoUserCountEvent.ChatId,
+		}
+	}
+
+	videoRecordingEvent := e.VideoCallRecordingEvent
+	if videoRecordingEvent != nil {
+		ret.VideoRecordingChangedEvent = &model.VideoRecordingChangedDto{
+			RecordInProgress: videoRecordingEvent.RecordInProgress,
+			ChatID:           videoRecordingEvent.ChatId,
 		}
 	}
 

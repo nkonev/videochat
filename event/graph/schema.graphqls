@@ -76,8 +76,13 @@ type ChatEvent {
     messageBroadcastEvent: MessageBroadcastNotification
 }
 
-type VideoCallChangedDto {
+type VideoUserCountChangedDto {
     usersCount: Int64!
+    chatId: Int64!
+}
+
+type VideoRecordingChangedDto {
+    recordInProgress: Boolean!
     chatId: Int64!
 }
 
@@ -110,7 +115,8 @@ type GlobalEvent {
     chatEvent: ChatDto
     chatDeletedEvent: ChatDeletedDto
     userEvent: User
-    videoEvent: VideoCallChangedDto
+    videoUserCountChangedEvent: VideoUserCountChangedDto
+    videoRecordingChangedEvent: VideoRecordingChangedDto
     videoCallInvitation: VideoCallInvitationDto
     videoParticipantDialEvent: VideoDialChanges
     unreadMessagesNotification: ChatUnreadMessageChanged

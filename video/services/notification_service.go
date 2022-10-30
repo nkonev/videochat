@@ -14,10 +14,11 @@ type StateChangedNotificationService struct {
 	livekitRoomClient   *lksdk.RoomServiceClient
 	userService         *UserService
 	notificationService *NotificationService
+	egressService       *EgressService
 }
 
-func NewStateChangedNotificationService(conf *config.ExtendedConfig, livekitRoomClient *lksdk.RoomServiceClient, userService *UserService, notificationService *NotificationService) *StateChangedNotificationService {
-	return &StateChangedNotificationService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService}
+func NewStateChangedNotificationService(conf *config.ExtendedConfig, livekitRoomClient *lksdk.RoomServiceClient, userService *UserService, notificationService *NotificationService, egressService *EgressService) *StateChangedNotificationService {
+	return &StateChangedNotificationService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService, egressService: egressService}
 }
 
 func (h *StateChangedNotificationService) NotifyAllChats(ctx context.Context) {
@@ -33,17 +34,29 @@ func (h *StateChangedNotificationService) NotifyAllChats(ctx context.Context) {
 			Logger.Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
 			continue
 		}
+
 		// Here room.NumParticipants are zeroed, so we need to invoke service
 		usersCount, err := h.userService.CountUsers(context.Background(), room.Name)
 		if err != nil {
 			Logger.Errorf("got error during counting users in scheduler, %v", err)
-			continue
+		} else {
+			Logger.Infof("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
+			err = h.notificationService.NotifyVideoUserCountChanged(chatId, usersCount, ctx)
+			if err != nil {
+				Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", err)
+			}
 		}
-		Logger.Infof("Sending notificationDto chatId=%v, usersCount=%v", chatId, usersCount)
-		err = h.notificationService.Notify(chatId, usersCount, ctx)
+
+		egresses, err := h.egressService.GetActiveEgresses(chatId, ctx)
 		if err != nil {
-			Logger.Errorf("got error during notificationService.Notify, %v", err)
-			continue
+			Logger.Errorf("got error during counting active egresses in scheduler, %v", err)
+		} else {
+			recordInProgress := len(egresses) > 0
+			Logger.Infof("Sending recording changed chatId=%v, recordInProgress=%v", chatId, recordInProgress)
+			err = h.notificationService.NotifyRecordingChanged(chatId, recordInProgress, ctx)
+			if err != nil {
+				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
+			}
 		}
 	}
 }
