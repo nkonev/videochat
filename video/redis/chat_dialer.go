@@ -32,7 +32,7 @@ func NewChatDialerService(scheduleService *services.DialRedisRepository, conf *c
 
 func (srv *ChatDialerService) doJob() {
 
-	if srv.conf.SyncNotificationPeriod == 0 {
+	if srv.conf.VideoCallUsersCountNotificationPeriod == 0 {
 		Logger.Debugf("Scheduler in ChatDialerService is disabled")
 		return
 	}
@@ -134,7 +134,7 @@ func ChatDialerScheduler(
 	service *ChatDialerService,
 	conf *config.ExtendedConfig,
 ) *ChatDialerTask {
-	var interv = conf.SyncNotificationPeriod
+	var interv = conf.VideoCallUsersCountNotificationPeriod
 	Logger.Infof("Created chats dialer with interval %v", interv)
 	return &ChatDialerTask{&gointerlock.GoInterval{
 		Name:           "chatDialer",

@@ -38,3 +38,14 @@ func (rh *EgressService) GetActiveEgresses(chatId int64, ctx context.Context) ([
 
 	return ret, nil
 }
+
+func (rh *EgressService) HasActiveEgresses(chatId int64, ctx context.Context) (bool, error) {
+	egresses, err := rh.GetActiveEgresses(chatId, ctx)
+	if err != nil {
+		return false, err
+	}
+
+	recordInProgress := len(egresses) > 0
+
+	return recordInProgress, nil
+}

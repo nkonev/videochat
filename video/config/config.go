@@ -117,15 +117,16 @@ type RabbitMqConfig struct {
 }
 
 type ExtendedConfig struct {
-	FrontendConfig         FrontendConfig   `mapstructure:"frontend"`
-	RestClientConfig       RestClientConfig `mapstructure:"http"`
-	ChatConfig             ChatConfig       `mapstructure:"chat"`
-	AaaConfig              AaaConfig        `mapstructure:"aaa"`
-	AuthConfig             AuthConfig       `mapstructure:"auth"`
-	LivekitConfig          LivekitConfig    `mapstructure:"livekit"`
-	JaegerConfig           JaegerConfig     `mapstructure:"jaeger"`
-	HttpServerConfig       HttpServerConfig `mapstructure:"server"`
-	RabbitMqConfig         RabbitMqConfig   `mapstructure:"rabbitmq"`
-	SyncNotificationPeriod time.Duration    `mapstructure:"syncNotificationPeriod"`
-	DialPeriod             time.Duration    `mapstructure:"dialPeriod"`
+	FrontendConfig                        FrontendConfig   `mapstructure:"frontend"`
+	RestClientConfig                      RestClientConfig `mapstructure:"http"`
+	ChatConfig                            ChatConfig       `mapstructure:"chat"`
+	AaaConfig                             AaaConfig        `mapstructure:"aaa"`
+	AuthConfig                            AuthConfig       `mapstructure:"auth"`
+	LivekitConfig                         LivekitConfig    `mapstructure:"livekit"`
+	JaegerConfig                          JaegerConfig     `mapstructure:"jaeger"`
+	HttpServerConfig                      HttpServerConfig `mapstructure:"server"`
+	RabbitMqConfig                        RabbitMqConfig   `mapstructure:"rabbitmq"`
+	VideoCallUsersCountNotificationPeriod time.Duration    `mapstructure:"videoCallUsersCountNotificationPeriod"`
+	VideoCallRecordingNotificationPeriod  time.Duration    `mapstructure:"videoCallRecordingNotificationPeriod"`
+	DialPeriod                            time.Duration    `mapstructure:"dialPeriod"`
 }

@@ -50,7 +50,8 @@ rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
   debug: true
 
-syncNotificationPeriod: 2s
+videoCallUsersCountNotificationPeriod: 2s
+videoCallRecordingNotificationPeriod: 20s
 dialPeriod: 5s
 
 redis:

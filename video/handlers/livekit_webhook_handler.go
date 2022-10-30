@@ -14,13 +14,15 @@ type LivekitWebhookHandler struct {
 	config              *config.ExtendedConfig
 	notificationService *services.NotificationService
 	userService         *services.UserService
+	egressService       *services.EgressService
 }
 
-func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, userService *services.UserService) *LivekitWebhookHandler {
+func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, userService *services.UserService, egressService *services.EgressService) *LivekitWebhookHandler {
 	return &LivekitWebhookHandler{
 		config:              config,
 		notificationService: notificationService,
 		userService:         userService,
+		egressService:       egressService,
 	}
 }
 
@@ -46,7 +48,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 
 			chatId, err := utils.GetRoomIdFromName(event.Room.Name)
 			if err != nil {
-				Logger.Error(err, "error during reading chat id from room name event=%v, %v", event.Room.Name)
+				Logger.Error(err, "error during reading chat id from room name event=%v, %v", event, event.Room.Name)
 				return nil
 			}
 
@@ -56,6 +58,30 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 			if err != nil {
 				Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged event=%v, %v", event, err)
 				return nil
+			}
+		} else if event.Event == "egress_started" {
+
+			chatId, err := utils.GetRoomIdFromName(event.EgressInfo.RoomName)
+			if err != nil {
+				Logger.Error(err, "error during reading chat id from room name event=%v, %v", event, event.Room.Name)
+				return nil
+			}
+
+			err = h.notificationService.NotifyRecordingChanged(chatId, true, c.Request().Context())
+			if err != nil {
+				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
+			}
+		} else if event.Event == "egress_ended" {
+
+			chatId, err := utils.GetRoomIdFromName(event.EgressInfo.RoomName)
+			if err != nil {
+				Logger.Error(err, "error during reading chat id from room name event=%v, %v", event, event.Room.Name)
+				return nil
+			}
+
+			err = h.notificationService.NotifyRecordingChanged(chatId, false, c.Request().Context())
+			if err != nil {
+				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 			}
 		}
 

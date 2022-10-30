@@ -152,12 +152,10 @@ func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 		}
 	}
 
-	egresses, err := rh.egressService.GetActiveEgresses(chatId, c.Request().Context())
+	recordInProgress, err := rh.egressService.HasActiveEgresses(chatId, c.Request().Context())
 	if err != nil {
 		return err
 	}
-
-	recordInProgress := len(egresses) > 0
 
 	return c.JSON(http.StatusOK, StatusResponse{
 		RecordInProcess: recordInProgress,

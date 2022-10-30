@@ -21,7 +21,7 @@ func NewStateChangedNotificationService(conf *config.ExtendedConfig, livekitRoom
 	return &StateChangedNotificationService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService, egressService: egressService}
 }
 
-func (h *StateChangedNotificationService) NotifyAllChats(ctx context.Context) {
+func (h *StateChangedNotificationService) NotifyAllChatsAboutVideoCallUsersCount(ctx context.Context) {
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := h.livekitRoomClient.ListRooms(context.Background(), listRoomReq)
 	if err != nil {
@@ -46,12 +46,27 @@ func (h *StateChangedNotificationService) NotifyAllChats(ctx context.Context) {
 				Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", err)
 			}
 		}
+	}
+}
 
-		egresses, err := h.egressService.GetActiveEgresses(chatId, ctx)
+func (h *StateChangedNotificationService) NotifyAllChatsAboutVideoCallRecording(ctx context.Context) {
+	listRoomReq := &livekit.ListRoomsRequest{}
+	rooms, err := h.livekitRoomClient.ListRooms(context.Background(), listRoomReq)
+	if err != nil {
+		Logger.Error(err, "error during reading rooms %v", err)
+		return
+	}
+	for _, room := range rooms.Rooms {
+		chatId, err := utils.GetRoomIdFromName(room.Name)
+		if err != nil {
+			Logger.Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
+			continue
+		}
+
+		recordInProgress, err := h.egressService.HasActiveEgresses(chatId, ctx)
 		if err != nil {
 			Logger.Errorf("got error during counting active egresses in scheduler, %v", err)
 		} else {
-			recordInProgress := len(egresses) > 0
 			Logger.Infof("Sending recording changed chatId=%v, recordInProgress=%v", chatId, recordInProgress)
 			err = h.notificationService.NotifyRecordingChanged(chatId, recordInProgress, ctx)
 			if err != nil {

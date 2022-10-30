@@ -61,10 +61,12 @@ func main() {
 			services.NewDialRedisRepository,
 			services.NewEgressService,
 			redis.RedisV8,
-			redis.NewChatNotifierService,
-			redis.ChatNotifierScheduler,
+			redis.NewVideoCallUsersCountNotifierService,
+			redis.VideoCallUsersCountNotifierScheduler,
 			redis.NewChatDialerService,
 			redis.ChatDialerScheduler,
+			redis.NewRecordingNotifierService,
+			redis.RecordingNotifierScheduler,
 		),
 		fx.Invoke(
 			runEcho,
@@ -219,15 +221,21 @@ func runEcho(e *echo.Echo, cfg *config.ExtendedConfig) {
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func runScheduler(chatNotifierTask *redis.ChatNotifierTask, chatDialerTask *redis.ChatDialerTask) {
+func runScheduler(chatNotifierTask *redis.VideoCallUsersCountNotifierTask, chatDialerTask *redis.ChatDialerTask, videoRecordingTask *redis.RecordingNotifierTask) {
 	go func() {
 		err := chatNotifierTask.Run(context.Background())
 		if err != nil {
-			Logger.Errorf("Error during working chatNotifierTask: %s", err)
+			Logger.Errorf("Error during working videoUsersCountNotifierTask: %s", err)
 		}
 	}()
 	go func() {
 		err := chatDialerTask.Run(context.Background())
+		if err != nil {
+			Logger.Errorf("Error during working chatDialerTask: %s", err)
+		}
+	}()
+	go func() {
+		err := videoRecordingTask.Run(context.Background())
 		if err != nil {
 			Logger.Errorf("Error during working chatDialerTask: %s", err)
 		}
