@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/webhook"
@@ -44,30 +43,21 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 		Logger.Debugf("got %v", event)
 
 		if event.Event == "participant_joined" || event.Event == "participant_left" {
-			participant := event.Participant
-			md := &MetadataDto{}
-			err = json.Unmarshal([]byte(participant.Metadata), md)
-			if err != nil {
-				Logger.Errorf("got error during parsing metadata from event=%v, %v", event, err)
-				goto exit
-			}
 
 			chatId, err := utils.GetRoomIdFromName(event.Room.Name)
 			if err != nil {
 				Logger.Error(err, "error during reading chat id from room name event=%v, %v", event.Room.Name)
-				goto exit
+				return nil
 			}
 
 			usersCount := int64(event.Room.NumParticipants)
 
-			Logger.Infof("Sending notificationDto userId=%v, chatId=%v", md.UserId, chatId)
 			err = h.notificationService.Notify(chatId, usersCount, c.Request().Context())
 			if err != nil {
 				Logger.Errorf("got error during notificationService.Notify event=%v, %v", event, err)
-				goto exit
+				return nil
 			}
 		}
-	exit:
 
 		return nil
 	}

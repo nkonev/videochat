@@ -57,7 +57,7 @@
         LOGGED_OUT,
         VIDEO_CALL_CHANGED,
         MESSAGE_BROADCAST,
-        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE, CHAT_ADD, PROFILE_SET,
+        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE, CHAT_ADD, PROFILE_SET, START_RECORD, STOP_RECORD,
     } from "./bus";
     import {chat_list_name, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
@@ -608,7 +608,19 @@
                     const d = getChatEventsData(e).messageBroadcastEvent;
                     bus.$emit(MESSAGE_BROADCAST, d);
                 }
-            }
+            },
+            onStartRecord() {
+                axios.put(`/api/video/${this.chatId}/record/start`).then(({data}) => {
+                    this.$store.commit(SET_SHOW_RECORD_START_BUTTON, !data.recordInProcess);
+                    this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, data.recordInProcess);
+                })
+            },
+            onStopRecord() {
+                axios.put(`/api/video/${this.chatId}/record/stop`).then(({data}) => {
+                    this.$store.commit(SET_SHOW_RECORD_START_BUTTON, !data.recordInProcess);
+                    this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, data.recordInProcess);
+                })
+            },
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -651,6 +663,9 @@
             bus.$on(USER_TYPING, this.onUserTyping);
             bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
 
+            bus.$on(START_RECORD, this.onStartRecord);
+            bus.$on(STOP_RECORD, this.onStopRecord);
+
             writingUsersTimerId = setInterval(()=>{
                 const curr = + new Date();
                 this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
@@ -686,6 +701,9 @@
 
             bus.$off(USER_TYPING, this.onUserTyping);
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
+
+            bus.$off(START_RECORD, this.onStartRecord);
+            bus.$off(STOP_RECORD, this.onStopRecord);
 
             clearInterval(writingUsersTimerId);
 

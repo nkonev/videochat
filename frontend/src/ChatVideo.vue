@@ -25,7 +25,7 @@ import {
     SET_SHOW_HANG_BUTTON,
     SET_SHOW_RECORD_START_BUTTON,
     GET_SHOW_RECORD_STOP_BUTTON,
-    SET_VIDEO_CHAT_USERS_COUNT, SET_SHOW_RECORD_STOP_BUTTON, GET_USER, SET_CAN_MAKE_RECORD, GET_CAN_MAKE_RECORD
+    SET_VIDEO_CHAT_USERS_COUNT, SET_SHOW_RECORD_STOP_BUTTON, GET_CAN_MAKE_RECORD
 } from "@/store";
 import {
     defaultAudioMute,
@@ -426,12 +426,6 @@ export default {
         onAddScreenSource() {
             this.createLocalMediaTracks(null, null, true);
         },
-        onStartRecord() {
-
-        },
-        onStopRecord() {
-
-        },
     },
     computed: {
         ...mapGetters({
@@ -471,15 +465,11 @@ export default {
         bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
-        bus.$on(START_RECORD, this.onStartRecord);
-        bus.$on(STOP_RECORD, this.onStopRecord);
     },
     destroyed() {
         bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
-        bus.$off(START_RECORD, this.onStartRecord);
-        bus.$off(STOP_RECORD, this.onStopRecord);
     }
 }
 
