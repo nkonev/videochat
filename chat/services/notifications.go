@@ -156,10 +156,20 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 }
 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
+
 	for _, participantId := range userIds {
+
+		var copied *dto.DisplayMessageDto = &dto.DisplayMessageDto{}
+		if err := deepcopy.Copy(copied, message); err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
+			continue
+		}
+		// TODO move to better place
+		copied.CanEdit = message.OwnerId == participantId
+
 		err := not.rabbitPublisher.Publish(dto.ChatEvent{
 			EventType:           eventType,
-			MessageNotification: message,
+			MessageNotification: copied,
 			UserId:              participantId,
 			ChatId:              chatId,
 		})
