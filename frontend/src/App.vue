@@ -108,7 +108,7 @@
             <v-spacer></v-spacer>
 
             <v-card light v-if="isShowSearch">
-                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" clearable clear-icon="mdi-close-circle"></v-text-field>
+                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
             </v-card>
         </v-app-bar>
 
@@ -374,6 +374,9 @@
             openLocale() {
                 bus.$emit(OPEN_LANGUAGE_MODAL);
             },
+            resetInput() {
+                this.searchString = null;
+            },
         },
         computed: {
             ...mapGetters({
@@ -393,15 +396,6 @@
             currentUserAvatar() {
                 return this.currentUser.avatar;
             },
-            searchString: {
-                get(){
-                    return this.$store.getters[GET_SEARCH_STRING];
-                },
-                set(newVal){
-                    this.$store.commit(SET_SEARCH_STRING, newVal);
-                    return newVal;
-                }
-            }
         },
         mounted() {
             this.$store.dispatch(FETCH_USER_PROFILE);
