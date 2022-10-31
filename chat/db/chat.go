@@ -221,11 +221,18 @@ func (tx *Tx) DeleteChat(id int64) error {
 		return err
 	}
 
-	if _, err := tx.Exec("DELETE FROM chat WHERE id = $1", id); err != nil {
+	if res, err := tx.Exec("DELETE FROM chat WHERE id = $1", id); err != nil {
 		Logger.Errorf("Error during delete chat %v %v", id, err)
 		return err
 	} else {
-		// OK
+		affected, err := res.RowsAffected()
+		if err != nil {
+			Logger.Errorf("Error during checking rows affected %v", err)
+			return err
+		}
+		if affected == 0 {
+			return errors.New("No rows affected")
+		}
 		return nil
 	}
 }
@@ -237,6 +244,7 @@ func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String)
 		Logger.Errorf("Error during getting chat id %v", err)
 		return nil, err
 	}
+	// TODO handle case zero rows updated
 	return &lastUpdateDateTime, nil
 }
 

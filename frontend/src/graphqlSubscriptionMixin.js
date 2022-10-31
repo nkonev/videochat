@@ -17,14 +17,19 @@ export default (nameForLog) => {
                 const onNext_ = (e) => {
                     console.debug(`Got ${nameForLog} event`, e);
                     if (e.errors != null && e.errors.length) {
-                        this.setError(null, `Error in ${nameForLog} subscription`);
+                        this.setError(null, `Error in onNext ${nameForLog} subscription`);
                         return
                     }
                     this.onNextSubscriptionElement(e);
                 }
                 const onError = (e) => {
-                    console.error(`Got err in ${nameForLog} subscription, reconnecting`, e);
-                    this.subscriptionTimeoutId = setTimeout(this.graphQlSubscribe, 2000);
+                    if (Array.isArray(e)) {
+                        console.error(`Got err in ${nameForLog} subscription`, e);
+                        this.setError(null, `Error in onError ${nameForLog} subscription`);
+                    } else {
+                        console.error(`Got connection err in ${nameForLog} subscription, reconnecting`, e);
+                        this.subscriptionTimeoutId = setTimeout(this.graphQlSubscribe, 2000);
+                    }
                 }
                 const onComplete = () => {
                     console.log(`Got compete in ${nameForLog} subscription`);

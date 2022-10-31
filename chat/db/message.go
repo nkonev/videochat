@@ -131,17 +131,35 @@ func (tx *Tx) EditMessage(m *Message) error {
 		return errors.New("id required")
 	}
 
-	if _, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2 WHERE owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id); err != nil {
+	if res, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2 WHERE owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id); err != nil {
 		Logger.Errorf("Error during editing message id %v", err)
 		return err
+	} else {
+		affected, err := res.RowsAffected()
+		if err != nil {
+			Logger.Errorf("Error during checking rows affected %v", err)
+			return err
+		}
+		if affected == 0 {
+			return errors.New("No rows affected")
+		}
 	}
 	return nil
 }
 
 func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error {
-	if _, err := db.Exec(fmt.Sprintf(`DELETE FROM message_chat_%v WHERE id = $1 AND owner_id = $2`, chatId), messageId, ownerId); err != nil {
+	if res, err := db.Exec(fmt.Sprintf(`DELETE FROM message_chat_%v WHERE id = $1 AND owner_id = $2`, chatId), messageId, ownerId); err != nil {
 		Logger.Errorf("Error during deleting message id %v", err)
 		return err
+	} else {
+		affected, err := res.RowsAffected()
+		if err != nil {
+			Logger.Errorf("Error during checking rows affected %v", err)
+			return err
+		}
+		if affected == 0 {
+			return errors.New("No rows affected")
+		}
 	}
 	return nil
 }
