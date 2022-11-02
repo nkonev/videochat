@@ -238,13 +238,28 @@ func (tx *Tx) DeleteChat(id int64) error {
 }
 
 func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String) (*time.Time, error) {
+
+	if res, err := tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now() WHERE id = $1`, id, newTitle, avatar, avatarBig); err != nil {
+		Logger.Errorf("Error during editing chat id %v", err)
+		return nil, err
+	} else {
+		affected, err := res.RowsAffected()
+		if err != nil {
+			Logger.Errorf("Error during checking rows affected %v", err)
+			return nil, err
+		}
+		if affected == 0 {
+			return nil, errors.New("No rows affected")
+		}
+	}
+
 	var lastUpdateDateTime time.Time
-	res := tx.QueryRow(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now() WHERE id = $1 RETURNING id, last_update_date_time`, id, newTitle, avatar, avatarBig)
-	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
-		Logger.Errorf("Error during getting chat id %v", err)
+	res := tx.QueryRow(`SELECT last_update_date_time FROM chat WHERE id = $1`, id)
+	if err := res.Scan(&lastUpdateDateTime); err != nil {
+		Logger.Errorf("Error during getting last update time %v", err)
 		return nil, err
 	}
-	// TODO handle case zero rows updated
+
 	return &lastUpdateDateTime, nil
 }
 
