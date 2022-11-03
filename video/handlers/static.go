@@ -25,7 +25,17 @@ func ConfigureStaticMiddleware() StaticMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			reqUrl := c.Request().RequestURI
-			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") || reqUrl == "/git.json" {
+			if reqUrl == "/" ||
+				reqUrl == "/index.html" ||
+				reqUrl == "/favicon.ico" ||
+				strings.HasPrefix(reqUrl, "/build") ||
+				strings.HasPrefix(reqUrl, "/assets") ||
+				strings.HasPrefix(reqUrl, "/static") ||
+				reqUrl == "/git.json" ||
+				reqUrl == "/logo.png" ||
+				reqUrl == "/logo.svg" ||
+				reqUrl == "/manifest.json" ||
+				reqUrl == "/robots.txt" {
 				h.ServeHTTP(c.Response().Writer, c.Request())
 				return nil
 			} else {

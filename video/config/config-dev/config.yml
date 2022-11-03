@@ -13,6 +13,7 @@ auth:
   exclude:
     - "^/video/public.*"
     - "^/internal/.*"
+    - "^/static/.*"
 
 jaeger:
   host: "localhost"
