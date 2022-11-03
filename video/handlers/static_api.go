@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-//go:embed static
+//go:embed static-api
 var embeddedFiles embed.FS
 
-type StaticMiddleware echo.MiddlewareFunc
+type ApiStaticMiddleware echo.MiddlewareFunc
 
-func ConfigureStaticMiddleware() StaticMiddleware {
-	fsys, err := fs.Sub(embeddedFiles, "static")
+func ConfigureApiStaticMiddleware() ApiStaticMiddleware {
+	fsys, err := fs.Sub(embeddedFiles, "static-api")
 	if err != nil {
 		Logger.Panicf("Cannot open static embedded dir")
 	}
@@ -25,17 +25,7 @@ func ConfigureStaticMiddleware() StaticMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			reqUrl := c.Request().RequestURI
-			if reqUrl == "/" ||
-				reqUrl == "/index.html" ||
-				reqUrl == "/favicon.ico" ||
-				strings.HasPrefix(reqUrl, "/build") ||
-				strings.HasPrefix(reqUrl, "/assets") ||
-				strings.HasPrefix(reqUrl, "/static") ||
-				reqUrl == "/git.json" ||
-				reqUrl == "/logo.png" ||
-				reqUrl == "/logo.svg" ||
-				reqUrl == "/manifest.json" ||
-				reqUrl == "/robots.txt" {
+			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") || reqUrl == "/git.json" {
 				h.ServeHTTP(c.Response().Writer, c.Request())
 				return nil
 			} else {

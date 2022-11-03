@@ -1,5 +1,6 @@
 server:
-  address: ":1237"
+  apiAddress: ":1237"
+  egressLayoutAddress: ":1239"
   shutdownTimeout: "10s"
   bodyLimit: "100G"
 
@@ -13,7 +14,6 @@ auth:
   exclude:
     - "^/video/public.*"
     - "^/internal/.*"
-    - "^/static/.*"
 
 jaeger:
   host: "localhost"

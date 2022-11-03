@@ -23,7 +23,7 @@ func NewNotificationService(producer *producer.RabbitUserCountPublisher, restCli
 }
 
 func (h *NotificationService) NotifyVideoUserCountChanged(chatId, usersCount int64, ctx context.Context) error {
-	Logger.Infof("Notifying video call chat_id=%v", chatId)
+	Logger.Debugf("Notifying video call chat_id=%v", chatId)
 
 	var chatNotifyDto = dto.VideoCallUserCountChangedDto{
 		UsersCount: usersCount,
@@ -40,7 +40,7 @@ func (h *NotificationService) NotifyVideoUserCountChanged(chatId, usersCount int
 }
 
 func (h *NotificationService) NotifyRecordingChanged(chatId int64, recordInProgress bool, ctx context.Context) error {
-	Logger.Infof("Notifying video call chat_id=%v", chatId)
+	Logger.Debugf("Notifying video call chat_id=%v", chatId)
 
 	var chatNotifyDto = dto.VideoCallRecordingChangedDto{
 		RecordInProgress: recordInProgress,

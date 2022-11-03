@@ -38,13 +38,15 @@ func main() {
 		fx.Provide(
 			createTypedConfig,
 			configureTracer,
-			configureEcho,
+			configureApiEcho,
+			configureEgressLayoutEcho,
 			client.NewRestClient,
 			client.NewLivekitClient,
 			client.NewEgressClient,
 			handlers.NewUserHandler,
 			handlers.NewConfigHandler,
-			handlers.ConfigureStaticMiddleware,
+			handlers.ConfigureApiStaticMiddleware,
+			handlers.ConfigureEgressLayoutStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			handlers.NewTokenHandler,
 			handlers.NewLivekitWebhookHandler,
@@ -69,7 +71,8 @@ func main() {
 			redis.RecordingNotifierScheduler,
 		),
 		fx.Invoke(
-			runEcho,
+			runApiEcho,
+			runEgressLayoutEcho,
 			runScheduler,
 		),
 	)
@@ -111,10 +114,18 @@ func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) 
 	}
 }
 
-func configureEcho(
+type ApiEcho struct {
+	*echo.Echo
+}
+
+type EgressLayoutEcho struct {
+	*echo.Echo
+}
+
+func configureApiEcho(
 	cfg *config.ExtendedConfig,
 	authMiddleware handlers.AuthMiddleware,
-	staticMiddleware handlers.StaticMiddleware,
+	staticMiddleware handlers.ApiStaticMiddleware,
 	lc fx.Lifecycle,
 	th *handlers.TokenHandler,
 	uh *handlers.UserHandler,
@@ -123,7 +134,7 @@ func configureEcho(
 	ih *handlers.InviteHandler,
 	rh *handlers.RecordHandler,
 	tp *sdktrace.TracerProvider,
-) *echo.Echo {
+) *ApiEcho {
 
 	bodyLimit := cfg.HttpServerConfig.BodyLimit
 
@@ -168,7 +179,37 @@ func configureEcho(
 		},
 	})
 
-	return e
+	return &ApiEcho{e}
+}
+
+func configureEgressLayoutEcho(
+	staticMiddleware handlers.EgressLayoutStaticMiddleware,
+	lc fx.Lifecycle,
+) *EgressLayoutEcho {
+	e := echo.New()
+	e.Logger.SetOutput(Logger.Writer())
+
+	e.HTTPErrorHandler = createCustomHTTPErrorHandler(e)
+
+	accessLoggerConfig := middleware.LoggerConfig{
+		Output: Logger.Writer(),
+		Format: `"remote_ip":"${remote_ip}",` +
+			`"method":"${method}","uri":"${uri}",` +
+			`"status":${status},` +
+			`,"bytes_in":${bytes_in},"bytes_out":${bytes_out},"traceId":"${header:uber-trace-id}"` + "\n",
+	}
+	e.Use(middleware.LoggerWithConfig(accessLoggerConfig))
+	e.Use(echo.MiddlewareFunc(staticMiddleware))
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			// do some work on application stop (like closing connections and files)
+			Logger.Infof("Stopping http server")
+			return e.Shutdown(ctx)
+		},
+	})
+
+	return &EgressLayoutEcho{e}
 }
 
 func configureTracer(lc fx.Lifecycle, cfg *config.ExtendedConfig) (*sdktrace.TracerProvider, error) {
@@ -208,17 +249,30 @@ func configureTracer(lc fx.Lifecycle, cfg *config.ExtendedConfig) (*sdktrace.Tra
 }
 
 // rely on viper import and it's configured by
-func runEcho(e *echo.Echo, cfg *config.ExtendedConfig) {
-	address := cfg.HttpServerConfig.Address
+func runApiEcho(e *ApiEcho, cfg *config.ExtendedConfig) {
+	address := cfg.HttpServerConfig.ApiAddress
 
-	Logger.Info("Starting server...")
+	Logger.Info("Starting api server...")
 	// Start server in another goroutine
 	go func() {
 		if err := e.Start(address); err != nil {
 			Logger.Infof("server shut down: %v", err)
 		}
 	}()
-	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
+	Logger.Info("Api server started. Waiting for interrupt signal 2 (Ctrl+C)")
+}
+
+func runEgressLayoutEcho(e *EgressLayoutEcho, cfg *config.ExtendedConfig) {
+	address := cfg.HttpServerConfig.EgressLayoutAddress
+
+	Logger.Info("Starting egress layout server...")
+	// Start server in another goroutine
+	go func() {
+		if err := e.Start(address); err != nil {
+			Logger.Infof("server shut down: %v", err)
+		}
+	}()
+	Logger.Info("Egress layout server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
 func runScheduler(chatNotifierTask *redis.VideoCallUsersCountNotifierTask, chatDialerTask *redis.ChatDialerTask, videoRecordingTask *redis.RecordingNotifierTask) {

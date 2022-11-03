@@ -40,7 +40,7 @@ func (h *StateChangedNotificationService) NotifyAllChatsAboutVideoCallUsersCount
 		if err != nil {
 			Logger.Errorf("got error during counting users in scheduler, %v", err)
 		} else {
-			Logger.Infof("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
+			Logger.Debugf("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
 			err = h.notificationService.NotifyVideoUserCountChanged(chatId, usersCount, ctx)
 			if err != nil {
 				Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", err)
@@ -67,7 +67,7 @@ func (h *StateChangedNotificationService) NotifyAllChatsAboutVideoCallRecording(
 		if err != nil {
 			Logger.Errorf("got error during counting active egresses in scheduler, %v", err)
 		} else {
-			Logger.Infof("Sending recording changed chatId=%v, recordInProgress=%v", chatId, recordInProgress)
+			Logger.Debugf("Sending recording changed chatId=%v, recordInProgress=%v", chatId, recordInProgress)
 			err = h.notificationService.NotifyRecordingChanged(chatId, recordInProgress, ctx)
 			if err != nil {
 				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)

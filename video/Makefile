@@ -30,8 +30,8 @@ package-js:
 	yarn install && \
 	yarn run build && \
 	cd ${CURR} && \
-	rm -rf handlers/static/* && \
-	cp -R /tmp/egress/template-default/build/* handlers/static && \
+	rm -rf handlers/static-egress-layout/* && \
+	cp -R /tmp/egress/template-default/build/* handlers/static-egress-layout && \
 	rm -rf /tmp/egress
 
 BUILDDIR := ./build
