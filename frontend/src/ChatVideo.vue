@@ -254,7 +254,7 @@ export default {
             console.log("Creating room with dynacast", this.roomDynacast, "adaptiveStream", this.roomAdaptiveStream);
 
             // creates a new room with options
-            const room = this.room = new Room({
+            this.room = new Room({
                 // automatically manage subscribed video quality
                 adaptiveStream: this.roomAdaptiveStream,
 
@@ -263,11 +263,11 @@ export default {
             });
 
             // set up event listeners
-            room
+            this.room
                 .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
                     try {
-                        console.log("TrackPublished to room.name", room.name);
-                        console.debug("TrackPublished to room", room);
+                        console.log("TrackPublished to room.name", this.room.name);
+                        console.debug("TrackPublished to room", this.room);
                         this.drawNewComponentOrInsertIntoExisting(participant, [publication], this.getOnScreenPosition(publication), null);
                     } catch (e) {
                         this.setError(e, "Error during reacting on remote track published");
@@ -278,14 +278,14 @@ export default {
                 .on(RoomEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
                 .on(RoomEvent.LocalTrackPublished, () => {
                     try {
-                        console.log("LocalTrackPublished to room.name", room.name);
-                        console.debug("LocalTrackPublished to room", room);
+                        console.log("LocalTrackPublished to room.name", this.room.name);
+                        console.debug("LocalTrackPublished to room", this.room);
 
                         const localVideoProperties = {
-                            localParticipant: room.localParticipant
+                            localParticipant: this.room.localParticipant
                         };
-                        const participantTracks = room.localParticipant.getTracks();
-                        this.drawNewComponentOrInsertIntoExisting(room.localParticipant, participantTracks, first, localVideoProperties);
+                        const participantTracks = this.room.localParticipant.getTracks();
+                        this.drawNewComponentOrInsertIntoExisting(this.room.localParticipant, participantTracks, first, localVideoProperties);
                     } catch (e) {
                         this.setError(e, "Error during reacting on local track published");
                     }
@@ -320,11 +320,11 @@ export default {
             try {
                 this.inRestarting = true;
                 await retry(async (context) => {
-                    const res = await room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
+                    const res = await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
                         // subscribe to other participants automatically
                         autoSubscribe: true,
                     });
-                    console.log('connected to room', room.name);
+                    console.log('connected to room', this.room.name);
                     return res
                 }, retryOptions);
                 this.inRestarting = false;
