@@ -40,8 +40,8 @@ See [screenshots](./screenshots.md)
 
 # Troubleshooting
 * Poor quality of screen sharing - a) Disable [simulcast](https://github.com/livekit/livekit/issues/761), b) Increase its resolution
-* Connection to livekit interrupts only with Firefox and enabled UPD mux. Solution is to disable UDP muxing and pass multiple UDP ports of webrtc ice udp port range.
-* Duplication of your own video source(camera) can be caused by poor mobile network. The solution can be switching to more stable Wi-Fi.
+* Connection to livekit is interrupting if at least one participant uses Firefox. Solution is to disable ICE lite in livekit config.
+* Duplication of your own video source(camera) can be caused by poor mobile network. Or interrupts using Android Chrome. The solution can be switching to more stable Wi-Fi.
 ## Reasons of not showing video
 * jaeger all-in-one ate too much memory - one of participants didn't see other - restart jaeger.
 * Mobile Chrome 101.0.4951.41 - swap it up (e. g. close application and open again) helps when video isn't connected from Mobile Chrome.
