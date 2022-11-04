@@ -41,7 +41,7 @@ See [screenshots](./screenshots.md)
 # Troubleshooting
 * Poor quality of screen sharing - a) Disable [simulcast](https://github.com/livekit/livekit/issues/761), b) Increase its resolution
 * Connection to livekit is interrupting if at least one participant uses Firefox. Solution is to disable ICE lite in livekit config.
-* Duplication of your own video source(camera). Or interrupts using Android Chrome(sic!). The solution is switching from mobile network to (more stable) Wi-Fi.
+* Duplication of your own video source(camera). Or interrupts on Android Chrome(sic!). The solution is switching from mobile network to (more stable) Wi-Fi.
 ## Reasons of not showing video
 * jaeger all-in-one ate too much memory - one of participants didn't see other - restart jaeger.
 * Mobile Chrome 101.0.4951.41 - swap it up (e. g. close application and open again) helps when video isn't connected from Mobile Chrome.
