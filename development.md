@@ -71,14 +71,14 @@ http://localhost:8081/api/user/list?userId=1&userId=-1
 
 # Go
 
-Push down dummy go packages
+## Push down dummy go packages
 ```
 go list -m -json all
 ```
 
-Test:
-```
-go test ./... -count=1
+## Run one test
+```bash
+go test ./... -count=1 -test.v -test.timeout=20s -p 1 -run TestExtractAuth
 ```
 
 ## Update Go modules
@@ -190,75 +190,6 @@ https://webrtchacks.com/limit-webrtc-bandwidth-sdp/
 https://habr.com/en/company/Voximplant/blog/316840/
 
 
-# ion-SFU FAQ
-https://github.com/pion/ion-sfu/pull/496/files
-
-## Explaination of two peer connections
-https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
-> ion-sfu does not support perfect negotiation, becuase there were some issues on browser implementation, thats why it uses 2 pc, one to publish and other one to subscribe, that way negotiations would be always one sided.
-
-### Tracing
-You can match media stream id, media track id in console (F12) and in `about:webrtc` 
-
-Peer connection does not have id. [1](https://github.com/w3c/webrtc-pc/issues/1775), [2](https://github.com/pion/webrtc/issues/1250)
-
-
-## Known issues
-
-### Codecs
-When Call started in th next sequence
-* Desktop Firefox hd vp8 (1)
-* Mobile Chrome hd vp8 (2)
-* Desktop Firefox hd vp8 (3)
- 
-
-then Firefox (1) won't see video from Firefox (3). If we replace Chrome (2) with Firefox client then problem will be gone.
-
-
-When Call started in th next sequence
-* Desktop Firefox hd vp8 (1)
-* Mobile Chrome hd h264 (2)
-* Desktop Firefox hd vp8 (3)
-
-
-then all works ok.
-
-
-Also it works good when all the devices use the same h264.
-
-
-### IceLite
-When one of participants has the public IP (it's possible) there are no video. I turned on IceLite in config in order to fix it.
-
-
-### I don't see my image from camera when I connect from mobile
-Some mobile operators impede WebRTC traffic. 
-
-Solution: try to use Wi-Fi.
-
-
-## Simulcast
-* https://github.com/pion/webrtc/tree/master/examples/simulcast
-* https://github.com/pion/ion-sfu/pull/189
-* https://github.com/pion/ion-sfu/pull/227
-* https://github.com/pion/ion-sdk-flutter/commit/d480792ce89fd1d87dc010f85aafaad8139f8671#diff-29436ed00f4c4d104d7a3a703144724e4dff5b5d01c2b7da70ea54b2ef39b780R65
-
-In `receiver.go` we have isSimulcast: len(track.RID()) > 0, given this and fact that Firefox doesn't sent rid we acn't enable simulcast in Firefox.
-
-But according to https://webrtchacks.com/sfu-simulcast/ H.264/SVC, where scalability capabilities are fully built into the codec itself.
-
-Firefox [doesn't support simulcast for H264](https://bugzilla.mozilla.org/show_bug.cgi?id=1210175)
-
-Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=1663368)
-
-
-## Interesting forks ion-sfu
-* https://github.com/edudip/ion-sfu/commits/master
-* https://github.com/cryptagon/ion-sfu/commits/master-tandem (With fixing simulcast)
-
-
-
-
 # Livekit
 ## Generate livekit token
 ```
@@ -289,6 +220,8 @@ docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjM
 * [v1.2.5 Decrease publication timeout to 10s and clean local state on failed unpublish attempts](https://github.com/livekit/client-sdk-js/pull/363)
 * [Reconnect policy](https://github.com/livekit/client-sdk-js/pull/266)
 * [Clear pending track resolver on track unpublish](https://github.com/livekit/client-sdk-js/pull/363)
+* [Interrupts and reconnects with Firefox participants](https://github.com/livekit/livekit/issues/1143)
+* [Debugging Intermittent timeout errors](https://github.com/livekit/livekit/issues/1070)
 
 
 ## Monitoring
@@ -305,10 +238,73 @@ https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
 cat /proc/$(pgrep livekit)/limits
 ```
 
-# Run one test
-```bash
-go test ./... -count=1 -test.v -test.timeout=20s -p 1 -run TestExtractAuth
-```
+# ion-SFU FAQ (Obsoleted)
+https://github.com/pion/ion-sfu/pull/496/files
+
+## Explaination of two peer connections
+https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
+> ion-sfu does not support perfect negotiation, becuase there were some issues on browser implementation, thats why it uses 2 pc, one to publish and other one to subscribe, that way negotiations would be always one sided.
+
+### Tracing
+You can match media stream id, media track id in console (F12) and in `about:webrtc`
+
+Peer connection does not have id. [1](https://github.com/w3c/webrtc-pc/issues/1775), [2](https://github.com/pion/webrtc/issues/1250)
+
+
+## Known issues
+
+### Codecs
+When Call started in th next sequence
+* Desktop Firefox hd vp8 (1)
+* Mobile Chrome hd vp8 (2)
+* Desktop Firefox hd vp8 (3)
+
+
+then Firefox (1) won't see video from Firefox (3). If we replace Chrome (2) with Firefox client then problem will be gone.
+
+
+When Call started in th next sequence
+* Desktop Firefox hd vp8 (1)
+* Mobile Chrome hd h264 (2)
+* Desktop Firefox hd vp8 (3)
+
+
+then all works ok.
+
+
+Also it works good when all the devices use the same h264.
+
+
+### IceLite
+When one of participants has the public IP (it's possible) there are no video. I turned on IceLite in config in order to fix it.
+
+
+### I don't see my image from camera when I connect from mobile
+Some mobile operators impede WebRTC traffic.
+
+Solution: try to use Wi-Fi.
+
+
+## Simulcast
+* https://github.com/pion/webrtc/tree/master/examples/simulcast
+* https://github.com/pion/ion-sfu/pull/189
+* https://github.com/pion/ion-sfu/pull/227
+* https://github.com/pion/ion-sdk-flutter/commit/d480792ce89fd1d87dc010f85aafaad8139f8671#diff-29436ed00f4c4d104d7a3a703144724e4dff5b5d01c2b7da70ea54b2ef39b780R65
+
+In `receiver.go` we have isSimulcast: len(track.RID()) > 0, given this and fact that Firefox doesn't sent rid we acn't enable simulcast in Firefox.
+
+But according to https://webrtchacks.com/sfu-simulcast/ H.264/SVC, where scalability capabilities are fully built into the codec itself.
+
+Firefox [doesn't support simulcast for H264](https://bugzilla.mozilla.org/show_bug.cgi?id=1210175)
+
+Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=1663368)
+
+
+## Interesting forks ion-sfu
+* https://github.com/edudip/ion-sfu/commits/master
+* https://github.com/cryptagon/ion-sfu/commits/master-tandem (With fixing simulcast)
+
+
 
 
 # For Github CI
