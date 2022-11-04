@@ -71,7 +71,7 @@
 
 
         <v-app-bar
-                color='indigo'
+                color='darkgrey'
                 dark
                 app
                 id="myAppBar"
