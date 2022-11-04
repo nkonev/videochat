@@ -1,11 +1,16 @@
 port: 7880
 rtc:
-    #udp_port: 7882
-    tcp_port: 7881
+    udp_port: 7882
+    #tcp_port: 7881
+    tcp_port: 0
     use_external_ip: true
-    use_ice_lite: true
-    port_range_start: 35200
-    port_range_end: 35400
+    #use_ice_lite: true
+    use_ice_lite: false
+    #port_range_start: 35200
+    #port_range_end: 35400
+    #force_tcp: true
+    allow_tcp_fallback: false
+
 #room:
 #    enabled_codecs:
 #        - mime: audio/opus
