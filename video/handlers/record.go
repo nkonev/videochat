@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go"
+	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
@@ -16,13 +17,14 @@ import (
 )
 
 type RecordHandler struct {
-	egressClient  *lksdk.EgressClient
-	restClient    *client.RestClient
-	egressService *services.EgressService
+	egressClient           *lksdk.EgressClient
+	restClient             *client.RestClient
+	egressService          *services.EgressService
+	onlyRoleAdminRecording bool
 }
 
 func NewRecordHandler(egressClient *lksdk.EgressClient, restClient *client.RestClient, egressService *services.EgressService) *RecordHandler {
-	return &RecordHandler{egressClient: egressClient, restClient: restClient, egressService: egressService}
+	return &RecordHandler{egressClient: egressClient, restClient: restClient, egressService: egressService, onlyRoleAdminRecording: viper.GetBool("only-role-admin-recording")}
 }
 
 func (rh *RecordHandler) StartRecording(c echo.Context) error {
@@ -41,6 +43,10 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 		if !ok {
 			return c.NoContent(http.StatusUnauthorized)
 		}
+	}
+	if rh.onlyRoleAdminRecording && !userPrincipalDto.HasRole("ROLE_ADMIN") {
+		GetLogEntry(c.Request().Context()).Errorf("Only admin car record with this configuration")
+		return c.NoContent(http.StatusUnauthorized)
 	}
 
 	roomName := utils.GetRoomNameFromId(chatId)
@@ -154,8 +160,13 @@ func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 		return err
 	}
 
+	var normalCanRecord bool = true
+	if rh.onlyRoleAdminRecording && !userPrincipalDto.HasRole("ROLE_ADMIN") {
+		normalCanRecord = false
+	}
+
 	return c.JSON(http.StatusOK, StatusResponse{
 		RecordInProcess: recordInProgress,
-		CanMakeRecord:   true,
+		CanMakeRecord:   normalCanRecord,
 	})
 }

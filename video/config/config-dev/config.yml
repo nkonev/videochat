@@ -59,6 +59,7 @@ rabbitmq:
 videoCallUsersCountNotificationPeriod: 2s
 videoCallRecordingNotificationPeriod: 20s
 dialPeriod: 5s
+only-role-admin-recording: true
 
 redis:
   address: :36379
