@@ -77,7 +77,6 @@ export default {
             cancelSource: null,
             limitError: null,
             shouldSetFileUuidToMessage: false,
-            shouldUpdateFileList: false,
         }
     },
     filters: {
@@ -86,11 +85,10 @@ export default {
         },
     },
     methods: {
-        showModal(fileItemUuid, shouldSetFileUuidToMessage, shouldUpdateFileList) {
+        showModal(fileItemUuid, shouldSetFileUuidToMessage) {
             this.$data.show = true;
             this.$data.fileItemUuid = fileItemUuid;
             this.$data.shouldSetFileUuidToMessage = shouldSetFileUuidToMessage;
-            this.$data.shouldUpdateFileList = shouldUpdateFileList;
         },
         hideModal() {
             this.$data.show = false;
@@ -103,7 +101,6 @@ export default {
             this.limitError = null;
             this.$data.fileItemUuid = null;
             this.$data.shouldSetFileUuidToMessage = false;
-            this.$data.shouldUpdateFileList = false;
         },
         onProgressFunction(event) {
             this.progress = Math.round((100 * event.loaded) / event.total);
@@ -145,9 +142,7 @@ export default {
                             bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: response.data.count});
                         }
                         this.uploading = false;
-                        if (this.$data.shouldUpdateFileList) {
-                            bus.$emit(UPDATE_VIEW_FILES_DIALOG);
-                        }
+                        bus.$emit(UPDATE_VIEW_FILES_DIALOG);
                     })
                     .catch((thrown) => {
                         if (axios.isCancel(thrown)) {

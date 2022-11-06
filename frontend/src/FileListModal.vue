@@ -152,7 +152,7 @@ export default {
             this.filePage = firstPage;
         },
         openUploadModal() {
-            bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.fileItemUuid, this.messageEditing, true);
+            bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.fileItemUuid, this.messageEditing);
         },
         deleteFile(dto) {
             bus.$emit(OPEN_SIMPLE_MODAL, {
