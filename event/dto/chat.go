@@ -24,6 +24,10 @@ type BaseChatDto struct {
 	ParticipantsCount   int         `json:"participantsCount"`
 }
 
+type ChatDeletedDto struct {
+	Id int64 `json:"id"`
+}
+
 type ChatDto struct {
 	BaseChatDto
 	Participants []*User `json:"participants"`

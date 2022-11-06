@@ -140,25 +140,27 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	}
 	notificationDto := e.MessageNotification
 	if notificationDto != nil {
-		if e.EventType == "message_deleted" {
-			result.MessageDeletedEvent = &model.MessageDeletedDto{
-				ID:     notificationDto.Id,
-				ChatID: notificationDto.ChatId,
-			}
-		} else {
-			result.MessageEvent = &model.DisplayMessageDto{ // dto.DisplayMessageDto
-				ID:             notificationDto.Id,
-				Text:           notificationDto.Text,
-				ChatID:         notificationDto.ChatId,
-				OwnerID:        notificationDto.OwnerId,
-				CreateDateTime: notificationDto.CreateDateTime,
-				EditDateTime:   notificationDto.EditDateTime.Ptr(),
-				Owner:          convertUser(notificationDto.Owner),
-				CanEdit:        notificationDto.CanEdit,
-				FileItemUUID:   notificationDto.FileItemUuid,
-			}
+		result.MessageEvent = &model.DisplayMessageDto{ // dto.DisplayMessageDto
+			ID:             notificationDto.Id,
+			Text:           notificationDto.Text,
+			ChatID:         notificationDto.ChatId,
+			OwnerID:        notificationDto.OwnerId,
+			CreateDateTime: notificationDto.CreateDateTime,
+			EditDateTime:   notificationDto.EditDateTime.Ptr(),
+			Owner:          convertUser(notificationDto.Owner),
+			CanEdit:        notificationDto.CanEdit,
+			FileItemUUID:   notificationDto.FileItemUuid,
 		}
 	}
+
+	messageDeleted := e.MessageDeletedNotification
+	if messageDeleted != nil {
+		result.MessageDeletedEvent = &model.MessageDeletedDto{
+			ID:     messageDeleted.Id,
+			ChatID: messageDeleted.ChatId,
+		}
+	}
+
 	userTypingEvent := e.UserTypingNotification
 	if userTypingEvent != nil {
 		result.UserTypingEvent = &model.UserTypingDto{
@@ -183,31 +185,32 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 	}
 	chatDtoWithAdmin := e.ChatNotification
 	if chatDtoWithAdmin != nil {
-		if e.EventType == "chat_deleted" {
-			ret.ChatDeletedEvent = &model.ChatDeletedDto{
-				ID: chatDtoWithAdmin.Id,
-			}
-		} else {
-			ret.ChatEvent = &model.ChatDto{ // dto.ChatDtoWithAdmin
-				ID:                       chatDtoWithAdmin.Id,
-				Name:                     chatDtoWithAdmin.Name,
-				Avatar:                   chatDtoWithAdmin.Avatar.Ptr(),
-				AvatarBig:                chatDtoWithAdmin.AvatarBig.Ptr(),
-				LastUpdateDateTime:       chatDtoWithAdmin.LastUpdateDateTime,
-				ParticipantIds:           chatDtoWithAdmin.ParticipantIds,
-				CanEdit:                  chatDtoWithAdmin.CanEdit.Ptr(),
-				CanDelete:                chatDtoWithAdmin.CanDelete.Ptr(),
-				CanLeave:                 chatDtoWithAdmin.CanLeave.Ptr(),
-				UnreadMessages:           chatDtoWithAdmin.UnreadMessages,
-				CanBroadcast:             chatDtoWithAdmin.CanBroadcast,
-				CanVideoKick:             chatDtoWithAdmin.CanVideoKick,
-				CanAudioMute:             chatDtoWithAdmin.CanAudioMute,
-				CanChangeChatAdmins:      chatDtoWithAdmin.CanChangeChatAdmins,
-				TetATet:                  chatDtoWithAdmin.IsTetATet,
-				ParticipantsCount:        chatDtoWithAdmin.ParticipantsCount,
-				ChangingParticipantsPage: chatDtoWithAdmin.ChangingParticipantsPage,
-				Participants:             convertUsers(chatDtoWithAdmin.Participants),
-			}
+		ret.ChatEvent = &model.ChatDto{ // dto.ChatDtoWithAdmin
+			ID:                       chatDtoWithAdmin.Id,
+			Name:                     chatDtoWithAdmin.Name,
+			Avatar:                   chatDtoWithAdmin.Avatar.Ptr(),
+			AvatarBig:                chatDtoWithAdmin.AvatarBig.Ptr(),
+			LastUpdateDateTime:       chatDtoWithAdmin.LastUpdateDateTime,
+			ParticipantIds:           chatDtoWithAdmin.ParticipantIds,
+			CanEdit:                  chatDtoWithAdmin.CanEdit.Ptr(),
+			CanDelete:                chatDtoWithAdmin.CanDelete.Ptr(),
+			CanLeave:                 chatDtoWithAdmin.CanLeave.Ptr(),
+			UnreadMessages:           chatDtoWithAdmin.UnreadMessages,
+			CanBroadcast:             chatDtoWithAdmin.CanBroadcast,
+			CanVideoKick:             chatDtoWithAdmin.CanVideoKick,
+			CanAudioMute:             chatDtoWithAdmin.CanAudioMute,
+			CanChangeChatAdmins:      chatDtoWithAdmin.CanChangeChatAdmins,
+			TetATet:                  chatDtoWithAdmin.IsTetATet,
+			ParticipantsCount:        chatDtoWithAdmin.ParticipantsCount,
+			ChangingParticipantsPage: chatDtoWithAdmin.ChangingParticipantsPage,
+			Participants:             convertUsers(chatDtoWithAdmin.Participants),
+		}
+	}
+
+	chatDeleted := e.ChatDeletedDto
+	if chatDeleted != nil {
+		ret.ChatDeletedEvent = &model.ChatDeletedDto{
+			ID: chatDeleted.Id,
 		}
 	}
 

@@ -62,50 +62,62 @@ func (not *notifictionsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64,
 }
 
 func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, changingParticipantPage int, tx *db.Tx) {
+	GetLogEntry(c.Request().Context()).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
+
 	for _, participantId := range userIds {
-		GetLogEntry(c.Request().Context()).Debugf("Sending notification about %v the chat to participant: %v", eventType, participantId)
+		if eventType == "chat_deleted" {
+			err := not.rabbitPublisher.Publish(dto.GlobalEvent{
+				UserId:         participantId,
+				EventType:      eventType,
+				ChatDeletedDto: &dto.ChatDeletedDto{Id: newChatDto.Id},
+			})
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			}
 
-		var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
-		if err := deepcopy.Copy(copied, newChatDto); err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
-			continue
-		}
+		} else {
+			var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
+			if err := deepcopy.Copy(copied, newChatDto); err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
+				continue
+			}
 
-		admin, err := tx.IsAdmin(participantId, newChatDto.Id)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during checking is admin for userId=%v: %s", participantId, err)
-			continue
-		}
+			admin, err := tx.IsAdmin(participantId, newChatDto.Id)
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("error during checking is admin for userId=%v: %s", participantId, err)
+				continue
+			}
 
-		unreadMessages, err := tx.GetUnreadMessagesCount(newChatDto.Id, participantId)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
-			continue
-		}
+			unreadMessages, err := tx.GetUnreadMessagesCount(newChatDto.Id, participantId)
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
+				continue
+			}
 
-		// TODO move to better place
-		//  see also handlers/chat.go:199 convertToDto()
-		copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
-		copied.CanDelete = null.BoolFrom(admin)
-		copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet)
-		copied.UnreadMessages = unreadMessages
-		copied.CanVideoKick = admin
-		copied.CanAudioMute = admin
-		copied.CanChangeChatAdmins = admin && !copied.IsTetATet
-		copied.ParticipantsCount = newChatDto.ParticipantsCount
-		copied.ChangingParticipantsPage = changingParticipantPage
-		copied.CanBroadcast = admin
-		for _, participant := range copied.Participants {
-			utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)
-		}
+			// TODO move to better place
+			//  see also handlers/chat.go:199 convertToDto()
+			copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
+			copied.CanDelete = null.BoolFrom(admin)
+			copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet)
+			copied.UnreadMessages = unreadMessages
+			copied.CanVideoKick = admin
+			copied.CanAudioMute = admin
+			copied.CanChangeChatAdmins = admin && !copied.IsTetATet
+			copied.ParticipantsCount = newChatDto.ParticipantsCount
+			copied.ChangingParticipantsPage = changingParticipantPage
+			copied.CanBroadcast = admin
+			for _, participant := range copied.Participants {
+				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)
+			}
 
-		err = not.rabbitPublisher.Publish(dto.GlobalEvent{
-			UserId:           participantId,
-			EventType:        eventType,
-			ChatNotification: newChatDto,
-		})
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			err = not.rabbitPublisher.Publish(dto.GlobalEvent{
+				UserId:           participantId,
+				EventType:        eventType,
+				ChatNotification: newChatDto,
+			})
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			}
 		}
 	}
 }
@@ -158,23 +170,37 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *notifictionsImpl, eventType string) {
 
 	for _, participantId := range userIds {
+		if eventType == "message_deleted" {
+			err := not.rabbitPublisher.Publish(dto.ChatEvent{
+				EventType: eventType,
+				MessageDeletedNotification: &dto.MessageDeletedDto{
+					Id:     message.Id,
+					ChatId: message.ChatId,
+				},
+				UserId: participantId,
+				ChatId: chatId,
+			})
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			}
+		} else {
+			var copied *dto.DisplayMessageDto = &dto.DisplayMessageDto{}
+			if err := deepcopy.Copy(copied, message); err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
+				continue
+			}
+			// TODO move to better place
+			copied.CanEdit = message.OwnerId == participantId
 
-		var copied *dto.DisplayMessageDto = &dto.DisplayMessageDto{}
-		if err := deepcopy.Copy(copied, message); err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
-			continue
-		}
-		// TODO move to better place
-		copied.CanEdit = message.OwnerId == participantId
-
-		err := not.rabbitPublisher.Publish(dto.ChatEvent{
-			EventType:           eventType,
-			MessageNotification: copied,
-			UserId:              participantId,
-			ChatId:              chatId,
-		})
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			err := not.rabbitPublisher.Publish(dto.ChatEvent{
+				EventType:           eventType,
+				MessageNotification: copied,
+				UserId:              participantId,
+				ChatId:              chatId,
+			})
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			}
 		}
 	}
 }
