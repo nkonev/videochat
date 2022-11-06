@@ -1,3 +1,5 @@
+import { format, parseISO, differenceInDays } from 'date-fns';
+
 export const defaultAudioMute = true;
 
 export const getHeight = (elementId, modifier, defaultValue) => {
@@ -223,3 +225,12 @@ export const noPagePlaceholder = -1;
 
 export const colorText = 'colorText';
 export const colorBackground = 'colorBackground';
+
+export const getHumanReadableDate = (timestamp) => {
+    const parsedDate = parseISO(timestamp);
+    let formatString = 'HH:mm:ss';
+    if (differenceInDays(new Date(), parsedDate) >= 1) {
+        formatString = formatString + ', d MMM yyyy';
+    }
+    return `${format(parsedDate, formatString)}`
+}

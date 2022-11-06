@@ -18,6 +18,11 @@ type DisplayMessageDto struct {
 	FileItemUuid   *uuid.UUID `json:"fileItemUuid"`
 }
 
+type MessageDeletedDto struct {
+	Id     int64 `json:"id"`
+	ChatId int64 `json:"chatId"`
+}
+
 type UserTypingNotification struct {
 	Login         string `json:"login"`
 	ParticipantId int64  `json:"participantId"`

@@ -344,14 +344,22 @@ func (h *FilesHandler) getListFilesInFileItem(
 		Recursive:    true,
 	})
 
+	var intermediateList []minio.ObjectInfo = make([]minio.ObjectInfo, 0)
+	for objInfo := range objects {
+		GetLogEntry(c).Debugf("Object '%v'", objInfo.Key)
+		intermediateList = append(intermediateList, objInfo)
+	}
+	sort.SliceStable(intermediateList, func(i, j int) bool {
+		return intermediateList[i].LastModified.Unix() > intermediateList[j].LastModified.Unix()
+	})
+
 	var list []*FileInfoDto = make([]*FileInfoDto, 0)
 	var counter = 0
 	var respCounter = 0
 
-	for objInfo := range objects {
+	for _, objInfo := range intermediateList {
 
 		if counter >= offset {
-			GetLogEntry(c).Debugf("Object '%v'", objInfo.Key)
 			tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
 			if err != nil {
 				GetLogEntry(c).Errorf("Error during getting tags %v", err)
@@ -371,9 +379,6 @@ func (h *FilesHandler) getListFilesInFileItem(
 		}
 		counter++
 	}
-	sort.SliceStable(list, func(i, j int) bool {
-		return list[i].LastModified.Unix() < list[j].LastModified.Unix()
-	})
 
 	var participantIdSet = map[int64]bool{}
 	for _, fileDto := range list {

@@ -5,12 +5,6 @@
                 <v-card-title>{{ $vuetify.lang.t('$vuetify.attached_files') }}</v-card-title>
 
                 <v-card-text class="ma-0 pa-0">
-                    <v-pagination
-                        v-if="shouldShowPagination"
-                        v-model="filePage"
-                        :length="filePagesCount"
-                    ></v-pagination>
-
                     <v-list v-if="!loading">
                         <template v-if="dto.count > 0">
                             <template v-for="(item, index) in dto.files">
@@ -21,9 +15,12 @@
                                     </v-list-item-avatar>
                                     <v-list-item-content class="ml-4">
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
-                                        <v-list-item-subtitle><span v-if="item.owner">{{ $vuetify.lang.t('$vuetify.files_by') }} {{item.owner.login}}</span> <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">
+                                        <v-list-item-subtitle><span v-if="item.owner">{{ $vuetify.lang.t('$vuetify.files_by') }} {{item.owner.login}}</span>
+                                            <span> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
+                                            <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">
                                             {{ $vuetify.lang.t('$vuetify.files_public_url') }}
-                                        </a></v-list-item-subtitle>
+                                            </a>
+                                        </v-list-item-subtitle>
                                     </v-list-item-content>
 
 
@@ -61,8 +58,14 @@
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
-                  <v-btn color="primary" class="mr-4" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
-                  <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                    <v-pagination
+                        v-if="shouldShowPagination"
+                        v-model="filePage"
+                        :length="filePagesCount"
+                    ></v-pagination>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" class="mr-4" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
+                    <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -79,7 +82,7 @@ import bus, {
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
 import axios from "axios";
-import {replaceInArray} from "./utils";
+import {getHumanReadableDate, replaceInArray} from "./utils";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -116,19 +119,17 @@ export default {
             this.chatId = chatId;
             this.fileItemUuid = fileItemUuid;
             this.show = true;
-            this.loading = true;
             this.messageEditing = messageEditing;
-            this.updateFiles(()=> {
-                this.loading = false;
-            })
+            this.updateFiles();
         },
         translatePage() {
             return this.filePage - 1;
         },
-        updateFiles(callback) {
+        updateFiles() {
             if (!this.show) {
                 return
             }
+            this.loading = true;
             axios.get(`/api/storage/${this.chatId}`, {
                 params: {
                     page: this.translatePage(),
@@ -140,9 +141,7 @@ export default {
                     this.dto = response.data;
                 })
                 .finally(() => {
-                    if (callback) {
-                      callback();
-                    }
+                    this.loading = false;
                 })
         },
         closeModal() {
@@ -200,7 +199,10 @@ export default {
         },
         fireEdit(dto) {
             bus.$emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});
-        }
+        },
+        getDate(item) {
+            return getHumanReadableDate(item.lastModified)
+        },
     },
     watch: {
         filePage(newValue) {

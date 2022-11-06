@@ -35,7 +35,7 @@ services:
     logging:
       driver: "journald"
       options:
-        tag: event
+        tag: chat-event
 
 networks:
   backend:

@@ -6,8 +6,6 @@
 <script>
 import Vue from 'vue';
 import {mapGetters} from 'vuex';
-// https://dev.to/hulyakarakaya/how-to-fix-regeneratorruntime-is-not-defined-doj
-import 'regenerator-runtime/runtime';
 import {
     Room,
     RoomEvent,
