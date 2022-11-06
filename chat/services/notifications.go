@@ -106,6 +106,7 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 			copied.ParticipantsCount = newChatDto.ParticipantsCount
 			copied.ChangingParticipantsPage = changingParticipantPage
 			copied.CanBroadcast = admin
+
 			for _, participant := range copied.Participants {
 				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)
 			}

@@ -143,9 +143,6 @@ func getChat(
 			return nil, err
 		}
 		chatDto := convertToDto(cc, users, unreadMessages)
-		if authResult != nil && authResult.HasRole("ROLE_ADMIN") {
-			chatDto.CanBroadcast = true
-		}
 
 		for _, participant := range users {
 			utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
@@ -222,17 +219,18 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		ParticipantIds: c.ParticipantsIds,
 		Avatar:         c.Avatar,
 		AvatarBig:      c.AvatarBig,
-		// see also notifications/notifications.go:75 chatNotifyCommon()
+		// see also services/notifications.go:75 chatNotifyCommon()
 		CanEdit:             null.BoolFrom(c.IsAdmin && !c.TetATet),
 		CanDelete:           null.BoolFrom(c.IsAdmin),
-		LastUpdateDateTime:  c.LastUpdateDateTime,
 		CanLeave:            null.BoolFrom(!c.IsAdmin && !c.TetATet),
 		UnreadMessages:      unreadMessages,
-		IsTetATet:           c.TetATet,
 		CanVideoKick:        c.IsAdmin,
 		CanAudioMute:        c.IsAdmin,
 		CanChangeChatAdmins: c.IsAdmin && !c.TetATet,
 		ParticipantsCount:   c.ParticipantsCount,
+		LastUpdateDateTime:  c.LastUpdateDateTime,
+		IsTetATet:           c.TetATet,
+		CanBroadcast:        c.IsAdmin,
 	}
 	return &dto.ChatDto{
 		BaseChatDto:  b,

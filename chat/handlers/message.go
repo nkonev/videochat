@@ -427,16 +427,12 @@ func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	if !userPrincipalDto.HasRole("ROLE_ADMIN") {
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	if participant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
+	if participant, err := mc.db.IsAdmin(userPrincipalDto.UserId, chatId); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking participant")
 		return err
 	} else if !participant {
