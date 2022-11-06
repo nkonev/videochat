@@ -121,6 +121,20 @@ services:
       options:
         tag: chat-livekit
 
+  egress:
+    image: nkonev/egress:v1.5.1-pre-3
+    networks:
+      backend:
+    environment:
+      - EGRESS_CONFIG_FILE=/etc/egress/config.yaml
+    volumes:
+      - ./egress/config.yaml:/etc/egress/config.yaml
+      - egress_tmp:/tmp/lkegress
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-egress
+
   jaeger:
     image: jaegertracing/all-in-one:1.34.0
     hostname: jaeger
@@ -135,6 +149,7 @@ volumes:
   postgres_data:
   redis_data_dir:
   rabbitmq_data_dir:
+  egress_tmp:
 
 networks:
   backend:

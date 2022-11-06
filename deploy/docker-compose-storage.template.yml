@@ -27,6 +27,7 @@ services:
         - "traefik.http.routers.storage-version-router.middlewares=storage-stripprefix-middleware"
     environment:
         - STORAGE_MINIO.ENDPOINT=minio:9000
+        - STORAGE_MINIO.CONTAINERENDPOINT=http://minio:9000
         - STORAGE_CHAT.URL.BASE=http://chat:1235
         - STORAGE_AAA.URL.BASE=http://aaa:8060
         - STORAGE_LIMITS.STAT.DIR=/data

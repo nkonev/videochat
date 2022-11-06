@@ -25,6 +25,7 @@ services:
     environment:
       - VIDEO_AAA.URL.BASE=http://aaa:8060
       - VIDEO_CHAT.URL.BASE=http://chat:1235
+      - VIDEO_STORAGE.URL.BASE=http://storage:1236
       - VIDEO_LIVEKIT.URL=http://livekit:7880
       - VIDEO_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - VIDEO_JAEGER.HOST=jaeger
