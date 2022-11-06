@@ -492,6 +492,7 @@
             onProfileSet() {
                 this.getInfo();
                 this.graphQlSubscribe();
+                this.updateVideoRecordingState();
             },
             onLoggedIn() {
                 // seems it need in order to mitigate bug with last login message
@@ -612,6 +613,17 @@
                     bus.$emit(MESSAGE_BROADCAST, d);
                 }
             },
+            updateVideoRecordingState() {
+                axios.get(`/api/video/${this.chatId}/record/status`).then(({data}) => {
+                    this.$store.commit(SET_CAN_MAKE_RECORD, data.canMakeRecord);
+                    if (data.canMakeRecord) {
+                        const record = data.recordInProcess;
+                        if (record) {
+                            this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, true);
+                        }
+                    }
+                })
+            }
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -661,15 +673,7 @@
 
             this.scrollerDiv = document.getElementById("messagesScroller");
 
-            axios.get(`/api/video/${this.chatId}/record/status`).then(({data}) => {
-                this.$store.commit(SET_CAN_MAKE_RECORD, data.canMakeRecord);
-                if (data.canMakeRecord) {
-                    const record = data.recordInProcess;
-                    if (record) {
-                        this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, true);
-                    }
-                }
-            })
+            this.updateVideoRecordingState();
         },
         beforeDestroy() {
             this.graphQlUnsubscribe();
