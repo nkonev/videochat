@@ -10,6 +10,7 @@ Your open source self-hosted videoconference platform.
 * No installation on client's machine - only modern browser with video camera or microphone required.
 * Screen [sharing](./screenshots.md#screen-sharing).
 * Multiple cameras support.
+* Video recording, recordings are saved to files.
 * One user can use several devices simultaneously (e. g. smartphone / PC / Laptop / ...).
 * [Muting, kicking](./screenshots.md#videoconference-and-participant-management) video participants.
 * Calling to user to [invite](./screenshots.md#inviting-user-to-videoconference) his or her to video conference.
