@@ -5,12 +5,6 @@
                 <v-card-title>{{ $vuetify.lang.t('$vuetify.attached_files') }}</v-card-title>
 
                 <v-card-text class="ma-0 pa-0">
-                    <v-pagination
-                        v-if="shouldShowPagination"
-                        v-model="filePage"
-                        :length="filePagesCount"
-                    ></v-pagination>
-
                     <v-list v-if="!loading">
                         <template v-if="dto.count > 0">
                             <template v-for="(item, index) in dto.files">
@@ -64,8 +58,14 @@
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
-                  <v-btn color="primary" class="mr-4" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
-                  <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                    <v-pagination
+                        v-if="shouldShowPagination"
+                        v-model="filePage"
+                        :length="filePagesCount"
+                    ></v-pagination>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" class="mr-4" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
+                    <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
