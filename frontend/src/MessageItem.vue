@@ -29,8 +29,7 @@
         OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE
     } from "./bus";
     import debounce from "lodash/debounce";
-    import { format, parseISO, differenceInDays } from 'date-fns';
-    import {setIcon} from "@/utils";
+    import {getHumanReadableDate, setIcon} from "@/utils";
     import "./messageImage.styl";
 
     export default {
@@ -72,12 +71,7 @@
                 return item.owner.login
             },
             getDate(item) {
-                const parsedDate = parseISO(item.createDateTime);
-                let formatString = 'HH:mm:ss';
-                if (differenceInDays(new Date(), parsedDate) >= 1) {
-                    formatString = formatString + ', d MMM yyyy';
-                }
-                return `${format(parsedDate, formatString)}`
+                return getHumanReadableDate(item.createDateTime)
             },
             onFilesClicked(itemId) {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid :itemId});
