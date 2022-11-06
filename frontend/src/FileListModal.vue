@@ -119,19 +119,17 @@ export default {
             this.chatId = chatId;
             this.fileItemUuid = fileItemUuid;
             this.show = true;
-            this.loading = true;
             this.messageEditing = messageEditing;
-            this.updateFiles(()=> {
-                this.loading = false;
-            })
+            this.updateFiles();
         },
         translatePage() {
             return this.filePage - 1;
         },
-        updateFiles(callback) {
+        updateFiles() {
             if (!this.show) {
                 return
             }
+            this.loading = true;
             axios.get(`/api/storage/${this.chatId}`, {
                 params: {
                     page: this.translatePage(),
@@ -143,9 +141,7 @@ export default {
                     this.dto = response.data;
                 })
                 .finally(() => {
-                    if (callback) {
-                      callback();
-                    }
+                    this.loading = false;
                 })
         },
         closeModal() {
