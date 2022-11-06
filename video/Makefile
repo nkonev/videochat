@@ -9,7 +9,7 @@ check-env:
 generate: generate-git
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
-STATIC_JSON := ./handlers/static/git.json
+STATIC_JSON := ./handlers/static-api/git.json
 CURR := $(shell pwd)
 
 generate-git:
