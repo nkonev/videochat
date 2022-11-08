@@ -9,7 +9,6 @@
                 @input="sendNotification"
             />
 
-            <div id="custom-toolbar">
                 <div class="d-flex flex-wrap flex-row">
                     <div style="max-width: 100%" v-if="$refs.tipTapRef">
                         <v-slide-group
@@ -72,7 +71,6 @@
                     </div>
 
                 </div>
-            </div>
 
     </v-container>
 </template>
@@ -323,24 +321,10 @@ $borderColor = rgba(0, 0, 0, 0.2)
     min-height 25%
 }
 
-#custom-toolbar {
-    border-top-width: 0
-    border-bottom-style dashed
-    border-left-style dashed
-    border-right-style dashed
-    border-width 1px
-    border-color: $borderColor
-}
 .richText {
     border-color: $borderColor
 }
-@media screen and (max-width: $mobileWidth) {
-    #custom-toolbar {
-        border-width: 0
-    }
-    //border-left-width: 0
-    //border-right-width: 0
-}
+
 
 .custom-toolbar-send {
     display: flex;
