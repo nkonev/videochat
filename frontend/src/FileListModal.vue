@@ -57,7 +57,7 @@
 
                 </v-card-text>
 
-                <v-card-actions class="pa-4">
+                <v-card-actions class="pa-4 d-flex flex-wrap flex-row">
                     <v-pagination
                         v-if="shouldShowPagination"
                         v-model="filePage"
