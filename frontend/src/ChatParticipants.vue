@@ -111,7 +111,7 @@
                                         </template>
                                         <template v-else-if="item.admin">
                                           <span class="pl-1 pr-1">
-                                              <v-icon v-bind="attrs" v-on="on">mdi-crown</v-icon>
+                                              <v-icon v-bind="attrs" v-on="on" color="primary">mdi-crown</v-icon>
                                           </span>
                                         </template>
                                     </template>
