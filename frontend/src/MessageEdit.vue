@@ -9,7 +9,7 @@
                 @input="sendNotification"
             />
 
-                <div class="d-flex flex-wrap flex-row">
+                <div class="d-flex flex-wrap flex-row dashed-borders">
                     <div style="max-width: 100%" v-if="$refs.tipTapRef">
                         <v-slide-group
                             multiple
@@ -325,6 +325,20 @@ $borderColor = rgba(0, 0, 0, 0.2)
     border-color: $borderColor
 }
 
+.dashed-borders {
+    border-top-width: 0
+    border-bottom-style dashed
+    border-left-style dashed
+    border-right-style dashed
+    border-width 1px
+    border-color: $borderColor
+}
+
+@media screen and (max-width: $mobileWidth) {
+    .dashed-borders {
+        border-width: 0
+    }
+}
 
 .custom-toolbar-send {
     display: flex;
