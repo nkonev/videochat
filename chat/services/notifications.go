@@ -103,9 +103,9 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 			copied.CanVideoKick = admin
 			copied.CanAudioMute = admin
 			copied.CanChangeChatAdmins = admin && !copied.IsTetATet
-			copied.ParticipantsCount = newChatDto.ParticipantsCount
-			copied.ChangingParticipantsPage = changingParticipantPage
 			copied.CanBroadcast = admin
+
+			copied.ChangingParticipantsPage = changingParticipantPage
 
 			for _, participant := range copied.Participants {
 				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)

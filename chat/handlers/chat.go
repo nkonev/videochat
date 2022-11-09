@@ -219,6 +219,8 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		ParticipantIds: c.ParticipantsIds,
 		Avatar:         c.Avatar,
 		AvatarBig:      c.AvatarBig,
+		IsTetATet:      c.TetATet,
+
 		// see also services/notifications.go:75 chatNotifyCommon()
 		CanEdit:             null.BoolFrom(c.IsAdmin && !c.TetATet),
 		CanDelete:           null.BoolFrom(c.IsAdmin),
@@ -227,10 +229,10 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		CanVideoKick:        c.IsAdmin,
 		CanAudioMute:        c.IsAdmin,
 		CanChangeChatAdmins: c.IsAdmin && !c.TetATet,
-		ParticipantsCount:   c.ParticipantsCount,
-		LastUpdateDateTime:  c.LastUpdateDateTime,
-		IsTetATet:           c.TetATet,
 		CanBroadcast:        c.IsAdmin,
+
+		ParticipantsCount:  c.ParticipantsCount,
+		LastUpdateDateTime: c.LastUpdateDateTime,
 	}
 	return &dto.ChatDto{
 		BaseChatDto:  b,
