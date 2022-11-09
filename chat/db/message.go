@@ -32,7 +32,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 	var rows *sql.Rows
 	if searchString != "" {
 		searchString = "%" + searchString + "%"
-		rows, err = db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) AND %s AND m.text ILIKE $5 ORDER BY id %s LIMIT $2`, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId, searchString)
+		rows, err = db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) AND %s AND strip_tags(m.text) ILIKE $5 ORDER BY id %s LIMIT $2`, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId, searchString)
 		if err != nil {
 			Logger.Errorf("Error during get chat rows %v", err)
 			return nil, err
