@@ -49,7 +49,7 @@ func (srv *DeleteMissedInChatFilesService) processEmbeddedFiles(filenameChatPref
 	var chatsWithFiles map[int64][]utils.Tuple = make(map[int64][]utils.Tuple)
 
 	var i = 0
-	// TODO is it ok to perform potentially long operations inside processing the channel ?
+
 	for objInfo := range objects {
 		// here in minio 'chat/108/b4c03030-e054-49b5-b63c-78808b4bdeff.png'
 		logger.Logger.Infof("Start processing minio key '%v'", objInfo.Key)
