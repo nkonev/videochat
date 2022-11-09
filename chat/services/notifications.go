@@ -2,7 +2,6 @@ package services
 
 import (
 	"github.com/getlantern/deepcopy"
-	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
@@ -94,16 +93,8 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 				continue
 			}
 
-			// TODO move to better place
-			//  see also handlers/chat.go:199 convertToDto()
-			copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
-			copied.CanDelete = null.BoolFrom(admin)
-			copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet)
-			copied.UnreadMessages = unreadMessages
-			copied.CanVideoKick = admin
-			copied.CanAudioMute = admin
-			copied.CanChangeChatAdmins = admin && !copied.IsTetATet
-			copied.CanBroadcast = admin
+			// see also handlers/chat.go:199 convertToDto()
+			copied.SetPersonalizedFields(admin, unreadMessages)
 
 			copied.ChangingParticipantsPage = changingParticipantPage
 
@@ -190,8 +181,8 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
 				continue
 			}
-			// TODO move to better place
-			copied.CanEdit = message.OwnerId == participantId
+
+			copied.SetPersonalizedFields(participantId)
 
 			err := not.rabbitPublisher.Publish(dto.ChatEvent{
 				EventType:           eventType,

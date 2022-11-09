@@ -18,6 +18,10 @@ type DisplayMessageDto struct {
 	FileItemUuid   *uuid.UUID `json:"fileItemUuid"`
 }
 
+func (copied *DisplayMessageDto) SetPersonalizedFields(participantId int64) {
+	copied.CanEdit = copied.OwnerId == participantId
+}
+
 type MessageDeletedDto struct {
 	Id     int64 `json:"id"`
 	ChatId int64 `json:"chatId"`

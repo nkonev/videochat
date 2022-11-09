@@ -142,7 +142,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, beha
 	if user == nil {
 		user = &dto.User{Login: fmt.Sprintf("user%v", dbMessage.OwnerId), Id: dbMessage.OwnerId}
 	}
-	return &dto.DisplayMessageDto{
+	ret := &dto.DisplayMessageDto{
 		Id:             dbMessage.Id,
 		Text:           dbMessage.Text,
 		ChatId:         dbMessage.ChatId,
@@ -150,9 +150,12 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, beha
 		CreateDateTime: dbMessage.CreateDateTime,
 		EditDateTime:   dbMessage.EditDateTime,
 		Owner:          user,
-		CanEdit:        dbMessage.OwnerId == behalfUserId,
 		FileItemUuid:   dbMessage.FileItemUuid,
 	}
+
+	ret.SetPersonalizedFields(behalfUserId)
+
+	return ret
 }
 
 func (a *CreateMessageDto) Validate() error {

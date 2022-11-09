@@ -24,6 +24,17 @@ type BaseChatDto struct {
 	ParticipantsCount   int         `json:"participantsCount"`
 }
 
+func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64) {
+	copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
+	copied.CanDelete = null.BoolFrom(admin)
+	copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet)
+	copied.UnreadMessages = unreadMessages
+	copied.CanVideoKick = admin
+	copied.CanAudioMute = admin
+	copied.CanChangeChatAdmins = admin && !copied.IsTetATet
+	copied.CanBroadcast = admin
+}
+
 type ChatDeletedDto struct {
 	Id int64 `json:"id"`
 }
