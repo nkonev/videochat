@@ -76,7 +76,6 @@ func (r *BaseChatDto) GetIsTetATet() bool {
 type ChatDtoWithAdmin struct {
 	BaseChatDto
 	Participants             []*UserWithAdmin `json:"participants"`
-	ParticipantsCount        int              `json:"participantsCount"`
 	ChangingParticipantsPage int              `json:"changingParticipantsPage"`
 }
 
