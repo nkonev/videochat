@@ -26,6 +26,9 @@ import TextStyle from "@tiptap/extension-text-style";
 import Color from '@tiptap/extension-color';
 import Highlight from "@tiptap/extension-highlight";
 import axios from "axios";
+import router from './router.js'
+
+const prosemirrorState = require('prosemirror-state');
 
 const embedUploadFunction = (chatId, fileObj) => {
     const formData = new FormData();
@@ -36,6 +39,43 @@ const embedUploadFunction = (chatId, fileObj) => {
             console.debug("got embed url", url);
             return url;
         })
+}
+
+const upload = (fileObj) => {
+    const chatId = router.history.current.params.id;
+    return embedUploadFunction(chatId, fileObj)
+}
+
+const MyImage = Image;
+
+MyImage.config.addProseMirrorPlugins = () => {
+    return [
+        new prosemirrorState.Plugin({
+            key: new prosemirrorState.PluginKey('imageHandler'),
+            props: {
+                handlePaste: (view, event) => {
+                    const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                    for (const item of items) {
+                        if (item.type.indexOf("image") === 0) {
+                            event.preventDefault();
+                            const {schema} = view.state;
+
+                            const image = item.getAsFile();
+
+                            upload(image).then(src => {
+                                const node = schema.nodes.image.create({
+                                    src: src,
+                                });
+                                const transaction = view.state.tr.replaceSelectionWith(node);
+                                view.dispatch(transaction)
+                            });
+
+                        }
+                    }
+                },
+            }
+        }),
+    ];
 }
 
 const empty = "";
@@ -107,7 +147,7 @@ export default {
               },
           }),
           Text,
-          Image.configure({
+          MyImage.configure({
               inline: true,
               HTMLAttributes: {
                   class: 'image-custom-class',
