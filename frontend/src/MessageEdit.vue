@@ -130,6 +130,7 @@
               this.$refs.tipTapRef.clearContent();
               this.editMessageDto = dtoFactory();
               this.fileCount = null;
+              this.notifyAboutBroadcast(true);
             },
             messageTextIsPresent(text) {
                 return text && text !== ""
