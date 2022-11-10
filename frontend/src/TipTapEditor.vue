@@ -21,62 +21,10 @@ import Link from '@tiptap/extension-link'
 import Text from "@tiptap/extension-text";
 import History from '@tiptap/extension-history';
 import Placeholder from '@tiptap/extension-placeholder';
-import Image from '@tiptap/extension-image';
 import TextStyle from "@tiptap/extension-text-style";
 import Color from '@tiptap/extension-color';
 import Highlight from "@tiptap/extension-highlight";
-import axios from "axios";
-import router from './router.js'
-
-const prosemirrorState = require('prosemirror-state');
-
-const embedUploadFunction = (chatId, fileObj) => {
-    const formData = new FormData();
-    formData.append('embed_file_header', fileObj);
-    return axios.post('/api/storage/'+chatId+'/embed', formData)
-        .then((result) => {
-            let url = result.data.relativeUrl; // Get url from response
-            console.debug("got embed url", url);
-            return url;
-        })
-}
-
-const upload = (fileObj) => {
-    const chatId = router.history.current.params.id;
-    return embedUploadFunction(chatId, fileObj)
-}
-
-const MyImage = Image;
-
-MyImage.config.addProseMirrorPlugins = () => {
-    return [
-        new prosemirrorState.Plugin({
-            key: new prosemirrorState.PluginKey('imageHandler'),
-            props: {
-                handlePaste: (view, event) => {
-                    const items = (event.clipboardData || event.originalEvent.clipboardData).items;
-                    for (const item of items) {
-                        if (item.type.indexOf("image") === 0) {
-                            event.preventDefault();
-                            const {schema} = view.state;
-
-                            const image = item.getAsFile();
-
-                            upload(image).then(src => {
-                                const node = schema.nodes.image.create({
-                                    src: src,
-                                });
-                                const transaction = view.state.tr.replaceSelectionWith(node);
-                                view.dispatch(transaction)
-                            });
-
-                        }
-                    }
-                },
-            }
-        }),
-    ];
-}
+import {buildImageHandler, embedUploadFunction} from '@/TipTapImage';
 
 const empty = "";
 
@@ -147,7 +95,7 @@ export default {
               },
           }),
           Text,
-          MyImage.configure({
+          buildImageHandler(this.chatId).configure({
               inline: true,
               HTMLAttributes: {
                   class: 'image-custom-class',
