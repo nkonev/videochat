@@ -60,7 +60,7 @@ videoCallUsersCountNotificationPeriod: 2s
 videoCallRecordingNotificationPeriod: 20s
 dialPeriod: 5s
 # used to forbid records by guests
-only-role-admin-recording: true
+onlyRoleAdminRecording: false
 
 redis:
   address: :36379

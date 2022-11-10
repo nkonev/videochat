@@ -24,7 +24,7 @@ type RecordHandler struct {
 }
 
 func NewRecordHandler(egressClient *lksdk.EgressClient, restClient *client.RestClient, egressService *services.EgressService) *RecordHandler {
-	return &RecordHandler{egressClient: egressClient, restClient: restClient, egressService: egressService, onlyRoleAdminRecording: viper.GetBool("only-role-admin-recording")}
+	return &RecordHandler{egressClient: egressClient, restClient: restClient, egressService: egressService, onlyRoleAdminRecording: viper.GetBool("onlyRoleAdminRecording")}
 }
 
 func (rh *RecordHandler) StartRecording(c echo.Context) error {

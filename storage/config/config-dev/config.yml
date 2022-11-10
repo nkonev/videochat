@@ -57,7 +57,7 @@ aaa:
     getUsers: "/internal/user/list"
 
 limits:
-  enabled: true
+  enabled: false
   stat:
     dir: "."
   default:

@@ -34,6 +34,8 @@ services:
         - STORAGE_REDIS.ADDRESS=redis:6379
         - STORAGE_JAEGER.HOST=jaeger
         - STORAGE_JAEGER.PORT=6831
+#        - STORAGE_LIMITS.ENABLED=true
+
     logging:
       driver: "journald"
       options:

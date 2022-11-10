@@ -31,6 +31,7 @@ services:
       - VIDEO_JAEGER.HOST=jaeger
       - VIDEO_JAEGER.PORT=6831
       - VIDEO_REDIS.ADDRESS=redis:6379
+#      - VIDEO_ONLYROLEADMINRECORDING=true
 
     logging:
       driver: "journald"
