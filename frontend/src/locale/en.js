@@ -47,7 +47,7 @@ export default {
     min_characters: "Min {0} characters",
     invalid_email: "Invalid email",
     participants: "participants",
-    message_edit_placeholder: "Press Ctrl + Enter to send, Esc to clear",
+    message_edit_placeholder: "Press Ctrl + Enter to send, Esc to clear. You also can drag and drop image on this label.",
     message_broadcast: "Broadcast",
     user_is_writing: "is writing...",
     user_open_chat: "Open chat",

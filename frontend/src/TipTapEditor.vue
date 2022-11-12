@@ -2,7 +2,7 @@
   <div class="richText">
     <input id="image-file-input" type="file" style="display: none;" accept="image/*" />
     <div class="richText__content">
-      <editor-content :editor="editor" />
+      <editor-content :editor="editor" class="editorContent" />
     </div>
   </div>
 </template>
@@ -136,6 +136,12 @@ export default {
 };
 </script>
 <style>
+.editorContent {
+    height: 100%;
+}
+.ProseMirror {
+    height: 100%;
+}
 .richText {
   display: flex;
   flex-direction: column;
