@@ -117,7 +117,6 @@
             return {
                 startingFromItemId: null,
                 items: [],
-                itemsTotal: 0,
                 infiniteId: +new Date(),
 
                 chatDto: {
