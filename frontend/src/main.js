@@ -22,7 +22,7 @@ import store, {
     UNSET_USER
 } from './store'
 import router from './router.js'
-import {setIcon} from "@/utils";
+import {hasLength, setIcon} from "@/utils";
 import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
 
 const CheckForNewUrl = '/api/chat/message/check-for-new';
@@ -222,6 +222,22 @@ vm = new Vue({
     Vue.prototype.isMobile = () => {
       return !this.$vuetify.breakpoint.smAndUp
     };
+    Vue.prototype.getHash = (preserveHash) => {
+      const tmp = this.$route.hash;
+      return preserveHash ? tmp : tmp?.slice(1)
+    };
+    Vue.prototype.clearHash = () => {
+      const hasHash = hasLength(this.getHash());
+      if (hasHash) {
+          console.debug("Clearing hash");
+          const currentRouteName = this.$route.name;
+          const routerNewState = {name: currentRouteName};
+          routerNewState.query = this.$route.query;
+          this.$router.push(routerNewState).catch(() => {
+          });
+      }
+    };
+
     bus.$on(PROFILE_SET, this.graphQlSubscribe);
     bus.$on(LOGGED_OUT, this.graphQlUnsubscribe);
   },

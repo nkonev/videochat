@@ -114,7 +114,7 @@
             <v-spacer></v-spacer>
 
             <v-card light v-if="isShowSearch">
-                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+                <v-text-field prepend-icon="mdi-magnify" hide-details single-line @input="clearHash()" v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
             </v-card>
         </v-app-bar>
 
@@ -240,6 +240,7 @@
     import MessageEditColorModal from "@/MessageEditColorModal";
 
     import queryMixin, {searchQueryParameter} from "@/queryMixin";
+    import {hasLength} from "@/utils";
 
     const reactOnAnswerThreshold = 3 * 1000; // ms
     const audio = new Audio("/call.mp3");
@@ -409,6 +410,19 @@
             resetInput() {
                 this.searchString = null;
             },
+            searchStringChanged(searchString) {
+                console.debug("doSearch", searchString);
+
+                const currentRouteName = this.$route.name;
+                const routerNewState = {name: currentRouteName};
+                if (searchString && searchString != "") {
+                    routerNewState.query = {[searchQueryParameter]: searchString};
+                }
+                if (hasLength(this.getHash(true))) {
+                    routerNewState.hash = this.getHash(true);
+                }
+                this.$router.push(routerNewState).catch(()=>{});
+            },
         },
         computed: {
             ...mapGetters({
@@ -438,6 +452,8 @@
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             bus.$on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
 
+            this.initQueryAndWatcher();
+
             this.$router.beforeEach((to, from, next) => {
                 console.debug("beforeEach", to);
 
@@ -458,19 +474,6 @@
                     next();
                 }
             });
-        },
-        watch: {
-            searchString (searchString, searchStringOld) {
-                // Update query basing on store (through computed) change
-                console.debug("doSearch", searchString);
-
-                const currentRouteName = this.$route.name;
-                const routerNewState = {name: currentRouteName};
-                if (searchString && searchString != "") {
-                    routerNewState.query = {[searchQueryParameter]: searchString};
-                }
-                this.$router.push(routerNewState).catch(()=>{});
-            },
         },
     }
 </script>

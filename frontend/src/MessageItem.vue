@@ -12,6 +12,7 @@
                 <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item.fileItemUuid)" small>mdi-file-download</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
+                <a class="mx-1" :href="'#message-item-' + item.id">#</a>
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ highlight: highlight }" >
                 <v-container v-html="item.text" class="ma-0 pre-formatted message-item-text"></v-container>

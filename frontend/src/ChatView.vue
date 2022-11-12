@@ -34,6 +34,7 @@
         >
             <v-icon>mdi-message-plus</v-icon>
         </v-btn>
+
         <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#chatViewContainer'" bottom v-model="showTooltip" :key="tooltipKey">
             <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} {{ $vuetify.lang.t('$vuetify.user_is_writing') }}</span>
             <span v-else>{{broadcastMessage}}</span>
@@ -72,7 +73,7 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
-    import { findIndex, replaceInArray } from "./utils";
+    import {findIndex, hasLength, replaceInArray} from "./utils";
     import MessageItem from "./MessageItem";
     // import 'splitpanes/dist/splitpanes.css';
     import debounce from "lodash/debounce";
@@ -349,6 +350,8 @@
 
             infiniteHandler($state) {
                 if (this.items.length) {
+                    this.clearHash();
+
                     if (this.isTopDirection()) {
                         this.startingFromItemId = Math.min(...this.items.map(it => it.id));
                     } else {
@@ -359,12 +362,15 @@
 
                 this.forbidChangeScrollDirection = true;
 
+                const hash = this.getHash();
+                const hasHash = hasLength(hash);
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
-                        startingFromItemId: this.startingFromItemId,
+                        startingFromItemId: hasHash ? hash.replace('message-item-', '') : this.startingFromItemId,
                         size: pageSize,
                         reverse: this.isTopDirection(),
-                        searchString: this.searchString
+                        searchString: this.searchString,
+                        hasHash: hasHash
                     },
                 }).then(({data}) => {
                     const list = data;
@@ -384,6 +390,9 @@
                         $state?.loaded();
                     } else {
                         $state?.complete();
+                    }
+                    if (hasHash) {
+                        this.$vuetify.goTo('#' + hash, {container: this.scrollerDiv, duration: 0});
                     }
                 }).finally(()=>{
                     this.forbidChangeScrollDirection = false;
