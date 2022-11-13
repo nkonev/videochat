@@ -366,7 +366,7 @@
                 const hasHash = hasLength(hash);
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
-                        startingFromItemId: hasHash ? hash.replace('message-item-', '') : this.startingFromItemId,
+                        startingFromItemId: hasHash ? hash.replace(/\D/g, '') : this.startingFromItemId,
                         size: pageSize,
                         reverse: this.isTopDirection(),
                         searchString: this.searchString,

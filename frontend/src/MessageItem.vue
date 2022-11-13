@@ -1,5 +1,5 @@
 <template>
-    <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="'message-item-' + item.id">
+    <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="'message-' + item.id">
         <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}" class="user-link">
             <v-list-item-avatar v-if="item.owner && item.owner.avatar" class="pr-0 mr-3">
                 <v-img :src="item.owner.avatar"></v-img>
@@ -12,7 +12,7 @@
                 <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item.fileItemUuid)" small>mdi-file-download</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
-                <a class="mx-1" :href="'#message-item-' + item.id">#</a>
+                <a class="mx-1" :href="'#message-' + item.id">#</a>
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ highlight: highlight }" >
                 <v-container v-html="item.text" class="ma-0 pre-formatted message-item-text"></v-container>
