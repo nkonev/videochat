@@ -6,15 +6,15 @@
             </v-list-item-avatar>
         </router-link>
 
-        <div @click="onMessageClick(item)" class="message-item-with-buttons-wrapper" @mousemove="onMessageMouseMove(item)">
+        <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
                 <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                 <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item.fileItemUuid)" small>mdi-file-download</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
-                <a class="mx-1" :href="'#message-' + item.id">#</a>
+                <a class="mx-1" :href="'/chat/' + chatId + '#message-' + item.id">#</a>
             </v-container>
-            <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ highlight: highlight }" >
+            <div @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ highlight: highlight }" >
                 <v-container v-html="item.text" class="ma-0 pre-formatted message-item-text"></v-container>
             </div>
         </div>
