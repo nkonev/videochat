@@ -23,7 +23,7 @@ type Message struct {
 func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
 	if hasHash {
 		leftLimit := limit / 2
-		rightLimit := limit/2 - 1
+		rightLimit := limit / 2
 
 		leftLimitRes := db.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit)
 		var leftMessageId, rightMessageId int64
@@ -45,7 +45,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 			order = "desc"
 		}
 
-		rows, err := db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE $3 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $3 ) AND id >= $4 AND id < $5 ORDER BY id %s LIMIT $2`, chatId, order), userId, limit, chatId, leftMessageId, rightMessageId)
+		rows, err := db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE $3 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $3 ) AND id >= $4 AND id <= $5 ORDER BY id %s LIMIT $2`, chatId, order), userId, limit, chatId, leftMessageId, rightMessageId)
 		if err != nil {
 			Logger.Errorf("Error during get chat rows with search %v", err)
 			return nil, err
