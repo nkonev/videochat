@@ -24,7 +24,9 @@ import Placeholder from '@tiptap/extension-placeholder';
 import TextStyle from "@tiptap/extension-text-style";
 import Color from '@tiptap/extension-color';
 import Highlight from "@tiptap/extension-highlight";
+import Mention from '@tiptap/extension-mention';
 import {buildImageHandler, embedUploadFunction} from '@/TipTapImage';
+import suggestion from './suggestion';
 
 const empty = "";
 
@@ -111,7 +113,13 @@ export default {
           }),
           TextStyle,
           Color,
-          Highlight.configure({ multicolor: true })
+          Highlight.configure({ multicolor: true }),
+          Mention.configure({
+              HTMLAttributes: {
+                  class: 'mention',
+              },
+              suggestion,
+          }),
       ],
       content: empty,
       onUpdate: () => this.onUpdateContent(),
