@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" scrollable>
             <v-card>
-                <v-card-title>{{ $vuetify.lang.t('$vuetify.attached_files') }}</v-card-title>
+                <v-card-title>{{ fileItemUuid ? $vuetify.lang.t('$vuetify.attached_message_files') : $vuetify.lang.t('$vuetify.attached_chat_files') }}</v-card-title>
 
                 <v-card-text class="ma-0 pa-0">
                     <v-list v-if="!loading">
