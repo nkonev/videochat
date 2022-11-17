@@ -13,7 +13,7 @@ export default (chatId) => {
                     searchString: query,
                 },
             }).then(({data}) => {
-                return data
+                return data.map(item => item.login)
             })
         },
 

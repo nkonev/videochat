@@ -8,7 +8,7 @@
                 :key="index"
                 @click="selectItem(index)"
             >
-                {{ item.login }}
+                {{ item }}
             </button>
         </template>
         <div class="list-item-head mention-item" v-else>
@@ -79,7 +79,7 @@ export default {
             const item = this.items[index]
 
             if (item) {
-                this.command({ id: item.login })
+                this.command({ id: item })
             }
         },
     },
