@@ -2,7 +2,7 @@
     <div class="mention-items">
         <template v-if="items.length">
             <button
-                class="mention-item"
+                class="list-item-head mention-item"
                 :class="{ 'is-selected': index === selectedIndex }"
                 v-for="(item, index) in items"
                 :key="index"
@@ -11,7 +11,7 @@
                 {{ item }}
             </button>
         </template>
-        <div class="mention-item" v-else>
+        <div class="list-item-head mention-item" v-else>
             No result
         </div>
     </div>
@@ -96,7 +96,6 @@ export default {
     background: #FFF;
     color: rgba(0, 0, 0, 0.8);
     overflow: hidden;
-    font-size: 0.9rem;
     box-shadow:
         0 0 0 1px rgba(0, 0, 0, 0.05),
         0px 10px 20px rgba(0, 0, 0, 0.1)
@@ -112,10 +111,7 @@ export default {
     border: 1px solid transparent;
     padding: 0.2rem 0.4rem;
     font-family: "Roboto", sans-serif;
-
-    font-size: 0.8125rem;
-    font-weight: 500;
-    line-height: 1rem;
+    font-size: 1rem !important;
 
     &.is-selected {
         border-color: $borderColor;

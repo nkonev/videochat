@@ -90,12 +90,7 @@
   .user-link {
     height 100%
   }
-  .list-item-head {
-    color:rgba(0, 0, 0, .6);
-    font-size: .8125rem;
-    font-weight: 500;
-    line-height: 1rem;
-  }
+
   .message-item-root {
       // align-items: center;
       display: flex;
