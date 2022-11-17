@@ -1,8 +1,8 @@
 <template>
-    <div class="items">
+    <div class="mention-items">
         <template v-if="items.length">
             <button
-                class="item"
+                class="mention-item"
                 :class="{ 'is-selected': index === selectedIndex }"
                 v-for="(item, index) in items"
                 :key="index"
@@ -11,7 +11,7 @@
                 {{ item }}
             </button>
         </template>
-        <div class="item" v-else>
+        <div class="mention-item" v-else>
             No result
         </div>
     </div>
@@ -86,8 +86,10 @@ export default {
 }
 </script>
 
-<style lang="scss">
-.items {
+<style lang="stylus">
+$borderColor = rgba(0, 0, 0, 0.2)
+
+.mention-items {
     padding: 0.2rem;
     position: relative;
     border-radius: 0.5rem;
@@ -97,11 +99,10 @@ export default {
     font-size: 0.9rem;
     box-shadow:
         0 0 0 1px rgba(0, 0, 0, 0.05),
-        0px 10px 20px rgba(0, 0, 0, 0.1),
-    ;
+        0px 10px 20px rgba(0, 0, 0, 0.1)
 }
 
-.item {
+.mention-item {
     display: block;
     margin: 0;
     width: 100%;
@@ -110,9 +111,15 @@ export default {
     border-radius: 0.4rem;
     border: 1px solid transparent;
     padding: 0.2rem 0.4rem;
+    font-family: "Roboto", sans-serif;
+
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1rem;
 
     &.is-selected {
-        border-color: #000;
+        border-color: $borderColor;
+        background: #e4efff;
     }
 }
 </style>
