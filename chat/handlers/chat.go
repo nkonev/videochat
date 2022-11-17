@@ -733,19 +733,32 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	result := []*dto.User{}
-	result = append(result, &dto.User{
+	initial := []*dto.User{}
+	initial = append(initial, &dto.User{
 		Id:    1,
 		Login: "Bobby",
 	})
-	result = append(result, &dto.User{
+	initial = append(initial, &dto.User{
 		Id:    2,
 		Login: "Billy",
 	})
-	result = append(result, &dto.User{
+	initial = append(initial, &dto.User{
 		Id:    3,
 		Login: "Willy",
 	})
+
+	result := []*dto.User{}
+
+	searchString := c.QueryParam("searchString")
+	if searchString != "" {
+		for _, user := range initial {
+			if strings.HasPrefix(user.Login, searchString) {
+				result = append(result, user)
+			}
+		}
+	} else {
+		result = initial
+	}
 
 	return c.JSON(http.StatusOK, result)
 }
