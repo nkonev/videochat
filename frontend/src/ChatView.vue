@@ -725,7 +725,7 @@
 </script>
 
 <style scoped lang="stylus">
-    $mobileWidth = 800px
+    @import "common.styl"
 
     .pre-formatted {
       white-space pre-wrap
@@ -758,9 +758,11 @@
 </style>
 
 <style lang="stylus">
+@import "common.styl"
+
 $dot-size = 2px;
 $dot-space = 4px;
-$bg-color = #e4efff;
+$bg-color = $messageSelectedBackground;
 $dot-color = darkgrey;
 
 .splitpanes {background-color: #f8f8f8;}

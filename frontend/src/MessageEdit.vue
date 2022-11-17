@@ -315,8 +315,7 @@
 </script>
 
 <style lang="stylus">
-$mobileWidth = 800px
-$borderColor = rgba(0, 0, 0, 0.2)
+@import "common.styl"
 
 #sendButtonContainer {
     min-height 25%
