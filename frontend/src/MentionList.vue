@@ -87,7 +87,7 @@ export default {
 </script>
 
 <style lang="stylus">
-$borderColor = rgba(0, 0, 0, 0.2)
+@import "common.styl"
 
 .mention-items {
     padding: 0.2rem;
@@ -119,7 +119,7 @@ $borderColor = rgba(0, 0, 0, 0.2)
 
     &.is-selected {
         border-color: $borderColor;
-        background: #e4efff;
+        background: $messageSelectedBackground;
     }
 }
 </style>

@@ -85,6 +85,8 @@
 </script>
 
 <style lang="stylus">
+  @import "common.styl"
+
   .user-link {
     height 100%
   }
@@ -147,7 +149,7 @@
       white-space: pre;
   }
   .highlight {
-      background #e4efff
+      background $messageSelectedBackground
   }
 
 </style>
