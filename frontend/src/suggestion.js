@@ -1,71 +1,79 @@
 import { VueRenderer } from '@tiptap/vue-2'
 import tippy from 'tippy.js'
+import axios from "axios";
 
 import MentionList from './MentionList.vue'
 
-export default {
-    items: ({ query }) => {
-        return [
-            'Lea Thompson', 'Cyndi Lauper', 'Tom Cruise', 'Madonna', 'Jerry Hall', 'Joan Collins', 'Winona Ryder', 'Christina Applegate', 'Alyssa Milano', 'Molly Ringwald', 'Ally Sheedy', 'Debbie Harry', 'Olivia Newton-John', 'Elton John', 'Michael J. Fox', 'Axl Rose', 'Emilio Estevez', 'Ralph Macchio', 'Rob Lowe', 'Jennifer Grey', 'Mickey Rourke', 'John Cusack', 'Matthew Broderick', 'Justine Bateman', 'Lisa Bonet',
-        ].filter(item => item.toLowerCase().startsWith(query.toLowerCase())).slice(0, 5)
-    },
+export default (chatId) => {
 
-    render: () => {
-        let component
-        let popup
+    return {
+        items: ({query}) => {
+            return axios.get(`/api/chat/${chatId}/suggest-participants`, {
+                params: {
+                    searchString: query,
+                },
+            }).then(({data}) => {
+                return data.map(e => e.login)
+            })
+        },
 
-        return {
-            onStart: props => {
-                component = new VueRenderer(MentionList, {
-                    // using vue 2:
-                    parent: this,
-                    propsData: props,
-                    // using vue 3:
-                    // props,
-                    // editor: props.editor,
-                })
+        render: () => {
+            let component
+            let popup
 
-                if (!props.clientRect) {
-                    return
-                }
+            return {
+                onStart: props => {
+                    component = new VueRenderer(MentionList, {
+                        // using vue 2:
+                        parent: this,
+                        propsData: props,
+                        // using vue 3:
+                        // props,
+                        // editor: props.editor,
+                    })
 
-                popup = tippy('body', {
-                    getReferenceClientRect: props.clientRect,
-                    appendTo: () => document.body,
-                    content: component.element,
-                    showOnCreate: true,
-                    interactive: true,
-                    trigger: 'manual',
-                    placement: 'bottom-start',
-                })
-            },
+                    if (!props.clientRect) {
+                        return
+                    }
 
-            onUpdate(props) {
-                component.updateProps(props)
+                    popup = tippy('body', {
+                        getReferenceClientRect: props.clientRect,
+                        appendTo: () => document.body,
+                        content: component.element,
+                        showOnCreate: true,
+                        interactive: true,
+                        trigger: 'manual',
+                        placement: 'bottom-start',
+                    })
+                },
 
-                if (!props.clientRect) {
-                    return
-                }
+                onUpdate(props) {
+                    component.updateProps(props)
 
-                popup[0].setProps({
-                    getReferenceClientRect: props.clientRect,
-                })
-            },
+                    if (!props.clientRect) {
+                        return
+                    }
 
-            onKeyDown(props) {
-                if (props.event.key === 'Escape') {
-                    popup[0].hide()
+                    popup[0].setProps({
+                        getReferenceClientRect: props.clientRect,
+                    })
+                },
 
-                    return true
-                }
+                onKeyDown(props) {
+                    if (props.event.key === 'Escape') {
+                        popup[0].hide()
 
-                return component.ref?.onKeyDown(props)
-            },
+                        return true
+                    }
 
-            onExit() {
-                popup[0].destroy()
-                component.destroy()
-            },
-        }
-    },
+                    return component.ref?.onKeyDown(props)
+                },
+
+                onExit() {
+                    popup[0].destroy()
+                    component.destroy()
+                },
+            }
+        },
+    }
 }

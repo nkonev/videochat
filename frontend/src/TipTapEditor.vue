@@ -118,7 +118,7 @@ export default {
               HTMLAttributes: {
                   class: 'mention',
               },
-              suggestion,
+              suggestion: suggestion(this.chatId),
           }),
       ],
       content: empty,

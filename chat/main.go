@@ -139,6 +139,7 @@ func configureEcho(
 	e.GET("/internal/does-participant-belong-to-chat", ch.DoesParticipantBelongToChat)
 	e.PUT("/chat/:id/users", ch.AddParticipants)
 	e.GET("/chat/:id/user", ch.SearchForUsersToAdd)
+	e.GET("/chat/:id/suggest-participants", ch.SearchForUsersToMention)
 	e.PUT("/chat/tet-a-tet/:participantId", ch.TetATet)
 	e.GET("/internal/access", ch.CheckAccess)
 	e.GET("/internal/participant-ids", ch.GetChatParticipants)

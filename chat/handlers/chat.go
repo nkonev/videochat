@@ -713,6 +713,43 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
+func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	participant, err := ch.db.IsParticipant(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
+	}
+	if !participant {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	result := []*dto.User{}
+	result = append(result, &dto.User{
+		Id:    1,
+		Login: "Bobby",
+	})
+	result = append(result, &dto.User{
+		Id:    2,
+		Login: "Billy",
+	})
+	result = append(result, &dto.User{
+		Id:    3,
+		Login: "Willy",
+	})
+
+	return c.JSON(http.StatusOK, result)
+}
+
 func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 	chatId, err := GetQueryParamAsInt64(c, "chatId")
 	if err != nil {
