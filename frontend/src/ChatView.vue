@@ -392,7 +392,7 @@
                         $state?.complete();
                     }
                     if (hasHash) {
-                        this.$vuetify.goTo('#' + hash, {container: this.scrollerDiv, duration: 0});
+                        this.$vuetify.goTo('#' + hash, {container: this.scrollerDiv, duration: 0, offset: 0});
                     }
                 }).finally(()=>{
                     this.forbidChangeScrollDirection = false;
