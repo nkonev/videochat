@@ -705,7 +705,7 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 		return err
 	}
 
-	users, err := ch.restClient.SearchGetUsers(searchString, excludingIds, c.Request().Context())
+	users, err := ch.restClient.SearchGetUsers(searchString, false, excludingIds, c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -733,34 +733,15 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	initial := []*dto.User{}
-	initial = append(initial, &dto.User{
-		Id:    1,
-		Login: "Bobby",
-	})
-	initial = append(initial, &dto.User{
-		Id:    2,
-		Login: "Billy",
-	})
-	initial = append(initial, &dto.User{
-		Id:    3,
-		Login: "Willy",
-	})
-
-	result := []*dto.User{}
-
 	searchString := c.QueryParam("searchString")
-	if searchString != "" {
-		for _, user := range initial {
-			if strings.HasPrefix(user.Login, searchString) {
-				result = append(result, user)
-			}
-		}
-	} else {
-		result = initial
+	includingIds, err := ch.db.GetAllParticipantIds(chatId)
+
+	users, err := ch.restClient.SearchGetUsers(searchString, true, includingIds, c.Request().Context())
+	if err != nil {
+		return err
 	}
 
-	return c.JSON(http.StatusOK, result)
+	return c.JSON(http.StatusOK, users)
 }
 
 func (ch *ChatHandler) CheckAccess(c echo.Context) error {

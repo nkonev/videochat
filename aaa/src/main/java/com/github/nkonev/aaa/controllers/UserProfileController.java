@@ -136,15 +136,18 @@ public class UserProfileController {
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestParam(value = "page", required=false, defaultValue = "0") int page,
             @RequestParam(value = "size", required=false, defaultValue = "0") int size,
-            @RequestParam(value = "excludingUserId") List<Long> userIds,
-            @RequestParam(value = "searchString") String searchString
+            @RequestParam(value = "userId") List<Long> userIds,
+            @RequestParam(value = "searchString") String searchString,
+            @RequestParam(value = "including") boolean including
     ) {
         LOGGER.info("Searching internal users");
         PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(page), PageUtils.fixSize(size), Sort.Direction.ASC, "id");
         searchString = searchString.trim();
 
         final String forDbSearch = "%" + searchString + "%";
-        List<UserAccount> resultPage = userAccountRepository.findByUsernameContainsIgnoreCaseAndIdNotIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, userIds);
+        List<UserAccount> resultPage =
+                including ? userAccountRepository.findByUsernameContainsIgnoreCaseAndIdIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, userIds) :
+                userAccountRepository.findByUsernameContainsIgnoreCaseAndIdNotIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, userIds);
 
         return resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList());
     }
