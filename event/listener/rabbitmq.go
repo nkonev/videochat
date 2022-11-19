@@ -54,7 +54,7 @@ func createAndBind(name string, key string, exchange string, consumeCh *rabbitmq
 	return &q
 }
 
-func CreateFanoutNotificationsChannel(connection *rabbitmq.Connection, onMessage FanoutNotificationsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
+func CreateEventsChannel(connection *rabbitmq.Connection, onMessage EventsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
 	var fanoutQueueName = "async-events-" + uuid.New().String()
 
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(

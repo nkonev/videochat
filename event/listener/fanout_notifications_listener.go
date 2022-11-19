@@ -11,9 +11,9 @@ import (
 	"nkonev.name/event/type_registry"
 )
 
-type FanoutNotificationsListener func(*amqp.Delivery) error
+type EventsListener func(*amqp.Delivery) error
 
-func CreateFanoutNotificationsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeRegistryInstance) FanoutNotificationsListener {
+func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeRegistryInstance) EventsListener {
 	return func(msg *amqp.Delivery) error {
 		bytesData := msg.Body
 		strData := string(bytesData)

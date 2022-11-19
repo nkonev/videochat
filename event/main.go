@@ -51,14 +51,14 @@ func main() {
 			configureEventBus,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
-			listener.CreateFanoutNotificationsListener,
+			listener.CreateEventsListener,
 			rabbitmq.CreateRabbitMqConnection,
 			type_registry.NewTypeRegistryInstance,
 			client.NewRestClient,
 		),
 		fx.Invoke(
 			runEcho,
-			listener.CreateFanoutNotificationsChannel,
+			listener.CreateEventsChannel,
 		),
 	)
 	app.Run()
