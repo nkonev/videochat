@@ -126,6 +126,13 @@ type RabbitMqConfig struct {
 	Debug bool   `mapstructure:"debug"`
 }
 
+type RedisConfig struct {
+	Address    string `mapstructure:"address"`
+	Password   string `mapstructure:"password"`
+	Db         int    `mapstructure:"db"`
+	MaxRetries int    `mapstructure:"maxRetries"`
+}
+
 type ExtendedConfig struct {
 	FrontendConfig                        FrontendConfig   `mapstructure:"frontend"`
 	RestClientConfig                      RestClientConfig `mapstructure:"http"`
@@ -140,4 +147,7 @@ type ExtendedConfig struct {
 	VideoCallUsersCountNotificationPeriod time.Duration    `mapstructure:"videoCallUsersCountNotificationPeriod"`
 	VideoCallRecordingNotificationPeriod  time.Duration    `mapstructure:"videoCallRecordingNotificationPeriod"`
 	DialPeriod                            time.Duration    `mapstructure:"dialPeriod"`
+	OnlyRoleAdminRecording                bool             `mapstructure:"onlyRoleAdminRecording"`
+	RecordPreset                          string           `mapstructure:"recordPreset"`
+	RedisConfig                           RedisConfig      `mapstructure:"redis"`
 }

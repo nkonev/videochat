@@ -59,8 +59,9 @@ rabbitmq:
 videoCallUsersCountNotificationPeriod: 2s
 videoCallRecordingNotificationPeriod: 20s
 dialPeriod: 5s
-# used to forbid records by guests
+# used to forbid records by guests on demo server
 onlyRoleAdminRecording: false
+recordPreset: H264_1080P_30
 
 redis:
   address: :36379
