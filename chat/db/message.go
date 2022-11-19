@@ -40,7 +40,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 			return nil, err
 		}
 
-		rightLimitRes := db.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id > $1 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit)
+		rightLimitRes := db.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT m.id FROM message_chat_%v m WHERE id >= $1 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit)
 		err = rightLimitRes.Scan(&rightMessageId)
 		if err != nil {
 			Logger.Errorf("Error during getting right messageId %v", err)
