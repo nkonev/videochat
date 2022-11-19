@@ -7,7 +7,6 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
-	"github.com/microcosm-cc/bluemonday"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -40,10 +39,10 @@ type ChatHandler struct {
 	db          db.DB
 	notificator services.Notifications
 	restClient  client.RestClient
-	policy      *bluemonday.Policy
+	policy      *SanitizerPolicy
 }
 
-func NewChatHandler(dbR db.DB, notificator services.Notifications, restClient client.RestClient, policy *bluemonday.Policy) *ChatHandler {
+func NewChatHandler(dbR db.DB, notificator services.Notifications, restClient client.RestClient, policy *SanitizerPolicy) *ChatHandler {
 	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
 }
 
@@ -292,7 +291,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 	return errOuter
 }
 
-func convertToCreatableChat(d *CreateChatDto, policy *bluemonday.Policy) *db.Chat {
+func convertToCreatableChat(d *CreateChatDto, policy *SanitizerPolicy) *db.Chat {
 	return &db.Chat{
 		Title: TrimAmdSanitize(policy, d.Name),
 	}

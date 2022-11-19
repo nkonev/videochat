@@ -7,7 +7,6 @@ require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/google/uuid v1.3.0
-	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/guregu/null v4.0.0+incompatible
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo/v4 v4.7.2

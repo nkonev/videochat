@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
@@ -133,7 +132,7 @@ func Convert(h http.Handler) echo.HandlerFunc {
 	}
 }
 
-func SanitizeMessage(policy *bluemonday.Policy, input string) string {
+func SanitizeMessage(policy *SanitizerPolicy, input string) string {
 	return policy.Sanitize(input)
 }
 
@@ -141,6 +140,6 @@ func Trim(str string) string {
 	return strings.TrimSpace(str)
 }
 
-func TrimAmdSanitize(policy *bluemonday.Policy, input string) string {
+func TrimAmdSanitize(policy *SanitizerPolicy, input string) string {
 	return Trim(SanitizeMessage(policy, input))
 }

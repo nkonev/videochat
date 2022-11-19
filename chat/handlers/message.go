@@ -5,10 +5,8 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/google/uuid"
-	strip "github.com/grokify/html-strip-tags-go"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
-	"github.com/microcosm-cc/bluemonday"
 	"math"
 	"net/http"
 	"nkonev.name/chat/auth"
@@ -35,14 +33,15 @@ type CreateMessageDto struct {
 
 type MessageHandler struct {
 	db          db.DB
-	policy      *bluemonday.Policy
+	policy      *SanitizerPolicy
+	stripper    *StripTagsPolicy
 	notificator services.Notifications
 	restClient  client.RestClient
 }
 
-func NewMessageHandler(dbR db.DB, policy *bluemonday.Policy, notificator services.Notifications, restClient client.RestClient) *MessageHandler {
+func NewMessageHandler(dbR db.DB, policy *SanitizerPolicy, stripper *StripTagsPolicy, notificator services.Notifications, restClient client.RestClient) *MessageHandler {
 	return &MessageHandler{
-		db: dbR, policy: policy, notificator: notificator, restClient: restClient,
+		db: dbR, policy: policy, stripper: stripper, notificator: notificator, restClient: restClient,
 	}
 }
 
@@ -237,7 +236,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	return errOuter
 }
 
-func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *bluemonday.Policy) *db.Message {
+func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *SanitizerPolicy) *db.Message {
 	return &db.Message{
 		Text:         TrimAmdSanitize(policy, dto.Text),
 		ChatId:       chatId,
@@ -297,7 +296,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	return errOuter
 }
 
-func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *bluemonday.Policy) *db.Message {
+func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *SanitizerPolicy) *db.Message {
 	return &db.Message{
 		Id:           dto.Id,
 		Text:         TrimAmdSanitize(policy, dto.Text),
@@ -450,7 +449,7 @@ func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 		return err
 	}
 
-	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, strip.StripTags(bindTo.Text))
+	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, mc.stripper.Sanitize(bindTo.Text))
 	return c.NoContent(http.StatusAccepted)
 }
 

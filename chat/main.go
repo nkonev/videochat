@@ -38,6 +38,8 @@ func main() {
 			configureTracer,
 			client.NewRestClient,
 			handlers.CreateSanitizer,
+			handlers.CreateStripTags,
+			handlers.StripStripSourcePolicy,
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
 			configureEcho,
