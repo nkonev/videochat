@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -32,16 +33,17 @@ type CreateMessageDto struct {
 }
 
 type MessageHandler struct {
-	db          db.DB
-	policy      *SanitizerPolicy
-	stripper    *StripTagsPolicy
-	notificator services.Notifications
-	restClient  client.RestClient
+	db                 db.DB
+	policy             *SanitizerPolicy
+	stripSourceContent *StripSourcePolicy
+	stripAllTags       *StripTagsPolicy
+	notificator        services.Notifications
+	restClient         client.RestClient
 }
 
-func NewMessageHandler(dbR db.DB, policy *SanitizerPolicy, stripper *StripTagsPolicy, notificator services.Notifications, restClient client.RestClient) *MessageHandler {
+func NewMessageHandler(dbR db.DB, policy *SanitizerPolicy, stripSourceContent *StripSourcePolicy, stripAllTags *StripTagsPolicy, notificator services.Notifications, restClient client.RestClient) *MessageHandler {
 	return &MessageHandler{
-		db: dbR, policy: policy, stripper: stripper, notificator: notificator, restClient: restClient,
+		db: dbR, policy: policy, stripSourceContent: stripSourceContent, stripAllTags: stripAllTags, notificator: notificator, restClient: restClient,
 	}
 }
 
@@ -225,6 +227,10 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+
+		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
+		mc.findMentions(message.Text, users, c.Request().Context())
+
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
 		mc.notificator.ChatNotifyAllUnreadMessageCount(participantIds, c, tx)
@@ -277,7 +283,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		ids, err := tx.GetAllParticipantIds(chatId)
+		participantIds, err := tx.GetAllParticipantIds(chatId)
 		if err != nil {
 			return err
 		}
@@ -286,7 +292,11 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		mc.notificator.NotifyAboutEditMessage(c, ids, chatId, message)
+
+		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
+		mc.findMentions(message.Text, users, c.Request().Context())
+
+		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message)
 
 		return c.JSON(http.StatusCreated, &utils.H{"id": bindTo.Id})
 	})
@@ -449,7 +459,7 @@ func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 		return err
 	}
 
-	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, mc.stripper.Sanitize(bindTo.Text))
+	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, mc.stripAllTags.Sanitize(bindTo.Text))
 	return c.NoContent(http.StatusAccepted)
 }
 
@@ -551,4 +561,13 @@ func (mc *MessageHandler) CheckEmbeddedFiles(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, requestMap)
+}
+
+func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User, c context.Context) {
+	withoutSourceTags := mc.stripSourceContent.Sanitize(messageText)
+	for _, user := range users {
+		if strings.Contains(withoutSourceTags, "@"+user.Login) {
+			GetLogEntry(c).Warnf("Found mention of user %v", user.Login)
+		}
+	}
 }

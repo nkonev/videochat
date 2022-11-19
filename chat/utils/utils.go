@@ -9,7 +9,6 @@ import (
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
-const PersonalChannelPrefix = "#"
 
 type H map[string]interface{}
 
@@ -111,12 +110,20 @@ func InterfaceToString(i interface{}) string {
 	return fmt.Sprintf("%v", i)
 }
 
-const CHANNEL_PREFIX_CHAT_MESSAGES = "chatMessages"
-
 func SetToArray(set map[int64]bool) []int64 {
 	var ownerIds []int64
-	for k, _ := range set {
-		ownerIds = append(ownerIds, k)
+	for k, v := range set {
+		if v {
+			ownerIds = append(ownerIds, k)
+		}
+	}
+	return ownerIds
+}
+
+func ArrayToSet(arr []int64) map[int64]bool {
+	var ownerIds map[int64]bool = map[int64]bool{}
+	for _, el := range arr {
+		ownerIds[el] = true
 	}
 	return ownerIds
 }
