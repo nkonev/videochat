@@ -136,6 +136,8 @@
                 showTooltip: true,
                 broadcastMessage: null,
                 tooltipKey: 0,
+                hash: null,
+                hasHash: false
             }
         },
         computed: {
@@ -350,8 +352,6 @@
 
             infiniteHandler($state) {
                 if (this.items.length) {
-                    this.clearHash();
-
                     if (this.isTopDirection()) {
                         this.startingFromItemId = Math.min(...this.items.map(it => it.id));
                     } else {
@@ -359,18 +359,19 @@
                     }
                     console.log("this.startingFromItemId set to", this.startingFromItemId);
                 }
+                if (this.items.length > pageSize) {
+                    this.clearHash();
+                }
 
                 this.forbidChangeScrollDirection = true;
 
-                const hash = this.getHash();
-                const hasHash = hasLength(hash);
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
-                        startingFromItemId: hasHash ? hash.replace(/\D/g, '') : this.startingFromItemId,
+                        startingFromItemId: this.hasHash ? this.hash.replace(/\D/g, '') : this.startingFromItemId,
                         size: pageSize,
                         reverse: this.isTopDirection(),
                         searchString: this.searchString,
-                        hasHash: hasHash
+                        hasHash: this.hasHash
                     },
                 }).then(({data}) => {
                     const list = data;
@@ -391,9 +392,10 @@
                     } else {
                         $state?.complete();
                     }
-                    if (hasHash) {
-                        this.$vuetify.goTo('#' + hash, {container: this.scrollerDiv, duration: 0});
+                    if (this.hasHash) {
+                        this.$vuetify.goTo('#' + this.hash, {container: this.scrollerDiv, duration: 0});
                     }
+                    this.hasHash = false;
                 }).finally(()=>{
                     this.forbidChangeScrollDirection = false;
                 })
@@ -642,6 +644,9 @@
             this.onScroll = throttle(this.onScroll, 400, {leading:true, trailing:true});
 
             this.initQueryAndWatcher();
+
+            this.hash = this.getHash();
+            this.hasHash = hasLength(this.hash);
         },
         mounted() {
             window.addEventListener('resize', this.onResizedListener);
