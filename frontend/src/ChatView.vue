@@ -449,7 +449,7 @@
             },
             scrollDown() {
                 Vue.nextTick(() => {
-                    console.log("myDiv.scrollTop", this.scrollerDiv.scrollTop, "myDiv.scrollHeight", this.scrollerDiv.scrollHeight);
+                    console.log("Scrolling down myDiv.scrollTop", this.scrollerDiv.scrollTop, "myDiv.scrollHeight", this.scrollerDiv.scrollHeight);
                     this.scrollerDiv.scrollTop = this.scrollerDiv.scrollHeight;
                 });
             },
