@@ -22,17 +22,21 @@ type Notifications interface {
 	NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
+	NotifyAddMention(c echo.Context, created []int64, chatId int64, message *dto.DisplayMessageDto)
+	NotifyRemoveMention(c echo.Context, deleted []int64, chatId int64, messageId int64)
 }
 
 type notifictionsImpl struct {
-	rabbitPublisher *producer.RabbitFanoutNotificationsPublisher
-	db              db.DB
+	rabbitEventPublisher        *producer.RabbitEventsPublisher
+	rabbitNotificationPublisher *producer.RabbitNotificationsPublisher
+	db                          db.DB
 }
 
-func NewNotifications(rabbitPublisher *producer.RabbitFanoutNotificationsPublisher, db db.DB) Notifications {
+func NewNotifications(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher, db db.DB) Notifications {
 	return &notifictionsImpl{
-		rabbitPublisher: rabbitPublisher,
-		db:              db,
+		rabbitEventPublisher:        rabbitEventPublisher,
+		rabbitNotificationPublisher: rabbitNotificationPublisher,
+		db:                          db,
 	}
 }
 
@@ -65,7 +69,7 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 
 	for _, participantId := range userIds {
 		if eventType == "chat_deleted" {
-			err := not.rabbitPublisher.Publish(dto.GlobalEvent{
+			err := not.rabbitEventPublisher.Publish(dto.GlobalEvent{
 				UserId:         participantId,
 				EventType:      eventType,
 				ChatDeletedDto: &dto.ChatDeletedDto{Id: newChatDto.Id},
@@ -102,7 +106,7 @@ func chatNotifyCommon(userIds []int64, not *notifictionsImpl, c echo.Context, ne
 				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)
 			}
 
-			err = not.rabbitPublisher.Publish(dto.GlobalEvent{
+			err = not.rabbitEventPublisher.Publish(dto.GlobalEvent{
 				UserId:           participantId,
 				EventType:        eventType,
 				ChatNotification: newChatDto,
@@ -129,7 +133,7 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 			UnreadMessages: unreadMessages,
 		}
 
-		err = not.rabbitPublisher.Publish(dto.GlobalEvent{
+		err = not.rabbitEventPublisher.Publish(dto.GlobalEvent{
 			UserId:                     participantId,
 			EventType:                  "chat_unread_messages_changed",
 			UnreadMessagesNotification: payload,
@@ -151,7 +155,7 @@ func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c 
 			MessagesCount: unreadMessages,
 		}
 
-		err = not.rabbitPublisher.Publish(dto.GlobalEvent{
+		err = not.rabbitEventPublisher.Publish(dto.GlobalEvent{
 			UserId:                        participantId,
 			EventType:                     "all_unread_messages_changed",
 			AllUnreadMessagesNotification: payload,
@@ -163,7 +167,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 
 	for _, participantId := range userIds {
 		if eventType == "message_deleted" {
-			err := not.rabbitPublisher.Publish(dto.ChatEvent{
+			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 				EventType: eventType,
 				MessageDeletedNotification: &dto.MessageDeletedDto{
 					Id:     message.Id,
@@ -184,7 +188,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 
 			copied.SetPersonalizedFields(participantId)
 
-			err := not.rabbitPublisher.Publish(dto.ChatEvent{
+			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 				EventType:           eventType,
 				MessageNotification: copied,
 				UserId:              participantId,
@@ -227,7 +231,7 @@ func (not *notifictionsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int
 	}
 
 	for _, participantId := range participantIds {
-		err := not.rabbitPublisher.Publish(dto.ChatEvent{
+		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 			EventType:              "user_typing",
 			UserTypingNotification: &ut,
 			UserId:                 participantId,
@@ -251,7 +255,7 @@ func (not *notifictionsImpl) NotifyAboutProfileChanged(user *dto.User) {
 	}
 
 	for _, participantId := range coChatters {
-		err = not.rabbitPublisher.Publish(dto.GlobalEvent{
+		err = not.rabbitEventPublisher.Publish(dto.GlobalEvent{
 			UserId:                  participantId,
 			EventType:               "user_profile_changed",
 			UserProfileNotification: user,
@@ -276,7 +280,7 @@ func (not *notifictionsImpl) NotifyAboutMessageBroadcast(c echo.Context, chatId,
 	}
 
 	for _, participantId := range participantIds {
-		err := not.rabbitPublisher.Publish(dto.ChatEvent{
+		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 			EventType:                    "user_broadcast",
 			MessageBroadcastNotification: &ut,
 			UserId:                       participantId,
@@ -287,4 +291,38 @@ func (not *notifictionsImpl) NotifyAboutMessageBroadcast(c echo.Context, chatId,
 		}
 	}
 
+}
+
+func (not *notifictionsImpl) NotifyAddMention(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+	for _, participantId := range userIds {
+		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
+			EventType: "mention_added",
+			UserId:    participantId,
+			ChatId:    chatId,
+			MentionNotification: &dto.MentionNotification{
+				Id:   message.Id,
+				Text: message.Text,
+			},
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		}
+	}
+
+}
+
+func (not *notifictionsImpl) NotifyRemoveMention(c echo.Context, userIds []int64, chatId int64, messageId int64) {
+	for _, participantId := range userIds {
+		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
+			EventType: "mention_deleted",
+			UserId:    participantId,
+			ChatId:    chatId,
+			MentionNotification: &dto.MentionNotification{
+				Id: messageId,
+			},
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		}
+	}
 }

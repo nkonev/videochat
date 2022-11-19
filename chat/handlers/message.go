@@ -229,7 +229,8 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		}
 
 		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
-		mc.findMentions(message.Text, users, c.Request().Context())
+		var addedMentions = mc.findMentions(message.Text, users, c.Request().Context())
+		mc.notificator.NotifyAddMention(c, addedMentions, chatId, message)
 
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
@@ -279,11 +280,21 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			GetLogEntry(c.Request().Context()).Infof("Empty message doesn't save")
 			return noContent(c)
 		}
-		err := tx.EditMessage(editableMessage)
+
+		participantIds, err := tx.GetAllParticipantIds(chatId)
 		if err != nil {
 			return err
 		}
-		participantIds, err := tx.GetAllParticipantIds(chatId)
+
+		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
+
+		oldMessage, err := tx.GetMessage(chatId, userPrincipalDto.UserId, editableMessage.Id)
+		if err != nil {
+			return err
+		}
+		var oldMentions = mc.findMentions(oldMessage.Text, users, c.Request().Context())
+
+		err = tx.EditMessage(editableMessage)
 		if err != nil {
 			return err
 		}
@@ -293,8 +304,25 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			return err
 		}
 
-		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
-		mc.findMentions(message.Text, users, c.Request().Context())
+		var newMentions = mc.findMentions(message.Text, users, c.Request().Context())
+
+		var userIdsToNotifyAboutMentionCreated []int64
+		var userIdsToNotifyAboutMentionDeleted []int64
+
+		for _, oldMentionedUserId := range oldMentions {
+			if !utils.Contains(newMentions, oldMentionedUserId) {
+				userIdsToNotifyAboutMentionDeleted = append(userIdsToNotifyAboutMentionDeleted, oldMentionedUserId)
+			}
+		}
+
+		for _, newMentionUserId := range newMentions {
+			if !utils.Contains(oldMentions, newMentionUserId) {
+				userIdsToNotifyAboutMentionCreated = append(userIdsToNotifyAboutMentionCreated, newMentionUserId)
+			}
+		}
+
+		mc.notificator.NotifyAddMention(c, userIdsToNotifyAboutMentionCreated, chatId, message)
+		mc.notificator.NotifyRemoveMention(c, userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
 
 		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message)
 
@@ -333,19 +361,28 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	oldMessage, err := mc.db.GetMessage(chatId, userPrincipalDto.UserId, messageId)
+	if err != nil {
+		return err
+	}
+	participantIds, err := mc.db.GetAllParticipantIds(chatId)
+	if err != nil {
+		return err
+	}
+	var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 
 	if err := mc.db.DeleteMessage(messageId, userPrincipalDto.UserId, chatId); err != nil {
 		return err
 	} else {
+		var oldMentions = mc.findMentions(oldMessage.Text, users, c.Request().Context())
+		mc.notificator.NotifyRemoveMention(c, oldMentions, chatId, messageId)
+
 		cd := &dto.DisplayMessageDto{
 			Id:     messageId,
 			ChatId: chatId,
 		}
-		if ids, err := mc.db.GetAllParticipantIds(chatId); err != nil {
-			return err
-		} else {
-			mc.notificator.NotifyAboutDeleteMessage(c, ids, chatId, cd)
-		}
+		mc.notificator.NotifyAboutDeleteMessage(c, participantIds, chatId, cd)
+
 		return c.JSON(http.StatusAccepted, &utils.H{"id": messageId})
 	}
 }
@@ -563,11 +600,13 @@ func (mc *MessageHandler) CheckEmbeddedFiles(c echo.Context) error {
 	return c.JSON(http.StatusOK, requestMap)
 }
 
-func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User, c context.Context) {
+func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User, c context.Context) []int64 {
+	var result = []int64{}
 	withoutSourceTags := mc.stripSourceContent.Sanitize(messageText)
 	for _, user := range users {
 		if strings.Contains(withoutSourceTags, "@"+user.Login) {
-			GetLogEntry(c).Warnf("Found mention of user %v", user.Login)
+			result = append(result, user.Id)
 		}
 	}
+	return result
 }

@@ -10,9 +10,10 @@ import (
 	"time"
 )
 
-const AsyncEventsFanoutExchange = "async-events-exchange"
+const EventsFanoutExchange = "async-events-exchange"
+const NotificationsFanoutExchange = "notifications-exchange"
 
-func (rp *RabbitFanoutNotificationsPublisher) Publish(aDto interface{}) error {
+func (rp *RabbitEventsPublisher) Publish(aDto interface{}) error {
 	aType := utils.GetType(aDto)
 
 	bytea, err := json.Marshal(aDto)
@@ -29,7 +30,7 @@ func (rp *RabbitFanoutNotificationsPublisher) Publish(aDto interface{}) error {
 		Type:         aType,
 	}
 
-	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
+	if err := rp.channel.Publish(EventsFanoutExchange, "", false, false, msg); err != nil {
 		Logger.Error(err, "Error during publishing dto")
 		return err
 	} else {
@@ -37,12 +38,47 @@ func (rp *RabbitFanoutNotificationsPublisher) Publish(aDto interface{}) error {
 	}
 }
 
-type RabbitFanoutNotificationsPublisher struct {
+type RabbitEventsPublisher struct {
 	channel *rabbitmq.Channel
 }
 
-func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection) *RabbitFanoutNotificationsPublisher {
-	return &RabbitFanoutNotificationsPublisher{
+func NewRabbitEventsPublisher(connection *rabbitmq.Connection) *RabbitEventsPublisher {
+	return &RabbitEventsPublisher{
+		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+	}
+}
+
+func (rp *RabbitNotificationsPublisher) Publish(aDto interface{}) error {
+	aType := utils.GetType(aDto)
+
+	bytea, err := json.Marshal(aDto)
+	if err != nil {
+		Logger.Error(err, "Failed during marshal dto")
+		return err
+	}
+
+	msg := amqp.Publishing{
+		DeliveryMode: amqp.Transient,
+		Timestamp:    time.Now(),
+		ContentType:  "application/json",
+		Body:         bytea,
+		Type:         aType,
+	}
+
+	if err := rp.channel.Publish(NotificationsFanoutExchange, "", false, false, msg); err != nil {
+		Logger.Error(err, "Error during publishing dto")
+		return err
+	} else {
+		return nil
+	}
+}
+
+type RabbitNotificationsPublisher struct {
+	channel *rabbitmq.Channel
+}
+
+func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection) *RabbitNotificationsPublisher {
+	return &RabbitNotificationsPublisher{
 		channel: myRabbitmq.CreateRabbitMqChannel(connection),
 	}
 }

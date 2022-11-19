@@ -48,6 +48,7 @@ func main() {
 			configureMigrations,
 			db.ConfigureDb,
 			services.NewNotifications,
+			producer.NewRabbitEventsPublisher,
 			producer.NewRabbitNotificationsPublisher,
 			listener.CreateAaaUserProfileUpdateListener,
 			rabbitmq.CreateRabbitMqConnection,

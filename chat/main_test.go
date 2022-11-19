@@ -216,6 +216,7 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			configureTestMigrations,
 			db.ConfigureDb,
 			services.NewNotifications,
+			producer.NewRabbitEventsPublisher,
 			producer.NewRabbitNotificationsPublisher,
 			myRabbitmq.CreateRabbitMqConnection,
 		),
@@ -250,6 +251,7 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 			configureTestMigrations,
 			db.ConfigureDb,
 			services.NewNotifications,
+			producer.NewRabbitEventsPublisher,
 			producer.NewRabbitNotificationsPublisher,
 			myRabbitmq.CreateRabbitMqConnection,
 		),
@@ -269,7 +271,7 @@ func createFanoutNotificationsChannel(connection *rabbitmq.Connection, lc fx.Lif
 		return err
 	}
 
-	err = consumeCh.ExchangeDeclare(producer.AsyncEventsFanoutExchange, "fanout", true, false, false, false, nil)
+	err = consumeCh.ExchangeDeclare(producer.EventsFanoutExchange, "fanout", true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
