@@ -10,7 +10,7 @@
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll">
                     <v-list  v-if="currentUser">
                         <template v-for="(item, index) in items">
-                            <MessageItem :key="item.id" :item="item" :chatId="chatId" :highlight="item.owner.id === currentUser.id" :highlightAsMentioned="item.id == highlightMentionedMessageId"></MessageItem>
+                            <MessageItem :key="item.id" :item="item" :chatId="chatId" :my="item.owner.id === currentUser.id" :highlight="item.id == highlightMessageId"></MessageItem>
                         </template>
                     </v-list>
                     <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
@@ -119,7 +119,7 @@
                 startingFromItemId: null,
                 items: [],
                 infiniteId: +new Date(),
-                highlightMentionedMessageId: null,
+                highlightMessageId: null,
 
                 chatDto: {
                     participantIds:[],
@@ -368,7 +368,7 @@
 
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
-                        startingFromItemId: this.hasHash ? this.highlightMentionedMessageId : this.startingFromItemId,
+                        startingFromItemId: this.hasHash ? this.highlightMessageId : this.startingFromItemId,
                         size: pageSize,
                         reverse: this.isTopDirection(),
                         searchString: this.searchString,
@@ -649,7 +649,7 @@
             this.hash = this.getHash();
             this.hasHash = hasLength(this.hash);
             if (this.hasHash) {
-                this.highlightMentionedMessageId = this.hash.replace(/\D/g, '');
+                this.highlightMessageId = this.hash.replace(/\D/g, '');
             }
         },
         mounted() {
