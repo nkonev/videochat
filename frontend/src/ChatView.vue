@@ -10,7 +10,7 @@
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll">
                     <v-list  v-if="currentUser">
                         <template v-for="(item, index) in items">
-                            <MessageItem :key="item.id" :item="item" :chatId="chatId" :highlight="item.owner.id === currentUser.id"></MessageItem>
+                            <MessageItem :key="item.id" :item="item" :chatId="chatId" :highlight="item.owner.id === currentUser.id" :highlightAsMentioned="item.id == highlightMentionedMessageId"></MessageItem>
                         </template>
                     </v-list>
                     <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
@@ -119,6 +119,7 @@
                 startingFromItemId: null,
                 items: [],
                 infiniteId: +new Date(),
+                highlightMentionedMessageId: null,
 
                 chatDto: {
                     participantIds:[],
@@ -360,13 +361,18 @@
                     console.log("this.startingFromItemId set to", this.startingFromItemId);
                 }
 
+                this.highlightMentionedMessageId = null;
                 this.forbidChangeScrollDirection = true;
 
                 const hash = this.getHash();
+                const highlightedMessageId = hash.replace(/\D/g, '');
                 const hasHash = hasLength(hash);
+                if (hasHash) {
+                    this.highlightMentionedMessageId = highlightedMessageId;
+                }
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
-                        startingFromItemId: hasHash ? hash.replace(/\D/g, '') : this.startingFromItemId,
+                        startingFromItemId: hasHash ?  highlightedMessageId: this.startingFromItemId,
                         size: pageSize,
                         reverse: this.isTopDirection(),
                         searchString: this.searchString,
