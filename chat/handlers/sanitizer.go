@@ -17,7 +17,7 @@ type StripSourcePolicy struct {
 func CreateSanitizer() *SanitizerPolicy {
 	policy := bluemonday.UGCPolicy()
 	policy.AllowAttrs("style").OnElements("span", "p", "strong", "em", "s", "u", "img", "mark")
-	policy.AllowAttrs("class").OnElements("img")
+	policy.AllowAttrs("class").OnElements("img", "span")
 	policy.AllowAttrs("target").OnElements("a")
 	return &SanitizerPolicy{policy}
 }

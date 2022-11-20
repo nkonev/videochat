@@ -9,7 +9,7 @@
 
 <script>
 import "prosemirror-view/style/prosemirror.css";
-import "./messageImage.styl";
+import "./message.styl";
 import { Editor, EditorContent } from "@tiptap/vue-2";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";

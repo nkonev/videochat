@@ -31,7 +31,7 @@
     } from "./bus";
     import debounce from "lodash/debounce";
     import {getHumanReadableDate, setIcon} from "@/utils";
-    import "./messageImage.styl";
+    import "./message.styl";
 
     export default {
         props: ['item', 'chatId', 'my', 'highlight'],
