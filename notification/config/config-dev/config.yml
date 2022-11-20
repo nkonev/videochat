@@ -1,0 +1,27 @@
+server:
+  address: ":1230"
+  shutdown.timeout: "10s"
+  body.limit: "100G"
+
+# Rest client
+http:
+  maxIdleConns: 2
+  idleConnTimeout: '10s'
+  disableCompression: false
+
+auth:
+  exclude:
+    - "^/notification/public.*"
+    - "^/internal.*"
+
+chat:
+  url:
+    base: "http://localhost:1235"
+    access: "/internal/access"
+
+rabbitmq:
+  url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
+
+jaeger:
+  host: "localhost"
+  port: 6831
