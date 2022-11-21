@@ -229,8 +229,8 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		}
 
 		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
-		var addedMentions = mc.findMentions(message.Text, users, c.Request().Context())
-		mc.notificator.NotifyAddMention(c, addedMentions, chatId, message)
+		var addedMentions, strippedText = mc.findMentions(message.Text, users, c.Request().Context())
+		mc.notificator.NotifyAddMention(c, addedMentions, chatId, message.Id, strippedText)
 
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
@@ -292,7 +292,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		var oldMentions = mc.findMentions(oldMessage.Text, users, c.Request().Context())
+		var oldMentions, _ = mc.findMentions(oldMessage.Text, users, c.Request().Context())
 
 		err = tx.EditMessage(editableMessage)
 		if err != nil {
@@ -304,7 +304,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			return err
 		}
 
-		var newMentions = mc.findMentions(message.Text, users, c.Request().Context())
+		var newMentions, strippedText = mc.findMentions(message.Text, users, c.Request().Context())
 
 		var userIdsToNotifyAboutMentionCreated []int64
 		var userIdsToNotifyAboutMentionDeleted []int64
@@ -321,7 +321,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			}
 		}
 
-		mc.notificator.NotifyAddMention(c, userIdsToNotifyAboutMentionCreated, chatId, message)
+		mc.notificator.NotifyAddMention(c, userIdsToNotifyAboutMentionCreated, chatId, message.Id, strippedText)
 		mc.notificator.NotifyRemoveMention(c, userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
 
 		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message)
@@ -374,7 +374,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	if err := mc.db.DeleteMessage(messageId, userPrincipalDto.UserId, chatId); err != nil {
 		return err
 	} else {
-		var oldMentions = mc.findMentions(oldMessage.Text, users, c.Request().Context())
+		var oldMentions, _ = mc.findMentions(oldMessage.Text, users, c.Request().Context())
 		mc.notificator.NotifyRemoveMention(c, oldMentions, chatId, messageId)
 
 		cd := &dto.DisplayMessageDto{
@@ -600,7 +600,7 @@ func (mc *MessageHandler) CheckEmbeddedFiles(c echo.Context) error {
 	return c.JSON(http.StatusOK, requestMap)
 }
 
-func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User, c context.Context) []int64 {
+func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User, c context.Context) ([]int64, string) {
 	var result = []int64{}
 	withoutSourceTags := mc.stripSourceContent.Sanitize(messageText)
 	for _, user := range users {
@@ -608,5 +608,6 @@ func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.
 			result = append(result, user.Id)
 		}
 	}
-	return result
+	withoutAnyHtml := mc.stripAllTags.Sanitize(withoutSourceTags)
+	return result, withoutAnyHtml
 }

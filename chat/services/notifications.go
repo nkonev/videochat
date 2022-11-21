@@ -22,7 +22,7 @@ type Notifications interface {
 	NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
 	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
-	NotifyAddMention(c echo.Context, created []int64, chatId int64, message *dto.DisplayMessageDto)
+	NotifyAddMention(c echo.Context, created []int64, chatId, messageId int64, message string)
 	NotifyRemoveMention(c echo.Context, deleted []int64, chatId int64, messageId int64)
 }
 
@@ -293,15 +293,15 @@ func (not *notifictionsImpl) NotifyAboutMessageBroadcast(c echo.Context, chatId,
 
 }
 
-func (not *notifictionsImpl) NotifyAddMention(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+func (not *notifictionsImpl) NotifyAddMention(c echo.Context, userIds []int64, chatId, messageId int64, message string) {
 	for _, participantId := range userIds {
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType: "mention_added",
 			UserId:    participantId,
 			ChatId:    chatId,
 			MentionNotification: &dto.MentionNotification{
-				Id:   message.Id,
-				Text: message.Text,
+				Id:   messageId,
+				Text: message,
 			},
 		})
 		if err != nil {
