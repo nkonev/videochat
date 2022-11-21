@@ -30,3 +30,7 @@ alter role chat superuser;
 create database chat with owner chat;
 \connect chat;
 
+create user notification with password 'notificationPazZw0rd';
+create database notification with owner notification;
+\connect notification;
+

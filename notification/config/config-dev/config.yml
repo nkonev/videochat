@@ -14,6 +14,13 @@ auth:
     - "^/notification/public.*"
     - "^/internal.*"
 
+postgresql:
+  # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+  url: "postgres://notification:notificationPazZw0rd@localhost:35432/notification?sslmode=disable&application_name=notification-app"
+  maxOpenConnections: 16
+  maxIdleConnections: 4
+  maxLifetime: 30s
+
 chat:
   url:
     base: "http://localhost:1235"

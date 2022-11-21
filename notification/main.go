@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"nkonev.name/notification/client"
 	"nkonev.name/notification/config"
+	"nkonev.name/notification/db"
 	"nkonev.name/notification/handlers"
 	"nkonev.name/notification/listener"
 	. "nkonev.name/notification/logger"
@@ -36,11 +37,14 @@ func main() {
 			configureEcho,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
+			configureMigrations,
+			db.ConfigureDb,
 			listener.CreateNotificationsListener,
 			rabbitmq.CreateRabbitMqConnection,
 			client.NewRestClient,
 		),
 		fx.Invoke(
+			runMigrations,
 			runEcho,
 			listener.CreateNotificationsChannel,
 		),
@@ -157,6 +161,14 @@ func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	})
 
 	return tp, nil
+}
+
+func configureMigrations() db.MigrationsConfig {
+	return db.MigrationsConfig{}
+}
+
+func runMigrations(db db.DB, migrationsConfig db.MigrationsConfig) {
+	db.Migrate(migrationsConfig)
 }
 
 // rely on viper import and it's configured by
