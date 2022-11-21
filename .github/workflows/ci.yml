@@ -145,7 +145,7 @@ jobs:
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Start & wait docker-compose environment
         run: |
-          docker-compose up -d postgresql redis rabbitmq
+          docker-compose up -d rabbitmq
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
       - name: Build & test event
         run: (cd event; make check-env download generate test package)
@@ -157,6 +157,41 @@ jobs:
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}"
           (cd event; make push-docker && echo "Will deploy event" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.EventUpdateCommand }} )
+
+  notification:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-notification-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Install software
+        run: |
+          mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
+      - name: Start & wait docker-compose environment
+        run: |
+          docker-compose up -d postgresql rabbitmq
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+      - name: Build & test notification
+        run: (cd notification; make check-env download generate test package)
+      - name: Deploy notification
+        if: github.ref == 'refs/heads/master'
+        run: |
+          mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
+          chmod 600 ~/.ssh/id_rsa
+          echo "Will login to docker" &&
+          docker login -u="nkonev" -p="${{ secrets.DockerPassword }}"
+          (cd notification; make push-docker && echo "Will deploy notification" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.NotificationUpdateCommand }} )
 
   storage:
     runs-on: ubuntu-22.04
