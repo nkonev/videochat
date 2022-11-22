@@ -116,6 +116,17 @@
             <v-card light v-if="isShowSearch">
                 <v-text-field prepend-icon="mdi-magnify" hide-details single-line @input="clearHash()" v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
             </v-card>
+            <v-badge
+                :content="notificationsCount"
+                :value="notificationsCount"
+                color="red"
+                overlap
+                offset-y="1.8em"
+            >
+                <v-btn icon :title="$vuetify.lang.t('$vuetify.notifications')">
+                    <v-icon>mdi-bell</v-icon>
+                </v-btn>
+            </v-badge>
         </v-app-bar>
 
 
@@ -444,6 +455,9 @@
             currentUserAvatar() {
                 return this.currentUser.avatar;
             },
+            notificationsCount() {
+                return 4
+            }
         },
         mounted() {
             this.$store.dispatch(FETCH_USER_PROFILE);
