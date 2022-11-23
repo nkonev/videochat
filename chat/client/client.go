@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -95,18 +96,19 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	return *users, nil
 }
 
+type searchUsersDto struct {
+	Page         int     `json:"page"`
+	Size         int     `json:"size"`
+	UserIds      []int64 `json:"userIds"`
+	SearchString string  `json:"searchString"`
+	Including    bool    `json:"including"`
+}
+
 func (rc RestClient) SearchGetUsers(searchString string, including bool, ids []int64, c context.Context) ([]*dto.User, error) {
 	contentType := "application/json;charset=UTF-8"
 	url0 := viper.GetString("aaa.url.base")
 	url1 := viper.GetString("aaa.url.searchUsers")
 	fullUrl := url0 + url1
-
-	var userIdsString []string
-	for _, userIdInt := range ids {
-		userIdsString = append(userIdsString, utils.Int64ToString(userIdInt))
-	}
-
-	excludingUserIdsJoinedToString := strings.Join(userIdsString, ",")
 
 	requestHeaders := map[string][]string{
 		"Accept-Encoding": {"gzip, deflate"},
@@ -114,15 +116,32 @@ func (rc RestClient) SearchGetUsers(searchString string, including bool, ids []i
 		"Content-Type":    {contentType},
 	}
 
-	parsedUrl, err := url.Parse(fullUrl + "?userId=" + excludingUserIdsJoinedToString + "&including=" + utils.InterfaceToString(including) + "&searchString=" + searchString)
+	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
 		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
+
+	req := searchUsersDto{
+		UserIds:      ids,
+		SearchString: searchString,
+		Including:    including,
+	}
+
+	bytesData, err := json.Marshal(req)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during marshalling:", err)
+		return nil, err
+	}
+	reader := bytes.NewReader(bytesData)
+
+	nopCloser := ioutil.NopCloser(reader)
+
 	request := &http.Request{
-		Method: "GET",
+		Method: "POST",
 		Header: requestHeaders,
 		URL:    parsedUrl,
+		Body:   nopCloser,
 	}
 
 	ctx, span := rc.tracer.Start(c, "users.Search")

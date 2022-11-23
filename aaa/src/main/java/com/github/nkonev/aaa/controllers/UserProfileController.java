@@ -131,23 +131,28 @@ public class UserProfileController {
         );
     }
 
-    @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH)
+    record SearchUsersDto(
+        int page,
+        int size,
+        List<Long> userIds,
+        String searchString,
+        boolean including
+    ) {}
+
+    @CrossOrigin(origins="*", methods = RequestMethod.POST)
+    @PostMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH)
     public List<Record> searchUserInternal(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
-            @RequestParam(value = "page", required=false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required=false, defaultValue = "0") int size,
-            @RequestParam(value = "userId") List<Long> userIds,
-            @RequestParam(value = "searchString") String searchString,
-            @RequestParam(value = "including") boolean including
+            @RequestBody SearchUsersDto request
     ) {
         LOGGER.info("Searching internal users");
-        PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(page), PageUtils.fixSize(size), Sort.Direction.ASC, "id");
-        searchString = searchString.trim();
+        PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(request.page), PageUtils.fixSize(request.size), Sort.Direction.ASC, "id");
+        var searchString = request.searchString.trim();
 
         final String forDbSearch = "%" + searchString + "%";
         List<UserAccount> resultPage =
-                including ? userAccountRepository.findByUsernameContainsIgnoreCaseAndIdIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, userIds) :
-                userAccountRepository.findByUsernameContainsIgnoreCaseAndIdNotIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, userIds);
+                request.including ? userAccountRepository.findByUsernameContainsIgnoreCaseAndIdIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds) :
+                userAccountRepository.findByUsernameContainsIgnoreCaseAndIdNotIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds);
 
         return resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList());
     }

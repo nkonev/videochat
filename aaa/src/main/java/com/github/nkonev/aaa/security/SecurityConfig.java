@@ -132,7 +132,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll();
 
         http.csrf()
-                .csrfTokenRepository(csrfTokenRepository());
+                .csrfTokenRepository(csrfTokenRepository())
+                .ignoringAntMatchers(Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH);
         http.exceptionHandling()
                 .authenticationEntryPoint(authenticationEntryPoint);
 
