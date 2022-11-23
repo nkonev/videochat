@@ -201,22 +201,24 @@ vm = new Vue({
       } else if (getGlobalEventsData(e).eventType === 'chat_unread_messages_changed') {
           const d = getGlobalEventsData(e).unreadMessagesNotification;
           bus.$emit(UNREAD_MESSAGES_CHANGED, d);
+      // TODO use the new notification events: notification_add, notification_remove
       } else if (getGlobalEventsData(e).eventType === 'all_unread_messages_changed') {
           const d = getGlobalEventsData(e).allUnreadMessagesNotification;
           const currentNewMessages = d.allUnreadMessages > 0;
           setIcon(currentNewMessages)
       }
     },
-    additionalActionAfterGraphQlSubscription() {
-        axios.put(CheckForNewUrl).then((resp) => {
-            const data = resp?.data;
-            console.debug("New messages response", data);
-            if (data) {
-                const currentNewMessages = data.allUnreadMessages > 0;
-                setIcon(currentNewMessages)
-            }
-        })
-    },
+    // TODO migrate this rest request to App.vue and set counter at top of bell there
+    // additionalActionAfterGraphQlSubscription() {
+    //     axios.put(CheckForNewUrl).then((resp) => {
+    //         const data = resp?.data;
+    //         console.debug("New messages response", data);
+    //         if (data) {
+    //             const currentNewMessages = data.allUnreadMessages > 0;
+    //             setIcon(currentNewMessages)
+    //         }
+    //     })
+    // },
   },
   created(){
     Vue.prototype.isMobile = () => {

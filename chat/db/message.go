@@ -240,53 +240,12 @@ func getUnreadMessagesCountCommon(co CommonOperations, chatId int64, userId int6
 	}
 }
 
-func getAllUnreadMessagesCountCommon(co CommonOperations, userId int64) (int64, error) {
-	var count int64
-
-	if rows, err := co.Query("SELECT chat_id FROM chat_participant WHERE user_id = $1", userId); err != nil {
-		Logger.Errorf("Error during get chat rows %v", err)
-		return 0, err
-	} else {
-		defer rows.Close()
-		list := make([]int64, 0)
-		for rows.Next() {
-			var chatId int64
-			if err := rows.Scan(&chatId); err != nil {
-				Logger.Errorf("Error during scan participant rows %v", err)
-				return 0, err
-			} else {
-				list = append(list, chatId)
-			}
-		}
-
-		for _, chatId := range list {
-			perChatCount, err := getUnreadMessagesCountCommon(co, chatId, userId)
-			if err != nil {
-				Logger.Errorf("Error during get per chat counts %v", err)
-				return 0, err
-			}
-			count += perChatCount
-		}
-
-		return count, nil
-	}
-
-}
-
 func (db *DB) GetUnreadMessagesCount(chatId int64, userId int64) (int64, error) {
 	return getUnreadMessagesCountCommon(db, chatId, userId)
 }
 
 func (tx *Tx) GetUnreadMessagesCount(chatId int64, userId int64) (int64, error) {
 	return getUnreadMessagesCountCommon(tx, chatId, userId)
-}
-
-func (db *DB) GetAllUnreadMessagesCount(userId int64) (int64, error) {
-	return getAllUnreadMessagesCountCommon(db, userId)
-}
-
-func (tx *Tx) GetAllUnreadMessagesCount(userId int64) (int64, error) {
-	return getAllUnreadMessagesCountCommon(tx, userId)
 }
 
 type MessageIdsAndTextPair struct {

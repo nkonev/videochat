@@ -37,12 +37,7 @@
         props: ['item', 'chatId', 'my', 'highlight'],
         methods: {
             onMessageClick(dto) {
-                axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`).then(({data}) => {
-                    if (data) {
-                        const currentNewMessages = data.allUnreadMessages > 0;
-                        setIcon(currentNewMessages)
-                    }
-                })
+                axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`)
             },
             onMessageMouseMove(item) {
                 this.onMessageClick(item);

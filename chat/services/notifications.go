@@ -21,7 +21,6 @@ type Notifications interface {
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
-	ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx)
 	NotifyAddMention(c echo.Context, created []int64, chatId, messageId int64, message string)
 	NotifyRemoveMention(c echo.Context, deleted []int64, chatId int64, messageId int64)
 }
@@ -137,28 +136,6 @@ func (not *notifictionsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Cont
 			UserId:                     participantId,
 			EventType:                  "chat_unread_messages_changed",
 			UnreadMessagesNotification: payload,
-		})
-	}
-}
-
-func (not *notifictionsImpl) ChatNotifyAllUnreadMessageCount(userIds []int64, c echo.Context, tx *db.Tx) {
-	for _, participantId := range userIds {
-		GetLogEntry(c.Request().Context()).Debugf("Sending notification about all unread messages to participantChannel: %v", participantId)
-
-		unreadMessages, err := tx.GetAllUnreadMessagesCount(participantId)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during get all unread messages for userId=%v: %s", participantId, err)
-			continue
-		}
-
-		payload := &dto.AllUnreadMessages{
-			MessagesCount: unreadMessages,
-		}
-
-		err = not.rabbitEventPublisher.Publish(dto.GlobalEvent{
-			UserId:                        participantId,
-			EventType:                     "all_unread_messages_changed",
-			AllUnreadMessagesNotification: payload,
 		})
 	}
 }
