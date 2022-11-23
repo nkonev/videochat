@@ -117,5 +117,9 @@ export default {
     message_edit_background_color: "Цвет фона",
     start_record: "Начать запись",
     stop_record: "Остановить запись",
-    notifications: "Уведомления"
+    notifications: "Уведомления",
+    notify_about_mentions: "Упоминания",
+    notify_about_missed_calls: "Пропущенные звонки",
+    notification_mention: "Упоминание",
+    notification_missed_call: "Пропущенный звонок"
 }

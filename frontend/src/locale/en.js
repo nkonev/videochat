@@ -117,5 +117,9 @@ export default {
     message_edit_background_color: "Background color",
     start_record: "Start record",
     stop_record: "Stop record",
-    notifications: "Notifications"
+    notifications: "Notifications",
+    notify_about_mentions: "Mentions",
+    notify_about_missed_calls: "Missed calls",
+    notification_mention: "Mention",
+    notification_missed_call: "Missed call"
 }

@@ -47,3 +47,4 @@ export const OPEN_MESSAGE_EDIT_LINK = "openMessageEditLink";
 export const MESSAGE_EDIT_LINK_SET = "messageEditLinkSet";
 export const OPEN_MESSAGE_EDIT_COLOR = "messageEditColor";
 export const MESSAGE_EDIT_COLOR_SET = "messageEditColorSet";
+export const OPEN_NOTIFICATIONS_DIALOG = "openNotifications";
