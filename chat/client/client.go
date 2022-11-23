@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -80,7 +81,7 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	code := resp.StatusCode
 	if code != 200 {
 		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
-		return nil, err
+		return nil, errors.New("Users response responded non-200 code")
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -156,7 +157,7 @@ func (rc RestClient) SearchGetUsers(searchString string, including bool, ids []i
 	code := resp.StatusCode
 	if code != 200 {
 		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
-		return nil, err
+		return nil, errors.New("Users response responded non-200 code")
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
