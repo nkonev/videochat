@@ -22,6 +22,7 @@ import (
 	"nkonev.name/notification/listener"
 	. "nkonev.name/notification/logger"
 	"nkonev.name/notification/rabbitmq"
+	"nkonev.name/notification/services"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -42,6 +43,7 @@ func main() {
 			listener.CreateNotificationsListener,
 			rabbitmq.CreateRabbitMqConnection,
 			client.NewRestClient,
+			services.CreateNotificationService,
 		),
 		fx.Invoke(
 			runMigrations,

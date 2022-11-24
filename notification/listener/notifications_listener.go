@@ -3,19 +3,19 @@ package listener
 import (
 	"encoding/json"
 	"github.com/streadway/amqp"
-	"nkonev.name/notification/db"
 	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
+	"nkonev.name/notification/services"
 )
 
 type NotificationsListener func(*amqp.Delivery) error
 
-func CreateNotificationsListener(db db.DB) NotificationsListener {
+func CreateNotificationsListener(service *services.NotificationService) NotificationsListener {
 	return func(msg *amqp.Delivery) error {
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
-		Logger.Infof("Received %v with type %v", strData, aType)
+		Logger.Debugf("Received %v with type %v", strData, aType)
 
 		var bindTo = new(dto.NotificationEvent)
 		err := json.Unmarshal(msg.Body, bindTo)
@@ -24,24 +24,7 @@ func CreateNotificationsListener(db db.DB) NotificationsListener {
 			return err
 		}
 
-		if bindTo.MentionNotification != nil {
-			notification := bindTo.MentionNotification
-			notificationType := "mention"
-			switch bindTo.EventType {
-			case "mention_added":
-				err := db.PutNotification(&notification.Id, bindTo.UserId, bindTo.ChatId, notificationType, notification.Text)
-				if err != nil {
-					Logger.Errorf("Unable to put notification %v", err)
-					return err
-				}
-			case "mention_deleted":
-				err := db.DeleteNotificationByMessageId(notification.Id, bindTo.UserId)
-				if err != nil {
-					Logger.Errorf("Unable to delete notification %v", err)
-					return err
-				}
-			}
-		}
+		service.HandleChatNotification(bindTo)
 
 		return nil
 	}
