@@ -30,6 +30,7 @@ import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import { Node, mergeAttributes } from '@tiptap/core';
 
+// https://www.codemzy.com/blog/tiptap-video-embed-extension
 const Video = Node.create({
     name: 'video', // unique name for the Node
     group: 'block', // belongs to the 'block' group of extensions
