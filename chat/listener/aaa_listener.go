@@ -10,7 +10,7 @@ import (
 
 type AaaUserProfileUpdateListener func(*amqp.Delivery) error
 
-func CreateAaaUserProfileUpdateListener(not services.Notifications) AaaUserProfileUpdateListener {
+func CreateAaaUserProfileUpdateListener(not services.Events) AaaUserProfileUpdateListener {
 	return func(msg *amqp.Delivery) error {
 		data := msg.Body
 		s := string(data)

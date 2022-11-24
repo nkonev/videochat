@@ -47,7 +47,7 @@ func main() {
 			handlers.ConfigureAuthMiddleware,
 			configureMigrations,
 			db.ConfigureDb,
-			services.NewNotifications,
+			services.NewEvents,
 			producer.NewRabbitEventsPublisher,
 			producer.NewRabbitNotificationsPublisher,
 			listener.CreateAaaUserProfileUpdateListener,

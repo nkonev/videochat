@@ -37,12 +37,12 @@ type CreateChatDto struct {
 
 type ChatHandler struct {
 	db          db.DB
-	notificator services.Notifications
+	notificator services.Events
 	restClient  client.RestClient
 	policy      *SanitizerPolicy
 }
 
-func NewChatHandler(dbR db.DB, notificator services.Notifications, restClient client.RestClient, policy *SanitizerPolicy) *ChatHandler {
+func NewChatHandler(dbR db.DB, notificator services.Events, restClient client.RestClient, policy *SanitizerPolicy) *ChatHandler {
 	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
 }
 
