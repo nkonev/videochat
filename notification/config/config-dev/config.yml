@@ -32,3 +32,5 @@ rabbitmq:
 jaeger:
   host: "localhost"
   port: 6831
+
+maxNotifications: 100

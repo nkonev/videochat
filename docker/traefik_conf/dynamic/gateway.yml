@@ -28,6 +28,10 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:1238
+    notification-service:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:1230
 
   routers:
     frontend-router:
@@ -60,6 +64,14 @@ http:
       middlewares:
         - "auth-middleware"
         - "api-strip-prefix-middleware"
+    notification-router:
+      rule: "PathPrefix(`/api/notification`)"
+      service: notification-service
+      middlewares:
+        - "auth-middleware"
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
+
     chat-public-router:
       rule: "PathPrefix(`/api/chat/public`)"
       service: chat-service
@@ -87,6 +99,12 @@ http:
     event-public-router:
       rule: "PathPrefix(`/api/event/public`)"
       service: event-service
+      middlewares:
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
+    notification-public-router:
+      rule: "PathPrefix(`/api/notification/public`)"
+      service: notification-service
       middlewares:
         - "api-strip-prefix-middleware"
         - "retry-middleware"

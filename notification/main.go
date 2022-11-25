@@ -38,6 +38,7 @@ func main() {
 			configureEcho,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
+			handlers.NewMessageHandler,
 			configureMigrations,
 			db.ConfigureDb,
 			listener.CreateNotificationsListener,
@@ -92,6 +93,7 @@ func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) 
 func configureEcho(
 	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
+	ch *handlers.NotificationHandler,
 	lc fx.Lifecycle,
 	tp *sdktrace.TracerProvider,
 ) *echo.Echo {
@@ -117,6 +119,8 @@ func configureEcho(
 	e.Use(middleware.LoggerWithConfig(accessLoggerConfig))
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
+
+	e.GET("/notification/notification", ch.GetNotifications)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

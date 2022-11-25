@@ -121,5 +121,6 @@ export default {
     notify_about_mentions: "Упоминания",
     notify_about_missed_calls: "Пропущенные звонки",
     notification_mention: "Упоминание",
-    notification_missed_call: "Пропущенный звонок"
+    notification_missed_call: "Пропущенный звонок",
+    no_notifications: "У вас нет уведомлений"
 }

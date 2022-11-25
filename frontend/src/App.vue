@@ -208,7 +208,6 @@
         GET_CHAT_USERS_COUNT,
         GET_ERROR_COLOR,
         GET_LAST_ERROR,
-        GET_SEARCH_STRING,
         GET_SHOW_ALERT,
         GET_SHOW_CALL_BUTTON,
         GET_SHOW_CHAT_EDIT_BUTTON,
@@ -217,12 +216,13 @@
         GET_TITLE,
         GET_USER,
         GET_VIDEO_CHAT_USERS_COUNT,
-        SET_LAST_ERROR,
-        SET_SEARCH_STRING,
-        SET_SHOW_ALERT,
         UNSET_USER,
         GET_SHOW_RECORD_START_BUTTON,
-        GET_SHOW_RECORD_STOP_BUTTON, SET_SHOW_RECORD_START_BUTTON, SET_SHOW_RECORD_STOP_BUTTON
+        GET_SHOW_RECORD_STOP_BUTTON,
+        SET_SHOW_RECORD_START_BUTTON,
+        SET_SHOW_RECORD_STOP_BUTTON,
+        FETCH_NOTIFICATIONS,
+        GET_NOTIFICATIONS
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -466,11 +466,12 @@
                 return this.currentUser.avatar;
             },
             notificationsCount() {
-                return 4
+                return this.$store.getters[GET_NOTIFICATIONS].length
             }
         },
         mounted() {
             this.$store.dispatch(FETCH_USER_PROFILE);
+            this.$store.dispatch(FETCH_NOTIFICATIONS);
         },
         created() {
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);

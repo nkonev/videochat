@@ -121,5 +121,6 @@ export default {
     notify_about_mentions: "Mentions",
     notify_about_missed_calls: "Missed calls",
     notification_mention: "Mention",
-    notification_missed_call: "Missed call"
+    notification_missed_call: "Missed call",
+    no_notifications: "You don't have notifications"
 }

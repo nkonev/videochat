@@ -8,6 +8,7 @@ export const GET_USER = 'getUser';
 export const SET_USER = 'setUser';
 export const UNSET_USER = 'unsetUser';
 export const FETCH_USER_PROFILE = 'fetchUserProfile';
+export const FETCH_NOTIFICATIONS = 'fetchNotifications';
 export const FETCH_AVAILABLE_OAUTH2_PROVIDERS = 'fetchAvailableOauth2';
 export const GET_AVAILABLE_OAUTH2_PROVIDERS = 'getAvailableOauth2';
 export const SET_AVAILABLE_OAUTH2_PROVIDERS = 'setAvailableOauth2';
@@ -45,6 +46,8 @@ export const GET_LAST_ERROR = 'getLastError';
 export const SET_LAST_ERROR = 'setLastError';
 export const GET_ERROR_COLOR = 'getErrorColor';
 export const SET_ERROR_COLOR = 'setErrorColor';
+export const GET_NOTIFICATIONS = 'getNotifications';
+export const SET_NOTIFICATIONS = 'setNotifications';
 
 const store = new Vuex.Store({
     state: {
@@ -70,6 +73,7 @@ const store = new Vuex.Store({
         showAlert: false,
         lastError: "",
         errorColor: "",
+        notifications: [],
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -132,6 +136,9 @@ const store = new Vuex.Store({
         [SET_ERROR_COLOR](state, payload) {
             state.errorColor = payload;
         },
+        [SET_NOTIFICATIONS](state, payload) {
+            state.notifications = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -188,6 +195,9 @@ const store = new Vuex.Store({
         [GET_ERROR_COLOR](state) {
             return state.errorColor;
         },
+        [GET_NOTIFICATIONS](state) {
+            return state.notifications;
+        },
     },
     actions: {
         [FETCH_USER_PROFILE](context) {
@@ -200,6 +210,12 @@ const store = new Vuex.Store({
             axios.get(`/api/oauth2/providers`).then(( {data} ) => {
                 console.debug("fetched oauth2 providers =", data);
                 context.commit(SET_AVAILABLE_OAUTH2_PROVIDERS, data);
+            });
+        },
+        [FETCH_NOTIFICATIONS](context) {
+            axios.get(`/api/notification/notification`).then(( {data} ) => {
+                console.debug("fetched notifications =", data);
+                context.commit(SET_NOTIFICATIONS, data);
             });
         },
     }
