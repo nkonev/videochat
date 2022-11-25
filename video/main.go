@@ -57,6 +57,7 @@ func main() {
 			producer.NewRabbitInvitePublisher,
 			producer.NewRabbitDialStatusPublisher,
 			producer.NewRabbitRecordingPublisher,
+			producer.NewRabbitNotificationsPublisher,
 			services.NewNotificationService,
 			services.NewUserService,
 			services.NewStateChangedNotificationService,
@@ -164,9 +165,9 @@ func configureApiEcho(
 	e.POST("/internal/livekit-webhook", lhf.GetLivekitWebhookHandler())
 	e.PUT("/video/:chatId/kick", uh.Kick)
 	e.PUT("/video/:chatId/mute", uh.Mute)
-	e.PUT("/video/:id/dial", ih.ProcessCallInvitation)
-	e.PUT("/video/:id/dial/cancel", ih.ProcessCancelInvitation)
-	e.PUT("/video/:id/dial/stop", ih.ProcessAsOwnerLeave)
+	e.PUT("/video/:id/dial", ih.ProcessCallInvitation)          // used by owner to add or remove from dial list
+	e.PUT("/video/:id/dial/cancel", ih.ProcessCancelInvitation) // cancelling by invitee
+	e.PUT("/video/:id/dial/stop", ih.ProcessAsOwnerLeave)       // used by owner
 	e.PUT("/video/:id/record/start", rh.StartRecording)
 	e.PUT("/video/:id/record/stop", rh.StopRecording)
 	e.GET("/video/:id/record/status", rh.StatusRecording)

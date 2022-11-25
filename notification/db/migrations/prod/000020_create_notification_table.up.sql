@@ -1,7 +1,7 @@
 create table notification(
     id bigserial primary key,
     notification_type text not null,
-    description text not null,
+    description text,
     message_id bigint,
     user_id bigint not null,
     chat_id bigint not null,

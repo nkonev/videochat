@@ -6,22 +6,11 @@
                 <v-card-text class="ma-0 pa-0">
                     <v-list class="pb-0">
                         <template v-if="notifications.length > 0">
-                            <v-list-item link>
-                                <v-list-item-icon class="mr-4"><v-icon large>mdi-phone-missed</v-icon></v-list-item-icon>
-                                <v-list-item-content class="py-2">
-                                    <v-list-item-title>John Smith</v-list-item-title>
-                                    <v-list-item-subtitle>{{ $vuetify.lang.t('$vuetify.notification_missed_call') }}</v-list-item-subtitle>
-                                    <v-list-item-subtitle>
-                                        05:18:39, 22 Nov 2022
-                                    </v-list-item-subtitle>
-                                </v-list-item-content>
-                            </v-list-item>
-
                             <template v-for="(item, index) in notifications">
                                 <v-list-item link>
                                     <v-list-item-icon class="mr-4"><v-icon large>{{getNotificationIcon(item.type)}}</v-icon></v-list-item-icon>
                                     <v-list-item-content class="py-2">
-                                        <v-list-item-title>{{item.description}}</v-list-item-title>
+                                        <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
                                         <v-list-item-subtitle>{{ getNotificationSubtitle(item.type) }}</v-list-item-subtitle>
                                         <v-list-item-subtitle>
                                             {{ getNotificationDate(item)}}
@@ -103,6 +92,14 @@ export default {
                     return this.$vuetify.lang.t('$vuetify.notification_missed_call')
                 case "mention":
                     return this.$vuetify.lang.t('$vuetify.notification_mention')
+            }
+        },
+        getNotificationTitle(item) {
+            switch (item.type) {
+                case "missed_call":
+                    return "Some chat"
+                case "mention":
+                    return item.description
             }
         },
         getNotificationDate(item) {

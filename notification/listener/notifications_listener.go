@@ -14,8 +14,7 @@ func CreateNotificationsListener(service *services.NotificationService) Notifica
 	return func(msg *amqp.Delivery) error {
 		bytesData := msg.Body
 		strData := string(bytesData)
-		aType := msg.Type
-		Logger.Debugf("Received %v with type %v", strData, aType)
+		Logger.Debugf("Received %v", strData)
 
 		var bindTo = new(dto.NotificationEvent)
 		err := json.Unmarshal(msg.Body, bindTo)

@@ -49,8 +49,6 @@ func NewRabbitEventsPublisher(connection *rabbitmq.Connection) *RabbitEventsPubl
 }
 
 func (rp *RabbitNotificationsPublisher) Publish(aDto interface{}) error {
-	aType := utils.GetType(aDto)
-
 	bytea, err := json.Marshal(aDto)
 	if err != nil {
 		Logger.Error(err, "Failed during marshal dto")
@@ -62,7 +60,6 @@ func (rp *RabbitNotificationsPublisher) Publish(aDto interface{}) error {
 		Timestamp:    time.Now(),
 		ContentType:  "application/json",
 		Body:         bytea,
-		Type:         aType,
 	}
 
 	if err := rp.channel.Publish(NotificationsFanoutExchange, "", false, false, msg); err != nil {

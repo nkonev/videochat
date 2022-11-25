@@ -41,7 +41,7 @@ func (db *DB) DeleteNotificationByMessageId(messageId int64, userId int64) error
 	return nil
 }
 
-func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, notificationType, description string) error {
+func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, notificationType string, description *string) error {
 
 	if res, err := db.Exec(
 		`insert into notification(notification_type, description, message_id, user_id, chat_id) 

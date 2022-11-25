@@ -13,6 +13,7 @@ import (
 )
 
 const AsyncEventsFanoutExchange = "async-events-exchange"
+const NotificationsFanoutExchange = "notifications-exchange"
 
 func (rp *RabbitUserCountPublisher) Publish(participantIds []int64, chatNotifyDto *dto.VideoCallUserCountChangedDto, ctx context.Context) error {
 
@@ -178,6 +179,38 @@ type RabbitRecordingPublisher struct {
 
 func NewRabbitRecordingPublisher(connection *rabbitmq.Connection) *RabbitRecordingPublisher {
 	return &RabbitRecordingPublisher{
+		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+	}
+}
+
+func (rp *RabbitNotificationsPublisher) Publish(aDto interface{}) error {
+	bytea, err := json.Marshal(aDto)
+	if err != nil {
+		Logger.Error(err, "Failed during marshal dto")
+		return err
+	}
+
+	msg := amqp.Publishing{
+		DeliveryMode: amqp.Transient,
+		Timestamp:    time.Now(),
+		ContentType:  "application/json",
+		Body:         bytea,
+	}
+
+	if err := rp.channel.Publish(NotificationsFanoutExchange, "", false, false, msg); err != nil {
+		Logger.Error(err, "Error during publishing dto")
+		return err
+	} else {
+		return nil
+	}
+}
+
+type RabbitNotificationsPublisher struct {
+	channel *rabbitmq.Channel
+}
+
+func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection) *RabbitNotificationsPublisher {
+	return &RabbitNotificationsPublisher{
 		channel: myRabbitmq.CreateRabbitMqChannel(connection),
 	}
 }

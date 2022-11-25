@@ -8,3 +8,10 @@ type GlobalEvent struct {
 	VideoParticipantDialEvent *VideoDialChanges             `json:"videoParticipantDialEvent"`
 	VideoCallRecordingEvent   *VideoCallRecordingChangedDto `json:"videoCallRecordingEvent"`
 }
+
+type NotificationEvent struct {
+	EventType              string `json:"eventType"`
+	ChatId                 int64  `json:"chatId"`
+	UserId                 int64  `json:"userId"`
+	MissedCallNotification bool   `json:"missedCallNotification"`
+}

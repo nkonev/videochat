@@ -15,16 +15,20 @@ import (
 )
 
 type InviteHandler struct {
-	dialRedisRepository *services.DialRedisRepository
-	chatClient          *client.RestClient
-	dialStatusPublisher *producer.RabbitDialStatusPublisher
+	dialRedisRepository   *services.DialRedisRepository
+	chatClient            *client.RestClient
+	dialStatusPublisher   *producer.RabbitDialStatusPublisher
+	notificationPublisher *producer.RabbitNotificationsPublisher
 }
 
-func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher) *InviteHandler {
+const MissedCall = "missed_call"
+
+func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher) *InviteHandler {
 	return &InviteHandler{
-		dialRedisRepository: dialService,
-		chatClient:          chatClient,
-		dialStatusPublisher: dialStatusPublisher,
+		dialRedisRepository:   dialService,
+		chatClient:            chatClient,
+		dialStatusPublisher:   dialStatusPublisher,
+		notificationPublisher: notificationPublisher,
 	}
 }
 
@@ -78,6 +82,10 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 
 	if call {
 		err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), userId, chatId, userPrincipalDto.UserId)
+		if err != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
 	} else {
 		err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userId, chatId)
 		if err != nil {
@@ -92,10 +100,23 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 			BehalfUserId: userPrincipalDto.UserId,
 		}
 		err = vh.dialStatusPublisher.Publish(&videoIsInvitingDto)
-	}
-	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+		if err != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		// here send missed call notification
+		var missedCall = dto.NotificationEvent{
+			EventType:              MissedCall,
+			ChatId:                 chatId,
+			UserId:                 userId,
+			MissedCallNotification: true,
+		}
+		err = vh.notificationPublisher.Publish(missedCall)
+		if err != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -202,6 +223,20 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	// here send missed call notification
+	for _, userId := range usersToDial {
+		var missedCall = dto.NotificationEvent{
+			EventType:              MissedCall,
+			ChatId:                 chatId,
+			UserId:                 userId,
+			MissedCallNotification: true,
+		}
+		err = vh.notificationPublisher.Publish(missedCall)
+		if err != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		}
 	}
 
 	return c.NoContent(http.StatusOK)
