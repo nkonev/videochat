@@ -208,17 +208,6 @@ vm = new Vue({
           setIcon(currentNewMessages)
       }
     },
-    // TODO migrate this rest request to App.vue and set counter at top of bell there
-    // additionalActionAfterGraphQlSubscription() {
-    //     axios.put(CheckForNewUrl).then((resp) => {
-    //         const data = resp?.data;
-    //         console.debug("New messages response", data);
-    //         if (data) {
-    //             const currentNewMessages = data.allUnreadMessages > 0;
-    //             setIcon(currentNewMessages)
-    //         }
-    //     })
-    // },
   },
   created(){
     Vue.prototype.isMobile = () => {

@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from "axios";
+import {setIcon} from "@/utils";
 
 Vue.use(Vuex);
 
@@ -216,6 +217,7 @@ const store = new Vuex.Store({
             axios.get(`/api/notification/notification`).then(( {data} ) => {
                 console.debug("fetched notifications =", data);
                 context.commit(SET_NOTIFICATIONS, data);
+                setIcon(data.length > 0)
             });
         },
     }
