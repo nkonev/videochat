@@ -220,7 +220,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		AvatarBig:      c.AvatarBig,
 		IsTetATet:      c.TetATet,
 
-		// see also services/notifications.go:75 chatNotifyCommon()
+		// see also services/events.go:75 chatNotifyCommon()
 
 		ParticipantsCount:  c.ParticipantsCount,
 		LastUpdateDateTime: c.LastUpdateDateTime,
