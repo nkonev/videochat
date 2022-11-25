@@ -7,6 +7,6 @@ type NotificationDto struct {
 	ChatId         int64     `json:"chatId"`
 	MessageId      *int64    `json:"messageId"`
 	Type           string    `json:"type"`
-	Description    *string   `json:"description"`
+	Description    string    `json:"description"`
 	CreateDateTime time.Time `json:"createDateTime"`
 }

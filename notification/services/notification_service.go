@@ -22,7 +22,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		notificationType := "mention"
 		switch event.EventType {
 		case "mention_added":
-			err := srv.dbs.PutNotification(&notification.Id, event.UserId, event.ChatId, notificationType, &notification.Text)
+			err := srv.dbs.PutNotification(&notification.Id, event.UserId, event.ChatId, notificationType, notification.Text)
 			if err != nil {
 				Logger.Errorf("Unable to put notification %v", err)
 			}
@@ -32,9 +32,10 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				Logger.Errorf("Unable to delete notification %v", err)
 			}
 		}
-	} else if event.MissedCallNotification {
+	} else if event.MissedCallNotification != nil {
+		notification := event.MissedCallNotification
 		notificationType := "missed_call"
-		err := srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, nil)
+		err := srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, notification.Description)
 		if err != nil {
 			Logger.Errorf("Unable to put notification %v", err)
 		}

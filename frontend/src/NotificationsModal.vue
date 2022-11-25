@@ -95,12 +95,7 @@ export default {
             }
         },
         getNotificationTitle(item) {
-            switch (item.type) {
-                case "missed_call":
-                    return "Some chat"
-                case "mention":
-                    return item.description
-            }
+            return item.description
         },
         getNotificationDate(item) {
             return getHumanReadableDate(item.createDateTime)

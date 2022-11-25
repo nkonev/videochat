@@ -105,17 +105,22 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		// here send missed call notification
-		var missedCall = dto.NotificationEvent{
-			EventType:              MissedCall,
-			ChatId:                 chatId,
-			UserId:                 userId,
-			MissedCallNotification: true,
-		}
-		err = vh.notificationPublisher.Publish(missedCall)
-		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-			return c.NoContent(http.StatusInternalServerError)
+		if inviteNames, err := vh.chatClient.GetChatNameForInvite(chatId, behalfUserId, []int64{userId}, c.Request().Context()); err != nil {
+			Logger.Error(err, "Failed during getting chat invite names")
+		} else if len(inviteNames) == 1 {
+			chatName := inviteNames[0]
+			// here send missed call notification
+			var missedCall = dto.NotificationEvent{
+				EventType:              MissedCall,
+				ChatId:                 chatId,
+				UserId:                 userId,
+				MissedCallNotification: &dto.MissedCallNotification{chatName.Name},
+			}
+			err = vh.notificationPublisher.Publish(missedCall)
+			if err != nil {
+				logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+				return c.NoContent(http.StatusInternalServerError)
+			}
 		}
 	}
 
@@ -225,17 +230,21 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	// here send missed call notification
-	for _, userId := range usersToDial {
-		var missedCall = dto.NotificationEvent{
-			EventType:              MissedCall,
-			ChatId:                 chatId,
-			UserId:                 userId,
-			MissedCallNotification: true,
-		}
-		err = vh.notificationPublisher.Publish(missedCall)
-		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+	if chatNames, err := vh.chatClient.GetChatNameForInvite(chatId, behalfUserId, usersToDial, c.Request().Context()); err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+	} else {
+		for _, chatName := range chatNames {
+			// here send missed call notification
+			var missedCall = dto.NotificationEvent{
+				EventType:              MissedCall,
+				ChatId:                 chatId,
+				UserId:                 chatName.UserId,
+				MissedCallNotification: &dto.MissedCallNotification{chatName.Name},
+			}
+			err = vh.notificationPublisher.Publish(missedCall)
+			if err != nil {
+				logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			}
 		}
 	}
 
