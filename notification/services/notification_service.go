@@ -18,7 +18,19 @@ func CreateNotificationService(dbs db.DB) *NotificationService {
 }
 
 func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEvent) {
-	if event.MentionNotification != nil {
+	err := srv.dbs.InitNotificationSettings(event.UserId)
+	if err != nil {
+		Logger.Errorf("Error during initializing notification settings %v", err)
+		return
+	}
+
+	userNotificationsSettings, err := srv.dbs.GetNotificationSettings(event.UserId)
+	if err != nil {
+		Logger.Errorf("Error during initializing notification settings %v", err)
+		return
+	}
+
+	if event.MentionNotification != nil && userNotificationsSettings.MentionsEnabled {
 		notification := event.MentionNotification
 		notificationType := "mention"
 		switch event.EventType {
@@ -39,7 +51,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				Logger.Errorf("Unable to delete notification %v", err)
 			}
 		}
-	} else if event.MissedCallNotification != nil {
+	} else if event.MissedCallNotification != nil && userNotificationsSettings.MissedCallsEnabled {
 		err := srv.removeExcessNotificationsIfNeed(event.UserId)
 		if err != nil {
 			Logger.Errorf("Unable to delete excess notifications %v", err)

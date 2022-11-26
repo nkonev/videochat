@@ -32,12 +32,16 @@
                         dense
                         hide-details
                         class="ma-0 ml-2 mr-4"
+                        v-model="notificationsSettings.mentionsEnabled"
+                        @click="putNotificationsSettings()"
                     ></v-switch>
                     <v-switch
                         :label="$vuetify.lang.t('$vuetify.notify_about_missed_calls')"
                         dense
                         hide-details
                         class="ma-0 ml-2 mr-4"
+                        v-model="notificationsSettings.missedCallsEnabled"
+                        @click="putNotificationsSettings()"
                     ></v-switch>
                     <v-spacer></v-spacer>
 
@@ -59,7 +63,7 @@ import bus, {
     OPEN_NOTIFICATIONS_DIALOG,
 } from "./bus";
 import {mapGetters} from 'vuex'
-import {GET_NOTIFICATIONS} from "@/store";
+import {GET_NOTIFICATIONS, GET_NOTIFICATIONS_SETTINGS, SET_NOTIFICATIONS_SETTINGS} from "@/store";
 import {getHumanReadableDate} from "./utils";
 import axios from "axios";
 import { chat_name} from "@/routes";
@@ -110,10 +114,16 @@ export default {
                 this.closeModal();
             });
         },
+        putNotificationsSettings() {
+            axios.put('/api/notification/settings', this.notificationsSettings).then(({data}) => {
+                this.$store.commit(SET_NOTIFICATIONS_SETTINGS, data);
+            })
+        },
     },
     computed: {
         ...mapGetters({
             notifications: GET_NOTIFICATIONS,
+            notificationsSettings: GET_NOTIFICATIONS_SETTINGS,
         })
     },
     watch: {

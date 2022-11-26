@@ -128,7 +128,8 @@ func configureEcho(
 
 	// TODO send notification removed and notification added to event and handle it on the frontend
 	e.GET("/notification/notification", ch.GetNotifications)
-
+	e.GET("/notification/settings", ch.GetNotificationSettings)
+	e.PUT("/notification/settings", ch.PutNotificationSettings)
 	// TODO also emit "Notification Removed"
 	e.PUT("/notification/read/:notificationId", ch.ReadNotification)
 

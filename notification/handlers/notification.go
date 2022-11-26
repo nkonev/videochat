@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"nkonev.name/notification/auth"
 	"nkonev.name/notification/db"
+	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
 	"nkonev.name/notification/utils"
 )
@@ -53,4 +54,61 @@ func (mc *NotificationHandler) ReadNotification(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusAccepted)
+}
+
+func (mc *NotificationHandler) GetNotificationSettings(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	err := mc.db.InitNotificationSettings(userPrincipalDto.UserId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
+		return err
+	}
+
+	notSett, err := mc.db.GetNotificationSettings(userPrincipalDto.UserId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, notSett)
+}
+
+func (mc *NotificationHandler) PutNotificationSettings(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	var bindTo = new(dto.NotificationSettings)
+	err := c.Bind(bindTo)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during reading notification settings %v", err)
+		return err
+	}
+
+	err = mc.db.InitNotificationSettings(userPrincipalDto.UserId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
+		return err
+	}
+
+	err = mc.db.PutNotificationSettings(userPrincipalDto.UserId, bindTo)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during writing notification settings %v", err)
+		return err
+	}
+
+	notSett, err := mc.db.GetNotificationSettings(userPrincipalDto.UserId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, notSett)
 }

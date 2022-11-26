@@ -50,6 +50,8 @@ export const SET_ERROR_COLOR = 'setErrorColor';
 export const GET_NOTIFICATIONS = 'getNotifications';
 export const SET_NOTIFICATIONS = 'setNotifications';
 export const UNSET_NOTIFICATIONS = 'unsetNotifications';
+export const GET_NOTIFICATIONS_SETTINGS = 'getNotificationsSettings';
+export const SET_NOTIFICATIONS_SETTINGS = 'setNotificationsSettings';
 
 const store = new Vuex.Store({
     state: {
@@ -76,6 +78,7 @@ const store = new Vuex.Store({
         lastError: "",
         errorColor: "",
         notifications: [],
+        notificationsSettings: {}
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -144,6 +147,9 @@ const store = new Vuex.Store({
         [UNSET_NOTIFICATIONS](state, payload) {
             state.notifications = [];
         },
+        [SET_NOTIFICATIONS_SETTINGS](state, payload) {
+            state.notificationsSettings = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -203,6 +209,9 @@ const store = new Vuex.Store({
         [GET_NOTIFICATIONS](state) {
             return state.notifications;
         },
+        [GET_NOTIFICATIONS_SETTINGS](state) {
+            return state.notificationsSettings;
+        },
     },
     actions: {
         [FETCH_USER_PROFILE](context) {
@@ -222,6 +231,10 @@ const store = new Vuex.Store({
                 console.debug("fetched notifications =", data);
                 context.commit(SET_NOTIFICATIONS, data);
                 setIcon(data.length > 0)
+            });
+            axios.get(`/api/notification/settings`).then(( {data} ) => {
+                console.debug("fetched notifications settings =", data);
+                context.commit(SET_NOTIFICATIONS_SETTINGS, data);
             });
         },
     }

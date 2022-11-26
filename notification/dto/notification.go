@@ -10,3 +10,8 @@ type NotificationDto struct {
 	Description    string    `json:"description"`
 	CreateDateTime time.Time `json:"createDateTime"`
 }
+
+type NotificationSettings struct {
+	MentionsEnabled    bool `json:"mentionsEnabled"`
+	MissedCallsEnabled bool `json:"missedCallsEnabled"`
+}
