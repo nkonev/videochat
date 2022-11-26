@@ -212,7 +212,8 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		if tx.AddMessageRead(id, userPrincipalDto.UserId, chatId) != nil {
+		_, err = tx.AddMessageRead(id, userPrincipalDto.UserId, chatId)
+		if err != nil {
 			return err
 		}
 		if tx.UpdateChatLastDatetimeChat(chatId) != nil {
@@ -230,7 +231,8 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 
 		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 		var addedMentions, strippedText = mc.findMentions(message.Text, users, c.Request().Context())
-		mc.notificator.NotifyAddMention(c, addedMentions, chatId, message.Id, strippedText)
+		var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
+		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText)
 
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
@@ -320,7 +322,8 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			}
 		}
 
-		mc.notificator.NotifyAddMention(c, userIdsToNotifyAboutMentionCreated, chatId, message.Id, strippedText)
+		var reallyAddedMentions = excludeMyself(userIdsToNotifyAboutMentionCreated, userPrincipalDto)
+		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText)
 		mc.notificator.NotifyRemoveMention(c, userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
 
 		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message)
@@ -331,6 +334,16 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
+}
+
+func excludeMyself(mentionedUserIds []int64, principalDto *auth.AuthResult) []int64 {
+	var result = []int64{}
+	for _, userId := range mentionedUserIds {
+		if principalDto != nil && userId != principalDto.UserId {
+			result = append(result, userId)
+		}
+	}
+	return result
 }
 
 func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *SanitizerPolicy) *db.Message {
@@ -402,10 +415,13 @@ func (mc MessageHandler) ReadMessage(c echo.Context) error {
 		return err
 	}
 
-	if err := mc.db.AddMessageRead(messageId, userPrincipalDto.UserId, chatId); err != nil {
+	wasSet, err := mc.db.AddMessageRead(messageId, userPrincipalDto.UserId, chatId)
+	if err != nil {
 		return err
 	}
-	mc.notificator.NotifyRemoveMention(c, []int64{userPrincipalDto.UserId}, chatId, messageId)
+	if (wasSet) {
+		mc.notificator.NotifyRemoveMention(c, []int64{userPrincipalDto.UserId}, chatId, messageId)
+	}
 
 	return c.NoContent(http.StatusAccepted)
 }

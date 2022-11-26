@@ -158,16 +158,29 @@ func (tx *Tx) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 	return getMessageCommon(tx, chatId, userId, messageId)
 }
 
-func addMessageReadCommon(co CommonOperations, messageId, userId int64, chatId int64) error {
-	_, err := co.Exec(`INSERT INTO message_read (last_message_id, user_id, chat_id) VALUES ($1, $2, $3) ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1  WHERE $1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
-	return err
+func addMessageReadCommon(co CommonOperations, messageId, userId int64, chatId int64) (bool, error) {
+	res, err := co.Exec(`INSERT INTO message_read (last_message_id, user_id, chat_id) VALUES ($1, $2, $3) ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1  WHERE $1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
+	if err != nil {
+		Logger.Errorf("Error during marking as read message id %v", err)
+		return false, err
+	}
+	affected, err := res.RowsAffected()
+	if err != nil {
+		Logger.Errorf("Error getting affected rows during marking as read message id %v", err)
+		return false, err
+	}
+	if affected > 0 {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
 
-func (db *DB) AddMessageRead(messageId, userId int64, chatId int64) error {
+func (db *DB) AddMessageRead(messageId, userId int64, chatId int64) (bool, error) {
 	return addMessageReadCommon(db, messageId, userId, chatId)
 }
 
-func (tx *Tx) AddMessageRead(messageId, userId int64, chatId int64) error {
+func (tx *Tx) AddMessageRead(messageId, userId int64, chatId int64) (bool, error) {
 	return addMessageReadCommon(tx, messageId, userId, chatId)
 }
 
