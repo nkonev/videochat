@@ -120,13 +120,9 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	// TODO add table about notification settings which initializes on the first request
+	// TODO We need to send "Notification Removed" during removing excess
 
-	// TODO it should return also current user settings "Mentions on/off" and max notifications count from settings
-	//  Also During inserting notification into the table we need remove excess for user according limit if need
-	//  And in addition we need to send "Notification Removed" during this process
-
-	// TODO send notification removed and notification added to event and handle it on the frontend
+	// TODO send "notification removed" and "notification added" to event and handle it on the frontend
 	e.GET("/notification/notification", ch.GetNotifications)
 	e.GET("/notification/settings", ch.GetNotificationSettings)
 	e.PUT("/notification/settings", ch.PutNotificationSettings)
