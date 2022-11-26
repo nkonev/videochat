@@ -405,6 +405,7 @@ func (mc MessageHandler) ReadMessage(c echo.Context) error {
 	if err := mc.db.AddMessageRead(messageId, userPrincipalDto.UserId, chatId); err != nil {
 		return err
 	}
+	mc.notificator.NotifyRemoveMention(c, []int64{userPrincipalDto.UserId}, chatId, messageId)
 
 	return c.NoContent(http.StatusAccepted)
 }

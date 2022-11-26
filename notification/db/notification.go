@@ -18,7 +18,7 @@ func (db *DB) DeleteNotification(id int64, userId int64) error {
 			return err
 		}
 		if affected == 0 {
-			return errors.New("No rows affected")
+			Logger.Infof("No rows affected")
 		}
 	}
 	return nil
@@ -35,7 +35,7 @@ func (db *DB) DeleteNotificationByMessageId(messageId int64, userId int64) error
 			return err
 		}
 		if affected == 0 {
-			return errors.New("No rows affected")
+			Logger.Infof("No rows affected")
 		}
 	}
 	return nil
