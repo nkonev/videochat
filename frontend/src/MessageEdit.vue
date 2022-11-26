@@ -130,7 +130,9 @@
               this.$refs.tipTapRef.clearContent();
               this.editMessageDto = dtoFactory();
               this.fileCount = null;
-              this.notifyAboutBroadcast(true);
+              if (this.userIsSet) {
+                  this.notifyAboutBroadcast(true);
+              }
             },
             messageTextIsPresent(text) {
                 return text && text !== ""
@@ -272,6 +274,9 @@
             }),
             messageEditHeight() {
                 return this.fullHeight ? 'calc(100vh - 56px - 48px)' : '100%'
+            },
+            userIsSet() {
+                return !!this.currentUser
             }
         },
         mounted() {

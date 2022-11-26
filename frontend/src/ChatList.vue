@@ -41,19 +41,19 @@
 </template>
 
 <script>
-import bus, {
-    CHAT_ADD,
-    CHAT_EDITED,
-    CHAT_DELETED,
-    LOGGED_IN,
-    OPEN_CHAT_EDIT,
-    OPEN_SIMPLE_MODAL,
-    UNREAD_MESSAGES_CHANGED,
-    USER_PROFILE_CHANGED,
-    CLOSE_SIMPLE_MODAL,
-    REFRESH_ON_WEBSOCKET_RESTORED,
-    VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET
-} from "./bus";
+    import bus, {
+        CHAT_ADD,
+        CHAT_EDITED,
+        CHAT_DELETED,
+        LOGGED_IN,
+        OPEN_CHAT_EDIT,
+        OPEN_SIMPLE_MODAL,
+        UNREAD_MESSAGES_CHANGED,
+        USER_PROFILE_CHANGED,
+        CLOSE_SIMPLE_MODAL,
+        REFRESH_ON_WEBSOCKET_RESTORED,
+        VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET
+    } from "./bus";
     import {chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
     import { findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition } from "./utils";
@@ -62,12 +62,16 @@ import bus, {
     import queryMixin from "@/queryMixin";
 
     import {
+        GET_USER,
         SET_CHAT_ID,
         SET_CHAT_USERS_COUNT,
         SET_SHOW_CHAT_EDIT_BUTTON,
         SET_SHOW_SEARCH,
         SET_TITLE
     } from "./store";
+
+    import {mapGetters} from "vuex";
+
 
     import ChatListContextMenu from "@/ChatListContextMenu";
 
@@ -87,6 +91,12 @@ import bus, {
         components:{
             InfiniteLoading,
             ChatListContextMenu,
+        },
+        computed: {
+            ...mapGetters({currentUser: GET_USER}),
+            userIsSet() {
+                return !!this.currentUser
+            }
         },
         methods:{
             // not working until you will change this.items list
@@ -146,6 +156,11 @@ import bus, {
             },
 
             infiniteHandler($state) {
+                if (!this.userIsSet) {
+                    $state.complete();
+                    return
+                }
+
                 console.debug("infiniteHandler", '"' + this.searchString + '"');
                 axios.get('/api/chat', {
                     params: {

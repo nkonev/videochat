@@ -207,6 +207,9 @@
             },
             aDistance() {
                 return this.isTopDirection() ? 0 : 100
+            },
+            userIsSet() {
+                return !!this.currentUser
             }
         },
         methods: {
@@ -364,6 +367,11 @@
                     this.clearHash();
                 }
 
+                if (!this.userIsSet) {
+                    $state.complete();
+                    return
+                }
+
                 this.forbidChangeScrollDirection = true;
 
                 axios.get(`/api/chat/${this.chatId}/message`, {
@@ -504,9 +512,7 @@
                 this.getInfo();
                 this.graphQlSubscribe();
                 this.updateVideoRecordingState();
-            },
-            onLoggedIn() {
-                // seems it need in order to mitigate bug with last login message
+
                 if (this.items.length === 0) {
                     this.reloadItems();
                 }
@@ -661,6 +667,7 @@
             this.$store.commit(SET_CHAT_ID, this.chatId);
             this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
 
+            // we trigger actions on load if profile was set
             if (this.currentUser) {
                 this.onProfileSet();
             } // else we rely on PROFILE_SET
@@ -675,7 +682,6 @@
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(PROFILE_SET, this.onProfileSet);
-            bus.$on(LOGGED_IN, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
@@ -689,8 +695,6 @@
             }, 500);
 
             this.scrollerDiv = document.getElementById("messagesScroller");
-
-            this.updateVideoRecordingState();
         },
         beforeDestroy() {
             this.graphQlUnsubscribe();
@@ -703,7 +707,6 @@
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(PROFILE_SET, this.onProfileSet);
-            bus.$off(LOGGED_IN, this.onLoggedIn);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
