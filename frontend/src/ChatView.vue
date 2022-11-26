@@ -659,7 +659,7 @@
             this.hash = this.getHash();
             this.hasHash = hasLength(this.hash);
             if (this.hasHash) {
-                this.highlightMessageId = this.hash.replace(/\D/g, '');
+                this.highlightMessageId = this.getMessageId(this.hash);
             }
         },
         mounted() {
@@ -745,7 +745,7 @@
                         const hash = this.getHash();
                         const hasHash = hasLength(hash);
                         if (hasHash) {
-                            const highlightMessageId = hash.replace(/\D/g, '');
+                            const highlightMessageId = this.getMessageId(hash);
                             if (findIndexNonStrictly(this.items, {id: highlightMessageId}) === -1) {
                                 this.hash = hash;
                                 this.hasHash = hasHash;

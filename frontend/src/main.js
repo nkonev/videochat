@@ -228,6 +228,9 @@ vm = new Vue({
           });
       }
     };
+    Vue.prototype.getMessageId = (hash) => {
+      return hash.replace(/\D/g, '')
+    };
 
     bus.$on(PROFILE_SET, this.graphQlSubscribe);
     bus.$on(LOGGED_OUT, this.graphQlUnsubscribe);
