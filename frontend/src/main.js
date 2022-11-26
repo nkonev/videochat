@@ -29,14 +29,16 @@ const CheckForNewUrl = '/api/chat/message/check-for-new';
 
 let vm;
 
-function getCsrfCookie(name) {
-    const value = "; " + document.cookie;
-    const parts = value.split("; " + name + "=");
-    if (parts.length === 2) return parts.pop().split(";").shift();
+function getCookieValue(name) {
+    const cookies = document.cookie.split(';');
+    const res = cookies.find(c => c.startsWith(name + '='));
+    if (res) {
+        return res.substring(res.indexOf('=') + 1);
+    }
 }
 
 axios.interceptors.request.use(request => {
-    const cookieValue = getCsrfCookie('VIDEOCHAT_XSRF_TOKEN');
+    const cookieValue = getCookieValue('VIDEOCHAT_XSRF_TOKEN');
     console.debug("Injecting xsrf token to header", cookieValue);
     request.headers['X-XSRF-TOKEN'] = cookieValue;
     return request
