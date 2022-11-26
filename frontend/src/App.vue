@@ -499,14 +499,14 @@
         mounted() {
         },
         created() {
-            this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS).then(() => {
-                this.$store.dispatch(FETCH_USER_PROFILE);
-            })
-
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             bus.$on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
             bus.$on(PROFILE_SET, this.onProfileSet);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
+
+            this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS).then(() => {
+                this.$store.dispatch(FETCH_USER_PROFILE);
+            })
 
             this.initQueryAndWatcher();
 
