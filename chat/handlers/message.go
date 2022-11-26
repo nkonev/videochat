@@ -415,13 +415,11 @@ func (mc MessageHandler) ReadMessage(c echo.Context) error {
 		return err
 	}
 
-	wasSet, err := mc.db.AddMessageRead(messageId, userPrincipalDto.UserId, chatId)
+	_, err = mc.db.AddMessageRead(messageId, userPrincipalDto.UserId, chatId)
 	if err != nil {
 		return err
 	}
-	if (wasSet) {
-		mc.notificator.NotifyRemoveMention(c, []int64{userPrincipalDto.UserId}, chatId, messageId)
-	}
+	mc.notificator.NotifyRemoveMention(c, []int64{userPrincipalDto.UserId}, chatId, messageId)
 
 	return c.NoContent(http.StatusAccepted)
 }
