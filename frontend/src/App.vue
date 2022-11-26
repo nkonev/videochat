@@ -266,6 +266,9 @@
 
     const reactOnAnswerThreshold = 3 * 1000; // ms
     const audio = new Audio("/call.mp3");
+    const invitedVideoChatAlertTimeout = reactOnAnswerThreshold;
+
+    let invitedVideoChatAlertTimer;
 
     export default {
         mixins: [queryMixin()],
@@ -356,6 +359,16 @@
                     this.invitedVideoChatId = data.chatId;
                     this.invitedVideoChatName = data.chatName;
                     this.invitedVideoChatAlert = true;
+
+                    // restart the timer
+                    if (invitedVideoChatAlertTimer) {
+                        clearInterval(invitedVideoChatAlertTimer);
+                    }
+                    // set auto-close snackbar
+                    invitedVideoChatAlertTimer = setTimeout(()=>{
+                        this.invitedVideoChatAlert = false;
+                    }, invitedVideoChatAlertTimeout);
+
                     audio.play().catch(error => {
                         console.warn("Unable to play sound", error);
                         bus.$emit(OPEN_PERMISSIONS_WARNING_MODAL);
