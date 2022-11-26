@@ -740,7 +740,7 @@
         watch: {
             '$route': {
                 handler: function(newRoute, oldRoute) {
-                    console.log("Watched on newRoute", newRoute, " oldRoute", oldRoute);
+                    console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
                     if (newRoute.name === chat_name) {
                         const hash = this.getHash();
                         const hasHash = hasLength(hash);
