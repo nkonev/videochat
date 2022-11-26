@@ -49,6 +49,7 @@ export const GET_ERROR_COLOR = 'getErrorColor';
 export const SET_ERROR_COLOR = 'setErrorColor';
 export const GET_NOTIFICATIONS = 'getNotifications';
 export const SET_NOTIFICATIONS = 'setNotifications';
+export const UNSET_NOTIFICATIONS = 'unsetNotifications';
 
 const store = new Vuex.Store({
     state: {
@@ -139,6 +140,9 @@ const store = new Vuex.Store({
         },
         [SET_NOTIFICATIONS](state, payload) {
             state.notifications = payload;
+        },
+        [UNSET_NOTIFICATIONS](state, payload) {
+            state.notifications = [];
         },
     },
     getters: {

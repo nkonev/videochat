@@ -222,7 +222,7 @@
         SET_SHOW_RECORD_START_BUTTON,
         SET_SHOW_RECORD_STOP_BUTTON,
         FETCH_NOTIFICATIONS,
-        GET_NOTIFICATIONS
+        GET_NOTIFICATIONS, UNSET_NOTIFICATIONS
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -236,7 +236,12 @@
         OPEN_VIDEO_SETTINGS,
         OPEN_LANGUAGE_MODAL,
         ADD_VIDEO_SOURCE_DIALOG,
-        ADD_SCREEN_SOURCE, OPEN_SIMPLE_MODAL, CLOSE_SIMPLE_MODAL, VIDEO_RECORDING_CHANGED, OPEN_NOTIFICATIONS_DIALOG,
+        ADD_SCREEN_SOURCE,
+        OPEN_SIMPLE_MODAL,
+        CLOSE_SIMPLE_MODAL,
+        VIDEO_RECORDING_CHANGED,
+        OPEN_NOTIFICATIONS_DIALOG,
+        PROFILE_SET,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -444,6 +449,15 @@
                 }
                 this.$router.push(routerNewState).catch(()=>{});
             },
+            onProfileSet(){
+                this.$store.dispatch(FETCH_NOTIFICATIONS);
+            },
+            onLoggedOut() {
+                this.resetVariables();
+            },
+            resetVariables() {
+                this.$store.commit(UNSET_NOTIFICATIONS);
+            },
         },
         computed: {
             ...mapGetters({
@@ -471,11 +485,12 @@
         },
         mounted() {
             this.$store.dispatch(FETCH_USER_PROFILE);
-            this.$store.dispatch(FETCH_NOTIFICATIONS);
         },
         created() {
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             bus.$on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
+            bus.$on(PROFILE_SET, this.onProfileSet);
+            bus.$on(LOGGED_OUT, this.onLoggedOut);
 
             this.initQueryAndWatcher();
 
