@@ -143,9 +143,11 @@ const store = new Vuex.Store({
         },
         [SET_NOTIFICATIONS](state, payload) {
             state.notifications = payload;
+            setIcon(payload != null && payload.length > 0);
         },
         [UNSET_NOTIFICATIONS](state, payload) {
             state.notifications = [];
+            setIcon(false);
         },
         [SET_NOTIFICATIONS_SETTINGS](state, payload) {
             state.notificationsSettings = payload;
@@ -230,7 +232,6 @@ const store = new Vuex.Store({
             axios.get(`/api/notification/notification`).then(( {data} ) => {
                 console.debug("fetched notifications =", data);
                 context.commit(SET_NOTIFICATIONS, data);
-                setIcon(data.length > 0)
             });
             axios.get(`/api/notification/settings`).then(( {data} ) => {
                 console.debug("fetched notifications settings =", data);
