@@ -33,4 +33,4 @@ jaeger:
   host: "localhost"
   port: 6831
 
-maxNotifications: 100
+maxNotifications: 10

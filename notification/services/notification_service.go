@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/spf13/viper"
 	"nkonev.name/notification/db"
 	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
@@ -22,7 +23,13 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		notificationType := "mention"
 		switch event.EventType {
 		case "mention_added":
-			err := srv.dbs.PutNotification(&notification.Id, event.UserId, event.ChatId, notificationType, notification.Text)
+			err := srv.removeExcessNotificationsIfNeed(event.UserId)
+			if err != nil {
+				Logger.Errorf("Unable to delete excess notifications %v", err)
+				return
+			}
+
+			err = srv.dbs.PutNotification(&notification.Id, event.UserId, event.ChatId, notificationType, notification.Text)
 			if err != nil {
 				Logger.Errorf("Unable to put notification %v", err)
 			}
@@ -33,12 +40,33 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			}
 		}
 	} else if event.MissedCallNotification != nil {
+		err := srv.removeExcessNotificationsIfNeed(event.UserId)
+		if err != nil {
+			Logger.Errorf("Unable to delete excess notifications %v", err)
+			return
+		}
+
 		notification := event.MissedCallNotification
 		notificationType := "missed_call"
-		err := srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, notification.Description)
+		err = srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, notification.Description)
 		if err != nil {
 			Logger.Errorf("Unable to put notification %v", err)
 		}
 	}
 
+}
+
+func (srv *NotificationService) removeExcessNotificationsIfNeed(userId int64) error {
+	count, err := srv.dbs.GetNotificationCount(userId)
+	if err != nil {
+		Logger.Errorf("Unable to get notification count %v", err)
+		return err
+	}
+
+	maxNotifications := viper.GetInt("maxNotifications")
+	if count >= int64(maxNotifications) {
+		toDelete := count - int64(maxNotifications) + 1
+		return srv.dbs.DeleteExcessUserNotifications(userId, toDelete)
+	}
+	return nil
 }

@@ -87,3 +87,28 @@ func (db *DB) GetNotifications(userId int64) ([]dto.NotificationDto, error) {
 	return list, nil
 
 }
+
+func (db *DB) GetNotificationCount(userId int64) (int64, error) {
+	row := db.QueryRow("select count(*) from notification where user_id = $1", userId)
+	if row.Err() != nil {
+		Logger.Errorf("Error during getting notification count %v", row.Err())
+		return 0, row.Err()
+	}
+	var count int64
+	err := row.Scan(&count)
+	if err != nil {
+		Logger.Errorf("Error during scanning notification count %v", err)
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (db *DB) DeleteExcessUserNotifications(userId int64, numToDelete int64) error {
+	_, err := db.Exec("delete from notification where id in (select id from notification where user_id = $1 order by id asc limit $2)", userId, numToDelete)
+	if err != nil {
+		Logger.Errorf("Error during remiving excess notificautions %v", err)
+		return err
+	}
+	return nil
+}
