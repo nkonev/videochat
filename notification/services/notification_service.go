@@ -50,6 +50,8 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			if err != nil {
 				Logger.Errorf("Unable to delete notification %v", err)
 			}
+		default:
+			Logger.Errorf("Unexpected event type %v", event.EventType)
 		}
 	} else if event.MissedCallNotification != nil && userNotificationsSettings.MissedCallsEnabled {
 		err := srv.removeExcessNotificationsIfNeed(event.UserId)
