@@ -402,7 +402,11 @@
                         $state?.complete();
                     }
                     if (this.hasHash) {
-                        this.$vuetify.goTo('#' + this.hash, {container: this.scrollerDiv, duration: 0});
+                        try {
+                            this.$vuetify.goTo('#' + this.hash, {container: this.scrollerDiv, duration: 0});
+                        } catch (err) {
+                            console.debug("Didn't scrolled", err)
+                        }
                     }
                     this.hasHash = false;
                 }).finally(()=>{
