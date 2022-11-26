@@ -34,3 +34,23 @@ func (mc *NotificationHandler) GetNotifications(c echo.Context) error {
 		return c.JSON(http.StatusOK, notifications)
 	}
 }
+
+func (mc *NotificationHandler) ReadNotification(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	notificationId, err := GetPathParamAsInt64(c, "notificationId")
+	if err != nil {
+		return err
+	}
+
+	err = mc.db.DeleteNotification(notificationId, userPrincipalDto.UserId)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusAccepted)
+}

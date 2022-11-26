@@ -126,10 +126,11 @@ func configureEcho(
 	//  Also During inserting notification into the table we need remove excess for user according limit if need
 	//  And in addition we need to send "Notification Removed" during this process
 
-	// TODO add "notification read handle" which also emits "Notification Removed"
-
 	// TODO send notification removed and notification added to event and handle it on the frontend
 	e.GET("/notification/notification", ch.GetNotifications)
+
+	// TODO also emit "Notification Removed"
+	e.PUT("/notification/read/:notificationId", ch.ReadNotification)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

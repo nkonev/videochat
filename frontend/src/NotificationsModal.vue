@@ -7,7 +7,7 @@
                     <v-list class="pb-0">
                         <template v-if="notifications.length > 0">
                             <template v-for="(item, index) in notifications">
-                                <v-list-item link>
+                                <v-list-item link @click="onNotificationClick(item)">
                                     <v-list-item-icon class="mr-4"><v-icon large>{{getNotificationIcon(item.type)}}</v-icon></v-list-item-icon>
                                     <v-list-item-content class="py-2">
                                         <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
@@ -61,13 +61,12 @@ import bus, {
 import {mapGetters} from 'vuex'
 import {GET_NOTIFICATIONS} from "@/store";
 import {getHumanReadableDate} from "./utils";
+import axios from "axios";
 
 export default {
     data () {
         return {
             show: false,
-            dto: null,
-            loading: false,
         }
     },
 
@@ -100,7 +99,9 @@ export default {
         getNotificationDate(item) {
             return getHumanReadableDate(item.createDateTime)
         },
-
+        onNotificationClick(item) {
+            axios.put('/api/notification/read/' + item.id)
+        },
     },
     computed: {
         ...mapGetters({
