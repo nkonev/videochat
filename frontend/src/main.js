@@ -244,7 +244,7 @@ vm = new Vue({
     bus.$off(LOGGED_OUT, this.graphQlUnsubscribe);
   },
   mounted(){
-    this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS);
+
   },
   watch: {
     '$store.state.currentUser': function(newUserValue, oldUserValue) {

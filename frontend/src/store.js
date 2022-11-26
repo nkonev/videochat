@@ -223,7 +223,7 @@ const store = new Vuex.Store({
             });
         },
         [FETCH_AVAILABLE_OAUTH2_PROVIDERS](context) {
-            axios.get(`/api/oauth2/providers`).then(( {data} ) => {
+            return axios.get(`/api/oauth2/providers`).then(( {data} ) => {
                 console.debug("fetched oauth2 providers =", data);
                 context.commit(SET_AVAILABLE_OAUTH2_PROVIDERS, data);
             });

@@ -222,7 +222,7 @@
         SET_SHOW_RECORD_START_BUTTON,
         SET_SHOW_RECORD_STOP_BUTTON,
         FETCH_NOTIFICATIONS,
-        GET_NOTIFICATIONS, UNSET_NOTIFICATIONS
+        GET_NOTIFICATIONS, UNSET_NOTIFICATIONS, FETCH_AVAILABLE_OAUTH2_PROVIDERS
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -497,9 +497,12 @@
             }
         },
         mounted() {
-            this.$store.dispatch(FETCH_USER_PROFILE);
         },
         created() {
+            this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS).then(() => {
+                this.$store.dispatch(FETCH_USER_PROFILE);
+            })
+
             bus.$on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             bus.$on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
             bus.$on(PROFILE_SET, this.onProfileSet);
@@ -528,6 +531,13 @@
                 }
             });
         },
+        destroyed() {
+            this.closeQueryWatcher();
+            bus.$off(VIDEO_CALL_INVITED, this.onVideoCallInvited);
+            bus.$off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
+            bus.$off(PROFILE_SET, this.onProfileSet);
+            bus.$off(LOGGED_OUT, this.onLoggedOut);
+        }
     }
 </script>
 
