@@ -163,6 +163,10 @@ export const findIndex = (array, element) => {
     return array.findIndex(value => value.id === element.id);
 };
 
+export const findIndexNonStrictly = (array, element) => {
+    return array.findIndex(value => value.id == element.id);
+};
+
 export const replaceInArray = (array, element) => {
     const foundIndex = findIndex(array, element);
     if (foundIndex === -1) {

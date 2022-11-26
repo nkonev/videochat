@@ -60,7 +60,7 @@
         MESSAGE_BROADCAST,
         REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE, CHAT_ADD, PROFILE_SET,
     } from "./bus";
-    import {chat_list_name, videochat_name} from "./routes";
+    import {chat_list_name, chat_name, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
     import ChatVideo from "./ChatVideo";
 
@@ -73,7 +73,7 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
-    import {findIndex, hasLength, replaceInArray} from "./utils";
+    import {findIndex, findIndexNonStrictly, hasLength, replaceInArray} from "./utils";
     import MessageItem from "./MessageItem";
     // import 'splitpanes/dist/splitpanes.css';
     import debounce from "lodash/debounce";
@@ -644,7 +644,7 @@
                         }
                     }
                 })
-            }
+            },
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -736,6 +736,29 @@
             ChatVideo,
             Splitpanes, Pane,
             MessageItem
+        },
+        watch: {
+            '$route': {
+                handler: function(newRoute, oldRoute) {
+                    console.log("Watched on newRoute", newRoute, " oldRoute", oldRoute);
+                    if (newRoute.name === chat_name) {
+                        const hash = this.getHash();
+                        const hasHash = hasLength(hash);
+                        if (hasHash) {
+                            const highlightMessageId = hash.replace(/\D/g, '');
+                            if (findIndexNonStrictly(this.items, {id: highlightMessageId}) === -1) {
+                                this.hash = hash;
+                                this.hasHash = hasHash;
+                                this.highlightMessageId = highlightMessageId;
+                                this.resetVariables();
+                                this.reloadItems();
+                            }
+                        }
+                    }
+                },
+                immediate: true,
+                deep: true
+            }
         }
     }
 </script>
