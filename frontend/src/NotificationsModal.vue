@@ -62,6 +62,7 @@ import {mapGetters} from 'vuex'
 import {GET_NOTIFICATIONS} from "@/store";
 import {getHumanReadableDate} from "./utils";
 import axios from "axios";
+import { chat_name} from "@/routes";
 
 export default {
     data () {
@@ -100,7 +101,14 @@ export default {
             return getHumanReadableDate(item.createDateTime)
         },
         onNotificationClick(item) {
-            axios.put('/api/notification/read/' + item.id)
+            axios.put('/api/notification/read/' + item.id).then(()=>{
+                const routeDto = { name: chat_name, params: { id: item.chatId }};
+                if (item.messageId) {
+                    routeDto.hash = "#message-" + item.messageId;
+                }
+                this.$router.push(routeDto);
+                this.closeModal();
+            });
         },
     },
     computed: {
