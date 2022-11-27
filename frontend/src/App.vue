@@ -509,30 +509,10 @@
             })
 
             this.initQueryAndWatcher();
-
-            this.$router.beforeEach((to, from, next) => {
-                console.debug("beforeEach", to);
-
-                if (from.name == videochat_name && to.name != videochat_name && to.params.leavingVideoAcceptableParam != true) {
-                    bus.$emit(OPEN_SIMPLE_MODAL, {
-                        buttonName: this.$vuetify.lang.t('$vuetify.ok'),
-                        title: this.$vuetify.lang.t('$vuetify.leave_call'),
-                        text: this.$vuetify.lang.t('$vuetify.leave_call_text'),
-                        actionFunction: ()=> {
-                            next();
-                            bus.$emit(CLOSE_SIMPLE_MODAL);
-                        },
-                        cancelFunction: ()=>{
-                            next(false)
-                        }
-                    });
-                } else {
-                    next();
-                }
-            });
         },
         destroyed() {
             this.closeQueryWatcher();
+
             bus.$off(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             bus.$off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
             bus.$off(PROFILE_SET, this.onProfileSet);

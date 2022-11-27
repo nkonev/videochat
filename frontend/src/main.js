@@ -12,7 +12,12 @@ import bus, {
     LOGGED_OUT,
     LOGGED_IN,
     VIDEO_CALL_INVITED,
-    VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED, PROFILE_SET, VIDEO_RECORDING_CHANGED,
+    VIDEO_CALL_USER_COUNT_CHANGED,
+    VIDEO_DIAL_STATUS_CHANGED,
+    PROFILE_SET,
+    VIDEO_RECORDING_CHANGED,
+    OPEN_SIMPLE_MODAL,
+    CLOSE_SIMPLE_MODAL,
 } from './bus';
 import store, {
     FETCH_AVAILABLE_OAUTH2_PROVIDERS,
@@ -24,6 +29,7 @@ import store, {
 import router from './router.js'
 import {hasLength, setIcon} from "@/utils";
 import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
+import {videochat_name} from "@/routes";
 
 const CheckForNewUrl = '/api/chat/message/check-for-new';
 
@@ -100,6 +106,27 @@ axios.interceptors.response.use((response) => {
 const getGlobalEventsData = (message) => {
     return message.data?.globalEvents
 };
+
+router.beforeEach((to, from, next) => {
+    console.debug("beforeEach", to, vuetify);
+
+    if (from.name == videochat_name && to.name != videochat_name && to.params.leavingVideoAcceptableParam != true) {
+        bus.$emit(OPEN_SIMPLE_MODAL, {
+            buttonName: vuetify.framework.lang.translator('$vuetify.ok'),
+            title: vuetify.framework.lang.translator('$vuetify.leave_call'),
+            text: vuetify.framework.lang.translator('$vuetify.leave_call_text'),
+            actionFunction: ()=> {
+                next();
+                bus.$emit(CLOSE_SIMPLE_MODAL);
+            },
+            cancelFunction: ()=>{
+                next(false)
+            }
+        });
+    } else {
+        next();
+    }
+});
 
 vm = new Vue({
   vuetify,
