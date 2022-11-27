@@ -107,7 +107,7 @@ export default {
         onNotificationClick(item) {
             const routeDto = { name: chat_name, params: { id: item.chatId }};
             if (item.messageId) {
-                routeDto.hash = "#message-" + item.messageId;
+                routeDto.hash = require('./routes').messageIdHashPrefix + item.messageId;
             }
             this.$router.push(routeDto).then(()=> {
                 this.closeModal();
