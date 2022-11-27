@@ -125,12 +125,12 @@
                     })
                 }
             },
-            resetInput() {
+            resetInput(withoutBroadcast) {
               console.log("Resetting text input");
               this.$refs.tipTapRef.clearContent();
               this.editMessageDto = dtoFactory();
               this.fileCount = null;
-              if (this.userIsSet) {
+              if (!withoutBroadcast) {
                   this.notifyAboutBroadcast(true);
               }
             },
@@ -284,7 +284,7 @@
             bus.$on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.$on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.$on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
-            this.resetInput();
+            this.resetInput(true);
         },
         beforeDestroy() {
             bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
