@@ -56,6 +56,8 @@ export default {
     participants_modal_title: "Participants",
     add: "Add",
     admin: "Admin",
+    revoke_admin: "Revoke admin",
+    grant_admin: "Grant admin",
     you_brackets: "(you)",
     call: "Call",
     stop_call: "Stop call",

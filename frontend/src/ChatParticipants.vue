@@ -115,7 +115,12 @@
                                           </span>
                                         </template>
                                     </template>
-                                    <span>{{ $vuetify.lang.t('$vuetify.admin') }}</span>
+                                    <template v-if="dto.canChangeChatAdmins && (item.id != currentUser.id)">
+                                        <span>{{ item.admin ? $vuetify.lang.t('$vuetify.revoke_admin') : $vuetify.lang.t('$vuetify.grant_admin') }}</span>
+                                    </template>
+                                    <template v-else-if="item.admin">
+                                        <span>{{ $vuetify.lang.t('$vuetify.admin') }}</span>
+                                    </template>
                                 </v-tooltip>
 
                                 <v-tooltip bottom v-if="dto.canEdit && item.id != currentUser.id">

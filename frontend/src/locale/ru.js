@@ -56,6 +56,8 @@ export default {
     participants_modal_title: "Участники",
     add: "Добавить",
     admin: "Админ",
+    revoke_admin: "Убрать админа",
+    grant_admin: "Сделать админом",
     you_brackets: "(вы)",
     call: "Позвать",
     stop_call: "Перестать звонить",
