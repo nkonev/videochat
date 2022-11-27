@@ -122,5 +122,7 @@ export default {
     notify_about_missed_calls: "Missed calls",
     notification_mention: "Mention",
     notification_missed_call: "Missed call",
-    no_notifications: "You don't have notifications"
+    no_notifications: "You don't have notifications",
+    search_in_chats: "Search by chats",
+    search_in_messages: "Search by messages"
 }

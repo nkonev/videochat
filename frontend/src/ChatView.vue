@@ -67,9 +67,19 @@
     import {mapGetters} from "vuex";
 
     import {
-        GET_USER, SET_CAN_BROADCAST_TEXT_MESSAGE, SET_CAN_MAKE_RECORD, SET_CHAT_ID, SET_CHAT_USERS_COUNT,
-        SET_SHOW_CALL_BUTTON, SET_SHOW_CHAT_EDIT_BUTTON,
-        SET_SHOW_HANG_BUTTON, SET_SHOW_RECORD_START_BUTTON, SET_SHOW_RECORD_STOP_BUTTON, SET_SHOW_SEARCH, SET_TITLE,
+        GET_USER,
+        SET_CAN_BROADCAST_TEXT_MESSAGE,
+        SET_CAN_MAKE_RECORD,
+        SET_CHAT_ID,
+        SET_CHAT_USERS_COUNT,
+        SET_SEARCH_NAME,
+        SET_SHOW_CALL_BUTTON,
+        SET_SHOW_CHAT_EDIT_BUTTON,
+        SET_SHOW_HANG_BUTTON,
+        SET_SHOW_RECORD_START_BUTTON,
+        SET_SHOW_RECORD_STOP_BUTTON,
+        SET_SHOW_SEARCH,
+        SET_TITLE,
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
@@ -670,6 +680,7 @@
             this.$store.commit(SET_SHOW_SEARCH, true);
             this.$store.commit(SET_CHAT_ID, this.chatId);
             this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
+            this.$store.commit(SET_SEARCH_NAME, this.$vuetify.lang.t('$vuetify.search_in_messages'));
 
             // we trigger actions on load if profile was set
             if (this.currentUser) {
@@ -703,6 +714,8 @@
         beforeDestroy() {
             this.graphQlUnsubscribe();
             window.removeEventListener('resize', this.onResizedListener);
+
+            this.$store.commit(SET_SEARCH_NAME, null);
 
             bus.$off(MESSAGE_ADD, this.onNewMessage);
             bus.$off(MESSAGE_DELETED, this.onDeleteMessage);

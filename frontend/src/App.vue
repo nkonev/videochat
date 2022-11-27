@@ -114,7 +114,7 @@
             <v-spacer></v-spacer>
 
             <v-card light v-if="isShowSearch">
-                <v-text-field prepend-icon="mdi-magnify" hide-details single-line @input="clearHash()" v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+                <v-text-field prepend-icon="mdi-magnify" hide-details single-line @input="clearHash()" v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
             </v-card>
 
             <v-badge
@@ -222,7 +222,7 @@
         SET_SHOW_RECORD_START_BUTTON,
         SET_SHOW_RECORD_STOP_BUTTON,
         FETCH_NOTIFICATIONS,
-        GET_NOTIFICATIONS, UNSET_NOTIFICATIONS, FETCH_AVAILABLE_OAUTH2_PROVIDERS
+        GET_NOTIFICATIONS, UNSET_NOTIFICATIONS, FETCH_AVAILABLE_OAUTH2_PROVIDERS, GET_SEARCH_NAME
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -485,6 +485,7 @@
                 title: GET_TITLE,
                 chatUsersCount: GET_CHAT_USERS_COUNT,
                 isShowSearch: GET_SHOW_SEARCH,
+                searchName: GET_SEARCH_NAME,
                 showAlert: GET_SHOW_ALERT,
                 lastError: GET_LAST_ERROR,
                 errorColor: GET_ERROR_COLOR,

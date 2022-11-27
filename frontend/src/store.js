@@ -21,6 +21,8 @@ export const GET_TITLE = 'getTitle';
 export const SET_TITLE = 'setTitle';
 export const GET_SHOW_SEARCH = 'getShowSearch';
 export const SET_SHOW_SEARCH = 'setShowSearch';
+export const GET_SEARCH_NAME = 'getSearchName';
+export const SET_SEARCH_NAME = 'setSearchName';
 export const GET_CHAT_ID = 'getChatId';
 export const SET_CHAT_ID = 'setChatId';
 export const GET_CHAT_USERS_COUNT = 'getChatUsesCount';
@@ -61,6 +63,7 @@ const store = new Vuex.Store({
         muteAudio: false,
         title: "",
         isShowSearch: true,
+        searchName: null,
         chatId: null,
         invitedChatId: null,
         chatUsersCount: 0,
@@ -116,6 +119,9 @@ const store = new Vuex.Store({
         },
         [SET_SHOW_SEARCH](state, payload) {
             state.isShowSearch = payload;
+        },
+        [SET_SEARCH_NAME](state, payload) {
+            state.searchName = payload;
         },
         [SET_CHAT_USERS_COUNT](state, payload) {
             state.chatUsersCount = payload;
@@ -183,6 +189,9 @@ const store = new Vuex.Store({
         },
         [GET_SHOW_SEARCH](state) {
             return state.isShowSearch;
+        },
+        [GET_SEARCH_NAME](state) {
+            return state.searchName;
         },
         [GET_CHAT_USERS_COUNT](state) {
             return state.chatUsersCount;

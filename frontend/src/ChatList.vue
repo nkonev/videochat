@@ -64,7 +64,7 @@
     import {
         GET_USER,
         SET_CHAT_ID,
-        SET_CHAT_USERS_COUNT,
+        SET_CHAT_USERS_COUNT, SET_SEARCH_NAME,
         SET_SHOW_CHAT_EDIT_BUTTON,
         SET_SHOW_SEARCH,
         SET_TITLE
@@ -286,6 +286,7 @@
             this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
             this.$store.commit(SET_CHAT_USERS_COUNT, 0);
             this.$store.commit(SET_SHOW_SEARCH, true);
+            this.$store.commit(SET_SEARCH_NAME, this.$vuetify.lang.t('$vuetify.search_in_chats'));
             this.$store.commit(SET_CHAT_ID, null);
             this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
         },
