@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"github.com/spf13/viper"
 	"nkonev.name/notification/db"
 	"nkonev.name/notification/dto"
@@ -69,7 +71,12 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		case "mention_deleted":
 			id, err := srv.dbs.DeleteNotificationByMessageId(mentionNotification.Id, event.UserId)
 			if err != nil {
-				Logger.Errorf("Unable to delete notification %v", err)
+				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
+					Logger.Debugf("Missed notification %v", err)
+				} else {
+					Logger.Errorf("Unable to delete notification %v", err)
+				}
+				return
 			}
 
 			err = srv.rabbitEventsPublisher.Publish(event.UserId, &dto.NotificationDto{Id: id, CreateDateTime: time.Now()}, NotificationDelete, context.Background())
