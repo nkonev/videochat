@@ -15,7 +15,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/fx"
 	"net/http"
-	"nkonev.name/notification/client"
 	"nkonev.name/notification/config"
 	"nkonev.name/notification/db"
 	"nkonev.name/notification/handlers"
@@ -44,7 +43,6 @@ func main() {
 			db.ConfigureDb,
 			listener.CreateNotificationsListener,
 			rabbitmq.CreateRabbitMqConnection,
-			client.NewRestClient,
 			services.CreateNotificationService,
 			producer.NewRabbiEventPublisher,
 		),
