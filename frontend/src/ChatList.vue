@@ -22,9 +22,9 @@
                 </v-list-item-content>
                 <v-list-item-action v-if="!isMobile()">
                     <v-container class="mb-0 mt-0 pl-0 pr-0 pb-0 pt-0">
-                        <v-btn v-if="item.canEdit" icon color="primary" @click="editChat(item)"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
-                        <v-btn v-if="item.canDelete" icon @click="deleteChat(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
-                        <v-btn v-if="item.canLeave" icon @click="leaveChat(item)"><v-icon dark>mdi-exit-run</v-icon></v-btn>
+                        <v-btn v-if="item.canEdit" icon color="primary" @click="editChat(item)" :title="$vuetify.lang.t('$vuetify.edit_chat')"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
+                        <v-btn v-if="item.canDelete" icon @click="deleteChat(item)" :title="$vuetify.lang.t('$vuetify.delete_chat')" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
+                        <v-btn v-if="item.canLeave" icon @click="leaveChat(item)" :title="$vuetify.lang.t('$vuetify.leave_chat')"><v-icon dark>mdi-exit-run</v-icon></v-btn>
                     </v-container>
                 </v-list-item-action>
             </v-list-item>
