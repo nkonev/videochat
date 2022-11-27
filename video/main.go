@@ -60,7 +60,7 @@ func main() {
 			producer.NewRabbitNotificationsPublisher,
 			services.NewNotificationService,
 			services.NewUserService,
-			services.NewStateChangedNotificationService,
+			services.NewStateChangedEventService,
 			services.NewDialRedisRepository,
 			services.NewEgressService,
 			redis.RedisV8,

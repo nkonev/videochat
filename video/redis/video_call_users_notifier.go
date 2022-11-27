@@ -10,11 +10,11 @@ import (
 )
 
 type VideoCallUsersCountNotifierService struct {
-	scheduleService *services.StateChangedNotificationService
+	scheduleService *services.StateChangedEventService
 	conf            *config.ExtendedConfig
 }
 
-func NewVideoCallUsersCountNotifierService(scheduleService *services.StateChangedNotificationService, conf *config.ExtendedConfig) *VideoCallUsersCountNotifierService {
+func NewVideoCallUsersCountNotifierService(scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig) *VideoCallUsersCountNotifierService {
 	return &VideoCallUsersCountNotifierService{
 		scheduleService: scheduleService,
 		conf:            conf,

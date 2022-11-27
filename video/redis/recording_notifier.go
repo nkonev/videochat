@@ -10,11 +10,11 @@ import (
 )
 
 type RecordingNotifierService struct {
-	scheduleService *services.StateChangedNotificationService
+	scheduleService *services.StateChangedEventService
 	conf            *config.ExtendedConfig
 }
 
-func NewRecordingNotifierService(scheduleService *services.StateChangedNotificationService, conf *config.ExtendedConfig) *RecordingNotifierService {
+func NewRecordingNotifierService(scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig) *RecordingNotifierService {
 	return &RecordingNotifierService{
 		scheduleService: scheduleService,
 		conf:            conf,

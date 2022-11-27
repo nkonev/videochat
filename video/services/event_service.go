@@ -9,7 +9,7 @@ import (
 	"nkonev.name/video/utils"
 )
 
-type StateChangedNotificationService struct {
+type StateChangedEventService struct {
 	conf                *config.ExtendedConfig
 	livekitRoomClient   *lksdk.RoomServiceClient
 	userService         *UserService
@@ -17,11 +17,11 @@ type StateChangedNotificationService struct {
 	egressService       *EgressService
 }
 
-func NewStateChangedNotificationService(conf *config.ExtendedConfig, livekitRoomClient *lksdk.RoomServiceClient, userService *UserService, notificationService *NotificationService, egressService *EgressService) *StateChangedNotificationService {
-	return &StateChangedNotificationService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService, egressService: egressService}
+func NewStateChangedEventService(conf *config.ExtendedConfig, livekitRoomClient *lksdk.RoomServiceClient, userService *UserService, notificationService *NotificationService, egressService *EgressService) *StateChangedEventService {
+	return &StateChangedEventService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService, egressService: egressService}
 }
 
-func (h *StateChangedNotificationService) NotifyAllChatsAboutVideoCallUsersCount(ctx context.Context) {
+func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx context.Context) {
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := h.livekitRoomClient.ListRooms(context.Background(), listRoomReq)
 	if err != nil {
@@ -49,7 +49,7 @@ func (h *StateChangedNotificationService) NotifyAllChatsAboutVideoCallUsersCount
 	}
 }
 
-func (h *StateChangedNotificationService) NotifyAllChatsAboutVideoCallRecording(ctx context.Context) {
+func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx context.Context) {
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := h.livekitRoomClient.ListRooms(context.Background(), listRoomReq)
 	if err != nil {
