@@ -21,11 +21,6 @@ postgresql:
   maxIdleConnections: 4
   maxLifetime: 30s
 
-chat:
-  url:
-    base: "http://localhost:1235"
-    access: "/internal/access"
-
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
 
