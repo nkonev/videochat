@@ -20,7 +20,7 @@ import bus, {
     CLOSE_SIMPLE_MODAL,
 } from './bus';
 import store, {
-    FETCH_AVAILABLE_OAUTH2_PROVIDERS,
+    FETCH_AVAILABLE_OAUTH2_PROVIDERS, NOTIFICATION_ADD, NOTIFICATION_DELETE,
     SET_ERROR_COLOR,
     SET_LAST_ERROR,
     SET_SHOW_ALERT,
@@ -198,6 +198,14 @@ vm = new Vue({
                     allUnreadMessagesNotification {
                       allUnreadMessages
                     }
+                    notificationEvent {
+                      id
+                      chatId
+                      messageId
+                      notificationType
+                      description
+                      createDateTime
+                    }
                   }
                 }
             `
@@ -230,11 +238,12 @@ vm = new Vue({
       } else if (getGlobalEventsData(e).eventType === 'chat_unread_messages_changed') {
           const d = getGlobalEventsData(e).unreadMessagesNotification;
           bus.$emit(UNREAD_MESSAGES_CHANGED, d);
-      // TODO use the new notification events: notification_add, notification_remove
-      } else if (getGlobalEventsData(e).eventType === 'all_unread_messages_changed') {
-          const d = getGlobalEventsData(e).allUnreadMessagesNotification;
-          const currentNewMessages = d.allUnreadMessages > 0;
-          setIcon(currentNewMessages)
+      } else if (getGlobalEventsData(e).eventType === 'notification_add') {
+          const d = getGlobalEventsData(e).notificationEvent;
+          store.dispatch(NOTIFICATION_ADD, d);
+      } else if (getGlobalEventsData(e).eventType === 'notification_delete') {
+          const d = getGlobalEventsData(e).notificationEvent;
+          store.dispatch(NOTIFICATION_DELETE, d);
       }
     },
   },

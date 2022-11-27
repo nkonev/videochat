@@ -1,10 +1,10 @@
 package db
 
 import (
-	"errors"
 	"github.com/spf13/viper"
 	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
+	"time"
 )
 
 func (db *DB) DeleteNotification(id int64, userId int64) error {
@@ -24,45 +24,39 @@ func (db *DB) DeleteNotification(id int64, userId int64) error {
 	return nil
 }
 
-func (db *DB) DeleteNotificationByMessageId(messageId int64, userId int64) error {
-	if res, err := db.Exec(`delete from notification where message_id = $1 and user_id = $2`, messageId, userId); err != nil {
-		Logger.Errorf("Error during deleting notification id %v", err)
-		return err
-	} else {
-		affected, err := res.RowsAffected()
-		if err != nil {
-			Logger.Errorf("Error during checking rows affected %v", err)
-			return err
-		}
-		if affected == 0 {
-			Logger.Infof("No rows affected")
-		}
+func (db *DB) DeleteNotificationByMessageId(messageId int64, userId int64) (int64, error) {
+	res := db.QueryRow(`delete from notification where message_id = $1 and user_id = $2 returning id`, messageId, userId)
+	if res.Err() != nil {
+		return 0, res.Err()
 	}
-	return nil
+	var id int64
+	err := res.Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
-func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, notificationType string, description string) error {
+func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, notificationType string, description string) (int64, time.Time, error) {
 
-	if res, err := db.Exec(
+	res := db.QueryRow(
 		`insert into notification(notification_type, description, message_id, user_id, chat_id) 
 			values ($1, $2, $3, $4, $5) 
 			on conflict(notification_type, message_id, user_id, chat_id) 
-			do update set description = excluded.description;`,
-		notificationType, description, messageId, userId, chatId); err != nil {
-
-		Logger.Errorf("Error during putting notification id %v", err)
-		return err
-	} else {
-		affected, err := res.RowsAffected()
-		if err != nil {
-			Logger.Errorf("Error during checking rows affected %v", err)
-			return err
-		}
-		if affected == 0 {
-			return errors.New("No rows affected")
-		}
+			do update set description = excluded.description
+			RETURNING id, create_date_time`,
+		notificationType, description, messageId, userId, chatId)
+	if res.Err() != nil {
+		return 0, time.Now(), res.Err()
 	}
-	return nil
+	var id int64
+	var createDatetime time.Time
+	if err := res.Scan(&id, &createDatetime); err != nil {
+		Logger.Errorf("Error during putting notification %v", err)
+		return 0, time.Now(), err
+	}
+	return id, createDatetime, nil
 }
 
 func (db *DB) GetNotifications(userId int64) ([]dto.NotificationDto, error) {
@@ -77,7 +71,7 @@ func (db *DB) GetNotifications(userId int64) ([]dto.NotificationDto, error) {
 	list := make([]dto.NotificationDto, 0)
 	for rows.Next() {
 		notificationDto := dto.NotificationDto{}
-		if err := rows.Scan(&notificationDto.Id, &notificationDto.Type, &notificationDto.Description, &notificationDto.ChatId, &notificationDto.MessageId, &notificationDto.CreateDateTime); err != nil {
+		if err := rows.Scan(&notificationDto.Id, &notificationDto.NotificationType, &notificationDto.Description, &notificationDto.ChatId, &notificationDto.MessageId, &notificationDto.CreateDateTime); err != nil {
 			Logger.Errorf("Error during scan notification rows %v", err)
 			return nil, err
 		} else {
@@ -104,11 +98,23 @@ func (db *DB) GetNotificationCount(userId int64) (int64, error) {
 	return count, nil
 }
 
-func (db *DB) DeleteExcessUserNotifications(userId int64, numToDelete int64) error {
-	_, err := db.Exec("delete from notification where id in (select id from notification where user_id = $1 order by id asc limit $2)", userId, numToDelete)
+func (db *DB) GetExcessUserNotificationIds(userId int64, numToDelete int64) ([]int64, error) {
+	rows, err := db.Query("select id from notification where user_id = $1 order by id asc limit $2", userId, numToDelete)
 	if err != nil {
 		Logger.Errorf("Error during remiving excess notificautions %v", err)
-		return err
+		return nil, err
 	}
-	return nil
+	defer rows.Close()
+
+	list := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			Logger.Errorf("Error during scan notification rows %v", err)
+			return nil, err
+		} else {
+			list = append(list, id)
+		}
+	}
+	return list, nil
 }

@@ -8,16 +8,20 @@ import (
 	"nkonev.name/notification/db"
 	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
+	"nkonev.name/notification/producer"
+	"nkonev.name/notification/services"
 	"nkonev.name/notification/utils"
 )
 
 type NotificationHandler struct {
-	db db.DB
+	db                    db.DB
+	rabbitEventsPublisher *producer.RabbitEventPublisher
 }
 
-func NewMessageHandler(dbR db.DB) *NotificationHandler {
+func NewMessageHandler(dbR db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher) *NotificationHandler {
 	return &NotificationHandler{
-		db: dbR,
+		db:                    dbR,
+		rabbitEventsPublisher: rabbitEventsPublisher,
 	}
 }
 
@@ -51,6 +55,11 @@ func (mc *NotificationHandler) ReadNotification(c echo.Context) error {
 	err = mc.db.DeleteNotification(notificationId, userPrincipalDto.UserId)
 	if err != nil {
 		return err
+	}
+
+	err = mc.rabbitEventsPublisher.Publish(userPrincipalDto.UserId, &dto.NotificationDto{Id: notificationId}, services.NotificationDelete, c.Request().Context())
+	if err != nil {
+		Logger.Errorf("Unable to send notification delete %v", err)
 	}
 
 	return c.NoContent(http.StatusAccepted)

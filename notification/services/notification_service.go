@@ -1,21 +1,29 @@
 package services
 
 import (
+	"context"
 	"github.com/spf13/viper"
 	"nkonev.name/notification/db"
 	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
+	"nkonev.name/notification/producer"
+	"time"
 )
 
 type NotificationService struct {
-	dbs db.DB
+	dbs                   db.DB
+	rabbitEventsPublisher *producer.RabbitEventPublisher
 }
 
-func CreateNotificationService(dbs db.DB) *NotificationService {
+func CreateNotificationService(dbs db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher) *NotificationService {
 	return &NotificationService{
-		dbs: dbs,
+		dbs:                   dbs,
+		rabbitEventsPublisher: rabbitEventsPublisher,
 	}
 }
+
+const NotificationAdd = "notification_add"
+const NotificationDelete = "notification_delete"
 
 func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEvent) {
 	err := srv.dbs.InitNotificationSettings(event.UserId)
@@ -31,7 +39,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 	}
 
 	if event.MentionNotification != nil && userNotificationsSettings.MentionsEnabled {
-		notification := event.MentionNotification
+		mentionNotification := event.MentionNotification
 		notificationType := "mention"
 		switch event.EventType {
 		case "mention_added":
@@ -41,14 +49,32 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				return
 			}
 
-			err = srv.dbs.PutNotification(&notification.Id, event.UserId, event.ChatId, notificationType, notification.Text)
+			id, createDateTime, err := srv.dbs.PutNotification(&mentionNotification.Id, event.UserId, event.ChatId, notificationType, mentionNotification.Text)
 			if err != nil {
 				Logger.Errorf("Unable to put notification %v", err)
+				return
 			}
+			err = srv.rabbitEventsPublisher.Publish(event.UserId, &dto.NotificationDto{
+				Id:               id,
+				ChatId:           event.ChatId,
+				MessageId:        &mentionNotification.Id,
+				NotificationType: notificationType,
+				Description:      mentionNotification.Text,
+				CreateDateTime:   createDateTime,
+			}, NotificationAdd, context.Background())
+			if err != nil {
+				Logger.Errorf("Unable to send notification delete %v", err)
+			}
+
 		case "mention_deleted":
-			err := srv.dbs.DeleteNotificationByMessageId(notification.Id, event.UserId)
+			id, err := srv.dbs.DeleteNotificationByMessageId(mentionNotification.Id, event.UserId)
 			if err != nil {
 				Logger.Errorf("Unable to delete notification %v", err)
+			}
+
+			err = srv.rabbitEventsPublisher.Publish(event.UserId, &dto.NotificationDto{Id: id, CreateDateTime: time.Now()}, NotificationDelete, context.Background())
+			if err != nil {
+				Logger.Errorf("Unable to send notification delete %v", err)
 			}
 		default:
 			Logger.Errorf("Unexpected event type %v", event.EventType)
@@ -62,9 +88,22 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 
 		notification := event.MissedCallNotification
 		notificationType := "missed_call"
-		err = srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, notification.Description)
+		id, createDateTime, err := srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, notification.Description)
 		if err != nil {
 			Logger.Errorf("Unable to put notification %v", err)
+			return
+		}
+
+		err = srv.rabbitEventsPublisher.Publish(event.UserId, &dto.NotificationDto{
+			Id:               id,
+			ChatId:           event.ChatId,
+			MessageId:        nil,
+			NotificationType: notificationType,
+			Description:      notification.Description,
+			CreateDateTime:   createDateTime,
+		}, NotificationAdd, context.Background())
+		if err != nil {
+			Logger.Errorf("Unable to send notification delete %v", err)
 		}
 	}
 
@@ -80,7 +119,23 @@ func (srv *NotificationService) removeExcessNotificationsIfNeed(userId int64) er
 	maxNotifications := viper.GetInt("maxNotifications")
 	if count >= int64(maxNotifications) {
 		toDelete := count - int64(maxNotifications) + 1
-		return srv.dbs.DeleteExcessUserNotifications(userId, toDelete)
+		notificationsIdsToDelete, err := srv.dbs.GetExcessUserNotificationIds(userId, toDelete)
+		if err != nil {
+			Logger.Errorf("Unable to get notification ids to delete %v", err)
+			return err
+		}
+		for _, id := range notificationsIdsToDelete {
+			err := srv.dbs.DeleteNotification(id, userId)
+			if err != nil {
+				Logger.Errorf("Unable to delete notification %v", err)
+				return err
+			}
+			err = srv.rabbitEventsPublisher.Publish(userId, &dto.NotificationDto{Id: id, CreateDateTime: time.Now()}, NotificationDelete, context.Background())
+			if err != nil {
+				Logger.Errorf("Unable to send notification delete %v", err)
+				return err
+			}
+		}
 	}
 	return nil
 }

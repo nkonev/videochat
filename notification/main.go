@@ -21,6 +21,7 @@ import (
 	"nkonev.name/notification/handlers"
 	"nkonev.name/notification/listener"
 	. "nkonev.name/notification/logger"
+	"nkonev.name/notification/producer"
 	"nkonev.name/notification/rabbitmq"
 	"nkonev.name/notification/services"
 )
@@ -45,6 +46,7 @@ func main() {
 			rabbitmq.CreateRabbitMqConnection,
 			client.NewRestClient,
 			services.CreateNotificationService,
+			producer.NewRabbiEventPublisher,
 		),
 		fx.Invoke(
 			runMigrations,
@@ -120,13 +122,9 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	// TODO We need to send "Notification Removed" during removing excess
-
-	// TODO send "notification removed" and "notification added" to event and handle it on the frontend
 	e.GET("/notification/notification", ch.GetNotifications)
 	e.GET("/notification/settings", ch.GetNotificationSettings)
 	e.PUT("/notification/settings", ch.PutNotificationSettings)
-	// TODO also emit "Notification Removed"
 	e.PUT("/notification/read/:notificationId", ch.ReadNotification)
 
 	lc.Append(fx.Hook{

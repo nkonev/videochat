@@ -110,6 +110,15 @@ type AllUnreadMessages {
     allUnreadMessages: Int64!
 }
 
+type NotificationDto {
+    id: Int64!
+    chatId: Int64!
+    messageId: Int64
+    notificationType: String!
+    description: String!
+    createDateTime: Time!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
@@ -121,6 +130,7 @@ type GlobalEvent {
     videoParticipantDialEvent: VideoDialChanges
     unreadMessagesNotification: ChatUnreadMessageChanged
     allUnreadMessagesNotification: AllUnreadMessages
+    notificationEvent: NotificationDto
 }
 
 type Query {

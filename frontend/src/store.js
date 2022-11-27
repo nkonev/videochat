@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from "axios";
-import {setIcon} from "@/utils";
+import {findIndex, setIcon} from "@/utils";
 
 Vue.use(Vuex);
 
@@ -54,6 +54,8 @@ export const SET_NOTIFICATIONS = 'setNotifications';
 export const UNSET_NOTIFICATIONS = 'unsetNotifications';
 export const GET_NOTIFICATIONS_SETTINGS = 'getNotificationsSettings';
 export const SET_NOTIFICATIONS_SETTINGS = 'setNotificationsSettings';
+export const NOTIFICATION_ADD = 'notificationAdd';
+export const NOTIFICATION_DELETE = 'notificationDelete';
 
 const store = new Vuex.Store({
     state: {
@@ -246,6 +248,16 @@ const store = new Vuex.Store({
                 console.debug("fetched notifications settings =", data);
                 context.commit(SET_NOTIFICATIONS_SETTINGS, data);
             });
+        },
+        [NOTIFICATION_ADD](context, payload) {
+            const newArr = [payload, ...context.state.notifications];
+            context.commit(SET_NOTIFICATIONS, newArr);
+        },
+        [NOTIFICATION_DELETE](context, payload) {
+            const newArr = context.state.notifications;
+            const idxToRemove = findIndex(newArr, payload);
+            newArr.splice(idxToRemove, 1);
+            context.commit(SET_NOTIFICATIONS, newArr);
         },
     }
 });

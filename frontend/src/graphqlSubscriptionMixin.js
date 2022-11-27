@@ -17,6 +17,7 @@ export default (nameForLog) => {
                 const onNext_ = (e) => {
                     console.debug(`Got ${nameForLog} event`, e);
                     if (e.errors != null && e.errors.length) {
+                        console.log("Subscription errors", e.errors);
                         this.setError(null, `Error in onNext ${nameForLog} subscription`);
                         return
                     }

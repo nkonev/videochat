@@ -8,10 +8,10 @@
                         <template v-if="notifications.length > 0">
                             <template v-for="(item, index) in notifications">
                                 <v-list-item link @click="onNotificationClick(item)">
-                                    <v-list-item-icon class="mr-4"><v-icon large>{{getNotificationIcon(item.type)}}</v-icon></v-list-item-icon>
+                                    <v-list-item-icon class="mr-4"><v-icon large>{{getNotificationIcon(item.notificationType)}}</v-icon></v-list-item-icon>
                                     <v-list-item-content class="py-2">
                                         <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
-                                        <v-list-item-subtitle>{{ getNotificationSubtitle(item.type) }}</v-list-item-subtitle>
+                                        <v-list-item-subtitle>{{ getNotificationSubtitle(item.notificationType) }}</v-list-item-subtitle>
                                         <v-list-item-subtitle>
                                             {{ getNotificationDate(item)}}
                                         </v-list-item-subtitle>

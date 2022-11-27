@@ -73,6 +73,7 @@ type GlobalEvent struct {
 	VideoParticipantDialEvent     *VideoDialChanges         `json:"videoParticipantDialEvent"`
 	UnreadMessagesNotification    *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
 	AllUnreadMessagesNotification *AllUnreadMessages        `json:"allUnreadMessagesNotification"`
+	NotificationEvent             *NotificationDto          `json:"notificationEvent"`
 }
 
 type MessageBroadcastNotification struct {
@@ -84,6 +85,15 @@ type MessageBroadcastNotification struct {
 type MessageDeletedDto struct {
 	ID     int64 `json:"id"`
 	ChatID int64 `json:"chatId"`
+}
+
+type NotificationDto struct {
+	ID               int64     `json:"id"`
+	ChatID           int64     `json:"chatId"`
+	MessageID        *int64    `json:"messageId"`
+	NotificationType string    `json:"notificationType"`
+	Description      string    `json:"description"`
+	CreateDateTime   time.Time `json:"createDateTime"`
 }
 
 type User struct {

@@ -16,3 +16,9 @@ type NotificationEvent struct {
 	MentionNotification    *MentionNotification    `json:"mentionNotification"`
 	MissedCallNotification *MissedCallNotification `json:"missedCallNotification"`
 }
+
+type GlobalEvent struct {
+	EventType             string           `json:"eventType"`
+	UserId                int64            `json:"userId"`
+	UserNotificationEvent *NotificationDto `json:"userNotificationEvent"`
+}

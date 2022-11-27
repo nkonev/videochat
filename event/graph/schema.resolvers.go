@@ -270,6 +270,18 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 		}
 	}
 
+	userNotification := e.UserNotificationEvent
+	if userNotification != nil {
+		ret.NotificationEvent = &model.NotificationDto{
+			ID:               userNotification.Id,
+			ChatID:           userNotification.ChatId,
+			MessageID:        userNotification.MessageId,
+			NotificationType: userNotification.NotificationType,
+			Description:      userNotification.Description,
+			CreateDateTime:   userNotification.CreateDateTime,
+		}
+	}
+
 	return ret
 }
 func convertUser(owner *dto.User) *model.User {
