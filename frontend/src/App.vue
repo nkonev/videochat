@@ -222,7 +222,7 @@
         SET_SHOW_RECORD_START_BUTTON,
         SET_SHOW_RECORD_STOP_BUTTON,
         FETCH_NOTIFICATIONS,
-        GET_NOTIFICATIONS, UNSET_NOTIFICATIONS, FETCH_AVAILABLE_OAUTH2_PROVIDERS, GET_SEARCH_NAME
+        GET_NOTIFICATIONS, UNSET_NOTIFICATIONS, FETCH_AVAILABLE_OAUTH2_PROVIDERS, GET_SEARCH_NAME, SET_TITLE
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -518,7 +518,7 @@
             bus.$off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
             bus.$off(PROFILE_SET, this.onProfileSet);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
-        }
+        },
     }
 </script>
 

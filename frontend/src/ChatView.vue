@@ -771,7 +771,12 @@
                 },
                 immediate: true,
                 deep: true
-            }
+            },
+            '$vuetify.lang.current': {
+                handler: function (newValue, oldValue) {
+                    this.$store.commit(SET_SEARCH_NAME, this.$vuetify.lang.t('$vuetify.search_in_messages'));
+                },
+            },
         }
     }
 </script>

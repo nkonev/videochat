@@ -294,6 +294,7 @@
           '$vuetify.lang.current': {
             handler: function (newValue, oldValue) {
               this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
+                this.$store.commit(SET_SEARCH_NAME, this.$vuetify.lang.t('$vuetify.search_in_chats'));
             },
           },
         },
