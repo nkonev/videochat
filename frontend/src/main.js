@@ -36,11 +36,9 @@ const CheckForNewUrl = '/api/chat/message/check-for-new';
 let vm;
 
 function getCookieValue(name) {
-    const cookies = document.cookie.split(';');
-    const res = cookies.find(c => c.startsWith(name + '='));
-    if (res) {
-        return res.substring(res.indexOf('=') + 1);
-    }
+    const value = "; " + document.cookie;
+    const parts = value.split("; " + name + "=");
+    if (parts.length === 2) return parts.pop().split(";").shift();
 }
 
 axios.interceptors.request.use(request => {
