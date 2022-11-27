@@ -1,6 +1,8 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type NotificationDto struct {
 	Id               int64     `json:"id"`
@@ -11,12 +13,14 @@ type NotificationDto struct {
 	CreateDateTime   time.Time `json:"createDateTime"`
 }
 
-type NotificationEventDto struct {
-	Dto       NotificationDto `json:"dto"`
-	EventType string          `json:"eventType"`
-}
-
 type NotificationSettings struct {
 	MentionsEnabled    bool `json:"mentionsEnabled"`
 	MissedCallsEnabled bool `json:"missedCallsEnabled"`
+}
+
+func NewNotificationDeleteDto(id int64) *NotificationDto {
+	return &NotificationDto{
+		Id:             id,
+		CreateDateTime: time.Now(), // it needs for GraphLQ because this field is not nullable
+	}
 }

@@ -9,7 +9,6 @@ import (
 	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
 	"nkonev.name/notification/producer"
-	"time"
 )
 
 type NotificationService struct {
@@ -79,7 +78,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				return
 			}
 
-			err = srv.rabbitEventsPublisher.Publish(event.UserId, &dto.NotificationDto{Id: id, CreateDateTime: time.Now()}, NotificationDelete, context.Background())
+			err = srv.rabbitEventsPublisher.Publish(event.UserId, dto.NewNotificationDeleteDto(id), NotificationDelete, context.Background())
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)
 			}
@@ -137,7 +136,7 @@ func (srv *NotificationService) removeExcessNotificationsIfNeed(userId int64) er
 				Logger.Errorf("Unable to delete notification %v", err)
 				return err
 			}
-			err = srv.rabbitEventsPublisher.Publish(userId, &dto.NotificationDto{Id: id, CreateDateTime: time.Now()}, NotificationDelete, context.Background())
+			err = srv.rabbitEventsPublisher.Publish(userId, dto.NewNotificationDeleteDto(id), NotificationDelete, context.Background())
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)
 				return err
