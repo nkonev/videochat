@@ -48,21 +48,8 @@
 import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL, SET_FILE_ITEM_UUID, UPDATE_VIEW_FILES_DIALOG} from "./bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
+import { formatSize } from "./utils";
 const CancelToken = axios.CancelToken;
-
-const formatSize = (size) => {
-    const operableSize = Math.abs(size);
-    if (operableSize > 1024 * 1024 * 1024 * 1024) {
-        return (size / 1024 / 1024 / 1024 / 1024).toFixed(2) + ' TB'
-    } else if (operableSize > 1024 * 1024 * 1024) {
-        return (size / 1024 / 1024 / 1024).toFixed(2) + ' GB'
-    } else if (operableSize > 1024 * 1024) {
-        return (size / 1024 / 1024).toFixed(2) + ' MB'
-    } else if (operableSize > 1024) {
-        return (size / 1024).toFixed(2) + ' KB'
-    }
-    return size.toString() + ' B'
-};
 
 export default {
     data () {

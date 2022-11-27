@@ -82,7 +82,7 @@ export default {
     leave_chat_text: "Вы действительно хотите выйти из чата '{0}' ?",
     delete_message_title: "Удаление сообщения #{0}",
     delete_message_text: "Вы действительно хотите удалить это сообщение ?",
-    files_by: "Владелец",
+    files_by: "загрузил",
     files_public_url: "Публичная ссылка",
     delete_from_chat: "Удалить из чата",
     delete_participant: "Удаление из чата #{0}",

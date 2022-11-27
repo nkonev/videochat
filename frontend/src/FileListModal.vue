@@ -15,7 +15,9 @@
                                     </v-list-item-avatar>
                                     <v-list-item-content class="ml-4">
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
-                                        <v-list-item-subtitle><span v-if="item.owner">{{ $vuetify.lang.t('$vuetify.files_by') }} {{item.owner.login}}</span>
+                                        <v-list-item-subtitle>
+                                            {{ item.size | formatSizeFilter }}
+                                            <span v-if="item.owner"> {{ $vuetify.lang.t('$vuetify.files_by') }} {{item.owner.login}}</span>
                                             <span> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                                             <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">
                                             {{ $vuetify.lang.t('$vuetify.files_public_url') }}
@@ -82,7 +84,7 @@ import bus, {
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
 import axios from "axios";
-import {getHumanReadableDate, replaceInArray} from "./utils";
+import { getHumanReadableDate, replaceInArray, formatSize } from "./utils";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -202,6 +204,11 @@ export default {
         },
         getDate(item) {
             return getHumanReadableDate(item.lastModified)
+        },
+    },
+    filters: {
+        formatSizeFilter(size) {
+            return formatSize((size))
         },
     },
     watch: {
