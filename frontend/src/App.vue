@@ -22,14 +22,14 @@
             <v-divider></v-divider>
 
             <v-list dense>
-                <v-list-item @click="createChat()">
-                    <v-list-item-icon><v-icon>mdi-plus</v-icon></v-list-item-icon>
-                    <v-list-item-content><v-list-item-title id="new-chat-dialog-button">{{ $vuetify.lang.t('$vuetify.new_chat') }}</v-list-item-title></v-list-item-content>
-                </v-list-item>
-
                 <v-list-item @click.prevent="goHome()" :href="require('./routes').root">
                     <v-list-item-icon><v-icon>mdi-forum</v-icon></v-list-item-icon>
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.chats') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
+                <v-list-item @click="createChat()">
+                    <v-list-item-icon><v-icon>mdi-plus</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title id="new-chat-dialog-button">{{ $vuetify.lang.t('$vuetify.new_chat') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
                 <v-list-item @click="displayChatFiles()" v-if="shouldDisplayFiles()">
