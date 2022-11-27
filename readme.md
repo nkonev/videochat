@@ -18,6 +18,7 @@ Your open source self-hosted videoconference platform.
 * User is [speaking indication](./screenshots.md#user-is-speaking-indication-green-nickname-and-microphone).
 * Persistent text chats with simple formatting. Messages are persisted regardless video-call session.
 * [Tet-a-tet](./screenshots.md#open-tet-a-tet-chat) private chats for two.
+* Notifications about `@mentions` and missed video calls.
 * Horizontal scaling, including video server itself thanks to Livekit.
 * Supports [login](./screenshots.md#login) through OpedID Connect providers: Facebook, VK.com, Google, Keycloak. Not required can be disabled.
 * LDAP login integration.
