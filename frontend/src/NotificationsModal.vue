@@ -105,14 +105,14 @@ export default {
             return getHumanReadableDate(item.createDateTime)
         },
         onNotificationClick(item) {
-            axios.put('/api/notification/read/' + item.id).then(()=>{
-                const routeDto = { name: chat_name, params: { id: item.chatId }};
-                if (item.messageId) {
-                    routeDto.hash = "#message-" + item.messageId;
-                }
-                this.$router.push(routeDto);
+            const routeDto = { name: chat_name, params: { id: item.chatId }};
+            if (item.messageId) {
+                routeDto.hash = "#message-" + item.messageId;
+            }
+            this.$router.push(routeDto).then(()=> {
                 this.closeModal();
-            });
+                axios.put('/api/notification/read/' + item.id);
+            })
         },
         putNotificationsSettings() {
             axios.put('/api/notification/settings', this.notificationsSettings).then(({data}) => {
