@@ -104,13 +104,11 @@
             </v-badge>
 
             <v-spacer></v-spacer>
-            <v-btn class="ma-2" text color="white" @click="onInfoClicked" :disabled="!chatId">
-                <div class="d-flex flex-column">
-                    <div style="text-transform: initial">{{title}}</div>
-                    <div v-if="chatUsersCount" style="font-size: 0.8em !important; letter-spacing: initial; text-transform: initial; opacity: 50%">
-                        {{ chatUsersCount }} {{ $vuetify.lang.t('$vuetify.participants') }}</div>
-                </div>
-            </v-btn>
+            <v-toolbar-title color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked" :style="{'cursor': chatId ? 'pointer' : 'default'}">
+                <div class="app-title-text">{{title}}</div>
+                <div v-if="chatUsersCount" class="align-self-center app-title-subtext">
+                    {{ chatUsersCount }} {{ $vuetify.lang.t('$vuetify.participants') }}</div>
+            </v-toolbar-title>
             <v-spacer></v-spacer>
 
             <v-card light v-if="isShowSearch">
@@ -343,7 +341,9 @@
                 this.updateLastAnsweredTimestamp();
             },
             onInfoClicked() {
-                bus.$emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
+                if (this.chatId) {
+                    bus.$emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
+                }
             },
             onNotificationsClicked() {
                 bus.$emit(OPEN_NOTIFICATIONS_DIALOG);
@@ -542,4 +542,31 @@
     @keyframes blink {
         50% { opacity: 30% }
     }
+
+    .app-title {
+        color #7481c9
+        &-text {
+            font-size: .875rem;
+            font-weight: 500;
+            letter-spacing: .0892857143em;
+            text-indent: .0892857143em;
+        }
+
+        &-subtext {
+            font-size: .7rem;
+            letter-spacing: initial;
+            text-transform: initial;
+            opacity: 50%
+        }
+
+        &-hoverable {
+            color white
+        }
+
+        &-hoverable:hover {
+            background-color: #4e5fbb;
+            border-radius: 4px;
+        }
+    }
+
 </style>
