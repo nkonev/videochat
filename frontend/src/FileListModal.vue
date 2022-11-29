@@ -59,15 +59,15 @@
 
                 </v-card-text>
 
-                <v-card-actions class="pa-4 d-flex flex-wrap flex-row">
+                <v-card-actions class="d-flex flex-wrap flex-row">
                     <v-pagination
                         v-if="shouldShowPagination"
                         v-model="filePage"
                         :length="filePagesCount"
                     ></v-pagination>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" class="mr-4" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
-                    <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="primary" class="mr-4 my-1" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
+                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
