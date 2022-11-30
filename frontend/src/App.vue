@@ -106,8 +106,8 @@
 
                 <v-spacer></v-spacer>
                 <v-toolbar-title color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked" :style="{'cursor': chatId ? 'pointer' : 'default'}">
-                    <div class="align-self-center app-title-text">{{title}}</div>
-                    <div v-if="chatUsersCount" class="align-self-center app-title-subtext">
+                    <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text">{{title}}</div>
+                    <div v-if="chatUsersCount" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
                         {{ chatUsersCount }} {{ $vuetify.lang.t('$vuetify.participants') }}</div>
                 </v-toolbar-title>
             </template>
