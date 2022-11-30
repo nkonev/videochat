@@ -11,7 +11,7 @@
                                 <v-list-item>
                                     <v-list-item-avatar class="ma-0 pa-0">
                                         <v-btn icon v-if="canEdit(item)" @click="fireEdit(item)"><v-icon>mdi-pencil</v-icon></v-btn>
-                                        <v-icon v-else>mdi-file</v-icon>
+                                        <v-icon v-else large>mdi-file</v-icon>
                                     </v-list-item-avatar>
                                     <v-list-item-content class="ml-4">
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>

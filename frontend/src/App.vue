@@ -79,56 +79,64 @@
                 dense
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
-            <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
-            <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
-            <v-btn v-if="showRecordStartButton" icon @click="startRecord()" :loading="initializingStaringVideoRecord" :title="$vuetify.lang.t('$vuetify.start_record')">
-                <v-icon>mdi-record-rec</v-icon>
-            </v-btn>
-            <v-btn v-if="showRecordStopButton" icon @click="stopRecord()" :loading="initializingStoppingVideoRecord" :title="$vuetify.lang.t('$vuetify.stop_record')">
-                <v-icon color="red">mdi-record-rec</v-icon>
-            </v-btn>
-            <v-badge
-                v-if="showCallButton || showHangButton"
-                :content="videoChatUsersCount"
-                :value="videoChatUsersCount"
-                color="green"
-                overlap
-                offset-y="1.8em"
-            >
-                <v-btn v-if="showCallButton" icon @click="createCall()" :title="$vuetify.lang.t('$vuetify.create_call')">
-                    <v-icon color="green">mdi-phone</v-icon>
+            <template v-if="showSearchButton || !isMobile()">
+                <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
+                <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
+                <v-btn v-if="showRecordStartButton" icon @click="startRecord()" :loading="initializingStaringVideoRecord" :title="$vuetify.lang.t('$vuetify.start_record')">
+                    <v-icon>mdi-record-rec</v-icon>
                 </v-btn>
-                <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
-                    <v-icon color="red">mdi-phone</v-icon>
+                <v-btn v-if="showRecordStopButton" icon @click="stopRecord()" :loading="initializingStoppingVideoRecord" :title="$vuetify.lang.t('$vuetify.stop_record')">
+                    <v-icon color="red">mdi-record-rec</v-icon>
                 </v-btn>
-            </v-badge>
+                <v-badge
+                    v-if="showCallButton || showHangButton"
+                    :content="videoChatUsersCount"
+                    :value="videoChatUsersCount"
+                    color="green"
+                    overlap
+                    offset-y="1.8em"
+                >
+                    <v-btn v-if="showCallButton" icon @click="createCall()" :title="$vuetify.lang.t('$vuetify.create_call')">
+                        <v-icon color="green">mdi-phone</v-icon>
+                    </v-btn>
+                    <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
+                        <v-icon color="red">mdi-phone</v-icon>
+                    </v-btn>
+                </v-badge>
 
-            <v-spacer></v-spacer>
-            <v-toolbar-title color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked" :style="{'cursor': chatId ? 'pointer' : 'default'}">
-                <div class="align-self-center app-title-text">{{title}}</div>
-                <div v-if="chatUsersCount" class="align-self-center app-title-subtext">
-                    {{ chatUsersCount }} {{ $vuetify.lang.t('$vuetify.participants') }}</div>
-            </v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-toolbar-title color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked" :style="{'cursor': chatId ? 'pointer' : 'default'}">
+                    <div class="align-self-center app-title-text">{{title}}</div>
+                    <div v-if="chatUsersCount" class="align-self-center app-title-subtext">
+                        {{ chatUsersCount }} {{ $vuetify.lang.t('$vuetify.participants') }}</div>
+                </v-toolbar-title>
+            </template>
             <v-spacer></v-spacer>
 
-            <v-card light v-if="isShowSearch">
-                <v-text-field prepend-icon="mdi-magnify" hide-details single-line @input="clearHash()" v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+            <v-btn v-if="isShowSearch && showSearchButton && isMobile()" icon :title="searchName" @click="onOpenSearch()">
+                <v-icon>mdi-magnify</v-icon>
+            </v-btn>
+            <v-card light v-if="isShowSearch && !showSearchButton || !isMobile()" :width="isMobile() ? '100%' : ''">
+                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
             </v-card>
 
-            <v-badge
-                :content="notificationsCount"
-                :value="notificationsCount"
-                color="red"
-                overlap
-                offset-y="1.8em"
-            >
-                <v-btn
-                    icon :title="$vuetify.lang.t('$vuetify.notifications')"
-                    @click="onNotificationsClicked()"
+            <template v-if="showSearchButton || !isMobile()">
+                <v-badge
+                    :content="notificationsCount"
+                    :value="notificationsCount"
+                    color="red"
+                    overlap
+                    offset-y="1.8em"
                 >
-                    <v-icon>mdi-bell</v-icon>
-                </v-btn>
-            </v-badge>
+                    <v-btn
+                        :small="isMobile()"
+                        icon :title="$vuetify.lang.t('$vuetify.notifications')"
+                        @click="onNotificationsClicked()"
+                    >
+                        <v-icon>mdi-bell</v-icon>
+                    </v-btn>
+                </v-badge>
+            </template>
         </v-app-bar>
 
 
@@ -281,6 +289,7 @@
                 lastAnswered: 0,
                 initializingStaringVideoRecord: false,
                 initializingStoppingVideoRecord: false,
+                showSearchButton: true,
             }
         },
         components:{
@@ -448,14 +457,18 @@
             },
             resetInput() {
                 this.searchString = null;
+                this.showSearchButton = true;
             },
             searchStringChanged(searchString) {
                 console.debug("doSearch", searchString);
+                this.clearHash();
 
                 const currentRouteName = this.$route.name;
                 const routerNewState = {name: currentRouteName};
                 if (searchString && searchString != "") {
                     routerNewState.query = {[searchQueryParameter]: searchString};
+                } else {
+                    this.showSearchButton = true;
                 }
                 if (hasLength(this.getHash(true))) {
                     routerNewState.hash = this.getHash(true);
@@ -471,6 +484,9 @@
             resetVariables() {
                 this.$store.commit(UNSET_NOTIFICATIONS);
             },
+            onOpenSearch() {
+                this.showSearchButton = false;
+            }
         },
         computed: {
             ...mapGetters({
@@ -495,7 +511,7 @@
             },
             notificationsCount() {
                 return this.$store.getters[GET_NOTIFICATIONS].length
-            }
+            },
         },
         mounted() {
         },
