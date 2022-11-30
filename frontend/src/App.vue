@@ -81,11 +81,11 @@
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
             <template v-if="showSearchButton || !isMobile()">
                 <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
-                <v-btn v-if="showHangButton" icon :small="isMobile()" @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
-                <v-btn v-if="showRecordStartButton" icon :small="isMobile()" @click="startRecord()" :loading="initializingStaringVideoRecord" :title="$vuetify.lang.t('$vuetify.start_record')">
+                <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
+                <v-btn v-if="showRecordStartButton" icon @click="startRecord()" :loading="initializingStaringVideoRecord" :title="$vuetify.lang.t('$vuetify.start_record')">
                     <v-icon>mdi-record-rec</v-icon>
                 </v-btn>
-                <v-btn v-if="showRecordStopButton" icon :small="isMobile()" @click="stopRecord()" :loading="initializingStoppingVideoRecord" :title="$vuetify.lang.t('$vuetify.stop_record')">
+                <v-btn v-if="showRecordStopButton" icon @click="stopRecord()" :loading="initializingStoppingVideoRecord" :title="$vuetify.lang.t('$vuetify.stop_record')">
                     <v-icon color="red">mdi-record-rec</v-icon>
                 </v-btn>
                 <v-badge
@@ -94,12 +94,12 @@
                     :value="videoChatUsersCount"
                     color="green"
                     overlap
-                    :offset-y="isMobile() ? '' : '1.8em'"
+                    offset-y="1.8em"
                 >
-                    <v-btn v-if="showCallButton" :class="isMobile() ? 'mr-1' : ''" icon :small="isMobile()" @click="createCall()" :title="$vuetify.lang.t('$vuetify.create_call')">
+                    <v-btn v-if="showCallButton" icon @click="createCall()" :title="$vuetify.lang.t('$vuetify.create_call')">
                         <v-icon color="green">mdi-phone</v-icon>
                     </v-btn>
-                    <v-btn v-if="showHangButton" :class="isMobile() ? 'mx-1' : ''" icon :small="isMobile()" @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
+                    <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
                         <v-icon color="red">mdi-phone</v-icon>
                     </v-btn>
                 </v-badge>
