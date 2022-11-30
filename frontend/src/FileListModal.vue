@@ -8,12 +8,12 @@
                     <v-list v-if="!loading">
                         <template v-if="dto.count > 0">
                             <template v-for="(item, index) in dto.files">
-                                <v-list-item>
-                                    <v-list-item-avatar class="ma-0 pa-0">
+                                <v-list-item class="ma-0 pa-0 mr-3">
+                                    <v-list-item-avatar class="ma-2 pa-0">
                                         <v-btn icon v-if="canEdit(item)" @click="fireEdit(item)"><v-icon>mdi-pencil</v-icon></v-btn>
                                         <v-icon v-else>mdi-file</v-icon>
                                     </v-list-item-avatar>
-                                    <v-list-item-content class="ml-4">
+                                    <v-list-item-content class="ma-0 pa-0">
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
                                         <v-list-item-subtitle>
                                             {{ item.size | formatSizeFilter }}
