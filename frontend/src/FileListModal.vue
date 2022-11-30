@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" scrollable>
+        <v-dialog v-model="show" max-width="800" scrollable>
             <v-card>
                 <v-card-title>{{ fileItemUuid ? $vuetify.lang.t('$vuetify.attached_message_files') : $vuetify.lang.t('$vuetify.attached_chat_files') }}</v-card-title>
 
