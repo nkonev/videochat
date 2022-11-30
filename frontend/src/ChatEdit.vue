@@ -18,7 +18,7 @@
                             v-model="editDto.name"
                             required
                             :rules="chatNameRules"
-                            autofocus
+                            :autofocus="!isMobile()"
                         ></v-text-field>
                         <v-autocomplete
                                 v-if="isNew"
