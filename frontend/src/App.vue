@@ -560,7 +560,6 @@
     }
 
     .app-title {
-        color #7481c9
         &-text {
             font-size: .875rem;
             font-weight: 500;
