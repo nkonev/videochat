@@ -9,18 +9,23 @@
                         <template v-if="dto.count > 0">
                             <template v-for="(item, index) in dto.files">
                                 <v-list-item class="ma-0 pa-0 mr-3">
-                                    <v-list-item-avatar class="ma-2 pa-0">
+                                    <v-list-item-avatar class="ma-2 pa-0 pl-1">
                                         <v-btn icon v-if="canEdit(item)" @click="fireEdit(item)"><v-icon>mdi-pencil</v-icon></v-btn>
                                         <v-icon v-else>mdi-file</v-icon>
                                     </v-list-item-avatar>
-                                    <v-list-item-content class="ma-0 pa-0">
+                                    <v-list-item-content class="ma-0 pa-0 pt-1 pb-2">
                                         <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
                                         <v-list-item-subtitle>
                                             {{ item.size | formatSizeFilter }}
                                             <span v-if="item.owner"> {{ $vuetify.lang.t('$vuetify.files_by') }} {{item.owner.login}}</span>
                                             <span> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                                            <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">
+                                            <a v-if="item.publicUrl && !isMobile()" :href="item.publicUrl" target="_blank">
                                             {{ $vuetify.lang.t('$vuetify.files_public_url') }}
+                                            </a>
+                                        </v-list-item-subtitle>
+                                        <v-list-item-subtitle v-if="item.publicUrl && isMobile()">
+                                            <a :href="item.publicUrl" target="_blank">
+                                                {{ $vuetify.lang.t('$vuetify.files_public_url') }}
                                             </a>
                                         </v-list-item-subtitle>
                                     </v-list-item-content>
