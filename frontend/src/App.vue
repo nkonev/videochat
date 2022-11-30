@@ -126,7 +126,7 @@
                     :value="notificationsCount"
                     color="red"
                     overlap
-                    offset-y="1.8em"
+                    :offset-y="isMobile() ? '' : '1.8em'"
                 >
                     <v-btn
                         :small="isMobile()"
