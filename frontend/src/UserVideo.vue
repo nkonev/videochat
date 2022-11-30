@@ -167,7 +167,7 @@ export default {
         }
     },
     created(){
-        this.showControls = this.isLocal && !this.isMobile();
+        this.showControls = this.isLocal;
     },
     destroyed() {
 
