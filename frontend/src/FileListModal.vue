@@ -13,9 +13,9 @@
                                         <v-btn icon v-if="canEdit(item)" @click="fireEdit(item)"><v-icon>mdi-pencil</v-icon></v-btn>
                                         <v-icon v-else>mdi-file</v-icon>
                                     </v-list-item-avatar>
-                                    <v-list-item-content class="ma-0 pa-0 pt-1 pb-2">
-                                        <v-list-item-title><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
-                                        <v-list-item-subtitle>
+                                    <v-list-item-content class="ma-0 pa-0 py-1">
+                                        <v-list-item-title class="my-0"><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
+                                        <v-list-item-subtitle class="my-0">
                                             {{ item.size | formatSizeFilter }}
                                             <span v-if="item.owner"> {{ $vuetify.lang.t('$vuetify.files_by') }} {{item.owner.login}}</span>
                                             <span> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
