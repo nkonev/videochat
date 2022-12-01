@@ -7,7 +7,7 @@
                     <v-list class="pb-0">
                         <template v-if="notifications.length > 0">
                             <template v-for="(item, index) in notifications">
-                                <v-list-item link @click="onNotificationClick(item)">
+                                <v-list-item link @click.prevent="onNotificationClick(item)" :href="getLink(item)">
                                     <v-list-item-icon class="mr-4"><v-icon large>{{getNotificationIcon(item.notificationType)}}</v-icon></v-list-item-icon>
                                     <v-list-item-content class="py-2">
                                         <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
@@ -67,7 +67,7 @@ import {mapGetters} from 'vuex'
 import {GET_NOTIFICATIONS, GET_NOTIFICATIONS_SETTINGS, SET_NOTIFICATIONS_SETTINGS} from "@/store";
 import {getHumanReadableDate} from "./utils";
 import axios from "axios";
-import { chat_name} from "@/routes";
+import {chat, chat_name} from "@/routes";
 
 export default {
     data () {
@@ -104,6 +104,13 @@ export default {
         },
         getNotificationDate(item) {
             return getHumanReadableDate(item.createDateTime)
+        },
+        getLink(item) {
+            let url = chat + "/" + item.chatId;
+            if (item.messageId) {
+                url += require('./routes').messageIdHashPrefix + item.messageId;
+            }
+            return url;
         },
         onNotificationClick(item) {
             const routeDto = { name: chat_name, params: { id: item.chatId }};
