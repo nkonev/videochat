@@ -81,6 +81,13 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 		return err
 	} else {
+		if hasHash {
+			_, err = mc.db.AddMessageRead(startingFromItemId, userPrincipalDto.UserId, chatId)
+			if err != nil {
+				return err
+			}
+		}
+
 		var ownersSet = map[int64]bool{}
 		for _, c := range messages {
 			ownersSet[c.OwnerId] = true
