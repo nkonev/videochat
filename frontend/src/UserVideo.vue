@@ -203,12 +203,12 @@ export default {
     }
 
     .video-container-element-control {
-        z-index 50
+        z-index 3
         position: absolute
     }
 
     .video-container-element-control-item {
-        z-index 51
+        z-index 4
         text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
     }
 
