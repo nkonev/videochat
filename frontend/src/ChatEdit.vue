@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" persistent>
+        <v-dialog v-model="show" max-width="640" :persistent="isNew">
             <v-card>
                 <v-card-title v-if="!isNew">{{ $vuetify.lang.t('$vuetify.edit_chat') }} #{{editChatId}}</v-card-title>
                 <v-card-title v-else>{{ $vuetify.lang.t('$vuetify.create_chat') }}</v-card-title>
