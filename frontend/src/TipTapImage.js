@@ -1,11 +1,11 @@
-const prosemirrorState = require('prosemirror-state');
+import {Plugin, PluginKey} from 'prosemirror-state';
 
 export const buildImageHandler = (instance, uploadFunction) => {
 
     instance.config.addProseMirrorPlugins = () => {
         return [
-            new prosemirrorState.Plugin({
-                key: new prosemirrorState.PluginKey('imageHandler'),
+            new Plugin({
+                key: new PluginKey('imageHandler'),
                 props: {
                     handlePaste: (view, event) => {
                         const items = (event.clipboardData || event.originalEvent.clipboardData).items;

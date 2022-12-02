@@ -92,15 +92,15 @@ export default {
   },
   mounted() {
 
-    const imageInstance = Image.configure({
+    const imagePluginInstance = Image.configure({
       inline: true,
       HTMLAttributes: {
           class: 'image-custom-class',
       },
     });
 
-    const patchedImageInstance = buildImageHandler(
-        imageInstance,
+    const patchedImagePluginInstance = buildImageHandler(
+        imagePluginInstance,
         (image) => embedUploadFunction(this.chatId, image)
     );
 
@@ -123,7 +123,7 @@ export default {
               },
           }),
           Text,
-          patchedImageInstance,
+          patchedImagePluginInstance,
           Italic,
           Bold,
           Strike,
