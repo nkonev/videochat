@@ -1,9 +1,8 @@
-const MyImage = require('@tiptap/extension-image').Image;
 const prosemirrorState = require('prosemirror-state');
 
-export const buildImageHandler = (uploadFunction) => {
+export const buildImageHandler = (instance, uploadFunction) => {
 
-    MyImage.config.addProseMirrorPlugins = () => {
+    instance.config.addProseMirrorPlugins = () => {
         return [
             new prosemirrorState.Plugin({
                 key: new prosemirrorState.PluginKey('imageHandler'),
@@ -74,5 +73,5 @@ export const buildImageHandler = (uploadFunction) => {
             }),
         ];
     }
-    return MyImage
+    return instance
 };

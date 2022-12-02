@@ -28,6 +28,7 @@ import Mention from '@tiptap/extension-mention';
 import axios from "axios";
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
+import {Image} from '@tiptap/extension-image';
 
 const empty = "";
 
@@ -90,6 +91,19 @@ export default {
     }
   },
   mounted() {
+
+    const imageInstance = Image.configure({
+      inline: true,
+      HTMLAttributes: {
+          class: 'image-custom-class',
+      },
+    });
+
+    const patchedImageInstance = buildImageHandler(
+        imageInstance,
+        (image) => embedUploadFunction(this.chatId, image)
+    );
+
     this.editor = new Editor({
       // https://github.com/ueberdosis/tiptap/issues/873#issuecomment-730147217
       parseOptions: {
@@ -109,12 +123,7 @@ export default {
               },
           }),
           Text,
-          buildImageHandler((image) => embedUploadFunction(this.chatId, image)).configure({
-              inline: true,
-              HTMLAttributes: {
-                  class: 'image-custom-class',
-              },
-          }),
+          patchedImageInstance,
           Italic,
           Bold,
           Strike,
