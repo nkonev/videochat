@@ -1,19 +1,7 @@
-import axios from "axios";
+const MyImage = require('@tiptap/extension-image').Image;
+const prosemirrorState = require('prosemirror-state');
 
-export const embedUploadFunction = (chatId, fileObj) => {
-    const formData = new FormData();
-    formData.append('embed_file_header', fileObj);
-    return axios.post('/api/storage/'+chatId+'/embed', formData)
-        .then((result) => {
-            let url = result.data.relativeUrl; // Get url from response
-            console.debug("got embed url", url);
-            return url;
-        })
-}
-
-export const buildImageHandler = (chatId) => {
-    const MyImage = require('@tiptap/extension-image').Image;
-    const prosemirrorState = require('prosemirror-state');
+export const buildImageHandler = (uploadFunction) => {
 
     MyImage.config.addProseMirrorPlugins = () => {
         return [
@@ -29,7 +17,7 @@ export const buildImageHandler = (chatId) => {
 
                                 const image = item.getAsFile();
 
-                                embedUploadFunction(chatId, image).then(src => {
+                                uploadFunction(image).then(src => {
                                     const node = schema.nodes.image.create({
                                         src: src,
                                     });
@@ -72,7 +60,7 @@ export const buildImageHandler = (chatId) => {
                             images.forEach(async (image) => {
 
                                 const node = schema.nodes.image.create({
-                                    src: await embedUploadFunction(chatId, image),
+                                    src: await uploadFunction(image),
                                 });
                                 const transaction = view.state.tr.insert(coordinates.pos, node);
                                 view.dispatch(transaction);

@@ -25,10 +25,22 @@ import TextStyle from "@tiptap/extension-text-style";
 import Color from '@tiptap/extension-color';
 import Highlight from "@tiptap/extension-highlight";
 import Mention from '@tiptap/extension-mention';
-import {buildImageHandler, embedUploadFunction} from '@/TipTapImage';
+import axios from "axios";
+import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 
 const empty = "";
+
+const embedUploadFunction = (chatId, fileObj) => {
+    const formData = new FormData();
+    formData.append('embed_file_header', fileObj);
+    return axios.post('/api/storage/'+chatId+'/embed', formData)
+        .then((result) => {
+            let url = result.data.relativeUrl; // Get url from response
+            console.debug("got embed url", url);
+            return url;
+        })
+}
 
 export default {
   components: {
@@ -97,7 +109,7 @@ export default {
               },
           }),
           Text,
-          buildImageHandler(this.chatId).configure({
+          buildImageHandler((image) => embedUploadFunction(this.chatId, image)).configure({
               inline: true,
               HTMLAttributes: {
                   class: 'image-custom-class',
