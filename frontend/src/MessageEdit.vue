@@ -6,7 +6,7 @@
             <tiptap
                 :key="editorKey"
                 ref="tipTapRef"
-                @input="sendNotification"
+                @input="onInput"
             />
 
                 <div class="d-flex flex-wrap flex-row dashed-borders">
@@ -121,8 +121,8 @@
                             this.resetInput();
                             bus.$emit(CLOSE_EDIT_MESSAGE);
                         }).finally(() => {
-                        this.sending = false;
-                    })
+                            this.sending = false;
+                        })
                 }
             },
             resetInput(withoutBroadcast) {
@@ -166,7 +166,7 @@
                     axios.put(`/api/chat/` + this.chatId + '/typing');
                 }
             },
-            sendNotification(val) {
+            onInput(val) {
                 if (this.sendBroadcast) {
                     this.notifyAboutBroadcast(false, val);
                 } else {
