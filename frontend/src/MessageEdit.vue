@@ -1,7 +1,7 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid :style="{height: messageEditHeight}"
                  @keyup.ctrl.enter="sendMessageToChat"
-                 @keyup.esc="resetInput"
+                 @keyup.esc="resetInput()"
     >
             <tiptap
                 :key="editorKey"
@@ -87,22 +87,21 @@
     import {mapGetters} from "vuex";
     import {GET_CAN_BROADCAST_TEXT_MESSAGE, GET_USER} from "./store";
     import Tiptap from './TipTapEditor.vue'
-    import {colorBackground, colorText} from "@/utils";
+    import {
+        chatEditMessageDtoFactory,
+        colorBackground,
+        colorText,
+        getStoredChatEditMessageDto, removeStoredChatEditMessageDto,
+        setStoredChatEditMessageDto
+    } from "@/utils";
 
-    const dtoFactory = () => {
-        return {
-            id: null,
-            text: "",
-            fileItemUuid: null,
-        }
-    };
 
     export default {
         props:['chatId', 'fullHeight'],
         data() {
             return {
                 editorKey: +new Date(),
-                editMessageDto: dtoFactory(),
+                editMessageDto: chatEditMessageDtoFactory(),
                 fileCount: null,
                 sendBroadcast: false,
                 sending: false,
@@ -113,7 +112,6 @@
                 return this.$refs.tipTapRef.getContent();
             },
             sendMessageToChat() {
-                this.editMessageDto.text = this.getContent();
                 if (this.messageTextIsPresent(this.editMessageDto.text)) {
                     this.sending = true;
                     (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto))
@@ -125,31 +123,35 @@
                         })
                 }
             },
-            resetInput(withoutBroadcast) {
+            resetInput() {
+              this.removeFromStore();
+
               console.log("Resetting text input");
               this.$refs.tipTapRef.clearContent();
-              this.editMessageDto = dtoFactory();
+              this.editMessageDto = chatEditMessageDtoFactory();
               this.fileCount = null;
-              if (!withoutBroadcast) {
-                  this.notifyAboutBroadcast(true);
-              }
+              this.notifyAboutBroadcast(true);
             },
             messageTextIsPresent(text) {
                 return text && text !== ""
             },
-            onSetMessage(dto) {
-                if (!dto) {
-                    this.editMessageDto = dtoFactory();
-                } else {
-                    this.editMessageDto = dto;
-                }
-                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+            loadFilesCount() {
                 if (this.editMessageDto.fileItemUuid) {
                     axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
                         .then((response) => {
                             this.onFileItemUuid({fileItemUuid: this.editMessageDto.fileItemUuid, count: response.data.count})
                         });
                 }
+            },
+            onSetMessage(dto) {
+                if (!dto) {
+                    this.editMessageDto = chatEditMessageDtoFactory();
+                } else {
+                    this.editMessageDto = dto;
+                    this.saveToStore();
+                }
+                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+                this.loadFilesCount();
                 this.$nextTick(()=>{
                     this.$refs.tipTapRef.setCursorToEnd()
                 })
@@ -167,6 +169,10 @@
                 }
             },
             onInput(val) {
+                this.editMessageDto.text = this.getContent();
+
+                this.saveToStore();
+
                 if (this.sendBroadcast) {
                     this.notifyAboutBroadcast(false, val);
                 } else {
@@ -186,6 +192,7 @@
                 if (this.fileCount === 0) {
                     this.editMessageDto.fileItemUuid = null;
                 }
+                this.saveToStore();
             },
             boldValue() {
                 return this.$refs.tipTapRef.$data.editor.isActive('bold')
@@ -265,7 +272,18 @@
                         this.$refs.tipTapRef.$data.editor.chain().focus().unsetHighlight().run()
                     }
                 }
-            }
+            },
+            loadFromStore() {
+                this.editMessageDto = getStoredChatEditMessageDto(this.chatId);
+                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+                this.loadFilesCount();
+            },
+            saveToStore() {
+                setStoredChatEditMessageDto(this.editMessageDto, this.chatId);
+            },
+            removeFromStore() {
+                removeStoredChatEditMessageDto(this.chatId);
+            },
         },
         computed: {
             ...mapGetters({
@@ -284,7 +302,7 @@
             bus.$on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.$on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.$on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
-            this.resetInput(true);
+            this.loadFromStore();
         },
         beforeDestroy() {
             bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
@@ -309,7 +327,12 @@
             '$vuetify.lang.current': {
                 handler: function (newValue, oldValue) {
                     this.editorKey++;
-                    this.resetInput();
+
+                    // reload
+                    this.$refs.tipTapRef.clearContent();
+                    this.$nextTick(() => {
+                        this.loadFromStore();
+                    })
                 },
             },
         },

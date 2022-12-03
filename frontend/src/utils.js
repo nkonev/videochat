@@ -252,3 +252,30 @@ export const formatSize = (size) => {
     }
     return size.toString() + ' B'
 };
+
+export const chatEditMessageDtoFactory = () => {
+    return {
+        id: null,
+        text: "",
+        fileItemUuid: null,
+    }
+};
+
+export const KEY_CHAT_EDIT_MESSAGE_DTO = 'chatEditMessageDto';
+
+export const getStoredChatEditMessageDto = (chatId) => {
+    let v = JSON.parse(localStorage.getItem(KEY_CHAT_EDIT_MESSAGE_DTO + '_' + chatId));
+    if (v === null) {
+        return chatEditMessageDtoFactory();
+    }
+    return v;
+}
+
+export const setStoredChatEditMessageDto = (v, chatId) => {
+    localStorage.setItem(KEY_CHAT_EDIT_MESSAGE_DTO + '_' + chatId, JSON.stringify(v));
+}
+
+export const removeStoredChatEditMessageDto = (chatId) => {
+    localStorage.removeItem(KEY_CHAT_EDIT_MESSAGE_DTO + '_' + chatId);
+}
+
