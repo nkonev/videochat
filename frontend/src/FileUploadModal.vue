@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="400" :persistent="uploading || this.files.length > 0">
+        <v-dialog v-model="show" max-width="400" :persistent="uploading || files.length > 0">
             <v-card>
                 <v-card-title>{{ $vuetify.lang.t('$vuetify.upload_files') }}</v-card-title>
 
