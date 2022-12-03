@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="400" :persistent="uploading">
+        <v-dialog v-model="show" max-width="400" :persistent="uploading || this.files.length > 0">
             <v-card>
                 <v-card-title>{{ $vuetify.lang.t('$vuetify.upload_files') }}</v-card-title>
 
@@ -175,5 +175,12 @@ export default {
         bus.$off(OPEN_FILE_UPLOAD_MODAL, this.showModal);
         bus.$off(CLOSE_FILE_UPLOAD_MODAL, this.hideModal);
     },
+    watch: {
+        show(newValue) {
+            if (!newValue) {
+                this.hideModal();
+            }
+        }
+    }
 }
 </script>
