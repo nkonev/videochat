@@ -89,8 +89,19 @@ func listen(
 		}
 
 		for msg := range deliveries {
-			onMessage(&msg)
-			msg.Ack(true)
+			func() {
+				defer func() {
+					if err := recover(); err != nil {
+						Logger.Errorf("In processing queue %v panic recovered: %v", queue.Name, err)
+					}
+				}()
+
+				err := onMessage(&msg)
+				if err != nil {
+					Logger.Errorf("In processing queue %v error: %v", queue.Name, err)
+				}
+				msg.Ack(true)
+			}()
 		}
 	}()
 }
