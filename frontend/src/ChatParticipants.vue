@@ -73,16 +73,16 @@
                                     bordered
                                     :value="item.online"
                                 >
-                                    <router-link :to="{ name: 'profileUser', params: { id: item.id }}">
+                                    <a @click.prevent="onParticipantClick(item)" :href="getLink(item)">
                                         <v-list-item-avatar class="ma-0 pa-0">
                                             <v-img :src="item.avatar"></v-img>
                                         </v-list-item-avatar>
-                                    </router-link>
+                                    </a>
                                 </v-badge>
                                 <v-list-item-content class="ml-4">
                                     <v-row no-gutters align="center">
                                         <v-col>
-                                            <v-list-item-title>{{item.login}}<template v-if="item.id == currentUser.id"> {{ $vuetify.lang.t('$vuetify.you_brackets') }}</template></v-list-item-title>
+                                            <v-list-item-title><a @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{item.login + (item.id == currentUser.id ? $vuetify.lang.t('$vuetify.you_brackets') : '' )}}</a></v-list-item-title>
                                         </v-col>
                                         <v-col>
                                             <v-progress-linear
@@ -175,7 +175,7 @@
     } from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import {videochat_name} from "./routes";
+    import {chat, chat_name, profile, profile_name, videochat_name} from "./routes";
     import debounce from "lodash/debounce";
     import userOnlinePollingMixin from "./userOnlinePollingMixin";
     import queryMixin from "@/queryMixin";
@@ -422,7 +422,17 @@
                         }
                     }
                 }
-            }
+            },
+            onParticipantClick(user) {
+                const routeDto = { name: profile_name, params: { id: user.id }};
+                this.$router.push(routeDto).then(()=> {
+                    this.closeModal();
+                })
+            },
+            getLink(user) {
+                let url = profile + "/" + user.id;
+                return url;
+            },
         },
         watch: {
             search (searchString) {
