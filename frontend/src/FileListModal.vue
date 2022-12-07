@@ -10,7 +10,7 @@
                             <template v-for="(item, index) in dto.files">
                                 <v-list-item class="ma-0 pa-0 mr-3">
                                     <v-list-item-avatar class="ma-2 pa-0 pl-1">
-                                        <v-btn icon v-if="canEdit(item)" @click="fireEdit(item)"><v-icon>mdi-pencil</v-icon></v-btn>
+                                        <v-btn icon v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.lang.t('$vuetify.edit')"><v-icon>mdi-pencil</v-icon></v-btn>
                                         <v-icon v-else>mdi-file</v-icon>
                                     </v-list-item-avatar>
                                     <v-list-item-content class="ma-0 pa-0 py-1">
@@ -205,9 +205,6 @@ export default {
                   replaceInArray(this.dto.files, response.data);
                   this.$forceUpdate();
                 })
-        },
-        canEdit(dto) {
-            return this.currentUser.id == dto.ownerId && dto.filename.endsWith('.txt');
         },
         fireEdit(dto) {
             bus.$emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});

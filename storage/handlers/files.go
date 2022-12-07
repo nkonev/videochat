@@ -43,6 +43,7 @@ type FileInfoDto struct {
 	PublicUrl    *string   `json:"publicUrl"`
 	Size         int64     `json:"size"`
 	CanDelete    bool      `json:"canDelete"`
+	CanEdit      bool      `json:"canEdit"`
 	CanShare     bool      `json:"canShare"`
 	LastModified time.Time `json:"lastModified"`
 	OwnerId      int64     `json:"ownerId"`
@@ -427,6 +428,7 @@ func (h *FilesHandler) getFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		Url:          *downloadUrl,
 		Size:         objInfo.Size,
 		CanDelete:    fileOwnerId == behalfUserId,
+		CanEdit:      fileOwnerId == behalfUserId && strings.HasSuffix(fileName, ".txt"),
 		CanShare:     fileOwnerId == behalfUserId,
 		LastModified: objInfo.LastModified,
 		OwnerId:      fileOwnerId,
