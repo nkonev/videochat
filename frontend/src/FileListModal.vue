@@ -46,7 +46,12 @@
                                     </v-tooltip>
 
 
-                                    <v-icon class="mx-1" v-if="item.canRemove" color="error" @click="deleteFile(item)" dark>mdi-delete</v-icon>
+                                    <v-tooltip bottom v-if="item.canRemove">
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-icon v-bind="attrs" v-on="on" class="mx-1" v-if="item.canRemove" color="error" @click="deleteFile(item)" dark>mdi-delete</v-icon>
+                                        </template>
+                                        <span>{{ $vuetify.lang.t('$vuetify.delete_btn') }}</span>
+                                    </v-tooltip>
                                 </v-list-item>
                                 <v-divider></v-divider>
                             </template>
