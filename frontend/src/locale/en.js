@@ -76,6 +76,7 @@ export default {
     no_files: "No files",
     share_file: "Share file",
     unshare_file: "Unshare file",
+    file_editing: "Editing '{0}'",
     delete_btn: "Delete",
     delete_chat_title: "Delete chat #{0}",
     delete_chat_text: "Are you sure to delete chat '{0}' ?",

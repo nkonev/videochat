@@ -76,6 +76,7 @@ export default {
     no_files: "Нет файлов",
     share_file: "Поделиться ссылкой",
     unshare_file: "Убрать публикацию",
+    file_editing: "Редактирование '{0}'",
     delete_btn: "Удалить",
     delete_chat_title: "Удаление чата #{0}",
     delete_chat_text: "Вы действительно хотите удалить чат '{0}' ?",

@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" persistent scrollable max-width="1280">
             <v-card>
-                <v-card-title>Editing '{{filename}}'</v-card-title>
+                <v-card-title>{{ this.$vuetify.lang.t('$vuetify.file_editing', filename) }}</v-card-title>
 
                 <v-card-text>
                     <v-progress-circular
@@ -14,8 +14,8 @@
                 </v-card-text>
 
                 <v-card-actions class="pa-4 pt-0">
-                    <v-btn color="primary" class="mr-4" @click="saveFile()">Save</v-btn>
-                    <v-btn class="mr-4" @click="closeModal()">Close</v-btn>
+                    <v-btn color="primary" class="mr-4" @click="saveFile()">{{$vuetify.lang.t('$vuetify.ok')}}</v-btn>
+                    <v-btn color="error" class="mr-4" @click="closeModal()">{{$vuetify.lang.t('$vuetify.close')}}</v-btn>
                     <v-spacer/>
                 </v-card-actions>
             </v-card>
