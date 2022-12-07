@@ -48,6 +48,8 @@ export default {
     invalid_email: "Invalid email",
     participants: "participants",
     message_edit_placeholder: "Press Ctrl + Enter to send, Esc to clear. You also can drag and drop image on this label.",
+    message_editing: "Editing message",
+    message_creating: "New message",
     message_broadcast: "Broadcast",
     user_is_writing: "is writing...",
     user_open_chat: "Open chat",

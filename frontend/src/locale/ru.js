@@ -48,6 +48,8 @@ export default {
     invalid_email: "Некорректный email",
     participants: "участника(ов)",
     message_edit_placeholder: "Нажмите Ctrl + Enter для отправки сообщения, Esc для очистки. Также можно перетащить картинку на эту надпись.",
+    message_editing: "Редактирование сообщения",
+    message_creating: "Новое сообщение",
     message_broadcast: "Показать всем",
     user_is_writing: "печатает...",
     user_open_chat: "Открыть чат",

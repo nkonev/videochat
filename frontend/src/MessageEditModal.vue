@@ -13,7 +13,7 @@
                 >
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
-                <v-toolbar-title>Editing message</v-toolbar-title>
+                <v-toolbar-title>{{ isNew ? $vuetify.lang.t('$vuetify.message_creating') : $vuetify.lang.t('$vuetify.message_editing')}}</v-toolbar-title>
             </v-toolbar>
             <div class="message-edit-dialog">
                 <MessageEdit :chatId="chatId" full-height="true"/>
@@ -29,17 +29,20 @@
         data() {
             return {
                 show: false,
+                messageId: null,
             }
         },
         methods: {
             showModal(dto) {
                 this.show = true;
+                this.messageId = dto?.id;
                 this.$nextTick(()=>{
                     bus.$emit(SET_EDIT_MESSAGE, dto);
                 })
             },
             closeModal() {
                 this.show = false;
+                this.messageId = null;
             }
         },
         watch: {
@@ -55,6 +58,9 @@
         computed: {
             chatId() {
                 return this.$route.params.id
+            },
+            isNew() {
+                return !this.messageId;
             },
         },
         created() {
