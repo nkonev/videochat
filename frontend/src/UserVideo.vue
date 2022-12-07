@@ -6,7 +6,7 @@
             <v-btn icon @click="onEnterFullscreen" :title="$vuetify.lang.t('$vuetify.fullscreen')"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
             <v-btn v-if="isLocal" icon @click="onClose()" :title="$vuetify.lang.t('$vuetify.close')"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
-        <span v-if="!isLocal && avatarIsSet" class="video-container-element-hint">If you don't see the video and camera is ok then try to reload tab</span>
+        <span v-if="!isLocal && avatarIsSet" class="video-container-element-hint">{{ $vuetify.lang.t('$vuetify.video_is_not_shown') }}</span>
         <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef"/>
         <p @click="showControls=!showControls" v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
