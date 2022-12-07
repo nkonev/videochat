@@ -149,6 +149,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 			EditDateTime:   notificationDto.EditDateTime.Ptr(),
 			Owner:          convertUser(notificationDto.Owner),
 			CanEdit:        notificationDto.CanEdit,
+			CanDelete:      notificationDto.CanDelete,
 			FileItemUUID:   notificationDto.FileItemUuid,
 		}
 	}

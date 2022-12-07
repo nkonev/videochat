@@ -90,6 +90,7 @@ type ComplexityRoot struct {
 	}
 
 	DisplayMessageDto struct {
+		CanDelete      func(childComplexity int) int
 		CanEdit        func(childComplexity int) int
 		ChatID         func(childComplexity int) int
 		CreateDateTime func(childComplexity int) int
@@ -399,6 +400,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatUnreadMessageChanged.UnreadMessages(childComplexity), true
+
+	case "DisplayMessageDto.canDelete":
+		if e.complexity.DisplayMessageDto.CanDelete == nil {
+			break
+		}
+
+		return e.complexity.DisplayMessageDto.CanDelete(childComplexity), true
 
 	case "DisplayMessageDto.canEdit":
 		if e.complexity.DisplayMessageDto.CanEdit == nil {
@@ -864,6 +872,7 @@ type DisplayMessageDto {
     editDateTime:   Time
     owner:          User
     canEdit:        Boolean!
+    canDelete:      Boolean!
     fileItemUuid:    UUID
 }
 
@@ -2035,6 +2044,8 @@ func (ec *executionContext) fieldContext_ChatEvent_messageEvent(ctx context.Cont
 				return ec.fieldContext_DisplayMessageDto_owner(ctx, field)
 			case "canEdit":
 				return ec.fieldContext_DisplayMessageDto_canEdit(ctx, field)
+			case "canDelete":
+				return ec.fieldContext_DisplayMessageDto_canDelete(ctx, field)
 			case "fileItemUuid":
 				return ec.fieldContext_DisplayMessageDto_fileItemUuid(ctx, field)
 			}
@@ -2617,6 +2628,50 @@ func (ec *executionContext) _DisplayMessageDto_canEdit(ctx context.Context, fiel
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_canEdit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayMessageDto_canDelete(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DisplayMessageDto_canDelete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanDelete, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DisplayMessageDto_canDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DisplayMessageDto",
 		Field:      field,
@@ -6976,6 +7031,13 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 		case "canEdit":
 
 			out.Values[i] = ec._DisplayMessageDto_canEdit(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "canDelete":
+
+			out.Values[i] = ec._DisplayMessageDto_canDelete(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

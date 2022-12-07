@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
 	"regexp"
 	"strconv"
@@ -150,12 +149,6 @@ func Remove(ids []int64, elem int64) []int64 {
 
 func SecondsToStringMilliseconds(seconds int64) string {
 	return fmt.Sprintf("%v000", seconds)
-}
-
-func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participant *dto.User, behalfParticipantId int64) {
-	if chatDto.GetIsTetATet() && participant.Id != behalfParticipantId {
-		chatDto.SetName(participant.Login)
-	}
 }
 
 func GetType(aDto interface{}) string {

@@ -15,6 +15,7 @@ type DisplayMessageDto struct {
 	EditDateTime   null.Time  `json:"editDateTime"`
 	Owner          *User      `json:"owner"`
 	CanEdit        bool       `json:"canEdit"`
+	CanDelete      bool       `json:"canDelete"`
 	FileItemUuid   *uuid.UUID `json:"fileItemUuid"`
 }
 

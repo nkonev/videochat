@@ -15,11 +15,13 @@ type DisplayMessageDto struct {
 	EditDateTime   null.Time  `json:"editDateTime"`
 	Owner          *User      `json:"owner"`
 	CanEdit        bool       `json:"canEdit"`
+	CanDelete      bool       `json:"canDelete"`
 	FileItemUuid   *uuid.UUID `json:"fileItemUuid"`
 }
 
 func (copied *DisplayMessageDto) SetPersonalizedFields(participantId int64) {
 	copied.CanEdit = copied.OwnerId == participantId
+	copied.CanDelete = copied.OwnerId == participantId
 }
 
 type MessageDeletedDto struct {

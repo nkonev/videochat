@@ -607,6 +607,7 @@
                                         avatar
                                       }
                                       canEdit
+                                      canDelete
                                       fileItemUuid
                                     }
                                     messageDeletedEvent {

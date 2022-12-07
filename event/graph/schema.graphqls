@@ -17,6 +17,7 @@ type DisplayMessageDto {
     editDateTime:   Time
     owner:          User
     canEdit:        Boolean!
+    canDelete:      Boolean!
     fileItemUuid:    UUID
 }
 
