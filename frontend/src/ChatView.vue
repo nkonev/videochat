@@ -767,6 +767,9 @@
                                 this.resetVariables();
                                 this.reloadItems();
                             // }
+                        } else {
+                            this.hasHash = false;
+                            this.highlightMessageId = null;
                         }
                     }
                 },
