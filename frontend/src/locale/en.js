@@ -132,5 +132,6 @@ export default {
     no_notifications: "You don't have notifications",
     search_in_chats: "Search by chats",
     search_in_messages: "Search by messages",
-    video_is_not_shown: "If you don't see the participant's video and camera is ok then try to reload tab"
+    video_is_not_shown: "If you don't see the participant's video and camera is ok then try to reload tab",
+    link: "Link"
 }

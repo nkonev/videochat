@@ -9,10 +9,10 @@
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
                 <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item.fileItemUuid)" small>mdi-file-download</v-icon>
-                <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small>mdi-delete</v-icon>
-                <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small>mdi-lead-pencil</v-icon>
-                <a class="mx-1 hash" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.id">#</a>
+                <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item.fileItemUuid)" small :title="$vuetify.lang.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
+                <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
+                <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
+                <a class="mx-1 hash" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.id" :title="$vuetify.lang.t('$vuetify.link')">#</a>
             </v-container>
             <div @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" >
                 <v-container v-html="item.text" class="ma-0 message-item-text"></v-container>
