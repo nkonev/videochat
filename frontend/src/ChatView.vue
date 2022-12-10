@@ -760,13 +760,17 @@
                         const hasHash = hasLength(hash);
                         if (hasHash) {
                             const highlightMessageId = this.getMessageId(hash);
-                            // if (findIndexNonStrictly(this.items, {id: highlightMessageId}) === -1) {
+                            if (findIndexNonStrictly(this.items, {id: highlightMessageId}) === -1) {
                                 this.hash = hash;
                                 this.hasHash = hasHash;
                                 this.highlightMessageId = highlightMessageId;
                                 this.resetVariables();
                                 this.reloadItems();
-                            // }
+                            } else {
+                                this.hash = hash;
+                                this.hasHash = hasHash;
+                                this.highlightMessageId = highlightMessageId;
+                            }
                         } else {
                             this.hasHash = false;
                             this.highlightMessageId = null;
