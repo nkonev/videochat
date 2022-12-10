@@ -15,7 +15,7 @@
                 <a class="mx-1 hash" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.id">#</a>
             </v-container>
             <div @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" >
-                <v-container v-html="item.text" class="ma-0 pre-formatted message-item-text"></v-container>
+                <v-container v-html="item.text" class="ma-0 message-item-text"></v-container>
             </div>
         </div>
     </div>

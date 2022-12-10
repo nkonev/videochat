@@ -785,10 +785,6 @@
 <style scoped lang="stylus">
     @import "common.styl"
 
-    .pre-formatted {
-      white-space pre-wrap
-    }
-
     #chatViewContainer {
         position: relative
         height: calc(100vh - 48px)
