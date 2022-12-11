@@ -469,6 +469,7 @@
                 } else {
                     this.showSearchButton = true;
                 }
+                // in order not to reset on initialization
                 if (hasLength(this.getHash(true))) {
                     routerNewState.hash = this.getHash(true);
                 }
