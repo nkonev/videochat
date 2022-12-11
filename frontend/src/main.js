@@ -251,7 +251,8 @@ vm = new Vue({
     };
     Vue.prototype.getHash = (preserveHash) => {
       const tmp = this.$route.hash;
-      return preserveHash ? tmp : tmp?.slice(1)
+      const str = preserveHash ? tmp : tmp?.slice(1);
+      return hasLength(str) ? str : null;
     };
     Vue.prototype.clearHash = () => {
       const hasHash = hasLength(this.getHash());
@@ -265,7 +266,11 @@ vm = new Vue({
       }
     };
     Vue.prototype.getMessageId = (hash) => {
-      return hash.replace(/\D/g, '')
+        if (!hash) {
+            return null;
+        }
+        const str = hash.replace(/\D/g, '');
+        return hasLength(str) ? str : null;
     };
 
     bus.$on(PROFILE_SET, this.graphQlSubscribe);

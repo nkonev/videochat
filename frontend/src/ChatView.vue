@@ -148,7 +148,6 @@
                 broadcastMessage: null,
                 tooltipKey: 0,
                 hash: null,
-                hasHash: false
             }
         },
         computed: {
@@ -220,6 +219,9 @@
             },
             userIsSet() {
                 return !!this.currentUser
+            },
+            hasHash() {
+                return hasLength(this.hash)
             }
         },
         methods: {
@@ -418,7 +420,7 @@
                             console.debug("Didn't scrolled", err)
                         }
                     }
-                    this.hasHash = false;
+                    this.hash = null;
                 }).finally(()=>{
                     this.forbidChangeScrollDirection = false;
                 })
@@ -668,7 +670,6 @@
             this.initQueryAndWatcher();
 
             this.hash = this.getHash();
-            this.hasHash = hasLength(this.hash);
             if (this.hasHash) {
                 this.highlightMessageId = this.getMessageId(this.hash);
             }
@@ -756,24 +757,11 @@
                 handler: function(newRoute, oldRoute) {
                     console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
                     if (newRoute.name === chat_name) {
-                        const hash = this.getHash();
-                        const hasHash = hasLength(hash);
-                        if (hasHash) {
-                            const highlightMessageId = this.getMessageId(hash);
-                            if (findIndexNonStrictly(this.items, {id: highlightMessageId}) === -1) {
-                                this.hash = hash;
-                                this.hasHash = hasHash;
-                                this.highlightMessageId = highlightMessageId;
-                                this.resetVariables();
-                                this.reloadItems();
-                            } else {
-                                this.hash = hash;
-                                this.hasHash = hasHash;
-                                this.highlightMessageId = highlightMessageId;
-                            }
-                        } else {
-                            this.hasHash = false;
-                            this.highlightMessageId = null;
+                        this.hash = this.getHash();
+                        this.highlightMessageId = this.getMessageId(this.hash);
+                        if (this.hasHash && findIndexNonStrictly(this.items, {id: this.highlightMessageId}) === -1) {
+                            this.resetVariables();
+                            this.reloadItems();
                         }
                     }
                 },
