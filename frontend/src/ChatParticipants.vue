@@ -3,7 +3,7 @@
         <v-dialog v-model="show" max-width="700" scrollable>
             <v-card>
                 <v-card-title class="pl-0 ml-0">
-                  <v-btn class="mx-2" icon @click="closeModal()"><v-icon>mdi-arrow-left</v-icon></v-btn>
+                  <v-btn class="mx-2" icon @click="closeModal()"><v-icon>mdi-close</v-icon></v-btn>
                   {{ $vuetify.lang.t('$vuetify.participants_modal_title') }}
                   <v-autocomplete
                       class="ml-4"
