@@ -18,6 +18,17 @@
                         <template slot="no-results"><span/></template>
                     </infinite-loading>
                 </div>
+
+                <v-btn
+                    v-if="!isMobile() && !isScrolledToBottom()"
+                    color="primary"
+                    fab
+                    dark
+                    style="position: relative; bottom: 66px; margin-left: 100%; right: 66px; z-index: 2"
+                    @click="onClickScrollDown()"
+                >
+                    <v-icon>mdi-chevron-down</v-icon>
+                </v-btn>
             </pane>
             <pane max-size="70" min-size="12" v-bind:size="editSize" v-if="!isMobile()">
                 <MessageEdit :chatId="chatId"/>
@@ -468,6 +479,9 @@
                     console.log("Skipping", dto)
                 }
             },
+            onClickScrollDown() {
+                this.scrollDown();
+            },
             scrollDown() {
                 Vue.nextTick(() => {
                     console.log("Scrolling down myDiv.scrollTop", this.scrollerDiv.scrollTop, "myDiv.scrollHeight", this.scrollerDiv.scrollHeight);
@@ -475,7 +489,11 @@
                 });
             },
             isScrolledToBottom() {
-                return this.scrollerDiv.scrollHeight - this.scrollerDiv.scrollTop - this.scrollerDiv.clientHeight < scrollingThreshold
+                if (this.scrollerDiv) {
+                    return this.scrollerDiv.scrollHeight - this.scrollerDiv.scrollTop - this.scrollerDiv.clientHeight < scrollingThreshold
+                } else {
+                    return false
+                }
             },
             getInfo() {
                 return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
