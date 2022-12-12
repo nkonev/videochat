@@ -387,7 +387,7 @@
                     console.log("this.startingFromItemId set to", this.startingFromItemId);
                 }
                 if (this.items.length > pageSize) {
-                    this.clearHash();
+                    this.clearRouteHash();
                 }
 
                 if (!this.userIsSet) {
@@ -481,13 +481,13 @@
             },
             onClickScrollDown() {
                 // condition is a dummy heuristic (because right now doe to outdated vue-infinite-loading we cannot scroll down several times. nevertheless I think it's a pretty good heuristic so I think it worth to remain it here after updating to vue 3 and another modern infinity scroller)
-                if (this.items.length <= pageSize && !this.getHash()) {
+                if (this.items.length <= pageSize && !this.getRouteHash()) {
                     this.scrollDown();
                 } else {
                     this.resetVariables();
                     this.reloadItems();
                 }
-                this.clearHash();
+                this.clearRouteHash();
                 this.hash = null;
             },
             scrollDown() {
@@ -695,7 +695,7 @@
 
             this.initQueryAndWatcher();
 
-            this.hash = this.getHash();
+            this.hash = this.getRouteHash();
             if (this.hasHash) {
                 this.highlightMessageId = this.getMessageId(this.hash);
             }
@@ -783,7 +783,7 @@
                 handler: function(newRoute, oldRoute) {
                     console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
                     if (newRoute.name === chat_name) {
-                        this.hash = this.getHash();
+                        this.hash = this.getRouteHash();
                         this.highlightMessageId = this.getMessageId(this.hash);
                         if (this.hasHash && findIndexNonStrictly(this.items, {id: this.highlightMessageId}) === -1) {
                             this.resetVariables();

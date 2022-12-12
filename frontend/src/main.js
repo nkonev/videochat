@@ -249,13 +249,13 @@ vm = new Vue({
     Vue.prototype.isMobile = () => {
       return !this.$vuetify.breakpoint.smAndUp
     };
-    Vue.prototype.getHash = (preserveHash) => {
+    Vue.prototype.getRouteHash = (preserveHash) => {
       const tmp = this.$route.hash;
       const str = preserveHash ? tmp : tmp?.slice(1);
       return hasLength(str) ? str : null;
     };
-    Vue.prototype.clearHash = () => {
-      const hasHash = hasLength(this.getHash());
+    Vue.prototype.clearRouteHash = () => {
+      const hasHash = hasLength(this.getRouteHash());
       if (hasHash) {
           console.debug("Clearing hash");
           const currentRouteName = this.$route.name;

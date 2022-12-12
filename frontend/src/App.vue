@@ -470,7 +470,7 @@
                     this.showSearchButton = true;
                 }
                 // in order not to reset on initialization
-                const fullHash = this.getHash(true);
+                const fullHash = this.getRouteHash(true);
                 if (hasLength(fullHash)) {
                     routerNewState.hash = fullHash;
                 }
