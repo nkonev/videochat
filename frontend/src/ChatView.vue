@@ -780,6 +780,7 @@
         },
         watch: {
             '$route': {
+                // reacts on user manually typing hash - in this case we may trigger reload if we don't have the necessary message
                 handler: function(newRoute, oldRoute) {
                     console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
                     if (newRoute.name === chat_name) {
