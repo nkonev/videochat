@@ -27,6 +27,7 @@ export const VIDEO_RECORDING_CHANGED = "videoRecordingChanged";
 export const VIDEO_CALL_INVITED = "videoCallInvited";
 export const VIDEO_DIAL_STATUS_CHANGED = "videoDialStatusChanged";
 export const OPEN_PERMISSIONS_WARNING_MODAL = "openPermissionsWarningModal";
+export const WEBSOCKET_RESTORED = "wsRestored";
 export const REFRESH_ON_WEBSOCKET_RESTORED = "refreshOnWsRestored";
 export const REQUEST_CHANGE_VIDEO_PARAMETERS = "requestChangeVideoParameters";
 export const VIDEO_PARAMETERS_CHANGED = "videoParametersChanged";

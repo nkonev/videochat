@@ -1,6 +1,6 @@
 import { createClient } from 'graphql-ws';
 import {getWebsocketUrlPrefix} from "@/utils";
-import {REFRESH_ON_WEBSOCKET_RESTORED} from "@/bus";
+import {WEBSOCKET_RESTORED} from "@/bus";
 
 let graphQlClient;
 export const createGraphQlClient = (bus) => {
@@ -12,7 +12,7 @@ export const createGraphQlClient = (bus) => {
     graphQlClient.on('connected', () => {
         if (initialized) {
             console.log("ReConnected to websocket graphql");
-            bus.$emit(REFRESH_ON_WEBSOCKET_RESTORED);
+            bus.$emit(WEBSOCKET_RESTORED);
         }
         initialized = true;
     })

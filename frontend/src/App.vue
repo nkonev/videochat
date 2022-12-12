@@ -247,7 +247,7 @@
         CLOSE_SIMPLE_MODAL,
         VIDEO_RECORDING_CHANGED,
         OPEN_NOTIFICATIONS_DIALOG,
-        PROFILE_SET,
+        PROFILE_SET, WEBSOCKET_RESTORED,
     } from "./bus";
     import ChatEdit from "./ChatEdit";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -423,6 +423,9 @@
                 this.showWebsocketRestored = false;
                 bus.$emit(REFRESH_ON_WEBSOCKET_RESTORED);
             },
+            onWsRestored() {
+                this.showWebsocketRestored = true;
+            },
             displayChatFiles() {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId});
             },
@@ -524,6 +527,7 @@
             bus.$on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
             bus.$on(PROFILE_SET, this.onProfileSet);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
+            bus.$on(WEBSOCKET_RESTORED, this.onWsRestored);
 
             this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS).then(() => {
                 this.$store.dispatch(FETCH_USER_PROFILE);
@@ -538,6 +542,7 @@
             bus.$off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
             bus.$off(PROFILE_SET, this.onProfileSet);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
+            bus.$off(WEBSOCKET_RESTORED, this.onWsRestored);
         },
     }
 </script>
