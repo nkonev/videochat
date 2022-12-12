@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
-import graphQlClient from "./graphql"
+import {createGraphQlClient, graphQlClient} from "./graphql"
 import axios from "axios";
 import bus, {
     CHAT_ADD,
@@ -125,6 +125,8 @@ router.beforeEach((to, from, next) => {
         next();
     }
 });
+
+createGraphQlClient(bus);
 
 vm = new Vue({
   vuetify,

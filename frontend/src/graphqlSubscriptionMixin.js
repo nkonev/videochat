@@ -1,4 +1,4 @@
-import graphQlClient from "@/graphql";
+import {graphQlClient} from "@/graphql";
 
 // expects methods setError, onNextSubscriptionElement, getGraphQlSubscriptionQuery, and additionalActionAfterGraphQlSubscription
 export default (nameForLog) => {
