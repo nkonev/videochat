@@ -117,7 +117,7 @@
                 <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
             </v-btn>
             <v-card light v-if="isShowSearch && !showSearchButton || !isMobile()" :width="isMobile() ? '100%' : ''">
-                <v-text-field :autofocus="isMobile()" prepend-icon="mdi-magnify" hide-details single-line @input="clearHash()" v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true"></v-text-field>
+                <v-text-field :autofocus="isMobile()" prepend-icon="mdi-magnify" hide-details single-line @input="clearRouteHash()" v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true"></v-text-field>
             </v-card>
 
             <template v-if="showSearchButton || !isMobile()">
