@@ -386,9 +386,6 @@
                     }
                     console.log("this.startingFromItemId set to", this.startingFromItemId);
                 }
-                if (this.items.length > pageSize) {
-                    this.clearRouteHash();
-                }
 
                 if (!this.userIsSet) {
                     $state.complete();
@@ -412,6 +409,9 @@
                             this.items = list.reverse().concat(this.items);
                         } else {
                             this.items = this.items.concat(list);
+                        }
+                        if (this.items.length > pageSize) {
+                            this.clearRouteHash();
                         }
                         this.reduceListIfNeed();
                         return true;
