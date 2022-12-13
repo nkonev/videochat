@@ -93,6 +93,7 @@
     import axios from "axios";
     import debounce from "lodash/debounce";
     import bus, {OPEN_CHAT_EDIT, OPEN_CHOOSE_AVATAR} from "./bus";
+    import {chat_name} from "@/routes";
 
     const dtoFactory = ()=>{
         return {
@@ -191,8 +192,12 @@
                         avatarBig: this.editDto.avatarBig,
                     };
                     (this.isNew ? axios.post(`/api/chat`, dtoToPost) : axios.put(`/api/chat`, dtoToPost))
-                        .then(() => {
+                        .then(({data}) => {
                             this.closeModal();
+                            if (this.isNew) {
+                                const routeDto = { name: chat_name, params: { id: data.id }};
+                                this.$router.push(routeDto);
+                            }
                         })
                 }
             },
