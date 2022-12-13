@@ -1,6 +1,6 @@
 import { createClient } from 'graphql-ws';
 import {getWebsocketUrlPrefix} from "@/utils";
-import {WEBSOCKET_RESTORED} from "@/bus";
+import {LOGGED_OUT, WEBSOCKET_RESTORED} from "@/bus";
 
 let graphQlClient;
 export const createGraphQlClient = (bus) => {
@@ -15,6 +15,7 @@ export const createGraphQlClient = (bus) => {
             bus.$emit(WEBSOCKET_RESTORED);
         }
         initialized = true;
-    })
+    });
+    bus.$on(LOGGED_OUT, () => {initialized = false});
 }
 export {graphQlClient};
