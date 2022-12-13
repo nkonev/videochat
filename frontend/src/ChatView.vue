@@ -152,7 +152,6 @@
                 scrollerProbeCurrent: 0,
                 scrollerProbePrevious: 0,
                 scrollerProbePreviousPrevious: 0,
-                forbidChangeScrollDirection: false,
 
                 writingUsers: [],
                 showTooltip: true,
@@ -252,9 +251,7 @@
                 this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
                 console.debug("onScroll prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
-                if (!this.forbidChangeScrollDirection) {
-                    this.trySwitchDirection();
-                }
+                this.trySwitchDirection();
             },
             isTopDirection() {
                 return this.aDirection === directionTop
@@ -392,8 +389,6 @@
                     return
                 }
 
-                this.forbidChangeScrollDirection = true;
-
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
                         startingFromItemId: this.hasHash ? this.highlightMessageId : this.startingFromItemId,
@@ -432,13 +427,10 @@
                         }
                     }
                     this.hash = null;
-                }).finally(()=>{
-                    this.forbidChangeScrollDirection = false;
                 })
             },
             reduceListIfNeed() {
                 if (this.items.length > maxItemsLength) {
-                    this.forbidChangeScrollDirection = true;
                     setTimeout(() => {
                         console.log("Reducing to", maxItemsLength);
                         if (this.isTopDirection()) {
@@ -446,7 +438,6 @@
                         } else {
                             this.items = this.items.slice(-reduceToLength);
                         }
-                        this.forbidChangeScrollDirection = false;
                     }, 1);
                 }
             },
