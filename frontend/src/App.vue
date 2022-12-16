@@ -8,7 +8,7 @@
                 v-model="drawer"
         >
             <template v-slot:prepend>
-                <v-list-item two-line v-if="currentUser">
+                <v-list-item two-line v-if="currentUser" @click.prevent="onProfileClicked()" link :href="require('./routes').profile">
                     <v-list-item-avatar  v-if="currentUser.avatar">
                         <img :src="currentUserAvatar"/>
                     </v-list-item-avatar>
@@ -327,6 +327,11 @@
             },
             goProfile() {
                 this.$router.push(({ name: profile_self_name}))
+            },
+            onProfileClicked() {
+                if (!this.isMobile()) {
+                    this.goProfile();
+                }
             },
             createChat() {
                 bus.$emit(OPEN_CHAT_EDIT, null);
