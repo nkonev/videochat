@@ -31,27 +31,11 @@
                                     </v-list-item-content>
 
 
-                                    <v-tooltip bottom v-if="item.canShare && !item.publicUrl">
-                                        <template v-slot:activator="{ on, attrs }">
-                                            <v-icon v-bind="attrs" v-on="on" class="mx-1" v-if="item.canShare && !item.publicUrl" color="primary" @click="shareFile(item, true)" dark>mdi-export</v-icon>
-                                        </template>
-                                        <span>{{ $vuetify.lang.t('$vuetify.share_file') }}</span>
-                                    </v-tooltip>
+                                    <v-icon class="mx-1" v-if="item.canShare && !item.publicUrl" color="primary" @click="shareFile(item, true)" dark :title="$vuetify.lang.t('$vuetify.share_file')">mdi-export</v-icon>
 
-                                    <v-tooltip bottom v-if="item.canShare && item.publicUrl">
-                                        <template v-slot:activator="{ on, attrs }">
-                                            <v-icon v-bind="attrs" v-on="on" class="mx-1" v-if="item.canShare && item.publicUrl" color="primary" @click="shareFile(item, false)" dark>mdi-lock</v-icon>
-                                        </template>
-                                        <span>{{ $vuetify.lang.t('$vuetify.unshare_file') }}</span>
-                                    </v-tooltip>
+                                    <v-icon class="mx-1" v-if="item.canShare && item.publicUrl" color="primary" @click="shareFile(item, false)" dark :title="$vuetify.lang.t('$vuetify.unshare_file')">mdi-lock</v-icon>
 
-
-                                    <v-tooltip bottom v-if="item.canDelete">
-                                        <template v-slot:activator="{ on, attrs }">
-                                            <v-icon v-bind="attrs" v-on="on" class="mx-1" color="error" @click="deleteFile(item)" dark>mdi-delete</v-icon>
-                                        </template>
-                                        <span>{{ $vuetify.lang.t('$vuetify.delete_btn') }}</span>
-                                    </v-tooltip>
+                                    <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteFile(item)" dark :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                                 </v-list-item>
                                 <v-divider></v-divider>
                             </template>

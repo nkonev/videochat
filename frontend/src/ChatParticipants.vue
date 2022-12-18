@@ -96,59 +96,37 @@
                                         </v-col>
                                     </v-row>
                                 </v-list-item-content>
-                                <v-tooltip bottom v-if="item.admin || dto.canChangeChatAdmins">
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <template v-if="dto.canChangeChatAdmins && (item.id != currentUser.id)">
-                                            <v-btn
-                                                v-bind="attrs" v-on="on"
-                                                :color="item.admin ? 'primary' : 'disabled'"
-                                                :loading="item.adminLoading ? true : false"
-                                                @click="changeChatAdmin(item)"
-                                                icon
-                                            >
-                                                <v-icon>mdi-crown</v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <template v-else-if="item.admin">
-                                          <span class="pl-1 pr-1">
-                                              <v-icon v-bind="attrs" v-on="on" color="primary">mdi-crown</v-icon>
-                                          </span>
-                                        </template>
-                                    </template>
+                                <template v-if="item.admin || dto.canChangeChatAdmins">
                                     <template v-if="dto.canChangeChatAdmins && (item.id != currentUser.id)">
-                                        <span>{{ item.admin ? $vuetify.lang.t('$vuetify.revoke_admin') : $vuetify.lang.t('$vuetify.grant_admin') }}</span>
+                                        <v-btn
+                                            :color="item.admin ? 'primary' : 'disabled'"
+                                            :loading="item.adminLoading ? true : false"
+                                            @click="changeChatAdmin(item)"
+                                            icon
+                                            :title="item.admin ? $vuetify.lang.t('$vuetify.revoke_admin') : $vuetify.lang.t('$vuetify.grant_admin')"
+                                        >
+                                            <v-icon>mdi-crown</v-icon>
+                                        </v-btn>
                                     </template>
                                     <template v-else-if="item.admin">
-                                        <span>{{ $vuetify.lang.t('$vuetify.admin') }}</span>
+                                          <span class="pl-1 pr-1" :title="$vuetify.lang.t('$vuetify.admin')">
+                                              <v-icon color="primary">mdi-crown</v-icon>
+                                          </span>
                                     </template>
-                                </v-tooltip>
+                                </template>
 
-                                <v-tooltip bottom v-if="dto.canEdit && item.id != currentUser.id">
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <v-btn v-bind="attrs" v-on="on" icon @click="deleteParticipant(item)" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
-                                    </template>
-                                    <span>{{ $vuetify.lang.t('$vuetify.delete_from_chat') }}</span>
-                                </v-tooltip>
-
-
-                                <v-tooltip bottom v-if="dto.canVideoKick && item.id != currentUser.id">
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <v-btn v-bind="attrs" v-on="on" icon @click="kickFromVideoCall(item.id)"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
-                                    </template>
-                                    <span>{{ $vuetify.lang.t('$vuetify.kick') }}</span>
-                                </v-tooltip>
-                                <v-tooltip bottom v-if="dto.canAudioMute && item.id != currentUser.id">
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <v-btn v-bind="attrs" v-on="on" icon @click="forceMute(item.id)"><v-icon color="error">mdi-microphone-off</v-icon></v-btn>
-                                    </template>
-                                    <span>{{ $vuetify.lang.t('$vuetify.force_mute') }}</span>
-                                </v-tooltip>
-                                <v-tooltip bottom v-if="item.id != currentUser.id">
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <v-btn v-bind="attrs" v-on="on" icon @click="startCalling(item)"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
-                                    </template>
-                                    <span>{{ item.callingTo ? $vuetify.lang.t('$vuetify.stop_call') : $vuetify.lang.t('$vuetify.call') }}</span>
-                                </v-tooltip>
+                                <template v-if="dto.canEdit && item.id != currentUser.id">
+                                    <v-btn icon @click="deleteParticipant(item)" color="error" :title="$vuetify.lang.t('$vuetify.delete_from_chat')"><v-icon dark>mdi-delete</v-icon></v-btn>
+                                </template>
+                                <template v-if="dto.canVideoKick && item.id != currentUser.id">
+                                    <v-btn icon @click="kickFromVideoCall(item.id)" :title="$vuetify.lang.t('$vuetify.kick')"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
+                                </template>
+                                <template v-if="dto.canAudioMute && item.id != currentUser.id">
+                                    <v-btn icon @click="forceMute(item.id)" :title="$vuetify.lang.t('$vuetify.force_mute')"><v-icon color="error">mdi-microphone-off</v-icon></v-btn>
+                                </template>
+                                <template v-if="item.id != currentUser.id">
+                                    <v-btn icon @click="startCalling(item)" :title="item.callingTo ? $vuetify.lang.t('$vuetify.stop_call') : $vuetify.lang.t('$vuetify.call')"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
+                                </template>
                             </v-list-item>
                             <v-divider></v-divider>
                         </template>
