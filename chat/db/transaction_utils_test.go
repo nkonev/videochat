@@ -27,7 +27,7 @@ func setup() {
 	config.InitViper()
 
 	d, err := ConfigureDb(nil)
-	dbInstance = &d
+	dbInstance = d
 
 	if err != nil {
 		Logger.Panicf("Error during getting db connection for test: %v", err)
@@ -37,7 +37,7 @@ func setup() {
 }
 
 func TestTransactionPositive(t *testing.T) {
-	err := Transact(*dbInstance, func(tx *Tx) error {
+	err := Transact(dbInstance, func(tx *Tx) error {
 		if _, err := tx.Exec("CREATE TABLE t1(a text UNIQUE)"); err != nil {
 			return err
 		}
@@ -59,7 +59,7 @@ func TestTransactionNegative(t *testing.T) {
 	_, err := dbInstance.Exec("CREATE TABLE t2(a text UNIQUE)")
 	assert.Nil(t, err)
 
-	err = Transact(*dbInstance, func(tx *Tx) error {
+	err = Transact(dbInstance, func(tx *Tx) error {
 		if _, err := tx.Exec("insert into t2(a) VALUES ('lorem')"); err != nil {
 			return err
 		}
@@ -79,7 +79,7 @@ func TestTransactionNegative(t *testing.T) {
 }
 
 func TestTransactionWithResultPositive(t *testing.T) {
-	idRaw, err := TransactWithResult(*dbInstance, func(tx *Tx) (interface{}, error) {
+	idRaw, err := TransactWithResult(dbInstance, func(tx *Tx) (interface{}, error) {
 		if _, err := tx.Exec("CREATE TABLE tr1(id BIGSERIAL PRIMARY KEY, a text UNIQUE)"); err != nil {
 			return 0, err
 		}
@@ -109,7 +109,7 @@ func TestTransactionWithResultNegative(t *testing.T) {
 	_, err := dbInstance.Exec("CREATE TABLE tr2(id BIGSERIAL PRIMARY KEY, a text UNIQUE)")
 	assert.Nil(t, err)
 
-	idRaw, err := TransactWithResult(*dbInstance, func(tx *Tx) (interface{}, error) {
+	idRaw, err := TransactWithResult(dbInstance, func(tx *Tx) (interface{}, error) {
 		res := tx.QueryRow(`INSERT INTO tr2(a) VALUES ('lorem') RETURNING id`)
 		var id int64
 		if err := res.Scan(&id); err != nil {
