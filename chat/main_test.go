@@ -192,8 +192,8 @@ func request(method, path string, body io.Reader, e *echo.Echo) (int, string, ht
 	return requestWithHeader(method, path, Header, body, e)
 }
 
-func configureTestMigrations() db.MigrationsConfig {
-	return db.MigrationsConfig{AppendTestData: true}
+func configureTestMigrations() *db.MigrationsConfig {
+	return &db.MigrationsConfig{AppendTestData: true}
 }
 
 func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
