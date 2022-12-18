@@ -328,7 +328,7 @@ func TestGetChatsPaginated(t *testing.T) {
 }
 
 func TestChatValidation(t *testing.T) {
-	runTest(t, func(e *echo.Echo, db db.DB) {
+	runTest(t, func(e *echo.Echo, db *db.DB) {
 		c, b, _ := request("POST", "/chat", strings.NewReader(`{"name": ""}`), e)
 		assert.Equal(t, http.StatusBadRequest, c)
 		textString := interfaceToString(getJsonPathResult(t, b, "$.name").(interface{}))
@@ -349,7 +349,7 @@ func TestChatValidation(t *testing.T) {
 }
 
 func TestChatCrud(t *testing.T) {
-	runTest(t, func(e *echo.Echo, db db.DB) {
+	runTest(t, func(e *echo.Echo, db *db.DB) {
 		// test not found
 		c30, _, _ := request("GET", "/chat/666", nil, e)
 		assert.Equal(t, http.StatusNotFound, c30)
@@ -511,7 +511,7 @@ func TestGetMessagesPaginated(t *testing.T) {
 }
 
 func TestMessageValidation(t *testing.T) {
-	runTest(t, func(e *echo.Echo, db db.DB) {
+	runTest(t, func(e *echo.Echo, db *db.DB) {
 		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": ""}`), e)
 		assert.Equal(t, http.StatusBadRequest, c)
 		textString := interfaceToString(getJsonPathResult(t, b, "$.text").(interface{}))
@@ -525,7 +525,7 @@ func TestMessageValidation(t *testing.T) {
 }
 
 func TestMessageCrud(t *testing.T) {
-	runTest(t, func(e *echo.Echo, db db.DB) {
+	runTest(t, func(e *echo.Echo, db *db.DB) {
 		messagesBefore, _ := db.CountMessages()
 		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": "Ultra new message"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
@@ -562,7 +562,7 @@ func TestMessageCrud(t *testing.T) {
 }
 
 func TestMessageIsSanitized(t *testing.T) {
-	runTest(t, func(e *echo.Echo, db db.DB) {
+	runTest(t, func(e *echo.Echo, db *db.DB) {
 		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": "<a onblur=\"alert(secret)\" href=\"http://www.google.com\">Google</a>"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
 
@@ -591,7 +591,7 @@ func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 		"X-Auth-Userid":        {"2"},
 	}
 
-	runTest(t, func(e *echo.Echo, db db.DB) {
+	runTest(t, func(e *echo.Echo, db *db.DB) {
 		c, b, _ := requestWithHeader("POST", "/chat", h2, strings.NewReader(`{"name": "Chat of second user"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
