@@ -131,7 +131,7 @@ func migrateInternal(db *sql.DB, path, migrationTable string) {
 	}
 }
 
-func (db *DB) Migrate(migrationsConfig MigrationsConfig) {
+func (db *DB) Migrate(migrationsConfig *MigrationsConfig) {
 	Logger.Infof("Starting prod migration")
 	migrateInternal(db.DB, "/prod", "go_migrate")
 	Logger.Infof("Migration successful prod completed")
@@ -143,7 +143,7 @@ func (db *DB) Migrate(migrationsConfig MigrationsConfig) {
 	}
 }
 
-func ConfigureDb(lc fx.Lifecycle) (DB, error) {
+func ConfigureDb(lc fx.Lifecycle) (*DB, error) {
 	dbConnectionString := viper.GetString("postgresql.url")
 	maxOpen := viper.GetInt("postgresql.maxOpenConnections")
 	maxIdle := viper.GetInt("postgresql.maxIdleConnections")
@@ -159,7 +159,7 @@ func ConfigureDb(lc fx.Lifecycle) (DB, error) {
 		})
 	}
 
-	return *dbInstance, err
+	return dbInstance, err
 }
 
 func (db *DB) RecreateDb() {

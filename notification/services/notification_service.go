@@ -12,11 +12,11 @@ import (
 )
 
 type NotificationService struct {
-	dbs                   db.DB
+	dbs                   *db.DB
 	rabbitEventsPublisher *producer.RabbitEventPublisher
 }
 
-func CreateNotificationService(dbs db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher) *NotificationService {
+func CreateNotificationService(dbs *db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher) *NotificationService {
 	return &NotificationService{
 		dbs:                   dbs,
 		rabbitEventsPublisher: rabbitEventsPublisher,

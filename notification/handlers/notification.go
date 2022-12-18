@@ -14,11 +14,11 @@ import (
 )
 
 type NotificationHandler struct {
-	db                    db.DB
+	db                    *db.DB
 	rabbitEventsPublisher *producer.RabbitEventPublisher
 }
 
-func NewMessageHandler(dbR db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher) *NotificationHandler {
+func NewMessageHandler(dbR *db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher) *NotificationHandler {
 	return &NotificationHandler{
 		db:                    dbR,
 		rabbitEventsPublisher: rabbitEventsPublisher,

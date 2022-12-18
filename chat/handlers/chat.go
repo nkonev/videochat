@@ -36,13 +36,13 @@ type CreateChatDto struct {
 }
 
 type ChatHandler struct {
-	db          db.DB
+	db          *db.DB
 	notificator services.Events
-	restClient  client.RestClient
+	restClient  *client.RestClient
 	policy      *SanitizerPolicy
 }
 
-func NewChatHandler(dbR db.DB, notificator services.Events, restClient client.RestClient, policy *SanitizerPolicy) *ChatHandler {
+func NewChatHandler(dbR *db.DB, notificator services.Events, restClient *client.RestClient, policy *SanitizerPolicy) *ChatHandler {
 	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
 }
 
@@ -115,7 +115,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 
 func getChat(
 	dbR db.CommonOperations,
-	restClient client.RestClient,
+	restClient *client.RestClient,
 	c echo.Context,
 	chatId int64,
 	behalfParticipantId int64,
@@ -167,13 +167,13 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 		return err
 	}
 
-	if chat, err := getChat(&ch.db, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsSize, participantsOffset); err != nil {
+	if chat, err := getChat(ch.db, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsSize, participantsOffset); err != nil {
 		return err
 	} else {
 		if chat == nil {
 			return c.NoContent(http.StatusNotFound)
 		} else {
-			copiedChat, err := ch.getChatWithAdminedUsers(c, chat, &ch.db)
+			copiedChat, err := ch.getChatWithAdminedUsers(c, chat, ch.db)
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}

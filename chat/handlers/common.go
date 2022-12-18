@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func getUsersRemotely(userIdSet map[int64]bool, restClient client.RestClient, c echo.Context) (map[int64]*dto.User, error) {
+func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) (map[int64]*dto.User, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
 	Logger.Infof("Requested user length is %v", length)
@@ -34,11 +34,11 @@ func getUsersRemotely(userIdSet map[int64]bool, restClient client.RestClient, c 
 	return ownersObjects, nil
 }
 
-func getUsersRemotelyOrEmptyFromSlice(userIds []int64, restClient client.RestClient, c echo.Context) map[int64]*dto.User {
+func getUsersRemotelyOrEmptyFromSlice(userIds []int64, restClient *client.RestClient, c echo.Context) map[int64]*dto.User {
 	return getUsersRemotelyOrEmpty(utils.ArrayToSet(userIds), restClient, c)
 }
 
-func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient client.RestClient, c echo.Context) map[int64]*dto.User {
+func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) map[int64]*dto.User {
 	if remoteUsers, err := getUsersRemotely(userIdSet, restClient, c); err != nil {
 		GetLogEntry(c.Request().Context()).Warn("Error during getting users from aaa")
 		return map[int64]*dto.User{}

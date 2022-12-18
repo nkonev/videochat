@@ -24,7 +24,7 @@ type RestClient struct {
 	tracer trace.Tracer
 }
 
-func NewRestClient() RestClient {
+func NewRestClient() *RestClient {
 	tr := &http.Transport{
 		MaxIdleConns:       viper.GetInt("http.maxIdleConns"),
 		IdleConnTimeout:    viper.GetDuration("http.idleConnTimeout"),
@@ -35,7 +35,7 @@ func NewRestClient() RestClient {
 	client := &http.Client{Transport: trR}
 	trcr := otel.Tracer("rest/client")
 
-	return RestClient{client, trcr}
+	return &RestClient{client, trcr}
 }
 
 // https://developers.google.com/protocol-buffers/docs/gotutorial

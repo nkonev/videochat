@@ -32,12 +32,12 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	return &q
 }
 
-func CreateAaaChannel(connection *rabbitmq.Connection) AaaEventsChannel {
-	return AaaEventsChannel{myRabbit.CreateRabbitMqChannel(connection)}
+func CreateAaaChannel(connection *rabbitmq.Connection) *AaaEventsChannel {
+	return &AaaEventsChannel{myRabbit.CreateRabbitMqChannel(connection)}
 }
 
-func CreateAaaQueue(consumeCh AaaEventsChannel) AaaEventsQueue {
-	return AaaEventsQueue{create(aaaEventsQueue, consumeCh.Channel)}
+func CreateAaaQueue(consumeCh *AaaEventsChannel) *AaaEventsQueue {
+	return &AaaEventsQueue{create(aaaEventsQueue, consumeCh.Channel)}
 }
 
 func listen(
@@ -76,8 +76,8 @@ func listen(
 }
 
 func ListenAaaQueue(
-	channel AaaEventsChannel,
-	queue AaaEventsQueue,
+	channel *AaaEventsChannel,
+	queue *AaaEventsQueue,
 	onMessage AaaUserProfileUpdateListener,
 	lc fx.Lifecycle) {
 

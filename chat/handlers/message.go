@@ -33,15 +33,15 @@ type CreateMessageDto struct {
 }
 
 type MessageHandler struct {
-	db                 db.DB
+	db                 *db.DB
 	policy             *SanitizerPolicy
 	stripSourceContent *StripSourcePolicy
 	stripAllTags       *StripTagsPolicy
 	notificator        services.Events
-	restClient         client.RestClient
+	restClient         *client.RestClient
 }
 
-func NewMessageHandler(dbR db.DB, policy *SanitizerPolicy, stripSourceContent *StripSourcePolicy, stripAllTags *StripTagsPolicy, notificator services.Events, restClient client.RestClient) *MessageHandler {
+func NewMessageHandler(dbR *db.DB, policy *SanitizerPolicy, stripSourceContent *StripSourcePolicy, stripAllTags *StripTagsPolicy, notificator services.Events, restClient *client.RestClient) *MessageHandler {
 	return &MessageHandler{
 		db: dbR, policy: policy, stripSourceContent: stripSourceContent, stripAllTags: stripAllTags, notificator: notificator, restClient: restClient,
 	}
@@ -103,7 +103,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	}
 }
 
-func getMessage(c echo.Context, co db.CommonOperations, restClient client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {
+func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {
 	if message, err := co.GetMessage(chatId, behalfUserId, messageId); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 		return nil, err
@@ -135,7 +135,7 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 		return err
 	}
 
-	message, err := getMessage(c, &mc.db, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+	message, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
 	if err != nil {
 		return err
 	}
@@ -524,7 +524,7 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	message, err := getMessage(c, &mc.db, mc.restClient, chatId, messageId, userId)
+	message, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userId)
 	if err != nil {
 		return err
 	}

@@ -208,11 +208,11 @@ func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	return tp, nil
 }
 
-func configureMigrations() db.MigrationsConfig {
-	return db.MigrationsConfig{}
+func configureMigrations() *db.MigrationsConfig {
+	return &db.MigrationsConfig{}
 }
 
-func runMigrations(db db.DB, migrationsConfig db.MigrationsConfig) {
+func runMigrations(db *db.DB, migrationsConfig *db.MigrationsConfig) {
 	db.Migrate(migrationsConfig)
 }
 
