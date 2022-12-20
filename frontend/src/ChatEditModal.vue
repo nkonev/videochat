@@ -205,7 +205,7 @@
                 return this.$refs.form.validate()
             },
             closeModal() {
-                console.debug("Closing ChatEdit");
+                console.debug("Closing ChatEditModal");
                 this.show = false;
                 // this.editChatId = null;
                 this.search = null;

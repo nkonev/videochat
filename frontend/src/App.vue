@@ -180,18 +180,18 @@
                 </v-snackbar>
 
                 <LoginModal/>
-                <ChatEdit/>
-                <ChatParticipants/>
+                <ChatEditModal/>
+                <ChatParticipantsModal/>
                 <SimpleModal/>
-                <PermissionsWarning/>
-                <ChooseAvatar/>
-                <FindUser/>
+                <PermissionsWarningModal/>
+                <ChooseAvatarModal/>
+                <FindUserModal/>
                 <FileUploadModal/>
                 <FileListModal/>
-                <VideoGlobalSettings/>
+                <VideoGlobalSettingsModal/>
                 <FileTextEditModal/>
                 <LanguageModal/>
-                <VideoAddNewSource/>
+                <VideoAddNewSourceModal/>
                 <MessageEditModal v-if="isMobile()"/>
                 <MessageEditLinkModal/>
                 <MessageEditColorModal/>
@@ -249,19 +249,19 @@
         OPEN_NOTIFICATIONS_DIALOG,
         PROFILE_SET, WEBSOCKET_RESTORED,
     } from "./bus";
-    import ChatEdit from "./ChatEdit";
+    import ChatEditModal from "./ChatEditModal";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
     import SimpleModal from "./SimpleModal";
-    import ChooseAvatar from "./ChooseAvatar";
-    import ChatParticipants from "./ChatParticipants";
-    import PermissionsWarning from "./PermissionsWarning";
-    import FindUser from "./FindUser";
+    import ChooseAvatarModal from "./ChooseAvatarModal";
+    import ChatParticipantsModal from "./ChatParticipantsModal";
+    import PermissionsWarningModal from "./PermissionsWarningModal";
+    import FindUserModal from "./FindUserMoadl";
     import FileUploadModal from './FileUploadModal';
     import FileListModal from "./FileListModal";
-    import VideoGlobalSettings from './VideoGlobalSettings';
+    import VideoGlobalSettingsModal from './VideoGlobalSettingsModal';
     import FileTextEditModal from "./FileTextEditModal";
     import LanguageModal from "./LanguageModal";
-    import VideoAddNewSource from "@/VideoAddNewSource";
+    import VideoAddNewSourceModal from "@/VideoAddNewSourceModal";
     import MessageEditModal from "@/MessageEditModal";
     import MessageEditLinkModal from "@/MessageEditLinkModal";
     import MessageEditColorModal from "@/MessageEditColorModal";
@@ -294,18 +294,18 @@
         },
         components:{
             LoginModal,
-            ChatEdit,
+            ChatEditModal,
             SimpleModal,
-            ChooseAvatar,
-            ChatParticipants,
-            PermissionsWarning,
-            FindUser,
+            ChooseAvatarModal,
+            ChatParticipantsModal,
+            PermissionsWarningModal,
+            FindUserModal,
             FileUploadModal,
             FileListModal,
-            VideoGlobalSettings,
+            VideoGlobalSettingsModal,
             FileTextEditModal,
             LanguageModal,
-            VideoAddNewSource,
+            VideoAddNewSourceModal,
             MessageEditModal,
             MessageEditLinkModal,
             MessageEditColorModal,

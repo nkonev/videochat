@@ -91,7 +91,7 @@
                 this.closeModal();
             },
             closeModal() {
-                console.debug("Closing FindUser");
+                console.debug("Closing FindUserModal");
                 this.show = false;
                 this.search = null;
                 this.isLoading = false;

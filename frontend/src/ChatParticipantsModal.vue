@@ -329,7 +329,7 @@
                 });
             },
             closeModal() {
-                console.debug("Closing ChatParticipants");
+                console.debug("Closing ChatParticipantsModal");
                 this.show = false;
                 this.chatId = null;
                 this.newParticipantIds = [];
