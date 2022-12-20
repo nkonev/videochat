@@ -2,8 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="700" scrollable>
             <v-card>
-                <v-card-title class="pl-0 ml-0">
-                  <v-btn class="mx-2" icon @click="closeModal()"><v-icon>mdi-close</v-icon></v-btn>
+                <v-card-title>
                   {{ $vuetify.lang.t('$vuetify.participants_modal_title') }}
                   <v-autocomplete
                       class="ml-4"
@@ -55,15 +54,9 @@
                 </v-card-title>
 
                 <v-card-text  class="ma-0 pa-0">
-                    <v-pagination
-                        v-if="shouldShowPagination"
-                        v-model="participantsPage"
-                        :length="participantsPagesCount"
-                    ></v-pagination>
-
                     <v-list v-if="dto.participants && dto.participants.length > 0">
                         <template v-for="(item, index) in dto.participants">
-                            <v-list-item class="pl-2 ml-1 pr-0 mr-1 mb-1 mt-1">
+                            <v-list-item class="pl-2 ml-1 pr-0 mr-3 mb-1 mt-1">
                                 <v-badge
                                     v-if="item.avatar"
                                     color="success accent-4"
@@ -137,6 +130,17 @@
                         color="primary"
                     ></v-progress-circular>
                 </v-card-text>
+
+                <v-card-actions class="d-flex flex-wrap flex-row">
+                    <v-pagination
+                        v-if="shouldShowPagination"
+                        v-model="participantsPage"
+                        :length="participantsPagesCount"
+                    ></v-pagination>
+                    <v-spacer></v-spacer>
+                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                </v-card-actions>
+
             </v-card>
         </v-dialog>
     </v-row>
