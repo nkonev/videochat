@@ -83,7 +83,7 @@
     import axios from "axios";
     import bus, {
         CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_COLOR_SET, MESSAGE_EDIT_LINK_SET,
-        OPEN_FILE_UPLOAD_MODAL, OPEN_MESSAGE_EDIT_COLOR, OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_VIDEO,
+        OPEN_FILE_UPLOAD_MODAL, OPEN_MESSAGE_EDIT_COLOR, OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA,
         OPEN_VIEW_FILES_DIALOG,
         SET_EDIT_MESSAGE, SET_FILE_ITEM_UUID,
     } from "./bus";
@@ -95,7 +95,7 @@
         chatEditMessageDtoFactory,
         colorBackground,
         colorText,
-        getStoredChatEditMessageDto, removeStoredChatEditMessageDto,
+        getStoredChatEditMessageDto, media_image, media_video, removeStoredChatEditMessageDto,
         setStoredChatEditMessageDto
     } from "@/utils";
 
@@ -253,10 +253,10 @@
                 return this.$refs.tipTapRef.$data.editor.view.state.selection.empty;
             },
             imageClick() {
-                this.$refs.tipTapRef.addImage()
+                bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_image, () => this.$refs.tipTapRef.addImage());
             },
             videoClick() {
-                bus.$emit(OPEN_MESSAGE_EDIT_VIDEO);
+                bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_video);
             },
             textColorClick(){
                 bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorText);
