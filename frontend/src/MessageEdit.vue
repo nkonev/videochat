@@ -39,8 +39,12 @@
                                 <v-icon>mdi-image-outline</v-icon>
                             </v-btn>
 
+                            <v-btn icon tile @click="videoClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_video')">
+                                <v-icon>mdi-video</v-icon>
+                            </v-btn>
+
                             <v-btn icon tile @click="textColorClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_text_color')">
-                                <v-icon>mdi-palette</v-icon>
+                                <v-icon>mdi-invert-colors</v-icon>
                             </v-btn>
 
                             <v-btn icon tile @click="backgroundColorClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_background_color')">
@@ -79,7 +83,7 @@
     import axios from "axios";
     import bus, {
         CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_COLOR_SET, MESSAGE_EDIT_LINK_SET,
-        OPEN_FILE_UPLOAD_MODAL, OPEN_MESSAGE_EDIT_COLOR, OPEN_MESSAGE_EDIT_LINK,
+        OPEN_FILE_UPLOAD_MODAL, OPEN_MESSAGE_EDIT_COLOR, OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_VIDEO,
         OPEN_VIEW_FILES_DIALOG,
         SET_EDIT_MESSAGE, SET_FILE_ITEM_UUID,
     } from "./bus";
@@ -250,6 +254,9 @@
             },
             imageClick() {
                 this.$refs.tipTapRef.addImage()
+            },
+            videoClick() {
+                bus.$emit(OPEN_MESSAGE_EDIT_VIDEO);
             },
             textColorClick(){
                 bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorText);
