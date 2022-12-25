@@ -30,6 +30,7 @@
                                                 @click="accept()"
                                                 style="cursor: pointer"
                                             >
+                                                {{ $vuetify.lang.t('$vuetify.click_to_choose') }}
                                             </v-overlay>
                                         </v-fade-transition>
 
@@ -82,6 +83,7 @@
             },
             accept() {
                 // TODO
+                console.log("Choosin")
                 this.closeModal();
             },
             clear() {

@@ -69,7 +69,7 @@ export default {
     allow: "Allow",
     user_profile_choose_avatar: "Choose avatar",
     choose_avatar_btn: "Choose avatar",
-    choose: "Choose",
+    click_to_choose: "Click to choose",
     choose_file_from_disk: "From disk",
     upload: "Upload",
     upload_files: "Upload files",

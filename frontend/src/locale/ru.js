@@ -69,7 +69,7 @@ export default {
     allow: "Разрешить",
     user_profile_choose_avatar: "Выбор аватара",
     choose_avatar_btn: "Выбрать аватар",
-    choose: "Выбрать",
+    click_to_choose: "Кликните для выбора",
     choose_file_from_disk: "С диска",
     upload: "Загрузить",
     upload_files: "Загрузка файлов",
