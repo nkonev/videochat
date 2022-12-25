@@ -154,3 +154,51 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 
 	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
+
+type MediaDto struct {
+	Id         string  `json:"id"`
+	Filename   string  `json:"filename"`
+	Url        string  `json:"url"`
+	PreviewUrl *string `json:"previewUrl"`
+}
+
+func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	Logger.Infof("Invoked with %v", userPrincipalDto)
+
+	var list []*MediaDto = make([]*MediaDto, 0)
+
+	u1 := "https://cdn.vuetifyjs.com/images/cards/house.jpg"
+	list = append(list, &MediaDto{
+		Id:         "1",
+		Filename:   "Pre-fab homes lorem ipsum dolor lorem ipsum dolor lorem ipsum dolor lorem ipsum dolor lorem ipsum.mp4",
+		PreviewUrl: &u1,
+	})
+
+	u2 := "https://cdn.vuetifyjs.com/images/cards/road.jpg"
+	list = append(list, &MediaDto{
+		Id:         "2",
+		Filename:   "Favorite road trips.jpg",
+		PreviewUrl: &u2,
+	})
+
+	u3 := "https://cdn.vuetifyjs.com/images/cards/plane.jpg"
+	list = append(list, &MediaDto{
+		Id:         "3",
+		Filename:   "Best airlines.mp4",
+		PreviewUrl: &u3,
+	})
+
+	list = append(list, &MediaDto{
+		Id:         "4",
+		Filename:   "Best airlines.png",
+		PreviewUrl: nil,
+	})
+
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": 4})
+}

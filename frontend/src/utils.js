@@ -279,7 +279,7 @@ export const removeStoredChatEditMessageDto = (chatId) => {
     localStorage.removeItem(KEY_CHAT_EDIT_MESSAGE_DTO + '_' + chatId);
 }
 
-export const media_image = "media_image";
+export const media_image = "image";
 
-export const media_video = "media_video";
+export const media_video = "video";
 
