@@ -253,7 +253,7 @@
                 return this.$refs.tipTapRef.$data.editor.view.state.selection.empty;
             },
             imageClick() {
-                bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_image, () => this.$refs.tipTapRef.addImage());
+                bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_image, () => this.$refs.tipTapRef.addImage(), this.$refs.tipTapRef.setImage);
             },
             videoClick() {
                 bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_video);

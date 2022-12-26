@@ -88,7 +88,10 @@ export default {
     },
     setCursorToEnd() {
       this.editor.commands.focus('end')
-    }
+    },
+    setImage(src) {
+        this.editor.chain().focus().setImage({ src: src }).run()
+    },
   },
   mounted() {
 
@@ -152,7 +155,7 @@ export default {
           const file = e.target.files[0];
           embedUploadFunction(this.chatId, file)
               .then(url => {
-                  this.editor.chain().focus().setImage({ src: url }).run()
+                  this.setImage(url)
               })
       }
     }

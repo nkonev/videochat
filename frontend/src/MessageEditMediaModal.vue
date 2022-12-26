@@ -28,7 +28,7 @@
                                                 <v-overlay
                                                     v-if="hover"
                                                     absolute
-                                                    @click="accept()"
+                                                    @click="accept(mediaFile)"
                                                     style="cursor: pointer"
                                                 >
                                                     {{ $vuetify.lang.t('$vuetify.click_to_choose') }}
@@ -85,6 +85,7 @@
                 show: false,
                 type: '',
                 fromDiskCallback: null,
+                setExistingImageCallback: null,
                 loading: false,
                 dto: dtoFactory(),
                 filePage: firstPage,
@@ -118,15 +119,17 @@
             },
         },
         methods: {
-            showModal(type, fromDiskCallback) {
+            showModal(type, fromDiskCallback, setExistingImageCallback) {
                 this.$data.show = true;
                 this.type = type;
                 this.fromDiskCallback = fromDiskCallback;
+                this.setExistingImageCallback = setExistingImageCallback;
                 this.updateFiles();
             },
-            accept() {
-                // TODO
-                console.log("Choosin")
+            accept(item) {
+                if (this.setExistingImageCallback) {
+                    this.setExistingImageCallback(item.url)
+                }
                 this.closeModal();
             },
             clear() {
@@ -136,6 +139,7 @@
                 this.show = false;
                 this.type = '';
                 this.fromDiskCallback = null;
+                this.setExistingImageCallback = null;
                 this.loading = false;
                 this.dto = dtoFactory();
                 this.filePage = firstPage;
