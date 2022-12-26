@@ -105,10 +105,10 @@ func Convert(h http.Handler) echo.HandlerFunc {
 }
 
 func getDotExtension(file *multipart.FileHeader) string {
-	return getDotExtensionStr(file.Filename)
+	return GetDotExtensionStr(file.Filename)
 }
 
-func getDotExtensionStr(fileName string) string {
+func GetDotExtensionStr(fileName string) string {
 	split := strings.Split(fileName, ".")
 	if len(split) > 1 {
 		return "." + split[len(split)-1]

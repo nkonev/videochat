@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
+	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
@@ -16,9 +17,10 @@ import (
 )
 
 type EmbedHandler struct {
-	minio       *minio.Client
-	chatClient  *client.RestClient
-	minioConfig *utils.MinioConfig
+	minio        *minio.Client
+	restClient   *client.RestClient
+	minioConfig  *utils.MinioConfig
+	filesService *FilesService
 }
 
 const embedMultipartKey = "embed_file_header"
@@ -26,13 +28,15 @@ const RelativeEmbeddedUrl = "/api/storage/%v/embed/%v%v"
 
 func NewEmbedHandler(
 	minio *minio.Client,
-	chatClient *client.RestClient,
+	restClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
+	filesService *FilesService,
 ) *EmbedHandler {
 	return &EmbedHandler{
-		minio:       minio,
-		chatClient:  chatClient,
-		minioConfig: minioConfig,
+		minio:        minio,
+		restClient:   restClient,
+		minioConfig:  minioConfig,
+		filesService: filesService,
 	}
 }
 
@@ -46,7 +50,7 @@ func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -117,7 +121,7 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 
 	fileId := fmt.Sprintf("chat/%v/%v", chatId, fileWithExt)
 
-	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -169,36 +173,57 @@ func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	Logger.Infof("Invoked with %v", userPrincipalDto)
+	filesPage := utils.FixPageString(c.QueryParam("page"))
+	filesSize := utils.FixSizeString(c.QueryParam("size"))
+	filesOffset := utils.GetOffset(filesPage, filesSize)
+
+	mediaType := c.QueryParam("type")
+
+	var filenameChatPrefix string = ""
+
+	bucketName := h.minioConfig.Files
+
+	chatId, err := utils.ParseInt64(c.Param("chatId"))
+	if err != nil {
+		return err
+	}
+
+	imageTypes := viper.GetStringSlice("types.image")
+	videoTypes := viper.GetStringSlice("types.video")
+
+	filter := func(info *minio.ObjectInfo) bool {
+		switch mediaType {
+		case "image":
+			return utils.StringContains(imageTypes, GetDotExtensionStr(info.Key))
+		case "video":
+			return utils.StringContains(videoTypes, GetDotExtensionStr(info.Key))
+		default:
+			return false
+		}
+	}
+
+	items, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, filesSize, filesOffset)
+	if err != nil {
+		return err
+	}
 
 	var list []*MediaDto = make([]*MediaDto, 0)
 
-	u1 := "https://cdn.vuetifyjs.com/images/cards/house.jpg"
-	list = append(list, &MediaDto{
-		Id:         "1",
-		Filename:   "Pre-fab homes lorem ipsum dolor lorem ipsum dolor lorem ipsum dolor lorem ipsum dolor lorem ipsum.mp4",
-		PreviewUrl: &u1,
-	})
-
-	u2 := "https://cdn.vuetifyjs.com/images/cards/road.jpg"
-	list = append(list, &MediaDto{
-		Id:         "2",
-		Filename:   "Favorite road trips.jpg",
-		PreviewUrl: &u2,
-	})
-
-	u3 := "https://cdn.vuetifyjs.com/images/cards/plane.jpg"
-	list = append(list, &MediaDto{
-		Id:         "3",
-		Filename:   "Best airlines.mp4",
-		PreviewUrl: &u3,
-	})
-
-	list = append(list, &MediaDto{
-		Id:         "4",
-		Filename:   "Best airlines.png",
-		PreviewUrl: nil,
-	})
+	for _, item := range items {
+		list = append(list, convert(item))
+	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": 4})
+}
+
+func convert(item *FileInfoDto) *MediaDto {
+	if item == nil {
+		return nil
+	}
+	return &MediaDto{
+		Id:         item.Id,
+		Filename:   item.Filename,
+		Url:        item.Url,
+		PreviewUrl: nil, // TODO
+	}
 }

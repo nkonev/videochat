@@ -15,6 +15,15 @@ auth:
     - "^/storage/public.*"
     - "^/internal.*"
 
+types:
+  image:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+  video:
+    - ".mp4"
+    - ".mkv"
+
 jaeger:
   host: "localhost"
   port: 6831

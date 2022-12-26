@@ -23,9 +23,10 @@ import (
 )
 
 type FilesHandler struct {
-	minio       *minio.Client
-	chatClient  *client.RestClient
-	minioConfig *utils.MinioConfig
+	minio        *minio.Client
+	restClient   *client.RestClient
+	minioConfig  *utils.MinioConfig
+	filesService *FilesService
 }
 
 type RenameDto struct {
@@ -54,13 +55,30 @@ const publicKey = "public"
 
 func NewFilesHandler(
 	minio *minio.Client,
-	chatClient *client.RestClient,
+	restClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
+	filesService *FilesService,
 ) *FilesHandler {
 	return &FilesHandler{
-		minio:       minio,
-		chatClient:  chatClient,
-		minioConfig: minioConfig,
+		minio:        minio,
+		restClient:   restClient,
+		minioConfig:  minioConfig,
+		filesService: filesService,
+	}
+}
+
+type FilesService struct {
+	minio      *minio.Client
+	restClient *client.RestClient
+}
+
+func NewFilesService(
+	minio *minio.Client,
+	chatClient *client.RestClient,
+) *FilesService {
+	return &FilesService{
+		minio:      minio,
+		restClient: chatClient,
 	}
 }
 
@@ -93,7 +111,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -179,7 +197,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -216,7 +234,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	}
 
 	contentType := bindTo.ContentType
-	dotExt := getDotExtensionStr(bindTo.Filename)
+	dotExt := GetDotExtensionStr(bindTo.Filename)
 
 	GetLogEntry(c.Request().Context()).Debugf("Determined content type: %v", contentType)
 
@@ -271,7 +289,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -294,7 +312,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filesSize, filesOffset)
+	list, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -332,11 +350,12 @@ func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c
 	return ownersObjects, nil
 }
 
-func (h *FilesHandler) getListFilesInFileItem(
+func (h *FilesService) getListFilesInFileItem(
 	behalfUserId int64,
 	bucket, filenameChatPrefix string,
 	chatId int64,
 	c context.Context,
+	filter func(*minio.ObjectInfo) bool,
 	size, offset int,
 ) ([]*FileInfoDto, error) {
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
@@ -348,7 +367,11 @@ func (h *FilesHandler) getListFilesInFileItem(
 	var intermediateList []minio.ObjectInfo = make([]minio.ObjectInfo, 0)
 	for objInfo := range objects {
 		GetLogEntry(c).Debugf("Object '%v'", objInfo.Key)
-		intermediateList = append(intermediateList, objInfo)
+		if filter != nil && filter(&objInfo) {
+			intermediateList = append(intermediateList, objInfo)
+		} else if filter == nil {
+			intermediateList = append(intermediateList, objInfo)
+		}
 	}
 	sort.SliceStable(intermediateList, func(i, j int) bool {
 		return intermediateList[i].LastModified.Unix() > intermediateList[j].LastModified.Unix()
@@ -385,7 +408,7 @@ func (h *FilesHandler) getListFilesInFileItem(
 	for _, fileDto := range list {
 		participantIdSet[fileDto.OwnerId] = true
 	}
-	var users = getUsersRemotelyOrEmpty(participantIdSet, h.chatClient, c)
+	var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
 	for _, fileDto := range list {
 		user := users[fileDto.OwnerId]
 		if user != nil {
@@ -396,7 +419,7 @@ func (h *FilesHandler) getListFilesInFileItem(
 	return list, nil
 }
 
-func (h *FilesHandler) getFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool) (*FileInfoDto, error) {
+func (h *FilesService) getFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool) (*FileInfoDto, error) {
 	downloadUrl, err := h.getChatPrivateUrlFromObject(objInfo, chatId)
 	if err != nil {
 		Logger.Errorf("Error get private url: %v", err)
@@ -437,7 +460,7 @@ func (h *FilesHandler) getFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 	return info, nil
 }
 
-func (h *FilesHandler) getPublicUrl(public bool, fileName string) (*string, error) {
+func (h *FilesService) getPublicUrl(public bool, fileName string) (*string, error) {
 	if !public {
 		return nil, nil
 	}
@@ -454,11 +477,11 @@ func (h *FilesHandler) getPublicUrl(public bool, fileName string) (*string, erro
 	return &str, nil
 }
 
-func (h *FilesHandler) getBaseUrlForDownload() string {
+func (h *FilesService) getBaseUrlForDownload() string {
 	return viper.GetString("server.contextPath") + "/storage"
 }
 
-func (h *FilesHandler) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, chatId int64) (*string, error) {
+func (h *FilesService) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, chatId int64) (*string, error) {
 	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + "/download")
 	if err != nil {
 		return nil, err
@@ -491,7 +514,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -537,14 +560,14 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, err := h.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filesSize, filesOffset)
+	list, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
 
 	// this fileItemUuid used for remove orphans
 	if h.countFilesUnderFileUuid(chatId, formerFileItemUuid, bucketName) == 0 {
-		h.chatClient.RemoveFileItem(chatId, formerFileItemUuid, userPrincipalDto.UserId, c.Request().Context())
+		h.restClient.RemoveFileItem(chatId, formerFileItemUuid, userPrincipalDto.UserId, c.Request().Context())
 	}
 
 	// get count
@@ -612,7 +635,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -699,14 +722,14 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	info, err := h.getFileInfo(userPrincipalDto.UserId, objectInfo, chatId, tagging, false)
+	info, err := h.filesService.getFileInfo(userPrincipalDto.UserId, objectInfo, chatId, tagging, false)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getFileInfo %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	var participantIdSet = map[int64]bool{}
 	participantIdSet[userPrincipalDto.UserId] = true
-	var users = getUsersRemotelyOrEmpty(participantIdSet, h.chatClient, c.Request().Context())
+	var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c.Request().Context())
 	user, ok := users[userPrincipalDto.UserId]
 	if ok {
 		info.Owner = user
@@ -737,7 +760,7 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -829,7 +852,7 @@ func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -884,7 +907,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 
 	fileItemUuid := uuid.New().String()
 	fileUuid := uuid.New().String()
-	dotExt := getDotExtensionStr(bindTo.FileName)
+	dotExt := GetDotExtensionStr(bindTo.FileName)
 
 	minioFilename := fmt.Sprintf("/chat/%v/%v/%v%v", bindTo.ChatId, fileItemUuid, fileUuid, dotExt)
 

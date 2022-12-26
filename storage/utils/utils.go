@@ -126,6 +126,19 @@ func Contains(ids []int64, elem int64) bool {
 	return GetIndexOf(ids, elem) != -1
 }
 
+func GetStringIndexOf(ids []string, elem string) int {
+	for i := 0; i < len(ids); i++ {
+		if ids[i] == elem {
+			return i
+		}
+	}
+	return -1
+}
+
+func StringContains(ids []string, elem string) bool {
+	return GetStringIndexOf(ids, elem) != -1
+}
+
 func Remove(ids []int64, elem int64) []int64 {
 	if !Contains(ids, elem) {
 		return ids

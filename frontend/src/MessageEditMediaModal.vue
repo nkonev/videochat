@@ -113,6 +113,9 @@
             shouldShowPagination() {
                 return this.dto != null && this.dto.files && this.dto.count > pageSize
             },
+            chatId() {
+                return this.$route.params.id
+            },
         },
         methods: {
             showModal(type, fromDiskCallback) {

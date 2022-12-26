@@ -49,6 +49,7 @@ func main() {
 			handlers.ConfigureAuthMiddleware,
 			handlers.NewUserAvatarHandler,
 			handlers.NewChatAvatarHandler,
+			handlers.NewFilesService,
 			handlers.NewFilesHandler,
 			handlers.NewEmbedHandler,
 		),
