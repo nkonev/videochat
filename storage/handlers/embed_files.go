@@ -202,7 +202,7 @@ func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
 		}
 	}
 
-	items, count, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, filesSize, filesOffset)
+	items, count, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}

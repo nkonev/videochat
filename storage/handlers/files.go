@@ -312,7 +312,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, count, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, filesSize, filesOffset)
+	list, count, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -353,6 +353,7 @@ func (h *FilesService) getListFilesInFileItem(
 	chatId int64,
 	c context.Context,
 	filter func(*minio.ObjectInfo) bool,
+	requestOwners bool,
 	size, offset int,
 ) ([]*FileInfoDto, int, error) {
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
@@ -403,15 +404,17 @@ func (h *FilesService) getListFilesInFileItem(
 		counter++
 	}
 
-	var participantIdSet = map[int64]bool{}
-	for _, fileDto := range list {
-		participantIdSet[fileDto.OwnerId] = true
-	}
-	var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
-	for _, fileDto := range list {
-		user := users[fileDto.OwnerId]
-		if user != nil {
-			fileDto.Owner = user
+	if requestOwners {
+		var participantIdSet = map[int64]bool{}
+		for _, fileDto := range list {
+			participantIdSet[fileDto.OwnerId] = true
+		}
+		var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
+		for _, fileDto := range list {
+			user := users[fileDto.OwnerId]
+			if user != nil {
+				fileDto.Owner = user
+			}
 		}
 	}
 
@@ -559,7 +562,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, count, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, filesSize, filesOffset)
+	list, count, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
