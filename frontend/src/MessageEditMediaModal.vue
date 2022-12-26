@@ -87,12 +87,6 @@
                 fromDiskCallback: null,
                 loading: false,
                 dto: dtoFactory(),
-                    // [
-                    // { title: 'Pre-fab homes lorem ipsum dolor lorem ipsum dolor lorem ipsum dolor lorem ipsum dolor lorem ipsum.mp4', src: 'https://cdn.vuetifyjs.com/images/cards/house.jpg', flex: 6 },
-                    // { title: 'Favorite road trips', src: 'https://cdn.vuetifyjs.com/images/cards/road.jpg', flex: 6 },
-                    // { title: 'Best airlines', src: 'https://cdn.vuetifyjs.com/images/cards/plane.jpg', flex: 6 },
-                    // { title: 'Best airlines', src: null, flex: 6 },
-                // ],
                 filePage: firstPage,
             }
         },
