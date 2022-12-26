@@ -202,7 +202,7 @@ func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
 		}
 	}
 
-	items, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, filesSize, filesOffset)
+	items, count, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
 		list = append(list, convert(item))
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": 4})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
 }
 
 func convert(item *FileInfoDto) *MediaDto {

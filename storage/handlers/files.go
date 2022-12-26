@@ -312,13 +312,10 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, filesSize, filesOffset)
+	list, count, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
-
-	// get count
-	count := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
 }
@@ -357,7 +354,7 @@ func (h *FilesService) getListFilesInFileItem(
 	c context.Context,
 	filter func(*minio.ObjectInfo) bool,
 	size, offset int,
-) ([]*FileInfoDto, error) {
+) ([]*FileInfoDto, int, error) {
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
@@ -377,6 +374,8 @@ func (h *FilesService) getListFilesInFileItem(
 		return intermediateList[i].LastModified.Unix() > intermediateList[j].LastModified.Unix()
 	})
 
+	count := len(intermediateList)
+
 	var list []*FileInfoDto = make([]*FileInfoDto, 0)
 	var counter = 0
 	var respCounter = 0
@@ -387,7 +386,7 @@ func (h *FilesService) getListFilesInFileItem(
 			tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
 			if err != nil {
 				GetLogEntry(c).Errorf("Error during getting tags %v", err)
-				return nil, err
+				return nil, 0, err
 			}
 
 			info, err := h.getFileInfo(behalfUserId, objInfo, chatId, tagging, true)
@@ -416,7 +415,7 @@ func (h *FilesService) getListFilesInFileItem(
 		}
 	}
 
-	return list, nil
+	return list, count, nil
 }
 
 func (h *FilesService) getFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool) (*FileInfoDto, error) {
@@ -560,7 +559,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, filesSize, filesOffset)
+	list, count, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -569,9 +568,6 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	if h.countFilesUnderFileUuid(chatId, formerFileItemUuid, bucketName) == 0 {
 		h.restClient.RemoveFileItem(chatId, formerFileItemUuid, userPrincipalDto.UserId, c.Request().Context())
 	}
-
-	// get count
-	count := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
 }
