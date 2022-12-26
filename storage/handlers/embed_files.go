@@ -166,6 +166,9 @@ type MediaDto struct {
 	PreviewUrl *string `json:"previewUrl"`
 }
 
+const media_image = "image"
+const media_video = "video"
+
 func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -177,7 +180,7 @@ func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
 	filesSize := utils.FixSizeString(c.QueryParam("size"))
 	filesOffset := utils.GetOffset(filesPage, filesSize)
 
-	mediaType := c.QueryParam("type")
+	requestedMediaType := c.QueryParam("type")
 
 	var filenameChatPrefix string = ""
 
@@ -192,10 +195,10 @@ func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
 	videoTypes := viper.GetStringSlice("types.video")
 
 	filter := func(info *minio.ObjectInfo) bool {
-		switch mediaType {
-		case "image":
+		switch requestedMediaType {
+		case media_image:
 			return utils.StringContains(imageTypes, GetDotExtensionStr(info.Key))
-		case "video":
+		case media_video:
 			return utils.StringContains(videoTypes, GetDotExtensionStr(info.Key))
 		default:
 			return false
@@ -210,20 +213,24 @@ func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
 	var list []*MediaDto = make([]*MediaDto, 0)
 
 	for _, item := range items {
-		list = append(list, convert(item))
+		list = append(list, convert(item, requestedMediaType))
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
 }
 
-func convert(item *FileInfoDto) *MediaDto {
+func convert(item *FileInfoDto, requestedMediaType string) *MediaDto {
 	if item == nil {
 		return nil
+	}
+	var previewUrl *string = nil
+	if requestedMediaType == media_image {
+		previewUrl = &item.Url
 	}
 	return &MediaDto{
 		Id:         item.Id,
 		Filename:   item.Filename,
 		Url:        item.Url,
-		PreviewUrl: nil, // TODO
+		PreviewUrl: previewUrl,
 	}
 }
