@@ -80,6 +80,7 @@ services:
     restart: unless-stopped
     ports:
       - 9000:9000
+      - 9001:9001
     networks:
       backend:
     environment:

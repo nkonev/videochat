@@ -227,6 +227,11 @@ func convert(item *FileInfoDto, requestedMediaType string) *MediaDto {
 	if requestedMediaType == media_image {
 		previewUrl = &item.Url
 	}
+	// TODO video
+	//  use 	h.minio.PresignedGetObject() to get an url, then pass it to the ffmpeg ang get an thumbnail
+	// TODO research
+	//  https://medium.com/@tiwari_nitish/lambda-computing-with-minio-and-kafka-de928897ccdf
+	//  https://min.io/docs/minio/linux/administration/monitoring/publish-events-to-amqp.html#minio-bucket-notifications-publish-amqp
 	return &MediaDto{
 		Id:         item.Id,
 		Filename:   item.Filename,

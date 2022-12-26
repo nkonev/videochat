@@ -532,3 +532,10 @@ subscription{
   }
 }
 ```
+
+# Make a thumbnail using ffmpeg
+https://codingdiksha.com/golang-script-to-generate-youtube-video-thumbnails-as-png-and-jpeg-images-in-browser/
+https://www.bannerbear.com/blog/how-to-set-a-custom-thumbnail-for-a-video-file-using-ffmpeg/
+```
+ffmpeg -y -i 'http://localhost:9000/files/chat/1/154b52fd-cb90-4952-89f3-81a6a119838e/d6e9f11c-b52f-40d5-9bcd-6df3d7231065.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=L2TGIKA132I0Y42J3MGA%2F20221226%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20221226T194140Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJMMlRHSUtBMTMySTBZNDJKM01HQSIsImV4cCI6MTY3MjA4NzE0OCwicGFyZW50IjoiQUtJQUlPU0ZPRE5ON0VYQU1QTEUifQ.PuZuc7mNSZex_XeD0i_2xOdSsfChUPvcgstJqvx5dktXFeRcAjEkm3vQox6DNqXN4o3s-D3XLeMwm91OkxoBiA&X-Amz-SignedHeaders=host&versionId=null&X-Amz-Signature=49b02c10fd5d45d1786c7e8d8246959eb5ee54ce20720beaa230f28f2edee2e6' -vf "thumbnail" -frames:v 1 /tmp/ss5.png
+```
