@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"math"
 	"net/http"
 	"nkonev.name/chat/auth"
@@ -603,5 +604,6 @@ func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.
 		}
 	}
 	withoutAnyHtml := mc.stripAllTags.Sanitize(withoutSourceTags)
-	return result, withoutAnyHtml
+	size := utils.Min(len(withoutAnyHtml)-1, viper.GetInt("mentionMaxTextSize"))
+	return result, withoutAnyHtml[:size]
 }
