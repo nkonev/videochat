@@ -265,7 +265,8 @@ func (h *EmbedHandler) PreviewDownloadHandler(c echo.Context) error {
 	}
 	stringPresingedUrl := presignedUrl.String()
 
-	ffCmd := exec.Command("ffmpeg", "-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
+	ffCmd := exec.Command("ffmpeg",
+		"-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
 		"-c:v", "png", "-f", "rawvideo", "-an", "-")
 
 	// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
