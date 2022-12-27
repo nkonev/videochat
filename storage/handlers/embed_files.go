@@ -172,7 +172,7 @@ type MediaDto struct {
 const media_image = "image"
 const media_video = "video"
 
-func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
+func (h *EmbedHandler) ListCandidatesForEmbed(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")

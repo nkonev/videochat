@@ -146,7 +146,7 @@ func configureEcho(
 	e.GET("/storage/:chatId/file/count/:fileItemUuid", fh.CountHandler)
 	e.GET("/storage/:chatId/file", fh.LimitsHandler)
 	e.POST("/storage/:chatId/embed", eh.UploadHandler)
-	e.GET("/storage/:chatId/embed/list", eh.DownloadHandlerList)
+	e.GET("/storage/:chatId/embed/list", eh.ListCandidatesForEmbed)
 	e.GET("/storage/:chatId/embed/:file", eh.DownloadHandler)
 
 	lc.Append(fx.Hook{
