@@ -7,8 +7,8 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.0
 	github.com/labstack/echo/v4 v4.7.2
-	github.com/livekit/protocol v1.1.3-0.20221026061756-e5d7144e26da
-	github.com/livekit/server-sdk-go v1.0.5-0.20221026203935-50afcd3c10ed
+	github.com/livekit/protocol v1.3.0
+	github.com/livekit/server-sdk-go v1.0.6
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.7.0
@@ -56,7 +56,7 @@ require (
 	github.com/pelletier/go-toml v1.2.0 // indirect
 	github.com/pion/datachannel v1.5.2 // indirect
 	github.com/pion/dtls/v2 v2.1.5 // indirect
-	github.com/pion/ice/v2 v2.2.11 // indirect
+	github.com/pion/ice/v2 v2.2.12 // indirect
 	github.com/pion/interceptor v0.1.12 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/mdns v0.0.5 // indirect
@@ -70,8 +70,8 @@ require (
 	github.com/pion/transport v0.13.1 // indirect
 	github.com/pion/turn/v2 v2.0.8 // indirect
 	github.com/pion/udp v0.1.1 // indirect
-	github.com/pion/webrtc/v3 v3.1.47 // indirect
-	github.com/prometheus/client_golang v1.13.0 // indirect
+	github.com/pion/webrtc/v3 v3.1.49 // indirect
+	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
@@ -82,21 +82,21 @@ require (
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/thoas/go-funk v0.9.2 // indirect
-	github.com/twitchtv/twirp v8.1.2+incompatible // indirect
+	github.com/twitchtv/twirp v8.1.3+incompatible // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	go.opentelemetry.io/otel/metric v0.30.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/dig v1.9.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
-	go.uber.org/zap v1.23.0 // indirect
+	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect
-	golang.org/x/net v0.0.0-20221017152216-f25eb7ecb193 // indirect
+	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	google.golang.org/genproto v0.0.0-20221018160656-63c7b68cfc55 // indirect
-	google.golang.org/grpc v1.50.1 // indirect
+	google.golang.org/grpc v1.51.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
