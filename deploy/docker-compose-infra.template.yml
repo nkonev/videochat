@@ -122,7 +122,7 @@ services:
         tag: chat-livekit
 
   egress:
-    image: livekit/egress:v1.5.1
+    image: livekit/egress:v1.5.3
     networks:
       backend:
     environment:
