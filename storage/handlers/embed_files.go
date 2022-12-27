@@ -9,11 +9,14 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	"net/http"
+	"net/url"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
+	"os/exec"
 	"strconv"
+	"time"
 )
 
 type EmbedHandler struct {
@@ -182,14 +185,14 @@ func (h *EmbedHandler) DownloadHandlerList(c echo.Context) error {
 
 	requestedMediaType := c.QueryParam("type")
 
-	var filenameChatPrefix string = ""
-
 	bucketName := h.minioConfig.Files
 
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
 	if err != nil {
 		return err
 	}
+
+	var filenameChatPrefix string = fmt.Sprintf("chat/%v/", chatId)
 
 	imageTypes := viper.GetStringSlice("types.image")
 	videoTypes := viper.GetStringSlice("types.video")
@@ -226,6 +229,15 @@ func convert(item *FileInfoDto, requestedMediaType string) *MediaDto {
 	var previewUrl *string = nil
 	if requestedMediaType == media_image {
 		previewUrl = &item.Url
+	} else if requestedMediaType == media_video {
+		parsedUrl, err := url.Parse(item.Url)
+		if err == nil {
+			parsedUrl.Path = "/api/storage/preview"
+			tmp := parsedUrl.String()
+			previewUrl = &tmp
+		} else {
+			Logger.Errorf("Error during parse url %v", err)
+		}
 	}
 	// TODO video
 	//  use 	h.minio.PresignedGetObject() to get an url, then pass it to the ffmpeg ang get an thumbnail
@@ -238,4 +250,29 @@ func convert(item *FileInfoDto, requestedMediaType string) *MediaDto {
 		Url:        item.Url,
 		PreviewUrl: previewUrl,
 	}
+}
+
+func (h *EmbedHandler) PreviewDownloadHandler(c echo.Context) error {
+
+	bucketName := h.minioConfig.Files
+
+	fileId := c.QueryParam("file")
+
+	d, _ := time.ParseDuration("10m")
+	presignedUrl, err := h.minio.PresignedGetObject(c.Request().Context(), bucketName, fileId, d, url.Values{})
+	if err != nil {
+		return err
+	}
+	stringPresingedUrl := presignedUrl.String()
+
+	ffCmd := exec.Command("ffmpeg", "-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
+		"-c:v", "png", "-f", "rawvideo", "-an", "-")
+
+	// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
+	output, err := ffCmd.Output()
+	if err != nil {
+		Logger.Errorf("Error during getting thumbnail %v", err)
+		return err
+	}
+	return c.Blob(http.StatusOK, "image/png", output)
 }

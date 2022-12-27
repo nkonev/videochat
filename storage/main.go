@@ -140,6 +140,7 @@ func configureEcho(
 	e.GET("/storage/:chatId", fh.ListHandler)
 	e.DELETE("/storage/:chatId/file", fh.DeleteHandler)
 	e.GET("/storage/download", fh.DownloadHandler)
+	e.GET("/storage/preview", eh.PreviewDownloadHandler)
 	e.GET(handlers.UrlStorageGetFile, fh.PublicDownloadHandler)
 	e.PUT("/storage/publish/file", fh.SetPublic)
 	e.GET("/storage/:chatId/file/count/:fileItemUuid", fh.CountHandler)
