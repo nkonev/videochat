@@ -544,3 +544,26 @@ ffmpeg -y -i 'http://localhost:9000/files/chat/1/154b52fd-cb90-4952-89f3-81a6a11
 
 ffmpeg -y -i 'http://localhost:9000/files/chat/1/154b52fd-cb90-4952-89f3-81a6a119838e/d6e9f11c-b52f-40d5-9bcd-6df3d7231065.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=2SNM25VJ805V7RMK4TM0%2F20221227%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20221227T144627Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiIyU05NMjVWSjgwNVY3Uk1LNFRNMCIsImV4cCI6MTY3MjE1NTk2OSwicGFyZW50IjoiQUtJQUlPU0ZPRE5ON0VYQU1QTEUifQ.2KM9yImoL2WWdI_yoSJ6JeB_uHz6PvGrKG1NXugbQAOtFbb7e_SKzM9FvxVFoYieMJoS6F31zI6C3HwsUX4KzA&X-Amz-SignedHeaders=host&versionId=null&X-Amz-Signature=40dc346427e9920af28c7485fe18a2314a7178a79a093b07844fef639945c061' -vf "thumbnail" -frames:v 1 -c:v png -f rawvideo -an - > /tmp/output.png
 ```
+
+https://min.io/docs/minio/linux/administration/monitoring/publish-events-to-amqp.html#minio-bucket-notifications-publish-amqp
+https://medium.com/@tiwari_nitish/lambda-computing-with-minio-and-kafka-de928897ccdf
+```
+# already done via config
+mc admin config set local/ notify_amqp:PRIMARY \
+  url="amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672" \
+  exchange="minio-events" \
+  exchange_type="direct" \
+  durable="on" \
+  no_wait="off" \
+  auto_deleted="off" \
+  delivery_mode="2"
+  
+mc admin service restart local/
+```
+
+Why isn't environment variable MINIO_NOTIFY_KAFKA_ENABLE documented? [#8863](https://github.com/minio/minio/issues/8863)
+https://github.com/minio/minio/pull/8864/files
+
+```
+mc event add local/files arn:minio:sqs::primary:amqp --event put,delete
+```

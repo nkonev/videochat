@@ -23,6 +23,7 @@ types:
   video:
     - ".mp4"
     - ".mkv"
+    - ".webm"
 
 jaeger:
   host: "localhost"
