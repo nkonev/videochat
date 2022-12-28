@@ -28,8 +28,6 @@ import Mention from '@tiptap/extension-mention';
 import axios from "axios";
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
-import {Image} from '@tiptap/extension-image';
-import {Plugin, PluginKey} from 'prosemirror-state';
 
 const empty = "";
 
