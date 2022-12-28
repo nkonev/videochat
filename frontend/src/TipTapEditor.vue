@@ -29,6 +29,7 @@ import axios from "axios";
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {Image} from '@tiptap/extension-image';
+import {Plugin, PluginKey} from 'prosemirror-state';
 
 const empty = "";
 
@@ -91,18 +92,13 @@ export default {
     }
   },
   mounted() {
-
-    const imagePluginInstance = Image.configure({
-      inline: true,
-      HTMLAttributes: {
-          class: 'image-custom-class',
-      },
-    });
-
-    const patchedImagePluginInstance = buildImageHandler(
-        imagePluginInstance,
-        (image) => embedUploadFunction(this.chatId, image)
-    );
+    const imagePluginInstance = buildImageHandler((image) => embedUploadFunction(this.chatId, image))
+        .configure({
+            inline: true,
+            HTMLAttributes: {
+                class: 'image-custom-class',
+            },
+        });
 
     this.editor = new Editor({
       // https://github.com/ueberdosis/tiptap/issues/873#issuecomment-730147217
@@ -123,7 +119,7 @@ export default {
               },
           }),
           Text,
-          patchedImagePluginInstance,
+          imagePluginInstance,
           Italic,
           Bold,
           Strike,
