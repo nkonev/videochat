@@ -12,7 +12,9 @@ import (
 	"net/url"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
+	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 	"os/exec"
 	"strconv"
@@ -23,7 +25,7 @@ type EmbedHandler struct {
 	minio        *minio.Client
 	restClient   *client.RestClient
 	minioConfig  *utils.MinioConfig
-	filesService *FilesService
+	filesService *services.FilesService
 }
 
 const embedMultipartKey = "embed_file_header"
@@ -33,7 +35,7 @@ func NewEmbedHandler(
 	minio *minio.Client,
 	restClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
-	filesService *FilesService,
+	filesService *services.FilesService,
 ) *EmbedHandler {
 	return &EmbedHandler{
 		minio:        minio,
@@ -89,7 +91,7 @@ func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 	fileUuid := uuid.New().String()
 	filename := fmt.Sprintf("chat/%v/%v%v", chatId, fileUuid, dotExt)
 
-	var userMetadata = serializeMetadata(formFile, userPrincipalDto, chatId)
+	var userMetadata = services.SerializeMetadata(formFile, userPrincipalDto, chatId)
 
 	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, formFile.Size, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
@@ -140,7 +142,7 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	_, _, fileName, err := deserializeMetadata(objectInfo.UserMetadata, false)
+	_, _, fileName, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -208,7 +210,7 @@ func (h *EmbedHandler) ListCandidatesForEmbed(c echo.Context) error {
 		}
 	}
 
-	items, count, err := h.filesService.getListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, filesSize, filesOffset)
+	items, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -222,7 +224,7 @@ func (h *EmbedHandler) ListCandidatesForEmbed(c echo.Context) error {
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
 }
 
-func convert(item *FileInfoDto, requestedMediaType string) *MediaDto {
+func convert(item *dto.FileInfoDto, requestedMediaType string) *MediaDto {
 	if item == nil {
 		return nil
 	}

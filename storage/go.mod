@@ -2,14 +2,17 @@ module nkonev.name/storage
 
 require (
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
+	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
 	github.com/disintegration/imaging v1.6.2
 	github.com/ehsaniara/gointerlock v1.1.1
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/google/uuid v1.3.0
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/minio/minio-go/v7 v7.0.45
+	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.7.0
+	github.com/streadway/amqp v1.0.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.32.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.32.0
 	go.opentelemetry.io/contrib/propagators/jaeger v1.7.0
@@ -35,7 +38,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.15.13 // indirect
-	github.com/klauspost/cpuid v1.3.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.2 // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
@@ -43,7 +45,6 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
-	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -70,7 +71,6 @@ require (
 	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	golang.org/x/tools v0.1.12 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.0.1-2019.2.3 // indirect

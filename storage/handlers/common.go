@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
@@ -115,56 +114,6 @@ func GetDotExtensionStr(fileName string) string {
 	} else {
 		return ""
 	}
-}
-
-const filenameKey = "filename"
-const ownerIdKey = "ownerid"
-const chatIdKey = "chatid"
-
-func serializeMetadata(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult, chatId int64) map[string]string {
-	return serializeMetadataByArgs(file.Filename, userPrincipalDto, chatId)
-}
-
-func serializeMetadataByArgs(filename string, userPrincipalDto *auth.AuthResult, chatId int64) map[string]string {
-	return serializeMetadataSimple(filename, userPrincipalDto.UserId, chatId)
-}
-
-func serializeMetadataSimple(filename string, userId int64, chatId int64) map[string]string {
-	var userMetadata = map[string]string{}
-	userMetadata[filenameKey] = filename
-	userMetadata[ownerIdKey] = utils.Int64ToString(userId)
-	userMetadata[chatIdKey] = utils.Int64ToString(chatId)
-	return userMetadata
-}
-
-func deserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, error) {
-	const xAmzMetaPrefix = "X-Amz-Meta-"
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	filename, ok := userMetadata[prefix+strings.Title(filenameKey)]
-	if !ok {
-		return 0, 0, "", errors.New("Unable to get filename")
-	}
-	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
-	if !ok {
-		return 0, 0, "", errors.New("Unable to get owner id")
-	}
-	ownerId, err := utils.ParseInt64(ownerIdString)
-	if err != nil {
-		return 0, 0, "", err
-	}
-
-	chatIdString, ok := userMetadata[prefix+strings.Title(chatIdKey)]
-	if !ok {
-		return 0, 0, "", errors.New("Unable to get chat id")
-	}
-	chatId, err := utils.ParseInt64(chatIdString)
-	if err != nil {
-		return 0, 0, "", err
-	}
-	return chatId, ownerId, filename, nil
 }
 
 func getMaxAllowedConsumption(isUnlimited bool) (int64, error) {

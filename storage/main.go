@@ -22,8 +22,11 @@ import (
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/config"
 	"nkonev.name/storage/handlers"
+	"nkonev.name/storage/listener"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/rabbitmq"
 	"nkonev.name/storage/redis"
+	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
 
@@ -50,13 +53,17 @@ func main() {
 			handlers.ConfigureAuthMiddleware,
 			handlers.NewUserAvatarHandler,
 			handlers.NewChatAvatarHandler,
-			handlers.NewFilesService,
 			handlers.NewFilesHandler,
 			handlers.NewEmbedHandler,
+			listener.CreateMinioEventsListener,
+			rabbitmq.CreateRabbitMqConnection,
+			services.NewFilesService,
+			services.NewPreviewService,
 		),
 		fx.Invoke(
 			runScheduler,
 			runEcho,
+			listener.CreateMinioEventsChannel,
 		),
 	)
 	app.Run()

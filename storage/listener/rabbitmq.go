@@ -4,11 +4,12 @@ import (
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
-	. "nkonev.name/notification/logger"
-	myRabbit "nkonev.name/notification/rabbitmq"
+	. "nkonev.name/storage/logger"
+	myRabbit "nkonev.name/storage/rabbitmq"
 )
 
-const NotificationsExchange = "notifications-exchange"
+// see AMQP minio's endpoint in docker-compose
+const MinioEventsExchange = "minio-events"
 
 type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
 
@@ -53,18 +54,18 @@ func createAndBind(name string, key string, exchange string, consumeCh *rabbitmq
 	return &q
 }
 
-func CreateNotificationsChannel(connection *rabbitmq.Connection, onMessage NotificationsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
-	var queueName = "notifications"
+func CreateMinioEventsChannel(connection *rabbitmq.Connection, onMessage MinioEventsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
+	var queueName = "minio-file-bucket"
 
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		connection,
 		func(channel *rabbitmq.Channel) error {
-			err := channel.ExchangeDeclare(NotificationsExchange, "direct", true, false, false, false, nil)
+			err := channel.ExchangeDeclare(MinioEventsExchange, "direct", true, false, false, false, nil)
 			if err != nil {
 				return err
 			}
 
-			aQueue := createAndBind(queueName, "", NotificationsExchange, channel)
+			aQueue := createAndBind(queueName, "", MinioEventsExchange, channel)
 			listen(channel, aQueue, onMessage, lc)
 			return nil
 		},
