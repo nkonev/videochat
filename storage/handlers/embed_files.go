@@ -232,23 +232,28 @@ func convert(item *dto.FileInfoDto, requestedMediaType string, minioConfig *util
 		return nil
 	}
 	var previewUrl *string = nil
-	if requestedMediaType == media_image {
-		previewUrl = &item.Url
-	} else if requestedMediaType == media_video {
-		parsedUrl, err := url.Parse(item.Url)
-		if err == nil {
-			parsedUrl.Path = "/api/storage/preview"
-			fileParam := parsedUrl.Query().Get(utils.FileParam)
-			newFileParam := utils.SetVideoPreviewExtension(fileParam)
+
+	parsedUrl, err := url.Parse(item.Url)
+	if err == nil {
+		parsedUrl.Path = "/api/storage/preview"
+		fileParam := parsedUrl.Query().Get(utils.FileParam)
+		newFileParam := ""
+		if requestedMediaType == media_video {
+			newFileParam = utils.SetVideoPreviewExtension(fileParam)
+		} else if requestedMediaType == media_image {
+			newFileParam = utils.SetImagePreviewExtension(fileParam)
+		}
+		if newFileParam != "" {
 			q := parsedUrl.Query()
 			q.Set(utils.FileParam, newFileParam)
 			parsedUrl.RawQuery = q.Encode()
-
 			tmp := parsedUrl.String()
 			previewUrl = &tmp
 		} else {
-			Logger.Errorf("Error during parse url %v", err)
+			Logger.Errorf("Unknown requested type %v", requestedMediaType)
 		}
+	} else {
+		Logger.Errorf("Error during parse url %v", err)
 	}
 
 	return &MediaDto{

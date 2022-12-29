@@ -83,6 +83,10 @@ func SetVideoPreviewExtension(key string) string {
 	return SetExtension(key, "png")
 }
 
+func SetImagePreviewExtension(key string) string {
+	return SetExtension(key, "jpg")
+}
+
 const FileParam = "file"
 
 func ParseChatId(minioKey string) (int64, error) {
