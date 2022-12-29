@@ -55,8 +55,6 @@ minio:
     files:
       # Start every
       interval: 60s
-      # Max keys in batch
-      maxKeys: 10
 
 chat:
   url:

@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/minio/minio-go/v7"
@@ -30,7 +29,7 @@ func NewDeleteMissedInChatFilesService(minioClient *minio.Client, minioBucketsCo
 }
 
 func (srv *DeleteMissedInChatFilesService) doJob() {
-	filenameChatPrefix := fmt.Sprintf("chat/")
+	filenameChatPrefix := "chat/"
 	ct := context.Background()
 	srv.processEmbeddedFiles(filenameChatPrefix, ct)
 

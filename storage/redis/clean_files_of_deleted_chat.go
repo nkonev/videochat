@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/minio/minio-go/v7"
@@ -38,13 +37,12 @@ type CleanFilesOfDeletedChatService struct {
 
 func (srv *CleanFilesOfDeletedChatService) doJob() {
 	ct := context.Background()
-	filenameChatPrefix := fmt.Sprintf("chat/")
+	filenameChatPrefix := "chat/"
 	srv.processChats(filenameChatPrefix, ct)
 }
 
 func (srv *CleanFilesOfDeletedChatService) processChats(filenameChatPrefix string, c context.Context) {
-	var maxMinioKeysInBatch = viper.GetInt("minio.cleaner.files.maxKeys")
-	logger.Logger.Infof("Starting cleaning files of deleted chats job with max minio keys limit = %v", maxMinioKeysInBatch)
+	logger.Logger.Infof("Starting cleaning files of deleted chats job")
 	var objects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
 		Prefix:    filenameChatPrefix,
 		Recursive: true,
