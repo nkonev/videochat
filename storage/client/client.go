@@ -119,7 +119,7 @@ func (h *RestClient) RemoveFileItem(chatId int64, fileItemUuid string, userId in
 	if response.StatusCode == http.StatusOK {
 		return
 	} else {
-		GetLogEntry(c).Error(err, "Unexpected status on removing file item", "httpCode", response.StatusCode)
+		GetLogEntry(c).Error("Unexpected status on removing file item %v %v", err, response.StatusCode)
 		return
 	}
 

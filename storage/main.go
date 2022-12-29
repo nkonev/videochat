@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/minio/minio-go/v7/pkg/notification"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
@@ -37,7 +38,7 @@ func main() {
 		fx.Provide(
 			configureTracer,
 			configureMinio,
-			configureMinioBuckets,
+			configureMinioEntities,
 			configureEcho,
 			redis.RedisV8,
 			redis.NewDeleteMissedInChatFilesService,
@@ -227,7 +228,7 @@ func runEcho(e *echo.Echo) {
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func configureMinioBuckets(client *minio.Client) (*utils.MinioConfig, error) {
+func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
 	var ua, ca, f, e string
 	var err error
 	if ua, err = utils.EnsureAndGetUserAvatarBucket(client); err != nil {
@@ -241,6 +242,48 @@ func configureMinioBuckets(client *minio.Client) (*utils.MinioConfig, error) {
 	}
 	if e, err = utils.EnsureAndGetEmbeddedBucket(client); err != nil {
 		return nil, err
+	}
+	bucketNotification, err := client.GetBucketNotification(context.Background(), f)
+	if err != nil {
+		return nil, err
+	}
+
+	arn := notification.Arn{
+		Partition: "minio",
+		Service:   "sqs",
+		Region:    "",
+		AccountID: "primary",
+		Resource:  "amqp",
+	}
+	subscriptionName := arn.String()
+	shouldCreateSubscription := true
+	queueConfigs := bucketNotification.QueueConfigs
+	if queueConfigs != nil {
+		for _, qc := range queueConfigs {
+			if qc.Queue == subscriptionName {
+				shouldCreateSubscription = false
+				break
+			}
+		}
+	}
+	if shouldCreateSubscription {
+		Logger.Infof("Will create subscription for bucket %v to arn %v", f, arn)
+		err := client.SetBucketNotification(context.Background(), f, notification.Configuration{
+			QueueConfigs: []notification.QueueConfig{
+				notification.QueueConfig{
+					Queue: subscriptionName,
+					Config: notification.Config{
+						Events: []notification.EventType{
+							"s3:ObjectCreated:*",
+							"s3:ObjectRemoved:*",
+						},
+					},
+				},
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &utils.MinioConfig{
 		UserAvatar: ua,

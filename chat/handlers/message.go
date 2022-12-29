@@ -514,22 +514,24 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 		return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
 	}
 	fileItemUuid := c.QueryParam("fileItemUuid")
-	messageId, err := mc.db.SetFileItemUuidToNull(userId, chatId, fileItemUuid)
+	messageId, hasMessageId, err := mc.db.SetFileItemUuidToNull(userId, chatId, fileItemUuid)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Unable to set FileItemUuid to full for fileItemUuid=%v, chatId=%v", fileItemUuid, chatId)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	// notifying
-	ids, err := mc.db.GetAllParticipantIds(chatId)
-	if err != nil {
-		return err
+	if hasMessageId {
+		ids, err := mc.db.GetAllParticipantIds(chatId)
+		if err != nil {
+			return err
+		}
+		message, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userId)
+		if err != nil {
+			return err
+		}
+		mc.notificator.NotifyAboutEditMessage(c, ids, chatId, message)
 	}
-	message, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userId)
-	if err != nil {
-		return err
-	}
-	mc.notificator.NotifyAboutEditMessage(c, ids, chatId, message)
 
 	return c.NoContent(http.StatusOK)
 }

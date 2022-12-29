@@ -566,4 +566,6 @@ https://github.com/minio/minio/pull/8864/files
 
 ```
 mc event add local/files arn:minio:sqs::primary:amqp --event put,delete
+mc event remove local/files --force
+mc event list local/files
 ```
