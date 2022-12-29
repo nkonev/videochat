@@ -7,6 +7,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"image"
 	"image/jpeg"
+	"io"
 	"net/url"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
@@ -39,17 +40,9 @@ func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent) {
 				Logger.Errorf("Error during getting image file %v for %v", err, normalizedKey)
 				return
 			}
-			srcImage, _, err := image.Decode(object)
+			byteBuffer, err := s.resizeImageToJpg(object)
 			if err != nil {
-				Logger.Errorf("Error during decoding image: %v", err)
-				return
-			}
-
-			dstImage := imaging.Resize(srcImage, 400, 300, imaging.Lanczos)
-			byteBuffer := new(bytes.Buffer)
-			err = jpeg.Encode(byteBuffer, dstImage, nil)
-			if err != nil {
-				Logger.Errorf("Error during encoding image: %v", err)
+				Logger.Errorf("Error during resizing image %v for %v", err, normalizedKey)
 				return
 			}
 
@@ -84,9 +77,17 @@ func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent) {
 			newKey := utils.FilesIdToFilesPreviewId(normalizedKey, s.minioConfig)
 			newKey = utils.SetVideoPreviewExtension(newKey)
 
-			var objectSize int64 = int64(len(output))
 			reader := bytes.NewReader(output)
-			_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, reader, objectSize, minio.PutObjectOptions{ContentType: "image/png"})
+
+			byteBuffer, err := s.resizeImageToJpg(reader)
+			if err != nil {
+				Logger.Errorf("Error during resizing image %v for %v", err, normalizedKey)
+				return
+			}
+
+			var objectSize int64 = int64(byteBuffer.Len())
+
+			_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg"})
 			if err != nil {
 				Logger.Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
 				return
@@ -95,4 +96,20 @@ func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent) {
 	} else if strings.HasPrefix(data.EventName, utils.ObjectRemoved) {
 		// TODO remove the preview
 	}
+}
+
+func (s PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error) {
+	srcImage, _, err := image.Decode(reader)
+	if err != nil {
+		Logger.Errorf("Error during decoding image: %v", err)
+		return nil, err
+	}
+	dstImage := imaging.Resize(srcImage, 400, 300, imaging.Lanczos)
+	byteBuffer := new(bytes.Buffer)
+	err = jpeg.Encode(byteBuffer, dstImage, nil)
+	if err != nil {
+		Logger.Errorf("Error during encoding image: %v", err)
+		return nil, err
+	}
+	return byteBuffer, nil
 }

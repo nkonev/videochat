@@ -80,7 +80,7 @@ func FilesIdToFilesPreviewId(key string, minioConfig *MinioConfig) string {
 }
 
 func SetVideoPreviewExtension(key string) string {
-	return SetExtension(key, "png")
+	return SetExtension(key, "jpg")
 }
 
 func SetImagePreviewExtension(key string) string {
