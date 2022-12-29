@@ -236,7 +236,7 @@ func runEcho(e *echo.Echo) {
 }
 
 func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
-	var ua, ca, f, e string
+	var ua, ca, f, e, p string
 	var err error
 	if ua, err = utils.EnsureAndGetUserAvatarBucket(client); err != nil {
 		return nil, err
@@ -248,6 +248,9 @@ func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
 		return nil, err
 	}
 	if e, err = utils.EnsureAndGetEmbeddedBucket(client); err != nil {
+		return nil, err
+	}
+	if p, err = utils.EnsureAndGetFilesPreviewBucket(client); err != nil {
 		return nil, err
 	}
 	bucketNotification, err := client.GetBucketNotification(context.Background(), f)
@@ -281,8 +284,8 @@ func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
 					Queue: subscriptionName,
 					Config: notification.Config{
 						Events: []notification.EventType{
-							"s3:ObjectCreated:*",
-							"s3:ObjectRemoved:*",
+							utils.ObjectCreated + ":*",
+							utils.ObjectRemoved + ":*",
 						},
 					},
 				},
@@ -293,10 +296,11 @@ func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
 		}
 	}
 	return &utils.MinioConfig{
-		UserAvatar: ua,
-		ChatAvatar: ca,
-		Files:      f,
-		Embedded:   e,
+		UserAvatar:   ua,
+		ChatAvatar:   ca,
+		Files:        f,
+		Embedded:     e,
+		FilesPreview: p,
 	}, nil
 }
 

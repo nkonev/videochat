@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
-	"github.com/spf13/viper"
 	"net/http"
 	"net/url"
 	"nkonev.name/storage/auth"
@@ -78,7 +77,7 @@ func (h *EmbedHandler) UploadHandler(c echo.Context) error {
 	}
 
 	contentType := formFile.Header.Get("Content-Type")
-	dotExt := getDotExtension(formFile)
+	dotExt := utils.GetDotExtension(formFile)
 
 	GetLogEntry(c.Request().Context()).Debugf("Determined content type: %v", contentType)
 
@@ -193,18 +192,24 @@ func (h *EmbedHandler) ListCandidatesForEmbed(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	belongs, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !belongs {
+		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
 
 	var filenameChatPrefix string = fmt.Sprintf("chat/%v/", chatId)
-
-	imageTypes := viper.GetStringSlice("types.image")
-	videoTypes := viper.GetStringSlice("types.video")
 
 	filter := func(info *minio.ObjectInfo) bool {
 		switch requestedMediaType {
 		case media_image:
-			return utils.StringContains(imageTypes, GetDotExtensionStr(info.Key))
+			return utils.IsImage(info.Key)
 		case media_video:
-			return utils.StringContains(videoTypes, GetDotExtensionStr(info.Key))
+			return utils.IsVideo(info.Key)
 		default:
 			return false
 		}

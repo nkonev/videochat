@@ -7,12 +7,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
-	"mime/multipart"
 	"net/http"
 	"nkonev.name/storage/auth"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -100,19 +98,6 @@ func Convert(h http.Handler) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		h.ServeHTTP(c.Response().Writer, c.Request())
 		return nil
-	}
-}
-
-func getDotExtension(file *multipart.FileHeader) string {
-	return GetDotExtensionStr(file.Filename)
-}
-
-func GetDotExtensionStr(fileName string) string {
-	split := strings.Split(fileName, ".")
-	if len(split) > 1 {
-		return "." + split[len(split)-1]
-	} else {
-		return ""
 	}
 }
 

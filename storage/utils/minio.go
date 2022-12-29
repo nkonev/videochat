@@ -57,6 +57,16 @@ func EnsureAndGetEmbeddedBucket(minioClient *minio.Client) (string, error) {
 	return bucketName, err
 }
 
-type MinioConfig struct {
-	UserAvatar, ChatAvatar, Files, Embedded string
+func EnsureAndGetFilesPreviewBucket(minioClient *minio.Client) (string, error) {
+	bucketName := viper.GetString("minio.bucket.filesPreview")
+	bucketLocation := viper.GetString("minio.location")
+	err := ensureBucket(minioClient, bucketName, bucketLocation)
+	return bucketName, err
 }
+
+type MinioConfig struct {
+	UserAvatar, ChatAvatar, Files, Embedded, FilesPreview string
+}
+
+const ObjectCreated = "s3:ObjectCreated"
+const ObjectRemoved = "s3:ObjectRemoved"

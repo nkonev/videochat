@@ -43,6 +43,7 @@ minio:
     chatAvatar: "chat-avatar"
     files: "files"
     embedded: "embedded"
+    filesPreview: "files-preview"
   cleaner:
     embedded:
       # Start every

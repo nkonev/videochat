@@ -2,9 +2,12 @@ package utils
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
+	"mime/multipart"
 	. "nkonev.name/storage/logger"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
@@ -161,4 +164,27 @@ type Tuple struct {
 	MinioKey string `json:"minioKey"`
 	Filename string `json:"filename"`
 	Exists   bool   `json:"exists"`
+}
+
+func GetDotExtension(file *multipart.FileHeader) string {
+	return GetDotExtensionStr(file.Filename)
+}
+
+func GetDotExtensionStr(fileName string) string {
+	split := strings.Split(fileName, ".")
+	if len(split) > 1 {
+		return "." + split[len(split)-1]
+	} else {
+		return ""
+	}
+}
+
+func IsImage(minioKey string) bool {
+	imageTypes := viper.GetStringSlice("types.image")
+	return StringContains(imageTypes, GetDotExtensionStr(minioKey))
+}
+
+func IsVideo(minioKey string) bool {
+	videoTypes := viper.GetStringSlice("types.video")
+	return StringContains(videoTypes, GetDotExtensionStr(minioKey))
 }

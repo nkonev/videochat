@@ -99,7 +99,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		}
 
 		contentType := file.Header.Get("Content-Type")
-		dotExt := getDotExtension(file)
+		dotExt := utils.GetDotExtension(file)
 
 		GetLogEntry(c.Request().Context()).Debugf("Determined content type: %v", contentType)
 
@@ -180,7 +180,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	}
 
 	contentType := bindTo.ContentType
-	dotExt := GetDotExtensionStr(bindTo.Filename)
+	dotExt := utils.GetDotExtensionStr(bindTo.Filename)
 
 	GetLogEntry(c.Request().Context()).Debugf("Determined content type: %v", contentType)
 
@@ -676,7 +676,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 
 	fileItemUuid := uuid.New().String()
 	fileUuid := uuid.New().String()
-	dotExt := GetDotExtensionStr(bindTo.FileName)
+	dotExt := utils.GetDotExtensionStr(bindTo.FileName)
 
 	minioFilename := fmt.Sprintf("/chat/%v/%v/%v%v", bindTo.ChatId, fileItemUuid, fileUuid, dotExt)
 
