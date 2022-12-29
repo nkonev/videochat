@@ -179,6 +179,16 @@ func GetDotExtensionStr(fileName string) string {
 	}
 }
 
+func SetExtension(fileName string, newExtension string) string {
+	idx := strings.LastIndex(fileName, ".")
+	if idx > 0 {
+		firstPart := fileName[0:idx]
+		return firstPart + "." + newExtension
+	} else {
+		return fileName
+	}
+}
+
 func IsImage(minioKey string) bool {
 	imageTypes := viper.GetStringSlice("types.image")
 	return StringContains(imageTypes, GetDotExtensionStr(minioKey))

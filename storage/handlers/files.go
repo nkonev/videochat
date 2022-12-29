@@ -392,7 +392,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	bucketName := h.minioConfig.Files
 
 	// check user belongs to chat
-	fileId := c.QueryParam("file")
+	fileId := c.QueryParam(utils.FileParam)
 	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
@@ -568,7 +568,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	bucketName := h.minioConfig.Files
 
 	// check file is public
-	fileId := c.QueryParam("file")
+	fileId := c.QueryParam(utils.FileParam)
 	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)

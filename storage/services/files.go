@@ -161,7 +161,7 @@ func (h *FilesService) getPublicUrl(public bool, fileName string) (*string, erro
 	}
 
 	query := downloadUrl.Query()
-	query.Add("file", fileName)
+	query.Add(utils.FileParam, fileName)
 	downloadUrl.RawQuery = query.Encode()
 	str := downloadUrl.String()
 	return &str, nil
@@ -178,7 +178,7 @@ func (h *FilesService) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, cha
 	}
 
 	query := downloadUrl.Query()
-	query.Add("file", objInfo.Key)
+	query.Add(utils.FileParam, objInfo.Key)
 	downloadUrl.RawQuery = query.Encode()
 	str := downloadUrl.String()
 	return &str, nil

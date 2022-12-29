@@ -15,9 +15,7 @@ import (
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
-	"os/exec"
 	"strconv"
-	"time"
 )
 
 type EmbedHandler struct {
@@ -112,7 +110,7 @@ func (h *EmbedHandler) DownloadHandler(c echo.Context) error {
 	bucketName := h.minioConfig.Embedded
 
 	// check user belongs to chat
-	fileWithExt := c.Param("file")
+	fileWithExt := c.Param(utils.FileParam)
 	chatIdString := c.Param("chatId")
 	chatId, err := utils.ParseInt64(chatIdString)
 	if err != nil {
@@ -223,13 +221,13 @@ func (h *EmbedHandler) ListCandidatesForEmbed(c echo.Context) error {
 	var list []*MediaDto = make([]*MediaDto, 0)
 
 	for _, item := range items {
-		list = append(list, convert(item, requestedMediaType))
+		list = append(list, convert(item, requestedMediaType, h.minioConfig))
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
 }
 
-func convert(item *dto.FileInfoDto, requestedMediaType string) *MediaDto {
+func convert(item *dto.FileInfoDto, requestedMediaType string, minioConfig *utils.MinioConfig) *MediaDto {
 	if item == nil {
 		return nil
 	}
@@ -240,17 +238,19 @@ func convert(item *dto.FileInfoDto, requestedMediaType string) *MediaDto {
 		parsedUrl, err := url.Parse(item.Url)
 		if err == nil {
 			parsedUrl.Path = "/api/storage/preview"
+			fileParam := parsedUrl.Query().Get(utils.FileParam)
+			newFileParam := utils.SetVideoPreviewExtension(fileParam)
+			q := parsedUrl.Query()
+			q.Set(utils.FileParam, newFileParam)
+			parsedUrl.RawQuery = q.Encode()
+
 			tmp := parsedUrl.String()
 			previewUrl = &tmp
 		} else {
 			Logger.Errorf("Error during parse url %v", err)
 		}
 	}
-	// TODO video
-	//  use 	h.minio.PresignedGetObject() to get an url, then pass it to the ffmpeg ang get an thumbnail
-	// TODO research
-	//  https://medium.com/@tiwari_nitish/lambda-computing-with-minio-and-kafka-de928897ccdf
-	//  https://min.io/docs/minio/linux/administration/monitoring/publish-events-to-amqp.html#minio-bucket-notifications-publish-amqp
+
 	return &MediaDto{
 		Id:         item.Id,
 		Filename:   item.Filename,
@@ -260,27 +260,47 @@ func convert(item *dto.FileInfoDto, requestedMediaType string) *MediaDto {
 }
 
 func (h *EmbedHandler) PreviewDownloadHandler(c echo.Context) error {
-
-	bucketName := h.minioConfig.Files
-
-	fileId := c.QueryParam("file")
-
-	d, _ := time.ParseDuration("10m")
-	presignedUrl, err := h.minio.PresignedGetObject(c.Request().Context(), bucketName, fileId, d, url.Values{})
-	if err != nil {
-		return err
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
 	}
-	stringPresingedUrl := presignedUrl.String()
 
-	ffCmd := exec.Command("ffmpeg",
-		"-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
-		"-c:v", "png", "-f", "rawvideo", "-an", "-")
+	bucketName := h.minioConfig.FilesPreview
 
-	// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
-	output, err := ffCmd.Output()
+	// check user belongs to chat
+	fileId := c.QueryParam(utils.FileParam)
+	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
 	if err != nil {
-		Logger.Errorf("Error during getting thumbnail %v", err)
-		return err
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
-	return c.Blob(http.StatusOK, "image/png", output)
+
+	chatId, err := utils.ParseChatId(fileId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	belongs, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !belongs {
+		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	object, e := h.minio.GetObject(context.Background(), bucketName, fileId, minio.GetObjectOptions{})
+	if e != nil {
+		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
+	}
+	defer object.Close()
+
+	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
+	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
+
+	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
