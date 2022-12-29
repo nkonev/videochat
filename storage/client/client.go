@@ -112,14 +112,14 @@ func (h *RestClient) RemoveFileItem(chatId int64, fileItemUuid string, userId in
 
 	response, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c).Error(err, "Transport error during removing file item")
+		GetLogEntry(c).Errorf("Transport error during removing file item %v", err)
 		return
 	}
 	defer response.Body.Close()
 	if response.StatusCode == http.StatusOK {
 		return
 	} else {
-		GetLogEntry(c).Error("Unexpected status on removing file item %v %v", err, response.StatusCode)
+		GetLogEntry(c).Errorf("Unexpected status on removing file item %v: %v", err, response.StatusCode)
 		return
 	}
 
