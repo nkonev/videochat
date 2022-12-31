@@ -46,8 +46,7 @@ func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent) {
 				return
 			}
 
-			newKey := utils.FilesIdToFilesPreviewId(normalizedKey, s.minioConfig)
-			newKey = utils.SetImagePreviewExtension(newKey)
+			newKey := utils.SetImagePreviewExtension(normalizedKey)
 
 			var objectSize int64 = int64(byteBuffer.Len())
 			_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg"})
@@ -74,8 +73,7 @@ func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent) {
 				Logger.Errorf("Error during creating thumbnail %v for %v", err, normalizedKey)
 				return
 			}
-			newKey := utils.FilesIdToFilesPreviewId(normalizedKey, s.minioConfig)
-			newKey = utils.SetVideoPreviewExtension(newKey)
+			newKey := utils.SetVideoPreviewExtension(normalizedKey)
 
 			reader := bytes.NewReader(output)
 
