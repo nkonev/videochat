@@ -190,6 +190,8 @@ const filenameKey = "filename"
 const ownerIdKey = "ownerid"
 const chatIdKey = "chatid"
 
+const originalKey = "originalkey"
+
 func SerializeMetadata(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult, chatId int64) map[string]string {
 	return SerializeMetadataByArgs(file.Filename, userPrincipalDto, chatId)
 }
@@ -206,8 +208,28 @@ func SerializeMetadataSimple(filename string, userId int64, chatId int64) map[st
 	return userMetadata
 }
 
+func SerializeOriginalKeyToMetadata(originalKeyParam string) map[string]string {
+	var userMetadata = map[string]string{}
+	userMetadata[originalKey] = originalKeyParam
+	return userMetadata
+}
+
+const xAmzMetaPrefix = "X-Amz-Meta-"
+
+func GetOriginalKeyFromMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (string, error) {
+	var prefix = ""
+	if hasAmzPrefix {
+		prefix = xAmzMetaPrefix
+	}
+
+	originalKeyParam, ok := userMetadata[prefix+strings.Title(originalKey)]
+	if !ok {
+		return "", errors.New("Unable to get originalKey")
+	}
+	return originalKeyParam, nil
+}
+
 func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, error) {
-	const xAmzMetaPrefix = "X-Amz-Meta-"
 	var prefix = ""
 	if hasAmzPrefix {
 		prefix = xAmzMetaPrefix

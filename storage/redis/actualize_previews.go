@@ -43,13 +43,13 @@ func (srv *ActualizePreviewsService) doJob() {
 
 func (srv *ActualizePreviewsService) processFiles(filenameChatPrefix string, c context.Context) {
 	logger.Logger.Infof("Starting actualize previews job")
+
+	// create preview for files if need
+	logger.Logger.Infof("Checking for missing previews")
 	var fileObjects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
 		Prefix:    filenameChatPrefix,
 		Recursive: true,
 	})
-
-	logger.Logger.Infof("Checking for missing previews")
-	// create preview for files if need
 	for fileOjInfo := range fileObjects {
 		// here in minio 'chat/108/'
 		logger.Logger.Debugf("Start processing minio key '%v'", fileOjInfo.Key)
@@ -71,6 +71,32 @@ func (srv *ActualizePreviewsService) processFiles(filenameChatPrefix string, c c
 
 	}
 	logger.Logger.Infof("Checking for missing previews finished")
+
+	// remove previews of removed files
+	logger.Logger.Infof("Checking for excess previews")
+	var previewObjects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.FilesPreview, minio.ListObjectsOptions{
+		Prefix:       filenameChatPrefix,
+		Recursive:    true,
+		WithMetadata: true,
+	})
+	for previewOjInfo := range previewObjects {
+		logger.Logger.Debugf("Start processing minio key '%v'", previewOjInfo.Key)
+		originalKey, err := services.GetOriginalKeyFromMetadata(previewOjInfo.UserMetadata, true)
+		if err != nil {
+			logger.Logger.Errorf("Error during getting original key %v", err)
+			continue
+		}
+		_, err = srv.minioClient.StatObject(c, srv.minioBucketsConfig.Files, originalKey, minio.StatObjectOptions{})
+		if err != nil {
+			logger.Logger.Infof("Will remove preview for %v", originalKey)
+			err := srv.minioClient.RemoveObject(c, srv.minioBucketsConfig.FilesPreview, previewOjInfo.Key, minio.RemoveObjectOptions{})
+			if err != nil {
+				logger.Logger.Errorf("Error during removing preview key %v", err)
+				continue
+			}
+		}
+	}
+	logger.Logger.Infof("Checking for excess previews finished")
 
 	logger.Logger.Infof("End of actualize previews job")
 }

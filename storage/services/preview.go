@@ -56,7 +56,7 @@ func (s PreviewService) CreatePreview(normalizedKey string, ctx context.Context)
 		newKey := utils.SetImagePreviewExtension(normalizedKey)
 
 		var objectSize int64 = int64(byteBuffer.Len())
-		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg"})
+		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg", UserMetadata: SerializeOriginalKeyToMetadata(normalizedKey)})
 		if err != nil {
 			Logger.Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
 			return
@@ -92,7 +92,7 @@ func (s PreviewService) CreatePreview(normalizedKey string, ctx context.Context)
 
 		var objectSize int64 = int64(byteBuffer.Len())
 
-		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg"})
+		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg", UserMetadata: SerializeOriginalKeyToMetadata(normalizedKey)})
 		if err != nil {
 			Logger.Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
 			return
