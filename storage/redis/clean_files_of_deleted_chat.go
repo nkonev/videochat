@@ -72,7 +72,7 @@ func (srv *CleanFilesOfDeletedChatService) processChats(filenameChatPrefix strin
 				logger.Logger.Debugf("Object file %v has been cleared from minio successfully", objInfo.Key)
 			}
 		} else {
-			logger.Logger.Infof("Chat %v is present, skipping", chatId)
+			logger.Logger.Debugf("Chat %v is present, skipping", chatId)
 		}
 	}
 	logger.Logger.Infof("End of processChats job")
