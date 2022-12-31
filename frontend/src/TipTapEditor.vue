@@ -28,6 +28,54 @@ import Mention from '@tiptap/extension-mention';
 import axios from "axios";
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
+import { Node, mergeAttributes } from '@tiptap/core';
+
+const Video = Node.create({
+    name: 'video', // unique name for the Node
+    group: 'block', // belongs to the 'block' group of extensions
+    selectable: true, // so we can select the video
+    draggable: true, // so we can drag the video
+    atom: true, // is a single unit
+
+    parseHTML() {
+        console.log("parseHTML");
+        return [
+            {
+                tag: 'video',
+            },
+        ]
+    },
+    addAttributes() {
+        console.log("addAttributes");
+        return {
+            "src": {
+                default: null
+            },
+        }
+    },
+    renderHTML({ HTMLAttributes }) {
+        console.log("renderHTML");
+        return ['video', mergeAttributes(HTMLAttributes)];
+    },
+    // https://www.codemzy.com/blog/tiptap-video-embed-extension
+    // addNodeView() {
+    //     console.log("addNodeView");
+    //     return ({ editor, node }) => {
+    //         const div = document.createElement('div');
+    //         div.className = 'video-container';
+    //         const iframe = document.createElement('iframe');
+    //         iframe.width = '640';
+    //         iframe.height = '360';
+    //         iframe.frameborder = "0";
+    //         iframe.allowfullscreen = "";
+    //         iframe.src = node.attrs.src;
+    //         div.append(iframe);
+    //         return {
+    //             dom: div,
+    //         }
+    //     }
+    // },
+});
 
 const empty = "";
 
@@ -75,9 +123,6 @@ export default {
         return empty
       }
     },
-    addImage() {
-      this.imageFileInput.click();
-    },
     messageTextIsNotEmpty(text) {
        return text && text !== "" && text !== '<p><br></p>' && text !== '<p></p>'
     },
@@ -88,8 +133,18 @@ export default {
     setCursorToEnd() {
       this.editor.commands.focus('end')
     },
+    addImage() {
+        this.imageFileInput.click();
+    },
     setImage(src) {
         this.editor.chain().focus().setImage({ src: src }).run()
+    },
+    addVideo() {
+        console.log("addVideo");
+    },
+    setVideo(src) {
+        console.log("setVideo", src);
+        this.editor.chain().focus().insertContent(`<video src="${src}"></video>`).run();
     },
   },
   mounted() {
@@ -121,6 +176,7 @@ export default {
           }),
           Text,
           imagePluginInstance,
+          Video,
           Italic,
           Bold,
           Strike,
@@ -229,4 +285,22 @@ export default {
     height: auto;
 }
 
+</style>
+
+<style lang="stylus">
+.video-container {
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 56.25%;
+}
+
+.video-container>iframe {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
 </style>

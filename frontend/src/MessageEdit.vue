@@ -256,7 +256,7 @@
                 bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_image, () => this.$refs.tipTapRef.addImage(), this.$refs.tipTapRef.setImage);
             },
             videoClick() {
-                bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_video);
+                bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_video, () => this.$refs.tipTapRef.addVideo(), this.$refs.tipTapRef.setVideo);
             },
             textColorClick(){
                 bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorText);
