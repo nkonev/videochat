@@ -55,6 +55,9 @@ minio:
     files:
       # Start every
       interval: 60s
+    previews:
+      # Start every
+      interval: 60s
 
 chat:
   url:

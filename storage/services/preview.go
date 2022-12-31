@@ -34,66 +34,71 @@ func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent) {
 	ctx := context.Background()
 	normalizedKey := utils.StripBucketName(data.Key, s.minioConfig.Files)
 	if strings.HasPrefix(data.EventName, utils.ObjectCreated) {
-		if utils.IsImage(normalizedKey) {
-			object, err := s.minio.GetObject(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectOptions{})
-			if err != nil {
-				Logger.Errorf("Error during getting image file %v for %v", err, normalizedKey)
-				return
-			}
-			byteBuffer, err := s.resizeImageToJpg(object)
-			if err != nil {
-				Logger.Errorf("Error during resizing image %v for %v", err, normalizedKey)
-				return
-			}
-
-			newKey := utils.SetImagePreviewExtension(normalizedKey)
-
-			var objectSize int64 = int64(byteBuffer.Len())
-			_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg"})
-			if err != nil {
-				Logger.Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
-				return
-			}
-		} else if utils.IsVideo(normalizedKey) {
-			d, _ := time.ParseDuration("10m")
-			presignedUrl, err := s.minio.PresignedGetObject(ctx, s.minioConfig.Files, normalizedKey, d, url.Values{})
-			if err != nil {
-				Logger.Errorf("Error during getting presigned url for %v", normalizedKey)
-				return
-			}
-			stringPresingedUrl := presignedUrl.String()
-
-			ffCmd := exec.Command("ffmpeg",
-				"-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
-				"-c:v", "png", "-f", "rawvideo", "-an", "-")
-
-			// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
-			output, err := ffCmd.Output()
-			if err != nil {
-				Logger.Errorf("Error during creating thumbnail %v for %v", err, normalizedKey)
-				return
-			}
-			newKey := utils.SetVideoPreviewExtension(normalizedKey)
-
-			reader := bytes.NewReader(output)
-
-			byteBuffer, err := s.resizeImageToJpg(reader)
-			if err != nil {
-				Logger.Errorf("Error during resizing image %v for %v", err, normalizedKey)
-				return
-			}
-
-			var objectSize int64 = int64(byteBuffer.Len())
-
-			_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg"})
-			if err != nil {
-				Logger.Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
-				return
-			}
-		}
+		s.CreatePreview(normalizedKey, ctx)
 	} else if strings.HasPrefix(data.EventName, utils.ObjectRemoved) {
 		// TODO remove the preview
 	}
+}
+
+func (s PreviewService) CreatePreview(normalizedKey string, ctx context.Context) {
+	if utils.IsImage(normalizedKey) {
+		object, err := s.minio.GetObject(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectOptions{})
+		if err != nil {
+			Logger.Errorf("Error during getting image file %v for %v", err, normalizedKey)
+			return
+		}
+		byteBuffer, err := s.resizeImageToJpg(object)
+		if err != nil {
+			Logger.Errorf("Error during resizing image %v for %v", err, normalizedKey)
+			return
+		}
+
+		newKey := utils.SetImagePreviewExtension(normalizedKey)
+
+		var objectSize int64 = int64(byteBuffer.Len())
+		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg"})
+		if err != nil {
+			Logger.Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
+			return
+		}
+	} else if utils.IsVideo(normalizedKey) {
+		d, _ := time.ParseDuration("10m")
+		presignedUrl, err := s.minio.PresignedGetObject(ctx, s.minioConfig.Files, normalizedKey, d, url.Values{})
+		if err != nil {
+			Logger.Errorf("Error during getting presigned url for %v", normalizedKey)
+			return
+		}
+		stringPresingedUrl := presignedUrl.String()
+
+		ffCmd := exec.Command("ffmpeg",
+			"-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
+			"-c:v", "png", "-f", "rawvideo", "-an", "-")
+
+		// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
+		output, err := ffCmd.Output()
+		if err != nil {
+			Logger.Errorf("Error during creating thumbnail %v for %v", err, normalizedKey)
+			return
+		}
+		newKey := utils.SetVideoPreviewExtension(normalizedKey)
+
+		reader := bytes.NewReader(output)
+
+		byteBuffer, err := s.resizeImageToJpg(reader)
+		if err != nil {
+			Logger.Errorf("Error during resizing image %v for %v", err, normalizedKey)
+			return
+		}
+
+		var objectSize int64 = int64(byteBuffer.Len())
+
+		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg"})
+		if err != nil {
+			Logger.Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
+			return
+		}
+	}
+	return
 }
 
 func (s PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error) {

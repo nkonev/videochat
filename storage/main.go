@@ -48,6 +48,8 @@ func main() {
 			redis.DeleteMissedInChatFilesScheduler,
 			redis.NewCleanFilesOfDeletedChatService,
 			redis.CleanFilesOfDeletedChatScheduler,
+			redis.NewActualizePreviewsService,
+			redis.ActualizePreviewsScheduler,
 			client.NewChatAccessClient,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
@@ -304,7 +306,7 @@ func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
 	}, nil
 }
 
-func runScheduler(cleanEmbeddedFilesTask *redis.CleanEmbeddedFilesTask, dt *redis.CleanFilesOfDeletedChatTask) {
+func runScheduler(cleanEmbeddedFilesTask *redis.CleanEmbeddedFilesTask, dt *redis.CleanFilesOfDeletedChatTask, a *redis.ActualizePreviewsTask) {
 	go func() {
 		err := cleanEmbeddedFilesTask.Run(context.Background())
 		if err != nil {
@@ -315,6 +317,12 @@ func runScheduler(cleanEmbeddedFilesTask *redis.CleanEmbeddedFilesTask, dt *redi
 		err := dt.Run(context.Background())
 		if err != nil {
 			Logger.Errorf("Error during working cleanFilesOfDeletedChatTask: %s", err)
+		}
+	}()
+	go func() {
+		err := a.Run(context.Background())
+		if err != nil {
+			Logger.Errorf("Error during working actualizePreviewsTask: %s", err)
 		}
 	}()
 
