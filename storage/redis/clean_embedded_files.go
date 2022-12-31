@@ -51,7 +51,7 @@ func (srv *DeleteMissedInChatFilesService) processEmbeddedFiles(filenameChatPref
 
 	for objInfo := range objects {
 		// here in minio 'chat/108/b4c03030-e054-49b5-b63c-78808b4bdeff.png'
-		logger.Logger.Infof("Start processing minio key '%v'", objInfo.Key)
+		logger.Logger.Debugf("Start processing minio key '%v'", objInfo.Key)
 		// in chat <p><img src="/api/storage/108/embed/b4c03030-e054-49b5-b63c-78808b4bdeff.png" style="width: 600px; height: 480px;"></p>
 		chatId, err := extractChatId(objInfo.Key)
 		if err != nil {

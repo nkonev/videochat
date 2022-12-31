@@ -50,7 +50,7 @@ func (srv *CleanFilesOfDeletedChatService) processChats(filenameChatPrefix strin
 
 	for objInfo := range objects {
 		// here in minio 'chat/108/'
-		logger.Logger.Infof("Start processing minio key '%v'", objInfo.Key)
+		logger.Logger.Debugf("Start processing minio key '%v'", objInfo.Key)
 		chatId, err := extractChatId(objInfo.Key)
 		if err != nil {
 			logger.Logger.Errorf("Unable to extract chat id from %v", objInfo.Key)

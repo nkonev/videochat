@@ -52,7 +52,7 @@ func (srv *ActualizePreviewsService) processFiles(filenameChatPrefix string, c c
 	// create preview for files if need
 	for fileOjInfo := range fileObjects {
 		// here in minio 'chat/108/'
-		logger.Logger.Infof("Start processing minio key '%v'", fileOjInfo.Key)
+		logger.Logger.Debugf("Start processing minio key '%v'", fileOjInfo.Key)
 		if utils.IsVideo(fileOjInfo.Key) {
 			previewToCheck := utils.SetVideoPreviewExtension(fileOjInfo.Key)
 			_, err := srv.minioClient.StatObject(c, srv.minioBucketsConfig.FilesPreview, previewToCheck, minio.StatObjectOptions{})
