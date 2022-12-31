@@ -71,7 +71,6 @@ type MinioConfig struct {
 }
 
 const ObjectCreated = "s3:ObjectCreated"
-const ObjectRemoved = "s3:ObjectRemoved"
 
 func SetVideoPreviewExtension(key string) string {
 	return SetExtension(key, "jpg")

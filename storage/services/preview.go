@@ -35,8 +35,6 @@ func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent) {
 	normalizedKey := utils.StripBucketName(data.Key, s.minioConfig.Files)
 	if strings.HasPrefix(data.EventName, utils.ObjectCreated) {
 		s.CreatePreview(normalizedKey, ctx)
-	} else if strings.HasPrefix(data.EventName, utils.ObjectRemoved) {
-		// TODO remove the preview
 	}
 }
 

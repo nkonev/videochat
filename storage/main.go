@@ -287,7 +287,6 @@ func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
 					Config: notification.Config{
 						Events: []notification.EventType{
 							utils.ObjectCreated + ":*",
-							utils.ObjectRemoved + ":*",
 						},
 					},
 				},
