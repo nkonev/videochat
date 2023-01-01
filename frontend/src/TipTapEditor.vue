@@ -49,10 +49,13 @@ const Video = Node.create({
             "src": {
                 default: null
             },
+            "poster": {
+                default: null
+            },
         }
     },
     renderHTML({ HTMLAttributes }) {
-        return ['video', mergeAttributes({"class": "video-custom-class"}, HTMLAttributes)];
+        return ['video', mergeAttributes({"class": "video-custom-class", "controls": true}, HTMLAttributes)];
     },
     addCommands() {
         return {
@@ -64,25 +67,6 @@ const Video = Node.create({
             },
         }
     },
-    // addNodeView() {
-    //     return ({ editor, node }) => {
-    //         const div = document.createElement('div');
-    //         div.className = 'video-container';
-    //         const iframe = document.createElement('iframe');
-    //         // if (editor.isEditable) {
-    //         //     iframe.className = 'pointer-events-none';
-    //         // }
-    //         iframe.width = '640';
-    //         iframe.height = '360';
-    //         iframe.frameborder = "0";
-    //         iframe.allowfullscreen = "";
-    //         iframe.src = node.attrs.src;
-    //         div.append(iframe);
-    //         return {
-    //             dom: div,
-    //         }
-    //     }
-    // },
 });
 
 const empty = "";
@@ -150,8 +134,8 @@ export default {
     addVideo() {
         console.log("addVideo");
     },
-    setVideo(src) {
-        this.editor.chain().focus().setVideo({ src: src }).run();
+    setVideo(src, previewUrl) {
+        this.editor.chain().focus().setVideo({ src: src, poster: previewUrl }).run();
     },
   },
   mounted() {

@@ -21,7 +21,7 @@ func CreateSanitizer() *SanitizerPolicy {
 	policy.AllowAttrs("data-type", "data-id").OnElements("span")
 	policy.AllowAttrs("target").OnElements("a")
 	policy.AllowElements("video")
-	policy.AllowAttrs("src", "class").OnElements("video")
+	policy.AllowAttrs("src", "class", "poster", "controls").OnElements("video")
 	return &SanitizerPolicy{policy}
 }
 

@@ -85,7 +85,7 @@
                 show: false,
                 type: '',
                 fromDiskCallback: null,
-                setExistingImageCallback: null,
+                setExistingMediaCallback: null,
                 loading: false,
                 dto: dtoFactory(),
                 filePage: firstPage,
@@ -119,16 +119,16 @@
             },
         },
         methods: {
-            showModal(type, fromDiskCallback, setExistingImageCallback) {
+            showModal(type, fromDiskCallback, setExistingMediaCallback) {
                 this.$data.show = true;
                 this.type = type;
                 this.fromDiskCallback = fromDiskCallback;
-                this.setExistingImageCallback = setExistingImageCallback;
+                this.setExistingMediaCallback = setExistingMediaCallback;
                 this.updateFiles();
             },
             accept(item) {
-                if (this.setExistingImageCallback) {
-                    this.setExistingImageCallback(item.url)
+                if (this.setExistingMediaCallback) {
+                    this.setExistingMediaCallback(item.url, item.previewUrl)
                 }
                 this.closeModal();
             },
@@ -139,7 +139,7 @@
                 this.show = false;
                 this.type = '';
                 this.fromDiskCallback = null;
-                this.setExistingImageCallback = null;
+                this.setExistingMediaCallback = null;
                 this.loading = false;
                 this.dto = dtoFactory();
                 this.filePage = firstPage;
