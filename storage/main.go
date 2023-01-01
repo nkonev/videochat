@@ -155,7 +155,7 @@ func configureEcho(
 	e.PUT("/storage/publish/file", fh.SetPublic)
 	e.GET("/storage/:chatId/file/count/:fileItemUuid", fh.CountHandler)
 	e.GET("/storage/:chatId/file", fh.LimitsHandler)
-	e.GET("/storage/:chatId/embed/list", eh.ListCandidatesForEmbed)
+	e.GET("/storage/:chatId/embed-candidates", eh.ListCandidatesForEmbed)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
