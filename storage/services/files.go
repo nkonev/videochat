@@ -317,10 +317,7 @@ func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 	if err != nil {
 		return 0, 0, "", "", err
 	}
-	correlationId, ok := userMetadata[prefix+strings.Title(correlationIdKey)]
-	if !ok {
-		return 0, 0, "", "", errors.New("Unable to get filename")
-	}
+	correlationId := userMetadata[prefix+strings.Title(correlationIdKey)]
 
 	return chatId, ownerId, filename, correlationId, nil
 }
