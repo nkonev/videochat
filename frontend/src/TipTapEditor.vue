@@ -28,49 +28,9 @@ import Mention from '@tiptap/extension-mention';
 import axios from "axios";
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
-import { Node, mergeAttributes } from '@tiptap/core';
 import {media_image, media_video} from "@/utils";
 import bus, { FILE_UPLOADED } from "./bus";
-
-// https://www.codemzy.com/blog/tiptap-video-embed-extension
-const Video = Node.create({
-    name: 'video', // unique name for the Node
-    group: 'block', // belongs to the 'block' group of extensions
-    selectable: true, // so we can select the video
-    draggable: true, // so we can drag the video
-    atom: true, // is a single unit
-
-    parseHTML() {
-        return [
-            {
-                tag: 'video',
-            },
-        ]
-    },
-    addAttributes() {
-        return {
-            "src": {
-                default: null
-            },
-            "poster": {
-                default: null
-            },
-        }
-    },
-    renderHTML({ HTMLAttributes }) {
-        return ['video', mergeAttributes({"class": "video-custom-class", "controls": true}, HTMLAttributes)];
-    },
-    addCommands() {
-        return {
-            setVideo: options => ({ commands }) => {
-                return commands.insertContent({
-                    type: this.name,
-                    attrs: options,
-                })
-            },
-        }
-    },
-});
+import Video from "@/TipTapVideo";
 
 const empty = "";
 
