@@ -536,67 +536,6 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-type Tuple struct {
-	MinioKey string `json:"minioKey"`
-	Filename string `json:"filename"`
-	Exists   bool   `json:"exists"`
-}
-
-func (rec Tuple) String() string {
-	return fmt.Sprintf("Tuple(key=%s, exists=%v, filename=%s)", rec.MinioKey, rec.Exists, rec.Filename)
-}
-
-func (mc *MessageHandler) CheckEmbeddedFiles(c echo.Context) error {
-	requestMap := new(map[int64][]*Tuple)
-	if err := c.Bind(requestMap); err != nil {
-		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
-		return err
-	}
-	GetLogEntry(c.Request().Context()).Debugf("Got request %v", requestMap)
-	for chatIdKey, tupleValues := range *requestMap {
-		GetLogEntry(c.Request().Context()).Infof("Processing %v=%v", chatIdKey, tupleValues)
-		exists, err := mc.db.IsChatExists(chatIdKey)
-		if err != nil {
-			Logger.Warnf("Error during checking existence of %v, skipping: %v", chatIdKey, err)
-			continue
-		}
-		if !exists {
-			for _, value := range tupleValues {
-				value.Exists = false
-			}
-			Logger.Infof("Set not exists for all files for chatId = %v", chatIdKey)
-			continue
-		}
-
-		// find here all files in messages
-		var filenames = []string{}
-		for _, tupleValue := range tupleValues {
-			filenames = append(filenames, tupleValue.Filename)
-		}
-		messageIdsAndTextsFromDb, err := mc.db.IsEmbedExists(chatIdKey, filenames)
-		if err != nil {
-			Logger.Warnf("Error during checking existence of filenames %v in %v, skipping: %v", filenames, chatIdKey, err)
-			continue
-		}
-
-		// invert to false for all pairs
-		for _, value := range tupleValues {
-			value.Exists = false
-		}
-		// here we try to find it in message texts
-		for _, messageIdsAndTextPair := range messageIdsAndTextsFromDb {
-			for _, tupleValue := range tupleValues {
-				if strings.Contains(messageIdsAndTextPair.Text, tupleValue.Filename) {
-					Logger.Infof("File %v is exists in chat with id %v", tupleValue.Filename, chatIdKey)
-					tupleValue.Exists = true
-				}
-			}
-		}
-	}
-
-	return c.JSON(http.StatusOK, requestMap)
-}
-
 func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User, c context.Context) ([]int64, string) {
 	var result = []int64{}
 	withoutSourceTags := mc.stripSourceContent.Sanitize(messageText)

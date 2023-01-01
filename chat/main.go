@@ -159,7 +159,6 @@ func configureEcho(
 	e.PUT("/chat/:id/typing", mc.TypeMessage)
 	e.PUT("/chat/:id/broadcast", mc.BroadcastMessage)
 	e.DELETE("/internal/remove-file-item", mc.RemoveFileItem)
-	e.POST("/internal/check-embedded-files", mc.CheckEmbeddedFiles)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

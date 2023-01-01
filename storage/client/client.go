@@ -1,7 +1,6 @@
 package client
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -22,15 +21,14 @@ import (
 )
 
 type RestClient struct {
-	client                 *http.Client
-	baseUrl                string
-	accessPath             string
-	removeFileItemPath     string
-	aaaBaseUrl             string
-	aaaGetUsersUrl         string
-	checkFilesPresencePath string
-	checkChatExistsPath    string
-	tracer                 trace.Tracer
+	client              *http.Client
+	baseUrl             string
+	accessPath          string
+	removeFileItemPath  string
+	aaaBaseUrl          string
+	aaaGetUsersUrl      string
+	checkChatExistsPath string
+	tracer              trace.Tracer
 }
 
 func newRestClient() *http.Client {
@@ -50,15 +48,14 @@ func NewChatAccessClient() *RestClient {
 	trcr := otel.Tracer("rest/client")
 
 	return &RestClient{
-		client:                 client,
-		baseUrl:                viper.GetString("chat.url.base"),
-		accessPath:             viper.GetString("chat.url.access"),
-		removeFileItemPath:     viper.GetString("chat.url.removeFileItem"),
-		aaaBaseUrl:             viper.GetString("aaa.url.base"),
-		aaaGetUsersUrl:         viper.GetString("aaa.url.getUsers"),
-		checkFilesPresencePath: viper.GetString("chat.url.checkEmbeddedFilesPath"),
-		checkChatExistsPath:    viper.GetString("chat.url.checkChatExistsPath"),
-		tracer:                 trcr,
+		client:              client,
+		baseUrl:             viper.GetString("chat.url.base"),
+		accessPath:          viper.GetString("chat.url.access"),
+		removeFileItemPath:  viper.GetString("chat.url.removeFileItem"),
+		aaaBaseUrl:          viper.GetString("aaa.url.base"),
+		aaaGetUsersUrl:      viper.GetString("aaa.url.getUsers"),
+		checkChatExistsPath: viper.GetString("chat.url.checkChatExistsPath"),
+		tracer:              trcr,
 	}
 }
 
@@ -180,59 +177,6 @@ func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 		return nil, err
 	}
 	return *users, nil
-}
-
-func (h *RestClient) CheckFilesInChat(input map[int64][]utils.Tuple, c context.Context) (map[int64][]utils.Tuple, error) {
-	fullUrl := fmt.Sprintf("%v%v", h.baseUrl, h.checkFilesPresencePath)
-
-	parsedUrl, err := url.Parse(fullUrl)
-	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse chat url:", err)
-		return nil, err
-	}
-
-	bytesArray, err := json.Marshal(input)
-	if err != nil {
-		GetLogEntry(c).Errorln("Failed during marshall body:", err)
-		return nil, err
-	}
-
-	request := &http.Request{
-		Method: "POST",
-		URL:    parsedUrl,
-		Body:   ioutil.NopCloser(bytes.NewReader(bytesArray)),
-		Header: map[string][]string{
-			echo.HeaderContentType: {"application/json"},
-		},
-	}
-
-	ctx, span := h.tracer.Start(c, "Files.CheckExists")
-	defer span.End()
-	request = request.WithContext(ctx)
-
-	response, err := h.client.Do(request)
-	if err != nil {
-		GetLogEntry(c).Error(err, "Transport error during checking embedded file")
-		return nil, err
-	}
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		err = errors.New(fmt.Sprintf("Unexpected status checking embedded file %v", response.StatusCode))
-		return nil, err
-	}
-
-	bodyBytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
-		return nil, err
-	}
-
-	resultMap := new(map[int64][]utils.Tuple)
-	if err := json.Unmarshal(bodyBytes, resultMap); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse result:", err)
-		return nil, err
-	}
-	return *resultMap, nil
 }
 
 type ChatExists struct {
