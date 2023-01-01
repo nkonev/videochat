@@ -134,6 +134,10 @@
       img {
           max-width 100%
       }
+
+      video {
+          max-width 100%
+      }
   }
   .with-space {
       white-space: pre;
