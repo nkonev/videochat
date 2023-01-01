@@ -162,6 +162,7 @@ func SecondsToStringMilliseconds(seconds int64) string {
 func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participant *dto.User, behalfParticipantId int64) {
 	if chatDto.GetIsTetATet() && participant.Id != behalfParticipantId {
 		chatDto.SetName(participant.Login)
+		chatDto.SetAvatar(participant.Avatar)
 	}
 }
 

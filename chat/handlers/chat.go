@@ -860,9 +860,10 @@ func (ch *ChatHandler) IsExists(c echo.Context) error {
 }
 
 type simpleChat struct {
-	Id        int64  `json:"id"`
-	Name      string `json:"name"`
-	IsTetATet bool   `json:"tetATet"`
+	Id        int64
+	Name      string
+	IsTetATet bool
+	Avatar    null.String
 }
 
 func (r *simpleChat) GetId() int64 {
@@ -873,8 +874,16 @@ func (r *simpleChat) GetName() string {
 	return r.Name
 }
 
+func (r *simpleChat) GetAvatar() null.String {
+	return r.Avatar
+}
+
 func (r *simpleChat) SetName(s string) {
 	r.Name = s
+}
+
+func (r *simpleChat) SetAvatar(s null.String) {
+	r.Avatar = s
 }
 
 func (r *simpleChat) GetIsTetATet() bool {
@@ -923,13 +932,14 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 			Id:        chat.Id,
 			Name:      chat.Title,
 			IsTetATet: chat.TetATet,
+			Avatar:    chat.Avatar,
 		}
 		utils.ReplaceChatNameToLoginForTetATet(
 			sch,
 			&meAsUser,
 			user.Id,
 		)
-		ret = append(ret, dto.ChatName{Name: sch.GetName(), UserId: user.Id})
+		ret = append(ret, dto.ChatName{Name: sch.GetName(), Avatar: sch.GetAvatar(), UserId: user.Id})
 	}
 	return c.JSON(http.StatusOK, ret)
 }

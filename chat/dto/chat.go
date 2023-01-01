@@ -47,8 +47,10 @@ type ChatDto struct {
 type ChatDtoWithTetATet interface {
 	GetId() int64
 	GetName() string
+	GetAvatar() null.String
 	GetIsTetATet() bool
 	SetName(s string)
+	SetAvatar(s null.String)
 }
 
 func (r *ChatDto) GetId() int64 {
@@ -79,6 +81,14 @@ func (r *BaseChatDto) SetName(s string) {
 	r.Name = s
 }
 
+func (r *BaseChatDto) GetAvatar() null.String {
+	return r.Avatar
+}
+
+func (r *BaseChatDto) SetAvatar(s null.String) {
+	r.Avatar = s
+}
+
 func (r *BaseChatDto) GetIsTetATet() bool {
 	return r.IsTetATet
 }
@@ -91,8 +101,9 @@ type ChatDtoWithAdmin struct {
 }
 
 type ChatName struct {
-	Name   string `json:"name"`   // chatName or userName in case tet-a-tet
-	UserId int64  `json:"userId"` // userId chatName for
+	Name   string      `json:"name"`   // chatName or userName in case tet-a-tet
+	Avatar null.String `json:"avatar"` // tet-a-tet -aware
+	UserId int64       `json:"userId"` // userId chatName for
 }
 
 type ChatUnreadMessageChanged struct {
