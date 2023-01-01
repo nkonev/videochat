@@ -11,6 +11,7 @@ import (
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"strings"
 	"time"
@@ -136,7 +137,7 @@ func Convert(h http.Handler) echo.HandlerFunc {
 	}
 }
 
-func SanitizeMessage(policy *SanitizerPolicy, input string) string {
+func SanitizeMessage(policy *services.SanitizerPolicy, input string) string {
 	return policy.Sanitize(input)
 }
 
@@ -144,6 +145,6 @@ func Trim(str string) string {
 	return strings.TrimSpace(str)
 }
 
-func TrimAmdSanitize(policy *SanitizerPolicy, input string) string {
+func TrimAmdSanitize(policy *services.SanitizerPolicy, input string) string {
 	return Trim(SanitizeMessage(policy, input))
 }

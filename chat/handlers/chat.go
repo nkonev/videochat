@@ -39,10 +39,10 @@ type ChatHandler struct {
 	db          *db.DB
 	notificator services.Events
 	restClient  *client.RestClient
-	policy      *SanitizerPolicy
+	policy      *services.SanitizerPolicy
 }
 
-func NewChatHandler(dbR *db.DB, notificator services.Events, restClient *client.RestClient, policy *SanitizerPolicy) *ChatHandler {
+func NewChatHandler(dbR *db.DB, notificator services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy) *ChatHandler {
 	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
 }
 
@@ -291,7 +291,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 	return errOuter
 }
 
-func convertToCreatableChat(d *CreateChatDto, policy *SanitizerPolicy) *db.Chat {
+func convertToCreatableChat(d *CreateChatDto, policy *services.SanitizerPolicy) *db.Chat {
 	return &db.Chat{
 		Title: TrimAmdSanitize(policy, d.Name),
 	}

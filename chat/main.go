@@ -37,9 +37,9 @@ func main() {
 		fx.Provide(
 			configureTracer,
 			client.NewRestClient,
-			handlers.CreateSanitizer,
-			handlers.CreateStripTags,
-			handlers.StripStripSourcePolicy,
+			services.CreateSanitizer,
+			services.CreateStripTags,
+			services.StripStripSourcePolicy,
 			handlers.NewChatHandler,
 			handlers.NewMessageHandler,
 			configureEcho,

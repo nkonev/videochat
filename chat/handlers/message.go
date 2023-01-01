@@ -35,14 +35,14 @@ type CreateMessageDto struct {
 
 type MessageHandler struct {
 	db                 *db.DB
-	policy             *SanitizerPolicy
-	stripSourceContent *StripSourcePolicy
-	stripAllTags       *StripTagsPolicy
+	policy             *services.SanitizerPolicy
+	stripSourceContent *services.StripSourcePolicy
+	stripAllTags       *services.StripTagsPolicy
 	notificator        services.Events
 	restClient         *client.RestClient
 }
 
-func NewMessageHandler(dbR *db.DB, policy *SanitizerPolicy, stripSourceContent *StripSourcePolicy, stripAllTags *StripTagsPolicy, notificator services.Events, restClient *client.RestClient) *MessageHandler {
+func NewMessageHandler(dbR *db.DB, policy *services.SanitizerPolicy, stripSourceContent *services.StripSourcePolicy, stripAllTags *services.StripTagsPolicy, notificator services.Events, restClient *client.RestClient) *MessageHandler {
 	return &MessageHandler{
 		db: dbR, policy: policy, stripSourceContent: stripSourceContent, stripAllTags: stripAllTags, notificator: notificator, restClient: restClient,
 	}
@@ -252,7 +252,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	return errOuter
 }
 
-func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *SanitizerPolicy) *db.Message {
+func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) *db.Message {
 	return &db.Message{
 		Text:         TrimAmdSanitize(policy, dto.Text),
 		ChatId:       chatId,
@@ -354,7 +354,7 @@ func excludeMyself(mentionedUserIds []int64, principalDto *auth.AuthResult) []in
 	return result
 }
 
-func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *SanitizerPolicy) *db.Message {
+func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) *db.Message {
 	return &db.Message{
 		Id:           dto.Id,
 		Text:         TrimAmdSanitize(policy, dto.Text),
