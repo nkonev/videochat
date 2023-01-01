@@ -48,8 +48,8 @@ func NewFilesHandler(
 }
 
 type EmbedDto struct {
-	Url       string  `json:"url"`
-	PosterUrl *string `json:"posterUrl"`
+	Url        string  `json:"url"`
+	PreviewUrl *string `json:"previewUrl"`
 }
 
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
@@ -133,8 +133,8 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		var previewUrl *string = services.GetPreviewUrlSmart(downloadUrl)
 
 		embeds = append(embeds, EmbedDto{
-			Url:       downloadUrl,
-			PosterUrl: previewUrl,
+			Url:        downloadUrl,
+			PreviewUrl: previewUrl,
 		})
 	}
 
