@@ -1,6 +1,6 @@
 <template>
   <div class="richText">
-    <input id="image-file-input" type="file" style="display: none;" accept="image/*,video/*" />
+    <input id="file-input" type="file" style="display: none;" accept="image/*,video/*" />
     <div class="richText__content">
       <editor-content :editor="editor" class="editorContent" />
     </div>
@@ -93,7 +93,7 @@ export default {
   data() {
     return {
       editor: null,
-      imageFileInput: null,
+      fileInput: null,
     };
   },
 
@@ -129,13 +129,13 @@ export default {
       this.editor.commands.focus('end')
     },
     addImage() {
-        this.imageFileInput.click();
+        this.fileInput.click();
     },
     setImage(src) {
         this.editor.chain().focus().setImage({ src: src }).run()
     },
     addVideo() {
-        this.imageFileInput.click();
+        this.fileInput.click();
     },
     setVideo(src, previewUrl) {
         this.editor.chain().focus().setVideo({ src: src, poster: previewUrl }).run();
@@ -200,8 +200,8 @@ export default {
       onUpdate: () => this.onUpdateContent(),
     });
 
-    this.imageFileInput = document.getElementById('image-file-input');
-    this.imageFileInput.onchange = e => {
+    this.fileInput = document.getElementById('file-input');
+    this.fileInput.onchange = e => {
       if (e.target.files.length) {
           const file = e.target.files[0];
           embedUploadFunction(this.chatId, file)
@@ -217,7 +217,7 @@ export default {
   beforeDestroy() {
     bus.$off(FILE_UPLOADED, this.onFileUploaded);
     this.editor.destroy();
-    this.imageFileInput = null;
+    this.fileInput = null;
   },
 };
 </script>
