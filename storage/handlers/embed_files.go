@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
 	"net/http"
-	"net/url"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
@@ -45,9 +44,6 @@ type MediaDto struct {
 	PreviewUrl *string `json:"previewUrl"`
 }
 
-const media_image = "image"
-const media_video = "video"
-
 func (h *EmbedHandler) ListCandidatesForEmbed(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -81,9 +77,9 @@ func (h *EmbedHandler) ListCandidatesForEmbed(c echo.Context) error {
 
 	filter := func(info *minio.ObjectInfo) bool {
 		switch requestedMediaType {
-		case media_image:
+		case services.Media_image:
 			return utils.IsImage(info.Key)
-		case media_video:
+		case services.Media_video:
 			return utils.IsVideo(info.Key)
 		default:
 			return false
@@ -98,40 +94,17 @@ func (h *EmbedHandler) ListCandidatesForEmbed(c echo.Context) error {
 	var list []*MediaDto = make([]*MediaDto, 0)
 
 	for _, item := range items {
-		list = append(list, convert(item, requestedMediaType, h.minioConfig))
+		list = append(list, convert(item, requestedMediaType))
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
 }
 
-func convert(item *dto.FileInfoDto, requestedMediaType string, minioConfig *utils.MinioConfig) *MediaDto {
+func convert(item *dto.FileInfoDto, requestedMediaType string) *MediaDto {
 	if item == nil {
 		return nil
 	}
-	var previewUrl *string = nil
-
-	parsedUrl, err := url.Parse(item.Url)
-	if err == nil {
-		parsedUrl.Path = "/api/storage/preview"
-		fileParam := parsedUrl.Query().Get(utils.FileParam)
-		newFileParam := ""
-		if requestedMediaType == media_video {
-			newFileParam = utils.SetVideoPreviewExtension(fileParam)
-		} else if requestedMediaType == media_image {
-			newFileParam = utils.SetImagePreviewExtension(fileParam)
-		}
-		if newFileParam != "" {
-			q := parsedUrl.Query()
-			q.Set(utils.FileParam, newFileParam)
-			parsedUrl.RawQuery = q.Encode()
-			tmp := parsedUrl.String()
-			previewUrl = &tmp
-		} else {
-			Logger.Errorf("Unknown requested type %v", requestedMediaType)
-		}
-	} else {
-		Logger.Errorf("Error during parse url %v", err)
-	}
+	var previewUrl *string = services.GetPreviewUrl(item.Url, requestedMediaType)
 
 	return &MediaDto{
 		Id:         item.Id,

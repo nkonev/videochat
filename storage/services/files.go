@@ -112,7 +112,7 @@ func (h *FilesService) GetListFilesInFileItem(
 }
 
 func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool, originalFilename bool) (*dto.FileInfoDto, error) {
-	downloadUrl, err := h.GetChatPrivateUrlFromObject(objInfo.Key, chatId, originalFilename)
+	downloadUrl, err := h.GetChatPrivateUrl(objInfo.Key, chatId, originalFilename)
 	if err != nil {
 		Logger.Errorf("Error get chat private url: %v", err)
 		return nil, err
@@ -140,7 +140,7 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 	info := &dto.FileInfoDto{
 		Id:           objInfo.Key,
 		Filename:     fileName,
-		Url:          *downloadUrl,
+		Url:          downloadUrl,
 		Size:         objInfo.Size,
 		CanDelete:    fileOwnerId == behalfUserId,
 		CanEdit:      fileOwnerId == behalfUserId && strings.HasSuffix(fileName, ".txt"),
@@ -173,10 +173,10 @@ func (h *FilesService) getBaseUrlForDownload() string {
 	return viper.GetString("server.contextPath") + "/storage"
 }
 
-func (h *FilesService) GetChatPrivateUrlFromObject(minioKey string, chatId int64, originalFilename bool) (*string, error) {
+func (h *FilesService) GetChatPrivateUrl(minioKey string, chatId int64, originalFilename bool) (string, error) {
 	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + "/download")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	query := downloadUrl.Query()
@@ -188,7 +188,49 @@ func (h *FilesService) GetChatPrivateUrlFromObject(minioKey string, chatId int64
 		str += "&original=true"
 	}
 
-	return &str, nil
+	return str, nil
+}
+
+const Media_image = "image"
+const Media_video = "video"
+
+func GetPreviewUrlSmart(itemUrl string) *string {
+	recognizedType := ""
+	if utils.IsVideo(itemUrl) {
+		recognizedType = Media_video
+	} else if utils.IsImage(itemUrl) {
+		recognizedType = Media_image
+	}
+	return GetPreviewUrl(itemUrl, recognizedType)
+}
+
+func GetPreviewUrl(itemUrl string, requestedMediaType string) *string {
+	var previewUrl *string = nil
+
+	parsedUrl, err := url.Parse(itemUrl)
+	if err == nil {
+		parsedUrl.Path = "/api/storage/preview"
+		fileParam := parsedUrl.Query().Get(utils.FileParam)
+		newFileParam := ""
+		if requestedMediaType == Media_video {
+			newFileParam = utils.SetVideoPreviewExtension(fileParam)
+		} else if requestedMediaType == Media_image {
+			newFileParam = utils.SetImagePreviewExtension(fileParam)
+		}
+		if newFileParam != "" {
+			q := parsedUrl.Query()
+			q.Set(utils.FileParam, newFileParam)
+			parsedUrl.RawQuery = q.Encode()
+			tmp := parsedUrl.String()
+			previewUrl = &tmp
+		} else {
+			Logger.Errorf("Unknown requested type %v", requestedMediaType)
+		}
+	} else {
+		Logger.Errorf("Error during parse url %v", err)
+	}
+
+	return previewUrl
 }
 
 const publicKey = "public"

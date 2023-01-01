@@ -48,8 +48,8 @@ func NewFilesHandler(
 }
 
 type EmbedDto struct {
-	Url       string `json:"url"`
-	PosterUrl string `json:"posterUrl"`
+	Url       string  `json:"url"`
+	PosterUrl *string `json:"posterUrl"`
 }
 
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
@@ -125,16 +125,17 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 			return err
 		}
 
-		downloadUrl, err := h.filesService.GetChatPrivateUrlFromObject(filename, chatId, false)
+		downloadUrl, err := h.filesService.GetChatPrivateUrl(filename, chatId, false)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting url: %v", err)
-			return err
-		} else {
-			embeds = append(embeds, EmbedDto{
-				Url:       *downloadUrl,
-				PosterUrl: "",
-			})
+			continue
 		}
+		var previewUrl *string = services.GetPreviewUrlSmart(downloadUrl)
+
+		embeds = append(embeds, EmbedDto{
+			Url:       downloadUrl,
+			PosterUrl: previewUrl,
+		})
 	}
 
 	// get count
