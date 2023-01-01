@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/base64"
 	"github.com/araddon/dateparse"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/dto"
+	"nkonev.name/chat/logger"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
@@ -147,4 +149,12 @@ func Trim(str string) string {
 
 func TrimAmdSanitize(policy *services.SanitizerPolicy, input string) string {
 	return Trim(SanitizeMessage(policy, input))
+}
+
+func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, error) {
+	if err := v.Validate(); err != nil {
+		logger.GetLogEntry(c.Request().Context()).Debugf("Error during validation: %v", err)
+		return false, c.JSON(http.StatusBadRequest, err)
+	}
+	return true, nil
 }
