@@ -42,6 +42,7 @@ func (h *FilesService) GetListFilesInFileItem(
 	c context.Context,
 	filter func(*minio.ObjectInfo) bool,
 	requestOwners bool,
+	originalFilename bool,
 	size, offset int,
 ) ([]*dto.FileInfoDto, int, error) {
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
@@ -83,6 +84,11 @@ func (h *FilesService) GetListFilesInFileItem(
 				GetLogEntry(c).Errorf("Error get file info: %v, skipping", err)
 				continue
 			}
+
+			if originalFilename {
+				info.Url = info.Url + "&original=true"
+			}
+
 			list = append(list, info)
 			respCounter++
 			if respCounter >= size {

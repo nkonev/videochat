@@ -258,7 +258,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, true, filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, true, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -332,7 +332,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, true, filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, true, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}

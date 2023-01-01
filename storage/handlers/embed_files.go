@@ -213,7 +213,7 @@ func (h *EmbedHandler) ListCandidatesForEmbed(c echo.Context) error {
 		}
 	}
 
-	items, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, filesSize, filesOffset)
+	items, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, false, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
