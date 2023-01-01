@@ -38,7 +38,6 @@ const Video = Node.create({
     atom: true, // is a single unit
 
     parseHTML() {
-        console.log("parseHTML");
         return [
             {
                 tag: 'video',
@@ -46,7 +45,6 @@ const Video = Node.create({
         ]
     },
     addAttributes() {
-        console.log("addAttributes");
         return {
             "src": {
                 default: null
@@ -54,19 +52,16 @@ const Video = Node.create({
         }
     },
     renderHTML({ HTMLAttributes }) {
-        console.log("renderHTML");
         return ['video', mergeAttributes(HTMLAttributes)];
     },
-    // https://www.codemzy.com/blog/tiptap-video-embed-extension
     addNodeView() {
-        console.log("addNodeView");
         return ({ editor, node }) => {
             const div = document.createElement('div');
             div.className = 'video-container';
             const iframe = document.createElement('iframe');
-            if (editor.isEditable) {
-                iframe.className = 'pointer-events-none';
-            }
+            // if (editor.isEditable) {
+            //     iframe.className = 'pointer-events-none';
+            // }
             iframe.width = '640';
             iframe.height = '360';
             iframe.frameborder = "0";
