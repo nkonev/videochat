@@ -69,12 +69,19 @@ type MessageBroadcastNotification {
     text: String!
 }
 
+type FileUploadedEvent {
+    url: String!
+    previewUrl: String
+    aType: String
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
     messageDeletedEvent: MessageDeletedDto
     userTypingEvent: UserTypingDto
     messageBroadcastEvent: MessageBroadcastNotification
+    fileUploadedEvent: FileUploadedEvent
 }
 
 type VideoUserCountChangedDto {

@@ -21,4 +21,6 @@ type FileInfoDto struct {
 type MinioEvent struct {
 	EventName string
 	Key       string
+	ChatId    int64
+	OwnerId   int64
 }

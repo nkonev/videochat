@@ -16,6 +16,7 @@ type ChatEvent struct {
 	MessageDeletedNotification   *MessageDeletedDto            `json:"messageDeletedNotification"`
 	UserTypingNotification       *UserTypingNotification       `json:"userTypingNotification"`
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
+	FileUploadedEvent            *FileUploadedEvent            `json:"fileUploadedEvent"`
 }
 
 func (ChatEvent) Name() eventbus.EventName {
@@ -48,4 +49,10 @@ type GlobalEvent struct {
 
 func (GlobalEvent) Name() eventbus.EventName {
 	return GLOBAL_EVENTS
+}
+
+type FileUploadedEvent struct {
+	Url        string  `json:"url"`
+	PreviewUrl *string `json:"previewUrl"`
+	Type       *string `json:"aType"`
 }

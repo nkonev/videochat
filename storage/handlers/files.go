@@ -48,9 +48,8 @@ func NewFilesHandler(
 }
 
 type EmbedDto struct {
-	Url        string  `json:"url"`
-	PreviewUrl *string `json:"previewUrl"`
-	Type       *string `json:"type"`
+	Url  string  `json:"url"`
+	Type *string `json:"type"`
 }
 
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
@@ -131,13 +130,11 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting url: %v", err)
 			continue
 		}
-		var previewUrl *string = services.GetPreviewUrlSmart(downloadUrl)
 		var aType = services.GetType(downloadUrl)
 
 		embeds = append(embeds, EmbedDto{
-			Url:        downloadUrl,
-			PreviewUrl: previewUrl,
-			Type:       aType,
+			Url:  downloadUrl,
+			Type: aType,
 		})
 	}
 

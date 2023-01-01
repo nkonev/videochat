@@ -69,7 +69,7 @@
         LOGGED_OUT,
         VIDEO_CALL_USER_COUNT_CHANGED,
         MESSAGE_BROADCAST,
-        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE, CHAT_ADD, PROFILE_SET,
+        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE, CHAT_ADD, PROFILE_SET, FILE_UPLOADED,
     } from "./bus";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
@@ -642,6 +642,11 @@
                                       userId
                                       text
                                     }
+                                    fileUploadedEvent {
+                                      url
+                                      previewUrl
+                                      aType
+                                    }
                                   }
                                 }
                 `
@@ -662,6 +667,9 @@
                 } else if (getChatEventsData(e).eventType === "user_broadcast") {
                     const d = getChatEventsData(e).messageBroadcastEvent;
                     bus.$emit(MESSAGE_BROADCAST, d);
+                } else if (getChatEventsData(e).eventType === "file_uploaded") {
+                    const d = getChatEventsData(e).fileUploadedEvent;
+                    bus.$emit(FILE_UPLOADED, d);
                 }
             },
             updateVideoRecordingState() {

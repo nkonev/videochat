@@ -43,6 +43,7 @@ type ChatEvent struct {
 	MessageDeletedEvent   *MessageDeletedDto            `json:"messageDeletedEvent"`
 	UserTypingEvent       *UserTypingDto                `json:"userTypingEvent"`
 	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
+	FileUploadedEvent     *FileUploadedEvent            `json:"fileUploadedEvent"`
 }
 
 type ChatUnreadMessageChanged struct {
@@ -61,6 +62,12 @@ type DisplayMessageDto struct {
 	CanEdit        bool       `json:"canEdit"`
 	CanDelete      bool       `json:"canDelete"`
 	FileItemUUID   *uuid.UUID `json:"fileItemUuid"`
+}
+
+type FileUploadedEvent struct {
+	URL        string  `json:"url"`
+	PreviewURL *string `json:"previewUrl"`
+	AType      *string `json:"aType"`
 }
 
 type GlobalEvent struct {

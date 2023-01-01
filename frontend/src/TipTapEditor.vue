@@ -30,6 +30,7 @@ import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import { Node, mergeAttributes } from '@tiptap/core';
 import {media_image, media_video} from "@/utils";
+import bus, { FILE_UPLOADED } from "./bus";
 
 // https://www.codemzy.com/blog/tiptap-video-embed-extension
 const Video = Node.create({
@@ -139,8 +140,15 @@ export default {
     setVideo(src, previewUrl) {
         this.editor.chain().focus().setVideo({ src: src, poster: previewUrl }).run();
     },
+    onFileUploaded(dto) {
+        if (dto.aType == media_video) {
+            this.setVideo(dto.url, dto.previewUrl)
+        }
+    }
   },
   mounted() {
+    bus.$on(FILE_UPLOADED, this.onFileUploaded);
+
     const imagePluginInstance = buildImageHandler((image) => embedUploadFunction(this.chatId, image).then(embed => embed.url))
         .configure({
             inline: true,
@@ -200,8 +208,6 @@ export default {
               .then(embed => {
                   if (embed.type == media_image) {
                       this.setImage(embed.url)
-                  } else if (embed.type == media_video) {
-                      this.setVideo(embed.url, embed.previewUrl)
                   }
               })
       }
@@ -209,6 +215,7 @@ export default {
   },
 
   beforeDestroy() {
+    bus.$off(FILE_UPLOADED, this.onFileUploaded);
     this.editor.destroy();
     this.imageFileInput = null;
   },

@@ -177,6 +177,14 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 			Text:   messageBroadcast.Text,
 		}
 	}
+	fileUploadedEvent := e.FileUploadedEvent
+	if fileUploadedEvent != nil {
+		result.FileUploadedEvent = &model.FileUploadedEvent{
+			URL:        fileUploadedEvent.Url,
+			PreviewURL: fileUploadedEvent.PreviewUrl,
+			AType:      fileUploadedEvent.Type,
+		}
+	}
 	return result
 }
 func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {

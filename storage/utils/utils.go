@@ -206,3 +206,8 @@ func IsVideo(minioKey string) bool {
 	videoTypes := viper.GetStringSlice("types.video")
 	return StringContains(videoTypes, GetDotExtensionStr(minioKey))
 }
+
+func GetType(aDto interface{}) string {
+	strName := fmt.Sprintf("%T", aDto)
+	return strName
+}

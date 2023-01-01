@@ -78,6 +78,7 @@ type ComplexityRoot struct {
 
 	ChatEvent struct {
 		EventType             func(childComplexity int) int
+		FileUploadedEvent     func(childComplexity int) int
 		MessageBroadcastEvent func(childComplexity int) int
 		MessageDeletedEvent   func(childComplexity int) int
 		MessageEvent          func(childComplexity int) int
@@ -100,6 +101,12 @@ type ComplexityRoot struct {
 		Owner          func(childComplexity int) int
 		OwnerID        func(childComplexity int) int
 		Text           func(childComplexity int) int
+	}
+
+	FileUploadedEvent struct {
+		AType      func(childComplexity int) int
+		PreviewURL func(childComplexity int) int
+		URL        func(childComplexity int) int
 	}
 
 	GlobalEvent struct {
@@ -359,6 +366,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatEvent.EventType(childComplexity), true
 
+	case "ChatEvent.fileUploadedEvent":
+		if e.complexity.ChatEvent.FileUploadedEvent == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.FileUploadedEvent(childComplexity), true
+
 	case "ChatEvent.messageBroadcastEvent":
 		if e.complexity.ChatEvent.MessageBroadcastEvent == nil {
 			break
@@ -470,6 +484,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DisplayMessageDto.Text(childComplexity), true
+
+	case "FileUploadedEvent.aType":
+		if e.complexity.FileUploadedEvent.AType == nil {
+			break
+		}
+
+		return e.complexity.FileUploadedEvent.AType(childComplexity), true
+
+	case "FileUploadedEvent.previewUrl":
+		if e.complexity.FileUploadedEvent.PreviewURL == nil {
+			break
+		}
+
+		return e.complexity.FileUploadedEvent.PreviewURL(childComplexity), true
+
+	case "FileUploadedEvent.url":
+		if e.complexity.FileUploadedEvent.URL == nil {
+			break
+		}
+
+		return e.complexity.FileUploadedEvent.URL(childComplexity), true
 
 	case "GlobalEvent.allUnreadMessagesNotification":
 		if e.complexity.GlobalEvent.AllUnreadMessagesNotification == nil {
@@ -924,12 +959,19 @@ type MessageBroadcastNotification {
     text: String!
 }
 
+type FileUploadedEvent {
+    url: String!
+    previewUrl: String
+    aType: String
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
     messageDeletedEvent: MessageDeletedDto
     userTypingEvent: UserTypingDto
     messageBroadcastEvent: MessageBroadcastNotification
+    fileUploadedEvent: FileUploadedEvent
 }
 
 type VideoUserCountChangedDto {
@@ -2198,6 +2240,55 @@ func (ec *executionContext) fieldContext_ChatEvent_messageBroadcastEvent(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatEvent_fileUploadedEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_fileUploadedEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileUploadedEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.FileUploadedEvent)
+	fc.Result = res
+	return ec.marshalOFileUploadedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐFileUploadedEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_fileUploadedEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "url":
+				return ec.fieldContext_FileUploadedEvent_url(ctx, field)
+			case "previewUrl":
+				return ec.fieldContext_FileUploadedEvent_previewUrl(ctx, field)
+			case "aType":
+				return ec.fieldContext_FileUploadedEvent_aType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FileUploadedEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChatUnreadMessageChanged_chatId(ctx context.Context, field graphql.CollectedField, obj *model.ChatUnreadMessageChanged) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChatUnreadMessageChanged_chatId(ctx, field)
 	if err != nil {
@@ -2720,6 +2811,132 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_fileItemUuid(ctx cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileUploadedEvent_url(ctx context.Context, field graphql.CollectedField, obj *model.FileUploadedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileUploadedEvent_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileUploadedEvent_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileUploadedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileUploadedEvent_previewUrl(ctx context.Context, field graphql.CollectedField, obj *model.FileUploadedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileUploadedEvent_previewUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PreviewURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileUploadedEvent_previewUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileUploadedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileUploadedEvent_aType(ctx context.Context, field graphql.CollectedField, obj *model.FileUploadedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileUploadedEvent_aType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileUploadedEvent_aType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileUploadedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3991,6 +4208,8 @@ func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Con
 				return ec.fieldContext_ChatEvent_userTypingEvent(ctx, field)
 			case "messageBroadcastEvent":
 				return ec.fieldContext_ChatEvent_messageBroadcastEvent(ctx, field)
+			case "fileUploadedEvent":
+				return ec.fieldContext_ChatEvent_fileUploadedEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatEvent", field.Name)
 		},
@@ -6929,6 +7148,10 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._ChatEvent_messageBroadcastEvent(ctx, field, obj)
 
+		case "fileUploadedEvent":
+
+			out.Values[i] = ec._ChatEvent_fileUploadedEvent(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7045,6 +7268,42 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 		case "fileItemUuid":
 
 			out.Values[i] = ec._DisplayMessageDto_fileItemUuid(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var fileUploadedEventImplementors = []string{"FileUploadedEvent"}
+
+func (ec *executionContext) _FileUploadedEvent(ctx context.Context, sel ast.SelectionSet, obj *model.FileUploadedEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fileUploadedEventImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FileUploadedEvent")
+		case "url":
+
+			out.Values[i] = ec._FileUploadedEvent_url(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "previewUrl":
+
+			out.Values[i] = ec._FileUploadedEvent_previewUrl(ctx, field, obj)
+
+		case "aType":
+
+			out.Values[i] = ec._FileUploadedEvent_aType(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8514,6 +8773,13 @@ func (ec *executionContext) marshalODisplayMessageDto2ᚖnkonevᚗnameᚋevent�
 		return graphql.Null
 	}
 	return ec._DisplayMessageDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOFileUploadedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐFileUploadedEvent(ctx context.Context, sel ast.SelectionSet, v *model.FileUploadedEvent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._FileUploadedEvent(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOInt642ᚖint64(ctx context.Context, v interface{}) (*int64, error) {

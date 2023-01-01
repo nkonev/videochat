@@ -322,6 +322,22 @@ func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 	return chatId, ownerId, filename, nil
 }
 
+func ChatIdKey(hasAmzPrefix bool) string {
+	var prefix = ""
+	if hasAmzPrefix {
+		prefix = xAmzMetaPrefix
+	}
+	return prefix + strings.Title(chatIdKey)
+}
+
+func OwnerIdKey(hasAmzPrefix bool) string {
+	var prefix = ""
+	if hasAmzPrefix {
+		prefix = xAmzMetaPrefix
+	}
+	return prefix + strings.Title(ownerIdKey)
+}
+
 func SerializeTags(public bool) map[string]string {
 	var userTags = map[string]string{}
 	userTags[publicKey] = fmt.Sprintf("%v", public)

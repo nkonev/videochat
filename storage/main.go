@@ -24,6 +24,7 @@ import (
 	"nkonev.name/storage/handlers"
 	"nkonev.name/storage/listener"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/producer"
 	"nkonev.name/storage/rabbitmq"
 	"nkonev.name/storage/redis"
 	"nkonev.name/storage/services"
@@ -56,6 +57,7 @@ func main() {
 			handlers.NewFilesHandler,
 			handlers.NewEmbedHandler,
 			listener.CreateMinioEventsListener,
+			producer.NewRabbitFileUploadedPublisher,
 			rabbitmq.CreateRabbitMqConnection,
 			services.NewFilesService,
 			services.NewPreviewService,

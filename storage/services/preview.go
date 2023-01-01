@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/producer"
 	"nkonev.name/storage/utils"
 	"os/exec"
 	"strings"
@@ -18,23 +19,32 @@ import (
 )
 
 type PreviewService struct {
-	minio       *minio.Client
-	minioConfig *utils.MinioConfig
+	minio                       *minio.Client
+	minioConfig                 *utils.MinioConfig
+	rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher
+	filesService                *FilesService
 }
 
-func NewPreviewService(minio *minio.Client, minioConfig *utils.MinioConfig) *PreviewService {
+func NewPreviewService(minio *minio.Client, minioConfig *utils.MinioConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
 	return &PreviewService{
-		minio:       minio,
-		minioConfig: minioConfig,
+		minio:                       minio,
+		minioConfig:                 minioConfig,
+		rabbitFileUploadedPublisher: rabbitFileUploadedPublisher,
+		filesService:                filesService,
 	}
 }
 
-func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent) {
+func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent, ctx context.Context) {
 	Logger.Debugf("Got %v", data)
-	ctx := context.Background()
 	normalizedKey := utils.StripBucketName(data.Key, s.minioConfig.Files)
 	if strings.HasPrefix(data.EventName, utils.ObjectCreated) {
 		s.CreatePreview(normalizedKey, ctx)
+
+		if pu, err := s.GetFileUploadedEvent(normalizedKey, data.ChatId, ctx); err == nil {
+			s.rabbitFileUploadedPublisher.Publish(data.OwnerId, data.ChatId, pu, ctx)
+		} else {
+			Logger.Errorf("Error during constructing uploaded event %v for %v", err, normalizedKey)
+		}
 	}
 }
 
@@ -113,4 +123,20 @@ func (s PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error
 		return nil, err
 	}
 	return byteBuffer, nil
+}
+
+func (s PreviewService) GetFileUploadedEvent(normalizedKey string, chatId int64, ctx context.Context) (*dto.FileUploadedEvent, error) {
+	downloadUrl, err := s.filesService.GetChatPrivateUrl(normalizedKey, chatId, false)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during getting url: %v", err)
+		return nil, err
+	}
+	var previewUrl *string = GetPreviewUrlSmart(downloadUrl)
+	var aType = GetType(downloadUrl)
+
+	return &dto.FileUploadedEvent{
+		Url:        downloadUrl,
+		PreviewUrl: previewUrl,
+		Type:       aType,
+	}, nil
 }
