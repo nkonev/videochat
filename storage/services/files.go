@@ -204,6 +204,21 @@ func GetPreviewUrlSmart(itemUrl string) *string {
 	return GetPreviewUrl(itemUrl, recognizedType)
 }
 
+func GetType(itemUrl string) *string {
+	var recognizedType string = ""
+	if utils.IsVideo(itemUrl) {
+		recognizedType = Media_video
+	} else if utils.IsImage(itemUrl) {
+		recognizedType = Media_image
+	}
+
+	if recognizedType != "" {
+		return &recognizedType
+	} else {
+		return nil
+	}
+}
+
 func GetPreviewUrl(itemUrl string, requestedMediaType string) *string {
 	var previewUrl *string = nil
 

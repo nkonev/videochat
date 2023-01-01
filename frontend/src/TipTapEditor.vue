@@ -1,6 +1,6 @@
 <template>
   <div class="richText">
-    <input id="image-file-input" type="file" style="display: none;" accept="image/*" />
+    <input id="image-file-input" type="file" style="display: none;" accept="image/*,video/*" />
     <div class="richText__content">
       <editor-content :editor="editor" class="editorContent" />
     </div>
@@ -29,6 +29,7 @@ import axios from "axios";
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import { Node, mergeAttributes } from '@tiptap/core';
+import {media_image, media_video} from "@/utils";
 
 // https://www.codemzy.com/blog/tiptap-video-embed-extension
 const Video = Node.create({
@@ -77,9 +78,9 @@ const embedUploadFunction = (chatId, fileObj) => {
     formData.append('files', fileObj);
     return axios.post('/api/storage/'+chatId+'/file', formData)
         .then((result) => {
-            let url = result.data.embeds[0].url; // Get url from response
-            console.debug("got embed url", url);
-            return url;
+            let embed = result.data.embeds[0]; // Get url from response
+            console.debug("got embed", embed);
+            return embed;
         })
 }
 
@@ -133,14 +134,14 @@ export default {
         this.editor.chain().focus().setImage({ src: src }).run()
     },
     addVideo() {
-        console.log("addVideo");
+        this.imageFileInput.click();
     },
     setVideo(src, previewUrl) {
         this.editor.chain().focus().setVideo({ src: src, poster: previewUrl }).run();
     },
   },
   mounted() {
-    const imagePluginInstance = buildImageHandler((image) => embedUploadFunction(this.chatId, image))
+    const imagePluginInstance = buildImageHandler((image) => embedUploadFunction(this.chatId, image).then(embed => embed.url))
         .configure({
             inline: true,
             HTMLAttributes: {
@@ -196,8 +197,12 @@ export default {
       if (e.target.files.length) {
           const file = e.target.files[0];
           embedUploadFunction(this.chatId, file)
-              .then(url => {
-                  this.setImage(url)
+              .then(embed => {
+                  if (embed.type == media_image) {
+                      this.setImage(embed.url)
+                  } else if (embed.type == media_video) {
+                      this.setVideo(embed.url, embed.previewUrl)
+                  }
               })
       }
     }
