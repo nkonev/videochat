@@ -75,7 +75,7 @@ services:
         max-file: "1"
 
   minio:
-    image: bitnami/minio:2022.12.12-debian-11-r5
+    image: bitnami/minio:2022.8.11-debian-11-r0
     hostname: minio
     restart: unless-stopped
     ports:

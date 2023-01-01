@@ -47,7 +47,7 @@ services:
         tag: chat-redis
 
   minio:
-    image: bitnami/minio:2022.12.12-debian-11-r5
+    image: bitnami/minio:2022.8.11-debian-11-r0
     hostname: minio
     environment:
       - MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE
@@ -61,6 +61,7 @@ services:
       - MINIO_NOTIFY_AMQP_NO_WAIT_primary=off
       - MINIO_NOTIFY_AMQP_AUTO_DELETED_primary=off
       - MINIO_NOTIFY_AMQP_DELIVERY_MODE_primary=2
+      - BITNAMI_DEBUG=true
 
     volumes:
       - /mnt/chat-minio/data:/data
