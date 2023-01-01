@@ -169,6 +169,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 			ParticipantID: userTypingEvent.ParticipantId,
 		}
 	}
+
 	messageBroadcast := e.MessageBroadcastNotification
 	if messageBroadcast != nil {
 		result.MessageBroadcastEvent = &model.MessageBroadcastNotification{
@@ -177,12 +178,14 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 			Text:   messageBroadcast.Text,
 		}
 	}
+
 	fileUploadedEvent := e.FileUploadedEvent
 	if fileUploadedEvent != nil {
 		result.FileUploadedEvent = &model.FileUploadedEvent{
-			URL:        fileUploadedEvent.Url,
-			PreviewURL: fileUploadedEvent.PreviewUrl,
-			AType:      fileUploadedEvent.Type,
+			URL:           fileUploadedEvent.Url,
+			PreviewURL:    fileUploadedEvent.PreviewUrl,
+			AType:         fileUploadedEvent.Type,
+			CorrelationID: &fileUploadedEvent.CorrelationId,
 		}
 	}
 	return result

@@ -73,6 +73,7 @@ type FileUploadedEvent {
     url: String!
     previewUrl: String
     aType: String
+    correlationId: String
 }
 
 type ChatEvent {

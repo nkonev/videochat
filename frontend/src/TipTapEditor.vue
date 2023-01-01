@@ -28,15 +28,17 @@ import Mention from '@tiptap/extension-mention';
 import axios from "axios";
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
-import {media_image, media_video} from "@/utils";
+import {hasLength, media_image, media_video} from "@/utils";
 import bus, { FILE_UPLOADED } from "./bus";
 import Video from "@/TipTapVideo";
+import { v4 as uuidv4 } from 'uuid';
 
 const empty = "";
 
-const embedUploadFunction = (chatId, fileObj) => {
+const embedUploadFunction = (chatId, fileObj, correlationId) => {
     const formData = new FormData();
     formData.append('files', fileObj);
+    formData.append('correlationId', correlationId);
     return axios.post('/api/storage/'+chatId+'/file', formData)
         .then((result) => {
             let embed = result.data.embeds[0]; // Get url from response
@@ -54,6 +56,7 @@ export default {
     return {
       editor: null,
       fileInput: null,
+      correlationId: null,
     };
   },
 
@@ -101,7 +104,7 @@ export default {
         this.editor.chain().focus().setVideo({ src: src, poster: previewUrl }).run();
     },
     onFileUploaded(dto) {
-        if (dto.aType == media_video) {
+        if (dto.aType == media_video && hasLength(this.correlationId) && this.correlationId == dto.correlationId) {
             this.setVideo(dto.url, dto.previewUrl)
         }
     }
@@ -109,7 +112,7 @@ export default {
   mounted() {
     bus.$on(FILE_UPLOADED, this.onFileUploaded);
 
-    const imagePluginInstance = buildImageHandler((image) => embedUploadFunction(this.chatId, image).then(embed => embed.url))
+    const imagePluginInstance = buildImageHandler((image) => embedUploadFunction(this.chatId, image, null).then(embed => embed.url))
         .configure({
             inline: true,
             HTMLAttributes: {
@@ -162,9 +165,10 @@ export default {
 
     this.fileInput = document.getElementById('file-input');
     this.fileInput.onchange = e => {
+      this.correlationId = uuidv4();
       if (e.target.files.length) {
           const file = e.target.files[0];
-          embedUploadFunction(this.chatId, file)
+          embedUploadFunction(this.chatId, file, this.correlationId)
               .then(embed => {
                   if (embed.type == media_image) {
                       this.setImage(embed.url)

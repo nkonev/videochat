@@ -52,7 +52,8 @@ func (GlobalEvent) Name() eventbus.EventName {
 }
 
 type FileUploadedEvent struct {
-	Url        string  `json:"url"`
-	PreviewUrl *string `json:"previewUrl"`
-	Type       *string `json:"aType"`
+	Url           string  `json:"url"`
+	PreviewUrl    *string `json:"previewUrl"`
+	Type          *string `json:"aType"`
+	CorrelationId string  `json:"correlationId"`
 }

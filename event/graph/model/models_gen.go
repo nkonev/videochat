@@ -65,9 +65,10 @@ type DisplayMessageDto struct {
 }
 
 type FileUploadedEvent struct {
-	URL        string  `json:"url"`
-	PreviewURL *string `json:"previewUrl"`
-	AType      *string `json:"aType"`
+	URL           string  `json:"url"`
+	PreviewURL    *string `json:"previewUrl"`
+	AType         *string `json:"aType"`
+	CorrelationID *string `json:"correlationId"`
 }
 
 type GlobalEvent struct {

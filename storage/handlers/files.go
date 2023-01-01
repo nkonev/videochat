@@ -31,6 +31,7 @@ type RenameDto struct {
 }
 
 const filesMultipartKey = "files"
+const correlationIdKey = "correlationId"
 const UrlStorageGetFile = "/storage/public/download"
 
 func NewFilesHandler(
@@ -93,6 +94,11 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		return err
 	}
 	files := form.File[filesMultipartKey]
+	correlationIds := form.Value[correlationIdKey]
+	correlationId := ""
+	if len(correlationIds) == 1 {
+		correlationId = correlationIds[0]
+	}
 
 	var embeds = []EmbedDto{}
 	for _, file := range files {
@@ -118,7 +124,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		fileUuid := uuid.New().String()
 		filename := fmt.Sprintf("chat/%v/%v/%v%v", chatId, fileItemUuid, fileUuid, dotExt)
 
-		var userMetadata = services.SerializeMetadata(file, userPrincipalDto, chatId)
+		var userMetadata = services.SerializeMetadata(file, userPrincipalDto, chatId, correlationId)
 
 		if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, file.Size, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
@@ -207,7 +213,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	fileUuid := getFileId(bindTo.Id)
 	filename := fmt.Sprintf("chat/%v/%v/%v%v", chatId, fileItemUuid, fileUuid, dotExt)
 
-	var userMetadata = services.SerializeMetadataByArgs(bindTo.Filename, userPrincipalDto, chatId)
+	var userMetadata = services.SerializeMetadataSimple(bindTo.Filename, userPrincipalDto.UserId, chatId, "")
 
 	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
@@ -382,7 +388,7 @@ func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c e
 }
 
 func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId int64, userPrincipalDto *auth.AuthResult, hasAmzPrefix bool) (bool, error) {
-	gotChatId, gotOwnerId, _, err := services.DeserializeMetadata(objInfo.UserMetadata, hasAmzPrefix)
+	gotChatId, gotOwnerId, _, _, err := services.DeserializeMetadata(objInfo.UserMetadata, hasAmzPrefix)
 	if err != nil {
 		Logger.Errorf("Error deserializeMetadata: %v", err)
 		return false, err
@@ -416,7 +422,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	chatId, _, fileName, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
+	chatId, _, fileName, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -477,7 +483,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	chatId, ownerId, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
+	chatId, ownerId, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -596,7 +602,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	_, _, fileName, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
+	_, _, fileName, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -694,7 +700,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 
-	metadata := services.SerializeMetadataSimple(bindTo.FileName, bindTo.OwnerId, bindTo.ChatId)
+	metadata := services.SerializeMetadataSimple(bindTo.FileName, bindTo.OwnerId, bindTo.ChatId, "")
 
 	fileItemUuid := uuid.New().String()
 	fileUuid := uuid.New().String()

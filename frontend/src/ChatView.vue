@@ -646,6 +646,7 @@
                                       url
                                       previewUrl
                                       aType
+                                      correlationId
                                     }
                                   }
                                 }
