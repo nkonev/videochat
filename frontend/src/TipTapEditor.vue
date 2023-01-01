@@ -77,7 +77,7 @@ const embedUploadFunction = (chatId, fileObj) => {
     formData.append('files', fileObj);
     return axios.post('/api/storage/'+chatId+'/file', formData)
         .then((result) => {
-            let url = result.data.embedUrls[0]; // Get url from response
+            let url = result.data.embeds[0].url; // Get url from response
             console.debug("got embed url", url);
             return url;
         })

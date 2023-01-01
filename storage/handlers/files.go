@@ -47,6 +47,11 @@ func NewFilesHandler(
 	}
 }
 
+type EmbedDto struct {
+	Url       string `json:"url"`
+	PosterUrl string `json:"posterUrl"`
+}
+
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -89,7 +94,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	}
 	files := form.File[filesMultipartKey]
 
-	var downloadUrls = []string{}
+	var embeds = []EmbedDto{}
 	for _, file := range files {
 		userLimitOk, _, _, err := checkUserLimit(h.minio, bucketName, userPrincipalDto, file.Size)
 		if err != nil {
@@ -125,14 +130,17 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting url: %v", err)
 			return err
 		} else {
-			downloadUrls = append(downloadUrls, *downloadUrl)
+			embeds = append(embeds, EmbedDto{
+				Url:       *downloadUrl,
+				PosterUrl: "",
+			})
 		}
 	}
 
 	// get count
 	count := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid, "count": count, "embedUrls": downloadUrls})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid, "count": count, "embeds": embeds})
 }
 
 type ReplaceTextFileDto struct {
