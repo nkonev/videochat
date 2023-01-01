@@ -79,14 +79,10 @@ func (h *FilesService) GetListFilesInFileItem(
 				return nil, 0, err
 			}
 
-			info, err := h.GetFileInfo(behalfUserId, objInfo, chatId, tagging, true)
+			info, err := h.GetFileInfo(behalfUserId, objInfo, chatId, tagging, true, originalFilename)
 			if err != nil {
 				GetLogEntry(c).Errorf("Error get file info: %v, skipping", err)
 				continue
-			}
-
-			if originalFilename {
-				info.Url = info.Url + "&original=true"
 			}
 
 			list = append(list, info)
@@ -115,10 +111,10 @@ func (h *FilesService) GetListFilesInFileItem(
 	return list, count, nil
 }
 
-func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool) (*dto.FileInfoDto, error) {
-	downloadUrl, err := h.getChatPrivateUrlFromObject(objInfo, chatId)
+func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool, originalFilename bool) (*dto.FileInfoDto, error) {
+	downloadUrl, err := h.GetChatPrivateUrlFromObject(objInfo.Key, chatId, originalFilename)
 	if err != nil {
-		Logger.Errorf("Error get private url: %v", err)
+		Logger.Errorf("Error get chat private url: %v", err)
 		return nil, err
 	}
 	metadata := objInfo.UserMetadata
@@ -177,16 +173,21 @@ func (h *FilesService) getBaseUrlForDownload() string {
 	return viper.GetString("server.contextPath") + "/storage"
 }
 
-func (h *FilesService) getChatPrivateUrlFromObject(objInfo minio.ObjectInfo, chatId int64) (*string, error) {
+func (h *FilesService) GetChatPrivateUrlFromObject(minioKey string, chatId int64, originalFilename bool) (*string, error) {
 	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + "/download")
 	if err != nil {
 		return nil, err
 	}
 
 	query := downloadUrl.Query()
-	query.Add(utils.FileParam, objInfo.Key)
+	query.Add(utils.FileParam, minioKey)
 	downloadUrl.RawQuery = query.Encode()
 	str := downloadUrl.String()
+
+	if originalFilename {
+		str += "&original=true"
+	}
+
 	return &str, nil
 }
 

@@ -44,8 +44,6 @@ func main() {
 			configureMinioEntities,
 			configureEcho,
 			redis.RedisV8,
-			redis.NewDeleteMissedInChatFilesService,
-			redis.DeleteMissedInChatFilesScheduler,
 			redis.NewCleanFilesOfDeletedChatService,
 			redis.CleanFilesOfDeletedChatScheduler,
 			redis.NewActualizePreviewsService,
@@ -155,9 +153,7 @@ func configureEcho(
 	e.PUT("/storage/publish/file", fh.SetPublic)
 	e.GET("/storage/:chatId/file/count/:fileItemUuid", fh.CountHandler)
 	e.GET("/storage/:chatId/file", fh.LimitsHandler)
-	e.POST("/storage/:chatId/embed", eh.UploadHandler)
 	e.GET("/storage/:chatId/embed/list", eh.ListCandidatesForEmbed)
-	e.GET("/storage/:chatId/embed/:file", eh.DownloadHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -238,7 +234,7 @@ func runEcho(e *echo.Echo) {
 }
 
 func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
-	var ua, ca, f, e, p string
+	var ua, ca, f, p string
 	var err error
 	if ua, err = utils.EnsureAndGetUserAvatarBucket(client); err != nil {
 		return nil, err
@@ -247,9 +243,6 @@ func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
 		return nil, err
 	}
 	if f, err = utils.EnsureAndGetFilesBucket(client); err != nil {
-		return nil, err
-	}
-	if e, err = utils.EnsureAndGetEmbeddedBucket(client); err != nil {
 		return nil, err
 	}
 	if p, err = utils.EnsureAndGetFilesPreviewBucket(client); err != nil {
@@ -300,18 +293,11 @@ func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
 		UserAvatar:   ua,
 		ChatAvatar:   ca,
 		Files:        f,
-		Embedded:     e,
 		FilesPreview: p,
 	}, nil
 }
 
-func runScheduler(cleanEmbeddedFilesTask *redis.CleanEmbeddedFilesTask, dt *redis.CleanFilesOfDeletedChatTask, a *redis.ActualizePreviewsTask) {
-	go func() {
-		err := cleanEmbeddedFilesTask.Run(context.Background())
-		if err != nil {
-			Logger.Errorf("Error during working cleanEmbeddedFilesTask: %s", err)
-		}
-	}()
+func runScheduler(dt *redis.CleanFilesOfDeletedChatTask, a *redis.ActualizePreviewsTask) {
 	go func() {
 		err := dt.Run(context.Background())
 		if err != nil {

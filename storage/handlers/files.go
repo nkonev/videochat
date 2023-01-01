@@ -89,6 +89,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	}
 	files := form.File[filesMultipartKey]
 
+	var downloadUrls = []string{}
 	for _, file := range files {
 		userLimitOk, _, _, err := checkUserLimit(h.minio, bucketName, userPrincipalDto, file.Size)
 		if err != nil {
@@ -118,12 +119,20 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 			GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
 			return err
 		}
+
+		downloadUrl, err := h.filesService.GetChatPrivateUrlFromObject(filename, chatId, false)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during getting url: %v", err)
+			return err
+		} else {
+			downloadUrls = append(downloadUrls, *downloadUrl)
+		}
 	}
 
 	// get count
 	count := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid, "count": count})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid, "count": count, "embedUrls": downloadUrls})
 }
 
 type ReplaceTextFileDto struct {
@@ -495,7 +504,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	info, err := h.filesService.GetFileInfo(userPrincipalDto.UserId, objectInfo, chatId, tagging, false)
+	info, err := h.filesService.GetFileInfo(userPrincipalDto.UserId, objectInfo, chatId, tagging, false, true)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getFileInfo %v", err)
 		return c.NoContent(http.StatusInternalServerError)

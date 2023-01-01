@@ -42,16 +42,8 @@ minio:
     userAvatar: "user-avatar"
     chatAvatar: "chat-avatar"
     files: "files"
-    embedded: "embedded"
     filesPreview: "files-preview"
   cleaner:
-    embedded:
-      # Start every
-      interval: 90s
-      # Max keys in batch
-      maxKeys: 10
-      # User has this time to send message with newly uploaded embedded image
-      threshold: 300s
     files:
       # Start every
       interval: 60s
