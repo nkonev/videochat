@@ -52,7 +52,17 @@ const Video = Node.create({
         }
     },
     renderHTML({ HTMLAttributes }) {
-        return ['video', mergeAttributes({"class": "video-container"}, HTMLAttributes)];
+        return ['video', mergeAttributes({"class": "video-custom-class"}, HTMLAttributes)];
+    },
+    addCommands() {
+        return {
+            setVideo: options => ({ commands }) => {
+                return commands.insertContent({
+                    type: this.name,
+                    attrs: options,
+                })
+            },
+        }
     },
     // addNodeView() {
     //     return ({ editor, node }) => {
@@ -141,7 +151,7 @@ export default {
         console.log("addVideo");
     },
     setVideo(src) {
-        this.editor.chain().focus().insertContent(`<video src="${src}"></video>`).run();
+        this.editor.chain().focus().setVideo({ src: src }).run();
     },
   },
   mounted() {
@@ -282,25 +292,4 @@ export default {
     height: auto;
 }
 
-</style>
-
-<style lang="stylus">
-.video-container {
-    position: relative;
-    overflow: hidden;
-    padding-bottom: 56.25%;
-}
-
-.video-container>iframe {
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    bottom: 0px;
-    left: 0px;
-    width: 100%;
-    height: 100%;
-}
-.pointer-events-none {
-    pointer-events: none;
-}
 </style>
