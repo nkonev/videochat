@@ -4,46 +4,53 @@
             <v-card>
                 <v-card-title>{{ fileItemUuid ? $vuetify.lang.t('$vuetify.attached_message_files') : $vuetify.lang.t('$vuetify.attached_chat_files') }}</v-card-title>
 
-                <v-card-text class="ma-0 pa-0">
-                    <v-list v-if="!loading">
+                <v-card-text>
+                    <v-row v-if="!loading">
                         <template v-if="dto.count > 0">
-                            <template v-for="(item, index) in dto.files">
-                                <v-list-item class="ma-0 pa-0 mr-3">
-                                    <v-list-item-avatar class="ma-2 pa-0 pl-1">
-                                        <v-btn icon v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.lang.t('$vuetify.edit')"><v-icon>mdi-pencil</v-icon></v-btn>
-                                        <v-icon v-else>mdi-file</v-icon>
-                                    </v-list-item-avatar>
-                                    <v-list-item-content class="ma-0 pa-0 py-1">
-                                        <v-list-item-title class="my-0"><a :href="item.url" target="_blank">{{item.filename}}</a></v-list-item-title>
-                                        <v-list-item-subtitle class="my-0">
+                            <v-col
+                                v-for="item in dto.files"
+                                :key="item.id"
+                                :cols="6"
+                            >
+                                <v-card>
+                                    <v-img
+                                        :src="item.previewUrl"
+                                        class="white--text align-end"
+                                        gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+                                        height="200px"
+                                    >
+                                        <v-card-title>
+                                            <a :href="item.url" target="_blank" class="download-link">{{item.filename}}</a>
+                                        </v-card-title>
+                                        <v-card-subtitle>
                                             {{ item.size | formatSizeFilter }}
                                             <span v-if="item.owner"> {{ $vuetify.lang.t('$vuetify.files_by') }} {{item.owner.login}}</span>
                                             <span> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                                            <a v-if="item.publicUrl && !isMobile()" :href="item.publicUrl" target="_blank">
-                                            {{ $vuetify.lang.t('$vuetify.files_public_url') }}
-                                            </a>
-                                        </v-list-item-subtitle>
-                                        <v-list-item-subtitle v-if="item.publicUrl && isMobile()">
-                                            <a :href="item.publicUrl" target="_blank">
+                                            <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">
                                                 {{ $vuetify.lang.t('$vuetify.files_public_url') }}
                                             </a>
-                                        </v-list-item-subtitle>
-                                    </v-list-item-content>
+                                        </v-card-subtitle>
+                                    </v-img>
+                                    <v-card-actions>
+                                        <v-spacer></v-spacer>
 
+                                        <v-btn icon v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.lang.t('$vuetify.edit')"><v-icon>mdi-pencil</v-icon></v-btn>
 
-                                    <v-icon class="mx-1" v-if="item.canShare && !item.publicUrl" color="primary" @click="shareFile(item, true)" dark :title="$vuetify.lang.t('$vuetify.share_file')">mdi-export</v-icon>
+                                        <v-btn icon v-if="item.canShare">
+                                            <v-icon color="primary" @click="shareFile(item, !item.publicUrl)" dark :title="item.publicUrl ? $vuetify.lang.t('$vuetify.unshare_file') : $vuetify.lang.t('$vuetify.share_file')">{{ item.publicUrl ? 'mdi-lock' : 'mdi-export'}}</v-icon>
+                                        </v-btn>
 
-                                    <v-icon class="mx-1" v-if="item.canShare && item.publicUrl" color="primary" @click="shareFile(item, false)" dark :title="$vuetify.lang.t('$vuetify.unshare_file')">mdi-lock</v-icon>
-
-                                    <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteFile(item)" dark :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
-                                </v-list-item>
-                                <v-divider></v-divider>
-                            </template>
+                                        <v-btn icon v-if="item.canDelete">
+                                            <v-icon color="error" @click="deleteFile(item)" dark :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
+                                        </v-btn>
+                                    </v-card-actions>
+                                </v-card>
+                            </v-col>
                         </template>
                         <template v-else>
                             <v-card-text>{{ $vuetify.lang.t('$vuetify.no_files') }}</v-card-text>
                         </template>
-                    </v-list>
+                    </v-row>
                     <v-progress-circular
                         class="ma-4 pa-4"
                         v-else
@@ -187,7 +194,9 @@ export default {
             axios.put(`/api/storage/publish/file`, {id: dto.id, public: share})
                 .then((response) => {
                   replaceInArray(this.dto.files, response.data);
-                  this.$forceUpdate();
+                  this.$nextTick(()=>{
+                      this.$forceUpdate();
+                  })
                 })
         },
         fireEdit(dto) {
@@ -226,3 +235,12 @@ export default {
     },
 }
 </script>
+
+<style lang="stylus">
+.v-card__title {
+    .download-link {
+        color white
+    }
+}
+
+</style>

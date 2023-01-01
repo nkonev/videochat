@@ -112,11 +112,20 @@ func (h *FilesService) GetListFilesInFileItem(
 }
 
 func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool, originalFilename bool) (*dto.FileInfoDto, error) {
-	downloadUrl, err := h.GetChatPrivateUrl(objInfo.Key, chatId, originalFilename)
+	downloadUrlRequestForOriginalFilename, downloadUrlWithoutQuery, err := h.GetChatPrivateUrl(objInfo.Key, chatId)
 	if err != nil {
 		Logger.Errorf("Error get chat private url: %v", err)
 		return nil, err
 	}
+	previewUrl := GetPreviewUrlSmart(downloadUrlWithoutQuery)
+
+	downloadUrl := ""
+	if originalFilename {
+		downloadUrl = downloadUrlRequestForOriginalFilename
+	} else {
+		downloadUrl = downloadUrlWithoutQuery
+	}
+
 	metadata := objInfo.UserMetadata
 
 	_, fileOwnerId, fileName, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
@@ -148,6 +157,7 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		LastModified: objInfo.LastModified,
 		OwnerId:      fileOwnerId,
 		PublicUrl:    publicUrl,
+		PreviewUrl:   previewUrl,
 	}
 	return info, nil
 }
@@ -173,10 +183,10 @@ func (h *FilesService) getBaseUrlForDownload() string {
 	return viper.GetString("server.contextPath") + "/storage"
 }
 
-func (h *FilesService) GetChatPrivateUrl(minioKey string, chatId int64, originalFilename bool) (string, error) {
+func (h *FilesService) GetChatPrivateUrl(minioKey string, chatId int64) (string, string, error) {
 	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + "/download")
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	query := downloadUrl.Query()
@@ -184,11 +194,10 @@ func (h *FilesService) GetChatPrivateUrl(minioKey string, chatId int64, original
 	downloadUrl.RawQuery = query.Encode()
 	str := downloadUrl.String()
 
-	if originalFilename {
-		str += "&original=true"
-	}
+	withoutQuery := str
+	str += "&original=true"
 
-	return str, nil
+	return str, withoutQuery, nil
 }
 
 const Media_image = "image"

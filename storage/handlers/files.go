@@ -131,7 +131,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 			return err
 		}
 
-		downloadUrl, err := h.filesService.GetChatPrivateUrl(filename, chatId, false)
+		_, downloadUrl, err := h.filesService.GetChatPrivateUrl(filename, chatId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting url: %v", err)
 			continue

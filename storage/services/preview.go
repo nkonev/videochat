@@ -126,7 +126,7 @@ func (s PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error
 }
 
 func (s PreviewService) GetFileUploadedEvent(normalizedKey string, chatId int64, correlationId string, ctx context.Context) (*dto.FileUploadedEvent, error) {
-	downloadUrl, err := s.filesService.GetChatPrivateUrl(normalizedKey, chatId, false)
+	_, downloadUrl, err := s.filesService.GetChatPrivateUrl(normalizedKey, chatId)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting url: %v", err)
 		return nil, err
