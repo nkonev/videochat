@@ -207,10 +207,12 @@ func GetPreviewUrlSmart(itemUrl string) *string {
 	recognizedType := ""
 	if utils.IsVideo(itemUrl) {
 		recognizedType = Media_video
+		return GetPreviewUrl(itemUrl, recognizedType)
 	} else if utils.IsImage(itemUrl) {
 		recognizedType = Media_image
+		return GetPreviewUrl(itemUrl, recognizedType)
 	}
-	return GetPreviewUrl(itemUrl, recognizedType)
+	return nil
 }
 
 func GetType(itemUrl string) *string {
