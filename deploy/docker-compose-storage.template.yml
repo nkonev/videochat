@@ -36,6 +36,7 @@ services:
         - STORAGE_JAEGER.HOST=jaeger
         - STORAGE_JAEGER.PORT=6831
 #        - STORAGE_LIMITS.ENABLED=true
+        - STORAGE_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
 
     logging:
       driver: "journald"
