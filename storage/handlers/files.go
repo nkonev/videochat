@@ -404,6 +404,9 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	originalString := c.QueryParam("original")
+	original := utils.ParseBooleanOr(originalString, false)
+
 	belongs, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
@@ -417,8 +420,9 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 
 	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
 	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
-	c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+fileName+"\"")
-
+	if original {
+		c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+fileName+"\"")
+	}
 	object, e := h.minio.GetObject(context.Background(), bucketName, fileId, minio.GetObjectOptions{})
 	if e != nil {
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})

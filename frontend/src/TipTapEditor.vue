@@ -58,23 +58,26 @@ const Video = Node.create({
         return ['video', mergeAttributes(HTMLAttributes)];
     },
     // https://www.codemzy.com/blog/tiptap-video-embed-extension
-    // addNodeView() {
-    //     console.log("addNodeView");
-    //     return ({ editor, node }) => {
-    //         const div = document.createElement('div');
-    //         div.className = 'video-container';
-    //         const iframe = document.createElement('iframe');
-    //         iframe.width = '640';
-    //         iframe.height = '360';
-    //         iframe.frameborder = "0";
-    //         iframe.allowfullscreen = "";
-    //         iframe.src = node.attrs.src;
-    //         div.append(iframe);
-    //         return {
-    //             dom: div,
-    //         }
-    //     }
-    // },
+    addNodeView() {
+        console.log("addNodeView");
+        return ({ editor, node }) => {
+            const div = document.createElement('div');
+            div.className = 'video-container';
+            const iframe = document.createElement('iframe');
+            if (editor.isEditable) {
+                iframe.className = 'pointer-events-none';
+            }
+            iframe.width = '640';
+            iframe.height = '360';
+            iframe.frameborder = "0";
+            iframe.allowfullscreen = "";
+            iframe.src = node.attrs.src;
+            div.append(iframe);
+            return {
+                dom: div,
+            }
+        }
+    },
 });
 
 const empty = "";
@@ -302,5 +305,8 @@ export default {
     left: 0px;
     width: 100%;
     height: 100%;
+}
+.pointer-events-none {
+    pointer-events: none;
 }
 </style>

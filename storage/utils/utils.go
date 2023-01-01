@@ -108,6 +108,14 @@ func ParseBoolean(str string) (bool, error) {
 	return strconv.ParseBool(str)
 }
 
+func ParseBooleanOr(str string, defaultVal bool) bool {
+	parseBool, err := strconv.ParseBool(str)
+	if err != nil {
+		return defaultVal
+	}
+	return parseBool
+}
+
 func SetToArray(set map[int64]bool) []int64 {
 	var ownerIds []int64
 	for k, _ := range set {
