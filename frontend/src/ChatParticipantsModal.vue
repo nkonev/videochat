@@ -112,7 +112,7 @@
     import bus, {
         CHAT_DELETED,
         CHAT_EDITED,
-        CLOSE_SIMPLE_MODAL,
+        CLOSE_SIMPLE_MODAL, OPEN_CHAT_EDIT,
         OPEN_PARTICIPANTS_DIALOG,
         OPEN_SIMPLE_MODAL, VIDEO_DIAL_STATUS_CHANGED,
     } from "./bus";
@@ -301,7 +301,7 @@
                 this.stopPolling();
             },
             addParticipants() {
-                console.log("Add participants");
+                bus.$emit(OPEN_CHAT_EDIT, this.chatId);
             },
             onChatDelete(dto) {
                 if (this.show && dto.id == this.chatId) {
