@@ -5,7 +5,7 @@
                 <v-card-title v-if="!isNew">{{ $vuetify.lang.t('$vuetify.edit_chat') }} #{{editChatId}}</v-card-title>
                 <v-card-title v-else>{{ $vuetify.lang.t('$vuetify.create_chat') }}</v-card-title>
 
-                <v-container fluid>
+                <v-container fluid class="pb-0">
                     <v-form
                         ref="form"
                         v-model="valid"
@@ -18,7 +18,6 @@
                             v-model="editDto.name"
                             required
                             :rules="chatNameRules"
-                            :autofocus="!isMobile()"
                         ></v-text-field>
                         <v-autocomplete
                                 v-model="editDto.participantIds"
@@ -63,15 +62,17 @@
                         </v-autocomplete>
 
                         <template v-if="!isNew">
-                            <v-img v-if="editDto.avatarBig || editDto.avatar"
-                                   :src="ava"
-                                   :aspect-ratio="16/9"
-                                   min-width="200"
-                                   min-height="200"
-                                   @click="openAvatarDialog"
-                            >
-                            </v-img>
-                            <v-btn v-else color="primary" @click="openAvatarDialog()">{{ $vuetify.lang.t('$vuetify.choose_avatar_btn') }}</v-btn>
+                            <v-container class="pb-0 px-0">
+                                <v-img v-if="editDto.avatarBig || editDto.avatar"
+                                       :src="ava"
+                                       :aspect-ratio="16/9"
+                                       min-width="200"
+                                       min-height="200"
+                                       @click="openAvatarDialog"
+                                >
+                                </v-img>
+                                <v-btn v-else color="primary" @click="openAvatarDialog()">{{ $vuetify.lang.t('$vuetify.choose_avatar_btn') }}</v-btn>
+                            </v-container>
                         </template>
                     </v-form>
                 </v-container>
@@ -173,12 +174,21 @@
 
                 this.isLoading = true;
 
-                axios.get(`/api/user?searchString=${searchString}`)
-                    .then((response) => {
-                        console.log("Fetched users", response.data.data);
-                        this.people = [...this.people, ...response.data.data];
-                    })
-                    .finally(() => (this.isLoading = false))
+                if (this.isNew) {
+                    axios.get(`/api/user?searchString=${searchString}`)
+                        .then((response) => {
+                            console.log("Fetched users", response.data.data);
+                            this.people = [...this.people, ...response.data.data];
+                        })
+                        .finally(() => (this.isLoading = false))
+                } else {
+                    axios.get(`/api/chat/${this.editChatId}/user?searchString=${searchString}`)
+                        .then((response) => {
+                            console.log("Fetched users", response.data);
+                            this.people = [...this.people, ...response.data];
+                        })
+                        .finally(() => (this.isLoading = false))
+                }
             },
             saveChat() {
                 const valid = this.validate();
@@ -192,9 +202,23 @@
                     };
                     (this.isNew ? axios.post(`/api/chat`, dtoToPost) : axios.put(`/api/chat`, dtoToPost))
                         .then(({data}) => {
+                            return data
+                        })
+                        .then((chatData)=> {
+                            if (!this.isNew && this.editDto.participantIds && this.editDto.participantIds.length) {
+                                return axios.put(`/api/chat/${this.editChatId}/user`, {
+                                    addParticipantIds: this.editDto.participantIds
+                                }).then(() => {
+                                    return chatData
+                                })
+                            } else {
+                                return Promise.resolve(chatData)
+                            }
+                        })
+                        .then((chatData) => {
                             this.closeModal();
                             if (this.isNew) {
-                                const routeDto = { name: chat_name, params: { id: data.id }};
+                                const routeDto = { name: chat_name, params: { id: chatData.id }};
                                 this.$router.push(routeDto);
                             }
                         })
