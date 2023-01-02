@@ -166,7 +166,7 @@
                     return
                 }
                 this.loading = true;
-                axios.get(`/api/storage/${this.chatId}/embed-candidates`, {
+                axios.get(`/api/storage/${this.chatId}/embed/candidates`, {
                     params: {
                         page: this.translatePage(),
                         size: pageSize,

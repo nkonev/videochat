@@ -235,7 +235,7 @@ func GetPreviewUrl(itemUrl string, requestedMediaType string) *string {
 
 	parsedUrl, err := url.Parse(itemUrl)
 	if err == nil {
-		parsedUrl.Path = "/api/storage/preview"
+		parsedUrl.Path = "/api/storage/embed/preview"
 		fileParam := parsedUrl.Query().Get(utils.FileParam)
 		newFileParam := ""
 		if requestedMediaType == Media_video {
