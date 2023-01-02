@@ -136,5 +136,7 @@ export default {
     search_in_chats: "Поиск по чатам",
     search_in_messages: "Поиск по сообщениям",
     video_is_not_shown: "Если вы не видите видео участника и камера в порядке, попробуйте перезагрузить вкладку",
-    link: "Ссылка"
+    link: "Ссылка",
+    participants_not_found: "Пользователи не найдены",
+    search_by_users: "Поиск по участникам"
 }

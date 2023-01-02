@@ -21,7 +21,6 @@
                             :autofocus="!isMobile()"
                         ></v-text-field>
                         <v-autocomplete
-                                v-if="isNew"
                                 v-model="editDto.participantIds"
                                 :disabled="isLoading"
                                 :items="people"

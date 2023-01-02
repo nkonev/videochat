@@ -40,6 +40,7 @@ type CommonOperations interface {
 	IsAdmin(userId int64, chatId int64) (bool, error)
 	GetChat(participantId, chatId int64) (*Chat, error)
 	GetChatWithParticipants(behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error)
+	GetChatWithoutParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error)
 	GetMessage(chatId int64, userId int64, messageId int64) (*Message, error)
 	GetUnreadMessagesCount(chatId int64, userId int64) (int64, error)
 	SetAdmin(userId int64, chatId int64, newAdmin bool) error

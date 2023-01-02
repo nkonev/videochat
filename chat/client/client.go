@@ -97,7 +97,7 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	return *users, nil
 }
 
-type searchUsersDto struct {
+type searchUsersResuqstDto struct {
 	Page         int     `json:"page"`
 	Size         int     `json:"size"`
 	UserIds      []int64 `json:"userIds"`
@@ -105,7 +105,12 @@ type searchUsersDto struct {
 	Including    bool    `json:"including"`
 }
 
-func (rc RestClient) SearchGetUsers(searchString string, including bool, ids []int64, c context.Context) ([]*dto.User, error) {
+type searchUsersResponseDto struct {
+	Users []*dto.User `json:"users"`
+	Count int         `json:"count"`
+}
+
+func (rc RestClient) SearchGetUsers(searchString string, including bool, ids []int64, page, size int, c context.Context) ([]*dto.User, int, error) {
 	contentType := "application/json;charset=UTF-8"
 	url0 := viper.GetString("aaa.url.base")
 	url1 := viper.GetString("aaa.url.searchUsers")
@@ -120,19 +125,21 @@ func (rc RestClient) SearchGetUsers(searchString string, including bool, ids []i
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
 		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
-		return nil, err
+		return nil, 0, err
 	}
 
-	req := searchUsersDto{
+	req := searchUsersResuqstDto{
 		UserIds:      ids,
 		SearchString: searchString,
 		Including:    including,
+		Page:         page,
+		Size:         size,
 	}
 
 	bytesData, err := json.Marshal(req)
 	if err != nil {
 		GetLogEntry(c).Errorln("Failed during marshalling:", err)
-		return nil, err
+		return nil, 0, err
 	}
 	reader := bytes.NewReader(bytesData)
 
@@ -151,24 +158,24 @@ func (rc RestClient) SearchGetUsers(searchString string, including bool, ids []i
 	resp, err := rc.Do(request)
 	if err != nil {
 		GetLogEntry(c).Warningln("Failed to request get users response:", err)
-		return nil, err
+		return nil, 0, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
 		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
-		return nil, errors.New("Users response responded non-200 code")
+		return nil, 0, errors.New("Users response responded non-200 code")
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
-		return nil, err
+		return nil, 0, err
 	}
 
-	users := &[]*dto.User{}
-	if err := json.Unmarshal(bodyBytes, users); err != nil {
+	respDto := &searchUsersResponseDto{}
+	if err := json.Unmarshal(bodyBytes, respDto); err != nil {
 		GetLogEntry(c).Errorln("Failed to parse users:", err)
-		return nil, err
+		return nil, 0, err
 	}
-	return *users, nil
+	return respDto.Users, respDto.Count, nil
 }

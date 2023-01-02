@@ -3,54 +3,8 @@
         <v-dialog v-model="show" max-width="700" scrollable>
             <v-card>
                 <v-card-title>
-                  {{ $vuetify.lang.t('$vuetify.participants_modal_title') }}
-                  <v-autocomplete
-                      class="ml-4"
-                      v-if="dto.canEdit"
-                      v-model="newParticipantIds"
-                      :disabled="newParticipantIdsIsLoading"
-                      :items="people"
-                      filled
-                      chips
-                      color="blue-grey lighten-2"
-                      :label="$vuetify.lang.t('$vuetify.select_users_to_add_to_chat')"
-                      item-text="login"
-                      item-value="id"
-                      multiple
-                      :hide-selected="true"
-                      hide-details
-                      :search-input.sync="search"
-                      dense
-                      outlined
-                      autofocus
-                  >
-                    <template v-slot:selection="data">
-                      <v-chip
-                          v-bind="data.attrs"
-                          :input-value="data.selected"
-                          close
-                          small
-                          @click="data.select"
-                          @click:close="removeNewSelected(data.item)"
-                      >
-                        <v-avatar left v-if="data.item.avatar">
-                          <v-img :src="data.item.avatar"></v-img>
-                        </v-avatar>
-                        {{ data.item.login }}
-                      </v-chip>
-                    </template>
-                    <template v-slot:item="data">
-                      <v-list-item-avatar v-if="data.item.avatar">
-                        <img :src="data.item.avatar">
-                      </v-list-item-avatar>
-                      <v-list-item-content>
-                        <v-list-item-title v-html="data.item.login"></v-list-item-title>
-                      </v-list-item-content>
-                    </template>
-                  </v-autocomplete>
-                  <v-btn v-if="dto.canEdit" :disabled="newParticipantIds.length == 0" color="primary" class="ma-2 ml-4" @click="addSelectedParticipants()">
-                      {{ $vuetify.lang.t('$vuetify.add') }}
-                  </v-btn>
+                    {{ $vuetify.lang.t('$vuetify.participants_modal_title') }}
+                    <v-text-field class="ml-4 pt-0 mt-0" prepend-icon="mdi-magnify" hide-details single-line v-model="userSearchString" :label="$vuetify.lang.t('$vuetify.search_by_users')" clearable clear-icon="mdi-close-circle"></v-text-field>
                 </v-card-title>
 
                 <v-card-text  class="ma-0 pa-0">
@@ -124,8 +78,12 @@
                             <v-divider></v-divider>
                         </template>
                     </v-list>
+                    <template v-else-if="!loading">
+                        <v-card-text>{{ $vuetify.lang.t('$vuetify.participants_not_found') }}</v-card-text>
+                    </template>
+
                     <v-progress-circular
-                        v-else
+                        v-if="loading"
                         indeterminate
                         color="primary"
                     ></v-progress-circular>
@@ -138,6 +96,9 @@
                         :length="participantsPagesCount"
                     ></v-pagination>
                     <v-spacer></v-spacer>
+                    <v-btn v-if="dto.canEdit" color="primary" class="ma-2 ml-4" @click="addParticipants()">
+                        {{ $vuetify.lang.t('$vuetify.add') }}
+                    </v-btn>
                     <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
 
@@ -175,18 +136,15 @@
     };
 
     export default {
-        mixins: [userOnlinePollingMixin(), queryMixin()],
+        mixins: [userOnlinePollingMixin()],
         data () {
             return {
                 show: false,
                 dto: dtoFactory(),
                 chatId: null,
-
-                newParticipantIdsIsLoading: false,
-                newParticipantIds: [],
-                people: [  ], // available person to chat with
-                search: null,
+                userSearchString: null,
                 participantsPage: firstPage,
+                loading: false,
             }
         },
         computed: {
@@ -227,10 +185,12 @@
             loadData() {
                 this.stopPolling();
                 console.log("Getting info about chat id in modal, chatId=", this.chatId);
+                this.loading = true;
                 axios.get('/api/chat/' + this.chatId, {
                     params: {
                         page: this.translatePage(),
                         size: pageSize,
+                        userSearchString: this.userSearchString
                     },
                 })
                     .then((response) => {
@@ -242,6 +202,8 @@
                             ()=>{ return this.dto.participantIds},
                             (v) => this.onUserOnlineChanged(v)
                         );
+                    }).finally(() => {
+                        this.loading = false;
                     })
             },
             changeChatAdmin(item) {
@@ -261,7 +223,7 @@
                     console.log("Inviting to video chat", call);
                     if (this.$route.name != videochat_name && call) {
                         const routerNewState = { name: videochat_name};
-                        this.navigateToWithPreservingSearchStringInQuery(routerNewState);
+                        this.$router.push(routerNewState);
                     }
                     for (const participant of this.dto.participants) {
                         if (participant.id == dto.id) {
@@ -330,49 +292,16 @@
             },
             closeModal() {
                 console.debug("Closing ChatParticipantsModal");
+                this.loading = false;
                 this.show = false;
                 this.chatId = null;
-                this.newParticipantIds = [];
-                this.people = [];
                 this.dto = dtoFactory();
-                this.newParticipantIdsIsLoading = false;
-                this.search = null;
+                this.userSearchString = null;
                 this.participantsPage = firstPage;
                 this.stopPolling();
             },
-            removeNewSelected (item) {
-                console.debug("Removing", item, this.newParticipantIds);
-                const index = this.newParticipantIds.indexOf(item.id);
-                if (index >= 0) this.newParticipantIds.splice(index, 1)
-            },
-            doNewSearch(searchString) {
-                if (this.newParticipantIdsIsLoading) return;
-
-                if (!searchString) {
-                    return;
-                }
-
-                this.newParticipantIdsIsLoading = true;
-
-                axios.get(`/api/chat/${this.dto.id}/user?searchString=${searchString}`)
-                    .then((response) => {
-                      console.debug("Fetched users", response.data);
-                      this.people = response.data;
-                    })
-                    .finally(() => (this.newParticipantIdsIsLoading = false))
-            },
-            addSelectedParticipants() {
-                axios.put(`/api/chat/${this.dto.id}/users`, {
-                  addParticipantIds: this.newParticipantIds
-                }, {
-                    params: {
-                        page: this.translatePage(),
-                        size: pageSize,
-                    },
-                }).then(value => {
-                    this.newParticipantIds = [];
-                    this.search = null;
-                })
+            addParticipants() {
+                console.log("Add participants");
             },
             onChatDelete(dto) {
                 if (this.show && dto.id == this.chatId) {
@@ -415,10 +344,15 @@
                 let url = profile + "/" + user.id;
                 return url;
             },
+            doSearch(){
+                if (this.show) {
+                    this.loadData();
+                }
+            }
         },
         watch: {
-            search (searchString) {
-              this.doNewSearch(searchString);
+            userSearchString (searchString) {
+              this.doSearch();
             },
             participantsPage(newValue) {
                 if (this.show) {
@@ -435,7 +369,7 @@
         },
 
         created() {
-            this.doNewSearch = debounce(this.doNewSearch, 700);
+            this.doSearch = debounce(this.doSearch, 700);
             bus.$on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
             bus.$on(CHAT_EDITED, this.onChatChange);
             bus.$on(CHAT_DELETED, this.onChatDelete);

@@ -34,7 +34,6 @@ import javax.validation.Valid;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.github.nkonev.aaa.Constants.Headers.*;
 import static com.github.nkonev.aaa.Constants.MAX_USERS_RESPONSE_LENGTH;
@@ -112,7 +111,7 @@ public class UserProfileController {
 
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER)
-    public com.github.nkonev.aaa.dto.Wrapper<Record> getUsers(
+    public com.github.nkonev.aaa.dto.Wrapper<com.github.nkonev.aaa.dto.UserAccountDTOExtended> getUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestParam(value = "page", required=false, defaultValue = "0") int page,
             @RequestParam(value = "size", required=false, defaultValue = "0") int size,
@@ -123,15 +122,15 @@ public class UserProfileController {
 
         final String forDbSearch = "%" + searchString + "%";
         List<UserAccount> resultPage = userAccountRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
-        long resultPageCount = userAccountRepository.findByUsernameContainsIgnoreCaseCount(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
+        long resultPageCount = userAccountRepository.findByUsernameContainsIgnoreCaseCount(forDbSearch);
 
-        return new com.github.nkonev.aaa.dto.Wrapper<Record>(
+        return new com.github.nkonev.aaa.dto.Wrapper<>(
                 resultPageCount,
                 resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList())
         );
     }
 
-    record SearchUsersDto(
+    record SearchUsersRequestDto(
         int page,
         int size,
         List<Long> userIds,
@@ -139,11 +138,16 @@ public class UserProfileController {
         boolean including
     ) {}
 
+    record SearchUsersResponseDto(
+            List<com.github.nkonev.aaa.dto.UserAccountDTOExtended> users,
+            long count
+    ) {}
+
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PostMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH)
-    public List<Record> searchUserInternal(
+    public SearchUsersResponseDto searchUserInternal(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
-            @RequestBody SearchUsersDto request
+            @RequestBody SearchUsersRequestDto request
     ) {
         LOGGER.info("Searching internal users");
         PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(request.page), PageUtils.fixSize(request.size), Sort.Direction.ASC, "id");
@@ -151,20 +155,27 @@ public class UserProfileController {
 
         final String forDbSearch = "%" + searchString + "%";
         List<UserAccount> resultPage;
+        long count = 0;
         if (request.userIds == null || request.userIds.isEmpty()) {
             resultPage = userAccountRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
+            count = userAccountRepository.findByUsernameContainsIgnoreCaseCount(forDbSearch);
         } else {
             if (request.including) {
                 resultPage = userAccountRepository.findByUsernameContainsIgnoreCaseAndIdIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds);
+                count = userAccountRepository.findByUsernameContainsIgnoreCaseAndIdInCount(forDbSearch, request.userIds);
             } else {
                 resultPage = userAccountRepository.findByUsernameContainsIgnoreCaseAndIdNotIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds);
+                count = userAccountRepository.findByUsernameContainsIgnoreCaseAndIdNotInCount(forDbSearch, request.userIds);
             }
         }
 
-        return resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList());
+        return new SearchUsersResponseDto(
+                resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList()),
+                count
+        );
     }
 
-    private Function<UserAccount, Record> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
+    private Function<UserAccount, com.github.nkonev.aaa.dto.UserAccountDTOExtended> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(currentUser, userAccount);
     }
 

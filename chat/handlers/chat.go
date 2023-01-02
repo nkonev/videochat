@@ -73,7 +73,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	if searchString != "" {
 		searchString = TrimAmdSanitize(ch.policy, searchString)
 
-		users, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, c.Request().Context())
+		users, _, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, 0, 0, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
 			return err
@@ -131,35 +131,66 @@ func getChat(
 	chatId int64,
 	behalfParticipantId int64,
 	authResult *auth.AuthResult,
-	participantsSize, participantsOffset int,
+	participantsPage, participantsSize, participantsOffset int,
+	userSearchString string,
 ) (*dto.ChatDto, error) {
 	fixedParticipantsSize := utils.FixSize(participantsSize)
 
-	if cc, err := dbR.GetChatWithParticipants(behalfParticipantId, chatId, fixedParticipantsSize, participantsOffset); err != nil {
-		return nil, err
-	} else {
+	var users []*dto.User = []*dto.User{}
+
+	var cc *db.ChatWithParticipants
+	if userSearchString != "" {
+		allParticipantIds, err := dbR.GetAllParticipantIds(chatId)
+		if err != nil {
+			return nil, err
+		}
+		totalFoundUserCount := 0
+		users, totalFoundUserCount, err = restClient.SearchGetUsers(userSearchString, true, allParticipantIds, participantsPage, fixedParticipantsSize, c.Request().Context())
+		if err != nil {
+			return nil, err
+		}
+
+		cc, err = dbR.GetChatWithoutParticipants(behalfParticipantId, chatId)
+		if err != nil {
+			return nil, err
+		}
 		if cc == nil {
 			return nil, nil
 		}
 
-		users, err := restClient.GetUsers(cc.ParticipantsIds, c.Request().Context())
+		// here we set found ids
+		for _, user := range users {
+			cc.ParticipantsIds = append(cc.ParticipantsIds, user.Id)
+		}
+		cc.ParticipantsCount = totalFoundUserCount
+	} else {
+		var err error
+		cc, err = dbR.GetChatWithParticipants(behalfParticipantId, chatId, fixedParticipantsSize, participantsOffset)
+		if err != nil {
+			return nil, err
+		}
+		if cc == nil {
+			return nil, nil
+		}
+
+		users, err = restClient.GetUsers(cc.ParticipantsIds, c.Request().Context())
 		if err != nil {
 			users = []*dto.User{}
 			GetLogEntry(c.Request().Context()).Warn("Error during getting users from aaa")
 		}
-
-		unreadMessages, err := dbR.GetUnreadMessagesCount(cc.Id, behalfParticipantId)
-		if err != nil {
-			return nil, err
-		}
-		chatDto := convertToDto(cc, users, unreadMessages)
-
-		for _, participant := range users {
-			utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
-		}
-
-		return chatDto, nil
 	}
+
+	unreadMessages, err := dbR.GetUnreadMessagesCount(cc.Id, behalfParticipantId)
+	if err != nil {
+		return nil, err
+	}
+	chatDto := convertToDto(cc, users, unreadMessages)
+
+	for _, participant := range users {
+		utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
+	}
+
+	return chatDto, nil
 }
 
 func (ch *ChatHandler) GetChat(c echo.Context) error {
@@ -172,13 +203,15 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 	participantsPage := utils.FixPageString(c.QueryParam("page"))
 	participantsSize := utils.FixSizeString(c.QueryParam("size"))
 	participantsOffset := utils.GetOffset(participantsPage, participantsSize)
+	userSearchString := c.QueryParam("userSearchString")
+	userSearchString = strings.TrimSpace(userSearchString)
 
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	if chat, err := getChat(ch.db, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsSize, participantsOffset); err != nil {
+	if chat, err := getChat(ch.db, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsPage, participantsSize, participantsOffset, userSearchString); err != nil {
 		return err
 	} else {
 		if chat == nil {
@@ -284,7 +317,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 			}
 		}
 
-		responseDto, err := getChat(tx, ch.restClient, c, id, userPrincipalDto.UserId, userPrincipalDto, 0, 0)
+		responseDto, err := getChat(tx, ch.restClient, c, id, userPrincipalDto.UserId, userPrincipalDto, 0, 0, 0, "")
 		if err != nil {
 			return err
 		}
@@ -413,7 +446,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			}
 		}
 
-		if responseDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, userPrincipalDto, 0, 0); err != nil {
+		if responseDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, userPrincipalDto, 0, 0, 0, ""); err != nil {
 			return err
 		} else {
 			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
@@ -454,7 +487,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, nil, 0, 0); err != nil {
+		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, nil, 0, 0, 0, ""); err != nil {
 			return err
 		} else {
 			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
@@ -536,7 +569,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, participantIdFromRequest)
 		}
 
-		if responseDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsSize, participantsOffset); err != nil {
+		if responseDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsPage, participantsSize, participantsOffset, ""); err != nil {
 			return err
 		} else {
 			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
@@ -598,7 +631,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		for _, participantIdFromRequest := range participantIds {
 			userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, participantIdFromRequest)
 		}
-		if chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsSize, participantsOffset); err != nil {
+		if chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsPage, participantsSize, participantsOffset, ""); err != nil {
 			return err
 		} else {
 			copiedChat, err := ch.getChatWithAdminedUsers(c, chatDto, tx)
@@ -671,7 +704,7 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		for _, participantIdFromRequest := range participantIds {
 			userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, participantIdFromRequest)
 		}
-		if chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsSize, participantsOffset); err != nil {
+		if chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsPage, participantsSize, participantsOffset, ""); err != nil {
 			return err
 		} else {
 			copiedChat, err := ch.getChatWithAdminedUsers(c, chatDto, tx)
@@ -715,7 +748,7 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 		return err
 	}
 
-	users, err := ch.restClient.SearchGetUsers(searchString, false, excludingIds, c.Request().Context())
+	users, _, err := ch.restClient.SearchGetUsers(searchString, false, excludingIds, 0, 0, c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -746,7 +779,7 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 	searchString := c.QueryParam("searchString")
 	includingIds, err := ch.db.GetAllParticipantIds(chatId)
 
-	users, err := ch.restClient.SearchGetUsers(searchString, true, includingIds, c.Request().Context())
+	users, _, err := ch.restClient.SearchGetUsers(searchString, true, includingIds, 0, 0, c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -835,7 +868,7 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 			return err
 		}
 
-		responseDto, err := getChat(tx, ch.restClient, c, chatId2, userPrincipalDto.UserId, userPrincipalDto, 0, 0)
+		responseDto, err := getChat(tx, ch.restClient, c, chatId2, userPrincipalDto.UserId, userPrincipalDto, 0, 0, 0, "")
 		if err != nil {
 			return err
 		}
