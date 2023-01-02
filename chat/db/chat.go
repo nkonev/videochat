@@ -93,11 +93,40 @@ func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) 
 	}
 }
 
-func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, searchString string) ([]*Chat, error) {
+func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
 	searchString = "%" + searchString + "%"
-	rows, err = db.Query(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND title ILIKE $4 ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset, searchString)
+
+	var additionalUserIds = ""
+	first := true
+	for _, userId := range additionalFoundUserIds {
+		if !first {
+			additionalUserIds = additionalUserIds + ","
+		}
+		additionalUserIds = additionalUserIds + utils.Int64ToString(userId)
+		first = false
+	}
+	var additionalUserIdsClause = ""
+	if len(additionalFoundUserIds) > 0 {
+		additionalUserIdsClause = fmt.Sprintf(" OR ( tet_a_tet IS true AND id IN ( SELECT chat_id FROM chat_participant WHERE user_id IN (%s) ) ) ", additionalUserIds)
+	}
+
+	rows, err = db.Query(fmt.Sprintf(`
+		SELECT 
+		    id, 
+		    title, 
+		    avatar, 
+		    avatar_big,
+		    last_update_date_time,
+		    tet_a_tet 
+		FROM chat 
+		WHERE 
+		    ( id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 )  AND title ILIKE $4 ) 
+			%s
+			ORDER BY (last_update_date_time, id) DESC 
+			LIMIT $2 OFFSET $3
+	`, additionalUserIdsClause), participantId, limit, offset, searchString)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
@@ -148,14 +177,14 @@ type ChatQueryByIds struct {
 	Ids []int64
 }
 
-func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, searchString string, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
 	var err error
 	var chats []*Chat
 
 	if searchString == "" {
 		chats, err = db.GetChatsByLimitOffset(participantId, limit, offset)
 	} else {
-		chats, err = db.GetChatsByLimitOffsetSearch(participantId, limit, offset, searchString)
+		chats, err = db.GetChatsByLimitOffsetSearch(participantId, limit, offset, searchString, additionalFoundUserIds)
 	}
 
 	if err != nil {

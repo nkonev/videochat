@@ -68,11 +68,22 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	searchString := c.QueryParam("searchString")
 	searchString = strings.TrimSpace(searchString)
 	var dbChats []*db.ChatWithParticipants
+	var additionalFoundUserIds = []int64{}
+
 	if searchString != "" {
 		searchString = TrimAmdSanitize(ch.policy, searchString)
+
+		users, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, c.Request().Context())
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
+			return err
+		}
+		for _, u := range users {
+			additionalFoundUserIds = append(additionalFoundUserIds, u.Id)
+		}
 	}
 
-	dbChats, err := ch.db.GetChatsWithParticipants(userPrincipalDto.UserId, size, offset, searchString, userPrincipalDto, 0, 0)
+	dbChats, err := ch.db.GetChatsWithParticipants(userPrincipalDto.UserId, size, offset, searchString, additionalFoundUserIds, userPrincipalDto, 0, 0)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error get chats from db %v", err)
 		return err

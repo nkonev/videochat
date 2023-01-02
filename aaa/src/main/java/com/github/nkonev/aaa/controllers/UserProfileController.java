@@ -150,9 +150,16 @@ public class UserProfileController {
         var searchString = request.searchString.trim();
 
         final String forDbSearch = "%" + searchString + "%";
-        List<UserAccount> resultPage =
-                request.including ? userAccountRepository.findByUsernameContainsIgnoreCaseAndIdIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds) :
-                userAccountRepository.findByUsernameContainsIgnoreCaseAndIdNotIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds);
+        List<UserAccount> resultPage;
+        if (request.userIds == null || request.userIds.isEmpty()) {
+            resultPage = userAccountRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
+        } else {
+            if (request.including) {
+                resultPage = userAccountRepository.findByUsernameContainsIgnoreCaseAndIdIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds);
+            } else {
+                resultPage = userAccountRepository.findByUsernameContainsIgnoreCaseAndIdNotIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds);
+            }
+        }
 
         return resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList());
     }
