@@ -188,6 +188,12 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 			CorrelationID: &fileUploadedEvent.CorrelationId,
 		}
 	}
+
+	participants := e.Participants
+	if participants != nil {
+		result.ParticipantsEvent = convertUsersWithAdmin(*participants)
+	}
+
 	return result
 }
 func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
@@ -198,24 +204,23 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 	chatDtoWithAdmin := e.ChatNotification
 	if chatDtoWithAdmin != nil {
 		ret.ChatEvent = &model.ChatDto{ // dto.ChatDtoWithAdmin
-			ID:                       chatDtoWithAdmin.Id,
-			Name:                     chatDtoWithAdmin.Name,
-			Avatar:                   chatDtoWithAdmin.Avatar.Ptr(),
-			AvatarBig:                chatDtoWithAdmin.AvatarBig.Ptr(),
-			LastUpdateDateTime:       chatDtoWithAdmin.LastUpdateDateTime,
-			ParticipantIds:           chatDtoWithAdmin.ParticipantIds,
-			CanEdit:                  chatDtoWithAdmin.CanEdit.Ptr(),
-			CanDelete:                chatDtoWithAdmin.CanDelete.Ptr(),
-			CanLeave:                 chatDtoWithAdmin.CanLeave.Ptr(),
-			UnreadMessages:           chatDtoWithAdmin.UnreadMessages,
-			CanBroadcast:             chatDtoWithAdmin.CanBroadcast,
-			CanVideoKick:             chatDtoWithAdmin.CanVideoKick,
-			CanAudioMute:             chatDtoWithAdmin.CanAudioMute,
-			CanChangeChatAdmins:      chatDtoWithAdmin.CanChangeChatAdmins,
-			TetATet:                  chatDtoWithAdmin.IsTetATet,
-			ParticipantsCount:        chatDtoWithAdmin.ParticipantsCount,
-			ChangingParticipantsPage: chatDtoWithAdmin.ChangingParticipantsPage,
-			Participants:             convertUsers(chatDtoWithAdmin.Participants),
+			ID:                  chatDtoWithAdmin.Id,
+			Name:                chatDtoWithAdmin.Name,
+			Avatar:              chatDtoWithAdmin.Avatar.Ptr(),
+			AvatarBig:           chatDtoWithAdmin.AvatarBig.Ptr(),
+			LastUpdateDateTime:  chatDtoWithAdmin.LastUpdateDateTime,
+			ParticipantIds:      chatDtoWithAdmin.ParticipantIds,
+			CanEdit:             chatDtoWithAdmin.CanEdit.Ptr(),
+			CanDelete:           chatDtoWithAdmin.CanDelete.Ptr(),
+			CanLeave:            chatDtoWithAdmin.CanLeave.Ptr(),
+			UnreadMessages:      chatDtoWithAdmin.UnreadMessages,
+			CanBroadcast:        chatDtoWithAdmin.CanBroadcast,
+			CanVideoKick:        chatDtoWithAdmin.CanVideoKick,
+			CanAudioMute:        chatDtoWithAdmin.CanAudioMute,
+			CanChangeChatAdmins: chatDtoWithAdmin.CanChangeChatAdmins,
+			TetATet:             chatDtoWithAdmin.IsTetATet,
+			ParticipantsCount:   chatDtoWithAdmin.ParticipantsCount,
+			Participants:        convertUsersWithAdmin(chatDtoWithAdmin.Participants),
 		}
 	}
 
@@ -306,6 +311,16 @@ func convertUser(owner *dto.User) *model.User {
 		Avatar: owner.Avatar.Ptr(),
 	}
 }
+func convertUsers(participants []*dto.User) []*model.User {
+	if participants == nil {
+		return nil
+	}
+	usrs := []*model.User{}
+	for _, user := range participants {
+		usrs = append(usrs, convertUser(user))
+	}
+	return usrs
+}
 func convertUserWithAdmin(owner *dto.UserWithAdmin) *model.UserWithAdmin {
 	if owner == nil {
 		return nil
@@ -317,7 +332,7 @@ func convertUserWithAdmin(owner *dto.UserWithAdmin) *model.UserWithAdmin {
 		Admin:  owner.Admin,
 	}
 }
-func convertUsers(participants []*dto.UserWithAdmin) []*model.UserWithAdmin {
+func convertUsersWithAdmin(participants []*dto.UserWithAdmin) []*model.UserWithAdmin {
 	if participants == nil {
 		return nil
 	}

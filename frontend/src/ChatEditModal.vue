@@ -182,7 +182,7 @@
                         })
                         .finally(() => (this.isLoading = false))
                 } else {
-                    axios.get(`/api/chat/${this.editChatId}/user?searchString=${searchString}`)
+                    axios.get(`/api/chat/${this.editChatId}/user-candidate?searchString=${searchString}`)
                         .then((response) => {
                             console.log("Fetched users", response.data);
                             this.people = [...this.people, ...response.data];
@@ -200,28 +200,24 @@
                         avatar: this.editDto.avatar,
                         avatarBig: this.editDto.avatarBig,
                     };
-                    (this.isNew ? axios.post(`/api/chat`, dtoToPost) : axios.put(`/api/chat`, dtoToPost))
-                        .then(({data}) => {
-                            return data
-                        })
-                        .then((chatData)=> {
-                            if (!this.isNew && this.editDto.participantIds && this.editDto.participantIds.length) {
+
+                    if (this.isNew) {
+                        axios.post(`/api/chat`, dtoToPost).then(({data}) => {
+                            const routeDto = { name: chat_name, params: { id: data.id }};
+                            this.$router.push(routeDto);
+                        }).then(()=>this.closeModal());
+                    } else {
+                        axios.put(`/api/chat`, dtoToPost).then(()=>{
+                            if (this.editDto.participantIds && this.editDto.participantIds.length) {
+                                // we firstly add users...
                                 return axios.put(`/api/chat/${this.editChatId}/user`, {
                                     addParticipantIds: this.editDto.participantIds
-                                }).then(() => {
-                                    return chatData
                                 })
                             } else {
-                                return Promise.resolve(chatData)
+                                return Promise.resolve()
                             }
-                        })
-                        .then((chatData) => {
-                            this.closeModal();
-                            if (this.isNew) {
-                                const routeDto = { name: chat_name, params: { id: chatData.id }};
-                                this.$router.push(routeDto);
-                            }
-                        })
+                        }).then(()=>this.closeModal());
+                    }
                 }
             },
             validate () {

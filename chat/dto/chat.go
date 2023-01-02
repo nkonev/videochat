@@ -96,8 +96,7 @@ func (r *BaseChatDto) GetIsTetATet() bool {
 // copied view for GET /chat/:id
 type ChatDtoWithAdmin struct {
 	BaseChatDto
-	Participants             []*UserWithAdmin `json:"participants"`
-	ChangingParticipantsPage int              `json:"changingParticipantsPage"`
+	Participants []*UserWithAdmin `json:"participants"`
 }
 
 type ChatName struct {

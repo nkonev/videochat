@@ -17,6 +17,7 @@ type ChatEvent struct {
 	UserTypingNotification       *UserTypingNotification       `json:"userTypingNotification"`
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
 	FileUploadedEvent            *FileUploadedEvent            `json:"fileUploadedEvent"`
+	Participants                 *[]*UserWithAdmin             `json:"participants"`
 }
 
 func (ChatEvent) Name() eventbus.EventName {

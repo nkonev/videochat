@@ -69,7 +69,13 @@
         LOGGED_OUT,
         VIDEO_CALL_USER_COUNT_CHANGED,
         MESSAGE_BROADCAST,
-        REFRESH_ON_WEBSOCKET_RESTORED, OPEN_EDIT_MESSAGE, CHAT_ADD, PROFILE_SET, FILE_UPLOADED,
+        REFRESH_ON_WEBSOCKET_RESTORED,
+        OPEN_EDIT_MESSAGE,
+        CHAT_ADD,
+        PROFILE_SET,
+        FILE_UPLOADED,
+        PARTICIPANT_ADDED,
+        PARTICIPANT_DELETED, PARTICIPANT_EDITED,
     } from "./bus";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
@@ -648,6 +654,12 @@
                                       aType
                                       correlationId
                                     }
+                                    participantsEvent {
+                                      id
+                                      login
+                                      avatar
+                                      admin
+                                    }
                                   }
                                 }
                 `
@@ -671,6 +683,15 @@
                 } else if (getChatEventsData(e).eventType === "file_uploaded") {
                     const d = getChatEventsData(e).fileUploadedEvent;
                     bus.$emit(FILE_UPLOADED, d);
+                } else if (getChatEventsData(e).eventType === "participant_added") {
+                    const d = getChatEventsData(e).participantsEvent;
+                    bus.$emit(PARTICIPANT_ADDED, d);
+                } else if (getChatEventsData(e).eventType === "participant_deleted") {
+                    const d = getChatEventsData(e).participantsEvent;
+                    bus.$emit(PARTICIPANT_DELETED, d);
+                } else if (getChatEventsData(e).eventType === "participant_edited") {
+                    const d = getChatEventsData(e).participantsEvent;
+                    bus.$emit(PARTICIPANT_EDITED, d);
                 }
             },
             updateVideoRecordingState() {

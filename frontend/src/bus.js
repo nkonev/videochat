@@ -51,3 +51,6 @@ export const OPEN_MESSAGE_EDIT_COLOR = "messageEditColor";
 export const MESSAGE_EDIT_COLOR_SET = "messageEditColorSet";
 export const OPEN_NOTIFICATIONS_DIALOG = "openNotifications";
 export const OPEN_MESSAGE_EDIT_MEDIA = "openMessageEditMedia";
+export const PARTICIPANT_ADDED = "participantAdded";
+export const PARTICIPANT_DELETED = "participantDeleted";
+export const PARTICIPANT_EDITED = "participantEdited";

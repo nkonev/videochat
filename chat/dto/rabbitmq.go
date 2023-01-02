@@ -8,6 +8,7 @@ type ChatEvent struct {
 	MessageDeletedNotification   *MessageDeletedDto            `json:"messageDeletedNotification"`
 	UserTypingNotification       *UserTypingNotification       `json:"userTypingNotification"`
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
+	Participants                 *[]*UserWithAdmin             `json:"participants"`
 }
 
 type GlobalEvent struct {

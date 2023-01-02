@@ -156,7 +156,6 @@ vm = new Vue({
                       tetATet
                       canAudioMute
                       participantsCount
-                      changingParticipantsPage
                       participants {
                         id
                         login

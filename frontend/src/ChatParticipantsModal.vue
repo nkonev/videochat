@@ -8,8 +8,8 @@
                 </v-card-title>
 
                 <v-card-text  class="ma-0 pa-0">
-                    <v-list v-if="dto.participants && dto.participants.length > 0">
-                        <template v-for="(item, index) in dto.participants">
+                    <v-list v-if="participantsDto.participants && participantsDto.participants.length > 0">
+                        <template v-for="(item, index) in participantsDto.participants">
                             <v-list-item class="pl-2 ml-1 pr-0 mr-3 mb-1 mt-1">
                                 <v-badge
                                     v-if="item.avatar"
@@ -111,29 +111,33 @@
     import axios from "axios";
     import bus, {
         CHAT_DELETED,
-        CHAT_EDITED,
         CLOSE_SIMPLE_MODAL, OPEN_CHAT_EDIT,
         OPEN_PARTICIPANTS_DIALOG,
-        OPEN_SIMPLE_MODAL, VIDEO_DIAL_STATUS_CHANGED,
+        OPEN_SIMPLE_MODAL, PARTICIPANT_ADDED, PARTICIPANT_DELETED, PARTICIPANT_EDITED, VIDEO_DIAL_STATUS_CHANGED,
     } from "./bus";
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
-    import {chat, chat_name, profile, profile_name, videochat_name} from "./routes";
-    import debounce from "lodash/debounce";
+    import {profile, profile_name, videochat_name} from "./routes";
     import userOnlinePollingMixin from "./userOnlinePollingMixin";
-    import queryMixin from "@/queryMixin";
-
+    import {findIndex, moveToFirstPosition, replaceInArray} from "@/utils";
+    import cloneDeep from "lodash/cloneDeep";
+    import debounce from "lodash/debounce";
     const firstPage = 1;
     const pageSize = 20;
 
     const dtoFactory = ()=>{
         return {
-            id: null,
-            name: "",
-            participantIds: [ ],
             participants: [ ],
+            participantsCount: 0
         }
     };
+
+    const participantsDtoFactory = () => {
+        return {
+            participants: [],
+            participantsCount: 0
+        }
+    }
 
     export default {
         mixins: [userOnlinePollingMixin()],
@@ -141,6 +145,7 @@
             return {
                 show: false,
                 dto: dtoFactory(),
+                participantsDto: participantsDtoFactory(),
                 chatId: null,
                 userSearchString: null,
                 participantsPage: firstPage,
@@ -150,12 +155,12 @@
         computed: {
             ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
             participantsPagesCount() {
-                const count = Math.ceil(this.dto.participantsCount / pageSize);
+                const count = Math.ceil(this.participantsDto.participantsCount / pageSize);
                 console.debug("Calc pages count", count);
                 return count;
             },
             shouldShowPagination() {
-                return this.dto != null && this.dto.participantsCount > pageSize
+                return this.participantsDto != null && this.participantsDto.participantsCount > pageSize
             }
         },
 
@@ -165,46 +170,46 @@
 
                 this.show = true;
                 if (this.chatId && this.show) {
-                    this.loadData();
+                    this.loadData().then(() => this.loadParticipantsData())
                 } else {
                     this.dto = dtoFactory();
-                }
-            },
-            transformParticipants(tmp) {
-                if (tmp.participants != null) {
-                    tmp.participants.forEach(item => {
-                        item.adminLoading = false;
-                        item.online = false;
-                        item.callingTo = false;
-                    });
+                    this.participantsDto = participantsDtoFactory();
                 }
             },
             translatePage() {
                 return this.participantsPage - 1;
             },
             loadData() {
-                this.stopPolling();
                 console.log("Getting info about chat id in modal, chatId=", this.chatId);
                 this.loading = true;
-                axios.get('/api/chat/' + this.chatId, {
+                return axios.get('/api/chat/' + this.chatId)
+                    .then((response) => {
+                        this.dto = response.data;
+                    })
+            },
+            loadParticipantsData() {
+                this.stopPolling();
+                console.log("Getting info about participants in modal, chatId=", this.chatId);
+                this.loading = true;
+                return axios.get('/api/chat/' + this.chatId + '/user', {
                     params: {
                         page: this.translatePage(),
                         size: pageSize,
-                        userSearchString: this.userSearchString
+                        searchString: this.userSearchString
                     },
                 })
                     .then((response) => {
-                        const tmp = response.data;
-                        this.transformParticipants(tmp);
-                        this.dto = tmp;
+                        const tmp = cloneDeep(response.data);
+                        this.transformParticipants(tmp.participants);
+                        this.participantsDto = tmp;
                     }).then(value => {
-                        this.startPolling(
-                            ()=>{ return this.dto.participantIds},
-                            (v) => this.onUserOnlineChanged(v)
-                        );
-                    }).finally(() => {
-                        this.loading = false;
-                    })
+                    this.startPolling(
+                        ()=>{ return this.participantsDto.participants.map((p)=> p.id ) },
+                        (v) => this.onUserOnlineChanged(v)
+                    );
+                }).finally(() => {
+                    this.loading = false;
+                })
             },
             changeChatAdmin(item) {
                 item.adminLoading = true;
@@ -225,7 +230,7 @@
                         const routerNewState = { name: videochat_name};
                         this.$router.push(routerNewState);
                     }
-                    for (const participant of this.dto.participants) {
+                    for (const participant of this.participantsDto.participants) {
                         if (participant.id == dto.id) {
                             participant.callingTo = call;
                             break
@@ -238,39 +243,6 @@
             },
             forceMute(userId) {
                 axios.put(`/api/video/${this.dto.id}/mute?userId=${userId}`)
-            },
-            onChatChange(dto) {
-                if (this.show && dto.id == this.chatId) {
-                    const oldParticipants = this.dto.participants;
-                    const oldParticipantIds = this.dto.participantIds;
-
-                    const clonedDto = Object.assign({}, dto);
-                    delete clonedDto.participants;
-                    delete clonedDto.participantIds;
-                    delete clonedDto.changingParticipantsPage;
-
-                    const serverPage = this.translatePage();
-
-                    this.dto = dtoFactory();
-                    this.$nextTick(()=> {
-                        this.dto = clonedDto;
-                        if (dto.changingParticipantsPage == serverPage) {
-                            if (dto.participants) {
-                                const tmp = dto;
-                                this.transformParticipants(tmp);
-                                this.dto = tmp;
-                            } else { // no participants means that we need switch page back
-                                if (this.participantsPage > firstPage) {
-                                    this.participantsPage--;
-                                    this.loadData();
-                                }
-                            }
-                        } else { // restore old participants - keep untouched
-                            this.dto.participants = oldParticipants;
-                            this.dto.participantIds = oldParticipantIds;
-                        }
-                    });
-                }
             },
             deleteParticipant(participant) {
                 bus.$emit(OPEN_SIMPLE_MODAL, {
@@ -296,6 +268,7 @@
                 this.show = false;
                 this.chatId = null;
                 this.dto = dtoFactory();
+                this.participantsDto = participantsDtoFactory();
                 this.userSearchString = null;
                 this.participantsPage = firstPage;
                 this.stopPolling();
@@ -309,8 +282,8 @@
                 }
             },
             onUserOnlineChanged(dtos) {
-                if (this.dto.participants) {
-                    this.dto.participants.forEach(item => {
+                if (this.participantsDto.participants) {
+                    this.participantsDto.participants.forEach(item => {
                         dtos.forEach(dtoItem => {
                             if (dtoItem.userId == item.id) {
                                 item.online = dtoItem.online;
@@ -321,10 +294,10 @@
                 }
             },
             onChatDialStatusChange(dto) {
-                if (!this.show || dto.chatId != this.chatId || !this.dto.participants) {
+                if (!this.show || dto.chatId != this.chatId || !this.participantsDto.participants) {
                     return;
                 }
-                for (const participant of this.dto.participants) {
+                for (const participant of this.participantsDto.participants) {
                     innerLoop:
                     for (const videoDialChanged of dto.dials) {
                         if (participant.id == videoDialChanged.userId) {
@@ -346,9 +319,71 @@
             },
             doSearch(){
                 if (this.show) {
-                    this.loadData();
+                    this.loadParticipantsData();
                 }
-            }
+            },
+            transformParticipants(participants) {
+                if (participants != null) {
+                    participants.forEach(item => {
+                        item.adminLoading = false;
+                        item.online = false;
+                        item.callingTo = false;
+                    });
+                }
+            },
+
+            addItem(dto) {
+                console.log("Adding item", dto);
+                this.participantsDto.participants.unshift(dto);
+            },
+            changeItem(dto) {
+                console.log("Replacing item", dto);
+                if (this.hasItem(dto)) {
+                    replaceInArray(this.participantsDto.participants, dto);
+                    moveToFirstPosition(this.participantsDto.participants, dto)
+                } else {
+                    this.participantsDto.participants.unshift(dto);
+                }
+            },
+            removeItem(dto) {
+                if (this.hasItem(dto)) {
+                    console.log("Removing item", dto);
+                    const idxToRemove = findIndex(this.participantsDto.participants, dto);
+                    this.participantsDto.participants.splice(idxToRemove, 1);
+                } else {
+                    console.log("Item was not be removed", dto);
+                }
+            },
+            // does should change items list (new item added to visible part or not for example)
+            hasItem(item) {
+                let idxOf = findIndex(this.participantsDto.participants, item);
+                return idxOf !== -1;
+            },
+
+            onParticipantAdded(users) {
+                const tmp = cloneDeep(users);
+                this.transformParticipants(tmp);
+                for (const user of tmp) {
+                    this.addItem(user);
+                }
+                this.$forceUpdate();
+            },
+            onParticipantDeleted(users) {
+                const tmp = cloneDeep(users);
+                this.transformParticipants(tmp);
+                for (const user of tmp) {
+                    this.removeItem(user);
+                }
+                this.$forceUpdate();
+            },
+            onParticipantEdited(users) {
+                const tmp = cloneDeep(users);
+                this.transformParticipants(tmp);
+                for (const user of tmp) {
+                    this.changeItem(user);
+                }
+                this.$forceUpdate();
+            },
         },
         watch: {
             userSearchString (searchString) {
@@ -357,8 +392,8 @@
             participantsPage(newValue) {
                 if (this.show) {
                     console.debug("SettingNewPage", newValue);
-                    this.dto = dtoFactory();
-                    this.loadData();
+                    this.participantsDto = participantsDtoFactory();
+                    this.loadParticipantsData();
                 }
             },
             show(newValue) {
@@ -371,13 +406,17 @@
         created() {
             this.doSearch = debounce(this.doSearch, 700);
             bus.$on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
-            bus.$on(CHAT_EDITED, this.onChatChange);
+            bus.$on(PARTICIPANT_ADDED, this.onParticipantAdded);
+            bus.$on(PARTICIPANT_DELETED, this.onParticipantDeleted);
+            bus.$on(PARTICIPANT_EDITED, this.onParticipantEdited);
             bus.$on(CHAT_DELETED, this.onChatDelete);
             bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
         },
         destroyed() {
             bus.$off(OPEN_PARTICIPANTS_DIALOG, this.showModal);
-            bus.$off(CHAT_EDITED, this.onChatChange);
+            bus.$off(PARTICIPANT_ADDED, this.onParticipantAdded);
+            bus.$off(PARTICIPANT_DELETED, this.onParticipantDeleted);
+            bus.$off(PARTICIPANT_EDITED, this.onParticipantEdited);
             bus.$off(CHAT_DELETED, this.onChatDelete);
             bus.$off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
         },

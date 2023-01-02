@@ -51,7 +51,6 @@ type ChatDto {
     canAudioMute:        Boolean!
     participants:             [UserWithAdmin!]!
     participantsCount:        Int!
-    changingParticipantsPage: Int!
 }
 
 type ChatDeletedDto {
@@ -83,6 +82,7 @@ type ChatEvent {
     userTypingEvent: UserTypingDto
     messageBroadcastEvent: MessageBroadcastNotification
     fileUploadedEvent: FileUploadedEvent
+    participantsEvent: [UserWithAdmin!]
 }
 
 type VideoUserCountChangedDto {

@@ -56,24 +56,23 @@ type ComplexityRoot struct {
 	}
 
 	ChatDto struct {
-		Avatar                   func(childComplexity int) int
-		AvatarBig                func(childComplexity int) int
-		CanAudioMute             func(childComplexity int) int
-		CanBroadcast             func(childComplexity int) int
-		CanChangeChatAdmins      func(childComplexity int) int
-		CanDelete                func(childComplexity int) int
-		CanEdit                  func(childComplexity int) int
-		CanLeave                 func(childComplexity int) int
-		CanVideoKick             func(childComplexity int) int
-		ChangingParticipantsPage func(childComplexity int) int
-		ID                       func(childComplexity int) int
-		LastUpdateDateTime       func(childComplexity int) int
-		Name                     func(childComplexity int) int
-		ParticipantIds           func(childComplexity int) int
-		Participants             func(childComplexity int) int
-		ParticipantsCount        func(childComplexity int) int
-		TetATet                  func(childComplexity int) int
-		UnreadMessages           func(childComplexity int) int
+		Avatar              func(childComplexity int) int
+		AvatarBig           func(childComplexity int) int
+		CanAudioMute        func(childComplexity int) int
+		CanBroadcast        func(childComplexity int) int
+		CanChangeChatAdmins func(childComplexity int) int
+		CanDelete           func(childComplexity int) int
+		CanEdit             func(childComplexity int) int
+		CanLeave            func(childComplexity int) int
+		CanVideoKick        func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		LastUpdateDateTime  func(childComplexity int) int
+		Name                func(childComplexity int) int
+		ParticipantIds      func(childComplexity int) int
+		Participants        func(childComplexity int) int
+		ParticipantsCount   func(childComplexity int) int
+		TetATet             func(childComplexity int) int
+		UnreadMessages      func(childComplexity int) int
 	}
 
 	ChatEvent struct {
@@ -82,6 +81,7 @@ type ComplexityRoot struct {
 		MessageBroadcastEvent func(childComplexity int) int
 		MessageDeletedEvent   func(childComplexity int) int
 		MessageEvent          func(childComplexity int) int
+		ParticipantsEvent     func(childComplexity int) int
 		UserTypingEvent       func(childComplexity int) int
 	}
 
@@ -297,13 +297,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatDto.CanVideoKick(childComplexity), true
 
-	case "ChatDto.changingParticipantsPage":
-		if e.complexity.ChatDto.ChangingParticipantsPage == nil {
-			break
-		}
-
-		return e.complexity.ChatDto.ChangingParticipantsPage(childComplexity), true
-
 	case "ChatDto.id":
 		if e.complexity.ChatDto.ID == nil {
 			break
@@ -394,6 +387,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatEvent.MessageEvent(childComplexity), true
+
+	case "ChatEvent.participantsEvent":
+		if e.complexity.ChatEvent.ParticipantsEvent == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.ParticipantsEvent(childComplexity), true
 
 	case "ChatEvent.userTypingEvent":
 		if e.complexity.ChatEvent.UserTypingEvent == nil {
@@ -949,7 +949,6 @@ type ChatDto {
     canAudioMute:        Boolean!
     participants:             [UserWithAdmin!]!
     participantsCount:        Int!
-    changingParticipantsPage: Int!
 }
 
 type ChatDeletedDto {
@@ -981,6 +980,7 @@ type ChatEvent {
     userTypingEvent: UserTypingDto
     messageBroadcastEvent: MessageBroadcastNotification
     fileUploadedEvent: FileUploadedEvent
+    participantsEvent: [UserWithAdmin!]
 }
 
 type VideoUserCountChangedDto {
@@ -1955,50 +1955,6 @@ func (ec *executionContext) fieldContext_ChatDto_participantsCount(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _ChatDto_changingParticipantsPage(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChatDto_changingParticipantsPage(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ChangingParticipantsPage, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ChatDto_changingParticipantsPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ChatDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _ChatEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChatEvent_eventType(ctx, field)
 	if err != nil {
@@ -2295,6 +2251,57 @@ func (ec *executionContext) fieldContext_ChatEvent_fileUploadedEvent(ctx context
 				return ec.fieldContext_FileUploadedEvent_correlationId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FileUploadedEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatEvent_participantsEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_participantsEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParticipantsEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.UserWithAdmin)
+	fc.Result = res
+	return ec.marshalOUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_participantsEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserWithAdmin_id(ctx, field)
+			case "login":
+				return ec.fieldContext_UserWithAdmin_login(ctx, field)
+			case "avatar":
+				return ec.fieldContext_UserWithAdmin_avatar(ctx, field)
+			case "admin":
+				return ec.fieldContext_UserWithAdmin_admin(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserWithAdmin", field.Name)
 		},
 	}
 	return fc, nil
@@ -3108,8 +3115,6 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(ctx context.Conte
 				return ec.fieldContext_ChatDto_participants(ctx, field)
 			case "participantsCount":
 				return ec.fieldContext_ChatDto_participantsCount(ctx, field)
-			case "changingParticipantsPage":
-				return ec.fieldContext_ChatDto_changingParticipantsPage(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatDto", field.Name)
 		},
@@ -4262,6 +4267,8 @@ func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Con
 				return ec.fieldContext_ChatEvent_messageBroadcastEvent(ctx, field)
 			case "fileUploadedEvent":
 				return ec.fieldContext_ChatEvent_fileUploadedEvent(ctx, field)
+			case "participantsEvent":
+				return ec.fieldContext_ChatEvent_participantsEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatEvent", field.Name)
 		},
@@ -7149,13 +7156,6 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "changingParticipantsPage":
-
-			out.Values[i] = ec._ChatDto_changingParticipantsPage(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7203,6 +7203,10 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 		case "fileUploadedEvent":
 
 			out.Values[i] = ec._ChatEvent_fileUploadedEvent(ctx, field, obj)
+
+		case "participantsEvent":
+
+			out.Values[i] = ec._ChatEvent_participantsEvent(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8935,6 +8939,53 @@ func (ec *executionContext) marshalOUserTypingDto2ᚖnkonevᚗnameᚋeventᚋgra
 		return graphql.Null
 	}
 	return ec._UserTypingDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserWithAdmin) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUserWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdmin(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOVideoCallInvitationDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoCallInvitationDto(ctx context.Context, sel ast.SelectionSet, v *model.VideoCallInvitationDto) graphql.Marshaler {
