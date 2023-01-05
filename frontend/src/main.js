@@ -92,6 +92,12 @@ axios.interceptors.response.use((response) => {
     store.commit(UNSET_USER);
     bus.$emit(LOGGED_OUT, null);
     return Promise.reject(error)
+  } else if (error && error.response && error.response.status == 413 ) {
+     const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
+     console.error(consoleErrorMessage);
+     const errorMessage  = "No free space left. Please contact the administrator.";
+     vm.setError(null, errorMessage);
+     return Promise.reject(error)
   } else if (error.config.url != CheckForNewUrl && !error.config.url.includes('/message/read/')) {
     const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
     console.error(consoleErrorMessage);
@@ -262,8 +268,7 @@ vm = new Vue({
           const currentRouteName = this.$route.name;
           const routerNewState = {name: currentRouteName};
           routerNewState.query = this.$route.query;
-          this.$router.push(routerNewState).catch(() => {
-          });
+          this.$router.push(routerNewState).catch(() => { });
       }
     };
     Vue.prototype.getMessageId = (hash) => {

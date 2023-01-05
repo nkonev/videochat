@@ -126,8 +126,7 @@
     const pageSize = 20;
 
     const dtoFactory = ()=>{
-        return {
-        }
+        return { }
     };
 
     const participantsDtoFactory = () => {
