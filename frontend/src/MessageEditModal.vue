@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="show" fullscreen>
+    <v-dialog v-model="show" fullscreen persistent>
         <v-card>
             <v-toolbar
                 dark
