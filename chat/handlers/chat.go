@@ -505,6 +505,16 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 
 		ch.notificator.NotifyAboutChangeParticipants(c, participantIds, chatId, newUsersWithAdmin)
 
+		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, nil, 0, 0)
+		if err != nil {
+			return err
+		}
+		copiedChat, err := ch.getChatWithAdminedUsers(c, tmpDto, tx)
+		if err != nil {
+			return err
+		}
+		ch.notificator.NotifyAboutChangeChat(c, copiedChat, []int64{interestingUserId}, tx)
+
 		return c.JSON(http.StatusAccepted, newUsersWithAdmin)
 	})
 	if errOuter != nil {
