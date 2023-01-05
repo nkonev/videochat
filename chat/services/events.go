@@ -109,7 +109,7 @@ func chatNotifyCommon(userIds []int64, not *eventsImpl, c echo.Context, newChatD
 			err = not.rabbitEventPublisher.Publish(dto.GlobalEvent{
 				UserId:           participantId,
 				EventType:        eventType,
-				ChatNotification: newChatDto,
+				ChatNotification: copied,
 			})
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
