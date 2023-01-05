@@ -110,7 +110,7 @@
 <script>
     import axios from "axios";
     import bus, {
-        CHAT_DELETED,
+        CHAT_DELETED, CHAT_EDITED,
         CLOSE_SIMPLE_MODAL, OPEN_CHAT_EDIT,
         OPEN_PARTICIPANTS_DIALOG,
         OPEN_SIMPLE_MODAL, PARTICIPANT_ADDED, PARTICIPANT_DELETED, PARTICIPANT_EDITED, VIDEO_DIAL_STATUS_CHANGED,
@@ -127,8 +127,6 @@
 
     const dtoFactory = ()=>{
         return {
-            participants: [ ],
-            participantsCount: 0
         }
     };
 
@@ -281,6 +279,10 @@
                     this.closeModal();
                 }
             },
+            onChatEdit(dto) {
+                // actually it is need only to reflect canEdit and friends
+                this.dto = dto;
+            },
             onUserOnlineChanged(dtos) {
                 if (this.participantsDto.participants) {
                     this.participantsDto.participants.forEach(item => {
@@ -410,6 +412,7 @@
             bus.$on(PARTICIPANT_DELETED, this.onParticipantDeleted);
             bus.$on(PARTICIPANT_EDITED, this.onParticipantEdited);
             bus.$on(CHAT_DELETED, this.onChatDelete);
+            bus.$on(CHAT_EDITED, this.onChatEdit);
             bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
         },
         destroyed() {
@@ -418,6 +421,7 @@
             bus.$off(PARTICIPANT_DELETED, this.onParticipantDeleted);
             bus.$off(PARTICIPANT_EDITED, this.onParticipantEdited);
             bus.$off(CHAT_DELETED, this.onChatDelete);
+            bus.$off(CHAT_EDITED, this.onChatEdit);
             bus.$off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
         },
     }
