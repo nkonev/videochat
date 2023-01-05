@@ -560,6 +560,8 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		}
 		ch.notificator.NotifyAboutChangeChat(c, copiedChat, tmpDto.ParticipantIds, tx)
 
+		ch.notificator.NotifyAboutDeleteChat(c, chatId, []int64{interestingUserId}, tx)
+
 		return c.NoContent(http.StatusAccepted)
 	})
 	if errOuter != nil {
