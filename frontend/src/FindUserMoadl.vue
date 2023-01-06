@@ -86,9 +86,7 @@
                     .finally(() => (this.isLoading = false))
             },
             onUserClicked(item) {
-                console.log("onUserClicked", item);
-                this.$router.push(({ name: profile_name, params: { id: item.id}}));
-                this.closeModal();
+                this.$router.push(({ name: profile_name, params: { id: item.id}})).then(()=>this.closeModal());
             },
             closeModal() {
                 console.debug("Closing FindUserModal");
