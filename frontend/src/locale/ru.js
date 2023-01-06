@@ -139,5 +139,6 @@ export default {
     video_is_not_shown: "Если вы не видите видео участника и камера в порядке, попробуйте перезагрузить вкладку",
     link: "Ссылка",
     participants_not_found: "Пользователи не найдены",
-    search_by_users: "Поиск по участникам"
+    search_by_users: "Поиск по участникам",
+    search_by_files: "Поиск по файлам"
 }

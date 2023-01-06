@@ -1,8 +1,11 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="800" scrollable>
+        <v-dialog v-model="show" max-width="800" scrollable :persistent="hasSearchString()">
             <v-card>
-                <v-card-title>{{ fileItemUuid ? $vuetify.lang.t('$vuetify.attached_message_files') : $vuetify.lang.t('$vuetify.attached_chat_files') }}</v-card-title>
+                <v-card-title>
+                    {{ fileItemUuid ? $vuetify.lang.t('$vuetify.attached_message_files') : $vuetify.lang.t('$vuetify.attached_chat_files') }}
+                    <v-text-field class="ml-4 pt-0 mt-0" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.lang.t('$vuetify.search_by_files')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+                </v-card-title>
 
                 <v-card-text>
                     <v-row v-if="!loading">
@@ -85,7 +88,8 @@ import bus, {
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
 import axios from "axios";
-import { getHumanReadableDate, replaceInArray, formatSize } from "./utils";
+import {getHumanReadableDate, replaceInArray, formatSize, hasLength} from "./utils";
+import debounce from "lodash/debounce";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -102,6 +106,7 @@ export default {
             loading: false,
             messageEditing: false,
             filePage: firstPage,
+            searchString: null,
         }
     },
     computed: {
@@ -137,7 +142,8 @@ export default {
                 params: {
                     page: this.translatePage(),
                     size: pageSize,
-                    fileItemUuid : this.fileItemUuid ? this.fileItemUuid : ''
+                    fileItemUuid : this.fileItemUuid ? this.fileItemUuid : '',
+                    searchString: this.searchString
                 },
             })
                 .then((response) => {
@@ -153,6 +159,10 @@ export default {
             this.fileItemUuid = null;
             this.messageEditing = false;
             this.filePage = firstPage;
+            this.searchString = null;
+        },
+        doSearch(){
+            this.updateFiles();
         },
         openUploadModal() {
             bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.fileItemUuid, this.messageEditing);
@@ -205,6 +215,12 @@ export default {
         getDate(item) {
             return getHumanReadableDate(item.lastModified)
         },
+        hasSearchString() {
+            return hasLength(this.searchString)
+        },
+        resetInput() {
+            this.searchString = null;
+        },
     },
     filters: {
         formatSizeFilter(size) {
@@ -223,9 +239,13 @@ export default {
             if (!newValue) {
                 this.closeModal();
             }
-        }
+        },
+        searchString (searchString) {
+            this.doSearch();
+        },
     },
     created() {
+        this.doSearch = debounce(this.doSearch, 700);
         bus.$on(OPEN_VIEW_FILES_DIALOG, this.showModal);
         bus.$on(UPDATE_VIEW_FILES_DIALOG, this.updateFiles);
     },

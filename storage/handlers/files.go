@@ -271,6 +271,10 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 
 	fileItemUuid := c.QueryParam("fileItemUuid")
 
+	searchString := c.QueryParam("searchString")
+	searchString = strings.TrimSpace(searchString)
+	searchString = strings.ToLower(searchString)
+
 	bucketName := h.minioConfig.Files
 
 	GetLogEntry(c.Request().Context()).Debugf("Listing bucket '%v':", bucketName)
@@ -282,7 +286,22 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, true, true, filesSize, filesOffset)
+	var filter func(info *minio.ObjectInfo) bool = nil
+	if searchString != "" {
+		filter = func(info *minio.ObjectInfo) bool {
+			metadata := info.UserMetadata
+
+			_, _, fileName, _, err := services.DeserializeMetadata(metadata, true)
+			if err != nil {
+				Logger.Errorf("Error get metadata: %v", err)
+				return false
+			}
+			normalizedFileName := strings.ToLower(fileName)
+			return strings.Contains(normalizedFileName, searchString)
+		}
+	}
+
+	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, true, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}

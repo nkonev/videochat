@@ -139,5 +139,6 @@ export default {
     video_is_not_shown: "If you don't see the participant's video and camera is ok then try to reload tab",
     link: "Link",
     participants_not_found: "Participants are not found",
-    search_by_users: "Search by users"
+    search_by_users: "Search by users",
+    search_by_files: "Search by files"
 }

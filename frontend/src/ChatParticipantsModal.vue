@@ -1,10 +1,10 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="700" scrollable>
+        <v-dialog v-model="show" max-width="700" scrollable :persistent="hasSearchString()">
             <v-card>
                 <v-card-title>
                     {{ $vuetify.lang.t('$vuetify.participants_modal_title') }}
-                    <v-text-field class="ml-4 pt-0 mt-0" prepend-icon="mdi-magnify" hide-details single-line v-model="userSearchString" :label="$vuetify.lang.t('$vuetify.search_by_users')" clearable clear-icon="mdi-close-circle"></v-text-field>
+                    <v-text-field class="ml-4 pt-0 mt-0" prepend-icon="mdi-magnify" hide-details single-line v-model="userSearchString" :label="$vuetify.lang.t('$vuetify.search_by_users')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
                 </v-card-title>
 
                 <v-card-text  class="ma-0 pa-0">
@@ -119,7 +119,7 @@
     import {GET_USER} from "./store";
     import {profile, profile_name, videochat_name} from "./routes";
     import userOnlinePollingMixin from "./userOnlinePollingMixin";
-    import {findIndex, moveToFirstPosition, replaceInArray} from "@/utils";
+    import {findIndex, hasLength, moveToFirstPosition, replaceInArray} from "@/utils";
     import cloneDeep from "lodash/cloneDeep";
     import debounce from "lodash/debounce";
     const firstPage = 1;
@@ -384,6 +384,12 @@
                     this.changeItem(user);
                 }
                 this.$forceUpdate();
+            },
+            hasSearchString() {
+                return hasLength(this.userSearchString)
+            },
+            resetInput() {
+                this.userSearchString = null;
             },
         },
         watch: {
