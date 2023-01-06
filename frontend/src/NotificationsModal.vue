@@ -117,10 +117,12 @@ export default {
             if (item.messageId) {
                 routeDto.hash = require('./routes').messageIdHashPrefix + item.messageId;
             }
-            this.$router.push(routeDto).then(()=> {
-                this.closeModal();
-                axios.put('/api/notification/read/' + item.id);
-            })
+            this.$router.push(routeDto)
+                .catch(()=>{})
+                .then(()=> {
+                    this.closeModal();
+                    axios.put('/api/notification/read/' + item.id);
+                })
         },
         putNotificationsSettings() {
             axios.put('/api/notification/settings', this.notificationsSettings).then(({data}) => {
