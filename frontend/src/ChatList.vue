@@ -1,6 +1,6 @@
 <template>
     <v-card>
-        <v-list>
+        <v-list v-if="items.length">
             <v-list-item-group v-model="group" color="primary" id="chat-list-items">
             <v-list-item @keydown.esc="onCloseContextMenu()"
                     v-for="(item, index) in items"
@@ -36,6 +36,19 @@
             <template slot="no-results"><span/></template>
         </infinite-loading>
 
+        <v-card v-if="userIsSet && !items.length && itemsLoaded">
+            <v-card-title>{{$vuetify.lang.t('$vuetify.welcome_participant', currentUser.login)}}</v-card-title>
+            <v-card-actions>
+                <v-btn color="primary" @click="createChat()" text>
+                    <v-icon>mdi-plus</v-icon>
+                    {{ $vuetify.lang.t('$vuetify.new_chat') }}
+                </v-btn>
+                <v-btn @click="findUser()" text>
+                    <v-icon>mdi-magnify</v-icon>
+                    {{ $vuetify.lang.t('$vuetify.find_user') }}
+                </v-btn>
+            </v-card-actions>
+        </v-card>
     </v-card>
 
 </template>
@@ -45,14 +58,13 @@
         CHAT_ADD,
         CHAT_EDITED,
         CHAT_DELETED,
-        LOGGED_IN,
         OPEN_CHAT_EDIT,
         OPEN_SIMPLE_MODAL,
         UNREAD_MESSAGES_CHANGED,
         USER_PROFILE_CHANGED,
         CLOSE_SIMPLE_MODAL,
         REFRESH_ON_WEBSOCKET_RESTORED,
-        VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET
+        VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET, OPEN_FIND_USER
     } from "./bus";
     import {chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
@@ -86,6 +98,7 @@
                 items: [],
                 infiniteId: +new Date(),
                 group: -1,
+                itemsLoaded: false,
             }
         },
         components:{
@@ -119,6 +132,7 @@
             resetVariables() {
                 this.items = [];
                 this.page = 0;
+                this.itemsLoaded = false;
             },
             addItem(dto) {
                 console.log("Adding item", dto);
@@ -178,6 +192,7 @@
                     } else {
                         $state.complete();
                     }
+                    this.itemsLoaded = true;
                 });
             },
             editChat(chat) {
@@ -251,6 +266,12 @@
             },
             onCloseContextMenu(){
                 this.$refs.contextMenuRef.onCloseContextMenu()
+            },
+            createChat() {
+                bus.$emit(OPEN_CHAT_EDIT, null);
+            },
+            findUser() {
+                bus.$emit(OPEN_FIND_USER)
             },
         },
         created() {

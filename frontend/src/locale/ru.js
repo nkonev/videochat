@@ -94,6 +94,7 @@ export default {
     files_by: "загрузил",
     files_public_url: "Публичная ссылка",
     delete_from_chat: "Удалить из чата",
+    welcome_participant: "Добро пожаловать, {0}!",
     delete_participant: "Удаление из чата #{0}",
     delete_participant_text: "Вы действительно хотите удалить участника #{0} '{1}' из этого чата ?",
     audio_autoplay_permissions_title: "Разрешения",
