@@ -69,7 +69,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	size := utils.FixSizeString(c.QueryParam("size"))
 	reverse := utils.GetBoolean(c.QueryParam("reverse"))
 	searchString := c.QueryParam("searchString")
-	searchString = TrimAmdSanitize(mc.policy, searchString)
+	searchString = TrimAmdSanitizeAndLower(mc.policy, searchString)
 	hasHash := utils.GetBoolean(c.QueryParam("hasHash"))
 
 	chatIdString := c.Param("id")
