@@ -26,7 +26,7 @@ type RecordHandler struct {
 
 func NewRecordHandler(egressClient *lksdk.EgressClient, restClient *client.RestClient, egressService *services.EgressService, conf *config.ExtendedConfig) (*RecordHandler, error) {
 	var recordPreset livekit.EncodingOptionsPreset
-	switch (conf.RecordPreset) {
+	switch conf.RecordPreset {
 	case "H264_720P_30":
 		recordPreset = livekit.EncodingOptionsPreset_H264_720P_30
 	case "H264_720P_60":
@@ -74,7 +74,7 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	}
 
 	roomName := utils.GetRoomNameFromId(chatId)
-	fileName := fmt.Sprintf("recording_%v.mp4", time.Now().Unix())
+	fileName := fmt.Sprintf("recording_%v.mp4", time.Now().Format("20060102150405"))
 	s3, err := rh.restClient.GetS3(fileName, chatId, userPrincipalDto.UserId, c.Request().Context())
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during gettting s3 %v", err)
