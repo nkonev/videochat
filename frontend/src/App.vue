@@ -141,7 +141,7 @@
 
 
         <v-main>
-            <v-container fluid class="ma-0 pa-0">
+            <v-container fluid class="ma-0 pa-0" style="height: 100%">
                 <v-snackbar v-model="showAlert" :color="errorColor" timeout="-1" :multi-line="true" :transition="false">
                     {{ lastError }}
 

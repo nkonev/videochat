@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-container class="ma-0 pa-0" style="height: 100%" fluid>
         <v-list v-if="items.length">
             <v-list-item-group v-model="group" color="primary" id="chat-list-items">
             <v-list-item @keydown.esc="onCloseContextMenu()"
@@ -36,20 +36,27 @@
             <template slot="no-results"><span/></template>
         </infinite-loading>
 
-        <v-card v-if="userIsSet && !items.length && itemsLoaded">
-            <v-card-title>{{$vuetify.lang.t('$vuetify.welcome_participant', currentUser.login)}}</v-card-title>
-            <v-card-actions>
-                <v-btn color="primary" @click="createChat()" text>
-                    <v-icon>mdi-plus</v-icon>
-                    {{ $vuetify.lang.t('$vuetify.new_chat') }}
-                </v-btn>
-                <v-btn @click="findUser()" text>
-                    <v-icon>mdi-magnify</v-icon>
-                    {{ $vuetify.lang.t('$vuetify.find_user') }}
-                </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-card>
+        <v-container fill-height fluid v-if="userIsSet && !items.length && itemsLoaded" :style="$vuetify.breakpoint.lgAndUp ? 'max-width: 420px' : ''">
+            <v-row align="center" justify="center">
+                <v-col>
+                    <v-card>
+                        <v-card-title class="d-flex justify-space-around">{{$vuetify.lang.t('$vuetify.welcome_participant', currentUser.login)}}</v-card-title>
+                        <v-card-actions  class="d-flex justify-space-around">
+                            <v-btn color="primary" @click="createChat()" text>
+                                <v-icon>mdi-plus</v-icon>
+                                {{ $vuetify.lang.t('$vuetify.new_chat') }}
+                            </v-btn>
+                            <v-btn @click="findUser()" text>
+                                <v-icon>mdi-magnify</v-icon>
+                                {{ $vuetify.lang.t('$vuetify.find_user') }}
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+
+                </v-col>
+            </v-row>
+        </v-container>
+    </v-container>
 
 </template>
 
