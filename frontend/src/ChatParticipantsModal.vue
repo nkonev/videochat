@@ -31,7 +31,7 @@
                                         <v-col>
                                             <v-list-item-title><a @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{item.login + (item.id == currentUser.id ? $vuetify.lang.t('$vuetify.you_brackets') : '' )}}</a></v-list-item-title>
                                         </v-col>
-                                        <v-col>
+                                        <v-col v-if="!isMobile()">
                                             <v-progress-linear
                                                 v-if="item.callingTo"
                                                 color="success"
