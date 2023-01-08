@@ -21,7 +21,6 @@ postgresql:
   maxIdleConnections: 4
   maxLifetime: 30s
   # all available: SELECT cfgname FROM pg_ts_config;
-  regconfig: english
   background: yellow
 
 aaa:

@@ -8,6 +8,8 @@ import (
 	"github.com/guregu/null"
 	"github.com/spf13/viper"
 	. "nkonev.name/chat/logger"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -79,13 +81,11 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		}
 		var err error
 		var rows *sql.Rows
-		var regconfig = viper.GetString("postgresql.regconfig")
-		var background = viper.GetString("postgresql.background")
 		if searchString != "" {
-			searchString = "%" + searchString + "%"
+			searchStringPercents := "%" + searchString + "%"
 			rows, err = db.Query(fmt.Sprintf(`SELECT 
     			m.id, 
-    			ts_headline('%v', m.text, websearch_to_tsquery('%v', $5), $$HighlightAll=true,StartSel='<mark style="background-color: %v; color: inherit">',StopSel='</mark>'$$),
+    			m.text,
     			m.owner_id, 
     			m.create_date_time, 
     			m.edit_date_time, 
@@ -95,7 +95,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 			) 
 			AND %s 
 			AND strip_tags(m.text) ILIKE $5 
-			ORDER BY id %s LIMIT $2`, regconfig, regconfig, background, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId, searchString)
+			ORDER BY id %s LIMIT $2`, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId, searchStringPercents)
 			if err != nil {
 				Logger.Errorf("Error during get chat rows %v", err)
 				return nil, err
@@ -116,10 +116,24 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
+				if searchString != "" {
+					message.Text = bestEffortHighlight(message.Text, searchString)
+				}
 				list = append(list, &message)
 			}
 		}
 		return list, nil
+	}
+}
+
+func bestEffortHighlight(input, searchString string) string {
+	var background = viper.GetString("postgresql.background")
+	toReplace := fmt.Sprintf("<mark style=\"background-color: %v; color: inherit\">%v</mark>", background, searchString)
+	compiled, loclErr := regexp.Compile("(?i)" + searchString)
+	if loclErr == nil {
+		return compiled.ReplaceAllString(input, toReplace)
+	} else {
+		return strings.ReplaceAll(input, searchString, toReplace)
 	}
 }
 
