@@ -27,16 +27,18 @@
                                     </a>
                                 </v-badge>
                                 <v-list-item-content class="ml-4">
-                                    <v-row no-gutters align="center">
-                                        <v-col>
-                                            <v-list-item-title><a @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{item.login + (item.id == currentUser.id ? $vuetify.lang.t('$vuetify.you_brackets') : '' )}}</a></v-list-item-title>
+                                    <v-row no-gutters align="center" class="d-flex flex-row">
+                                        <v-col class="flex-grow-0 flex-shrink-0">
+                                            <v-list-item-title :class="!isMobile() ? 'mr-2' : ''"><a @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{item.login + (item.id == currentUser.id ? $vuetify.lang.t('$vuetify.you_brackets') : '' )}}</a></v-list-item-title>
                                         </v-col>
-                                        <v-col v-if="!isMobile()">
+                                        <v-col v-if="!isMobile()" class="flex-grow-1 flex-shrink-0">
                                             <v-progress-linear
                                                 v-if="item.callingTo"
                                                 color="success"
                                                 buffer-value="0"
+                                                height="16"
                                                 indeterminate
+                                                stream
                                                 rounded
                                                 reverse
                                             ></v-progress-linear>
