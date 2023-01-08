@@ -256,7 +256,7 @@
     import ChooseAvatarModal from "./ChooseAvatarModal";
     import ChatParticipantsModal from "./ChatParticipantsModal";
     import PermissionsWarningModal from "./PermissionsWarningModal";
-    import FindUserModal from "./FindUserMoadl";
+    import FindUserModal from "./FindUserModal";
     import FileUploadModal from './FileUploadModal';
     import FileListModal from "./FileListModal";
     import VideoGlobalSettingsModal from './VideoGlobalSettingsModal';
