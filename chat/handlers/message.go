@@ -545,7 +545,7 @@ func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.
 		}
 	}
 	withoutAnyHtml := mc.stripAllTags.Sanitize(withoutSourceTags)
-	size := utils.Min(len(withoutAnyHtml)-1, viper.GetInt("mentionMaxTextSize"))
+	size := utils.Min(len(withoutAnyHtml), viper.GetInt("mentionMaxTextSize"))
 	if withoutAnyHtml != "" && size > 0 {
 		withoutAnyHtml = withoutAnyHtml[:size]
 	}
