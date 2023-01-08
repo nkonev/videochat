@@ -15,6 +15,10 @@
                 <a class="mx-1 hash" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.id" :title="$vuetify.lang.t('$vuetify.link')">#</a>
             </v-container>
             <div @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" >
+                <div class="embedded-message">
+                    <div class="list-item-head">Bobbi boba</div>
+                    Lorem ipsum
+                </div>
                 <v-container v-html="item.text" class="ma-0 message-item-text"></v-container>
             </div>
         </div>
@@ -81,6 +85,15 @@
 
 <style lang="stylus">
   @import "common.styl"
+
+  .embedded-message {
+      background: #f9f9f9;
+      border-radius 0 10px 10px 0
+      border-left: 4px solid #ccc;
+      margin: 0.5em 0.5em 0 0.5em;
+      padding: 0.3em 0.5em 0.2em 0.5em;
+      quotes: "\201C""\201D""\2018""\2019";
+  }
 
   .user-link {
     height 100%
