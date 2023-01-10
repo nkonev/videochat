@@ -6,10 +6,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/guregu/null"
-	"github.com/spf13/viper"
 	. "nkonev.name/chat/logger"
-	"regexp"
-	"strings"
 	"time"
 )
 
@@ -116,24 +113,10 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
-				if searchString != "" {
-					message.Text = bestEffortHighlight(message.Text, searchString)
-				}
 				list = append(list, &message)
 			}
 		}
 		return list, nil
-	}
-}
-
-func bestEffortHighlight(input, searchString string) string {
-	var background = viper.GetString("postgresql.background")
-	toReplace := fmt.Sprintf("<mark style=\"background-color: %v; color: inherit\">%v</mark>", background, searchString)
-	compiled, loclErr := regexp.Compile("(?i)" + searchString)
-	if loclErr == nil {
-		return compiled.ReplaceAllString(input, toReplace)
-	} else {
-		return strings.ReplaceAll(input, searchString, toReplace)
 	}
 }
 

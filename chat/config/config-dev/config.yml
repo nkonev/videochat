@@ -20,8 +20,6 @@ postgresql:
   maxOpenConnections: 16
   maxIdleConnections: 4
   maxLifetime: 30s
-  # all available: SELECT cfgname FROM pg_ts_config;
-  background: yellow
 
 aaa:
   url:
