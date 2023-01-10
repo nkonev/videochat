@@ -286,7 +286,7 @@
             },
             loadFromStore() {
                 this.editMessageDto = getStoredChatEditMessageDto(this.chatId);
-                if (this.editMessageDto.ownerId != this.currentUser?.id) {
+                if (this.editMessageDto.ownerId && this.editMessageDto.ownerId != this.currentUser?.id) {
                     console.log("Removing owner from saved message")
                     this.editMessageDto.ownerId = null;
                     this.editMessageDto.id = null;
