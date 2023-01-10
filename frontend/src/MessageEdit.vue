@@ -149,13 +149,14 @@
             },
             onSetMessage(dto) {
                 if (!dto) {
-                    this.editMessageDto = chatEditMessageDtoFactory();
+                    // opening modal from mobile
+                    this.loadFromStore();
                 } else {
                     this.editMessageDto = dto;
                     this.saveToStore();
+                    this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+                    this.loadFilesCount();
                 }
-                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
-                this.loadFilesCount();
                 this.$nextTick(()=>{
                     this.$refs.tipTapRef.setCursorToEnd()
                 })

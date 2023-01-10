@@ -16,7 +16,7 @@
                 <v-toolbar-title>{{ isNew ? $vuetify.lang.t('$vuetify.message_creating') : $vuetify.lang.t('$vuetify.message_editing')}}</v-toolbar-title>
             </v-toolbar>
             <div class="message-edit-dialog">
-                <MessageEdit :chatId="chatId" full-height="true"/>
+                <MessageEdit ref="msgEdit" :chatId="chatId" full-height="true"/>
             </div>
         </v-card>
     </v-dialog>

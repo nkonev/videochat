@@ -583,7 +583,7 @@
                     this.scrollDown();
                 }
             },
-            openNewMessageDialog() {
+            openNewMessageDialog() { // on mobile OPEN_EDIT_MESSAGE with the null argument
                 bus.$emit(OPEN_EDIT_MESSAGE, null);
             },
 
