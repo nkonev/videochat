@@ -84,7 +84,7 @@
     import bus, {
         CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_COLOR_SET, MESSAGE_EDIT_LINK_SET,
         OPEN_FILE_UPLOAD_MODAL, OPEN_MESSAGE_EDIT_COLOR, OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA,
-        OPEN_VIEW_FILES_DIALOG,
+        OPEN_VIEW_FILES_DIALOG, PROFILE_SET,
         SET_EDIT_MESSAGE, SET_FILE_ITEM_UUID,
     } from "./bus";
     import debounce from "lodash/debounce";
@@ -280,8 +280,16 @@
                     }
                 }
             },
+            onProfileSet(){
+                this.loadFromStore();
+            },
             loadFromStore() {
                 this.editMessageDto = getStoredChatEditMessageDto(this.chatId);
+                if (this.editMessageDto.ownerId != this.currentUser?.id) {
+                    console.log("Removing owner from saved message")
+                    this.editMessageDto.ownerId = null;
+                    this.editMessageDto.id = null;
+                }
                 this.$refs.tipTapRef.setContent(this.editMessageDto.text);
                 this.loadFilesCount();
             },
@@ -309,6 +317,7 @@
             bus.$on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.$on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.$on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
+            bus.$on(PROFILE_SET, this.onProfileSet);
             this.loadFromStore();
         },
         beforeDestroy() {
@@ -316,6 +325,7 @@
             bus.$off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.$off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.$off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
+            bus.$off(PROFILE_SET, this.onProfileSet);
         },
         created(){
             this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});
