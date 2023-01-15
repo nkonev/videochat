@@ -43,6 +43,12 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 
 	var cam = make(chan *model.ChatEvent)
 	subscribeHandler, err := r.Bus.Subscribe(dto.CHAT_EVENTS, func(event eventbus.Event, t time.Time) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.GetLogEntry(ctx).Errorf("In processing ChatEvents panic recovered: %v", err)
+			}
+		}()
+
 		switch typedEvent := event.(type) {
 		case dto.ChatEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) && typedEvent.ChatId == chatID {
@@ -86,6 +92,12 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 
 	var cam = make(chan *model.GlobalEvent)
 	subscribeHandler, err := r.Bus.Subscribe(dto.GLOBAL_EVENTS, func(event eventbus.Event, t time.Time) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.GetLogEntry(ctx).Errorf("In processing GlobalEvents panic recovered: %v", err)
+			}
+		}()
+
 		switch typedEvent := event.(type) {
 		case dto.GlobalEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) {
