@@ -13,6 +13,8 @@
                 <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
                 <a class="mx-1 hash" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.id" :title="$vuetify.lang.t('$vuetify.link')">#</a>
+                <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.reply')">mdi-reply</v-icon>
+                <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')">mdi-share</v-icon>
             </v-container>
             <div @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" >
                 <div class="embedded-message">

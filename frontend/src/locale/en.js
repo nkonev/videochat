@@ -140,5 +140,7 @@ export default {
     link: "Link",
     participants_not_found: "Participants are not found",
     search_by_users: "Search by users",
-    search_by_files: "Search by files"
+    search_by_files: "Search by files",
+    reply: "Reply",
+    share: "Share"
 }

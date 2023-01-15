@@ -140,5 +140,7 @@ export default {
     link: "Ссылка",
     participants_not_found: "Пользователи не найдены",
     search_by_users: "Поиск по участникам",
-    search_by_files: "Поиск по файлам"
+    search_by_files: "Поиск по файлам",
+    reply: "Ответить",
+    share: "Переслать"
 }
