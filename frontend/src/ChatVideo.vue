@@ -120,8 +120,7 @@ export default {
                     if (!candidateToAppendVideo) {
                         candidateToAppendVideo = this.createComponent(participantIdentityString, position, videoTagId, localVideoProperties);
                     }
-                    //const cameraEnabled = track && track.isSubscribed && !track.isMuted;
-                    const cameraEnabled = track && !track.isMuted;// && track.isSubscribed && !track.isMuted;
+                    const cameraEnabled = track && !track.isMuted;
                     if (!track.isSubscribed) {
                         console.warn("Video track is not subscribed");
                     }
@@ -142,8 +141,7 @@ export default {
                     if (!candidateToAppendAudio) {
                         candidateToAppendAudio = this.createComponent(participantIdentityString, position, videoTagId, localVideoProperties);
                     }
-                    //const micEnabled = track && track.isSubscribed && !track.isMuted;
-                    const micEnabled = track && !track.isMuted// && track.isSubscribed && !track.isMuted;
+                    const micEnabled = track && !track.isMuted;
                     if (!track.isSubscribed) {
                         console.warn("Audio track is not subscribed");
                     }
