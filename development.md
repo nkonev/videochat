@@ -569,3 +569,23 @@ mc event add local/files arn:minio:sqs::primary:amqp --event put,delete
 mc event remove local/files --force
 mc event list local/files
 ```
+
+```
+update message_chat_1 set embed_message_id = 845, embed_message_type = 'reply_on' where id = 734;
+
+SELECT 
+    m.id, 
+    m.text, 
+    m.owner_id,
+    m.create_date_time, 
+    m.edit_date_time, 
+    m.file_item_uuid,
+    me.id as embedded_message_id,
+    me.text as embedded_message_text,
+    me.owner_id as embedded_message_owner_id
+FROM message_chat_1 m
+LEFT JOIN message_chat_1 me 
+ON m.embed_message_id = me.id
+ORDER BY m.id DESC
+LIMIT 10;
+```
