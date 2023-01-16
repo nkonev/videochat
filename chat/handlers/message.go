@@ -163,6 +163,15 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, beha
 		FileItemUuid:   dbMessage.FileItemUuid,
 	}
 
+	if dbMessage.EmbeddedId != nil {
+		ret.EmbedMessage = &dto.EmbedMessage{
+			Id:        *dbMessage.EmbeddedId,
+			Text:      *dbMessage.EmbeddedText,
+			EmbedType: *dbMessage.EmbeddedType,
+			OwnerId:   *dbMessage.EmbeddedOwnerId,
+		}
+	}
+
 	ret.SetPersonalizedFields(behalfUserId)
 
 	return ret

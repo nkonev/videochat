@@ -18,7 +18,9 @@ type Message struct {
 	CreateDateTime  time.Time
 	EditDateTime    null.Time
 	FileItemUuid    *uuid.UUID
+	EmbeddedId      *int64
 	EmbeddedText    *string
+	EmbeddedType    *string
 	EmbeddedOwnerId *int64
 }
 
@@ -60,14 +62,20 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
     		m.owner_id,
     		m.create_date_time, 
     		m.edit_date_time, 
-    		m.file_item_uuid 
+    		m.file_item_uuid,
+			me.id as embedded_message_id,
+			me.text as embedded_message_text,
+			m.embed_message_type as embedded_message_type,
+			me.owner_id as embedded_message_owner_id
 		FROM message_chat_%v m 
+		LEFT JOIN message_chat_%v me 
+			ON m.embed_message_id = me.id
 		WHERE 
 		    $3 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $3 ) 
 			AND id >= $4 
 			AND id <= $5 
-		ORDER BY id %s 
-		LIMIT $2`, chatId, order),
+		ORDER BY m.id %s 
+		LIMIT $2`, chatId, chatId, order),
 			userId, limit, chatId, leftMessageId, rightMessageId)
 
 		if err != nil {
@@ -78,7 +86,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
-			if err := rows.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid); err != nil {
+			if err := rows.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid, &message.EmbeddedId, &message.EmbeddedText, &message.EmbeddedType, &message.EmbeddedOwnerId); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
@@ -103,19 +111,45 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
     			m.owner_id, 
     			m.create_date_time, 
     			m.edit_date_time, 
-    			m.file_item_uuid 
-			FROM message_chat_%v m WHERE $4 IN ( 
-				SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 
-			) 
-			AND %s 
-			AND strip_tags(m.text) ILIKE $5 
-			ORDER BY id %s LIMIT $2`, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId, searchStringPercents)
+    			m.file_item_uuid,
+				me.id as embedded_message_id,
+				me.text as embedded_message_text,
+				m.embed_message_type as embedded_message_type,
+				me.owner_id as embedded_message_owner_id
+			FROM message_chat_%v m 
+			LEFT JOIN message_chat_%v me 
+				ON m.embed_message_id = me.id
+			WHERE 
+		    	$4 IN (SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4) 
+				AND %s 
+				AND strip_tags(m.text) ILIKE $5 
+			ORDER BY m.id %s 
+			LIMIT $2`, chatId, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId, searchStringPercents)
 			if err != nil {
 				Logger.Errorf("Error during get chat rows %v", err)
 				return nil, err
 			}
 		} else {
-			rows, err = db.Query(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) AND %s ORDER BY id %s LIMIT $2`, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId)
+			rows, err = db.Query(fmt.Sprintf(`SELECT 
+    			m.id, 
+    			m.text,
+    			m.owner_id, 
+    			m.create_date_time,
+    			m.edit_date_time, 
+    			m.file_item_uuid,
+				me.id as embedded_message_id,
+				me.text as embedded_message_text,
+				m.embed_message_type as embedded_message_type,
+				me.owner_id as embedded_message_owner_id
+			FROM message_chat_%v m 
+			LEFT JOIN message_chat_%v me 
+				ON m.embed_message_id = me.id
+			WHERE 
+			    $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) 
+				AND %s 
+			ORDER BY m.id %s 
+			LIMIT $2`, chatId, chatId, nonEquality, order),
+				userId, limit, startingFromItemId, chatId)
 			if err != nil {
 				Logger.Errorf("Error during get chat rows with search %v", err)
 				return nil, err
@@ -126,7 +160,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
-			if err := rows.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid); err != nil {
+			if err := rows.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid, &message.EmbeddedId, &message.EmbeddedText, &message.EmbeddedType, &message.EmbeddedOwnerId); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
@@ -164,9 +198,26 @@ func (db *DB) CountMessages() (int64, error) {
 }
 
 func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId int64) (*Message, error) {
-	row := co.QueryRow(fmt.Sprintf(`SELECT m.id, m.text, m.owner_id, m.create_date_time, m.edit_date_time, m.file_item_uuid FROM message_chat_%v m WHERE m.id = $1 AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, chatId), messageId, userId, chatId)
+	row := co.QueryRow(fmt.Sprintf(`SELECT 
+    	m.id, 
+    	m.text,
+    	m.owner_id,
+    	m.create_date_time, 
+    	m.edit_date_time,
+    	m.file_item_uuid,
+		me.id as embedded_message_id,
+		me.text as embedded_message_text,
+		m.embed_message_type as embedded_message_type,
+		me.owner_id as embedded_message_owner_id
+	FROM message_chat_%v m 
+	LEFT JOIN message_chat_%v me 
+		ON m.embed_message_id = me.id
+	WHERE 
+	    m.id = $1 
+		AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, chatId, chatId),
+		messageId, userId, chatId)
 	message := Message{ChatId: chatId}
-	err := row.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid)
+	err := row.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid, &message.EmbeddedId, &message.EmbeddedText, &message.EmbeddedType, &message.EmbeddedOwnerId)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil

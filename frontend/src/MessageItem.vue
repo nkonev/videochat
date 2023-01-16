@@ -17,11 +17,11 @@
                 <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')">mdi-share</v-icon>
             </v-container>
             <div @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" >
-                <div class="embedded-message">
-                    <div class="list-item-head">Bobbi boba</div>
-                    Lorem ipsum
+                <div v-if="item.embedMessage" class="embedded-message">
+                    <div class="list-item-head">{{item.embedMessage.ownerId}}</div>
+                    <div class="ma-0 message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
-                <v-container v-html="item.text" class="ma-0 message-item-text"></v-container>
+                <v-container v-html="item.text" class="ma-0 message-item-text" :style="item.embedMessage ? 'padding-top: 0.5em': ''"></v-container>
             </div>
         </div>
     </div>
@@ -93,7 +93,7 @@
       border-radius 0 10px 10px 0
       border-left: 4px solid #ccc;
       margin: 0.5em 0.5em 0 0.5em;
-      padding: 0.3em 0.5em 0.2em 0.5em;
+      padding: 0.3em 0.5em 0.5em 0.5em;
       quotes: "\201C""\201D""\2018""\2019";
   }
 
