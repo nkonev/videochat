@@ -19,9 +19,9 @@
             <div @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" >
                 <div v-if="item.embedMessage" class="embedded-message">
                     <div class="list-item-head">{{item.embedMessage.ownerId}}</div>
-                    <div class="ma-0 message-item-text" v-html="item.embedMessage.text"></div>
+                    <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
-                <v-container v-html="item.text" class="ma-0 message-item-text" :style="item.embedMessage ? 'padding-top: 0.5em': ''"></v-container>
+                <v-container v-html="item.text" class="message-item-text" :style="item.embedMessage ? 'padding-top: 0.5em': ''"></v-container>
             </div>
         </div>
     </div>
@@ -120,7 +120,11 @@
   .message-item-wrapper {
       border-radius 10px
       background #efefef
-      display inline-block
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: baseline;
+      width: fit-content;
       word-wrap break-word
       overflow-wrap break-word
   }
