@@ -551,6 +551,7 @@
                 this.getInfo();
                 this.graphQlSubscribe();
                 this.updateVideoRecordingState();
+                this.setHashVariables();
 
                 if (this.items.length === 0) {
                     this.reloadItems();
@@ -705,6 +706,10 @@
                     }
                 })
             },
+            setHashVariables() {
+                this.hash = this.getRouteHash();
+                this.highlightMessageId = this.getMessageId(this.hash);
+            },
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -716,10 +721,7 @@
 
             this.initQueryAndWatcher();
 
-            this.hash = this.getRouteHash();
-            if (this.hasHash) {
-                this.highlightMessageId = this.getMessageId(this.hash);
-            }
+            this.setHashVariables();
         },
         mounted() {
             window.addEventListener('resize', this.onResizedListener);
@@ -805,8 +807,7 @@
                 handler: function(newRoute, oldRoute) {
                     console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
                     if (newRoute.name === chat_name) {
-                        this.hash = this.getRouteHash();
-                        this.highlightMessageId = this.getMessageId(this.hash);
+                        this.setHashVariables();
                         if (this.hasHash && findIndexNonStrictly(this.items, {id: this.highlightMessageId}) === -1) {
                             this.resetVariables();
                             this.reloadItems();
