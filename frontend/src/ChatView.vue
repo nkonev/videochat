@@ -808,9 +808,13 @@
                     console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
                     if (newRoute.name === chat_name) {
                         this.setHashVariables();
-                        if (this.hasHash && findIndexNonStrictly(this.items, {id: this.highlightMessageId}) === -1) {
-                            this.resetVariables();
-                            this.reloadItems();
+                        if (this.hasHash) {
+                            if (findIndexNonStrictly(this.items, {id: this.highlightMessageId}) === -1) {
+                                this.resetVariables();
+                                this.reloadItems(); // resets hash in infiniteHandler
+                            } else {
+                                this.hash = null; // reset cached hash explicitly in order not to subsequently use it in case when we have hash in scrolled to bottom
+                            }
                         }
                     }
                 },
