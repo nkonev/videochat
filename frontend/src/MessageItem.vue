@@ -21,7 +21,7 @@
                     <div class="list-item-head">{{getOwner(item.embedMessage.owner)}}</div>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
-                <v-container v-html="item.text" class="message-item-text" :style="item.embedMessage ? 'padding-top: 0.5em': ''"></v-container>
+                <v-container v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage ? 'after-embed': ''"></v-container>
             </div>
         </div>
     </div>
@@ -127,6 +127,10 @@
       width: fit-content;
       word-wrap break-word
       overflow-wrap break-word
+
+      .after-embed {
+          padding-top: 0.5em
+      }
   }
   .message-item-text {
       line-height: 1.1;
