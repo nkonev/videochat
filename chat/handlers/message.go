@@ -92,6 +92,9 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 		var ownersSet = map[int64]bool{}
 		for _, c := range messages {
 			ownersSet[c.OwnerId] = true
+			if c.EmbeddedOwnerId != nil {
+				ownersSet[*c.EmbeddedOwnerId] = true
+			}
 		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 		messageDtos := make([]*dto.DisplayMessageDto, 0)
@@ -114,6 +117,9 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 		}
 		var ownersSet = map[int64]bool{}
 		ownersSet[behalfUserId] = true
+		if message.EmbeddedOwnerId != nil {
+			ownersSet[*message.EmbeddedOwnerId] = true
+		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
 		return convertToMessageDto(message, owners, behalfUserId), nil
 	}
@@ -163,12 +169,13 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, beha
 		FileItemUuid:   dbMessage.FileItemUuid,
 	}
 
-	if dbMessage.EmbeddedId != nil {
+	if dbMessage.EmbeddedOwnerId != nil {
+		embeddedUser := owners[*dbMessage.EmbeddedOwnerId]
 		ret.EmbedMessage = &dto.EmbedMessage{
 			Id:        *dbMessage.EmbeddedId,
 			Text:      *dbMessage.EmbeddedText,
 			EmbedType: *dbMessage.EmbeddedType,
-			OwnerId:   *dbMessage.EmbeddedOwnerId,
+			Owner:     embeddedUser,
 		}
 	}
 

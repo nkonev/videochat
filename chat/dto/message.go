@@ -9,7 +9,7 @@ import (
 type EmbedMessage struct {
 	Id        int64  `json:"id"`
 	Text      string `json:"text"`
-	OwnerId   int64  `json:"ownerId"`
+	Owner     *User  `json:"owner"`
 	EmbedType string `json:"embedType"`
 }
 

@@ -8,7 +8,7 @@
 
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
-                <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
+                <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                 <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item.fileItemUuid)" small :title="$vuetify.lang.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
                 <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
@@ -18,7 +18,7 @@
             </v-container>
             <div @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" >
                 <div v-if="item.embedMessage" class="embedded-message">
-                    <div class="list-item-head">{{item.embedMessage.ownerId}}</div>
+                    <div class="list-item-head">{{getOwner(item.embedMessage.owner)}}</div>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
                 <v-container v-html="item.text" class="message-item-text" :style="item.embedMessage ? 'padding-top: 0.5em': ''"></v-container>
@@ -69,8 +69,8 @@
                     bus.$emit(OPEN_EDIT_MESSAGE, editMessageDto);
                 }
             },
-            getOwner(item) {
-                return item.owner.login
+            getOwner(owner) {
+                return owner.login
             },
             getDate(item) {
                 return getHumanReadableDate(item.createDateTime)
