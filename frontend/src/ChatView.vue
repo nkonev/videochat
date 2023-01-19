@@ -163,7 +163,7 @@
                 showTooltip: true,
                 broadcastMessage: null,
                 tooltipKey: 0,
-                hash: null,
+                initialHash: null,
             }
         },
         computed: {
@@ -236,8 +236,8 @@
             userIsSet() {
                 return !!this.currentUser
             },
-            hasHash() {
-                return hasLength(this.hash)
+            hasInitialHash() {
+                return hasLength(this.initialHash)
             }
         },
         methods: {
@@ -397,11 +397,11 @@
 
                 axios.get(`/api/chat/${this.chatId}/message`, {
                     params: {
-                        startingFromItemId: this.hasHash ? this.highlightMessageId : this.startingFromItemId,
+                        startingFromItemId: this.hasInitialHash ? this.highlightMessageId : this.startingFromItemId,
                         size: pageSize,
                         reverse: this.isTopDirection(),
                         searchString: this.searchString,
-                        hasHash: this.hasHash
+                        hasHash: this.hasInitialHash
                     },
                 }).then(({data}) => {
                     const list = data;
@@ -425,14 +425,14 @@
                     } else {
                         $state?.complete();
                     }
-                    if (this.hasHash) {
+                    if (this.hasInitialHash) {
                         try {
-                            this.$vuetify.goTo('#' + this.hash, {container: this.scrollerDiv, duration: 0});
+                            this.$vuetify.goTo('#' + this.initialHash, {container: this.scrollerDiv, duration: 0});
                         } catch (err) {
                             console.debug("Didn't scrolled", err)
                         }
                     }
-                    this.hash = null;
+                    this.initialHash = null;
                 })
             },
             reduceListIfNeed() {
@@ -485,7 +485,7 @@
                     this.reloadItems();
                 }
                 this.clearRouteHash();
-                this.hash = null;
+                this.initialHash = null;
             },
             scrollDown() {
                 Vue.nextTick(() => {
@@ -551,6 +551,7 @@
                 this.getInfo();
                 this.graphQlSubscribe();
                 this.updateVideoRecordingState();
+                this.setHashVariables();
 
                 if (this.items.length === 0) {
                     this.reloadItems();
@@ -705,6 +706,10 @@
                     }
                 })
             },
+            setHashVariables() {
+                this.initialHash = this.getRouteHash();
+                this.highlightMessageId = this.getMessageId(this.initialHash);
+            },
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -716,10 +721,7 @@
 
             this.initQueryAndWatcher();
 
-            this.hash = this.getRouteHash();
-            if (this.hasHash) {
-                this.highlightMessageId = this.getMessageId(this.hash);
-            }
+            this.setHashVariables();
         },
         mounted() {
             window.addEventListener('resize', this.onResizedListener);
@@ -804,12 +806,15 @@
                 // reacts on user manually typing hash - in this case we may trigger reload if we don't have the necessary message
                 handler: function(newRoute, oldRoute) {
                     console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
-                    if (newRoute.name === chat_name) {
-                        this.hash = this.getRouteHash();
-                        this.highlightMessageId = this.getMessageId(this.hash);
-                        if (this.hasHash && findIndexNonStrictly(this.items, {id: this.highlightMessageId}) === -1) {
-                            this.resetVariables();
-                            this.reloadItems();
+                    if (newRoute.name === chat_name || newRoute.name === videochat_name) {
+                        this.setHashVariables();
+                        if (this.hasInitialHash) {
+                            if (findIndexNonStrictly(this.items, {id: this.highlightMessageId}) === -1) {
+                                this.resetVariables();
+                                this.reloadItems(); // resets hash in infiniteHandler
+                            } else {
+                                this.initialHash = null; // reset cached hash explicitly in order not to subsequently use it in case when we have hash in scrolled to bottom
+                            }
                         }
                     }
                 },
