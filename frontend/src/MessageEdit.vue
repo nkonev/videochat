@@ -3,6 +3,7 @@
                  @keyup.ctrl.enter="sendMessageToChat"
                  @keyup.esc="resetInput()"
     >
+            <div v-if="showAnswer"><v-icon @click="showAnswer = false">mdi-close</v-icon> admin: lorem ipsum не только успешно пережил без заметных изменений</div>
             <tiptap
                 :key="editorKey"
                 ref="tipTapRef"
@@ -109,6 +110,7 @@
                 fileCount: null,
                 sendBroadcast: false,
                 sending: false,
+                showAnswer: true
             }
         },
         methods: {
@@ -133,6 +135,7 @@
               console.log("Resetting text input");
               this.$refs.tipTapRef.clearContent();
               this.editMessageDto = chatEditMessageDtoFactory();
+              this.showAnswer = false;
               this.fileCount = null;
               this.notifyAboutBroadcast(true);
             },
