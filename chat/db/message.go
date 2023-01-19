@@ -72,8 +72,8 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 			ON m.embed_message_id = me.id
 		WHERE 
 		    $3 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $3 ) 
-			AND id >= $4 
-			AND id <= $5 
+			AND m.id >= $4 
+			AND m.id <= $5 
 		ORDER BY m.id %s 
 		LIMIT $2`, chatId, chatId, order),
 			userId, limit, chatId, leftMessageId, rightMessageId)
