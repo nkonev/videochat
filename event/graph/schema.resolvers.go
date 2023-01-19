@@ -150,19 +150,28 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	var result = &model.ChatEvent{
 		EventType: e.EventType,
 	}
-	notificationDto := e.MessageNotification
-	if notificationDto != nil {
+	messageDto := e.MessageNotification
+	if messageDto != nil {
 		result.MessageEvent = &model.DisplayMessageDto{ // dto.DisplayMessageDto
-			ID:             notificationDto.Id,
-			Text:           notificationDto.Text,
-			ChatID:         notificationDto.ChatId,
-			OwnerID:        notificationDto.OwnerId,
-			CreateDateTime: notificationDto.CreateDateTime,
-			EditDateTime:   notificationDto.EditDateTime.Ptr(),
-			Owner:          convertUser(notificationDto.Owner),
-			CanEdit:        notificationDto.CanEdit,
-			CanDelete:      notificationDto.CanDelete,
-			FileItemUUID:   notificationDto.FileItemUuid,
+			ID:             messageDto.Id,
+			Text:           messageDto.Text,
+			ChatID:         messageDto.ChatId,
+			OwnerID:        messageDto.OwnerId,
+			CreateDateTime: messageDto.CreateDateTime,
+			EditDateTime:   messageDto.EditDateTime.Ptr(),
+			Owner:          convertUser(messageDto.Owner),
+			CanEdit:        messageDto.CanEdit,
+			CanDelete:      messageDto.CanDelete,
+			FileItemUUID:   messageDto.FileItemUuid,
+		}
+		embedMessageDto := messageDto.EmbedMessage
+		if embedMessageDto != nil {
+			result.MessageEvent.EmbedMessage = &model.EmbedMessage{
+				ID:        embedMessageDto.Id,
+				Text:      embedMessageDto.Text,
+				Owner:     convertUser(embedMessageDto.Owner),
+				EmbedType: embedMessageDto.EmbedType,
+			}
 		}
 	}
 

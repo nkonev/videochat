@@ -635,6 +635,16 @@
                                       canEdit
                                       canDelete
                                       fileItemUuid
+                                      embedMessage {
+                                        id
+                                        text
+                                        owner {
+                                          id
+                                          login
+                                          avatar
+                                        }
+                                        embedType
+                                      }
                                     }
                                     messageDeletedEvent {
                                       id
