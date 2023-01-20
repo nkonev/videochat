@@ -569,9 +569,13 @@ mc event add local/files arn:minio:sqs::primary:amqp --event put,delete
 mc event remove local/files --force
 mc event list local/files
 ```
-
+# Message embedding
+## Case 1 - reply on message
 ```
-update message_chat_1 set embed_message_id = 845, embed_message_type = 'reply_on' where id = 734;
+update message_chat_1 set 
+    embed_message_id = 845, 
+    embed_message_type = 'reply_on'
+where id = 734;
 
 SELECT 
     m.id, 
@@ -589,3 +593,20 @@ ON m.embed_message_id = me.id
 ORDER BY m.id DESC
 LIMIT 10;
 ```
+
+# Case 2 - message resending
+```
+insert into message_chat_2 values
+    text = 'copy-paste of original',
+    owner_id = <re_sender_id>
+    embed_message_id = <original_message_id>, 
+    embed_chat_id = <original_message_chat_id>, 
+    embed_message_type = 'resent'
+where id = 734;
+
+using SQL above - message just will not found, but SQL returns all what we need
+```
+
+... and on frontend we will understand how to draw using embed_message_type
+
+What's to do with checking of rights on media in the resendable message ?
