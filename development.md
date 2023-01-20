@@ -611,3 +611,4 @@ using SQL above - message just will not found, but SQL returns all what we need
 
 TODO: What's to do with checking of rights on media in the resendable message ? - just introduce copying file from one chat to other
 TODO: also expose to HTTP in chat the method "stripHtmlTags" - we need it in reply
+TODO: add to `chat/db/message.go` new fields `embed_chat_id` and `embed_owner_id`
