@@ -143,5 +143,6 @@ export default {
     search_by_users: "Search by users",
     search_by_files: "Search by files",
     reply: "Reply",
-    share: "Share"
+    share: "Share",
+    remove_answer: "Remove answer on message"
 }

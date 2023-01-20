@@ -3,7 +3,7 @@
                  @keyup.ctrl.enter="sendMessageToChat"
                  @keyup.esc="resetInput()"
     >
-            <div v-if="showAnswer" class="answer"><v-icon @click="showAnswer = false">mdi-close</v-icon> admin: lorem ipsum не только успешно пережил без заметных изменений</div>
+            <div v-if="showAnswer" class="answer"><v-icon @click="showAnswer = false" :title="$vuetify.lang.t('$vuetify.remove_answer')">mdi-close</v-icon> admin: lorem ipsum не только успешно пережил без заметных изменений используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации</div>
             <tiptap
                 :key="editorKey"
                 ref="tipTapRef"
@@ -395,8 +395,10 @@
     justify-content flex-end
     align-items center
 }
-    
+
 .answer {
     background: $embedMessageColor;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 </style>

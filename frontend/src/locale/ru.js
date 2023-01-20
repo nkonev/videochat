@@ -143,5 +143,6 @@ export default {
     search_by_users: "Поиск по участникам",
     search_by_files: "Поиск по файлам",
     reply: "Ответить",
-    share: "Переслать"
+    share: "Переслать",
+    remove_answer: "Убрать ответ на сообщение"
 }
