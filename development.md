@@ -609,5 +609,5 @@ using SQL above - message just will not found, but SQL returns all what we need
 
 ... and on frontend we will understand how to draw using embed_message_type
 
-TODO: What's to do with checking of rights on media in the resendable message ?
+TODO: What's to do with checking of rights on media in the resendable message ? - just introduce copying file from one chat to other
 TODO: also expose to HTTP in chat the method "stripHtmlTags" - we need it in reply
