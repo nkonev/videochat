@@ -144,5 +144,7 @@ export default {
     search_by_files: "Search by files",
     reply: "Reply",
     share: "Share",
-    remove_answer: "Remove answer on message"
+    remove_answer: "Remove answer on message",
+    share_to: "Choose chat to share to",
+    no_chats: "No chats"
 }

@@ -144,5 +144,7 @@ export default {
     search_by_files: "Поиск по файлам",
     reply: "Ответить",
     share: "Переслать",
-    remove_answer: "Убрать ответ на сообщение"
+    remove_answer: "Убрать ответ на сообщение",
+    share_to: "Выберите чат для пересылки",
+    no_chats: "Нет чатов"
 }

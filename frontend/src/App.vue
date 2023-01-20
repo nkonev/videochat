@@ -197,6 +197,7 @@
                 <MessageEditColorModal/>
                 <NotificationsModal/>
                 <MessageEditMediaModal/>
+                <MessageSendToModal/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -268,6 +269,7 @@
     import MessageEditColorModal from "@/MessageEditColorModal";
     import NotificationsModal from "@/NotificationsModal";
     import MessageEditMediaModal from "@/MessageEditMediaModal";
+    import MessageSendToModal from "@/MessageSendToModal";
 
     import queryMixin, {searchQueryParameter} from "@/queryMixin";
     import {hasLength} from "@/utils";
@@ -313,6 +315,7 @@
             MessageEditColorModal,
             NotificationsModal,
             MessageEditMediaModal,
+            MessageSendToModal,
         },
         methods:{
             toggleLeftNavigation() {
