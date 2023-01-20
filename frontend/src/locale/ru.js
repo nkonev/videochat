@@ -146,5 +146,6 @@ export default {
     share: "Переслать",
     remove_answer: "Убрать ответ на сообщение",
     share_to: "Выберите чат для пересылки",
-    no_chats: "Нет чатов"
+    no_chats: "Нет чатов",
+    search_by_chats: "Поиск по чатам"
 }
