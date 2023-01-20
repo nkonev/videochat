@@ -22,6 +22,7 @@
                                         gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
                                         height="200px"
                                     >
+                                        <v-container class="file-info-title ma-0 pa-0">
                                         <v-card-title>
                                             <a :href="item.url" target="_blank" class="download-link">{{item.filename}}</a>
                                         </v-card-title>
@@ -33,6 +34,7 @@
                                                 {{ $vuetify.lang.t('$vuetify.files_public_url') }}
                                             </a>
                                         </v-card-subtitle>
+                                        </v-container>
                                     </v-img>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
@@ -261,6 +263,9 @@ export default {
     .download-link {
         color white
     }
+}
+.file-info-title {
+    background rgba(0, 0, 0, 0.5);
 }
 
 </style>
