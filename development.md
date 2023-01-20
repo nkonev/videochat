@@ -613,3 +613,8 @@ TODO: What's to do with checking of rights on media in the resendable message ?
  - just introduce copying media file from one chat to other - possible unite it with downloading pictures from copy-pasted texts
 TODO: also expose to HTTP in chat the method "stripHtmlTags" - we need it in reply
 TODO: add to `chat/db/message.go` new fields `embed_chat_id` and `embed_owner_id`
+
+jsoup analogues for Golang
+* https://github.com/PuerkitoBio/goquery
+* https://github.com/saopayne/gsoup
+* https://github.com/anaskhan96/soup
