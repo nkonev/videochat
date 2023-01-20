@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" scrollable>
+        <v-dialog v-model="show" max-width="720" scrollable>
             <v-card>
                 <v-card-title>{{ $vuetify.lang.t('$vuetify.notifications') }}</v-card-title>
                 <v-card-text class="ma-0 pa-0">
@@ -43,6 +43,13 @@
                         v-model="notificationsSettings.missedCallsEnabled"
                         @click="putNotificationsSettings()"
                     ></v-switch>
+                    <v-switch
+                        :label="$vuetify.lang.t('$vuetify.notify_about_replies')"
+                        dense
+                        hide-details
+                        class="ma-0 ml-2 mr-4 py-1"
+                    ></v-switch>
+
                     <v-spacer></v-spacer>
 
                     <v-btn

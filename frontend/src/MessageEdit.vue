@@ -3,7 +3,7 @@
                  @keyup.ctrl.enter="sendMessageToChat"
                  @keyup.esc="resetInput()"
     >
-            <div v-if="showAnswer"><v-icon @click="showAnswer = false">mdi-close</v-icon> admin: lorem ipsum не только успешно пережил без заметных изменений</div>
+            <div v-if="showAnswer" class="answer"><v-icon @click="showAnswer = false">mdi-close</v-icon> admin: lorem ipsum не только успешно пережил без заметных изменений</div>
             <tiptap
                 :key="editorKey"
                 ref="tipTapRef"
@@ -394,5 +394,9 @@
     flex-grow: 10
     justify-content flex-end
     align-items center
+}
+    
+.answer {
+    background: $embedMessageColor;
 }
 </style>

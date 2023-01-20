@@ -89,7 +89,7 @@
   @import "common.styl"
 
   .embedded-message {
-      background: #f9f9f9;
+      background: $embedMessageColor;
       border-radius 0 10px 10px 0
       border-left: 4px solid #ccc;
       margin: 0.5em 0.5em 0 0.5em;
