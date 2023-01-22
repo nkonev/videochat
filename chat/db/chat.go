@@ -17,6 +17,7 @@ type Chat struct {
 	Title              string
 	LastUpdateDateTime time.Time
 	TetATet            bool
+	CanResend          bool
 	Avatar             null.String
 	AvatarBig          null.String
 }
@@ -39,7 +40,7 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	}
 
 	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet)
+	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -73,7 +74,7 @@ func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int
 func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = db.Query(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
+	rows, err = db.Query(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet, can_resend FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
@@ -82,7 +83,7 @@ func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) 
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
-			if err := rows.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet); err != nil {
+			if err := rows.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet, &chat.CanResend); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -119,7 +120,8 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 		    avatar, 
 		    avatar_big,
 		    last_update_date_time,
-		    tet_a_tet 
+		    tet_a_tet,
+		    can_resend
 		FROM chat 
 		WHERE 
 		    id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( title ILIKE $4  %s)
@@ -134,7 +136,7 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
-			if err := rows.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet); err != nil {
+			if err := rows.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet, &chat.CanResend); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -297,9 +299,9 @@ func (tx *Tx) DeleteChat(id int64) error {
 	}
 }
 
-func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String) (*time.Time, error) {
+func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String, canResend bool) (*time.Time, error) {
 
-	if res, err := tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now() WHERE id = $1`, id, newTitle, avatar, avatarBig); err != nil {
+	if res, err := tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend); err != nil {
 		Logger.Errorf("Error during editing chat id %v", err)
 		return nil, err
 	} else {
@@ -324,9 +326,9 @@ func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String)
 }
 
 func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, error) {
-	row := co.QueryRow(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
+	row := co.QueryRow(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet, can_resend FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
 	chat := Chat{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet)
+	err := row.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet, &chat.CanResend)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil

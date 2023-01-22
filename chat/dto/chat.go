@@ -22,6 +22,7 @@ type BaseChatDto struct {
 	IsTetATet           bool        `json:"tetATet"`
 	CanAudioMute        bool        `json:"canAudioMute"`
 	ParticipantsCount   int         `json:"participantsCount"`
+	CanResend           bool        `json:"canResend"`
 }
 
 func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64) {

@@ -64,6 +64,7 @@ type ComplexityRoot struct {
 		CanDelete           func(childComplexity int) int
 		CanEdit             func(childComplexity int) int
 		CanLeave            func(childComplexity int) int
+		CanResend           func(childComplexity int) int
 		CanVideoKick        func(childComplexity int) int
 		ID                  func(childComplexity int) int
 		LastUpdateDateTime  func(childComplexity int) int
@@ -297,6 +298,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatDto.CanLeave(childComplexity), true
+
+	case "ChatDto.canResend":
+		if e.complexity.ChatDto.CanResend == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.CanResend(childComplexity), true
 
 	case "ChatDto.canVideoKick":
 		if e.complexity.ChatDto.CanVideoKick == nil {
@@ -1000,6 +1008,7 @@ type ChatDto {
     canAudioMute:        Boolean!
     participants:             [UserWithAdmin!]!
     participantsCount:        Int!
+    canResend:           Boolean!
 }
 
 type ChatDeletedDto {
@@ -2001,6 +2010,50 @@ func (ec *executionContext) fieldContext_ChatDto_participantsCount(ctx context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatDto_canResend(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_canResend(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanResend, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_canResend(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3400,6 +3453,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(ctx context.Conte
 				return ec.fieldContext_ChatDto_participants(ctx, field)
 			case "participantsCount":
 				return ec.fieldContext_ChatDto_participantsCount(ctx, field)
+			case "canResend":
+				return ec.fieldContext_ChatDto_canResend(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatDto", field.Name)
 		},
@@ -7437,6 +7492,13 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 		case "participantsCount":
 
 			out.Values[i] = ec._ChatDto_participantsCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "canResend":
+
+			out.Values[i] = ec._ChatDto_canResend(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

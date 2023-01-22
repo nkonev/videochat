@@ -34,6 +34,7 @@ type ChatDto struct {
 	CanAudioMute        bool             `json:"canAudioMute"`
 	Participants        []*UserWithAdmin `json:"participants"`
 	ParticipantsCount   int              `json:"participantsCount"`
+	CanResend           bool             `json:"canResend"`
 }
 
 type ChatEvent struct {

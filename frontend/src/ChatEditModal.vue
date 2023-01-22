@@ -61,8 +61,15 @@
                             </template>
                         </v-autocomplete>
 
+                        <v-checkbox
+                            v-model="editDto.canResend"
+                            :label="$vuetify.lang.t('$vuetify.can_resend')"
+                            hide-details
+                            dense
+                        ></v-checkbox>
+
                         <template v-if="!isNew">
-                            <v-container class="pb-0 px-0">
+                            <v-container class="pb-0 px-0 pt-1">
                                 <v-img v-if="editDto.avatarBig || editDto.avatar"
                                        :src="ava"
                                        :aspect-ratio="16/9"
@@ -100,6 +107,7 @@
             id: null,
             name: "",
             participantIds: [ ],
+            canResend: false,
         }
     };
 
@@ -158,6 +166,7 @@
                             name: response.data.name,
                             avatar: response.data.avatar,
                             avatarBig: response.data.avatarBig,
+                            canResend: response.data.canResend,
                         };
                     })
             },
@@ -199,6 +208,7 @@
                         participantIds: this.isNew ? this.editDto.participantIds : null,
                         avatar: this.editDto.avatar,
                         avatarBig: this.editDto.avatarBig,
+                        canResend: this.editDto.canResend,
                     };
 
                     if (this.isNew) {

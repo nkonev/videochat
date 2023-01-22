@@ -22,6 +22,7 @@ type BaseChatDto struct {
 	IsTetATet           bool        `json:"tetATet"`
 	CanAudioMute        bool        `json:"canAudioMute"`
 	ParticipantsCount   int         `json:"participantsCount"`
+	CanResend           bool        `json:"canResend"`
 }
 
 type ChatDeletedDto struct {

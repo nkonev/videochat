@@ -59,6 +59,7 @@ type ChatDto {
     canAudioMute:        Boolean!
     participants:             [UserWithAdmin!]!
     participantsCount:        Int!
+    canResend:           Boolean!
 }
 
 type ChatDeletedDto {

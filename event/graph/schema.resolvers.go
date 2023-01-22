@@ -242,6 +242,7 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 			TetATet:             chatDtoWithAdmin.IsTetATet,
 			ParticipantsCount:   chatDtoWithAdmin.ParticipantsCount,
 			Participants:        convertUsersWithAdmin(chatDtoWithAdmin.Participants),
+			CanResend:           chatDtoWithAdmin.CanResend,
 		}
 	}
 

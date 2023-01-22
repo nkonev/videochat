@@ -147,5 +147,6 @@ export default {
     remove_answer: "Remove answer on message",
     share_to: "Choose chat to share to",
     no_chats: "No chats",
-    search_by_chats: "Search by chats"
+    search_by_chats: "Search by chats",
+    can_resend: "Allow resending"
 }

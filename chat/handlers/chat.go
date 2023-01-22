@@ -39,6 +39,7 @@ type CreateChatDto struct {
 	ParticipantIds *[]int64    `json:"participantIds"`
 	Avatar         null.String `json:"avatar"`
 	AvatarBig      null.String `json:"avatarBig"`
+	CanResend      bool        `json:"canResend"`
 }
 
 type ChatHandler struct {
@@ -238,6 +239,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		Avatar:         c.Avatar,
 		AvatarBig:      c.AvatarBig,
 		IsTetATet:      c.TetATet,
+		CanResend:      c.CanResend,
 
 		// see also services/events.go:75 chatNotifyCommon()
 
@@ -312,7 +314,8 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 
 func convertToCreatableChat(d *CreateChatDto, policy *services.SanitizerPolicy) *db.Chat {
 	return &db.Chat{
-		Title: TrimAmdSanitize(policy, d.Name),
+		Title:     TrimAmdSanitize(policy, d.Name),
+		CanResend: d.CanResend,
 	}
 }
 
@@ -375,7 +378,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
 		}
-		_, err := tx.EditChat(bindTo.Id, TrimAmdSanitize(ch.policy, bindTo.Name), bindTo.Avatar, bindTo.AvatarBig)
+		_, err := tx.EditChat(bindTo.Id, TrimAmdSanitize(ch.policy, bindTo.Name), bindTo.Avatar, bindTo.AvatarBig, bindTo.CanResend)
 		if err != nil {
 			return err
 		}
