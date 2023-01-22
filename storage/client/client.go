@@ -60,7 +60,7 @@ func NewChatAccessClient() *RestClient {
 }
 
 func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) (bool, error) {
-	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.baseUrl, h.accessPath, userId, chatId)
+	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v&considerCanResend=true", h.baseUrl, h.accessPath, userId, chatId)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

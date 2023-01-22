@@ -349,6 +349,22 @@ func (tx *Tx) GetChat(participantId, chatId int64) (*Chat, error) {
 	return getChatCommon(tx, participantId, chatId)
 }
 
+func (db *DB) GetChatBasic(chatId int64) (*Chat, error) {
+	row := db.QueryRow(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet, can_resend FROM chat WHERE chat.id = $1`, chatId)
+	chat := Chat{}
+	err := row.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet, &chat.CanResend)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return nil, nil
+	}
+	if err != nil {
+		Logger.Errorf("Error during get chat row %v", err)
+		return nil, err
+	} else {
+		return &chat, nil
+	}
+}
+
 func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
 	if _, err := tx.Exec("UPDATE chat SET last_update_date_time = utc_now() WHERE id = $1", id); err != nil {
 		Logger.Errorf("Error during update chat %v %v", id, err)

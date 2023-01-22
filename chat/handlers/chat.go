@@ -817,14 +817,31 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	useCanResend, _ := GetQueryParamAsBoolean(c, "considerCanResend")
 	participant, err := ch.db.IsParticipant(userId, chatId)
 	if err != nil {
 		return err
 	}
-	if participant {
-		return c.NoContent(http.StatusOK)
+
+	if useCanResend {
+		chat, err := ch.db.GetChatBasic(chatId)
+		if err != nil {
+			return err
+		}
+		if chat == nil {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+		if chat.CanResend {
+			return c.NoContent(http.StatusOK)
+		} else {
+			return c.NoContent(http.StatusUnauthorized)
+		}
 	} else {
-		return c.NoContent(http.StatusUnauthorized)
+		if participant {
+			return c.NoContent(http.StatusOK)
+		} else {
+			return c.NoContent(http.StatusUnauthorized)
+		}
 	}
 }
 
