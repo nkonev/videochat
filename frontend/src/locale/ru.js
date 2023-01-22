@@ -148,5 +148,5 @@ export default {
     share_to: "Выберите чат для пересылки",
     no_chats: "Нет чатов",
     search_by_chats: "Поиск по чатам",
-    can_resend: "Разрешить пересылку"
+    can_resend: "Разрешить пересылку сообщений"
 }
