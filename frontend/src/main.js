@@ -168,6 +168,7 @@ vm = new Vue({
                         avatar
                         admin
                       }
+                      canResend
                     }
                     chatDeletedEvent {
                       id

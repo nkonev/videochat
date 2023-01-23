@@ -10,7 +10,7 @@
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll">
                     <v-list  v-if="currentUser">
                         <template v-for="(item, index) in items">
-                            <MessageItem :key="item.id" :item="item" :chatId="chatId" :my="item.owner.id === currentUser.id" :highlight="item.id == highlightMessageId"></MessageItem>
+                            <MessageItem :key="item.id" :item="item" :chatId="chatId" :my="item.owner.id === currentUser.id" :highlight="item.id == highlightMessageId" :canResend="chatDto.canResend"></MessageItem>
                         </template>
                     </v-list>
                     <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
