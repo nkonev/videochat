@@ -9,7 +9,7 @@
                     <v-text-field class="ml-4 mr-4 pt-0 mt-0" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.lang.t('$vuetify.search_by_chats')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" autofocus></v-text-field>
                 </v-container>
                 <v-card-text class="ma-0 pa-0">
-                    <v-list class="pb-0">
+                    <v-list class="pb-0" v-if="!loading">
                         <template v-if="chats.length > 0">
                             <template v-for="(item, index) in chats">
                                 <v-list-item link>
@@ -25,8 +25,13 @@
                         <template v-else>
                             <v-card-text>{{ $vuetify.lang.t('$vuetify.no_chats') }}</v-card-text>
                         </template>
-
                     </v-list>
+                    <v-progress-circular
+                        class="ma-4 pa-4"
+                        v-else
+                        indeterminate
+                        color="primary"
+                    ></v-progress-circular>
                 </v-card-text>
                 <v-card-actions class="d-flex flex-wrap flex-row">
                     <v-spacer></v-spacer>
@@ -46,131 +51,46 @@
 <script>
 
 import bus, {
-    OPEN_NOTIFICATIONS_DIALOG, OPEN_SEND_TO_MODAL,
+    OPEN_SEND_TO_MODAL,
 } from "./bus";
-import {mapGetters} from 'vuex'
-import {GET_NOTIFICATIONS, GET_NOTIFICATIONS_SETTINGS, SET_NOTIFICATIONS_SETTINGS} from "@/store";
-import {getHumanReadableDate, hasLength} from "./utils";
+import {hasLength} from "./utils";
 import axios from "axios";
-import {chat, chat_name} from "@/routes";
+import debounce from "lodash/debounce";
 
 export default {
     data () {
         return {
             show: false,
             searchString: null,
-            chats: [ // max 20 items and search
-                {
-                    name: "Chat 1",
-                    id: 1,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 2",
-                    id: 2,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 3",
-                    id: 3,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 4",
-                    id: 4,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 5",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 6",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 7",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 8",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 9",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 10",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 11",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 12",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 13",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 14",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 15",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 16",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 17",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 18",
-                    id: 5,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 19",
-                    id: 19,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-                {
-                    name: "Chat 20",
-                    id: 20,
-                    avatar:"/api/storage/public/user/avatar/1078_AVATAR_200x200.jpg?time=1674160525"
-                },
-
-            ]
+            chats: [ ], // max 20 items and search
+            loading: false,
         }
     },
 
     methods: {
         showModal() {
             this.show = true;
+            this.loadData();
         },
         closeModal() {
             this.show = false;
+            this.chats = [];
+            this.loading = false;
+            this.searchString = null;
+        },
+        loadData() {
+            if (!this.show) {
+                return
+            }
+            this.loading = true;
+            axios.get('/api/chat', {
+                params: {
+                    searchString: this.searchString,
+                },
+            }).then(({data}) => {
+                this.chats = data.data;
+                this.loading = false;
+            })
         },
         getNotificationTitle(item) {
             return item.name
@@ -181,6 +101,9 @@ export default {
         resetInput() {
             this.searchString = null;
         },
+        doSearch(){
+            this.loadData();
+        },
     },
 
     watch: {
@@ -188,9 +111,13 @@ export default {
             if (!newValue) {
                 this.closeModal();
             }
-        }
+        },
+        searchString (searchString) {
+            this.doSearch();
+        },
     },
     created() {
+        this.doSearch = debounce(this.doSearch, 700);
         bus.$on(OPEN_SEND_TO_MODAL, this.showModal);
     },
     destroyed() {
