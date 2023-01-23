@@ -23,9 +23,8 @@ import (
 )
 
 type EditMessageDto struct {
-	Id           int64      `json:"id"`
-	Text         string     `json:"text"`
-	FileItemUuid *uuid.UUID `json:"fileItemUuid"`
+	Id int64 `json:"id"`
+	CreateMessageDto
 }
 
 type CreateMessageDto struct {
