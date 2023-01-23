@@ -127,6 +127,11 @@ func (h *EmbedHandler) PreviewDownloadHandler(c echo.Context) error {
 	fileId := c.QueryParam(utils.FileParam)
 	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
 	if err != nil {
+		if errTyped, ok := err.(minio.ErrorResponse); ok {
+			if errTyped.Code == "NoSuchKey" {
+				return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
+			}
+		}
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}

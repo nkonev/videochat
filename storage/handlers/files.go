@@ -425,6 +425,8 @@ func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId i
 	return true, nil
 }
 
+const NotFoundImage = "/api/storage/assets/not_found.png"
+
 func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -440,7 +442,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	if err != nil {
 		if errTyped, ok := err.(minio.ErrorResponse); ok {
 			if errTyped.Code == "NoSuchKey" {
-				return c.Redirect(http.StatusTemporaryRedirect, "/api/storage/assets/not_found.png")
+				return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
 			}
 		}
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
