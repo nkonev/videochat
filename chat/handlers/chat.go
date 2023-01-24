@@ -824,26 +824,25 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 		return err
 	}
 
-	if useCanResend {
-		chat, err := ch.db.GetChatBasic(chatId)
-		if err != nil {
-			return err
-		}
-		if chat == nil {
-			return c.NoContent(http.StatusUnauthorized)
-		}
-		if chat.CanResend {
-			return c.NoContent(http.StatusOK)
-		} else {
-			return c.NoContent(http.StatusUnauthorized)
-		}
+	if participant {
+		return c.NoContent(http.StatusOK)
 	} else {
-		if participant {
-			return c.NoContent(http.StatusOK)
-		} else {
-			return c.NoContent(http.StatusUnauthorized)
+		if useCanResend {
+			chat, err := ch.db.GetChatBasic(chatId)
+			if err != nil {
+				return err
+			}
+			if chat == nil {
+				return c.NoContent(http.StatusUnauthorized)
+			}
+			if chat.CanResend {
+				return c.NoContent(http.StatusOK)
+			} else {
+				return c.NoContent(http.StatusUnauthorized)
+			}
 		}
 	}
+	return c.NoContent(http.StatusUnauthorized)
 }
 
 func (ch *ChatHandler) IsAdmin(c echo.Context) error {
