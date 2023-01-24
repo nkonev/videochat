@@ -3,7 +3,7 @@
                  @keyup.ctrl.enter="sendMessageToChat"
                  @keyup.esc="resetInput()"
     >
-            <div v-if="showAnswer" class="answer"><v-icon @click="showAnswer = false" :title="$vuetify.lang.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
+            <div v-if="showAnswer" class="answer"><v-icon @click="resetAnswer()" :title="$vuetify.lang.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
             <tiptap
                 :key="editorKey"
                 ref="tipTapRef"
@@ -136,8 +136,7 @@
               console.log("Resetting text input");
               this.$refs.tipTapRef.clearContent();
               this.editMessageDto = chatEditMessageDtoFactory();
-              this.showAnswer = false;
-              this.answerOnPreview = null;
+              this.resetAnswer();
               this.fileCount = null;
               this.notifyAboutBroadcast(true);
             },
@@ -151,6 +150,13 @@
                             this.onFileItemUuid({fileItemUuid: this.editMessageDto.fileItemUuid, count: response.data.count})
                         });
                 }
+            },
+            resetAnswer() {
+                this.showAnswer = false;
+                this.answerOnPreview = null;
+
+                this.editMessageDto.embedMessageId = null;
+                this.editMessageDto.embedMessageType = null;
             },
             onSetMessage(dto) {
                 if (!dto) {
