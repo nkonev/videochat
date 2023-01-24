@@ -81,7 +81,11 @@
                     embedPreviewText: dto.text,
                     embedPreviewOwner: dto.owner.login,
                 };
-                bus.$emit(SET_EDIT_MESSAGE, replyMessage);
+                if (!this.isMobile()) {
+                    bus.$emit(SET_EDIT_MESSAGE, replyMessage);
+                } else {
+                    bus.$emit(OPEN_EDIT_MESSAGE, replyMessage);
+                }
             },
             getOwner(owner) {
                 return owner.login
