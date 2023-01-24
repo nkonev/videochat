@@ -43,14 +43,15 @@ type CreateChatDto struct {
 }
 
 type ChatHandler struct {
-	db          *db.DB
-	notificator services.Events
-	restClient  *client.RestClient
-	policy      *services.SanitizerPolicy
+	db              *db.DB
+	notificator     services.Events
+	restClient      *client.RestClient
+	policy          *services.SanitizerPolicy
+	cleanTagsPolicy *services.StripTagsPolicy
 }
 
-func NewChatHandler(dbR *db.DB, notificator services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy) *ChatHandler {
-	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy}
+func NewChatHandler(dbR *db.DB, notificator services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy, cleanTagsPolicy *services.StripTagsPolicy) *ChatHandler {
+	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy, cleanTagsPolicy: cleanTagsPolicy}
 }
 
 func (a *CreateChatDto) Validate() error {
@@ -923,6 +924,23 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
+}
+
+type CleanHtmlTagsDto struct {
+	Text string `json:"text"`
+}
+
+func (ch *ChatHandler) CleanHtmlTags(c echo.Context) error {
+	bindTo := new(CleanHtmlTagsDto)
+	err := c.Bind(bindTo)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
+		return err
+	}
+	response := CleanHtmlTagsDto{
+		ch.cleanTagsPolicy.Sanitize(bindTo.Text),
+	}
+	return c.JSON(http.StatusOK, response)
 }
 
 type ChatExists struct {

@@ -620,3 +620,7 @@ jsoup analogues for Golang
 * https://github.com/PuerkitoBio/goquery
 * https://github.com/saopayne/gsoup
 * https://github.com/anaskhan96/soup
+
+```
+curl -i -X PUT -H 'Content-Type: application/json' -d '{"text": "<a>danger</a> or not"}' --url 'http://localhost:8081/api/chat/public/clean-html-tags'
+```
