@@ -3,7 +3,7 @@
                  @keyup.ctrl.enter="sendMessageToChat"
                  @keyup.esc="resetInput()"
     >
-            <div v-if="showAnswer" class="answer"><v-icon @click="showAnswer = false" :title="$vuetify.lang.t('$vuetify.remove_answer')">mdi-close</v-icon> admin: lorem ipsum не только успешно пережил без заметных изменений используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации</div>
+            <div v-if="showAnswer" class="answer"><v-icon @click="showAnswer = false" :title="$vuetify.lang.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
             <tiptap
                 :key="editorKey"
                 ref="tipTapRef"
@@ -110,7 +110,8 @@
                 fileCount: null,
                 sendBroadcast: false,
                 sending: false,
-                showAnswer: true
+                showAnswer: false,
+                answerOnPreview: null,
             }
         },
         methods: {
@@ -136,6 +137,7 @@
               this.$refs.tipTapRef.clearContent();
               this.editMessageDto = chatEditMessageDtoFactory();
               this.showAnswer = false;
+              this.answerOnPreview = null;
               this.fileCount = null;
               this.notifyAboutBroadcast(true);
             },
@@ -152,9 +154,15 @@
             },
             onSetMessage(dto) {
                 if (!dto) {
-                    // opening modal from mobile
+                    // opening modal from mobile, just from scratch
                     this.loadFromStore();
                 } else {
+                    if (dto.embedMessageId) {
+                        axios.put('/api/chat/public/clean-html-tags', {text: dto.embedPreviewText}).then(({data}) => {
+                            this.showAnswer = true;
+                            this.answerOnPreview = `${dto.embedPreviewOwner}: ${data.text}`;
+                        })
+                    }
                     this.editMessageDto = dto;
                     this.saveToStore();
                     this.$refs.tipTapRef.setContent(this.editMessageDto.text);

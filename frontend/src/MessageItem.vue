@@ -13,7 +13,7 @@
                 <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                 <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
                 <a class="mx-2 hash" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.id" :title="$vuetify.lang.t('$vuetify.link')">#</a>
-                <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.reply')">mdi-reply</v-icon>
+                <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
                 <v-icon v-if="canResend" class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" >
@@ -71,6 +71,17 @@
             },
             shareMessage(dto) {
                 bus.$emit(OPEN_SEND_TO_MODAL)
+            },
+            replyOnMessage(dto) {
+                const replyMessage = {
+                    embedMessageId: dto.id,
+                    embedMessageType: "reply",
+
+                    // used only to show on front, ignored in message create machinery
+                    embedPreviewText: dto.text,
+                    embedPreviewOwner: dto.owner.login,
+                };
+                bus.$emit(SET_EDIT_MESSAGE, replyMessage);
             },
             getOwner(owner) {
                 return owner.login

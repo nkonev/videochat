@@ -19,6 +19,7 @@ type Message struct {
 	EditDateTime    null.Time
 	FileItemUuid    *uuid.UUID
 	EmbeddedId      *int64
+	EmbeddedChatId  *int64
 	EmbeddedText    *string
 	EmbeddedType    *string
 	EmbeddedOwnerId *int64
@@ -178,7 +179,7 @@ func (tx *Tx) CreateMessage(m *Message) (id int64, createDatetime time.Time, edi
 		return id, createDatetime, editDatetime, errors.New("text required")
 	}
 
-	res := tx.QueryRow(fmt.Sprintf(`INSERT INTO message_chat_%v (text, owner_id, file_item_uuid) VALUES ($1, $2, $3) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.OwnerId, m.FileItemUuid)
+	res := tx.QueryRow(fmt.Sprintf(`INSERT INTO message_chat_%v (text, owner_id, file_item_uuid, embed_message_id, embed_chat_id, embed_owner_id, embed_message_type) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.OwnerId, m.FileItemUuid, m.EmbeddedId, m.EmbeddedChatId, m.EmbeddedOwnerId, m.EmbeddedType)
 	if err := res.Scan(&id, &createDatetime, &editDatetime); err != nil {
 		Logger.Errorf("Error during getting message id %v", err)
 		return id, createDatetime, editDatetime, err
