@@ -27,9 +27,15 @@ type EditMessageDto struct {
 	CreateMessageDto
 }
 
+const EmbedMessageTypeResend = "resend"
+const EmbedMessageTypeReply = "reply"
+
 type CreateMessageDto struct {
-	Text         string     `json:"text"`
-	FileItemUuid *uuid.UUID `json:"fileItemUuid"`
+	Text             string     `json:"text"`
+	FileItemUuid     *uuid.UUID `json:"fileItemUuid"`
+	EmbedMessageId   *int64     `json:"embedMessageId"`
+	EmbedChatId      *int64     `json:"embedChatId"`
+	EmbedMessageType *string    `json:"embedMessageType"`
 }
 
 type MessageHandler struct {
@@ -183,6 +189,22 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, beha
 	return ret
 }
 
+func (a *CreateMessageDto) checkEmbed() error {
+	if a.EmbedMessageId != nil {
+		if a.EmbedMessageType == nil {
+			return errors.New("Missed embedMessageType")
+		} else {
+			if *a.EmbedMessageType != EmbedMessageTypeReply && *a.EmbedMessageType != EmbedMessageTypeResend {
+				return errors.New("Wrong embedMessageType")
+			}
+			if *a.EmbedMessageType == EmbedMessageTypeResend && a.EmbedChatId == nil {
+				return errors.New("Missed embedChatId for EmbedMessageTypeResend")
+			}
+		}
+	}
+	return nil
+}
+
 func (a *CreateMessageDto) Validate() error {
 	return validation.ValidateStruct(a, validation.Field(&a.Text, validation.Required, validation.Length(1, 1024*1024)))
 }
@@ -227,10 +249,13 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
 		}
 		creatableMessage := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
-		if creatableMessage.Text == "" {
-			GetLogEntry(c.Request().Context()).Infof("Empty message doesn't save")
-			return noContent(c)
+
+		err := mc.validateAndSetEmbedFieldsEmbedMessage(tx, bindTo, creatableMessage)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during checking embed %v", err)
+			return err
 		}
+
 		id, _, _, err := tx.CreateMessage(creatableMessage)
 		if err != nil {
 			return err
@@ -267,6 +292,42 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	return errOuter
 }
 
+func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input *CreateMessageDto, receiver *db.Message) error {
+	if input.EmbedMessageId != nil {
+		if err := input.checkEmbed(); err != nil {
+			return err
+		}
+		if *input.EmbedMessageType == EmbedMessageTypeReply {
+			receiver.EmbeddedId = input.EmbedMessageId
+			receiver.EmbeddedType = input.EmbedMessageType
+			return nil
+		} else if *input.EmbedMessageType == EmbedMessageTypeResend {
+			receiver.EmbeddedId = input.EmbedMessageId
+			receiver.EmbeddedType = input.EmbedMessageType
+			// check if this input.EmbedChatId resendable
+			chat, err := tx.GetChatBasic(*input.EmbedChatId)
+			if err != nil {
+				return err
+			}
+			if !chat.CanResend {
+				return errors.New("Resending is forbidden for this chat")
+			}
+			tmp, err := tx.GetMessageText(*input.EmbedChatId, *input.EmbedMessageId)
+			if err != nil {
+				return err
+			}
+			if tmp == nil {
+				return errors.New("Missing the message")
+			}
+			receiver.Text = *tmp
+			return nil
+		}
+		return errors.New("Unexpected branch, logical mistake")
+	} else {
+		return nil
+	}
+}
+
 func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) *db.Message {
 	return &db.Message{
 		Text:         TrimAmdSanitize(policy, dto.Text),
@@ -300,9 +361,11 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
 		editableMessage := convertToEditableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
-		if editableMessage.Text == "" {
-			GetLogEntry(c.Request().Context()).Infof("Empty message doesn't save")
-			return noContent(c)
+
+		err := mc.validateAndSetEmbedFieldsEmbedMessage(tx, &bindTo.CreateMessageDto, editableMessage)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during checking embed %v", err)
+			return err
 		}
 
 		participantIds, err := tx.GetAllParticipantIds(chatId)

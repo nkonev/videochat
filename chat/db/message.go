@@ -238,6 +238,28 @@ func (tx *Tx) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 	return getMessageCommon(tx, chatId, userId, messageId)
 }
 
+func (tx *Tx) GetMessageText(chatId int64, messageId int64) (*string, error) {
+	row := tx.QueryRow(fmt.Sprintf(`SELECT 
+    	m.text
+	FROM message_chat_%v m 
+	WHERE 
+	    m.id = $1 
+`, chatId),
+		messageId)
+	var result *string
+	err := row.Scan(result)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return nil, nil
+	}
+	if err != nil {
+		Logger.Errorf("Error during get message row %v", err)
+		return nil, err
+	} else {
+		return result, nil
+	}
+}
+
 func addMessageReadCommon(co CommonOperations, messageId, userId int64, chatId int64) (bool, error) {
 	res, err := co.Exec(`INSERT INTO message_read (last_message_id, user_id, chat_id) VALUES ($1, $2, $3) ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1  WHERE $1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
 	if err != nil {
