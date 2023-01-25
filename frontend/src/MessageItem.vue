@@ -64,7 +64,7 @@
             },
             editMessage(dto){
                 const editMessageDto = cloneDeep(dto);
-                if (dto.embedMessage.id) {
+                if (dto.embedMessage?.id) {
                     // used only to show on front, ignored in message create machinery
                     editMessageDto.embedPreviewText = dto.embedMessage.text;
                     editMessageDto.embedPreviewOwner = dto.embedMessage.owner.login;
