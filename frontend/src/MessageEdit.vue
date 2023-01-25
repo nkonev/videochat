@@ -158,17 +158,20 @@
                 this.editMessageDto.embedMessageId = null;
                 this.editMessageDto.embedMessageType = null;
             },
+            loadEmbedPreviewIfNeed(dto) {
+                if (dto.embedMessageId) {
+                    axios.put('/api/chat/public/clean-html-tags', {text: dto.embedPreviewText}).then(({data}) => {
+                        this.showAnswer = true;
+                        this.answerOnPreview = `${dto.embedPreviewOwner}: ${data.text}`;
+                    })
+                }
+            },
             onSetMessage(dto) {
                 if (!dto) {
                     // opening modal from mobile, just from scratch
                     this.loadFromStore();
                 } else {
-                    if (dto.embedMessageId) {
-                        axios.put('/api/chat/public/clean-html-tags', {text: dto.embedPreviewText}).then(({data}) => {
-                            this.showAnswer = true;
-                            this.answerOnPreview = `${dto.embedPreviewOwner}: ${data.text}`;
-                        })
-                    }
+                    this.loadEmbedPreviewIfNeed(dto);
                     this.editMessageDto = dto;
                     this.saveToStore();
                     this.$refs.tipTapRef.setContent(this.editMessageDto.text);
@@ -308,6 +311,7 @@
                     this.editMessageDto.ownerId = null;
                     this.editMessageDto.id = null;
                 }
+                this.loadEmbedPreviewIfNeed(this.editMessageDto);
                 this.$refs.tipTapRef.setContent(this.editMessageDto.text);
                 this.loadFilesCount();
             },
