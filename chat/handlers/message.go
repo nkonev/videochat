@@ -305,14 +305,15 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 			if !chat.CanResend {
 				return errors.New("Resending is forbidden for this chat")
 			}
-			tmp, err := tx.GetMessageText(input.EmbedMessageRequest.ChatId, input.EmbedMessageRequest.Id)
+			messageText, messageOwnerId, err := tx.GetMessageBasic(input.EmbedMessageRequest.ChatId, input.EmbedMessageRequest.Id)
 			if err != nil {
 				return err
 			}
-			if tmp == nil {
+			if messageText == nil {
 				return errors.New("Missing the message")
 			}
-			receiver.Text = *tmp
+			receiver.Text = *messageText
+			receiver.EmbeddedOwnerId = messageOwnerId
 			return nil
 		}
 		return errors.New("Unexpected branch, logical mistake")

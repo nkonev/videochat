@@ -239,25 +239,27 @@ func (tx *Tx) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 	return getMessageCommon(tx, chatId, userId, messageId)
 }
 
-func (tx *Tx) GetMessageText(chatId int64, messageId int64) (*string, error) {
+func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, error) {
 	row := tx.QueryRow(fmt.Sprintf(`SELECT 
-    	m.text
+    	m.text,
+    	m.owner_id
 	FROM message_chat_%v m 
 	WHERE 
 	    m.id = $1 
 `, chatId),
 		messageId)
 	var result *string
-	err := row.Scan(result)
+	var owner *int64
+	err := row.Scan(result, owner)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
-		return nil, nil
+		return nil, nil, nil
 	}
 	if err != nil {
 		Logger.Errorf("Error during get message row %v", err)
-		return nil, err
+		return nil, nil, err
 	} else {
-		return result, nil
+		return result, owner, nil
 	}
 }
 
