@@ -296,7 +296,7 @@ func (tx *Tx) EditMessage(m *Message) error {
 		return errors.New("id required")
 	}
 
-	if res, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2 WHERE owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id); err != nil {
+	if res, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2, embed_message_id = $5, embed_chat_id = $6, embed_owner_id = $7, embed_message_type = $8 WHERE owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id, m.EmbeddedId, m.EmbeddedChatId, m.EmbeddedOwnerId, m.EmbeddedType); err != nil {
 		Logger.Errorf("Error during editing message id %v", err)
 		return err
 	} else {

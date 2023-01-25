@@ -63,14 +63,20 @@
             },
             editMessage(dto){
                 const editMessageDto = {id: dto.id, text: dto.text, fileItemUuid: dto.fileItemUuid};
+                if (dto.embedMessage.id) {
+                    // reply fields
+                    editMessageDto.embedMessageId = dto.embedMessage.id;
+                    editMessageDto.embedMessageType = dto.embedMessage.embedType;
+
+                    // used only to show on front, ignored in message create machinery
+                    editMessageDto.embedPreviewText = dto.embedMessage.text;
+                    editMessageDto.embedPreviewOwner = dto.embedMessage.owner.login;
+                }
                 if (!this.isMobile()) {
                     bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
                 } else {
                     bus.$emit(OPEN_EDIT_MESSAGE, editMessageDto);
                 }
-            },
-            shareMessage(dto) {
-                bus.$emit(OPEN_SEND_TO_MODAL)
             },
             replyOnMessage(dto) {
                 const replyMessage = {
@@ -86,6 +92,9 @@
                 } else {
                     bus.$emit(OPEN_EDIT_MESSAGE, replyMessage);
                 }
+            },
+            shareMessage(dto) {
+                bus.$emit(OPEN_SEND_TO_MODAL)
             },
             getOwner(owner) {
                 return owner.login
