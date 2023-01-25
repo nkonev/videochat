@@ -38,6 +38,7 @@
     import debounce from "lodash/debounce";
     import {getHumanReadableDate, setIcon} from "@/utils";
     import "./message.styl";
+    import cloneDeep from "lodash/cloneDeep";
 
     export default {
         props: ['item', 'chatId', 'my', 'highlight', 'canResend'],
@@ -62,12 +63,8 @@
                 });
             },
             editMessage(dto){
-                const editMessageDto = {id: dto.id, text: dto.text, fileItemUuid: dto.fileItemUuid};
+                const editMessageDto = cloneDeep(dto);
                 if (dto.embedMessage.id) {
-                    // reply fields
-                    editMessageDto.embedMessageId = dto.embedMessage.id;
-                    editMessageDto.embedMessageType = dto.embedMessage.embedType;
-
                     // used only to show on front, ignored in message create machinery
                     editMessageDto.embedPreviewText = dto.embedMessage.text;
                     editMessageDto.embedPreviewOwner = dto.embedMessage.owner.login;
@@ -80,9 +77,10 @@
             },
             replyOnMessage(dto) {
                 const replyMessage = {
-                    embedMessageId: dto.id,
-                    embedMessageType: "reply",
-
+                    embedMessage: {
+                        id: dto.id,
+                        embedType: "reply"
+                    },
                     // used only to show on front, ignored in message create machinery
                     embedPreviewText: dto.text,
                     embedPreviewOwner: dto.owner.login,

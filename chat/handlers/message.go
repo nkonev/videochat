@@ -31,11 +31,9 @@ const EmbedMessageTypeResend = "resend"
 const EmbedMessageTypeReply = "reply"
 
 type CreateMessageDto struct {
-	Text             string     `json:"text"`
-	FileItemUuid     *uuid.UUID `json:"fileItemUuid"`
-	EmbedMessageId   *int64     `json:"embedMessageId"`
-	EmbedChatId      *int64     `json:"embedChatId"`
-	EmbedMessageType *string    `json:"embedMessageType"`
+	Text                string                   `json:"text"`
+	FileItemUuid        *uuid.UUID               `json:"fileItemUuid"`
+	EmbedMessageRequest *dto.EmbedMessageRequest `json:"embedMessage"`
 }
 
 type MessageHandler struct {
@@ -189,22 +187,6 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, beha
 	return ret
 }
 
-func (a *CreateMessageDto) checkEmbed() error {
-	if a.EmbedMessageId != nil {
-		if a.EmbedMessageType == nil {
-			return errors.New("Missed embedMessageType")
-		} else {
-			if *a.EmbedMessageType != EmbedMessageTypeReply && *a.EmbedMessageType != EmbedMessageTypeResend {
-				return errors.New("Wrong embedMessageType")
-			}
-			if *a.EmbedMessageType == EmbedMessageTypeResend && a.EmbedChatId == nil {
-				return errors.New("Missed embedChatId for EmbedMessageTypeResend")
-			}
-		}
-	}
-	return nil
-}
-
 func (a *CreateMessageDto) Validate() error {
 	return validation.ValidateStruct(a, validation.Field(&a.Text, validation.Required, validation.Length(1, 1024*1024)))
 }
@@ -293,26 +275,37 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 }
 
 func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input *CreateMessageDto, receiver *db.Message) error {
-	if input.EmbedMessageId != nil {
-		if err := input.checkEmbed(); err != nil {
-			return err
+	if input.EmbedMessageRequest != nil {
+		if input.EmbedMessageRequest.Id == 0 {
+			return errors.New("Missed embed message id")
 		}
-		if *input.EmbedMessageType == EmbedMessageTypeReply {
-			receiver.EmbeddedId = input.EmbedMessageId
-			receiver.EmbeddedType = input.EmbedMessageType
+		if input.EmbedMessageRequest.EmbedType == "" {
+			return errors.New("Missed embedMessageType")
+		} else {
+			if input.EmbedMessageRequest.EmbedType != EmbedMessageTypeReply && input.EmbedMessageRequest.EmbedType != EmbedMessageTypeResend {
+				return errors.New("Wrong embedMessageType")
+			}
+			if input.EmbedMessageRequest.EmbedType == EmbedMessageTypeResend && input.EmbedMessageRequest.ChatId == 0 {
+				return errors.New("Missed embedChatId for EmbedMessageTypeResend")
+			}
+		}
+
+		if input.EmbedMessageRequest.EmbedType == EmbedMessageTypeReply {
+			receiver.EmbeddedId = &input.EmbedMessageRequest.Id
+			receiver.EmbeddedType = &input.EmbedMessageRequest.EmbedType
 			return nil
-		} else if *input.EmbedMessageType == EmbedMessageTypeResend {
-			receiver.EmbeddedId = input.EmbedMessageId
-			receiver.EmbeddedType = input.EmbedMessageType
+		} else if input.EmbedMessageRequest.EmbedType == EmbedMessageTypeResend {
+			receiver.EmbeddedId = &input.EmbedMessageRequest.Id
+			receiver.EmbeddedType = &input.EmbedMessageRequest.EmbedType
 			// check if this input.EmbedChatId resendable
-			chat, err := tx.GetChatBasic(*input.EmbedChatId)
+			chat, err := tx.GetChatBasic(input.EmbedMessageRequest.ChatId)
 			if err != nil {
 				return err
 			}
 			if !chat.CanResend {
 				return errors.New("Resending is forbidden for this chat")
 			}
-			tmp, err := tx.GetMessageText(*input.EmbedChatId, *input.EmbedMessageId)
+			tmp, err := tx.GetMessageText(input.EmbedMessageRequest.ChatId, input.EmbedMessageRequest.Id)
 			if err != nil {
 				return err
 			}
@@ -323,9 +316,9 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 			return nil
 		}
 		return errors.New("Unexpected branch, logical mistake")
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
 func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) *db.Message {

@@ -154,12 +154,11 @@
             resetAnswer() {
                 this.showAnswer = false;
                 this.answerOnPreview = null;
-
-                this.editMessageDto.embedMessageId = null;
-                this.editMessageDto.embedMessageType = null;
+                this.editMessageDto.embedMessage = null;
+                this.saveToStore();
             },
             loadEmbedPreviewIfNeed(dto) {
-                if (dto.embedMessageId) {
+                if (dto.embedMessage?.id) {
                     axios.put('/api/chat/public/clean-html-tags', {text: dto.embedPreviewText}).then(({data}) => {
                         this.showAnswer = true;
                         this.answerOnPreview = `${dto.embedPreviewOwner}: ${data.text}`;

@@ -13,6 +13,12 @@ type EmbedMessage struct {
 	EmbedType string `json:"embedType"`
 }
 
+type EmbedMessageRequest struct {
+	Id        int64  `json:"id"`
+	ChatId    int64  `json:"chatId"`
+	EmbedType string `json:"embedType"`
+}
+
 type DisplayMessageDto struct {
 	Id             int64         `json:"id"`
 	Text           string        `json:"text"`
