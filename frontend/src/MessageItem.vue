@@ -36,7 +36,7 @@
         OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE, OPEN_SEND_TO_MODAL
     } from "./bus";
     import debounce from "lodash/debounce";
-    import {getHumanReadableDate, setIcon} from "@/utils";
+    import {getHumanReadableDate, setAnswerPreviewFields, setIcon} from "@/utils";
     import "./message.styl";
     import cloneDeep from "lodash/cloneDeep";
 
@@ -65,9 +65,7 @@
             editMessage(dto){
                 const editMessageDto = cloneDeep(dto);
                 if (dto.embedMessage?.id) {
-                    // used only to show on front, ignored in message create machinery
-                    editMessageDto.embedPreviewText = dto.embedMessage.text;
-                    editMessageDto.embedPreviewOwner = dto.embedMessage.owner.login;
+                    setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner.login);
                 }
                 if (!this.isMobile()) {
                     bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
@@ -81,10 +79,8 @@
                         id: dto.id,
                         embedType: "reply"
                     },
-                    // used only to show on front, ignored in message create machinery
-                    embedPreviewText: dto.text,
-                    embedPreviewOwner: dto.owner.login,
                 };
+                setAnswerPreviewFields(replyMessage, dto.text, dto.owner.login);
                 if (!this.isMobile()) {
                     bus.$emit(SET_EDIT_MESSAGE, replyMessage);
                 } else {

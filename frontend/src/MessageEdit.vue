@@ -95,7 +95,7 @@
     import {
         chatEditMessageDtoFactory,
         colorBackground,
-        colorText,
+        colorText, getAnswerPreviewFields,
         getStoredChatEditMessageDto, media_image, media_video, removeStoredChatEditMessageDto,
         setStoredChatEditMessageDto
     } from "@/utils";
@@ -159,9 +159,10 @@
             },
             loadEmbedPreviewIfNeed(dto) {
                 if (dto.embedMessage?.id) {
-                    axios.put('/api/chat/public/clean-html-tags', {text: dto.embedPreviewText}).then(({data}) => {
+                    const {embedPreviewText, embedPreviewOwner} = getAnswerPreviewFields(dto);
+                    axios.put('/api/chat/public/preview-without-html', {text: embedPreviewText}).then(({data}) => {
                         this.showAnswer = true;
-                        this.answerOnPreview = `${dto.embedPreviewOwner}: ${data.text}`;
+                        this.answerOnPreview = `${embedPreviewOwner}: ${data.text}`;
                     })
                 }
             },

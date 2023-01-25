@@ -35,3 +35,4 @@ jaeger:
   port: 6831
 
 mentionMaxTextSize: 80
+previewMaxTextSize: 360

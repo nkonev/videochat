@@ -8,6 +8,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -936,8 +937,11 @@ func (ch *ChatHandler) CleanHtmlTags(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
 		return err
 	}
+	tmp := ch.cleanTagsPolicy.Sanitize(bindTo.Text)
+	size := utils.Min(len(tmp), viper.GetInt("previewMaxTextSize"))
+	withoutAnyHtml := tmp[:size]
 	response := CleanHtmlTagsDto{
-		ch.cleanTagsPolicy.Sanitize(bindTo.Text),
+		withoutAnyHtml,
 	}
 	return c.JSON(http.StatusOK, response)
 }
