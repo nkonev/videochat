@@ -18,7 +18,7 @@
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" >
                 <div v-if="item.embedMessage" class="embedded-message">
-                    <a class="list-item-head" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.embedMessage.id">{{getOwner(item.embedMessage.owner)}}</a>
+                    <a class="list-item-head" :href="getEmbedLinkTo(item)" @click.stop="onEmbedLinkClick(item)">{{getEmbedHead(item)}}</a>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
                 <v-container v-if="item.embedMessage == null || item.embedMessage.embedType == 'reply'" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
@@ -39,6 +39,7 @@
     import {getHumanReadableDate, setAnswerPreviewFields, setIcon} from "@/utils";
     import "./message.styl";
     import cloneDeep from "lodash/cloneDeep";
+    import {chat, chat_name, messageIdHashPrefix, videochat_name} from "./routes"
 
     export default {
         props: ['item', 'chatId', 'my', 'highlight', 'canResend'],
@@ -98,7 +99,27 @@
             },
             onFilesClicked(itemId) {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid :itemId});
-            }
+            },
+            getEmbedLinkTo(item) {
+                if (item.embedMessage.embedType == "reply") {
+                    return chat + '/' + this.chatId + messageIdHashPrefix + item.embedMessage.id
+                } else if (item.embedMessage.embedType == "resend") {
+                    return chat + '/' + item.embedMessage.chatId + messageIdHashPrefix + item.embedMessage.id
+                }
+            },
+            onEmbedLinkClick(item) {
+                if (item.embedMessage.embedType == "resend") {
+                    const routeDto = { name: chat_name, params: { id: item.embedMessage.chatId }};
+                    this.$router.push(routeDto);
+                }
+            },
+            getEmbedHead(item){
+                if (item.embedMessage.embedType == "reply") {
+                    return this.getOwner(item.embedMessage.owner)
+                } else if (item.embedMessage.embedType == "resend") {
+                    return this.getOwner(item.embedMessage.owner) + " in other chat";
+                }
+            },
         },
         created() {
             this.onMessageMouseMove = debounce(this.onMessageMouseMove, 1000, {leading:true, trailing:false});
