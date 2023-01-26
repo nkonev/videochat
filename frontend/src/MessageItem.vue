@@ -21,7 +21,7 @@
                     <a class="list-item-head" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.embedMessage.id">{{getOwner(item.embedMessage.owner)}}</a>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
-                <v-container @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage ? 'after-embed': ''"></v-container>
+                <v-container v-if="item.embedMessage == null || item.embedMessage.embedType == 'reply'" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
             </div>
         </div>
     </div>
@@ -113,7 +113,7 @@
       background: $embedMessageColor;
       border-radius 0 10px 10px 0
       border-left: 4px solid #ccc;
-      margin: 0.5em 0.5em 0 0.5em;
+      margin: 0.5em 0.5em 0.5em 0.5em;
       padding: 0.3em 0.5em 0.5em 0.5em;
       quotes: "\201C""\201D""\2018""\2019";
   }
@@ -150,7 +150,7 @@
       overflow-wrap break-word
 
       .after-embed {
-          padding-top: 0.5em
+          padding-top: 0
       }
   }
   .message-item-text {
