@@ -637,6 +637,7 @@
                                       fileItemUuid
                                       embedMessage {
                                         id
+                                        chatId
                                         text
                                         owner {
                                           id
