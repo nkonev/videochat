@@ -248,9 +248,9 @@ func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, e
 	    m.id = $1 
 `, chatId),
 		messageId)
-	var result *string
-	var owner *int64
-	err := row.Scan(result, owner)
+	var result string
+	var owner int64
+	err := row.Scan(&result, &owner)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil, nil
@@ -259,7 +259,7 @@ func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, e
 		Logger.Errorf("Error during get message row %v", err)
 		return nil, nil, err
 	} else {
-		return result, owner, nil
+		return &result, &owner, nil
 	}
 }
 

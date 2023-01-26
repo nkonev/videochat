@@ -314,6 +314,7 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 			}
 			receiver.Text = *messageText
 			receiver.EmbeddedOwnerId = messageOwnerId
+			receiver.EmbeddedChatId = &input.EmbedMessageRequest.ChatId
 			return nil
 		}
 		return errors.New("Unexpected branch, logical mistake")

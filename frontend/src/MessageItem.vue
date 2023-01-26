@@ -33,7 +33,7 @@
         CLOSE_SIMPLE_MODAL,
         OPEN_SIMPLE_MODAL,
         OPEN_VIEW_FILES_DIALOG,
-        OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE, OPEN_SEND_TO_MODAL
+        OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE, OPEN_RESEND_TO_MODAL
     } from "./bus";
     import debounce from "lodash/debounce";
     import {getHumanReadableDate, setAnswerPreviewFields, setIcon} from "@/utils";
@@ -88,7 +88,7 @@
                 }
             },
             shareMessage(dto) {
-                bus.$emit(OPEN_SEND_TO_MODAL)
+                bus.$emit(OPEN_RESEND_TO_MODAL, dto)
             },
             getOwner(owner) {
                 return owner.login

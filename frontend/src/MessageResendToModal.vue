@@ -12,7 +12,7 @@
                     <v-list class="pb-0" v-if="!loading">
                         <template v-if="chats.length > 0">
                             <template v-for="(item, index) in chats">
-                                <v-list-item link>
+                                <v-list-item link @click="resendMessageTo(item.id)">
                                     <v-list-item-avatar v-if="item.avatar">
                                         <img :src="item.avatar"/>
                                     </v-list-item-avatar>
@@ -51,7 +51,7 @@
 <script>
 
 import bus, {
-    OPEN_SEND_TO_MODAL,
+    OPEN_RESEND_TO_MODAL,
 } from "./bus";
 import {hasLength} from "./utils";
 import axios from "axios";
@@ -64,12 +64,14 @@ export default {
             searchString: null,
             chats: [ ], // max 20 items and search
             loading: false,
+            messageDto: null,
         }
     },
 
     methods: {
-        showModal() {
+        showModal(messageDto) {
             this.show = true;
+            this.messageDto = messageDto;
             this.loadData();
         },
         closeModal() {
@@ -77,6 +79,7 @@ export default {
             this.chats = [];
             this.loading = false;
             this.searchString = null;
+            this.messageDto = null;
         },
         loadData() {
             if (!this.show) {
@@ -104,6 +107,24 @@ export default {
         doSearch(){
             this.loadData();
         },
+        resendMessageTo(chatId) {
+            const messageDto = {
+                text: this.messageDto.text, // yes, we copy text as is, along with embedded images and video
+                embedMessage: {
+                    id: this.messageDto.id,
+                    chatId: parseInt(this.chatId),
+                    embedType: "resend"
+                }
+            };
+            axios.post(`/api/chat/`+chatId+'/message', messageDto).then(()=> {
+                this.closeModal()
+            })
+        },
+    },
+    computed: {
+        chatId() {
+            return this.$route.params.id
+        },
     },
 
     watch: {
@@ -118,10 +139,10 @@ export default {
     },
     created() {
         this.doSearch = debounce(this.doSearch, 700);
-        bus.$on(OPEN_SEND_TO_MODAL, this.showModal);
+        bus.$on(OPEN_RESEND_TO_MODAL, this.showModal);
     },
     destroyed() {
-        bus.$off(OPEN_SEND_TO_MODAL, this.showModal);
+        bus.$off(OPEN_RESEND_TO_MODAL, this.showModal);
     },
 }
 </script>
