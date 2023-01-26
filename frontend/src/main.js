@@ -112,7 +112,7 @@ const getGlobalEventsData = (message) => {
 };
 
 router.beforeEach((to, from, next) => {
-    console.debug("beforeEach", to, vuetify);
+    console.debug("beforeEach", from, to);
 
     if (from.name == videochat_name && to.name != videochat_name && to.params.leavingVideoAcceptableParam != true) {
         bus.$emit(OPEN_SIMPLE_MODAL, {
