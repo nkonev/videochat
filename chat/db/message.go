@@ -7,22 +7,33 @@ import (
 	"github.com/google/uuid"
 	"github.com/guregu/null"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/utils"
 	"time"
 )
 
 type Message struct {
-	Id              int64
-	Text            string
-	ChatId          int64
-	OwnerId         int64
-	CreateDateTime  time.Time
-	EditDateTime    null.Time
-	FileItemUuid    *uuid.UUID
-	EmbeddedId      *int64
-	EmbeddedChatId  *int64
-	EmbeddedText    *string
-	EmbeddedType    *string
-	EmbeddedOwnerId *int64
+	Id             int64
+	Text           string
+	ChatId         int64
+	OwnerId        int64
+	CreateDateTime time.Time
+	EditDateTime   null.Time
+	FileItemUuid   *uuid.UUID
+
+	RequestEmbeddedMessageId      *int64
+	RequestEmbeddedMessageType    *string
+	RequestEmbeddedMessageChatId  *int64
+	RequestEmbeddedMessageOwnerId *int64
+
+	ResponseEmbeddedMessageType *string
+
+	ResponseEmbeddedMessageReplyId      *int64
+	ResponseEmbeddedMessageReplyOwnerId *int64
+	ResponseEmbeddedMessageReplyText    *string
+
+	ResponseEmbeddedMessageResendId      *int64
+	ResponseEmbeddedMessageResendOwnerId *int64
+	ResponseEmbeddedMessageResendChatId  *int64
 }
 
 func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
@@ -64,10 +75,13 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
     		m.create_date_time, 
     		m.edit_date_time, 
     		m.file_item_uuid,
-			me.id as embedded_message_id,
-			me.text as embedded_message_text,
 			m.embed_message_type as embedded_message_type,
-			me.owner_id as embedded_message_owner_id
+			me.id as embedded_message_reply_id,
+			me.text as embedded_message_reply_text,
+			me.owner_id as embedded_message_reply_owner_id,
+			m.embed_message_id as embedded_message_resend_id,
+			m.embed_chat_id as embedded_message_resend_chat_id,
+			m.embed_owner_id as embedded_message_resend_owner_id
 		FROM message_chat_%v m 
 		LEFT JOIN message_chat_%v me 
 			ON m.embed_message_id = me.id
@@ -87,7 +101,21 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
-			if err := rows.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid, &message.EmbeddedId, &message.EmbeddedText, &message.EmbeddedType, &message.EmbeddedOwnerId); err != nil {
+			if err := rows.Scan(
+				&message.Id,
+				&message.Text,
+				&message.OwnerId,
+				&message.CreateDateTime,
+				&message.EditDateTime,
+				&message.FileItemUuid,
+				&message.ResponseEmbeddedMessageType,
+				&message.ResponseEmbeddedMessageReplyId,
+				&message.ResponseEmbeddedMessageReplyText,
+				&message.ResponseEmbeddedMessageReplyOwnerId,
+				&message.ResponseEmbeddedMessageResendId,
+				&message.ResponseEmbeddedMessageResendChatId,
+				&message.ResponseEmbeddedMessageResendOwnerId,
+			); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
@@ -113,10 +141,13 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
     			m.create_date_time, 
     			m.edit_date_time, 
     			m.file_item_uuid,
-				me.id as embedded_message_id,
-				me.text as embedded_message_text,
 				m.embed_message_type as embedded_message_type,
-				me.owner_id as embedded_message_owner_id
+				me.id as embedded_message_reply_id,
+				me.text as embedded_message_reply_text,
+				me.owner_id as embedded_message_reply_owner_id,
+				m.embed_message_id as embedded_message_resend_id,
+				m.embed_chat_id as embedded_message_resend_chat_id,
+				m.embed_owner_id as embedded_message_resend_owner_id
 			FROM message_chat_%v m 
 			LEFT JOIN message_chat_%v me 
 				ON m.embed_message_id = me.id
@@ -138,10 +169,13 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
     			m.create_date_time,
     			m.edit_date_time, 
     			m.file_item_uuid,
-				me.id as embedded_message_id,
-				me.text as embedded_message_text,
 				m.embed_message_type as embedded_message_type,
-				me.owner_id as embedded_message_owner_id
+				me.id as embedded_message_reply_id,
+				me.text as embedded_message_reply_text,
+				me.owner_id as embedded_message_reply_owner_id,
+				m.embed_message_id as embedded_message_resend_id,
+				m.embed_chat_id as embedded_message_resend_chat_id,
+				m.embed_owner_id as embedded_message_resend_owner_id
 			FROM message_chat_%v m 
 			LEFT JOIN message_chat_%v me 
 				ON m.embed_message_id = me.id
@@ -161,7 +195,21 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
-			if err := rows.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid, &message.EmbeddedId, &message.EmbeddedText, &message.EmbeddedType, &message.EmbeddedOwnerId); err != nil {
+			if err := rows.Scan(
+				&message.Id,
+				&message.Text,
+				&message.OwnerId,
+				&message.CreateDateTime,
+				&message.EditDateTime,
+				&message.FileItemUuid,
+				&message.ResponseEmbeddedMessageType,
+				&message.ResponseEmbeddedMessageReplyId,
+				&message.ResponseEmbeddedMessageReplyText,
+				&message.ResponseEmbeddedMessageReplyOwnerId,
+				&message.ResponseEmbeddedMessageResendId,
+				&message.ResponseEmbeddedMessageResendChatId,
+				&message.ResponseEmbeddedMessageResendOwnerId,
+			); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
@@ -172,6 +220,31 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 	}
 }
 
+type embedMessage struct {
+	embedMessageId      *int64
+	embedMessageChatId  *int64
+	embedMessageOwnerId *int64
+	embedMessageType    *string
+}
+
+func initEmbedMessageRequestStruct(m *Message) (embedMessage, error) {
+	ret := embedMessage{}
+	if m.RequestEmbeddedMessageType != nil {
+		if *m.RequestEmbeddedMessageType == utils.EmbedMessageTypeReply {
+			ret.embedMessageId = m.RequestEmbeddedMessageId
+			ret.embedMessageType = m.RequestEmbeddedMessageType
+		} else if *m.RequestEmbeddedMessageType == utils.EmbedMessageTypeResend {
+			ret.embedMessageId = m.RequestEmbeddedMessageId
+			ret.embedMessageChatId = m.RequestEmbeddedMessageChatId
+			ret.embedMessageOwnerId = m.RequestEmbeddedMessageOwnerId
+			ret.embedMessageType = m.RequestEmbeddedMessageType
+		} else {
+			return ret, errors.New("Unexpected branch in saving in db")
+		}
+	}
+	return ret, nil
+}
+
 func (tx *Tx) CreateMessage(m *Message) (id int64, createDatetime time.Time, editDatetime null.Time, err error) {
 	if m == nil {
 		return id, createDatetime, editDatetime, errors.New("message required")
@@ -179,7 +252,11 @@ func (tx *Tx) CreateMessage(m *Message) (id int64, createDatetime time.Time, edi
 		return id, createDatetime, editDatetime, errors.New("text required")
 	}
 
-	res := tx.QueryRow(fmt.Sprintf(`INSERT INTO message_chat_%v (text, owner_id, file_item_uuid, embed_message_id, embed_chat_id, embed_owner_id, embed_message_type) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.OwnerId, m.FileItemUuid, m.EmbeddedId, m.EmbeddedChatId, m.EmbeddedOwnerId, m.EmbeddedType)
+	embed, err := initEmbedMessageRequestStruct(m)
+	if err != nil {
+		return id, createDatetime, editDatetime, errors.New("error during initializing embed struct")
+	}
+	res := tx.QueryRow(fmt.Sprintf(`INSERT INTO message_chat_%v (text, owner_id, file_item_uuid, embed_message_id, embed_chat_id, embed_owner_id, embed_message_type) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.OwnerId, m.FileItemUuid, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType)
 	if err := res.Scan(&id, &createDatetime, &editDatetime); err != nil {
 		Logger.Errorf("Error during getting message id %v", err)
 		return id, createDatetime, editDatetime, err
@@ -206,10 +283,13 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
     	m.create_date_time, 
     	m.edit_date_time,
     	m.file_item_uuid,
-		me.id as embedded_message_id,
-		me.text as embedded_message_text,
 		m.embed_message_type as embedded_message_type,
-		me.owner_id as embedded_message_owner_id
+		me.id as embedded_message_reply_id,
+		me.text as embedded_message_reply_text,
+		me.owner_id as embedded_message_reply_owner_id,
+		m.embed_message_id as embedded_message_resend_id,
+		m.embed_chat_id as embedded_message_resend_chat_id,
+		m.embed_owner_id as embedded_message_resend_owner_id
 	FROM message_chat_%v m 
 	LEFT JOIN message_chat_%v me 
 		ON m.embed_message_id = me.id
@@ -218,7 +298,21 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
 		AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, chatId, chatId),
 		messageId, userId, chatId)
 	message := Message{ChatId: chatId}
-	err := row.Scan(&message.Id, &message.Text, &message.OwnerId, &message.CreateDateTime, &message.EditDateTime, &message.FileItemUuid, &message.EmbeddedId, &message.EmbeddedText, &message.EmbeddedType, &message.EmbeddedOwnerId)
+	err := row.Scan(
+		&message.Id,
+		&message.Text,
+		&message.OwnerId,
+		&message.CreateDateTime,
+		&message.EditDateTime,
+		&message.FileItemUuid,
+		&message.ResponseEmbeddedMessageType,
+		&message.ResponseEmbeddedMessageReplyId,
+		&message.ResponseEmbeddedMessageReplyText,
+		&message.ResponseEmbeddedMessageReplyOwnerId,
+		&message.ResponseEmbeddedMessageResendId,
+		&message.ResponseEmbeddedMessageResendChatId,
+		&message.ResponseEmbeddedMessageResendOwnerId,
+	)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -298,7 +392,12 @@ func (tx *Tx) EditMessage(m *Message) error {
 		return errors.New("id required")
 	}
 
-	if res, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2, embed_message_id = $5, embed_chat_id = $6, embed_owner_id = $7, embed_message_type = $8 WHERE owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id, m.EmbeddedId, m.EmbeddedChatId, m.EmbeddedOwnerId, m.EmbeddedType); err != nil {
+	embed, err := initEmbedMessageRequestStruct(m)
+	if err != nil {
+		return errors.New("error during initializing embed struct")
+	}
+
+	if res, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2, embed_message_id = $5, embed_chat_id = $6, embed_owner_id = $7, embed_message_type = $8 WHERE owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType); err != nil {
 		Logger.Errorf("Error during editing message id %v", err)
 		return err
 	} else {

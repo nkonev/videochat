@@ -105,7 +105,8 @@ type ComplexityRoot struct {
 		Text           func(childComplexity int) int
 	}
 
-	EmbedMessage struct {
+	EmbedMessageResponse struct {
+		ChatID    func(childComplexity int) int
 		EmbedType func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Owner     func(childComplexity int) int
@@ -509,33 +510,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DisplayMessageDto.Text(childComplexity), true
 
-	case "EmbedMessage.embedType":
-		if e.complexity.EmbedMessage.EmbedType == nil {
+	case "EmbedMessageResponse.chatId":
+		if e.complexity.EmbedMessageResponse.ChatID == nil {
 			break
 		}
 
-		return e.complexity.EmbedMessage.EmbedType(childComplexity), true
+		return e.complexity.EmbedMessageResponse.ChatID(childComplexity), true
 
-	case "EmbedMessage.id":
-		if e.complexity.EmbedMessage.ID == nil {
+	case "EmbedMessageResponse.embedType":
+		if e.complexity.EmbedMessageResponse.EmbedType == nil {
 			break
 		}
 
-		return e.complexity.EmbedMessage.ID(childComplexity), true
+		return e.complexity.EmbedMessageResponse.EmbedType(childComplexity), true
 
-	case "EmbedMessage.owner":
-		if e.complexity.EmbedMessage.Owner == nil {
+	case "EmbedMessageResponse.id":
+		if e.complexity.EmbedMessageResponse.ID == nil {
 			break
 		}
 
-		return e.complexity.EmbedMessage.Owner(childComplexity), true
+		return e.complexity.EmbedMessageResponse.ID(childComplexity), true
 
-	case "EmbedMessage.text":
-		if e.complexity.EmbedMessage.Text == nil {
+	case "EmbedMessageResponse.owner":
+		if e.complexity.EmbedMessageResponse.Owner == nil {
 			break
 		}
 
-		return e.complexity.EmbedMessage.Text(childComplexity), true
+		return e.complexity.EmbedMessageResponse.Owner(childComplexity), true
+
+	case "EmbedMessageResponse.text":
+		if e.complexity.EmbedMessageResponse.Text == nil {
+			break
+		}
+
+		return e.complexity.EmbedMessageResponse.Text(childComplexity), true
 
 	case "FileUploadedEvent.aType":
 		if e.complexity.FileUploadedEvent.AType == nil {
@@ -957,8 +965,9 @@ type User {
     avatar: String
 }
 
-type EmbedMessage {
+type EmbedMessageResponse {
     id:     Int64!
+    chatId: Int64
     text:   String!
     owner:  User
     embedType: String!
@@ -975,7 +984,7 @@ type DisplayMessageDto {
     canEdit:        Boolean!
     canDelete:      Boolean!
     fileItemUuid:   UUID
-    embedMessage:   EmbedMessage
+    embedMessage:   EmbedMessageResponse
 }
 
 type MessageDeletedDto {
@@ -2963,9 +2972,9 @@ func (ec *executionContext) _DisplayMessageDto_embedMessage(ctx context.Context,
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.EmbedMessage)
+	res := resTmp.(*model.EmbedMessageResponse)
 	fc.Result = res
-	return ec.marshalOEmbedMessage2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐEmbedMessage(ctx, field.Selections, res)
+	return ec.marshalOEmbedMessageResponse2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐEmbedMessageResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_embedMessage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2977,22 +2986,24 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_embedMessage(ctx cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_EmbedMessage_id(ctx, field)
+				return ec.fieldContext_EmbedMessageResponse_id(ctx, field)
+			case "chatId":
+				return ec.fieldContext_EmbedMessageResponse_chatId(ctx, field)
 			case "text":
-				return ec.fieldContext_EmbedMessage_text(ctx, field)
+				return ec.fieldContext_EmbedMessageResponse_text(ctx, field)
 			case "owner":
-				return ec.fieldContext_EmbedMessage_owner(ctx, field)
+				return ec.fieldContext_EmbedMessageResponse_owner(ctx, field)
 			case "embedType":
-				return ec.fieldContext_EmbedMessage_embedType(ctx, field)
+				return ec.fieldContext_EmbedMessageResponse_embedType(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type EmbedMessage", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type EmbedMessageResponse", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _EmbedMessage_id(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EmbedMessage_id(ctx, field)
+func (ec *executionContext) _EmbedMessageResponse_id(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessageResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmbedMessageResponse_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3022,9 +3033,9 @@ func (ec *executionContext) _EmbedMessage_id(ctx context.Context, field graphql.
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EmbedMessage_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EmbedMessageResponse_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "EmbedMessage",
+		Object:     "EmbedMessageResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3035,8 +3046,49 @@ func (ec *executionContext) fieldContext_EmbedMessage_id(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _EmbedMessage_text(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EmbedMessage_text(ctx, field)
+func (ec *executionContext) _EmbedMessageResponse_chatId(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessageResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmbedMessageResponse_chatId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmbedMessageResponse_chatId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmbedMessageResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmbedMessageResponse_text(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessageResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmbedMessageResponse_text(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3066,9 +3118,9 @@ func (ec *executionContext) _EmbedMessage_text(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EmbedMessage_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EmbedMessageResponse_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "EmbedMessage",
+		Object:     "EmbedMessageResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3079,8 +3131,8 @@ func (ec *executionContext) fieldContext_EmbedMessage_text(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _EmbedMessage_owner(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EmbedMessage_owner(ctx, field)
+func (ec *executionContext) _EmbedMessageResponse_owner(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessageResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmbedMessageResponse_owner(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3107,9 +3159,9 @@ func (ec *executionContext) _EmbedMessage_owner(ctx context.Context, field graph
 	return ec.marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EmbedMessage_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EmbedMessageResponse_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "EmbedMessage",
+		Object:     "EmbedMessageResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3128,8 +3180,8 @@ func (ec *executionContext) fieldContext_EmbedMessage_owner(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _EmbedMessage_embedType(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EmbedMessage_embedType(ctx, field)
+func (ec *executionContext) _EmbedMessageResponse_embedType(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessageResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmbedMessageResponse_embedType(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3159,9 +3211,9 @@ func (ec *executionContext) _EmbedMessage_embedType(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EmbedMessage_embedType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EmbedMessageResponse_embedType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "EmbedMessage",
+		Object:     "EmbedMessageResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7687,37 +7739,41 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 	return out
 }
 
-var embedMessageImplementors = []string{"EmbedMessage"}
+var embedMessageResponseImplementors = []string{"EmbedMessageResponse"}
 
-func (ec *executionContext) _EmbedMessage(ctx context.Context, sel ast.SelectionSet, obj *model.EmbedMessage) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, embedMessageImplementors)
+func (ec *executionContext) _EmbedMessageResponse(ctx context.Context, sel ast.SelectionSet, obj *model.EmbedMessageResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, embedMessageResponseImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("EmbedMessage")
+			out.Values[i] = graphql.MarshalString("EmbedMessageResponse")
 		case "id":
 
-			out.Values[i] = ec._EmbedMessage_id(ctx, field, obj)
+			out.Values[i] = ec._EmbedMessageResponse_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "chatId":
+
+			out.Values[i] = ec._EmbedMessageResponse_chatId(ctx, field, obj)
+
 		case "text":
 
-			out.Values[i] = ec._EmbedMessage_text(ctx, field, obj)
+			out.Values[i] = ec._EmbedMessageResponse_text(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "owner":
 
-			out.Values[i] = ec._EmbedMessage_owner(ctx, field, obj)
+			out.Values[i] = ec._EmbedMessageResponse_owner(ctx, field, obj)
 
 		case "embedType":
 
-			out.Values[i] = ec._EmbedMessage_embedType(ctx, field, obj)
+			out.Values[i] = ec._EmbedMessageResponse_embedType(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -9232,11 +9288,11 @@ func (ec *executionContext) marshalODisplayMessageDto2ᚖnkonevᚗnameᚋevent�
 	return ec._DisplayMessageDto(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOEmbedMessage2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐEmbedMessage(ctx context.Context, sel ast.SelectionSet, v *model.EmbedMessage) graphql.Marshaler {
+func (ec *executionContext) marshalOEmbedMessageResponse2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐEmbedMessageResponse(ctx context.Context, sel ast.SelectionSet, v *model.EmbedMessageResponse) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._EmbedMessage(ctx, sel, v)
+	return ec._EmbedMessageResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOFileUploadedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐFileUploadedEvent(ctx context.Context, sel ast.SelectionSet, v *model.FileUploadedEvent) graphql.Marshaler {

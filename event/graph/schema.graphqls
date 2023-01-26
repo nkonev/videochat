@@ -8,8 +8,9 @@ type User {
     avatar: String
 }
 
-type EmbedMessage {
+type EmbedMessageResponse {
     id:     Int64!
+    chatId: Int64
     text:   String!
     owner:  User
     embedType: String!
@@ -26,7 +27,7 @@ type DisplayMessageDto {
     canEdit:        Boolean!
     canDelete:      Boolean!
     fileItemUuid:   UUID
-    embedMessage:   EmbedMessage
+    embedMessage:   EmbedMessageResponse
 }
 
 type MessageDeletedDto {

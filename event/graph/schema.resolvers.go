@@ -166,8 +166,9 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 		}
 		embedMessageDto := messageDto.EmbedMessage
 		if embedMessageDto != nil {
-			result.MessageEvent.EmbedMessage = &model.EmbedMessage{
+			result.MessageEvent.EmbedMessage = &model.EmbedMessageResponse{
 				ID:        embedMessageDto.Id,
+				ChatID:    embedMessageDto.ChatId,
 				Text:      embedMessageDto.Text,
 				Owner:     convertUser(embedMessageDto.Owner),
 				EmbedType: embedMessageDto.EmbedType,

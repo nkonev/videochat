@@ -27,9 +27,6 @@ type EditMessageDto struct {
 	CreateMessageDto
 }
 
-const EmbedMessageTypeResend = "resend"
-const EmbedMessageTypeReply = "reply"
-
 type CreateMessageDto struct {
 	Text                string                   `json:"text"`
 	FileItemUuid        *uuid.UUID               `json:"fileItemUuid"`
@@ -93,10 +90,12 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 		}
 
 		var ownersSet = map[int64]bool{}
-		for _, c := range messages {
-			ownersSet[c.OwnerId] = true
-			if c.EmbeddedOwnerId != nil {
-				ownersSet[*c.EmbeddedOwnerId] = true
+		for _, message := range messages {
+			ownersSet[message.OwnerId] = true
+			if message.ResponseEmbeddedMessageReplyOwnerId != nil {
+				ownersSet[*message.ResponseEmbeddedMessageReplyOwnerId] = true
+			} else if message.ResponseEmbeddedMessageResendOwnerId != nil {
+				ownersSet[*message.ResponseEmbeddedMessageResendOwnerId] = true
 			}
 		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
@@ -120,8 +119,10 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 		}
 		var ownersSet = map[int64]bool{}
 		ownersSet[behalfUserId] = true
-		if message.EmbeddedOwnerId != nil {
-			ownersSet[*message.EmbeddedOwnerId] = true
+		if message.ResponseEmbeddedMessageReplyOwnerId != nil {
+			ownersSet[*message.ResponseEmbeddedMessageReplyOwnerId] = true
+		} else if message.ResponseEmbeddedMessageResendOwnerId != nil {
+			ownersSet[*message.ResponseEmbeddedMessageResendOwnerId] = true
 		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
 		return convertToMessageDto(message, owners, behalfUserId), nil
@@ -172,14 +173,24 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, beha
 		FileItemUuid:   dbMessage.FileItemUuid,
 	}
 
-	if dbMessage.EmbeddedOwnerId != nil {
-		embeddedUser := owners[*dbMessage.EmbeddedOwnerId]
-		ret.EmbedMessage = &dto.EmbedMessage{
-			Id:        *dbMessage.EmbeddedId,
-			Text:      *dbMessage.EmbeddedText,
-			EmbedType: *dbMessage.EmbeddedType,
+	if dbMessage.ResponseEmbeddedMessageReplyOwnerId != nil {
+		embeddedUser := owners[*dbMessage.ResponseEmbeddedMessageReplyOwnerId]
+		ret.EmbedMessage = &dto.EmbedMessageResponse{
+			Id:        *dbMessage.ResponseEmbeddedMessageReplyId,
+			Text:      *dbMessage.ResponseEmbeddedMessageReplyText,
+			EmbedType: *dbMessage.ResponseEmbeddedMessageType,
 			Owner:     embeddedUser,
 		}
+	} else if dbMessage.ResponseEmbeddedMessageResendOwnerId != nil {
+		embeddedUser := owners[*dbMessage.ResponseEmbeddedMessageResendOwnerId]
+		ret.EmbedMessage = &dto.EmbedMessageResponse{
+			Id:        *dbMessage.ResponseEmbeddedMessageResendId,
+			ChatId:    dbMessage.ResponseEmbeddedMessageResendChatId,
+			Text:      dbMessage.Text,
+			EmbedType: *dbMessage.ResponseEmbeddedMessageType,
+			Owner:     embeddedUser,
+		}
+		ret.Text = ""
 	}
 
 	ret.SetPersonalizedFields(behalfUserId)
@@ -196,10 +207,6 @@ func (a *EditMessageDto) Validate() error {
 		validation.Field(&a.Text, validation.Required, validation.Length(1, 1024*1024)),
 		validation.Field(&a.Id, validation.Required),
 	)
-}
-
-func noContent(c echo.Context) error {
-	return c.NoContent(204)
 }
 
 func (mc *MessageHandler) PostMessage(c echo.Context) error {
@@ -282,21 +289,21 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 		if input.EmbedMessageRequest.EmbedType == "" {
 			return errors.New("Missed embedMessageType")
 		} else {
-			if input.EmbedMessageRequest.EmbedType != EmbedMessageTypeReply && input.EmbedMessageRequest.EmbedType != EmbedMessageTypeResend {
+			if input.EmbedMessageRequest.EmbedType != utils.EmbedMessageTypeReply && input.EmbedMessageRequest.EmbedType != utils.EmbedMessageTypeResend {
 				return errors.New("Wrong embedMessageType")
 			}
-			if input.EmbedMessageRequest.EmbedType == EmbedMessageTypeResend && input.EmbedMessageRequest.ChatId == 0 {
+			if input.EmbedMessageRequest.EmbedType == utils.EmbedMessageTypeResend && input.EmbedMessageRequest.ChatId == 0 {
 				return errors.New("Missed embedChatId for EmbedMessageTypeResend")
 			}
 		}
 
-		if input.EmbedMessageRequest.EmbedType == EmbedMessageTypeReply {
-			receiver.EmbeddedId = &input.EmbedMessageRequest.Id
-			receiver.EmbeddedType = &input.EmbedMessageRequest.EmbedType
+		if input.EmbedMessageRequest.EmbedType == utils.EmbedMessageTypeReply {
+			receiver.RequestEmbeddedMessageId = &input.EmbedMessageRequest.Id
+			receiver.RequestEmbeddedMessageType = &input.EmbedMessageRequest.EmbedType
 			return nil
-		} else if input.EmbedMessageRequest.EmbedType == EmbedMessageTypeResend {
-			receiver.EmbeddedId = &input.EmbedMessageRequest.Id
-			receiver.EmbeddedType = &input.EmbedMessageRequest.EmbedType
+		} else if input.EmbedMessageRequest.EmbedType == utils.EmbedMessageTypeResend {
+			receiver.RequestEmbeddedMessageId = &input.EmbedMessageRequest.Id
+			receiver.RequestEmbeddedMessageType = &input.EmbedMessageRequest.EmbedType
 			// check if this input.EmbedChatId resendable
 			chat, err := tx.GetChatBasic(input.EmbedMessageRequest.ChatId)
 			if err != nil {
@@ -313,8 +320,8 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 				return errors.New("Missing the message")
 			}
 			receiver.Text = *messageText
-			receiver.EmbeddedOwnerId = messageOwnerId
-			receiver.EmbeddedChatId = &input.EmbedMessageRequest.ChatId
+			receiver.RequestEmbeddedMessageOwnerId = messageOwnerId
+			receiver.RequestEmbeddedMessageChatId = &input.EmbedMessageRequest.ChatId
 			return nil
 		}
 		return errors.New("Unexpected branch, logical mistake")

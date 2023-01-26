@@ -177,3 +177,6 @@ func Min(a, b int) int {
 	}
 	return b
 }
+
+const EmbedMessageTypeResend = "resend"
+const EmbedMessageTypeReply = "reply"
