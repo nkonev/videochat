@@ -292,3 +292,6 @@ export const setAnswerPreviewFields = (dto, messageText, ownerLogin) => {
 export const getAnswerPreviewFields = (dto) => {
     return dto;
 }
+
+export const embed_message_reply = "reply";
+export const embed_message_resend = "resend";

@@ -21,7 +21,7 @@
                     <a class="list-item-head" :href="getEmbedLinkTo(item)" @click.prevent="onEmbedLinkClick(item)">{{getEmbedHead(item)}}</a>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
-                <v-container v-if="item.embedMessage == null || item.embedMessage.embedType == 'reply'" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
+                <v-container v-if="shouldShowMainContainer(item)" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
             </div>
         </div>
     </div>
@@ -36,10 +36,15 @@
         OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE, OPEN_RESEND_TO_MODAL
     } from "./bus";
     import debounce from "lodash/debounce";
-    import {getHumanReadableDate, setAnswerPreviewFields, setIcon} from "@/utils";
+    import {
+        embed_message_reply,
+        embed_message_resend,
+        getHumanReadableDate,
+        setAnswerPreviewFields,
+    } from "@/utils";
     import "./message.styl";
     import cloneDeep from "lodash/cloneDeep";
-    import {chat, chat_name, messageIdHashPrefix, videochat_name} from "./routes"
+    import {chat, chat_name, messageIdHashPrefix} from "./routes"
 
     export default {
         props: ['item', 'chatId', 'my', 'highlight', 'canResend'],
@@ -78,7 +83,7 @@
                 const replyMessage = {
                     embedMessage: {
                         id: dto.id,
-                        embedType: "reply"
+                        embedType: embed_message_reply
                     },
                 };
                 setAnswerPreviewFields(replyMessage, dto.text, dto.owner.login);
@@ -101,24 +106,27 @@
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid :itemId});
             },
             getEmbedLinkTo(item) {
-                if (item.embedMessage.embedType == "reply") {
+                if (item.embedMessage.embedType == embed_message_reply) {
                     return chat + '/' + this.chatId + messageIdHashPrefix + item.embedMessage.id
-                } else if (item.embedMessage.embedType == "resend") {
+                } else if (item.embedMessage.embedType == embed_message_resend) {
                     return chat + '/' + item.embedMessage.chatId + messageIdHashPrefix + item.embedMessage.id
                 }
             },
             onEmbedLinkClick(item) {
-                if (item.embedMessage.embedType == "resend") {
+                if (item.embedMessage.embedType == embed_message_resend) {
                     const routeDto = { name: chat_name, params: { id: item.embedMessage.chatId }, hash: messageIdHashPrefix + item.embedMessage.id};
                     this.$router.push(routeDto);
                 }
             },
             getEmbedHead(item){
-                if (item.embedMessage.embedType == "reply") {
+                if (item.embedMessage.embedType == embed_message_reply) {
                     return this.getOwner(item.embedMessage.owner)
-                } else if (item.embedMessage.embedType == "resend") {
+                } else if (item.embedMessage.embedType == embed_message_resend) {
                     return this.getOwner(item.embedMessage.owner) + " in other chat";
                 }
+            },
+            shouldShowMainContainer(item) {
+                return item.embedMessage == null || item.embedMessage.embedType == embed_message_reply
             },
         },
         created() {
