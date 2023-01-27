@@ -108,12 +108,12 @@
             getEmbedLinkTo(item) {
                 if (item.embedMessage.embedType == embed_message_reply) {
                     return chat + '/' + this.chatId + messageIdHashPrefix + item.embedMessage.id
-                } else if (item.embedMessage.embedType == embed_message_resend) {
+                } else if (item.embedMessage.embedType == embed_message_resend && item.embedMessage.isParticipant) {
                     return chat + '/' + item.embedMessage.chatId + messageIdHashPrefix + item.embedMessage.id
                 }
             },
             onEmbedLinkClick(item) {
-                if (item.embedMessage.embedType == embed_message_resend) {
+                if (item.embedMessage.embedType == embed_message_resend && item.embedMessage.isParticipant) {
                     const routeDto = { name: chat_name, params: { id: item.embedMessage.chatId }, hash: messageIdHashPrefix + item.embedMessage.id};
                     this.$router.push(routeDto);
                 }

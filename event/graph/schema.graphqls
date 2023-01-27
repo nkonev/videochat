@@ -15,6 +15,7 @@ type EmbedMessageResponse {
     text:   String!
     owner:  User
     embedType: String!
+    isParticipant: Boolean!
 }
 
 type DisplayMessageDto {

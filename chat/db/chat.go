@@ -373,6 +373,63 @@ func (tx *Tx) GetChatBasic(chatId int64) (*Chat, error) {
 	return getChatBasicCommon(tx, chatId)
 }
 
+func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error) {
+	result := map[int64]*BasicChatDto{}
+	if len(chatIds) == 0 {
+		return result, nil
+	}
+
+	inClause := ""
+	first := true
+	for chatId, val := range chatIds {
+		if val {
+			dtl := ""
+			if !first {
+				dtl = ","
+			}
+			dtl += utils.Int64ToString(chatId)
+			inClause = inClause + dtl
+		}
+
+		first = false
+	}
+	rows, err := co.Query(fmt.Sprintf("SELECT c.id, c.title, (cp.user_id is not null) FROM chat c LEFT JOIN chat_participant cp ON (c.id = cp.chat_id AND cp.user_id = $1) WHERE c.id IN (%s)", inClause), behalfParticipantId)
+	if err != nil {
+		Logger.Errorf("Error during get chat rows %v", err)
+		return nil, err
+	} else {
+		defer rows.Close()
+		list := make([]*BasicChatDto, 0)
+		for rows.Next() {
+			dto := new(BasicChatDto)
+			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant); err != nil {
+				Logger.Errorf("Error during scan chat rows %v", err)
+				return nil, err
+			} else {
+				list = append(list, dto)
+			}
+		}
+		for _, bc := range list {
+			result[bc.Id] = bc
+		}
+		return result, nil
+	}
+}
+
+func (db *DB) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error) {
+	return getChatsBasicCommon(db, chatIds, behalfParticipantId)
+}
+
+func (tx *Tx) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error) {
+	return getChatsBasicCommon(tx, chatIds, behalfParticipantId)
+}
+
+type BasicChatDto struct {
+	Id                      int64
+	Title                   string
+	BehalfUserIsParticipant bool
+}
+
 func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
 	if _, err := tx.Exec("UPDATE chat SET last_update_date_time = utc_now() WHERE id = $1", id); err != nil {
 		Logger.Errorf("Error during update chat %v %v", id, err)

@@ -7,12 +7,13 @@ import (
 )
 
 type EmbedMessageResponse struct {
-	Id        int64  `json:"id"`
-	ChatId    *int64 `json:"chatId"`
-	ChatName  *string `json:"chatName"`
-	Text      string `json:"text"`
-	Owner     *User  `json:"owner"`
-	EmbedType string `json:"embedType"`
+	Id            int64   `json:"id"`
+	ChatId        *int64  `json:"chatId"`
+	ChatName      *string `json:"chatName"`
+	Text          string  `json:"text"`
+	Owner         *User   `json:"owner"`
+	EmbedType     string  `json:"embedType"`
+	IsParticipant bool    `json:"isParticipant"`
 }
 
 type EmbedMessageRequest struct {
