@@ -90,18 +90,28 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 		}
 
 		var ownersSet = map[int64]bool{}
+		var chatsSet = map[int64]string{}
+
 		for _, message := range messages {
 			ownersSet[message.OwnerId] = true
 			if message.ResponseEmbeddedMessageReplyOwnerId != nil {
-				ownersSet[*message.ResponseEmbeddedMessageReplyOwnerId] = true
+				var embeddedMessageReplyOwnerId = *message.ResponseEmbeddedMessageReplyOwnerId
+				ownersSet[embeddedMessageReplyOwnerId] = true
 			} else if message.ResponseEmbeddedMessageResendOwnerId != nil {
-				ownersSet[*message.ResponseEmbeddedMessageResendOwnerId] = true
+				var embeddedMessageResendOwnerId = *message.ResponseEmbeddedMessageResendOwnerId
+				ownersSet[embeddedMessageResendOwnerId] = true
+				var embeddedMessageResendChatId = *message.ResponseEmbeddedMessageResendChatId
+				chatBasic, err := mc.db.GetChatBasic(embeddedMessageResendChatId)
+				if err != nil {
+					return err
+				}
+				chatsSet[embeddedMessageResendChatId] = chatBasic.Title
 			}
 		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 		messageDtos := make([]*dto.DisplayMessageDto, 0)
 		for _, c := range messages {
-			messageDtos = append(messageDtos, convertToMessageDto(c, owners, userPrincipalDto.UserId))
+			messageDtos = append(messageDtos, convertToMessageDto(c, owners, chatsSet, userPrincipalDto.UserId))
 		}
 
 		GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
@@ -119,13 +129,22 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 		}
 		var ownersSet = map[int64]bool{}
 		ownersSet[behalfUserId] = true
+		var chatsSet = map[int64]string{}
 		if message.ResponseEmbeddedMessageReplyOwnerId != nil {
-			ownersSet[*message.ResponseEmbeddedMessageReplyOwnerId] = true
+			var embeddedMessageReplyOwnerId = *message.ResponseEmbeddedMessageReplyOwnerId
+			ownersSet[embeddedMessageReplyOwnerId] = true
 		} else if message.ResponseEmbeddedMessageResendOwnerId != nil {
-			ownersSet[*message.ResponseEmbeddedMessageResendOwnerId] = true
+			var embeddedMessageResendOwnerId = *message.ResponseEmbeddedMessageResendOwnerId
+			ownersSet[embeddedMessageResendOwnerId] = true
+			var embeddedMessageResendChatId = *message.ResponseEmbeddedMessageResendChatId
+			chatBasic, err := co.GetChatBasic(embeddedMessageResendChatId)
+			if err != nil {
+				return nil, err
+			}
+			chatsSet[embeddedMessageResendChatId] = chatBasic.Title
 		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
-		return convertToMessageDto(message, owners, behalfUserId), nil
+		return convertToMessageDto(message, owners, chatsSet, behalfUserId), nil
 	}
 }
 
@@ -157,7 +176,7 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, message)
 }
 
-func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, behalfUserId int64) *dto.DisplayMessageDto {
+func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chats map[int64]string, behalfUserId int64) *dto.DisplayMessageDto {
 	user := owners[dbMessage.OwnerId]
 	if user == nil {
 		user = &dto.User{Login: fmt.Sprintf("user%v", dbMessage.OwnerId), Id: dbMessage.OwnerId}
@@ -183,9 +202,12 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, beha
 		}
 	} else if dbMessage.ResponseEmbeddedMessageResendOwnerId != nil {
 		embeddedUser := owners[*dbMessage.ResponseEmbeddedMessageResendOwnerId]
+		var chatName = "chat"
+		chatName = chats[*dbMessage.ResponseEmbeddedMessageResendChatId]
 		ret.EmbedMessage = &dto.EmbedMessageResponse{
 			Id:        *dbMessage.ResponseEmbeddedMessageResendId,
 			ChatId:    dbMessage.ResponseEmbeddedMessageResendChatId,
+			ChatName:  &chatName,
 			Text:      dbMessage.Text,
 			EmbedType: *dbMessage.ResponseEmbeddedMessageType,
 			Owner:     embeddedUser,

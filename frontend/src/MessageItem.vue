@@ -122,7 +122,7 @@
                 if (item.embedMessage.embedType == embed_message_reply) {
                     return this.getOwner(item.embedMessage.owner)
                 } else if (item.embedMessage.embedType == embed_message_resend) {
-                    return this.getOwner(item.embedMessage.owner) + " in other chat";
+                    return this.getOwner(item.embedMessage.owner) + this.$vuetify.lang.t('$vuetify.in') + item.embedMessage.chatName;
                 }
             },
             shouldShowMainContainer(item) {

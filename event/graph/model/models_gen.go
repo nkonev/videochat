@@ -67,11 +67,12 @@ type DisplayMessageDto struct {
 }
 
 type EmbedMessageResponse struct {
-	ID        int64  `json:"id"`
-	ChatID    *int64 `json:"chatId"`
-	Text      string `json:"text"`
-	Owner     *User  `json:"owner"`
-	EmbedType string `json:"embedType"`
+	ID        int64   `json:"id"`
+	ChatID    *int64  `json:"chatId"`
+	ChatName  *string `json:"chatName"`
+	Text      string  `json:"text"`
+	Owner     *User   `json:"owner"`
+	EmbedType string  `json:"embedType"`
 }
 
 type FileUploadedEvent struct {

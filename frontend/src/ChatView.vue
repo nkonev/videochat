@@ -638,6 +638,7 @@
                                       embedMessage {
                                         id
                                         chatId
+                                        chatName
                                         text
                                         owner {
                                           id

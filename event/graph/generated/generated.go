@@ -107,6 +107,7 @@ type ComplexityRoot struct {
 
 	EmbedMessageResponse struct {
 		ChatID    func(childComplexity int) int
+		ChatName  func(childComplexity int) int
 		EmbedType func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Owner     func(childComplexity int) int
@@ -516,6 +517,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EmbedMessageResponse.ChatID(childComplexity), true
+
+	case "EmbedMessageResponse.chatName":
+		if e.complexity.EmbedMessageResponse.ChatName == nil {
+			break
+		}
+
+		return e.complexity.EmbedMessageResponse.ChatName(childComplexity), true
 
 	case "EmbedMessageResponse.embedType":
 		if e.complexity.EmbedMessageResponse.EmbedType == nil {
@@ -968,6 +976,7 @@ type User {
 type EmbedMessageResponse {
     id:     Int64!
     chatId: Int64
+    chatName: String
     text:   String!
     owner:  User
     embedType: String!
@@ -2989,6 +2998,8 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_embedMessage(ctx cont
 				return ec.fieldContext_EmbedMessageResponse_id(ctx, field)
 			case "chatId":
 				return ec.fieldContext_EmbedMessageResponse_chatId(ctx, field)
+			case "chatName":
+				return ec.fieldContext_EmbedMessageResponse_chatName(ctx, field)
 			case "text":
 				return ec.fieldContext_EmbedMessageResponse_text(ctx, field)
 			case "owner":
@@ -3082,6 +3093,47 @@ func (ec *executionContext) fieldContext_EmbedMessageResponse_chatId(ctx context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmbedMessageResponse_chatName(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessageResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmbedMessageResponse_chatName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmbedMessageResponse_chatName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmbedMessageResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7759,6 +7811,10 @@ func (ec *executionContext) _EmbedMessageResponse(ctx context.Context, sel ast.S
 		case "chatId":
 
 			out.Values[i] = ec._EmbedMessageResponse_chatId(ctx, field, obj)
+
+		case "chatName":
+
+			out.Values[i] = ec._EmbedMessageResponse_chatName(ctx, field, obj)
 
 		case "text":
 

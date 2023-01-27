@@ -148,5 +148,6 @@ export default {
     share_to: "Choose chat to share to",
     no_chats: "No chats",
     search_by_chats: "Search by chats",
-    can_resend: "Allow message resending"
+    can_resend: "Allow message resending",
+    in: " in "
 }

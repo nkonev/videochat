@@ -11,6 +11,7 @@ type User {
 type EmbedMessageResponse {
     id:     Int64!
     chatId: Int64
+    chatName: String
     text:   String!
     owner:  User
     embedType: String!
