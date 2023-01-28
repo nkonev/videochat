@@ -48,6 +48,8 @@
                         dense
                         hide-details
                         class="ma-0 ml-2 mr-4 py-1"
+                        v-model="notificationsSettings.answersEnabled"
+                        @click="putNotificationsSettings()"
                     ></v-switch>
 
                     <v-spacer></v-spacer>
