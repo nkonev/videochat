@@ -21,7 +21,7 @@ services:
         tag: chat-traefik
 
   postgresql:
-    image: postgres:14.5-alpine3.16
+    image: postgres:15.1-alpine3.17
     volumes:
       - ./postgresql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
@@ -35,7 +35,7 @@ services:
         tag: chat-postgresql
 
   redis:
-    image: redis:7.0.4-alpine3.16
+    image: redis:7.0.8-alpine3.17
     hostname: redis
     volumes:
       - redis_data_dir:/data
@@ -47,7 +47,7 @@ services:
         tag: chat-redis
 
   minio:
-    image: bitnami/minio:2022.8.11-debian-11-r0
+    image: bitnami/minio:2023.1.25-debian-11-r0
     hostname: minio
     environment:
       - MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE
@@ -73,7 +73,7 @@ services:
         tag: chat-minio
 
   rabbitmq:
-    image: rabbitmq:3.9.22-management-alpine
+    image: rabbitmq:3.11.7-management-alpine
     hostname: rabbitmq
     environment:
       - RABBITMQ_DEFAULT_USER=videoChat
