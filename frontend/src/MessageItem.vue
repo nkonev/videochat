@@ -16,12 +16,12 @@
                 <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
                 <v-icon v-if="canResend" class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
             </v-container>
-            <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" >
+            <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
                 <div v-if="item.embedMessage" class="embedded-message">
                     <a class="list-item-head" :href="getEmbedLinkTo(item)" @click.prevent="onEmbedLinkClick(item)">{{getEmbedHead(item)}}</a>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
-                <v-container v-if="shouldShowMainContainer(item)" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
+                <v-container v-if="shouldShowMainContainer(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
             </div>
         </div>
     </div>
