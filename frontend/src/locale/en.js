@@ -149,5 +149,6 @@ export default {
     no_chats: "No chats",
     search_by_chats: "Search by chats",
     can_resend: "Allow message resending",
-    in: " in "
+    in: " in ",
+    resend_to_here: "Click to resend here"
 }

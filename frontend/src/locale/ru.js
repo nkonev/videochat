@@ -149,5 +149,6 @@ export default {
     no_chats: "Нет чатов",
     search_by_chats: "Поиск по чатам",
     can_resend: "Разрешить пересылку сообщений",
-    in: " в "
+    in: " в ",
+    resend_to_here: "Кликните для пересылки сюда"
 }

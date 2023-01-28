@@ -12,14 +12,17 @@
                     <v-list class="pb-0" v-if="!loading">
                         <template v-if="chats.length > 0">
                             <template v-for="(item, index) in chats">
-                                <v-list-item link @click="resendMessageTo(item.id)">
-                                    <v-list-item-avatar v-if="item.avatar">
-                                        <img :src="item.avatar"/>
-                                    </v-list-item-avatar>
-                                    <v-list-item-content class="py-2">
-                                        <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
-                                    </v-list-item-content>
-                                </v-list-item>
+                                <v-hover v-slot:default="{ hover }">
+                                    <v-list-item link @click="resendMessageTo(item.id)">
+                                        <v-list-item-avatar v-if="item.avatar">
+                                            <img :src="item.avatar"/>
+                                        </v-list-item-avatar>
+                                        <v-list-item-content class="py-2">
+                                            <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
+                                            <v-list-item-subtitle v-if="hover">{{ $vuetify.lang.t('$vuetify.resend_to_here') }}</v-list-item-subtitle>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                </v-hover>
                             </template>
                         </template>
                         <template v-else>
