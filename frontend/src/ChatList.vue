@@ -37,7 +37,7 @@
             <template slot="no-results"><span/></template>
         </infinite-loading>
 
-        <v-container fill-height fluid v-if="userIsSet && !items.length && itemsLoaded" :style="$vuetify.breakpoint.lgAndUp ? 'max-width: 420px' : ''">
+        <v-container fill-height fluid v-if="shouldShowWelcome()" :style="$vuetify.breakpoint.lgAndUp ? 'max-width: 420px' : ''">
             <v-row align="center" justify="center">
                 <v-col>
                     <v-card>
@@ -76,7 +76,7 @@
     } from "./bus";
     import {chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
-    import { findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition } from "./utils";
+    import { findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition, hasLength } from "./utils";
     import axios from "axios";
     import debounce from "lodash/debounce";
     import queryMixin from "@/queryMixin";
@@ -274,6 +274,9 @@
             },
             onCloseContextMenu(){
                 this.$refs.contextMenuRef.onCloseContextMenu()
+            },
+            shouldShowWelcome(){
+                return this.userIsSet && !this.items.length && this.itemsLoaded && !hasLength(this.searchString)
             },
             createChat() {
                 bus.$emit(OPEN_CHAT_EDIT, null);
