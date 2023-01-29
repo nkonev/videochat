@@ -68,7 +68,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			}
 
 		case "mention_deleted":
-			id, err := srv.dbs.DeleteNotificationByMessageId(mentionNotification.Id, event.UserId)
+			id, err := srv.dbs.DeleteNotificationByMessageId(mentionNotification.Id, notificationType, event.UserId)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
 					Logger.Debugf("Missed notification %v", err)
@@ -111,6 +111,35 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		if err != nil {
 			Logger.Errorf("Unable to send notification delete %v", err)
 		}
+	} else if event.ReplyNotification != nil && userNotificationsSettings.AnswersEnabled {
+		err := srv.removeExcessNotificationsIfNeed(event.UserId)
+		if err != nil {
+			Logger.Errorf("Unable to delete excess notifications %v", err)
+			return
+		}
+
+		notification := event.ReplyNotification
+		notificationType := "reply"
+		switch event.EventType {
+		case "reply_added":
+			_, _, err = srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.ReplyableMessage)
+			if err != nil {
+				Logger.Errorf("Unable to put notification %v", err)
+				return
+			}
+		case "reply_deleted":
+			_, err := srv.dbs.DeleteNotificationByMessageId(notification.MessageId, notificationType, event.UserId)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
+					Logger.Debugf("Missed notification %v", err)
+				} else {
+					Logger.Errorf("Unable to delete notification %v", err)
+				}
+				return
+			}
+
+		}
+
 	}
 
 }

@@ -60,3 +60,9 @@ type MessageBroadcastNotification struct {
 type AllUnreadMessages struct {
 	MessagesCount int64 `json:"allUnreadMessages"`
 }
+
+type ReplyDto struct {
+	MessageId        int64  `json:"messageId"`
+	ChatId           int64  `json:"chatId"`
+	ReplyableMessage string `json:"replyableMessage"`
+}

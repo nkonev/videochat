@@ -31,4 +31,5 @@ type NotificationEvent struct {
 	ChatId              int64                `json:"chatId"`
 	UserId              int64                `json:"userId"`
 	MentionNotification *MentionNotification `json:"mentionNotification"`
+	ReplyNotification   *ReplyDto            `json:"replyNotification"`
 }

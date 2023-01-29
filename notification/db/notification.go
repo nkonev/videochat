@@ -24,8 +24,8 @@ func (db *DB) DeleteNotification(id int64, userId int64) error {
 	return nil
 }
 
-func (db *DB) DeleteNotificationByMessageId(messageId int64, userId int64) (int64, error) {
-	res := db.QueryRow(`delete from notification where message_id = $1 and user_id = $2 returning id`, messageId, userId)
+func (db *DB) DeleteNotificationByMessageId(messageId int64, notificationType string, userId int64) (int64, error) {
+	res := db.QueryRow(`delete from notification where message_id = $1 and user_id = $2 and notification_type = $3 returning id`, messageId, userId, notificationType)
 	if res.Err() != nil {
 		return 0, res.Err()
 	}

@@ -292,9 +292,10 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 
 		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 		var addedMentions, strippedText = mc.findMentions(message.Text, users, c.Request().Context())
+		var reply, userToSendTo = mc.wasReplyAdded(nil, message, chatId)
 		var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
 		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText)
-
+		mc.notificator.NotifyAddReply(c, reply, userToSendTo)
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
 		return c.JSON(http.StatusCreated, message)
@@ -434,6 +435,11 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			}
 		}
 
+		var replyAdded, userToSendToAdded = mc.wasReplyAdded(oldMessage, message, chatId)
+		mc.notificator.NotifyAddReply(c, replyAdded, userToSendToAdded)
+		var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, message, chatId)
+		mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
+
 		var reallyAddedMentions = excludeMyself(userIdsToNotifyAboutMentionCreated, userPrincipalDto)
 		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText)
 		mc.notificator.NotifyRemoveMention(c, userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
@@ -506,6 +512,9 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 			ChatId: chatId,
 		}
 		mc.notificator.NotifyAboutDeleteMessage(c, participantIds, chatId, cd)
+
+		var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, nil, chatId)
+		mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
 
 		return c.JSON(http.StatusAccepted, &utils.H{"id": messageId})
 	}
@@ -654,4 +663,40 @@ func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.
 		withoutAnyHtml = withoutAnyHtml[:size]
 	}
 	return result, withoutAnyHtml
+}
+
+func (mc *MessageHandler) wasReplyAdded(oldMessage *db.Message, messageRendered *dto.DisplayMessageDto, chatId int64) (*dto.ReplyDto, *int64) {
+	var replyWasMissed = true
+	if oldMessage != nil && oldMessage.ResponseEmbeddedMessageType != nil && *oldMessage.ResponseEmbeddedMessageType == utils.EmbedMessageTypeReply && oldMessage.ResponseEmbeddedMessageReplyId != nil {
+		replyWasMissed = false
+	}
+	if replyWasMissed && messageRendered.EmbedMessage != nil && messageRendered.EmbedMessage.Owner != nil && messageRendered.EmbedMessage.EmbedType == utils.EmbedMessageTypeReply {
+
+		tmp := mc.stripAllTags.Sanitize(messageRendered.Text)
+		size := utils.Min(len(tmp), viper.GetInt("previewMaxTextSize"))
+		withoutAnyHtml := tmp[:size]
+
+		return &dto.ReplyDto{
+			MessageId:        messageRendered.Id,
+			ChatId:           chatId,
+			ReplyableMessage: withoutAnyHtml,
+		}, &messageRendered.EmbedMessage.Owner.Id
+	} else {
+		return nil, nil
+	}
+}
+
+func (mc *MessageHandler) wasReplyRemoved(oldMessage *db.Message, messageRendered *dto.DisplayMessageDto, chatId int64) (*dto.ReplyDto, *int64) {
+	var replyWasPresented = true
+	if oldMessage.ResponseEmbeddedMessageType != nil && *oldMessage.ResponseEmbeddedMessageType == utils.EmbedMessageTypeReply && oldMessage.ResponseEmbeddedMessageReplyId == nil {
+		replyWasPresented = false
+	}
+	if replyWasPresented && ((messageRendered != nil && messageRendered.EmbedMessage == nil) || (messageRendered == nil)) {
+		return &dto.ReplyDto{
+			MessageId: oldMessage.Id,
+			ChatId:    chatId,
+		}, oldMessage.ResponseEmbeddedMessageReplyOwnerId
+	} else {
+		return nil, nil
+	}
 }

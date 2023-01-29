@@ -26,6 +26,8 @@ type Events interface {
 	NotifyAboutNewParticipants(c echo.Context, userIds []int64, chatId int64, users []*dto.UserWithAdmin)
 	NotifyAboutDeleteParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToRemove []int64)
 	NotifyAboutChangeParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin)
+	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
+	NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
 }
 
 type eventsImpl struct {
@@ -298,6 +300,34 @@ func (not *eventsImpl) NotifyRemoveMention(c echo.Context, userIds []int64, chat
 			MentionNotification: &dto.MentionNotification{
 				Id: messageId,
 			},
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		}
+	}
+}
+
+func (not *eventsImpl) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64) {
+	if userId != nil {
+		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
+			EventType:         "reply_added",
+			UserId:            *userId,
+			ChatId:            reply.ChatId,
+			ReplyNotification: reply,
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		}
+	}
+}
+
+func (not *eventsImpl) NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64) {
+	if userId != nil {
+		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
+			EventType:         "reply_deleted",
+			UserId:            *userId,
+			ChatId:            reply.ChatId,
+			ReplyNotification: reply,
 		})
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
