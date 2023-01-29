@@ -543,6 +543,10 @@ func (mc MessageHandler) ReadMessage(c echo.Context) error {
 		return err
 	}
 	mc.notificator.NotifyRemoveMention(c, []int64{userPrincipalDto.UserId}, chatId, messageId)
+	mc.notificator.NotifyRemoveReply(c, &dto.ReplyDto{
+		MessageId: messageId,
+		ChatId:    chatId,
+	}, &userPrincipalDto.UserId)
 
 	return c.NoContent(http.StatusAccepted)
 }
