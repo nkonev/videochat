@@ -75,7 +75,9 @@ services:
         max-file: "1"
 
   minio:
-    image: bitnami/minio:2022.12.12-debian-11-r5
+    # it's the last working version
+    # 2023.1.25-debian-11-r1 still is not working in getting file list
+    image: bitnami/minio:2023.1.12-debian-11-r1
     hostname: minio
     restart: unless-stopped
     ports:

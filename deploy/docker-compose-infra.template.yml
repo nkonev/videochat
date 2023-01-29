@@ -47,7 +47,7 @@ services:
         tag: chat-redis
 
   minio:
-    image: bitnami/minio:2022.12.12-debian-11-r5
+    image: bitnami/minio:2023.1.12-debian-11-r1
     hostname: minio
     environment:
       - MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE
