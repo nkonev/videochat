@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/guregu/null"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/utils"
 	"time"
 )
 
@@ -230,10 +230,10 @@ type embedMessage struct {
 func initEmbedMessageRequestStruct(m *Message) (embedMessage, error) {
 	ret := embedMessage{}
 	if m.RequestEmbeddedMessageType != nil {
-		if *m.RequestEmbeddedMessageType == utils.EmbedMessageTypeReply {
+		if *m.RequestEmbeddedMessageType == dto.EmbedMessageTypeReply {
 			ret.embedMessageId = m.RequestEmbeddedMessageId
 			ret.embedMessageType = m.RequestEmbeddedMessageType
-		} else if *m.RequestEmbeddedMessageType == utils.EmbedMessageTypeResend {
+		} else if *m.RequestEmbeddedMessageType == dto.EmbedMessageTypeResend {
 			ret.embedMessageId = m.RequestEmbeddedMessageId
 			ret.embedMessageChatId = m.RequestEmbeddedMessageChatId
 			ret.embedMessageOwnerId = m.RequestEmbeddedMessageOwnerId

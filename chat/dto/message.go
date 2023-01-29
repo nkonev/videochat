@@ -6,6 +6,9 @@ import (
 	"time"
 )
 
+const EmbedMessageTypeResend = "resend"
+const EmbedMessageTypeReply = "reply"
+
 type EmbedMessageResponse struct {
 	Id            int64   `json:"id"`
 	ChatId        *int64  `json:"chatId"`
@@ -37,7 +40,7 @@ type DisplayMessageDto struct {
 }
 
 func (copied *DisplayMessageDto) SetPersonalizedFields(participantId int64) {
-	copied.CanEdit = copied.OwnerId == participantId
+	copied.CanEdit = ((copied.OwnerId == participantId) && (copied.EmbedMessage == nil || copied.EmbedMessage.EmbedType != EmbedMessageTypeResend))
 	copied.CanDelete = copied.OwnerId == participantId
 }
 

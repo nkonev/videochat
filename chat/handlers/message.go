@@ -240,7 +240,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		return err
 	}
 
-	if bindTo.EmbedMessageRequest == nil || (bindTo.EmbedMessageRequest != nil && bindTo.EmbedMessageRequest.EmbedType == utils.EmbedMessageTypeReply) {
+	if bindTo.EmbedMessageRequest == nil || (bindTo.EmbedMessageRequest != nil && bindTo.EmbedMessageRequest.EmbedType == dto.EmbedMessageTypeReply) {
 		if valid, err := ValidateAndRespondError(c, bindTo); err != nil || !valid {
 			return err
 		}
@@ -316,19 +316,19 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 		if input.EmbedMessageRequest.EmbedType == "" {
 			return errors.New("Missed embedMessageType")
 		} else {
-			if input.EmbedMessageRequest.EmbedType != utils.EmbedMessageTypeReply && input.EmbedMessageRequest.EmbedType != utils.EmbedMessageTypeResend {
+			if input.EmbedMessageRequest.EmbedType != dto.EmbedMessageTypeReply && input.EmbedMessageRequest.EmbedType != dto.EmbedMessageTypeResend {
 				return errors.New("Wrong embedMessageType")
 			}
-			if input.EmbedMessageRequest.EmbedType == utils.EmbedMessageTypeResend && input.EmbedMessageRequest.ChatId == 0 {
+			if input.EmbedMessageRequest.EmbedType == dto.EmbedMessageTypeResend && input.EmbedMessageRequest.ChatId == 0 {
 				return errors.New("Missed embedChatId for EmbedMessageTypeResend")
 			}
 		}
 
-		if input.EmbedMessageRequest.EmbedType == utils.EmbedMessageTypeReply {
+		if input.EmbedMessageRequest.EmbedType == dto.EmbedMessageTypeReply {
 			receiver.RequestEmbeddedMessageId = &input.EmbedMessageRequest.Id
 			receiver.RequestEmbeddedMessageType = &input.EmbedMessageRequest.EmbedType
 			return nil
-		} else if input.EmbedMessageRequest.EmbedType == utils.EmbedMessageTypeResend {
+		} else if input.EmbedMessageRequest.EmbedType == dto.EmbedMessageTypeResend {
 			receiver.RequestEmbeddedMessageId = &input.EmbedMessageRequest.Id
 			receiver.RequestEmbeddedMessageType = &input.EmbedMessageRequest.EmbedType
 			// check if this input.EmbedChatId resendable
@@ -669,10 +669,10 @@ func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.
 
 func (mc *MessageHandler) wasReplyAdded(oldMessage *db.Message, messageRendered *dto.DisplayMessageDto, chatId int64) (*dto.ReplyDto, *int64) {
 	var replyWasMissed = true
-	if oldMessage != nil && oldMessage.ResponseEmbeddedMessageType != nil && *oldMessage.ResponseEmbeddedMessageType == utils.EmbedMessageTypeReply && oldMessage.ResponseEmbeddedMessageReplyId != nil {
+	if oldMessage != nil && oldMessage.ResponseEmbeddedMessageType != nil && *oldMessage.ResponseEmbeddedMessageType == dto.EmbedMessageTypeReply && oldMessage.ResponseEmbeddedMessageReplyId != nil {
 		replyWasMissed = false
 	}
-	if replyWasMissed && messageRendered.EmbedMessage != nil && messageRendered.EmbedMessage.Owner != nil && messageRendered.Owner != nil && messageRendered.EmbedMessage.EmbedType == utils.EmbedMessageTypeReply {
+	if replyWasMissed && messageRendered.EmbedMessage != nil && messageRendered.EmbedMessage.Owner != nil && messageRendered.Owner != nil && messageRendered.EmbedMessage.EmbedType == dto.EmbedMessageTypeReply {
 
 		withoutAnyHtml := createMessagePreview(mc.stripAllTags, messageRendered.Text, messageRendered.Owner.Login)
 
@@ -688,7 +688,7 @@ func (mc *MessageHandler) wasReplyAdded(oldMessage *db.Message, messageRendered 
 
 func (mc *MessageHandler) wasReplyRemoved(oldMessage *db.Message, messageRendered *dto.DisplayMessageDto, chatId int64) (*dto.ReplyDto, *int64) {
 	var replyWasPresented = true
-	if oldMessage.ResponseEmbeddedMessageType != nil && *oldMessage.ResponseEmbeddedMessageType == utils.EmbedMessageTypeReply && oldMessage.ResponseEmbeddedMessageReplyId == nil {
+	if oldMessage.ResponseEmbeddedMessageType != nil && *oldMessage.ResponseEmbeddedMessageType == dto.EmbedMessageTypeReply && oldMessage.ResponseEmbeddedMessageReplyId == nil {
 		replyWasPresented = false
 	}
 	if replyWasPresented && ((messageRendered != nil && messageRendered.EmbedMessage == nil) || (messageRendered == nil)) {
