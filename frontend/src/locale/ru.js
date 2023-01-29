@@ -150,5 +150,6 @@ export default {
     search_by_chats: "Поиск по чатам",
     can_resend: "Разрешить пересылку сообщений",
     in: " в ",
-    resend_to_here: "Кликните для пересылки сюда"
+    resend_to_here: "Кликните для пересылки сюда",
+    notification_reply: "Ответ"
 }

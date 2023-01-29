@@ -150,5 +150,6 @@ export default {
     search_by_chats: "Search by chats",
     can_resend: "Allow message resending",
     in: " in ",
-    resend_to_here: "Click to resend here"
+    resend_to_here: "Click to resend here",
+    notification_reply: "Reply"
 }

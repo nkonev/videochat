@@ -8,7 +8,6 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -926,22 +925,25 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 	return errOuter
 }
 
-type CleanHtmlTagsDto struct {
+type CleanHtmlTagsRequestDto struct {
+	Text  string `json:"text"`
+	Login string `json:"login"`
+}
+
+type CleanHtmlTagsResponseDto struct {
 	Text string `json:"text"`
 }
 
-func (ch *ChatHandler) CleanHtmlTags(c echo.Context) error {
-	bindTo := new(CleanHtmlTagsDto)
+func (ch *ChatHandler) CreatePreview(c echo.Context) error {
+	bindTo := new(CleanHtmlTagsRequestDto)
 	err := c.Bind(bindTo)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
 		return err
 	}
-	tmp := ch.cleanTagsPolicy.Sanitize(bindTo.Text)
-	size := utils.Min(len(tmp), viper.GetInt("previewMaxTextSize"))
-	withoutAnyHtml := tmp[:size]
-	response := CleanHtmlTagsDto{
-		withoutAnyHtml,
+	preview := createMessagePreview(ch.cleanTagsPolicy, bindTo.Text, bindTo.Login)
+	response := CleanHtmlTagsResponseDto{
+		Text: preview,
 	}
 	return c.JSON(http.StatusOK, response)
 }

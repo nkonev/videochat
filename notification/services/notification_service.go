@@ -122,13 +122,25 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		notificationType := "reply"
 		switch event.EventType {
 		case "reply_added":
-			_, _, err = srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.ReplyableMessage)
+			id, createDateTime, err := srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.ReplyableMessage)
 			if err != nil {
 				Logger.Errorf("Unable to put notification %v", err)
 				return
 			}
+			err = srv.rabbitEventsPublisher.Publish(event.UserId, &dto.NotificationDto{
+				Id:               id,
+				ChatId:           event.ChatId,
+				MessageId:        &notification.MessageId,
+				NotificationType: notificationType,
+				Description:      notification.ReplyableMessage,
+				CreateDateTime:   createDateTime,
+			}, NotificationAdd, context.Background())
+			if err != nil {
+				Logger.Errorf("Unable to send notification delete %v", err)
+			}
+
 		case "reply_deleted":
-			_, err := srv.dbs.DeleteNotificationByMessageId(notification.MessageId, notificationType, event.UserId)
+			id, err := srv.dbs.DeleteNotificationByMessageId(notification.MessageId, notificationType, event.UserId)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
 					Logger.Debugf("Missed notification %v", err)
@@ -137,7 +149,12 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				}
 				return
 			}
-
+			err = srv.rabbitEventsPublisher.Publish(event.UserId, dto.NewNotificationDeleteDto(id), NotificationDelete, context.Background())
+			if err != nil {
+				Logger.Errorf("Unable to send notification delete %v", err)
+			}
+		default:
+			Logger.Errorf("Unexpected event type %v", event.EventType)
 		}
 
 	}

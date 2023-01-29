@@ -670,11 +670,9 @@ func (mc *MessageHandler) wasReplyAdded(oldMessage *db.Message, messageRendered 
 	if oldMessage != nil && oldMessage.ResponseEmbeddedMessageType != nil && *oldMessage.ResponseEmbeddedMessageType == utils.EmbedMessageTypeReply && oldMessage.ResponseEmbeddedMessageReplyId != nil {
 		replyWasMissed = false
 	}
-	if replyWasMissed && messageRendered.EmbedMessage != nil && messageRendered.EmbedMessage.Owner != nil && messageRendered.EmbedMessage.EmbedType == utils.EmbedMessageTypeReply {
+	if replyWasMissed && messageRendered.EmbedMessage != nil && messageRendered.EmbedMessage.Owner != nil && messageRendered.Owner != nil && messageRendered.EmbedMessage.EmbedType == utils.EmbedMessageTypeReply {
 
-		tmp := mc.stripAllTags.Sanitize(messageRendered.Text)
-		size := utils.Min(len(tmp), viper.GetInt("previewMaxTextSize"))
-		withoutAnyHtml := tmp[:size]
+		withoutAnyHtml := createMessagePreview(mc.stripAllTags, messageRendered.Text, messageRendered.Owner.Login)
 
 		return &dto.ReplyDto{
 			MessageId:        messageRendered.Id,

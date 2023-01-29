@@ -98,6 +98,8 @@ export default {
                     return "mdi-phone-missed"
                 case "mention":
                     return "mdi-at"
+                case "reply":
+                    return "mdi-reply-outline"
             }
         },
         getNotificationSubtitle(type) {
@@ -106,6 +108,8 @@ export default {
                     return this.$vuetify.lang.t('$vuetify.notification_missed_call')
                 case "mention":
                     return this.$vuetify.lang.t('$vuetify.notification_mention')
+                case "reply":
+                    return this.$vuetify.lang.t('$vuetify.notification_reply')
             }
         },
         getNotificationTitle(item) {

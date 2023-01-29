@@ -160,9 +160,9 @@
             loadEmbedPreviewIfNeed(dto) {
                 if (dto.embedMessage?.id) {
                     const {embedPreviewText, embedPreviewOwner} = getAnswerPreviewFields(dto);
-                    axios.put('/api/chat/public/preview-without-html', {text: embedPreviewText}).then(({data}) => {
+                    axios.put('/api/chat/public/preview-without-html', {text: embedPreviewText, login: embedPreviewOwner}).then(({data}) => {
                         this.showAnswer = true;
-                        this.answerOnPreview = `${embedPreviewOwner}: ${data.text}`;
+                        this.answerOnPreview = data.text;
                     })
                 }
             },

@@ -162,3 +162,9 @@ func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, er
 	}
 	return true, nil
 }
+
+func createMessagePreview(cleanTagsPolicy *services.StripTagsPolicy, text, login string) string {
+	tmp := cleanTagsPolicy.Sanitize(login + ": " + text)
+	size := utils.Min(len(tmp), viper.GetInt("previewMaxTextSize"))
+	return tmp[:size]
+}
