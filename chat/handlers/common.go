@@ -151,10 +151,6 @@ func TrimAmdSanitize(policy *services.SanitizerPolicy, input string) string {
 	return Trim(SanitizeMessage(policy, input))
 }
 
-func TrimAmdSanitizeAndLower(policy *services.SanitizerPolicy, input string) string {
-	return Trim(strings.ToLower(SanitizeMessage(policy, input)))
-}
-
 func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, error) {
 	if err := v.Validate(); err != nil {
 		logger.GetLogEntry(c.Request().Context()).Debugf("Error during validation: %v", err)

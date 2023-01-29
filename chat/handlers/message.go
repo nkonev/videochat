@@ -240,8 +240,10 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		return err
 	}
 
-	if valid, err := ValidateAndRespondError(c, bindTo); err != nil || !valid {
-		return err
+	if bindTo.EmbedMessageRequest == nil || (bindTo.EmbedMessageRequest != nil && bindTo.EmbedMessageRequest.EmbedType == utils.EmbedMessageTypeReply) {
+		if valid, err := ValidateAndRespondError(c, bindTo); err != nil || !valid {
+			return err
+		}
 	}
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
