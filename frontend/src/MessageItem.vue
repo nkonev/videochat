@@ -18,7 +18,7 @@
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
                 <div v-if="item.embedMessage" class="embedded-message">
-                    <a class="list-item-head" :href="getEmbedLinkTo(item)" @click.prevent="onEmbedLinkClick(item)">{{getEmbedHead(item)}}</a>
+                    <a class="list-item-head" :href="getEmbedLinkTo(item)" @click="onEmbedLinkClick(item)">{{getEmbedHead(item)}}</a>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
                 <v-container v-if="shouldShowMainContainer(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
@@ -115,6 +115,9 @@
             onEmbedLinkClick(item) {
                 if (item.embedMessage.embedType == embed_message_resend && item.embedMessage.isParticipant) {
                     const routeDto = { name: chat_name, params: { id: item.embedMessage.chatId }, hash: messageIdHashPrefix + item.embedMessage.id};
+                    this.$router.push(routeDto);
+                } else if (item.embedMessage.embedType == embed_message_reply) {
+                    const routeDto = { name: chat_name, params: { id: this.chatId }, hash: messageIdHashPrefix + item.embedMessage.id};
                     this.$router.push(routeDto);
                 }
             },
