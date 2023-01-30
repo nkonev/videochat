@@ -151,5 +151,6 @@ export default {
     can_resend: "Разрешить пересылку сообщений",
     in: " в ",
     resend_to_here: "Кликните для пересылки сюда",
-    notification_reply: "Ответ"
+    notification_reply: "Ответ",
+    tet_a_tet: "Диалог тет-а-тет"
 }

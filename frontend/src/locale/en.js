@@ -151,5 +151,6 @@ export default {
     can_resend: "Allow message resending",
     in: " in ",
     resend_to_here: "Click to resend here",
-    notification_reply: "Reply"
+    notification_reply: "Reply",
+    tet_a_tet: "Tet-a-tet dialog"
 }

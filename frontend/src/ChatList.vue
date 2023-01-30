@@ -209,8 +209,12 @@
                 bus.$emit(OPEN_CHAT_EDIT, chatId);
             },
             printParticipants(chat) {
-                const logins = chat.participants.map(p => p.login);
-                return logins.join(", ")
+                if (chat.tetATet) {
+                    return this.$vuetify.lang.t('$vuetify.tet_a_tet');
+                } else {
+                    const logins = chat.participants.map(p => p.login);
+                    return logins.join(", ")
+                }
             },
             deleteChat(chat) {
                 bus.$emit(OPEN_SIMPLE_MODAL, {
