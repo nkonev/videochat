@@ -1,6 +1,7 @@
 export const root = '/';
 export const chat = '/chat';
 export const profile = '/profile';
+export const video_suffix = '/video';
 
 export const chat_list_name = 'chat_list';
 export const chat_name = 'chat';

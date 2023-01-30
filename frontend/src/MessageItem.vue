@@ -18,7 +18,7 @@
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
                 <div v-if="item.embedMessage" class="embedded-message">
-                    <a class="list-item-head" :href="getEmbedLinkTo(item)" @click="onEmbedLinkClick(item)">{{getEmbedHead(item)}}</a>
+                    <a class="list-item-head" :href="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</a>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
                 <v-container v-if="shouldShowMainContainer(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
@@ -44,7 +44,7 @@
     } from "@/utils";
     import "./message.styl";
     import cloneDeep from "lodash/cloneDeep";
-    import {chat, chat_name, messageIdHashPrefix} from "./routes"
+    import {chat, chat_name, messageIdHashPrefix, video_suffix, videochat_name} from "./routes"
 
     export default {
         props: ['item', 'chatId', 'my', 'highlight', 'canResend'],
@@ -106,19 +106,14 @@
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid :itemId});
             },
             getEmbedLinkTo(item) {
-                if (item.embedMessage.embedType == embed_message_reply) {
-                    return chat + '/' + this.chatId + messageIdHashPrefix + item.embedMessage.id
-                } else if (item.embedMessage.embedType == embed_message_resend && item.embedMessage.isParticipant) {
-                    return chat + '/' + item.embedMessage.chatId + messageIdHashPrefix + item.embedMessage.id
+                let video = "";
+                if (this.$route.name == videochat_name) {
+                    video = video_suffix;
                 }
-            },
-            onEmbedLinkClick(item) {
-                if (item.embedMessage.embedType == embed_message_resend && item.embedMessage.isParticipant) {
-                    const routeDto = { name: chat_name, params: { id: item.embedMessage.chatId }, hash: messageIdHashPrefix + item.embedMessage.id};
-                    this.$router.push(routeDto);
-                } else if (item.embedMessage.embedType == embed_message_reply) {
-                    const routeDto = { name: chat_name, params: { id: this.chatId }, hash: messageIdHashPrefix + item.embedMessage.id};
-                    this.$router.push(routeDto);
+                if (item.embedMessage.embedType == embed_message_reply) {
+                    return chat + '/' + this.chatId + video + messageIdHashPrefix + item.embedMessage.id
+                } else if (item.embedMessage.embedType == embed_message_resend && item.embedMessage.isParticipant) {
+                    return chat + '/' + item.embedMessage.chatId + video + messageIdHashPrefix + item.embedMessage.id
                 }
             },
             getEmbedHead(item){
