@@ -283,6 +283,11 @@ func (tx *Tx) DeleteChat(id int64) error {
 		return err
 	}
 
+	if _, err := tx.Exec(fmt.Sprintf(`DROP SEQUENCE message_chat_id_%v;`, id)); err != nil {
+		Logger.Errorf("Error during drop in sequence %v %v", id, err)
+		return err
+	}
+
 	if res, err := tx.Exec("DELETE FROM chat WHERE id = $1", id); err != nil {
 		Logger.Errorf("Error during delete chat %v %v", id, err)
 		return err
