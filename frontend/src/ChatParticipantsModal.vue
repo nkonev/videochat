@@ -67,10 +67,10 @@
                                 <template v-if="dto.canEdit && item.id != currentUser.id">
                                     <v-btn icon @click="deleteParticipant(item)" color="error" :title="$vuetify.lang.t('$vuetify.delete_from_chat')"><v-icon dark>mdi-delete</v-icon></v-btn>
                                 </template>
-                                <template v-if="dto.canVideoKick && item.id != currentUser.id">
+                                <template v-if="dto.canVideoKick && item.id != currentUser.id && isVideo()">
                                     <v-btn icon @click="kickFromVideoCall(item.id)" :title="$vuetify.lang.t('$vuetify.kick')"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
                                 </template>
-                                <template v-if="dto.canAudioMute && item.id != currentUser.id">
+                                <template v-if="dto.canAudioMute && item.id != currentUser.id && isVideo()">
                                     <v-btn icon @click="forceMute(item.id)" :title="$vuetify.lang.t('$vuetify.force_mute')"><v-icon color="error">mdi-microphone-off</v-icon></v-btn>
                                 </template>
                                 <template v-if="item.id != currentUser.id">
@@ -392,6 +392,9 @@
             },
             resetInput() {
                 this.userSearchString = null;
+            },
+            isVideo() {
+                return this.$router.currentRoute.name == videochat_name
             },
         },
         watch: {
