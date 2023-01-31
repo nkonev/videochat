@@ -13,7 +13,7 @@ export const getHeight = (elementId, modifier, defaultValue) => {
 }
 
 export const getUrlPrefix = () => {
-    return window.location
+    return window.location.protocol + "//" + window.location.host
 }
 
 export const getWebsocketUrlPrefix = () => {
