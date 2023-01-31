@@ -610,7 +610,9 @@ func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 		return err
 	}
 
-	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, mc.stripAllTags.Sanitize(bindTo.Text))
+	preview := createMessagePreview(mc.stripAllTags, bindTo.Text, userPrincipalDto.UserLogin)
+
+	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, preview)
 	return c.NoContent(http.StatusAccepted)
 }
 

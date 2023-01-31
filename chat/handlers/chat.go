@@ -47,11 +47,11 @@ type ChatHandler struct {
 	notificator     services.Events
 	restClient      *client.RestClient
 	policy          *services.SanitizerPolicy
-	cleanTagsPolicy *services.StripTagsPolicy
+	stripTagsPolicy *services.StripTagsPolicy
 }
 
 func NewChatHandler(dbR *db.DB, notificator services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy, cleanTagsPolicy *services.StripTagsPolicy) *ChatHandler {
-	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy, cleanTagsPolicy: cleanTagsPolicy}
+	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy, stripTagsPolicy: cleanTagsPolicy}
 }
 
 func (a *CreateChatDto) Validate() error {
@@ -941,7 +941,7 @@ func (ch *ChatHandler) CreatePreview(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
 		return err
 	}
-	preview := createMessagePreview(ch.cleanTagsPolicy, bindTo.Text, bindTo.Login)
+	preview := createMessagePreview(ch.stripTagsPolicy, bindTo.Text, bindTo.Login)
 	response := CleanHtmlTagsResponseDto{
 		Text: preview,
 	}
