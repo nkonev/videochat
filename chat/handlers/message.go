@@ -611,6 +611,9 @@ func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 	}
 
 	preview := createMessagePreview(mc.stripAllTags, bindTo.Text, userPrincipalDto.UserLogin)
+	if preview == loginPrefix(userPrincipalDto.UserLogin) {
+		preview = ""
+	}
 
 	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, preview)
 	return c.NoContent(http.StatusAccepted)
