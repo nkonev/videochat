@@ -297,7 +297,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		var reply, userToSendTo = mc.wasReplyAdded(nil, message, chatId)
 		var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
 		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText)
-		mc.notificator.NotifyAddReply(c, reply, userToSendTo)
+		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId)
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
 		return c.JSON(http.StatusCreated, message)
@@ -438,7 +438,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		}
 
 		var replyAdded, userToSendToAdded = mc.wasReplyAdded(oldMessage, message, chatId)
-		mc.notificator.NotifyAddReply(c, replyAdded, userToSendToAdded)
+		mc.notificator.NotifyAddReply(c, replyAdded, userToSendToAdded, userPrincipalDto.UserId)
 		var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, message, chatId)
 		mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
 

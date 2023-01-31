@@ -26,7 +26,7 @@ type Events interface {
 	NotifyAboutNewParticipants(c echo.Context, userIds []int64, chatId int64, users []*dto.UserWithAdmin)
 	NotifyAboutDeleteParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToRemove []int64)
 	NotifyAboutChangeParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin)
-	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
+	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64)
 	NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
 }
 
@@ -307,8 +307,8 @@ func (not *eventsImpl) NotifyRemoveMention(c echo.Context, userIds []int64, chat
 	}
 }
 
-func (not *eventsImpl) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64) {
-	if userId != nil {
+func (not *eventsImpl) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64) {
+	if userId != nil && *userId != behalfUserId {
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType:         "reply_added",
 			UserId:            *userId,
