@@ -10,9 +10,31 @@
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll">
                     <v-list  v-if="currentUser">
                         <template v-for="(item, index) in items">
-                            <MessageItem :key="item.id" :item="item" :chatId="chatId" :my="item.owner.id === currentUser.id" :highlight="item.id == highlightMessageId" :canResend="chatDto.canResend"></MessageItem>
+                            <MessageItem
+                                :key="item.id"
+                                :item="item"
+                                :chatId="chatId"
+                                :my="item.owner.id === currentUser.id"
+                                :highlight="item.id == highlightMessageId"
+                                :canResend="chatDto.canResend"
+                                @contextmenu="onShowContextMenu($event, item)"
+                                @deleteMessage="deleteMessage"
+                                @editMessage="editMessage"
+                                @replyOnMessage="replyOnMessage"
+                                @shareMessage="shareMessage"
+                                @onFilesClicked="onFilesClicked"
+                            ></MessageItem>
                         </template>
                     </v-list>
+                    <MessageItemContextMenu
+                        ref="contextMenuRef"
+                        :canResend="chatDto.canResend"
+                        @deleteMessage="this.deleteMessage"
+                        @editMessage="this.editMessage"
+                        @replyOnMessage="this.replyOnMessage"
+                        @shareMessage="this.shareMessage"
+                        @onFilesClicked="this.onFilesClicked"
+                    />
                     <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
                         <template slot="no-more"><span/></template>
                         <template slot="no-results"><span/></template>
@@ -75,11 +97,17 @@
         PROFILE_SET,
         FILE_UPLOADED,
         PARTICIPANT_ADDED,
-        PARTICIPANT_DELETED, PARTICIPANT_EDITED,
+        PARTICIPANT_DELETED,
+        PARTICIPANT_EDITED,
+        OPEN_SIMPLE_MODAL,
+        CLOSE_SIMPLE_MODAL,
+        SET_EDIT_MESSAGE,
+        OPEN_RESEND_TO_MODAL, OPEN_VIEW_FILES_DIALOG,
     } from "./bus";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
     import ChatVideo from "./ChatVideo";
+    import MessageItemContextMenu from "./MessageItemContextMenu"
 
     import {mapGetters} from "vuex";
 
@@ -100,13 +128,21 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
-    import {findIndex, findIndexNonStrictly, hasLength, replaceInArray} from "./utils";
+    import {
+        embed_message_reply,
+        findIndex,
+        findIndexNonStrictly,
+        hasLength,
+        replaceInArray,
+        setAnswerPreviewFields
+    } from "./utils";
     import MessageItem from "./MessageItem";
     // import 'splitpanes/dist/splitpanes.css';
     import debounce from "lodash/debounce";
     import throttle from "lodash/throttle";
     import queryMixin from "@/queryMixin";
     import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
+    import cloneDeep from "lodash/cloneDeep";
 
 
     const defaultDesktopWithoutVideo = [80, 20];
@@ -722,6 +758,54 @@
                 this.initialHash = this.getRouteHash();
                 this.highlightMessageId = this.getMessageId(this.initialHash);
             },
+            onShowContextMenu(e, menuableItem){
+                this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+            },
+
+            deleteMessage(dto){
+                bus.$emit(OPEN_SIMPLE_MODAL, {
+                    buttonName: this.$vuetify.lang.t('$vuetify.delete_btn'),
+                    title: this.$vuetify.lang.t('$vuetify.delete_message_title', dto.id),
+                    text:  this.$vuetify.lang.t('$vuetify.delete_message_text'),
+                    actionFunction: ()=> {
+                        axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
+                            .then(() => {
+                                bus.$emit(CLOSE_SIMPLE_MODAL);
+                            })
+                    }
+                });
+            },
+            editMessage(dto){
+                const editMessageDto = cloneDeep(dto);
+                if (dto.embedMessage?.id) {
+                    setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner.login);
+                }
+                if (!this.isMobile()) {
+                    bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
+                } else {
+                    bus.$emit(OPEN_EDIT_MESSAGE, editMessageDto);
+                }
+            },
+            replyOnMessage(dto) {
+                const replyMessage = {
+                    embedMessage: {
+                        id: dto.id,
+                        embedType: embed_message_reply
+                    },
+                };
+                setAnswerPreviewFields(replyMessage, dto.text, dto.owner.login);
+                if (!this.isMobile()) {
+                    bus.$emit(SET_EDIT_MESSAGE, replyMessage);
+                } else {
+                    bus.$emit(OPEN_EDIT_MESSAGE, replyMessage);
+                }
+            },
+            shareMessage(dto) {
+                bus.$emit(OPEN_RESEND_TO_MODAL, dto)
+            },
+            onFilesClicked(item) {
+                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});
+            },
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -811,7 +895,8 @@
             MessageEdit,
             ChatVideo,
             Splitpanes, Pane,
-            MessageItem
+            MessageItem,
+            MessageItemContextMenu
         },
         watch: {
             '$route': {

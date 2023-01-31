@@ -5,6 +5,7 @@
         :position-y="contextMenuY"
         absolute
         offset-y
+        :transition="false"
     >
         <v-list>
             <v-list-item

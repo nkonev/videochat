@@ -12,6 +12,10 @@ export const getHeight = (elementId, modifier, defaultValue) => {
     return defaultValue;
 }
 
+export const getUrlPrefix = () => {
+    return window.location
+}
+
 export const getWebsocketUrlPrefix = () => {
     return ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host
 }

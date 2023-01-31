@@ -152,5 +152,6 @@ export default {
     in: " в ",
     resend_to_here: "Кликните для пересылки сюда",
     notification_reply: "Ответ",
-    tet_a_tet: "Диалог тет-а-тет"
+    tet_a_tet: "Диалог тет-а-тет",
+    copy_link_to_message: "Скопировать ссылку на сообщение"
 }

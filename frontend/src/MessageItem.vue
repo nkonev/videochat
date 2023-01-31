@@ -9,14 +9,16 @@
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
                 <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item.fileItemUuid)" small :title="$vuetify.lang.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
-                <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
-                <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
-                <a class="mx-2 hash" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.id" :title="$vuetify.lang.t('$vuetify.link')">#</a>
-                <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
-                <v-icon v-if="canResend" class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
+                <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item)" small :title="$vuetify.lang.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
+                <template v-if="!isMobile()">
+                    <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
+                    <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
+                    <a class="mx-2 hash" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.id" :title="$vuetify.lang.t('$vuetify.link')">#</a>
+                    <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
+                    <v-icon v-if="canResend" class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
+                </template>
             </v-container>
-            <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)">
+            <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
                 <div v-if="item.embedMessage" class="embedded-message">
                     <a class="list-item-head" :href="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</a>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
@@ -56,54 +58,26 @@
                 this.onMessageClick(item);
             },
             deleteMessage(dto){
-                bus.$emit(OPEN_SIMPLE_MODAL, {
-                    buttonName: this.$vuetify.lang.t('$vuetify.delete_btn'),
-                    title: this.$vuetify.lang.t('$vuetify.delete_message_title', dto.id),
-                    text:  this.$vuetify.lang.t('$vuetify.delete_message_text'),
-                    actionFunction: ()=> {
-                        axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
-                            .then(() => {
-                                bus.$emit(CLOSE_SIMPLE_MODAL);
-                            })
-                    }
-                });
+                this.$emit('deleteMessage', dto)
             },
             editMessage(dto){
-                const editMessageDto = cloneDeep(dto);
-                if (dto.embedMessage?.id) {
-                    setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner.login);
-                }
-                if (!this.isMobile()) {
-                    bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
-                } else {
-                    bus.$emit(OPEN_EDIT_MESSAGE, editMessageDto);
-                }
+                this.$emit('editMessage', dto)
             },
             replyOnMessage(dto) {
-                const replyMessage = {
-                    embedMessage: {
-                        id: dto.id,
-                        embedType: embed_message_reply
-                    },
-                };
-                setAnswerPreviewFields(replyMessage, dto.text, dto.owner.login);
-                if (!this.isMobile()) {
-                    bus.$emit(SET_EDIT_MESSAGE, replyMessage);
-                } else {
-                    bus.$emit(OPEN_EDIT_MESSAGE, replyMessage);
-                }
+                this.$emit('replyOnMessage', dto)
             },
             shareMessage(dto) {
-                bus.$emit(OPEN_RESEND_TO_MODAL, dto)
+                this.$emit('shareMessage', dto)
             },
+            onFilesClicked(dto) {
+                this.$emit('onFilesClicked', dto)
+            },
+
             getOwner(owner) {
                 return owner.login
             },
             getDate(item) {
                 return getHumanReadableDate(item.createDateTime)
-            },
-            onFilesClicked(itemId) {
-                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid :itemId});
             },
             getEmbedLinkTo(item) {
                 let video = "";
@@ -125,6 +99,9 @@
             },
             shouldShowMainContainer(item) {
                 return item.embedMessage == null || item.embedMessage.embedType == embed_message_reply
+            },
+            onShowContextMenu(event, item) {
+                this.$emit('contextmenu', event, item)
             },
         },
         created() {
