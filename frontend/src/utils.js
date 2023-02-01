@@ -313,5 +313,6 @@ export const isArrEqual = (a, b) => {
     if (a != null && b != null) {
         return JSON.stringify(a.sort()) === JSON.stringify(b.sort());
     }
-    console.error("Unexpected branch", a, b)
+    console.error("Unexpected branch", a, b);
+    return true
 }
