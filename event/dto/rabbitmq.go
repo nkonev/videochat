@@ -65,6 +65,8 @@ type UserOnline struct {
 	Online bool  `json:"online"`
 }
 
-func (UserOnline) Name() eventbus.EventName {
+type ArrayUserOnline []UserOnline
+
+func (ArrayUserOnline) Name() eventbus.EventName {
 	return USER_ONLINE
 }

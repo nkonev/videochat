@@ -1,6 +1,7 @@
 package com.github.nkonev.aaa.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
@@ -65,9 +66,7 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
         LOGGER.info("User '{}' logged out", userDetails.getUsername());
 
         var usersOnline = aaaUserDetailsService.getUsersOnline(List.of(userDetails.getId()));
-        for (var uo: usersOnline) {
-            eventService.notifyOnlineChanged(uo);
-        }
+        eventService.notifyOnlineChanged(usersOnline);
 
         response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         objectMapper.writeValue(response.getWriter(), Collections.singletonMap("message", "you successfully logged out"));

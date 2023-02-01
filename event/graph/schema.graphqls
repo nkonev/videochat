@@ -166,5 +166,5 @@ type Query {
 type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
-    userOnlineEvents(userIds: [Int64!]!): UserOnline!
+    userOnlineEvents(userIds: [Int64!]!): [UserOnline!]!
 }

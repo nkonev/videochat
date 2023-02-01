@@ -178,9 +178,8 @@ public class UserProfileController {
     @PutMapping(Constants.Urls.INTERNAL_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE)
     public void requestUserOnline(@RequestParam(value = "userId") List<Long> userIds) {
         List<UserOnlineResponse> usersOnline = aaaUserDetailsService.getUsersOnline(userIds);
-        for(var uo: usersOnline) {
-            notifier.notifyOnlineChanged(new UserOnlineResponse(uo.userId, uo.online));
-        }
+        List<UserOnlineResponse> userOnlineResponses = usersOnline.stream().map(uo -> new UserOnlineResponse(uo.userId, uo.online)).toList();
+        notifier.notifyOnlineChanged(userOnlineResponses);
     }
 
     private Function<UserAccount, com.github.nkonev.aaa.dto.UserAccountDTOExtended> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {

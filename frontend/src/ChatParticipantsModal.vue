@@ -278,12 +278,14 @@
                 this.dto = dto;
             },
             onUserOnlineChanged(rawData) {
-                const dto = rawData?.data?.userOnlineEvents;
-                if (this.participantsDto.participants && dto) {
+                const dtos = rawData?.data?.userOnlineEvents;
+                if (this.participantsDto.participants && dtos) {
                     this.participantsDto.participants.forEach(item => {
-                        if (dto.id == item.id) {
-                            item.online = dto.online;
-                        }
+                        dtos.forEach(dtoItem => {
+                            if (dtoItem.id == item.id) {
+                                item.online = dtoItem.online;
+                            }
+                        })
                     })
                     this.$forceUpdate();
                 }
@@ -398,8 +400,8 @@
                     }
                 }`
             },
-            onNextSubscriptionElement(item) {
-                this.onUserOnlineChanged(item);
+            onNextSubscriptionElement(items) {
+                this.onUserOnlineChanged(items);
             },
         },
         watch: {

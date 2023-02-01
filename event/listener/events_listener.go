@@ -55,14 +55,15 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				return err
 			}
 
-		case dto.UserOnline:
+		case []dto.UserOnline:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
 				Logger.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 
-			err = bus.PublishAsync(bindTo)
+			var converted = dto.ArrayUserOnline(bindTo)
+			err = bus.PublishAsync(converted)
 			if err != nil {
 				Logger.Errorf("Error during sending to bus : %v", err)
 				return err

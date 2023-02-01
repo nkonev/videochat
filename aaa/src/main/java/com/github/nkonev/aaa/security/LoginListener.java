@@ -11,6 +11,9 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
 import static com.github.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
 /**
@@ -33,6 +36,6 @@ public class LoginListener implements ApplicationListener<AuthenticationSuccessE
         UserAccountDetailsDTO userDetails = (UserAccountDetailsDTO) event.getAuthentication().getPrincipal();
         LOGGER.info("User '{}' logged in", userDetails.getUsername());
         userAccountRepository.updateLastLogin(userDetails.getUsername(), getNowUTC());
-        eventService.notifyOnlineChanged(new UserProfileController.UserOnlineResponse(userDetails.getId(), true));
+        eventService.notifyOnlineChanged(List.of(new UserProfileController.UserOnlineResponse(userDetails.getId(), true)));
     }
 }

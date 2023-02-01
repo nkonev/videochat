@@ -40,9 +40,7 @@ public class UserOnlineTask {
         for (int i = 0; i < pages; i++) {
             var chunk = userAccountRepository.findAll(PageRequest.of(i, pageSize));
             var usersOnline = aaaUserDetailsService.getUsersOnlineByUsers(chunk.getContent());
-            for (var uo: usersOnline) {
-                eventService.notifyOnlineChanged(uo);
-            }
+            eventService.notifyOnlineChanged(usersOnline);
         }
         LOGGER.debug("User online task finish");
     }

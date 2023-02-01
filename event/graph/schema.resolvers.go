@@ -132,14 +132,14 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 }
 
 // UserOnlineEvents is the resolver for the userOnlineEvents field.
-func (r *subscriptionResolver) UserOnlineEvents(ctx context.Context, userIds []int64) (<-chan *model.UserOnline, error) {
+func (r *subscriptionResolver) UserOnlineEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserOnline, error) {
 	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		return nil, errors.New("Unable to get auth context")
 	}
 	logger.GetLogEntry(ctx).Infof("Subscribing to UserOnline channel as user %v", authResult.UserId)
 
-	var cam = make(chan *model.UserOnline)
+	var cam = make(chan []*model.UserOnline)
 
 	subscribeHandler, err := r.Bus.Subscribe(dto.USER_ONLINE, func(event eventbus.Event, t time.Time) {
 		defer func() {
@@ -149,9 +149,15 @@ func (r *subscriptionResolver) UserOnlineEvents(ctx context.Context, userIds []i
 		}()
 
 		switch typedEvent := event.(type) {
-		case dto.UserOnline:
-			if utils.Contains(userIds, typedEvent.UserId) {
-				cam <- convertToUserOnline(&typedEvent)
+		case dto.ArrayUserOnline:
+			var batch = []*model.UserOnline{}
+			for _, userOnline := range typedEvent {
+				if utils.Contains(userIds, userOnline.UserId) {
+					batch = append(batch, convertToUserOnline(&userOnline))
+				}
+			}
+			if len(batch) > 0 {
+				cam <- batch
 			}
 			break
 		default:
@@ -199,12 +205,6 @@ func (r *Resolver) Subscription() generated.SubscriptionResolver { return &subsc
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
 
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
 func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	var result = &model.ChatEvent{
 		EventType: e.EventType,
