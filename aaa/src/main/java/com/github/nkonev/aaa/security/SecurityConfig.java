@@ -133,7 +133,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.csrf()
                 .csrfTokenRepository(csrfTokenRepository())
-                .ignoringAntMatchers(Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH);
+                .ignoringAntMatchers(Constants.Urls.INTERNAL_API+ "/**");
         http.exceptionHandling()
                 .authenticationEntryPoint(authenticationEntryPoint);
 

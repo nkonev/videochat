@@ -299,3 +299,19 @@ export const getAnswerPreviewFields = (dto) => {
 
 export const embed_message_reply = "reply";
 export const embed_message_resend = "resend";
+
+export const isArrEqual = (a, b) => {
+    if (a == null && b == null) {
+        return true
+    }
+    if (a == null && b != null) {
+        return false
+    }
+    if (a != null && b == null) {
+        return false
+    }
+    if (a != null && b != null) {
+        return JSON.stringify(a.sort()) === JSON.stringify(b.sort());
+    }
+    console.error("Unexpected branch", a, b)
+}

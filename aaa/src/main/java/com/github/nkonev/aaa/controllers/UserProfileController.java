@@ -175,6 +175,14 @@ public class UserProfileController {
         );
     }
 
+    @PutMapping(Constants.Urls.INTERNAL_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE)
+    public void requestUserOnline(@RequestParam(value = "userId") List<Long> userIds) {
+        List<UserOnlineResponse> usersOnline = aaaUserDetailsService.getUsersOnline(userIds);
+        for(var uo: usersOnline) {
+            notifier.notifyOnlineChanged(new UserOnlineResponse(uo.userId, uo.online));
+        }
+    }
+
     private Function<UserAccount, com.github.nkonev.aaa.dto.UserAccountDTOExtended> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(currentUser, userAccount);
     }

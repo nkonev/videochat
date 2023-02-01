@@ -140,6 +140,7 @@ func (r *subscriptionResolver) UserOnlineEvents(ctx context.Context, userIds []i
 	logger.GetLogEntry(ctx).Infof("Subscribing to UserOnline channel as user %v", authResult.UserId)
 
 	var cam = make(chan *model.UserOnline)
+
 	subscribeHandler, err := r.Bus.Subscribe(dto.USER_ONLINE, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -176,6 +177,8 @@ func (r *subscriptionResolver) UserOnlineEvents(ctx context.Context, userIds []i
 			}
 		}
 	}()
+
+	r.HttpClient.AskForUserOnline(userIds, ctx)
 
 	return cam, nil
 }

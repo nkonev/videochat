@@ -120,8 +120,8 @@
     import {mapGetters} from "vuex";
     import {GET_USER} from "./store";
     import {profile, profile_name, videochat_name} from "./routes";
-    import userOnlinePollingMixin from "./userOnlinePollingMixin";
-    import {findIndex, hasLength, moveToFirstPosition, replaceInArray} from "@/utils";
+    import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
+    import {findIndex, hasLength, isArrEqual, moveToFirstPosition, replaceInArray} from "@/utils";
     import cloneDeep from "lodash/cloneDeep";
     import debounce from "lodash/debounce";
     const firstPage = 1;
@@ -139,7 +139,7 @@
     }
 
     export default {
-        mixins: [userOnlinePollingMixin()],
+        mixins: [graphqlSubscriptionMixin('userOnline')],
         data () {
             return {
                 show: false,
@@ -187,7 +187,6 @@
                     })
             },
             loadParticipantsData() {
-                this.stopPolling();
                 console.log("Getting info about participants in modal, chatId=", this.chatId);
                 this.loading = true;
                 return axios.get('/api/chat/' + this.chatId + '/user', {
@@ -201,14 +200,9 @@
                         const tmp = cloneDeep(response.data);
                         this.transformParticipants(tmp.participants);
                         this.participantsDto = tmp;
-                    }).then(value => {
-                    this.startPolling(
-                        ()=>{ return this.participantsDto.participants.map((p)=> p.id ) },
-                        (v) => this.onUserOnlineChanged(v)
-                    );
-                }).finally(() => {
-                    this.loading = false;
-                })
+                    }).finally(() => {
+                        this.loading = false;
+                    })
             },
             changeChatAdmin(item) {
                 item.adminLoading = true;
@@ -270,7 +264,6 @@
                 this.participantsDto = participantsDtoFactory();
                 this.userSearchString = null;
                 this.participantsPage = firstPage;
-                this.stopPolling();
             },
             addParticipants() {
                 bus.$emit(OPEN_CHAT_EDIT, this.chatId);
@@ -284,14 +277,13 @@
                 // actually it is need only to reflect canEdit and friends
                 this.dto = dto;
             },
-            onUserOnlineChanged(dtos) {
-                if (this.participantsDto.participants) {
+            onUserOnlineChanged(rawData) {
+                const dto = rawData?.data?.userOnlineEvents;
+                if (this.participantsDto.participants && dto) {
                     this.participantsDto.participants.forEach(item => {
-                        dtos.forEach(dtoItem => {
-                            if (dtoItem.userId == item.id) { // TODO userId => id
-                                item.online = dtoItem.online;
-                            }
-                        })
+                        if (dto.id == item.id) {
+                            item.online = dto.online;
+                        }
                     })
                     this.$forceUpdate();
                 }
@@ -396,6 +388,19 @@
             isVideo() {
                 return this.$router.currentRoute.name == videochat_name
             },
+
+            getGraphQlSubscriptionQuery() {
+                return `
+                subscription {
+                    userOnlineEvents(userIds:[${this.participantsDto.participants.map((p)=> p.id ).join(", ")}]) {
+                        id
+                        online
+                    }
+                }`
+            },
+            onNextSubscriptionElement(item) {
+                this.onUserOnlineChanged(item);
+            },
         },
         watch: {
             userSearchString (searchString) {
@@ -412,6 +417,13 @@
                 if (!newValue) {
                     this.closeModal();
                 }
+            },
+            participantsDto(newValue, oldValue) {
+                const oldArr = oldValue?.participants.map((p)=> p.id );
+                const newArr = newValue?.participants.map((p)=> p.id );
+                if (!isArrEqual(oldArr, newArr)) {
+                    this.graphQlSubscribe();
+                }
             }
         },
 
@@ -424,6 +436,9 @@
             bus.$on(CHAT_DELETED, this.onChatDelete);
             bus.$on(CHAT_EDITED, this.onChatEdit);
             bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+        },
+        beforeDestroy() {
+            this.graphQlUnsubscribe();
         },
         destroyed() {
             bus.$off(OPEN_PARTICIPANTS_DIALOG, this.showModal);

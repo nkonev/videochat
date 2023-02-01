@@ -31,7 +31,7 @@ public class Constants {
         public static final String PASSWORD_RESET_SET_NEW = "/password-reset-set-new";
         public static final String SESSIONS = "/sessions";
         public static final String ROLE = "/role";
-
+        public static final String REQUEST_FOR_ONLINE = "/request-for-online";
     }
 
     public static class Headers {
