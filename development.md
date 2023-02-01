@@ -569,6 +569,7 @@ mc event add local/files arn:minio:sqs::primary:amqp --event put,delete
 mc event remove local/files --force
 mc event list local/files
 ```
+
 # Message embedding
 ## Case 1 - reply on message
 ```
@@ -608,13 +609,6 @@ using SQL above - message just will not found, but SQL returns all what we need
 ```
 
 ... and on frontend we will understand how to draw using embed_message_type
-
-TODO: What's to do with checking of rights on media in the resendable message ? 
- - introduce chat setting - resending_allowed, false by default.
- - take on account this setting during storage's authorization to file
-TODO: also expose to HTTP in chat the method "stripHtmlTags" - we need it in reply
-TODO: add to `chat/db/message.go` new fields `embed_chat_id` and `embed_owner_id`
-TODO: make NO_MEDIA image and video stub which will be shown if file is missing or no authorization
 
 jsoup analogues for Golang
 * https://github.com/PuerkitoBio/goquery
