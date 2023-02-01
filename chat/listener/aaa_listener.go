@@ -14,7 +14,7 @@ func CreateAaaUserProfileUpdateListener(not services.Events) AaaUserProfileUpdat
 	return func(msg *amqp.Delivery) error {
 		data := msg.Body
 		s := string(data)
-		Logger.Infof("Received %v", s)
+		Logger.Debugf("Received %v", s)
 
 		var u *dto.User
 		err := json.Unmarshal(data, &u)

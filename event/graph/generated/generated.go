@@ -161,14 +161,20 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		ChatEvents   func(childComplexity int, chatID int64) int
-		GlobalEvents func(childComplexity int) int
+		ChatEvents       func(childComplexity int, chatID int64) int
+		GlobalEvents     func(childComplexity int) int
+		UserOnlineEvents func(childComplexity int, userIds []int64) int
 	}
 
 	User struct {
 		Avatar func(childComplexity int) int
 		ID     func(childComplexity int) int
 		Login  func(childComplexity int) int
+	}
+
+	UserOnline struct {
+		ID     func(childComplexity int) int
+		Online func(childComplexity int) int
 	}
 
 	UserTypingDto struct {
@@ -215,6 +221,7 @@ type QueryResolver interface {
 type SubscriptionResolver interface {
 	ChatEvents(ctx context.Context, chatID int64) (<-chan *model.ChatEvent, error)
 	GlobalEvents(ctx context.Context) (<-chan *model.GlobalEvent, error)
+	UserOnlineEvents(ctx context.Context, userIds []int64) (<-chan *model.UserOnline, error)
 }
 
 type executableSchema struct {
@@ -769,6 +776,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.GlobalEvents(childComplexity), true
 
+	case "Subscription.userOnlineEvents":
+		if e.complexity.Subscription.UserOnlineEvents == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_userOnlineEvents_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.UserOnlineEvents(childComplexity, args["userIds"].([]int64)), true
+
 	case "User.avatar":
 		if e.complexity.User.Avatar == nil {
 			break
@@ -789,6 +808,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Login(childComplexity), true
+
+	case "UserOnline.id":
+		if e.complexity.UserOnline.ID == nil {
+			break
+		}
+
+		return e.complexity.UserOnline.ID(childComplexity), true
+
+	case "UserOnline.online":
+		if e.complexity.UserOnline.Online == nil {
+			break
+		}
+
+		return e.complexity.UserOnline.Online(childComplexity), true
 
 	case "UserTypingDto.login":
 		if e.complexity.UserTypingDto.Login == nil {
@@ -981,6 +1014,11 @@ type User {
     avatar: String
 }
 
+type UserOnline {
+    id:     Int64!
+    online:  Boolean!
+}
+
 type EmbedMessageResponse {
     id:     Int64!
     chatId: Int64
@@ -1134,6 +1172,7 @@ type Query {
 type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
+    userOnlineEvents(userIds: [Int64!]!): UserOnline!
 }
 `, BuiltIn: false},
 }
@@ -1170,6 +1209,21 @@ func (ec *executionContext) field_Subscription_chatEvents_args(ctx context.Conte
 		}
 	}
 	args["chatId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Subscription_userOnlineEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []int64
+	if tmp, ok := rawArgs["userIds"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
+		arg0, err = ec.unmarshalNInt642ᚕint64ᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userIds"] = arg0
 	return args, nil
 }
 
@@ -4868,6 +4922,81 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Subscription_userOnlineEvents(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_userOnlineEvents(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().UserOnlineEvents(rctx, fc.Args["userIds"].([]int64))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model.UserOnline):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNUserOnline2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserOnline(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_userOnlineEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserOnline_id(ctx, field)
+			case "online":
+				return ec.fieldContext_UserOnline_online(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserOnline", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_userOnlineEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_id(ctx, field)
 	if err != nil {
@@ -4992,6 +5121,94 @@ func (ec *executionContext) fieldContext_User_avatar(ctx context.Context, field 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOnline_id(ctx context.Context, field graphql.CollectedField, obj *model.UserOnline) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnline_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnline_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnline",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOnline_online(ctx context.Context, field graphql.CollectedField, obj *model.UserOnline) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnline_online(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Online, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnline_online(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnline",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8231,6 +8448,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_chatEvents(ctx, fields[0])
 	case "globalEvents":
 		return ec._Subscription_globalEvents(ctx, fields[0])
+	case "userOnlineEvents":
+		return ec._Subscription_userOnlineEvents(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -8264,6 +8483,41 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 			out.Values[i] = ec._User_avatar(ctx, field, obj)
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var userOnlineImplementors = []string{"UserOnline"}
+
+func (ec *executionContext) _UserOnline(ctx context.Context, sel ast.SelectionSet, obj *model.UserOnline) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userOnlineImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserOnline")
+		case "id":
+
+			out.Values[i] = ec._UserOnline_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "online":
+
+			out.Values[i] = ec._UserOnline_online(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8982,6 +9236,20 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNUserOnline2nkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserOnline(ctx context.Context, sel ast.SelectionSet, v model.UserOnline) graphql.Marshaler {
+	return ec._UserOnline(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserOnline2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserOnline(ctx context.Context, sel ast.SelectionSet, v *model.UserOnline) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserOnline(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserWithAdmin) graphql.Marshaler {

@@ -7,6 +7,7 @@ import (
 
 const CHAT_EVENTS = "events.chat"
 const GLOBAL_EVENTS = "events.global"
+const USER_ONLINE = "user.online"
 
 type ChatEvent struct {
 	EventType                    string                        `json:"eventType"`
@@ -57,4 +58,13 @@ type FileUploadedEvent struct {
 	PreviewUrl    *string `json:"previewUrl"`
 	Type          *string `json:"aType"`
 	CorrelationId string  `json:"correlationId"`
+}
+
+type UserOnline struct {
+	UserId int64 `json:"userId"`
+	Online bool  `json:"online"`
+}
+
+func (UserOnline) Name() eventbus.EventName {
+	return USER_ONLINE
 }

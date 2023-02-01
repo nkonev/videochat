@@ -123,6 +123,11 @@ type User struct {
 	Avatar *string `json:"avatar"`
 }
 
+type UserOnline struct {
+	ID     int64 `json:"id"`
+	Online bool  `json:"online"`
+}
+
 type UserTypingDto struct {
 	Login         string `json:"login"`
 	ParticipantID int64  `json:"participantId"`

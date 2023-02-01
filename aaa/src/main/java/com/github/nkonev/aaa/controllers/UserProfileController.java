@@ -10,7 +10,7 @@ import com.github.nkonev.aaa.exception.DataNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
 import com.github.nkonev.aaa.security.OAuth2Providers;
-import com.github.nkonev.aaa.services.NotifierService;
+import com.github.nkonev.aaa.services.EventService;
 import com.github.nkonev.aaa.services.UserService;
 import com.github.nkonev.aaa.utils.PageUtils;
 import org.slf4j.Logger;
@@ -63,7 +63,7 @@ public class UserProfileController {
     private UserService userService;
 
     @Autowired
-    private NotifierService notifier;
+    private EventService notifier;
 
     @Autowired
     private ObjectProvider<OAuth2ClientProperties> oAuth2ClientProperties;
@@ -296,7 +296,7 @@ public class UserProfileController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping(Constants.Urls.API+Constants.Urls.USER+"/online")
     public List<UserOnlineResponse> getOnlineForUsers(@RequestParam(value = "userId") List<Long> userIds){
-        return aaaUserDetailsService.getUsersSessions(userIds);
+        return aaaUserDetailsService.getUsersOnline(userIds);
     }
 
     @PreAuthorize("@aaaSecurityService.hasSessionManagementPermission(#userAccount)")

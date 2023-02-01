@@ -18,10 +18,10 @@ custom.base-url: "http://localhost:${server.port}"
 # https://stackoverflow.com/questions/411331/using-javamail-with-tls
 spring.mail:
   testConnection: false
-  host: smtp.yandex.ru 
+  host: smtp.yandex.ru
   port: 465
-  username: username 
-  password: password 
+  username: username
+  password: password
   properties:
     # mail.smtp.starttls.enable: "true"
     mail.smtp.ssl.enable: "true"
@@ -64,9 +64,9 @@ spring:
 
 custom:
   email:
-    from: "username@yandex.ru" 
+    from: "username@yandex.ru"
   registration:
-    email:  
+    email:
       subject: "Registration confirmation"
   confirmation:
     registration:
@@ -78,6 +78,8 @@ custom:
     token:
       ttl-minutes: 5
   online-estimation: 10m
+  user-online-batch-size: 20
+  user-online-cron: "*/20 * * * * *"
 
 server.tomcat.accesslog.enabled: false
 server.tomcat.accesslog.pattern: '%t %a "%r" %s (%D ms)'

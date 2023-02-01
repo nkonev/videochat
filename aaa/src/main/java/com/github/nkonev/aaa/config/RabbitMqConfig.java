@@ -11,7 +11,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMqConfig {
 
-    public static final String QUEUE_EVENTS_NAME = "aaa-events";
+    public static final String QUEUE_PROFILE_EVENTS_NAME = "aaa-profile-events";
+
+    public static final String QUEUE_ONLINE_EVENTS_NAME = "async-events-exchange";
 
     @Autowired
     private ObjectMapper objectMapper;

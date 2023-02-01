@@ -288,7 +288,7 @@
                 if (this.participantsDto.participants) {
                     this.participantsDto.participants.forEach(item => {
                         dtos.forEach(dtoItem => {
-                            if (dtoItem.userId == item.id) {
+                            if (dtoItem.userId == item.id) { // TODO userId => id
                                 item.online = dtoItem.online;
                             }
                         })

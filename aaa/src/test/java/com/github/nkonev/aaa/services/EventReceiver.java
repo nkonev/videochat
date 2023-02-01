@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static com.github.nkonev.aaa.config.RabbitMqConfig.QUEUE_EVENTS_NAME;
+import static com.github.nkonev.aaa.config.RabbitMqConfig.QUEUE_PROFILE_EVENTS_NAME;
 
 @Component
 public class EventReceiver {
@@ -16,7 +16,7 @@ public class EventReceiver {
 
     private final ConcurrentLinkedQueue<UserAccountDTO> queue = new ConcurrentLinkedQueue<>();
 
-    @RabbitListener(queues = QUEUE_EVENTS_NAME)
+    @RabbitListener(queues = QUEUE_PROFILE_EVENTS_NAME)
     public void listen(UserAccountDTO message) {
         LOGGER.info("Received <" + message + ">");
         queue.add(message);

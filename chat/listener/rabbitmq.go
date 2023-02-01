@@ -8,7 +8,7 @@ import (
 	myRabbit "nkonev.name/chat/rabbitmq"
 )
 
-const aaaEventsQueue = "aaa-events"
+const aaaEventsQueue = "aaa-profile-events"
 
 type AaaEventsQueue struct{ *amqp.Queue }
 

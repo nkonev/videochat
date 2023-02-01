@@ -131,6 +131,62 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 	return cam, nil
 }
 
+// UserOnlineEvents is the resolver for the userOnlineEvents field.
+func (r *subscriptionResolver) UserOnlineEvents(ctx context.Context, userIds []int64) (<-chan *model.UserOnline, error) {
+	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		return nil, errors.New("Unable to get auth context")
+	}
+	logger.GetLogEntry(ctx).Infof("Subscribing to UserOnline channel as user %v", authResult.UserId)
+
+	var cam = make(chan *model.UserOnline)
+	subscribeHandler, err := r.Bus.Subscribe(dto.USER_ONLINE, func(event eventbus.Event, t time.Time) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.GetLogEntry(ctx).Errorf("In processing UserOnline panic recovered: %v", err)
+			}
+		}()
+
+		switch typedEvent := event.(type) {
+		case dto.UserOnline:
+			if utils.Contains(userIds, typedEvent.UserId) {
+				cam <- convertToUserOnline(&typedEvent)
+			}
+			break
+		default:
+			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+		}
+	})
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		return nil, err
+	}
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				logger.GetLogEntry(ctx).Infof("Closing UserOnline channel for user %v", authResult.UserId)
+				err := r.Bus.Unsubscribe(subscribeHandler)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserOnline channel for user %v", authResult.UserId)
+				}
+				close(cam)
+				return
+			}
+		}
+	}()
+
+	return cam, nil
+}
+
+func convertToUserOnline(u *dto.UserOnline) *model.UserOnline {
+	return &model.UserOnline{
+		ID:     u.UserId,
+		Online: u.Online,
+	}
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 

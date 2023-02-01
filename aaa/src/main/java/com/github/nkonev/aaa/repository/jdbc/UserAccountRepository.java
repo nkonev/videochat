@@ -3,7 +3,7 @@ package com.github.nkonev.aaa.repository.jdbc;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserAccountRepository extends CrudRepository<UserAccount, Long> {
+public interface UserAccountRepository extends PagingAndSortingRepository<UserAccount, Long> {
 
     Optional<UserAccount> findByUsername(String username);
 

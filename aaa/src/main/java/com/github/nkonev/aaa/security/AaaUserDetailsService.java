@@ -23,8 +23,6 @@ import org.springframework.util.Assert;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
@@ -83,11 +81,20 @@ public class AaaUserDetailsService implements UserDetailsService {
         return getSessions(userDetails.getUsername());
     }
 
-    public List<UserProfileController.UserOnlineResponse> getUsersSessions(List<Long> userIds){
+    public List<UserProfileController.UserOnlineResponse> getUsersOnline(List<Long> userIds){
         if (userIds == null){
             throw new RuntimeException("userIds cannon be null");
         }
         return StreamSupport.stream(userAccountRepository.findAllById(userIds).spliterator(), false)
+                .map(u -> new UserProfileController.UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
+                .toList();
+    }
+
+    public List<UserProfileController.UserOnlineResponse> getUsersOnlineByUsers(List<UserAccount> users){
+        if (users == null){
+            throw new RuntimeException("users cannon be null");
+        }
+        return users.stream()
                 .map(u -> new UserProfileController.UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
                 .toList();
     }

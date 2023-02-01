@@ -20,8 +20,8 @@ spring.mail:
   testConnection: false
   host: 127.0.0.1
   port: 3125
-  username: testEmailUsername 
-  password: testEmailPassword 
+  username: testEmailUsername
+  password: testEmailPassword
   properties:
     # mail.smtp.starttls.enable: "true"
     # mail.smtp.ssl.enable: "true"
@@ -42,9 +42,9 @@ spring:
 
 custom:
   email:
-    from: testEmailUsername@test.example.com 
+    from: testEmailUsername@test.example.com
   registration:
-    email:  
+    email:
       subject: "Registration confirmation"
   confirmation:
     registration:
@@ -56,6 +56,8 @@ custom:
     token:
       ttl-minutes: 5
   online-estimation: 10m
+  user-online-batch-size: 20
+  user-online-cron: "*/20 * * * * *"
 
 server.port: 9080
 

@@ -8,6 +8,11 @@ type User {
     avatar: String
 }
 
+type UserOnline {
+    id:     Int64!
+    online:  Boolean!
+}
+
 type EmbedMessageResponse {
     id:     Int64!
     chatId: Int64
@@ -161,4 +166,5 @@ type Query {
 type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
+    userOnlineEvents(userIds: [Int64!]!): UserOnline!
 }
