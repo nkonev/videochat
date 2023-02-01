@@ -303,6 +303,7 @@
                         }
                     }
                 }
+                this.$forceUpdate();
             },
             onParticipantClick(user) {
                 const routeDto = { name: profile_name, params: { id: user.id }};
