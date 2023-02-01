@@ -2,9 +2,11 @@ package com.github.nkonev.aaa.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
+import com.github.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -34,6 +36,12 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
 
     private final ObjectMapper objectMapper;
 
+    @Autowired
+    private AaaUserDetailsService aaaUserDetailsService;
+
+    @Autowired
+    private EventService eventService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RESTAuthenticationLogoutSuccessHandler.class);
 
     public RESTAuthenticationLogoutSuccessHandler(ObjectProvider<CsrfTokenRepository> csrfTokenRepositoryProvider, ObjectMapper objectMapper) {
@@ -55,6 +63,11 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
 
         UserAccountDetailsDTO userDetails = (UserAccountDetailsDTO)authentication.getPrincipal();
         LOGGER.info("User '{}' logged out", userDetails.getUsername());
+
+        var usersOnline = aaaUserDetailsService.getUsersOnline(List.of(userDetails.getId()));
+        for (var uo: usersOnline) {
+            eventService.notifyOnlineChanged(uo);
+        }
 
         response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         objectMapper.writeValue(response.getWriter(), Collections.singletonMap("message", "you successfully logged out"));
