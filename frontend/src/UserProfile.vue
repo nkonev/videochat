@@ -92,10 +92,10 @@ import {
 import axios from "axios";
 import {chat_name} from "./routes";
 import {mapGetters} from "vuex";
-import userOnlinePollingMixin from "./userOnlinePollingMixin";
+import graphqlSubscriptionMixin from "@/graphqlSubscriptionMixin";
 
 export default {
-    mixins: [userOnlinePollingMixin()],
+    mixins: [graphqlSubscriptionMixin('userOnlineInProfile')],
     data() {
         return {
             viewableUser: null,
@@ -128,11 +128,6 @@ export default {
             this.viewableUser = null;
             axios.get(`/api/user/${this.userId}`).then((response) => {
                 this.viewableUser = response.data;
-            }).then(() => {
-                this.startPolling(
-                    ()=>{ return [this.userId]},
-                    (v) => this.onUserOnlineChanged(v)
-                );
             })
         },
         tetATet(withUserId) {
@@ -140,12 +135,26 @@ export default {
                 this.$router.push(({ name: chat_name, params: { id: response.data.id}}));
             })
         },
-        onUserOnlineChanged(dtos) {
+
+        onUserOnlineChanged(rawData) {
+            const dtos = rawData?.data?.userOnlineEvents;
             dtos.forEach(dtoItem => {
-                if (dtoItem.userId == this.userId) {
+                if (dtoItem.id == this.userId) {
                     this.online = dtoItem.online;
                 }
             })
+        },
+        getGraphQlSubscriptionQuery() {
+            return `
+                subscription {
+                    userOnlineEvents(userIds:[${this.userId}]) {
+                        id
+                        online
+                    }
+                }`
+        },
+        onNextSubscriptionElement(items) {
+            this.onUserOnlineChanged(items);
         },
     },
     mounted() {
@@ -156,9 +165,10 @@ export default {
         this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
 
         this.loadUser();
+        this.graphQlSubscribe();
     },
     beforeDestroy() {
-        this.stopPolling();
+        this.graphQlUnsubscribe();
     },
     created() {
     },

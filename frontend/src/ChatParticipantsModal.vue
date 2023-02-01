@@ -139,7 +139,7 @@
     }
 
     export default {
-        mixins: [graphqlSubscriptionMixin('userOnline')],
+        mixins: [graphqlSubscriptionMixin('userOnlineInChatParticipants')],
         data () {
             return {
                 show: false,
