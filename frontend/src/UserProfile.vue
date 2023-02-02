@@ -138,7 +138,7 @@ export default {
 
         onUserOnlineChanged(rawData) {
             const dtos = rawData?.data?.userOnlineEvents;
-            dtos.forEach(dtoItem => {
+            dtos?.forEach(dtoItem => {
                 if (dtoItem.id == this.userId) {
                     this.online = dtoItem.online;
                 }

@@ -8,10 +8,20 @@
                     @contextmenu="onShowContextMenu($event, item)"
                     @click="openChat(item)"
             >
-                <v-list-item-avatar v-if="item.avatar">
-                    <img :src="item.avatar"/>
-                </v-list-item-avatar>
-                <v-list-item-content :id="'chat-item-' + item.id">
+                <v-badge
+                    v-if="item.avatar"
+                    color="success accent-4"
+                    dot
+                    bottom
+                    overlap
+                    bordered
+                    :value="item.online"
+                >
+                    <v-list-item-avatar class="ma-0 pa-0">
+                        <img :src="item.avatar"/>
+                    </v-list-item-avatar>
+                </v-badge>
+                <v-list-item-content :id="'chat-item-' + item.id" :class="item.avatar ? 'ml-4' : ''">
                     <v-list-item-title>
                         <span class="min-height">
                             {{item.name}}
@@ -76,7 +86,7 @@
     } from "./bus";
     import {chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
-    import { findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition, hasLength } from "./utils";
+    import {findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition, hasLength} from "./utils";
     import axios from "axios";
     import debounce from "lodash/debounce";
     import queryMixin from "@/queryMixin";
@@ -94,11 +104,12 @@
 
 
     import ChatListContextMenu from "@/ChatListContextMenu";
+    import graphqlSubscriptionMixin from "@/graphqlSubscriptionMixin";
 
     const pageSize = 40;
 
     export default {
-        mixins: [queryMixin()],
+        mixins: [queryMixin(), graphqlSubscriptionMixin('userOnlineTetATetInChatList')],
 
         data() {
             return {
@@ -144,11 +155,13 @@
             },
             addItem(dto) {
                 console.log("Adding item", dto);
+                this.transformItem(dto);
                 this.items.unshift(dto);
                 this.$forceUpdate();
             },
             changeItem(dto) {
                 console.log("Replacing item", dto);
+                this.transformItem(dto);
                 if (this.hasItem(dto)) {
                     replaceInArray(this.items, dto);
                     moveToFirstPosition(this.items, dto)
@@ -194,6 +207,9 @@
                     const list = data.data;
                     if (list.length) {
                         this.page += 1;
+                        list.forEach((item) => {
+                            this.transformItem(item);
+                        });
                         //this.items = [...this.items, ...list];
                         replaceOrAppend(this.items, list);
                         $state.loaded();
@@ -288,6 +304,39 @@
             findUser() {
                 bus.$emit(OPEN_FIND_USER)
             },
+
+            transformItem(item) {
+                item.online = false;
+            },
+            getTetATetParticipantIds(items) {
+                return items.filter((item) => item.tetATet).map((item) => item.participants.filter((p) => p.id != this.currentUser?.id)[0].id);
+            },
+            onUserOnlineChanged(rawData) {
+                const dtos = rawData?.data?.userOnlineEvents;
+                if (dtos) {
+                    this.items.forEach(item => {
+                        dtos.forEach(dtoItem => {
+                            if (item.tetATet && item.participants.filter((p)=> p.id == dtoItem.id).length) {
+                                item.online = dtoItem.online;
+                            }
+                        })
+                    })
+                    this.$forceUpdate();
+                }
+            },
+
+            getGraphQlSubscriptionQuery() {
+                return `
+                subscription {
+                    userOnlineEvents(userIds:[${this.getTetATetParticipantIds(this.items)}]) {
+                        id
+                        online
+                    }
+                }`
+            },
+            onNextSubscriptionElement(items) {
+                this.onUserOnlineChanged(items);
+            },
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -305,6 +354,7 @@
             this.initQueryAndWatcher();
         },
         beforeDestroy() {
+            this.graphQlUnsubscribe();
             this.closeQueryWatcher();
         },
         destroyed() {
@@ -332,6 +382,14 @@
               this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
                 this.$store.commit(SET_SEARCH_NAME, this.$vuetify.lang.t('$vuetify.search_in_chats'));
             },
+          },
+          items(newValue, oldValue) {
+              const newParticipants = this.getTetATetParticipantIds(newValue);
+              if (newParticipants.length == 0) {
+                  this.graphQlUnsubscribe();
+              } else {
+                  this.graphQlSubscribe();
+              }
           },
         },
     }
