@@ -424,8 +424,12 @@
             participantsDto(newValue, oldValue) {
                 const oldArr = oldValue?.participants.map((p)=> p.id );
                 const newArr = newValue?.participants.map((p)=> p.id );
-                if (!isArrEqual(oldArr, newArr)) {
-                    this.graphQlSubscribe();
+                if (newArr == null || newArr.length == 0) {
+                    this.graphQlUnsubscribe();
+                } else {
+                    if (!isArrEqual(oldArr, newArr)) {
+                        this.graphQlSubscribe();
+                    }
                 }
             }
         },
