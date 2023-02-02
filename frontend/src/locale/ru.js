@@ -153,5 +153,6 @@ export default {
     resend_to_here: "Кликните для пересылки сюда",
     notification_reply: "Ответ",
     tet_a_tet: "Диалог тет-а-тет",
-    copy_link_to_message: "Скопировать ссылку на сообщение"
+    copy_link_to_message: "Скопировать ссылку на сообщение",
+    copy_link_to_chat: "Скопировать ссылку на чат"
 }

@@ -22,6 +22,9 @@
 </template>
 
 <script>
+import {getUrlPrefix} from "@/utils";
+import {chat, messageIdHashPrefix} from "@/routes";
+
 export default {
     data(){
         return {
@@ -57,9 +60,14 @@ export default {
                 if (this.menuableItem.canLeave) {
                     ret.push({title: this.$vuetify.lang.t('$vuetify.leave_btn'), icon: 'mdi-exit-run', action: () => this.$emit('leaveChat', this.menuableItem) });
                 }
+                ret.push({title: this.$vuetify.lang.t('$vuetify.copy_link_to_chat'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
             }
             return ret;
-        }
+        },
+        copyLink(item) {
+            const link = getUrlPrefix() + chat + '/' + item.id;
+            navigator.clipboard.writeText(link);
+        },
     }
 }
 </script>

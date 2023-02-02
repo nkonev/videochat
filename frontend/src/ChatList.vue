@@ -7,6 +7,7 @@
                     :key="item.id"
                     @contextmenu="onShowContextMenu($event, item)"
                     @click="openChat(item)"
+                    :href="getLink(item)"
             >
                 <v-badge
                     v-if="item.avatar"
@@ -84,7 +85,7 @@
         REFRESH_ON_WEBSOCKET_RESTORED,
         VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET, OPEN_FIND_USER
     } from "./bus";
-    import {chat_name} from "./routes";
+    import {chat, chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
     import {findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition, hasLength} from "./utils";
     import axios from "axios";
@@ -336,6 +337,10 @@
             },
             onNextSubscriptionElement(items) {
                 this.onUserOnlineChanged(items);
+            },
+
+            getLink(item) {
+                return chat + "/" + item.id
             },
         },
         created() {

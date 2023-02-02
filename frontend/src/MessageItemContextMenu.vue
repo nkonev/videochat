@@ -73,7 +73,7 @@ export default {
         copyLink(item) {
             const link = getUrlPrefix() + chat + '/' + this.chatId + messageIdHashPrefix + item.id;
             navigator.clipboard.writeText(link);
-        }
+        },
     },
     computed: {
         chatId() {
