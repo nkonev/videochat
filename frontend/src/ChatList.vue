@@ -25,7 +25,7 @@
                 <v-list-item-content :id="'chat-item-' + item.id" :class="item.avatar ? 'ml-4' : ''">
                     <v-list-item-title>
                         <span class="min-height">
-                            {{item.name}}
+                            {{getChatName(item)}}
                         </span>
                         <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0"></v-badge>
                         <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0"/>
@@ -341,6 +341,13 @@
 
             getLink(item) {
                 return chat + "/" + item.id
+            },
+            getChatName(item) {
+                let bldr = item.name;
+                if (!item.avatar && item.online) {
+                    bldr += (" (" + this.$vuetify.lang.t('$vuetify.user_online') + ")");
+                }
+                return bldr;
             },
         },
         created() {
