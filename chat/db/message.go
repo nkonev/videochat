@@ -57,6 +57,24 @@ func selectMessageClause(chatId int64) string {
 	`, chatId, chatId)
 }
 
+func provideScanTo(message *Message) []any {
+	return []any{
+		&message.Id,
+		&message.Text,
+		&message.OwnerId,
+		&message.CreateDateTime,
+		&message.EditDateTime,
+		&message.FileItemUuid,
+		&message.ResponseEmbeddedMessageType,
+		&message.ResponseEmbeddedMessageReplyId,
+		&message.ResponseEmbeddedMessageReplyText,
+		&message.ResponseEmbeddedMessageReplyOwnerId,
+		&message.ResponseEmbeddedMessageResendId,
+		&message.ResponseEmbeddedMessageResendChatId,
+		&message.ResponseEmbeddedMessageResendOwnerId,
+	}
+}
+
 func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
 	if hasHash {
 		leftLimit := limit / 2
@@ -106,21 +124,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
-			if err := rows.Scan(
-				&message.Id,
-				&message.Text,
-				&message.OwnerId,
-				&message.CreateDateTime,
-				&message.EditDateTime,
-				&message.FileItemUuid,
-				&message.ResponseEmbeddedMessageType,
-				&message.ResponseEmbeddedMessageReplyId,
-				&message.ResponseEmbeddedMessageReplyText,
-				&message.ResponseEmbeddedMessageReplyOwnerId,
-				&message.ResponseEmbeddedMessageResendId,
-				&message.ResponseEmbeddedMessageResendChatId,
-				&message.ResponseEmbeddedMessageResendOwnerId,
-			); err != nil {
+			if err := rows.Scan(provideScanTo(&message)[:]...); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
@@ -168,21 +172,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
-			if err := rows.Scan(
-				&message.Id,
-				&message.Text,
-				&message.OwnerId,
-				&message.CreateDateTime,
-				&message.EditDateTime,
-				&message.FileItemUuid,
-				&message.ResponseEmbeddedMessageType,
-				&message.ResponseEmbeddedMessageReplyId,
-				&message.ResponseEmbeddedMessageReplyText,
-				&message.ResponseEmbeddedMessageReplyOwnerId,
-				&message.ResponseEmbeddedMessageResendId,
-				&message.ResponseEmbeddedMessageResendChatId,
-				&message.ResponseEmbeddedMessageResendOwnerId,
-			); err != nil {
+			if err := rows.Scan(provideScanTo(&message)[:]...); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
@@ -255,21 +245,7 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
 		AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, selectMessageClause(chatId)),
 		messageId, userId, chatId)
 	message := Message{ChatId: chatId}
-	err := row.Scan(
-		&message.Id,
-		&message.Text,
-		&message.OwnerId,
-		&message.CreateDateTime,
-		&message.EditDateTime,
-		&message.FileItemUuid,
-		&message.ResponseEmbeddedMessageType,
-		&message.ResponseEmbeddedMessageReplyId,
-		&message.ResponseEmbeddedMessageReplyText,
-		&message.ResponseEmbeddedMessageReplyOwnerId,
-		&message.ResponseEmbeddedMessageResendId,
-		&message.ResponseEmbeddedMessageResendChatId,
-		&message.ResponseEmbeddedMessageResendOwnerId,
-	)
+	err := row.Scan(provideScanTo(&message)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
