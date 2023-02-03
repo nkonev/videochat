@@ -110,7 +110,7 @@ export default {
     source_add: "Добавить источник",
     screen_share: "Демонстрация экрана",
     apply: "Применить",
-    create_call: "Звонок",
+    enter_into_call: "Войти в видеоконференцию",
     leave_call: "Покинуть звонок",
     leave_call_text: "Вы действительно хотите покинуть видео звонок ?",
     message_edit_bold: "Жирный (Ctrl+B)",

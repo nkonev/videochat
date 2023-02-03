@@ -96,8 +96,8 @@
                     overlap
                     offset-y="1.8em"
                 >
-                    <v-btn v-if="showCallButton" icon @click="createCall()" :title="$vuetify.lang.t('$vuetify.create_call')">
-                        <v-icon color="green">mdi-phone</v-icon>
+                    <v-btn v-if="showCallButton" icon @click="createCall()" :title="$vuetify.lang.t('$vuetify.enter_into_call')">
+                        <v-icon color="green">mdi-phone-plus</v-icon>
                     </v-btn>
                     <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
                         <v-icon color="red">mdi-phone</v-icon>

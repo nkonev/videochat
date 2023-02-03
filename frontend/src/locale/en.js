@@ -110,7 +110,7 @@ export default {
     source_add: "Add source",
     screen_share: "Screen sharing",
     apply: "Apply",
-    create_call: "Call",
+    enter_into_call: "Enter into video conference",
     leave_call: "Leave call",
     leave_call_text: "Are you sure to leave this video call ?",
     message_edit_bold: "Bold (Ctrl+B)",
