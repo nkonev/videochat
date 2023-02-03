@@ -57,7 +57,7 @@ func selectMessageClause(chatId int64) string {
 	`, chatId, chatId)
 }
 
-func provideScanTo(message *Message) []any {
+func provideScanToMessage(message *Message) []any {
 	return []any{
 		&message.Id,
 		&message.Text,
@@ -124,7 +124,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
-			if err := rows.Scan(provideScanTo(&message)[:]...); err != nil {
+			if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
@@ -172,7 +172,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
-			if err := rows.Scan(provideScanTo(&message)[:]...); err != nil {
+			if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
 				Logger.Errorf("Error during scan message rows %v", err)
 				return nil, err
 			} else {
@@ -245,7 +245,7 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
 		AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, selectMessageClause(chatId)),
 		messageId, userId, chatId)
 	message := Message{ChatId: chatId}
-	err := row.Scan(provideScanTo(&message)[:]...)
+	err := row.Scan(provideScanToMessage(&message)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil

@@ -71,10 +71,35 @@ func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int
 	return true, chatId, nil
 }
 
+func selectChatClause() string {
+	return `SELECT 
+				id, 
+				title, 
+				avatar, 
+				avatar_big,
+				last_update_date_time,
+				tet_a_tet,
+				can_resend
+			FROM chat
+`
+}
+
+func provideScanToChat(chat *Chat) []any {
+	return []any{
+		&chat.Id,
+		&chat.Title,
+		&chat.Avatar,
+		&chat.AvatarBig,
+		&chat.LastUpdateDateTime,
+		&chat.TetATet,
+		&chat.CanResend,
+	}
+}
+
 func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = db.Query(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet, can_resend FROM chat WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
+	rows, err = db.Query(selectChatClause()+` WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
@@ -83,7 +108,7 @@ func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) 
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
-			if err := rows.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet, &chat.CanResend); err != nil {
+			if err := rows.Scan(provideScanToChat(&chat)[:]...); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -113,16 +138,7 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 		additionalUserIdsClause = fmt.Sprintf(" OR ( tet_a_tet IS true AND id IN ( SELECT chat_id FROM chat_participant WHERE user_id IN (%s) ) ) ", additionalUserIds)
 	}
 
-	rows, err = db.Query(fmt.Sprintf(`
-		SELECT 
-		    id, 
-		    title, 
-		    avatar, 
-		    avatar_big,
-		    last_update_date_time,
-		    tet_a_tet,
-		    can_resend
-		FROM chat 
+	rows, err = db.Query(selectChatClause()+fmt.Sprintf(`
 		WHERE 
 		    id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( title ILIKE $4  %s)
 			ORDER BY (last_update_date_time, id) DESC 
@@ -136,7 +152,7 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
-			if err := rows.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet, &chat.CanResend); err != nil {
+			if err := rows.Scan(provideScanToChat(&chat)[:]...); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -331,9 +347,9 @@ func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String,
 }
 
 func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, error) {
-	row := co.QueryRow(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet, can_resend FROM chat WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
+	row := co.QueryRow(selectChatClause()+` WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
 	chat := Chat{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet, &chat.CanResend)
+	err := row.Scan(provideScanToChat(&chat)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -355,9 +371,9 @@ func (tx *Tx) GetChat(participantId, chatId int64) (*Chat, error) {
 }
 
 func getChatBasicCommon(co CommonOperations, chatId int64) (*Chat, error) {
-	row := co.QueryRow(`SELECT id, title, avatar, avatar_big, last_update_date_time, tet_a_tet, can_resend FROM chat WHERE chat.id = $1`, chatId)
+	row := co.QueryRow(selectChatClause()+` WHERE chat.id = $1`, chatId)
 	chat := Chat{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.Avatar, &chat.AvatarBig, &chat.LastUpdateDateTime, &chat.TetATet, &chat.CanResend)
+	err := row.Scan(provideScanToChat(&chat)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
