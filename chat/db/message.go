@@ -36,6 +36,27 @@ type Message struct {
 	ResponseEmbeddedMessageResendChatId  *int64
 }
 
+func selectMessageClause(chatId int64) string {
+	return fmt.Sprintf(`SELECT 
+    		m.id, 
+    		m.text, 
+    		m.owner_id,
+    		m.create_date_time, 
+    		m.edit_date_time, 
+    		m.file_item_uuid,
+			m.embed_message_type as embedded_message_type,
+			me.id as embedded_message_reply_id,
+			me.text as embedded_message_reply_text,
+			me.owner_id as embedded_message_reply_owner_id,
+			m.embed_message_id as embedded_message_resend_id,
+			m.embed_chat_id as embedded_message_resend_chat_id,
+			m.embed_owner_id as embedded_message_resend_owner_id
+		FROM message_chat_%v m 
+		LEFT JOIN message_chat_%v me 
+			ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
+	`, chatId, chatId)
+}
+
 func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
 	if hasHash {
 		leftLimit := limit / 2
@@ -68,29 +89,13 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 			order = "desc"
 		}
 
-		rows, err := db.Query(fmt.Sprintf(`SELECT 
-    		m.id, 
-    		m.text, 
-    		m.owner_id,
-    		m.create_date_time, 
-    		m.edit_date_time, 
-    		m.file_item_uuid,
-			m.embed_message_type as embedded_message_type,
-			me.id as embedded_message_reply_id,
-			me.text as embedded_message_reply_text,
-			me.owner_id as embedded_message_reply_owner_id,
-			m.embed_message_id as embedded_message_resend_id,
-			m.embed_chat_id as embedded_message_resend_chat_id,
-			m.embed_owner_id as embedded_message_resend_owner_id
-		FROM message_chat_%v m 
-		LEFT JOIN message_chat_%v me 
-			ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
+		rows, err := db.Query(fmt.Sprintf(`%v
 		WHERE 
 		    $3 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $3 ) 
 			AND m.id >= $4 
 			AND m.id <= $5 
 		ORDER BY m.id %s 
-		LIMIT $2`, chatId, chatId, order),
+		LIMIT $2`, selectMessageClause(chatId), order),
 			userId, limit, chatId, leftMessageId, rightMessageId)
 
 		if err != nil {
@@ -134,56 +139,24 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		var rows *sql.Rows
 		if searchString != "" {
 			searchStringPercents := "%" + searchString + "%"
-			rows, err = db.Query(fmt.Sprintf(`SELECT 
-    			m.id, 
-    			m.text,
-    			m.owner_id, 
-    			m.create_date_time, 
-    			m.edit_date_time, 
-    			m.file_item_uuid,
-				m.embed_message_type as embedded_message_type,
-				me.id as embedded_message_reply_id,
-				me.text as embedded_message_reply_text,
-				me.owner_id as embedded_message_reply_owner_id,
-				m.embed_message_id as embedded_message_resend_id,
-				m.embed_chat_id as embedded_message_resend_chat_id,
-				m.embed_owner_id as embedded_message_resend_owner_id
-			FROM message_chat_%v m 
-			LEFT JOIN message_chat_%v me 
-				ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
+			rows, err = db.Query(fmt.Sprintf(`%v
 			WHERE 
 		    	$4 IN (SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4) 
 				AND %s 
 				AND strip_tags(m.text) ILIKE $5 
 			ORDER BY m.id %s 
-			LIMIT $2`, chatId, chatId, nonEquality, order), userId, limit, startingFromItemId, chatId, searchStringPercents)
+			LIMIT $2`, selectMessageClause(chatId), nonEquality, order), userId, limit, startingFromItemId, chatId, searchStringPercents)
 			if err != nil {
 				Logger.Errorf("Error during get chat rows %v", err)
 				return nil, err
 			}
 		} else {
-			rows, err = db.Query(fmt.Sprintf(`SELECT 
-    			m.id, 
-    			m.text,
-    			m.owner_id, 
-    			m.create_date_time,
-    			m.edit_date_time, 
-    			m.file_item_uuid,
-				m.embed_message_type as embedded_message_type,
-				me.id as embedded_message_reply_id,
-				me.text as embedded_message_reply_text,
-				me.owner_id as embedded_message_reply_owner_id,
-				m.embed_message_id as embedded_message_resend_id,
-				m.embed_chat_id as embedded_message_resend_chat_id,
-				m.embed_owner_id as embedded_message_resend_owner_id
-			FROM message_chat_%v m 
-			LEFT JOIN message_chat_%v me 
-				ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
+			rows, err = db.Query(fmt.Sprintf(`%v
 			WHERE 
 			    $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) 
 				AND %s 
 			ORDER BY m.id %s 
-			LIMIT $2`, chatId, chatId, nonEquality, order),
+			LIMIT $2`, selectMessageClause(chatId), nonEquality, order),
 				userId, limit, startingFromItemId, chatId)
 			if err != nil {
 				Logger.Errorf("Error during get chat rows with search %v", err)
@@ -276,26 +249,10 @@ func (db *DB) CountMessages() (int64, error) {
 }
 
 func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId int64) (*Message, error) {
-	row := co.QueryRow(fmt.Sprintf(`SELECT 
-    	m.id, 
-    	m.text,
-    	m.owner_id,
-    	m.create_date_time, 
-    	m.edit_date_time,
-    	m.file_item_uuid,
-		m.embed_message_type as embedded_message_type,
-		me.id as embedded_message_reply_id,
-		me.text as embedded_message_reply_text,
-		me.owner_id as embedded_message_reply_owner_id,
-		m.embed_message_id as embedded_message_resend_id,
-		m.embed_chat_id as embedded_message_resend_chat_id,
-		m.embed_owner_id as embedded_message_resend_owner_id
-	FROM message_chat_%v m 
-	LEFT JOIN message_chat_%v me 
-		ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
+	row := co.QueryRow(fmt.Sprintf(`%v
 	WHERE 
 	    m.id = $1 
-		AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, chatId, chatId),
+		AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, selectMessageClause(chatId)),
 		messageId, userId, chatId)
 	message := Message{ChatId: chatId}
 	err := row.Scan(
