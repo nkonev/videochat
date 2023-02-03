@@ -84,7 +84,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 			m.embed_owner_id as embedded_message_resend_owner_id
 		FROM message_chat_%v m 
 		LEFT JOIN message_chat_%v me 
-			ON m.embed_message_id = me.id
+			ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
 		WHERE 
 		    $3 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $3 ) 
 			AND m.id >= $4 
@@ -150,7 +150,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 				m.embed_owner_id as embedded_message_resend_owner_id
 			FROM message_chat_%v m 
 			LEFT JOIN message_chat_%v me 
-				ON m.embed_message_id = me.id
+				ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
 			WHERE 
 		    	$4 IN (SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4) 
 				AND %s 
@@ -178,7 +178,7 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 				m.embed_owner_id as embedded_message_resend_owner_id
 			FROM message_chat_%v m 
 			LEFT JOIN message_chat_%v me 
-				ON m.embed_message_id = me.id
+				ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
 			WHERE 
 			    $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) 
 				AND %s 
@@ -292,7 +292,7 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
 		m.embed_owner_id as embedded_message_resend_owner_id
 	FROM message_chat_%v m 
 	LEFT JOIN message_chat_%v me 
-		ON m.embed_message_id = me.id
+		ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
 	WHERE 
 	    m.id = $1 
 		AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, chatId, chatId),
