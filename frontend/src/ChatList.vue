@@ -6,7 +6,6 @@
                     v-for="(item, index) in items"
                     :key="item.id"
                     @contextmenu="onShowContextMenu($event, item)"
-                    @click.prevent="openChat(item)"
                     :href="getLink(item)"
             >
                 <v-badge
