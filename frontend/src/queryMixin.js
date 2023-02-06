@@ -1,5 +1,4 @@
 import {GET_SEARCH_STRING, SET_SEARCH_STRING} from "@/store";
-import {videochat_name} from "@/routes";
 
 export const searchQueryParameter = 'q';
 
