@@ -13,7 +13,7 @@
                 <template v-if="!isMobile()">
                     <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                     <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
-                    <a class="mx-2 hash" :href="require('./routes').chat + '/' + chatId + require('./routes').messageIdHashPrefix + item.id" :title="$vuetify.lang.t('$vuetify.link')">#</a>
+                    <router-link class="mx-2 hash" :to="getMessageLink(item)" :title="$vuetify.lang.t('$vuetify.link')">#</router-link>
                     <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
                     <v-icon v-if="canResend" class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
                 </template>
@@ -31,22 +31,14 @@
 
 <script>
     import axios from "axios";
-    import bus, {
-        CLOSE_SIMPLE_MODAL,
-        OPEN_SIMPLE_MODAL,
-        OPEN_VIEW_FILES_DIALOG,
-        OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE, OPEN_RESEND_TO_MODAL
-    } from "./bus";
     import debounce from "lodash/debounce";
     import {
         embed_message_reply,
         embed_message_resend,
         getHumanReadableDate,
-        setAnswerPreviewFields,
     } from "@/utils";
     import "./message.styl";
-    import cloneDeep from "lodash/cloneDeep";
-    import {chat, chat_name, messageIdHashPrefix, video_suffix, videochat_name} from "./routes"
+    import {chat_name, messageIdHashPrefix} from "./routes"
 
     export default {
         props: ['item', 'chatId', 'my', 'highlight', 'canResend'],
@@ -78,6 +70,15 @@
             },
             getDate(item) {
                 return getHumanReadableDate(item.createDateTime)
+            },
+            getMessageLink(item) {
+                return {
+                    name: this.$route.name,
+                    params: {
+                        id: this.chatId
+                    },
+                    hash: messageIdHashPrefix + item.id
+                }
             },
             getEmbedLinkTo(item) {
                 let chatId;
