@@ -20,7 +20,7 @@
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
                 <div v-if="item.embedMessage" class="embedded-message">
-                    <a class="list-item-head" :href="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</a>
+                    <router-link class="list-item-head" :to="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</router-link>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
                 <v-container v-if="shouldShowMainContainer(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
@@ -80,14 +80,21 @@
                 return getHumanReadableDate(item.createDateTime)
             },
             getEmbedLinkTo(item) {
-                let video = "";
-                if (this.$route.name == videochat_name) {
-                    video = video_suffix;
-                }
+                let chatId;
+                let name;
                 if (item.embedMessage.embedType == embed_message_reply) {
-                    return chat + '/' + this.chatId + video + messageIdHashPrefix + item.embedMessage.id
+                    chatId = this.chatId;
+                    name = this.$route.name;
                 } else if (item.embedMessage.embedType == embed_message_resend && item.embedMessage.isParticipant) {
-                    return chat + '/' + item.embedMessage.chatId + video + messageIdHashPrefix + item.embedMessage.id
+                    chatId = item.embedMessage.chatId;
+                    name = chat_name;
+                }
+                return {
+                    name: name,
+                    params: {
+                        id: chatId
+                    },
+                    hash: messageIdHashPrefix + item.embedMessage.id
                 }
             },
             getEmbedHead(item){

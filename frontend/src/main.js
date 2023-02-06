@@ -111,27 +111,6 @@ const getGlobalEventsData = (message) => {
     return message.data?.globalEvents
 };
 
-router.beforeEach((to, from, next) => {
-    console.debug("beforeEach", from, to);
-
-    if (from.name == videochat_name && to.name != videochat_name && to.params.leavingVideoAcceptableParam != true) {
-        bus.$emit(OPEN_SIMPLE_MODAL, {
-            buttonName: vuetify.framework.lang.translator('$vuetify.ok'),
-            title: vuetify.framework.lang.translator('$vuetify.leave_call'),
-            text: vuetify.framework.lang.translator('$vuetify.leave_call_text'),
-            actionFunction: ()=> {
-                next();
-                bus.$emit(CLOSE_SIMPLE_MODAL);
-            },
-            cancelFunction: ()=>{
-                next(false)
-            }
-        });
-    } else {
-        next();
-    }
-});
-
 createGraphQlClient(bus);
 
 vm = new Vue({
