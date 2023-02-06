@@ -19,7 +19,7 @@
                                         </v-list-item-avatar>
                                         <v-list-item-content class="py-2">
                                             <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
-                                            <v-list-item-subtitle v-if="hover">{{ $vuetify.lang.t('$vuetify.resend_to_here') }}</v-list-item-subtitle>
+                                            <v-list-item-subtitle :class="!hover ? 'white-colored' : ''">{{ hover ? $vuetify.lang.t('$vuetify.resend_to_here') : '-' }}</v-list-item-subtitle>
                                         </v-list-item-content>
                                     </v-list-item>
                                 </v-hover>
@@ -149,3 +149,9 @@ export default {
     },
 }
 </script>
+
+<style lang="stylus">
+.white-colored {
+    color white !important
+}
+</style>
