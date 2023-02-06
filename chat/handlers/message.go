@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"math"
 	"net/http"
 	"nkonev.name/chat/auth"
@@ -293,7 +292,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		}
 
 		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
-		var addedMentions, strippedText = mc.findMentions(message.Text, users, c.Request().Context())
+		var addedMentions, strippedText = mc.findMentions(message.Text, users, message.Owner.Login, c.Request().Context())
 		var reply, userToSendTo = mc.wasReplyAdded(nil, message, chatId)
 		var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
 		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText)
@@ -408,7 +407,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		var oldMentions, _ = mc.findMentions(oldMessage.Text, users, c.Request().Context())
+		var oldMentions, _ = mc.findMentions(oldMessage.Text, users, "", c.Request().Context())
 
 		err = tx.EditMessage(editableMessage)
 		if err != nil {
@@ -420,7 +419,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			return err
 		}
 
-		var newMentions, strippedText = mc.findMentions(message.Text, users, c.Request().Context())
+		var newMentions, strippedText = mc.findMentions(message.Text, users, message.Owner.Login, c.Request().Context())
 
 		var userIdsToNotifyAboutMentionCreated []int64
 		var userIdsToNotifyAboutMentionDeleted []int64
@@ -506,7 +505,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	if err := mc.db.DeleteMessage(messageId, userPrincipalDto.UserId, chatId); err != nil {
 		return err
 	} else {
-		var oldMentions, _ = mc.findMentions(oldMessage.Text, users, c.Request().Context())
+		var oldMentions, _ = mc.findMentions(oldMessage.Text, users, "", c.Request().Context())
 		mc.notificator.NotifyRemoveMention(c, oldMentions, chatId, messageId)
 
 		cd := &dto.DisplayMessageDto{
@@ -660,7 +659,7 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User, c context.Context) ([]int64, string) {
+func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User, login string, c context.Context) ([]int64, string) {
 	var result = []int64{}
 	withoutSourceTags := mc.stripSourceContent.Sanitize(messageText)
 	for _, user := range users {
@@ -669,9 +668,8 @@ func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.
 		}
 	}
 	withoutAnyHtml := mc.stripAllTags.Sanitize(withoutSourceTags)
-	size := utils.Min(len(withoutAnyHtml), viper.GetInt("mentionMaxTextSize"))
-	if withoutAnyHtml != "" && size > 0 {
-		withoutAnyHtml = withoutAnyHtml[:size]
+	if withoutAnyHtml != "" {
+		withoutAnyHtml = createMessagePreview(mc.stripAllTags, withoutAnyHtml, login)
 	}
 	return result, withoutAnyHtml
 }
