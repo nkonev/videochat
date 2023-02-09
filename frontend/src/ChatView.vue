@@ -7,7 +7,7 @@
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane v-bind:size="messagesSize">
-                <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll">
+                <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
                     <v-list  v-if="currentUser">
                         <template v-for="(item, index) in items">
                             <MessageItem
@@ -806,6 +806,14 @@
             onFilesClicked(item) {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});
             },
+            onCloseContextMenu(){
+                this.$refs.contextMenuRef.onCloseContextMenu()
+            },
+            keydownListener(e) {
+                if (e.key === 'Escape') {
+                    this.onCloseContextMenu()
+                }
+            },
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -857,6 +865,8 @@
             }, 500);
 
             this.scrollerDiv = document.getElementById("messagesScroller");
+
+            document.addEventListener("keydown", this.keydownListener);
         },
         beforeDestroy() {
             this.graphQlUnsubscribe();
@@ -881,6 +891,7 @@
             clearInterval(writingUsersTimerId);
 
             this.closeQueryWatcher();
+            document.removeEventListener("keydown", this.keydownListener);
         },
         destroyed() {
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
