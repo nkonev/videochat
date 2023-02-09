@@ -10,6 +10,6 @@ import static com.github.nkonev.aaa.config.RabbitMqConfig.QUEUE_PROFILE_EVENTS_N
 public class RabbitMqTestConfig {
     @Bean
     public Queue aaaEvents() {
-        return new Queue(QUEUE_PROFILE_EVENTS_NAME, false);
+        return new Queue(QUEUE_PROFILE_EVENTS_NAME, true);
     }
 }
