@@ -100,7 +100,7 @@
                         <v-icon color="green">mdi-phone-plus</v-icon>
                     </v-btn>
                     <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
-                        <v-icon color="red">mdi-phone</v-icon>
+                        <v-icon :class="shouldPhoneBlink ? 'call-blink' : 'red--text'">mdi-phone</v-icon>
                     </v-btn>
                 </v-badge>
 
@@ -230,7 +230,11 @@
         SET_SHOW_RECORD_START_BUTTON,
         SET_SHOW_RECORD_STOP_BUTTON,
         FETCH_NOTIFICATIONS,
-        GET_NOTIFICATIONS, UNSET_NOTIFICATIONS, FETCH_AVAILABLE_OAUTH2_PROVIDERS, GET_SEARCH_NAME, SET_TITLE
+        GET_NOTIFICATIONS,
+        UNSET_NOTIFICATIONS,
+        FETCH_AVAILABLE_OAUTH2_PROVIDERS,
+        GET_SEARCH_NAME,
+        GET_SHOULD_PHONE_BLINK
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -245,8 +249,6 @@
         OPEN_LANGUAGE_MODAL,
         ADD_VIDEO_SOURCE_DIALOG,
         ADD_SCREEN_SOURCE,
-        OPEN_SIMPLE_MODAL,
-        CLOSE_SIMPLE_MODAL,
         VIDEO_RECORDING_CHANGED,
         OPEN_NOTIFICATIONS_DIALOG,
         PROFILE_SET, WEBSOCKET_RESTORED,
@@ -520,6 +522,7 @@
                 showAlert: GET_SHOW_ALERT,
                 lastError: GET_LAST_ERROR,
                 errorColor: GET_ERROR_COLOR,
+                shouldPhoneBlink: GET_SHOULD_PHONE_BLINK
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return this.currentUser.avatar;

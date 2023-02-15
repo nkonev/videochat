@@ -23,7 +23,7 @@ import {
     SET_SHOW_HANG_BUTTON,
     SET_SHOW_RECORD_START_BUTTON,
     GET_SHOW_RECORD_STOP_BUTTON,
-    SET_VIDEO_CHAT_USERS_COUNT, SET_SHOW_RECORD_STOP_BUTTON, GET_CAN_MAKE_RECORD
+    SET_VIDEO_CHAT_USERS_COUNT, SET_SHOW_RECORD_STOP_BUTTON, GET_CAN_MAKE_RECORD, SET_SHOULD_PHONE_BLINK, GET_USER
 } from "@/store";
 import {
     defaultAudioMute,
@@ -35,7 +35,7 @@ import {
 import bus, {
     ADD_SCREEN_SOURCE,
     ADD_VIDEO_SOURCE,
-    REQUEST_CHANGE_VIDEO_PARAMETERS,
+    REQUEST_CHANGE_VIDEO_PARAMETERS, VIDEO_DIAL_STATUS_CHANGED,
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus";
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
@@ -51,14 +51,16 @@ const last = 'last';
 
 export default {
     mixins: [videoServerSettingsMixin(), queryMixin()],
-
+    props: ['chatDto'],
     data() {
         return {
-            chatId: null,
             room: null,
             videoContainerDiv: null,
             userVideoComponents: new ChatVideoUserComponentHolder(),
             inRestarting: false,
+            chatId: null,
+            isTetATet: false,
+            participantIds: [],
         }
     },
     methods: {
@@ -422,18 +424,35 @@ export default {
         onAddScreenSource() {
             this.createLocalMediaTracks(null, null, true);
         },
+        onChatDialStatusChange(dto) {
+            if (this.isTetATet) {
+                for (const videoDialChanged of dto.dials) {
+                    if (this.currentUser.id != videoDialChanged.userId) {
+                        this.$store.commit(SET_SHOULD_PHONE_BLINK, videoDialChanged.status);
+                    }
+                }
+            }
+        },
     },
     computed: {
         ...mapGetters({
             inRecordingProcess: GET_SHOW_RECORD_STOP_BUTTON,
             canMakeRecord: GET_CAN_MAKE_RECORD,
-        })
+            currentUser: GET_USER,
+        }),
     },
     async mounted() {
-        this.chatId = this.$route.params.id;
+        this.chatId = this.chatDto.id;
+        this.isTetATet = this.chatDto.tetATet;
+        this.participantIds = this.chatDto.participantIds;
 
         this.$store.commit(SET_SHOW_CALL_BUTTON, false);
         this.$store.commit(SET_SHOW_HANG_BUTTON, true);
+        if (this.isTetATet) {
+            this.$store.commit(SET_SHOULD_PHONE_BLINK, true); // also listen to stopping calling to that participant in onChatDialStatusChange
+            const oppositeUserId = this.participantIds.filter((p) => p != this.currentUser.id)[0];
+            axios.put(`/api/video/${this.chatId}/dial?userId=${oppositeUserId}&call=true`)
+        }
 
         if (!this.inRecordingProcess && this.canMakeRecord) {
             this.$store.commit(SET_SHOW_RECORD_START_BUTTON, true);
@@ -461,11 +480,13 @@ export default {
         bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
+        bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     },
     destroyed() {
         bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
+        bus.$off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     }
 }
 

@@ -54,6 +54,8 @@ export const SET_NOTIFICATIONS = 'setNotifications';
 export const UNSET_NOTIFICATIONS = 'unsetNotifications';
 export const GET_NOTIFICATIONS_SETTINGS = 'getNotificationsSettings';
 export const SET_NOTIFICATIONS_SETTINGS = 'setNotificationsSettings';
+export const GET_SHOULD_PHONE_BLINK = 'getShouldPhoneBlink';
+export const SET_SHOULD_PHONE_BLINK = 'setShouldPhoneBlink';
 export const NOTIFICATION_ADD = 'notificationAdd';
 export const NOTIFICATION_DELETE = 'notificationDelete';
 
@@ -83,7 +85,8 @@ const store = new Vuex.Store({
         lastError: "",
         errorColor: "",
         notifications: [],
-        notificationsSettings: {}
+        notificationsSettings: {},
+        shouldPhoneBlink: false,
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -160,6 +163,9 @@ const store = new Vuex.Store({
         [SET_NOTIFICATIONS_SETTINGS](state, payload) {
             state.notificationsSettings = payload;
         },
+        [SET_SHOULD_PHONE_BLINK](state, payload) {
+            state.shouldPhoneBlink = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -224,6 +230,9 @@ const store = new Vuex.Store({
         },
         [GET_NOTIFICATIONS_SETTINGS](state) {
             return state.notificationsSettings;
+        },
+        [GET_SHOULD_PHONE_BLINK](state) {
+            return state.shouldPhoneBlink;
         },
     },
     actions: {
