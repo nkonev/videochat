@@ -448,11 +448,6 @@ export default {
 
         this.$store.commit(SET_SHOW_CALL_BUTTON, false);
         this.$store.commit(SET_SHOW_HANG_BUTTON, true);
-        if (this.isTetATet) {
-            this.$store.commit(SET_SHOULD_PHONE_BLINK, true); // also listen to stopping calling to that participant in onChatDialStatusChange
-            const oppositeUserId = this.participantIds.filter((p) => p != this.currentUser.id)[0];
-            axios.put(`/api/video/${this.chatId}/dial?userId=${oppositeUserId}&call=true`)
-        }
 
         if (!this.inRecordingProcess && this.canMakeRecord) {
             this.$store.commit(SET_SHOW_RECORD_START_BUTTON, true);
