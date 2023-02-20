@@ -198,28 +198,7 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		}
 	}
 
-	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
-	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	// dummy remove myself from call list
-	err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userPrincipalDto.UserId, chatId)
-	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	var videoIsInvitingDto = dto.VideoIsInvitingDto{
-		ChatId:       chatId,
-		UserIds:      []int64{userPrincipalDto.UserId},
-		Status:       false,
-		BehalfUserId: behalfUserId,
-	}
-	err = vh.dialStatusPublisher.Publish(&videoIsInvitingDto)
-	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	vh.processCallLogic(c, chatId, userPrincipalDto)
 
 	return c.JSON(http.StatusOK, ret)
 }
@@ -243,19 +222,23 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
+	return c.NoContent(vh.processCallLogic(c, chatId, userPrincipalDto))
+}
+
+func (vh *InviteHandler) processCallLogic(c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) int {
 	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+		return http.StatusInternalServerError
 	}
 	if behalfUserId == services.NoUser {
-		return c.NoContent(http.StatusOK)
+		return http.StatusOK
 	}
 
 	err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+		return http.StatusInternalServerError
 	}
 
 	var videoIsInvitingDto = dto.VideoIsInvitingDto{
@@ -268,10 +251,10 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+		return http.StatusInternalServerError
 	}
 
-	return c.NoContent(http.StatusOK)
+	return http.StatusOK
 }
 
 func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
