@@ -23,7 +23,7 @@ import {
     SET_SHOW_HANG_BUTTON,
     SET_SHOW_RECORD_START_BUTTON,
     GET_SHOW_RECORD_STOP_BUTTON,
-    SET_VIDEO_CHAT_USERS_COUNT, SET_SHOW_RECORD_STOP_BUTTON, GET_CAN_MAKE_RECORD, SET_SHOULD_PHONE_BLINK, GET_USER
+    SET_VIDEO_CHAT_USERS_COUNT, SET_SHOW_RECORD_STOP_BUTTON, GET_CAN_MAKE_RECORD, GET_USER
 } from "@/store";
 import {
     defaultAudioMute,
@@ -59,7 +59,6 @@ export default {
             userVideoComponents: new ChatVideoUserComponentHolder(),
             inRestarting: false,
             chatId: null,
-            isTetATet: false,
             participantIds: [],
         }
     },
@@ -424,15 +423,6 @@ export default {
         onAddScreenSource() {
             this.createLocalMediaTracks(null, null, true);
         },
-        onChatDialStatusChange(dto) {
-            if (this.isTetATet) {
-                for (const videoDialChanged of dto.dials) {
-                    if (this.currentUser.id != videoDialChanged.userId) {
-                        this.$store.commit(SET_SHOULD_PHONE_BLINK, videoDialChanged.status);
-                    }
-                }
-            }
-        },
     },
     computed: {
         ...mapGetters({
@@ -443,7 +433,6 @@ export default {
     },
     async mounted() {
         this.chatId = this.chatDto.id;
-        this.isTetATet = this.chatDto.tetATet;
         this.participantIds = this.chatDto.participantIds;
 
         this.$store.commit(SET_SHOW_CALL_BUTTON, false);
@@ -475,13 +464,11 @@ export default {
         bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
-        bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     },
     destroyed() {
         bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
-        bus.$off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     }
 }
 

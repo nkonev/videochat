@@ -196,8 +196,31 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 			ret.Status = true
 			vh.addCalling(c, oppositeUser, true, chatId, userPrincipalDto)
 		}
-
 	}
+
+	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	// dummy remove myself from call list
+	err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userPrincipalDto.UserId, chatId)
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	var videoIsInvitingDto = dto.VideoIsInvitingDto{
+		ChatId:       chatId,
+		UserIds:      []int64{userPrincipalDto.UserId},
+		Status:       false,
+		BehalfUserId: behalfUserId,
+	}
+	err = vh.dialStatusPublisher.Publish(&videoIsInvitingDto)
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
 	return c.JSON(http.StatusOK, ret)
 }
 

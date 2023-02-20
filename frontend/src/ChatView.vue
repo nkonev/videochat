@@ -102,7 +102,7 @@
         OPEN_SIMPLE_MODAL,
         CLOSE_SIMPLE_MODAL,
         SET_EDIT_MESSAGE,
-        OPEN_RESEND_TO_MODAL, OPEN_VIEW_FILES_DIALOG,
+        OPEN_RESEND_TO_MODAL, OPEN_VIEW_FILES_DIALOG, VIDEO_DIAL_STATUS_CHANGED,
     } from "./bus";
     import {chat_list_name, chat_name, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
@@ -117,7 +117,7 @@
         SET_CAN_MAKE_RECORD,
         SET_CHAT_ID,
         SET_CHAT_USERS_COUNT,
-        SET_SEARCH_NAME,
+        SET_SEARCH_NAME, SET_SHOULD_PHONE_BLINK,
         SET_SHOW_CALL_BUTTON,
         SET_SHOW_CHAT_EDIT_BUTTON,
         SET_SHOW_HANG_BUTTON,
@@ -815,6 +815,15 @@
                     this.onCloseContextMenu()
                 }
             },
+            onChatDialStatusChange(dto) {
+                if (this.chatDto.tetATet) {
+                    for (const videoDialChanged of dto.dials) {
+                        if (this.currentUser.id != videoDialChanged.userId) {
+                            this.$store.commit(SET_SHOULD_PHONE_BLINK, videoDialChanged.status);
+                        }
+                    }
+                }
+            },
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -859,6 +868,7 @@
 
             bus.$on(USER_TYPING, this.onUserTyping);
             bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
+            bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
 
             writingUsersTimerId = setInterval(()=>{
                 const curr = + new Date();
@@ -888,6 +898,7 @@
 
             bus.$off(USER_TYPING, this.onUserTyping);
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
+            bus.$off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
 
             clearInterval(writingUsersTimerId);
 
