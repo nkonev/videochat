@@ -97,7 +97,7 @@
                     offset-y="1.8em"
                 >
                     <v-btn v-if="showCallButton" icon @click="createCall()" :title="$vuetify.lang.t('$vuetify.enter_into_call')">
-                        <v-icon color="green">mdi-phone-plus</v-icon>
+                        <v-icon color="green">{{tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                     </v-btn>
                     <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
                         <v-icon :class="shouldPhoneBlink ? 'call-blink' : 'red--text'">mdi-phone</v-icon>
@@ -234,7 +234,7 @@
         UNSET_NOTIFICATIONS,
         FETCH_AVAILABLE_OAUTH2_PROVIDERS,
         GET_SEARCH_NAME,
-        GET_SHOULD_PHONE_BLINK
+        GET_SHOULD_PHONE_BLINK, GET_TET_A_TET
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -355,7 +355,7 @@
                 const routerNewState = { name: videochat_name};
                 this.navigateToWithPreservingSearchStringInQuery(routerNewState);
                 this.updateLastAnsweredTimestamp();
-                axios.put(`/api/video/${this.chatId}/dial/start`)
+                axios.put(`/api/video/${this.chatId}/dial/start`);
             },
             stopCall() {
                 console.debug("stopping Call");
@@ -523,7 +523,8 @@
                 showAlert: GET_SHOW_ALERT,
                 lastError: GET_LAST_ERROR,
                 errorColor: GET_ERROR_COLOR,
-                shouldPhoneBlink: GET_SHOULD_PHONE_BLINK
+                shouldPhoneBlink: GET_SHOULD_PHONE_BLINK,
+                tetATet: GET_TET_A_TET,
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return this.currentUser.avatar;

@@ -56,6 +56,8 @@ export const GET_NOTIFICATIONS_SETTINGS = 'getNotificationsSettings';
 export const SET_NOTIFICATIONS_SETTINGS = 'setNotificationsSettings';
 export const GET_SHOULD_PHONE_BLINK = 'getShouldPhoneBlink';
 export const SET_SHOULD_PHONE_BLINK = 'setShouldPhoneBlink';
+export const GET_TET_A_TET = 'getTetATet';
+export const SET_TET_A_TET = 'setTetATet';
 export const NOTIFICATION_ADD = 'notificationAdd';
 export const NOTIFICATION_DELETE = 'notificationDelete';
 
@@ -87,6 +89,7 @@ const store = new Vuex.Store({
         notifications: [],
         notificationsSettings: {},
         shouldPhoneBlink: false,
+        tetATet: false,
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -166,6 +169,9 @@ const store = new Vuex.Store({
         [SET_SHOULD_PHONE_BLINK](state, payload) {
             state.shouldPhoneBlink = payload;
         },
+        [SET_TET_A_TET](state, payload) {
+            state.tetATet = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -233,6 +239,9 @@ const store = new Vuex.Store({
         },
         [GET_SHOULD_PHONE_BLINK](state) {
             return state.shouldPhoneBlink;
+        },
+        [GET_TET_A_TET](state) {
+            return state.tetATet;
         },
     },
     actions: {

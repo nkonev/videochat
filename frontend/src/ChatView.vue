@@ -123,7 +123,7 @@
         SET_SHOW_HANG_BUTTON,
         SET_SHOW_RECORD_START_BUTTON,
         SET_SHOW_RECORD_STOP_BUTTON,
-        SET_SHOW_SEARCH,
+        SET_SHOW_SEARCH, SET_TET_A_TET,
         SET_TITLE,
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
@@ -544,6 +544,7 @@
                     this.$store.commit(SET_CHAT_ID, this.chatId);
                     this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, data.canEdit);
                     this.$store.commit(SET_CAN_BROADCAST_TEXT_MESSAGE, data.canBroadcast);
+                    this.$store.commit(SET_TET_A_TET, data.tetATet);
                     this.chatDto = data;
                 }).catch(reason => {
                     if (reason.response.status == 404) {
