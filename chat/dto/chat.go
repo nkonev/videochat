@@ -110,3 +110,8 @@ type ChatUnreadMessageChanged struct {
 	ChatId         int64 `json:"chatId"`
 	UnreadMessages int64 `json:"unreadMessages"`
 }
+
+type BasicChatDto struct {
+	TetATet        bool    `json:"tetATet"`
+	ParticipantIds []int64 `json:"participantIds"`
+}

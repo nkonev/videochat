@@ -355,6 +355,7 @@
                 const routerNewState = { name: videochat_name};
                 this.navigateToWithPreservingSearchStringInQuery(routerNewState);
                 this.updateLastAnsweredTimestamp();
+                axios.put(`/api/video/${this.chatId}/dial/start`)
             },
             stopCall() {
                 console.debug("stopping Call");

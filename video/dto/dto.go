@@ -62,3 +62,8 @@ type S3Response struct {
 	Metadata  map[string]string `json:"metadata"`
 	Filepath  string            `json:"filepath"`
 }
+
+type BasicChatDto struct {
+	TetATet        bool    `json:"tetATet"`
+	ParticipantIds []int64 `json:"participantIds"`
+}

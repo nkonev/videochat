@@ -28,6 +28,7 @@ type RestClient struct {
 	doesParticipantBelongToChatPath string
 	chatParticipantIdsPath          string
 	chatInviteNamePath              string
+	chatBasicInfoPath               string
 	aaaBaseUrl                      string
 	aaaGetUsersUrl                  string
 	storageBaseUrl                  string
@@ -54,6 +55,7 @@ func NewRestClient(config *config.ExtendedConfig) *RestClient {
 		doesParticipantBelongToChatPath: config.ChatConfig.ChatUrlConfig.DoesParticipantBelongToChat,
 		chatParticipantIdsPath:          config.ChatConfig.ChatUrlConfig.ChatParticipantIds,
 		chatInviteNamePath:              config.ChatConfig.ChatUrlConfig.ChatInviteName,
+		chatBasicInfoPath:               config.ChatConfig.ChatUrlConfig.ChatBasicInfoPath,
 		aaaBaseUrl:                      config.AaaConfig.AaaUrlConfig.Base,
 		aaaGetUsersUrl:                  config.AaaConfig.AaaUrlConfig.GetUsers,
 		storageBaseUrl:                  config.StorageConfig.StorageUrlConfig.Base,
@@ -411,6 +413,56 @@ func (h *RestClient) GetS3(filename string, chatId int64, userId int64, c contex
 	ret := new(dto.S3Response)
 	if err := json.Unmarshal(bodyBytes, ret); err != nil {
 		GetLogEntry(c).Errorln("Failed to parse s3:", err)
+		return nil, err
+	}
+	return ret, nil
+}
+
+func (h *RestClient) GetBasicChatInfo(chatId int64, userId int64, c context.Context) (*dto.BasicChatDto, error) {
+	contentType := "application/json;charset=UTF-8"
+	fullUrl := h.chatBaseUrl + h.chatBasicInfoPath + "/" + utils.Int64ToString(chatId) + "?userId=" + utils.Int64ToString(userId)
+
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during parse BasicChatInfo for invite url:", err)
+		return nil, err
+	}
+	request := &http.Request{
+		Method: "GET",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+
+	ctx, span := h.tracer.Start(c, "chat.GetBasicChatInfo")
+	defer span.End()
+	request = request.WithContext(ctx)
+
+	resp, err := h.client.Do(request)
+	if err != nil {
+		GetLogEntry(c).Warningln("Failed to request BasicChatInfo for invite response:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		GetLogEntry(c).Warningln("Chat BasicChatInfo for invite response responded non-200 code: ", code)
+		return nil, err
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed to decode BasicChatInfo for invite response:", err)
+		return nil, err
+	}
+
+	ret := new(dto.BasicChatDto)
+	if err := json.Unmarshal(bodyBytes, ret); err != nil {
+		GetLogEntry(c).Errorln("Failed to parse BasicChatInfo for invite:", err)
 		return nil, err
 	}
 	return ret, nil

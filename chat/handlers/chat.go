@@ -1049,6 +1049,28 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 	return c.JSON(http.StatusOK, ret)
 }
 
+func (ch *ChatHandler) GetBasicInfo(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+	behalfUserId, err := GetQueryParamAsInt64(c, "userId")
+	if err != nil {
+		return err
+	}
+
+	chat, err := ch.db.GetChatWithParticipants(behalfUserId, chatId, utils.FixSize(0), utils.FixPage(0))
+	if err != nil {
+		return err
+	}
+
+	ret := dto.BasicChatDto{
+		TetATet:        chat.TetATet,
+		ParticipantIds: chat.ParticipantsIds,
+	}
+	return c.JSON(http.StatusOK, ret)
+}
+
 func (ch *ChatHandler) RemoveAllParticipants(c echo.Context) error {
 	GetLogEntry(c.Request().Context()).Warnf("Removing ALL participants")
 	return ch.db.DeleteAllParticipants()

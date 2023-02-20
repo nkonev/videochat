@@ -27,6 +27,7 @@ chat:
     doesParticipantBelongToChat: "/internal/does-participant-belong-to-chat"
     chatParticipants: "/internal/participant-ids"
     chatInviteName: "/internal/name-for-invite"
+    chatBasicInfoPath: "/internal/basic"
 
 aaa:
   url:

@@ -217,7 +217,7 @@
             },
             startCalling(dto) {
                 const call = !dto.callingTo;
-                axios.put(`/api/video/${this.dto.id}/dial?userId=${dto.id}&call=${call}`).then(value => {
+                axios.put(`/api/video/${this.dto.id}/dial/invite?userId=${dto.id}&call=${call}`).then(value => {
                     console.log("Inviting to video chat", call);
                     if (this.$route.name != videochat_name && call) {
                         const routerNewState = { name: videochat_name};

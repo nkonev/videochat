@@ -165,8 +165,8 @@ func configureApiEcho(
 	e.POST("/internal/livekit-webhook", lhf.GetLivekitWebhookHandler())
 	e.PUT("/video/:chatId/kick", uh.Kick)
 	e.PUT("/video/:chatId/mute", uh.Mute)
-	e.PUT("/video/:id/dial", ih.ProcessCallInvitation)          // used by owner to add or remove from dial list
-	e.PUT("/video/:id/dial/start", ih.ProcessDialStart)         // during entering into dial. Returns status: true which means that frontend should (initially) draw the calling. Now it used only in tet-a-tet. If we are in the tet-a-tet and we don't have incoming call - we should call the counterpart, as we would do in "/video/:id/dial"
+	e.PUT("/video/:id/dial/invite", ih.ProcessCallInvitation) // used by owner to add or remove from dial list
+	e.PUT("/video/:id/dial/start", ih.ProcessDialStart)
 	e.PUT("/video/:id/dial/cancel", ih.ProcessCancelInvitation) // cancelling by invitee
 	e.PUT("/video/:id/dial/stop", ih.ProcessAsOwnerLeave)       // used by owner
 	e.PUT("/video/:id/record/start", rh.StartRecording)

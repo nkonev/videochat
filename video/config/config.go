@@ -68,6 +68,7 @@ type ChatUrlConfig struct {
 	DoesParticipantBelongToChat string `mapstructure:"doesParticipantBelongToChat"`
 	ChatParticipantIds          string `mapstructure:"chatParticipants"`
 	ChatInviteName              string `mapstructure:"chatInviteName"`
+	ChatBasicInfoPath           string `mapstructure:"chatBasicInfoPath"`
 }
 
 type AaaUrlConfig struct {

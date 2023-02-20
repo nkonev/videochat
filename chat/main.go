@@ -151,6 +151,7 @@ func configureEcho(
 	e.GET("/internal/is-admin", ch.IsAdmin)
 	e.GET("/internal/is-chat-exists/:id", ch.IsExists)
 	e.GET("/internal/name-for-invite", ch.GetNameForInvite)
+	e.GET("/internal/basic/:id", ch.GetBasicInfo)
 
 	e.GET("/chat/:id/message", mc.GetMessages)
 	e.GET("/chat/:id/message/:messageId", mc.GetMessage)
