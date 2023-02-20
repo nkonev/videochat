@@ -11,6 +11,7 @@ import (
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
+	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 	"time"
@@ -62,12 +63,6 @@ func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
 	})
 }
 
-type MetadataDto struct {
-	UserId int64  `json:"userId"`
-	Login  string `json:"login"`
-	Avatar string `json:"avatar"` // url
-}
-
 func (h *TokenHandler) getJoinToken(apiKey, apiSecret, room string, authResult *auth.AuthResult) (string, error) {
 	canPublish := true
 	canSubscribe := true
@@ -81,7 +76,7 @@ func (h *TokenHandler) getJoinToken(apiKey, apiSecret, room string, authResult *
 		CanPublish:   &canPublish,
 		CanSubscribe: &canSubscribe,
 	}
-	md := &MetadataDto{
+	md := &dto.MetadataDto{
 		UserId: authResult.UserId,
 		Login:  authResult.UserLogin,
 		Avatar: authResult.Avatar,

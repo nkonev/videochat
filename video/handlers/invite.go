@@ -1,12 +1,8 @@
 package handlers
 
 import (
-	"context"
-	"encoding/json"
 	"errors"
 	"github.com/labstack/echo/v4"
-	"github.com/livekit/protocol/livekit"
-	lksdk "github.com/livekit/server-sdk-go"
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
@@ -23,18 +19,18 @@ type InviteHandler struct {
 	chatClient            *client.RestClient
 	dialStatusPublisher   *producer.RabbitDialStatusPublisher
 	notificationPublisher *producer.RabbitNotificationsPublisher
-	livekitClient         *lksdk.RoomServiceClient
+	userService           *services.UserService
 }
 
 const MissedCall = "missed_call"
 
-func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, livekitClient *lksdk.RoomServiceClient) *InviteHandler {
+func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService) *InviteHandler {
 	return &InviteHandler{
 		dialRedisRepository:   dialService,
 		chatClient:            chatClient,
 		dialStatusPublisher:   dialStatusPublisher,
 		notificationPublisher: notificationPublisher,
-		livekitClient:         livekitClient,
+		userService:           userService,
 	}
 }
 
@@ -184,7 +180,7 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		}
 
 		// uniq users by userId
-		usersOfVideo, err := vh.getVideoParticipants(chatId, c.Request().Context())
+		usersOfVideo, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
 		if err != nil {
 			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -329,36 +325,4 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
-}
-
-func (vh *InviteHandler) getVideoParticipants(chatId int64, ctx context.Context) ([]int64, error) {
-	roomName := utils.GetRoomNameFromId(chatId)
-
-	var ret = []int64{}
-	var set = make(map[int64]bool)
-
-	lpr := &livekit.ListParticipantsRequest{Room: roomName}
-	participants, err := vh.livekitClient.ListParticipants(ctx, lpr)
-	if err != nil {
-		Logger.Errorf("Unable to get participants %v", err)
-		return ret, err
-	}
-
-	for _, participant := range participants.Participants {
-		md := &MetadataDto{}
-		err = json.Unmarshal([]byte(participant.Metadata), md)
-		if err != nil {
-			Logger.Errorf("got error during parsing metadata from chatId=%v, %v", chatId, err)
-			continue
-		}
-		set[md.UserId] = true
-	}
-
-	for key, value := range set {
-		if value {
-			ret = append(ret, key)
-		}
-	}
-
-	return ret, nil
 }

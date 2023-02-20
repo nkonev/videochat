@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
+	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
@@ -86,7 +87,7 @@ func (h *UserHandler) Kick(c echo.Context) error {
 	}
 
 	for _, participant := range participants.Participants {
-		md := &MetadataDto{}
+		md := &dto.MetadataDto{}
 		err = json.Unmarshal([]byte(participant.Metadata), md)
 		if err != nil {
 			Logger.Errorf("got error during parsing metadata from kick userId=%v from chatId=%v, %v", userId, chatId, err)
@@ -139,7 +140,7 @@ func (h *UserHandler) Mute(c echo.Context) error {
 	}
 
 	for _, participant := range participants.Participants {
-		md := &MetadataDto{}
+		md := &dto.MetadataDto{}
 		err = json.Unmarshal([]byte(participant.Metadata), md)
 		if err != nil {
 			Logger.Errorf("got error during parsing metadata from kick userId=%v from chatId=%v, %v", userId, chatId, err)
