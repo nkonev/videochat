@@ -243,7 +243,7 @@ export default {
         async tryRestartVideoDevice() {
             this.inRestarting = true;
             for (const publication of this.room.localParticipant.tracks.values()) {
-                this.room.localParticipant.unpublishTrack(publication.track, true);
+                await this.room.localParticipant.unpublishTrack(publication.track, true);
             }
             await this.createLocalMediaTracks(null, null);
             bus.$emit(VIDEO_PARAMETERS_CHANGED);

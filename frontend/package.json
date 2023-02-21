@@ -24,7 +24,7 @@
     "core-js": "^3.26.0",
     "date-fns": "^2.29.3",
     "graphql-ws": "^5.11.2",
-    "livekit-client": "1.6.0",
+    "livekit-client": "1.6.5",
     "lodash": "^4.17.21",
     "regenerator-runtime": "^0.13.10",
     "splitpanes": "^2.3.8",
