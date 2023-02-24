@@ -133,10 +133,6 @@ func (vh *InviteHandler) addCalling(c echo.Context, callee int64, call bool, cha
 	return http.StatusOK
 }
 
-type StartDialResponse struct {
-	Status bool // true means that frontend should (initially) draw the calling
-}
-
 func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -163,7 +159,6 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	ret := StartDialResponse{}
 
 	if basicChatInfo.TetATet {
 		usersOfChat := basicChatInfo.ParticipantIds
@@ -189,14 +184,13 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		// and we(behalf user) doesn't have incoming call
 		if len(usersOfChat) > 0 && len(usersOfVideo) == 0 && oppositeUser != services.NoUser {
 			// we should call the counterpart, as we would do in "/video/:id/dial"
-			ret.Status = true
 			vh.addCalling(c, oppositeUser, true, chatId, userPrincipalDto)
 		}
 	}
 
 	vh.processCallLogic(c, chatId, userPrincipalDto)
 
-	return c.JSON(http.StatusOK, ret)
+	return c.NoContent(http.StatusOK)
 }
 
 func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
