@@ -683,6 +683,7 @@
                                           avatar
                                         }
                                         embedType
+                                        isParticipant
                                       }
                                     }
                                     messageDeletedEvent {
