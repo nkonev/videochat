@@ -203,11 +203,15 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 	} else if dbMessage.ResponseEmbeddedMessageResendOwnerId != nil {
 		embeddedUser := owners[*dbMessage.ResponseEmbeddedMessageResendOwnerId]
 		basicChat := chats[*dbMessage.ResponseEmbeddedMessageResendChatId]
-		var chatName = basicChat.Title
+		var embedChatName *string = nil
+		if !basicChat.IsTetATet {
+			embedChatName = &basicChat.Title
+		}
+
 		ret.EmbedMessage = &dto.EmbedMessageResponse{
 			Id:            *dbMessage.ResponseEmbeddedMessageResendId,
 			ChatId:        dbMessage.ResponseEmbeddedMessageResendChatId,
-			ChatName:      &chatName,
+			ChatName:      embedChatName,
 			Text:          dbMessage.Text,
 			EmbedType:     *dbMessage.ResponseEmbeddedMessageType,
 			Owner:         embeddedUser,

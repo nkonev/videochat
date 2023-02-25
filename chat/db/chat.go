@@ -53,7 +53,7 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 
 func (tx *Tx) CreateTetATetChat(behalfUserId int64, toParticipantId int64) (int64, error) {
 	tetATetChatName := fmt.Sprintf("tet_a_tet_%v_%v", behalfUserId, toParticipantId)
-	chatId, _, err := tx.CreateChat(&Chat{Title: tetATetChatName, TetATet: true})
+	chatId, _, err := tx.CreateChat(&Chat{Title: tetATetChatName, TetATet: true, CanResend: true})
 	return chatId, err
 }
 
@@ -414,7 +414,7 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 
 		first = false
 	}
-	rows, err := co.Query(fmt.Sprintf("SELECT c.id, c.title, (cp.user_id is not null) FROM chat c LEFT JOIN chat_participant cp ON (c.id = cp.chat_id AND cp.user_id = $1) WHERE c.id IN (%s)", inClause), behalfParticipantId)
+	rows, err := co.Query(fmt.Sprintf("SELECT c.id, c.title, (cp.user_id is not null), c.tet_a_tet FROM chat c LEFT JOIN chat_participant cp ON (c.id = cp.chat_id AND cp.user_id = $1) WHERE c.id IN (%s)", inClause), behalfParticipantId)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
@@ -423,7 +423,7 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 		list := make([]*BasicChatDto, 0)
 		for rows.Next() {
 			dto := new(BasicChatDto)
-			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant); err != nil {
+			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -449,6 +449,7 @@ type BasicChatDto struct {
 	Id                      int64
 	Title                   string
 	BehalfUserIsParticipant bool
+	IsTetATet               bool
 }
 
 func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {

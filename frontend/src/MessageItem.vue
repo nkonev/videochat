@@ -20,7 +20,14 @@
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
                 <div v-if="item.embedMessage" class="embedded-message">
-                    <router-link class="list-item-head" :to="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</router-link>
+                    <template v-if="item.embedMessage.chatName">
+                        <router-link class="list-item-head" :to="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</router-link>
+                    </template>
+                    <template v-else>
+                        <div class="list-item-head">
+                            {{getEmbedHeadLite(item)}}
+                        </div>
+                    </template>
                     <div class="message-item-text" v-html="item.embedMessage.text"></div>
                 </div>
                 <v-container v-if="shouldShowMainContainer(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
@@ -103,6 +110,11 @@
                     return this.getOwner(item.embedMessage.owner)
                 } else if (item.embedMessage.embedType == embed_message_resend) {
                     return this.getOwner(item.embedMessage.owner) + this.$vuetify.lang.t('$vuetify.in') + item.embedMessage.chatName;
+                }
+            },
+            getEmbedHeadLite(item){
+                if (item.embedMessage.embedType == embed_message_resend) {
+                    return this.getOwner(item.embedMessage.owner)
                 }
             },
             shouldShowMainContainer(item) {
