@@ -350,20 +350,6 @@
             updateLastAnsweredTimestamp() {
                 this.lastAnswered = +new Date();
             },
-            createCall() {
-                console.debug("createCall");
-                axios.put(`/api/video/${this.chatId}/dial/start`).then(()=>{
-                    const routerNewState = { name: videochat_name};
-                    this.navigateToWithPreservingSearchStringInQuery(routerNewState);
-                    this.updateLastAnsweredTimestamp();
-                })
-            },
-            stopCall() {
-                console.debug("stopping Call");
-                const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
-                this.navigateToWithPreservingSearchStringInQuery(routerNewState);
-                this.updateLastAnsweredTimestamp();
-            },
             onInfoClicked() {
                 if (this.chatId) {
                     bus.$emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
@@ -400,17 +386,33 @@
                 }
             },
             onClickInvitation() {
-                const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
-                this.navigateToWithPreservingSearchStringInQuery(routerNewState);
-                axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`);
-                this.invitedVideoChatId = 0;
-                this.invitedVideoChatName = null;
-                this.invitedVideoChatAlert = false;
-                this.updateLastAnsweredTimestamp();
+                axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`).then(()=>{
+                    const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
+                    this.navigateToWithPreservingSearchStringInQuery(routerNewState);
+                    this.invitedVideoChatId = 0;
+                    this.invitedVideoChatName = null;
+                    this.invitedVideoChatAlert = false;
+                    this.updateLastAnsweredTimestamp();
+                });
             },
             onClickCancelInvitation() {
-                this.invitedVideoChatAlert = false;
-                axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`);
+                axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`).then(()=>{
+                    this.invitedVideoChatAlert = false;
+                    this.updateLastAnsweredTimestamp();
+                });
+            },
+            createCall() {
+                console.debug("createCall");
+                axios.put(`/api/video/${this.chatId}/dial/start`).then(()=>{
+                    const routerNewState = { name: videochat_name};
+                    this.navigateToWithPreservingSearchStringInQuery(routerNewState);
+                    this.updateLastAnsweredTimestamp();
+                })
+            },
+            stopCall() {
+                console.debug("stopping Call");
+                const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
+                this.navigateToWithPreservingSearchStringInQuery(routerNewState);
                 this.updateLastAnsweredTimestamp();
             },
             isVideoRoute() {
