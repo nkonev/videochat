@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/guregu/null"
+	"github.com/spf13/viper"
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
@@ -53,7 +54,7 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 
 func (tx *Tx) CreateTetATetChat(behalfUserId int64, toParticipantId int64) (int64, error) {
 	tetATetChatName := fmt.Sprintf("tet_a_tet_%v_%v", behalfUserId, toParticipantId)
-	chatId, _, err := tx.CreateChat(&Chat{Title: tetATetChatName, TetATet: true, CanResend: true})
+	chatId, _, err := tx.CreateChat(&Chat{Title: tetATetChatName, TetATet: true, CanResend: viper.GetBool("canResendFromTetATet")})
 	return chatId, err
 }
 
