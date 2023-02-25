@@ -352,10 +352,11 @@
             },
             createCall() {
                 console.debug("createCall");
-                const routerNewState = { name: videochat_name};
-                this.navigateToWithPreservingSearchStringInQuery(routerNewState);
-                this.updateLastAnsweredTimestamp();
-                axios.put(`/api/video/${this.chatId}/dial/start`);
+                axios.put(`/api/video/${this.chatId}/dial/start`).then(()=>{
+                    const routerNewState = { name: videochat_name};
+                    this.navigateToWithPreservingSearchStringInQuery(routerNewState);
+                    this.updateLastAnsweredTimestamp();
+                })
             },
             stopCall() {
                 console.debug("stopping Call");

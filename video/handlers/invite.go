@@ -183,12 +183,13 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 
 		// and we(behalf user) doesn't have incoming call
 		if len(usersOfVideo) == 0 && oppositeUser != services.NoUser {
-			// we should call the counterpart, as we would do in "/video/:id/dial"
+			// we should call the counterpart
 			vh.addCalling(c, oppositeUser, true, chatId, userPrincipalDto)
 		}
 	}
 
-	vh.processCallLogic(c, chatId, userPrincipalDto)
+	// duplicate "take the phone" which cancels ringing logic for opposite user
+	vh.cancelCallingLogic(c, chatId, userPrincipalDto)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -212,10 +213,10 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	return c.NoContent(vh.processCallLogic(c, chatId, userPrincipalDto))
+	return c.NoContent(vh.cancelCallingLogic(c, chatId, userPrincipalDto))
 }
 
-func (vh *InviteHandler) processCallLogic(c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) int {
+func (vh *InviteHandler) cancelCallingLogic(c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) int {
 	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
