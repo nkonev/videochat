@@ -160,8 +160,8 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		return err
 	}
 
-	if basicChatInfo.TetATet {
-		usersOfChat := basicChatInfo.ParticipantIds
+	usersOfChat := basicChatInfo.ParticipantIds
+	if basicChatInfo.TetATet && len(usersOfChat) > 0 {
 		if err != nil {
 			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -182,7 +182,7 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		}
 
 		// and we(behalf user) doesn't have incoming call
-		if len(usersOfChat) > 0 && len(usersOfVideo) == 0 && oppositeUser != services.NoUser {
+		if len(usersOfVideo) == 0 && oppositeUser != services.NoUser {
 			// we should call the counterpart, as we would do in "/video/:id/dial"
 			vh.addCalling(c, oppositeUser, true, chatId, userPrincipalDto)
 		}
