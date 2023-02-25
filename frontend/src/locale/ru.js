@@ -154,5 +154,6 @@ export default {
     notification_reply: "Ответ",
     tet_a_tet: "Диалог тет-а-тет",
     copy_link_to_message: "Скопировать ссылку на сообщение",
-    copy_link_to_chat: "Скопировать ссылку на чат"
+    copy_link_to_chat: "Скопировать ссылку на чат",
+    copy_selected: "Скопировать выделенный текст"
 }

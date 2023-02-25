@@ -154,5 +154,6 @@ export default {
     notification_reply: "Reply",
     tet_a_tet: "Tet-a-tet dialog",
     copy_link_to_message: "Copy link to message",
-    copy_link_to_chat: "Copy link to chat"
+    copy_link_to_chat: "Copy link to chat",
+    copy_selected: "Copy selected text"
 }

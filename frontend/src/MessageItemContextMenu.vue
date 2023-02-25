@@ -53,6 +53,7 @@ export default {
         getContextMenuItems() {
             const ret = [];
             if (this.menuableItem) {
+                ret.push({title: this.$vuetify.lang.t('$vuetify.copy_selected'), icon: 'mdi-content-copy', action: () => this.copySelected() });
                 if (this.menuableItem.fileItemUuid) {
                     ret.push({title: this.$vuetify.lang.t('$vuetify.attached_message_files'), icon: 'mdi-file-download', action: () => this.$emit('onFilesClicked', this.menuableItem) });
                 }
@@ -73,6 +74,10 @@ export default {
         copyLink(item) {
             const link = getUrlPrefix() + chat + '/' + this.chatId + messageIdHashPrefix + item.id;
             navigator.clipboard.writeText(link);
+        },
+        copySelected() {
+            const selectedText = window.getSelection().toString();
+            navigator.clipboard.writeText(selectedText);
         },
     },
     computed: {
