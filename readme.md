@@ -24,6 +24,7 @@ Your open source self-hosted videoconference platform.
 * Supports [login](./screenshots.md#login) through OpedID Connect providers: Facebook, VK.com, Google, Keycloak. Not required can be disabled.
 * LDAP login integration.
 * Internationalization: English and Russian UI.
+* Firewall friendly: only two ports for WebRTC are needed (TURN, WebRTC).
 * Simple setup with docker swarm or docker-compose.
 * No vendor lock on cloud provider.
 * Familiar infrastructure which you know - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, NGINX. No unique exotic solutions.
