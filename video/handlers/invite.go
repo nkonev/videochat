@@ -63,10 +63,10 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	return c.NoContent(vh.addCalling(c, callee, call, chatId, userPrincipalDto))
+	return c.NoContent(vh.addToCalling(c, callee, call, chatId, userPrincipalDto))
 }
 
-func (vh *InviteHandler) addCalling(c echo.Context, callee int64, call bool, chatId int64, userPrincipalDto *auth.AuthResult) int {
+func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, call bool, chatId int64, userPrincipalDto *auth.AuthResult) int {
 	// check participant's access to chat
 	if ok, err := vh.chatClient.CheckAccess(callee, chatId, c.Request().Context()); err != nil {
 		return http.StatusInternalServerError
@@ -184,7 +184,7 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		// and we(behalf user) doesn't have incoming call
 		if len(usersOfVideo) == 0 && oppositeUser != services.NoUser {
 			// we should call the counterpart
-			vh.addCalling(c, oppositeUser, true, chatId, userPrincipalDto)
+			vh.addToCalling(c, oppositeUser, true, chatId, userPrincipalDto)
 		}
 	}
 
