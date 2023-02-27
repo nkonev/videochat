@@ -55,7 +55,6 @@ func main() {
 			handlers.NewUserAvatarHandler,
 			handlers.NewChatAvatarHandler,
 			handlers.NewFilesHandler,
-			handlers.NewEmbedHandler,
 			listener.CreateMinioEventsListener,
 			producer.NewRabbitFileUploadedPublisher,
 			rabbitmq.CreateRabbitMqConnection,
@@ -113,7 +112,6 @@ func configureEcho(
 	uah *handlers.UserAvatarHandler,
 	cha *handlers.ChatAvatarHandler,
 	fh *handlers.FilesHandler,
-	eh *handlers.EmbedHandler,
 	tp *sdktrace.TracerProvider,
 ) *echo.Echo {
 
@@ -154,8 +152,8 @@ func configureEcho(
 	e.PUT("/storage/publish/file", fh.SetPublic)
 	e.GET("/storage/:chatId/file/count/:fileItemUuid", fh.CountHandler)
 	e.GET("/storage/:chatId/file", fh.LimitsHandler)
-	e.GET("/storage/:chatId/embed/candidates", eh.ListCandidatesForEmbed)
-	e.GET("/storage/embed/preview", eh.PreviewDownloadHandler)
+	e.GET("/storage/:chatId/embed/candidates", fh.ListCandidatesForEmbed)
+	e.GET("/storage/embed/preview", fh.PreviewDownloadHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
