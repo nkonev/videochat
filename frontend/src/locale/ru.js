@@ -62,6 +62,7 @@ export default {
     grant_admin: "Сделать админом",
     you_brackets: "(вы)",
     call: "Позвать",
+    call_up: "Позвонить",
     stop_call: "Перестать звонить",
     force_mute: "Заглушить",
     kick: "Выкинуть из звонка",
@@ -155,5 +156,9 @@ export default {
     tet_a_tet: "Диалог тет-а-тет",
     copy_link_to_message: "Скопировать ссылку на сообщение",
     copy_link_to_chat: "Скопировать ссылку на чат",
-    copy_selected: "Скопировать выделенный текст"
+    copy_selected: "Скопировать выделенный текст",
+    pinned_messages: "Закреплённые",
+    pin_message: "Закрепить сообщение",
+    no_pin_messages: "Нет закреплённых сообщений",
+    remove_from_pinned: "Удалить из закреплённых"
 }

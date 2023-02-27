@@ -35,6 +35,7 @@ type DisplayMessageDto {
     canDelete:      Boolean!
     fileItemUuid:   UUID
     embedMessage:   EmbedMessageResponse
+    pinned:         Boolean!
 }
 
 type MessageDeletedDto {
@@ -101,6 +102,7 @@ type ChatEvent {
     messageBroadcastEvent: MessageBroadcastNotification
     fileUploadedEvent: FileUploadedEvent
     participantsEvent: [UserWithAdmin!]
+    promoteMessageEvent: DisplayMessageDto
 }
 
 type VideoUserCountChangedDto {

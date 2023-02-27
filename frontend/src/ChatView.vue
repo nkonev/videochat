@@ -8,6 +8,20 @@
             </pane>
             <pane v-bind:size="messagesSize">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
+                    <div v-if="pinnedPromoted" style="position: absolute; z-index: 7; width: 100%">
+                        <v-alert
+                            dense
+                            color="red lighten-2"
+                            dark
+                            dismissible
+                            prominent
+                        >
+                            <router-link :to="getPinnedRoureObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
+                                {{ pinnedPromoted.text }}
+                            </router-link>
+                        </v-alert>
+
+                    </div>
                     <v-list  v-if="currentUser">
                         <template v-for="(item, index) in items">
                             <MessageItem
@@ -34,6 +48,8 @@
                         @replyOnMessage="this.replyOnMessage"
                         @shareMessage="this.shareMessage"
                         @onFilesClicked="this.onFilesClicked"
+                        @pinMessage="pinMessage"
+                        @removedFromPinned="removedFromPinned"
                     />
                     <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
                         <template slot="no-more"><span/></template>
@@ -102,9 +118,13 @@
         OPEN_SIMPLE_MODAL,
         CLOSE_SIMPLE_MODAL,
         SET_EDIT_MESSAGE,
-        OPEN_RESEND_TO_MODAL, OPEN_VIEW_FILES_DIALOG, VIDEO_DIAL_STATUS_CHANGED,
+        OPEN_RESEND_TO_MODAL,
+        OPEN_VIEW_FILES_DIALOG,
+        VIDEO_DIAL_STATUS_CHANGED,
+        PINNED_MESSAGE_PROMOTED,
+        PINNED_MESSAGE_UNPROMOTED,
     } from "./bus";
-    import {chat_list_name, chat_name, videochat_name} from "./routes";
+    import {chat, chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
     import ChatVideo from "./ChatVideo";
     import MessageItemContextMenu from "./MessageItemContextMenu"
@@ -200,6 +220,7 @@
                 broadcastMessage: null,
                 tooltipKey: 0,
                 initialHash: null,
+                pinnedPromoted: null,
             }
         },
         computed: {
@@ -560,7 +581,13 @@
                                 this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, data.usersCount);
                             });
                     }
-                });
+                }).then(()=>{
+                    return axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
+                        if (response.status != 204) {
+                            this.pinnedPromoted = response.data;
+                        }
+                    })
+                })
             },
             goToChatList() {
                 this.$router.push(({name: chat_list_name}))
@@ -654,37 +681,42 @@
             },
             getGraphQlSubscriptionQuery() {
                 return `
+                                fragment DisplayMessageDtoFragment on DisplayMessageDto {
+                                  id
+                                  text
+                                  chatId
+                                  ownerId
+                                  createDateTime
+                                  editDateTime
+                                  owner {
+                                    id
+                                    login
+                                    avatar
+                                  }
+                                  canEdit
+                                  canDelete
+                                  fileItemUuid
+                                  embedMessage {
+                                    id
+                                    chatId
+                                    chatName
+                                    text
+                                    owner {
+                                      id
+                                      login
+                                      avatar
+                                    }
+                                    embedType
+                                    isParticipant
+                                  }
+                                  pinned
+                                }
+
                                 subscription{
                                   chatEvents(chatId: ${this.chatId}) {
                                     eventType
                                     messageEvent {
-                                      id
-                                      text
-                                      chatId
-                                      ownerId
-                                      createDateTime
-                                      editDateTime
-                                      owner {
-                                        id
-                                        login
-                                        avatar
-                                      }
-                                      canEdit
-                                      canDelete
-                                      fileItemUuid
-                                      embedMessage {
-                                        id
-                                        chatId
-                                        chatName
-                                        text
-                                        owner {
-                                          id
-                                          login
-                                          avatar
-                                        }
-                                        embedType
-                                        isParticipant
-                                      }
+                                      ...DisplayMessageDtoFragment
                                     }
                                     messageDeletedEvent {
                                       id
@@ -711,6 +743,9 @@
                                       login
                                       avatar
                                       admin
+                                    }
+                                    promoteMessageEvent {
+                                      ...DisplayMessageDtoFragment
                                     }
                                   }
                                 }
@@ -744,6 +779,12 @@
                 } else if (getChatEventsData(e).eventType === "participant_edited") {
                     const d = getChatEventsData(e).participantsEvent;
                     bus.$emit(PARTICIPANT_EDITED, d);
+                } else if (getChatEventsData(e).eventType === "pinned_message_promote") {
+                    const d = getChatEventsData(e).promoteMessageEvent;
+                    bus.$emit(PINNED_MESSAGE_PROMOTED, d);
+                } else if (getChatEventsData(e).eventType === "pinned_message_unpromote") {
+                    const d = getChatEventsData(e).promoteMessageEvent;
+                    bus.$emit(PINNED_MESSAGE_UNPROMOTED, d);
                 }
             },
             updateVideoRecordingState() {
@@ -806,6 +847,20 @@
             shareMessage(dto) {
                 bus.$emit(OPEN_RESEND_TO_MODAL, dto)
             },
+            pinMessage(dto) {
+                axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {
+                    params: {
+                        pin: true
+                    },
+                });
+            },
+            removedFromPinned(dto) {
+                axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {
+                    params: {
+                        pin: false
+                    },
+                });
+            },
             onFilesClicked(item) {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});
             },
@@ -824,6 +879,17 @@
                             this.$store.commit(SET_SHOULD_PHONE_BLINK, videoDialChanged.status);
                         }
                     }
+                }
+            },
+            getPinnedRoureObject(item) {
+                return {name: chat_name, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+            },
+            onPinnedMessagePromoted(item) {
+                this.pinnedPromoted = item;
+            },
+            onPinnedMessageUnpromoted(item) {
+                if (this.pinnedPromoted && this.pinnedPromoted.id == item.id) {
+                    this.pinnedPromoted = null;
                 }
             },
         },
@@ -871,6 +937,8 @@
             bus.$on(USER_TYPING, this.onUserTyping);
             bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
             bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+            bus.$on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
+            bus.$on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
 
             writingUsersTimerId = setInterval(()=>{
                 const curr = + new Date();
@@ -901,11 +969,14 @@
             bus.$off(USER_TYPING, this.onUserTyping);
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
             bus.$off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+            bus.$off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
+            bus.$off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
 
             clearInterval(writingUsersTimerId);
 
             this.closeQueryWatcher();
             document.removeEventListener("keydown", this.keydownListener);
+            this.pinnedPromoted = null;
         },
         destroyed() {
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);

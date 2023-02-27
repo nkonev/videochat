@@ -55,3 +55,6 @@ export const PARTICIPANT_ADDED = "participantAdded";
 export const PARTICIPANT_DELETED = "participantDeleted";
 export const PARTICIPANT_EDITED = "participantEdited";
 export const OPEN_RESEND_TO_MODAL = "openSendTo";
+export const OPEN_PINNED_MESSAGES_MODAL = "openPinnedMessagesModal";
+export const PINNED_MESSAGE_PROMOTED = "pinnedMessagePromoted";
+export const PINNED_MESSAGE_UNPROMOTED = "pinnedMessageUnpromoted";

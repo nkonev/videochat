@@ -9,6 +9,7 @@ type ChatEvent struct {
 	UserTypingNotification       *UserTypingNotification       `json:"userTypingNotification"`
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
 	Participants                 *[]*UserWithAdmin             `json:"participants"`
+	PromoteMessageNotification   *DisplayMessageDto            `json:"promoteMessageNotification"`
 }
 
 type GlobalEvent struct {

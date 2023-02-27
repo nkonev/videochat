@@ -37,6 +37,7 @@ type DisplayMessageDto struct {
 	CanDelete      bool                  `json:"canDelete"`
 	FileItemUuid   *uuid.UUID            `json:"fileItemUuid"`
 	EmbedMessage   *EmbedMessageResponse `json:"embedMessage"`
+	Pinned         bool                  `json:"pinned"`
 }
 
 func (copied *DisplayMessageDto) SetPersonalizedFields(participantId int64) {

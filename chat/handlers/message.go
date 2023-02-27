@@ -90,18 +90,8 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 
 		var ownersSet = map[int64]bool{}
 		var chatsPreSet = map[int64]bool{}
-
 		for _, message := range messages {
-			ownersSet[message.OwnerId] = true
-			if message.ResponseEmbeddedMessageReplyOwnerId != nil {
-				var embeddedMessageReplyOwnerId = *message.ResponseEmbeddedMessageReplyOwnerId
-				ownersSet[embeddedMessageReplyOwnerId] = true
-			} else if message.ResponseEmbeddedMessageResendOwnerId != nil {
-				var embeddedMessageResendOwnerId = *message.ResponseEmbeddedMessageResendOwnerId
-				ownersSet[embeddedMessageResendOwnerId] = true
-				var embeddedMessageResendChatId = *message.ResponseEmbeddedMessageResendChatId
-				chatsPreSet[embeddedMessageResendChatId] = true
-			}
+			populateSets(message, ownersSet, chatsPreSet)
 		}
 		chatsSet, err := mc.db.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
 		if err != nil {
@@ -128,16 +118,8 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 		}
 		var ownersSet = map[int64]bool{}
 		var chatsPreSet = map[int64]bool{}
-		ownersSet[behalfUserId] = true
-		if message.ResponseEmbeddedMessageReplyOwnerId != nil {
-			var embeddedMessageReplyOwnerId = *message.ResponseEmbeddedMessageReplyOwnerId
-			ownersSet[embeddedMessageReplyOwnerId] = true
-		} else if message.ResponseEmbeddedMessageResendOwnerId != nil {
-			var embeddedMessageResendOwnerId = *message.ResponseEmbeddedMessageResendOwnerId
-			ownersSet[embeddedMessageResendOwnerId] = true
-			var embeddedMessageResendChatId = *message.ResponseEmbeddedMessageResendChatId
-			chatsPreSet[embeddedMessageResendChatId] = true
-		}
+		populateSets(message, ownersSet, chatsPreSet)
+
 		chatsSet, err := co.GetChatsBasic(chatsPreSet, behalfUserId)
 		if err != nil {
 			return nil, err
@@ -145,6 +127,19 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 
 		var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
 		return convertToMessageDto(message, owners, chatsSet, behalfUserId), nil
+	}
+}
+
+func populateSets(message *db.Message, ownersSet map[int64]bool, chatsPreSet map[int64]bool) {
+	ownersSet[message.OwnerId] = true
+	if message.ResponseEmbeddedMessageReplyOwnerId != nil {
+		var embeddedMessageReplyOwnerId = *message.ResponseEmbeddedMessageReplyOwnerId
+		ownersSet[embeddedMessageReplyOwnerId] = true
+	} else if message.ResponseEmbeddedMessageResendOwnerId != nil {
+		var embeddedMessageResendOwnerId = *message.ResponseEmbeddedMessageResendOwnerId
+		ownersSet[embeddedMessageResendOwnerId] = true
+		var embeddedMessageResendChatId = *message.ResponseEmbeddedMessageResendChatId
+		chatsPreSet[embeddedMessageResendChatId] = true
 	}
 }
 
@@ -190,6 +185,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 		EditDateTime:   dbMessage.EditDateTime,
 		Owner:          user,
 		FileItemUuid:   dbMessage.FileItemUuid,
+		Pinned:         dbMessage.Pinned,
 	}
 
 	if dbMessage.ResponseEmbeddedMessageReplyOwnerId != nil {
@@ -525,7 +521,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	}
 }
 
-func (mc MessageHandler) ReadMessage(c echo.Context) error {
+func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
@@ -661,6 +657,286 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (mc *MessageHandler) PinMessage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	messageId, err := GetPathParamAsInt64(c, "messageId")
+	if err != nil {
+		return err
+	}
+
+	pin, err := GetQueryParamAsBoolean(c, "pin")
+	if err != nil {
+		return err
+	}
+
+	err = db.Transact(mc.db, func(tx *db.Tx) error {
+		isParticipant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !isParticipant {
+			msg := "user " + utils.Int64ToString(userPrincipalDto.UserId) + " is not belongs to chat " + utils.Int64ToString(chatId)
+			GetLogEntry(c.Request().Context()).Warnf(msg)
+			return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
+		}
+
+		participantIds, err := tx.GetAllParticipantIds(chatId)
+		if err != nil {
+			return err
+		}
+
+		if pin {
+			err = tx.PinMessage(chatId, messageId, pin)
+			if err != nil {
+				return err
+			}
+			err = tx.UnpromoteMessages(chatId)
+			if err != nil {
+				return err
+			}
+			err = tx.PromoteMessage(chatId, messageId)
+			if err != nil {
+				return err
+			}
+
+			// prepare message obj
+			message, err := tx.GetMessage(chatId, userPrincipalDto.UserId, messageId)
+			if err != nil {
+				return err
+			}
+			if message == nil {
+				return nil
+			}
+			var ownersSet = map[int64]bool{}
+			var chatsPreSet = map[int64]bool{}
+			populateSets(message, ownersSet, chatsPreSet)
+			chatsSet, err := tx.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
+			if err != nil {
+				return err
+			}
+			var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
+			res := convertToMessageDto(message, owners, chatsSet, userPrincipalDto.UserId)
+			// notify as about changed message
+			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
+
+			// notify about newly promoted result (promoted can be different)
+			err = mc.sendPromotePinnedMessageEvent(c, message, tx, chatId, participantIds, userPrincipalDto.UserId, true)
+			if err != nil {
+				return err
+			}
+		} else {
+			previouslyPromoted, err := tx.GetPinnedPromoted(chatId)
+			if err != nil {
+				return err
+			}
+
+			err = tx.PinMessage(chatId, messageId, pin)
+			if err != nil {
+				return err
+			}
+
+			message, err := tx.GetMessage(chatId, userPrincipalDto.UserId, messageId)
+			if err != nil {
+				return err
+			}
+			var ownersSet = map[int64]bool{}
+			var chatsPreSet = map[int64]bool{}
+			populateSets(message, ownersSet, chatsPreSet)
+			chatsSet, err := tx.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
+			if err != nil {
+				return err
+			}
+			var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
+			res := convertToMessageDto(message, owners, chatsSet, userPrincipalDto.UserId)
+			// notify as about changed message
+			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
+
+			err = mc.sendPromotePinnedMessageEvent(c, message, tx, chatId, participantIds, userPrincipalDto.UserId, false)
+			if err != nil {
+				return err
+			}
+
+			// promote the previous
+			if previouslyPromoted != nil && previouslyPromoted.Id == messageId {
+				err = tx.PromotePreviousMessage(chatId)
+				if err != nil {
+					return err
+				}
+				promoted, err := tx.GetPinnedPromoted(chatId)
+				if err != nil {
+					return err
+				}
+				if promoted != nil {
+					err = mc.sendPromotePinnedMessageEvent(c, promoted, tx, chatId, participantIds, userPrincipalDto.UserId, true)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return c.NoContent(http.StatusOK)
+}
+
+type MessageWrapper struct {
+	Data  []*dto.DisplayMessageDto `json:"data"`
+	Count int64                    `json:"totalCount"` // total message number for this user
+}
+
+func (mc *MessageHandler) GetPinnedMessages(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	page := utils.FixPageString(c.QueryParam("page"))
+	size := utils.FixSizeString(c.QueryParam("size"))
+	offset := utils.GetOffset(page, size)
+
+	return db.Transact(mc.db, func(tx *db.Tx) error {
+		isParticipant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !isParticipant {
+			msg := "user " + utils.Int64ToString(userPrincipalDto.UserId) + " is not belongs to chat " + utils.Int64ToString(chatId)
+			GetLogEntry(c.Request().Context()).Warnf(msg)
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
+		messages, err := tx.GetPinnedMessages(chatId, size, offset)
+		if err != nil {
+			return err
+		}
+
+		var ownersSet = map[int64]bool{}
+		var chatsPreSet = map[int64]bool{}
+		for _, message := range messages {
+			populateSets(message, ownersSet, chatsPreSet)
+		}
+		chatsSet, err := mc.db.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
+		messageDtos := make([]*dto.DisplayMessageDto, 0)
+		for _, c := range messages {
+			converted := convertToMessageDto(c, owners, chatsSet, userPrincipalDto.UserId)
+			patchForView(mc.stripAllTags, converted)
+			messageDtos = append(messageDtos, converted)
+		}
+
+		count, err := tx.GetPinnedMessagesCount(chatId)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, MessageWrapper{
+			Data:  messageDtos,
+			Count: count,
+		})
+	})
+}
+
+func (mc *MessageHandler) GetPinnedMessage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	return db.Transact(mc.db, func(tx *db.Tx) error {
+		isParticipant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !isParticipant {
+			msg := "user " + utils.Int64ToString(userPrincipalDto.UserId) + " is not belongs to chat " + utils.Int64ToString(chatId)
+			GetLogEntry(c.Request().Context()).Warnf(msg)
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
+		message, err := tx.GetPinnedPromoted(chatId)
+		if err != nil {
+			return err
+		}
+
+		if message == nil {
+			return c.NoContent(http.StatusNoContent)
+		}
+		var ownersSet = map[int64]bool{}
+		var chatsPreSet = map[int64]bool{}
+		populateSets(message, ownersSet, chatsPreSet)
+
+		chatsSet, err := tx.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+
+		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
+		res := convertToMessageDto(message, owners, chatsSet, userPrincipalDto.UserId)
+		patchForView(mc.stripAllTags, res)
+
+		return c.JSON(http.StatusOK, res)
+	})
+}
+
+func patchForView(cleanTagsPolicy *services.StripTagsPolicy, message *dto.DisplayMessageDto) {
+	if message.EmbedMessage != nil && message.EmbedMessage.EmbedType == dto.EmbedMessageTypeResend {
+		message.Text = message.EmbedMessage.Text
+	}
+	message.Text = createMessagePreviewWithoutLogin(cleanTagsPolicy, message.Text)
+}
+
+func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, message *db.Message, tx *db.Tx, chatId int64, participantIds []int64, behalfUserId int64, promote bool) error {
+
+	if message == nil {
+		return nil
+	}
+	var ownersSet = map[int64]bool{}
+	var chatsPreSet = map[int64]bool{}
+	populateSets(message, ownersSet, chatsPreSet)
+
+	chatsSet, err := tx.GetChatsBasic(chatsPreSet, behalfUserId)
+	if err != nil {
+		return err
+	}
+
+	var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
+	res := convertToMessageDto(message, owners, chatsSet, behalfUserId)
+	patchForView(mc.stripAllTags, res)
+
+	// notify about promote to the pinned
+	mc.notificator.NotifyAboutPromote(c, chatId, res, promote, participantIds)
+	return nil
 }
 
 func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User, login string, c context.Context) ([]int64, string) {

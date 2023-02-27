@@ -37,6 +37,11 @@
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.files') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
+                <v-list-item @click="openPinnedMessages()" v-if="shouldPinnedMessages()">
+                    <v-list-item-icon><v-icon>mdi-pin</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.pinned_messages') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
                 <v-list-item @click="findUser()">
                     <v-list-item-icon><v-icon>mdi-magnify</v-icon></v-list-item-icon>
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.find_user') }}</v-list-item-title></v-list-item-content>
@@ -96,7 +101,7 @@
                     overlap
                     offset-y="1.8em"
                 >
-                    <v-btn v-if="showCallButton" icon @click="createCall()" :title="$vuetify.lang.t('$vuetify.enter_into_call')">
+                    <v-btn v-if="showCallButton" icon @click="createCall()" :title="tetATet ? $vuetify.lang.t('$vuetify.call_up') : $vuetify.lang.t('$vuetify.enter_into_call')">
                         <v-icon color="green">{{tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                     </v-btn>
                     <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
@@ -198,6 +203,7 @@
                 <NotificationsModal/>
                 <MessageEditMediaModal/>
                 <MessageResendToModal/>
+                <PinnedMessagesModal/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -251,7 +257,7 @@
         ADD_SCREEN_SOURCE,
         VIDEO_RECORDING_CHANGED,
         OPEN_NOTIFICATIONS_DIALOG,
-        PROFILE_SET, WEBSOCKET_RESTORED,
+        PROFILE_SET, WEBSOCKET_RESTORED, OPEN_PINNED_MESSAGES_MODAL,
     } from "./bus";
     import ChatEditModal from "./ChatEditModal";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -272,6 +278,7 @@
     import NotificationsModal from "@/NotificationsModal";
     import MessageEditMediaModal from "@/MessageEditMediaModal";
     import MessageResendToModal from "@/MessageResendToModal";
+    import PinnedMessagesModal from "@/PinnedMessagesModal";
 
     import queryMixin, {searchQueryParameter} from "@/queryMixin";
     import {hasLength} from "@/utils";
@@ -318,6 +325,7 @@
             NotificationsModal,
             MessageEditMediaModal,
             MessageResendToModal,
+            PinnedMessagesModal,
         },
         methods:{
             toggleLeftNavigation() {
@@ -424,6 +432,9 @@
             shouldDisplayFiles() {
                 return this.chatId;
             },
+            shouldPinnedMessages() {
+                return this.chatId;
+            },
             shouldDisplayEditChat() {
                 return this.showChatEditButton;
             },
@@ -445,6 +456,9 @@
             },
             displayChatFiles() {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId});
+            },
+            openPinnedMessages() {
+                bus.$emit(OPEN_PINNED_MESSAGES_MODAL);
             },
             openVideoSettings() {
                 bus.$emit(OPEN_VIDEO_SETTINGS);

@@ -45,6 +45,7 @@ type ChatEvent struct {
 	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
 	FileUploadedEvent     *FileUploadedEvent            `json:"fileUploadedEvent"`
 	ParticipantsEvent     []*UserWithAdmin              `json:"participantsEvent"`
+	PromoteMessageEvent   *DisplayMessageDto            `json:"promoteMessageEvent"`
 }
 
 type ChatUnreadMessageChanged struct {
@@ -64,6 +65,7 @@ type DisplayMessageDto struct {
 	CanDelete      bool                  `json:"canDelete"`
 	FileItemUUID   *uuid.UUID            `json:"fileItemUuid"`
 	EmbedMessage   *EmbedMessageResponse `json:"embedMessage"`
+	Pinned         bool                  `json:"pinned"`
 }
 
 type EmbedMessageResponse struct {

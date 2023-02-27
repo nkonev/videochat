@@ -34,6 +34,9 @@ type Message struct {
 	ResponseEmbeddedMessageResendId      *int64
 	ResponseEmbeddedMessageResendOwnerId *int64
 	ResponseEmbeddedMessageResendChatId  *int64
+
+	Pinned      bool
+	PinPromoted bool
 }
 
 func selectMessageClause(chatId int64) string {
@@ -50,7 +53,9 @@ func selectMessageClause(chatId int64) string {
 			me.owner_id as embedded_message_reply_owner_id,
 			m.embed_message_id as embedded_message_resend_id,
 			m.embed_chat_id as embedded_message_resend_chat_id,
-			m.embed_owner_id as embedded_message_resend_owner_id
+			m.embed_owner_id as embedded_message_resend_owner_id,
+			m.pinned,
+			m.pin_promoted
 		FROM message_chat_%v m 
 		LEFT JOIN message_chat_%v me 
 			ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
@@ -72,6 +77,8 @@ func provideScanToMessage(message *Message) []any {
 		&message.ResponseEmbeddedMessageResendId,
 		&message.ResponseEmbeddedMessageResendChatId,
 		&message.ResponseEmbeddedMessageResendOwnerId,
+		&message.Pinned,
+		&message.PinPromoted,
 	}
 }
 
@@ -400,4 +407,98 @@ func (db *DB) GetUnreadMessagesCount(chatId int64, userId int64) (int64, error) 
 
 func (tx *Tx) GetUnreadMessagesCount(chatId int64, userId int64) (int64, error) {
 	return getUnreadMessagesCountCommon(tx, chatId, userId)
+}
+
+func (tx *Tx) HasPinnedMessages(chatId int64) (hasPinnedMessages bool, err error) {
+	row := tx.QueryRow(fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM message_chat_%v WHERE pinned IS TRUE)", chatId))
+	err = row.Scan(&hasPinnedMessages)
+	return
+}
+
+func (tx *Tx) PinMessage(chatId, messageId int64, shouldPin bool) error {
+	_, err := tx.Exec(fmt.Sprintf("UPDATE message_chat_%v SET pinned = $1 WHERE id = $2", chatId), shouldPin, messageId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (tx *Tx) GetPinnedMessages(chatId int64, limit, offset int) ([]*Message, error) {
+	rows, err := tx.Query(fmt.Sprintf(`%v
+			WHERE 
+			    m.pinned IS TRUE
+			ORDER BY m.id desc
+			LIMIT $1 OFFSET $2`, selectMessageClause(chatId)),
+		limit, offset)
+	if err != nil {
+		Logger.Errorf("Error during get chat rows with search %v", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+	list := make([]*Message, 0)
+	for rows.Next() {
+		message := Message{ChatId: chatId}
+		if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
+			Logger.Errorf("Error during scan message rows %v", err)
+			return nil, err
+		} else {
+			list = append(list, &message)
+		}
+	}
+	return list, nil
+}
+
+func (tx *Tx) GetPinnedMessagesCount(chatId int64) (int64, error) {
+	row := tx.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM message_chat_%v WHERE pinned IS TRUE`, chatId))
+	if row.Err() != nil {
+		return 0, row.Err()
+	}
+	var res int64
+	err := row.Scan(&res)
+	if err != nil {
+		return 0, err
+	}
+	return res, nil
+}
+
+func (tx *Tx) UnpromoteMessages(chatId int64) error {
+	_, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET pin_promoted = FALSE`, chatId))
+	return err
+}
+
+func (tx *Tx) PromoteMessage(chatId, messageId int64) error {
+	_, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET pin_promoted = TRUE WHERE id = $1`, chatId), messageId)
+	return err
+}
+
+func (tx *Tx) PromotePreviousMessage(chatId int64) error {
+	_, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET pin_promoted = TRUE WHERE id IN (SELECT id FROM message_chat_%v WHERE pinned IS TRUE ORDER BY id DESC LIMIT 1)`, chatId, chatId))
+	return err
+}
+
+func (tx *Tx) GetPinnedPromoted(chatId int64) (*Message, error) {
+	row := tx.QueryRow(fmt.Sprintf(`%v
+			WHERE 
+			    m.pinned IS TRUE AND m.pin_promoted IS TRUE
+			ORDER BY m.id desc
+			LIMIT 1`, selectMessageClause(chatId)),
+	)
+	if row.Err() != nil {
+		Logger.Errorf("Error during get pinned messages %v", row.Err())
+		return nil, row.Err()
+	}
+
+	message := Message{ChatId: chatId}
+	err := row.Scan(provideScanToMessage(&message)[:]...)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return nil, nil
+	}
+	if err != nil {
+		Logger.Errorf("Error during get message row %v", err)
+		return nil, err
+	} else {
+		return &message, nil
+	}
 }

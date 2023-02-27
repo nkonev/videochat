@@ -83,6 +83,7 @@ type ComplexityRoot struct {
 		MessageDeletedEvent   func(childComplexity int) int
 		MessageEvent          func(childComplexity int) int
 		ParticipantsEvent     func(childComplexity int) int
+		PromoteMessageEvent   func(childComplexity int) int
 		UserTypingEvent       func(childComplexity int) int
 	}
 
@@ -102,6 +103,7 @@ type ComplexityRoot struct {
 		ID             func(childComplexity int) int
 		Owner          func(childComplexity int) int
 		OwnerID        func(childComplexity int) int
+		Pinned         func(childComplexity int) int
 		Text           func(childComplexity int) int
 	}
 
@@ -422,6 +424,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatEvent.ParticipantsEvent(childComplexity), true
 
+	case "ChatEvent.promoteMessageEvent":
+		if e.complexity.ChatEvent.PromoteMessageEvent == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.PromoteMessageEvent(childComplexity), true
+
 	case "ChatEvent.userTypingEvent":
 		if e.complexity.ChatEvent.UserTypingEvent == nil {
 			break
@@ -512,6 +521,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DisplayMessageDto.OwnerID(childComplexity), true
+
+	case "DisplayMessageDto.pinned":
+		if e.complexity.DisplayMessageDto.Pinned == nil {
+			break
+		}
+
+		return e.complexity.DisplayMessageDto.Pinned(childComplexity), true
 
 	case "DisplayMessageDto.text":
 		if e.complexity.DisplayMessageDto.Text == nil {
@@ -1049,6 +1065,7 @@ type DisplayMessageDto {
     canDelete:      Boolean!
     fileItemUuid:   UUID
     embedMessage:   EmbedMessageResponse
+    pinned:         Boolean!
 }
 
 type MessageDeletedDto {
@@ -1115,6 +1132,7 @@ type ChatEvent {
     messageBroadcastEvent: MessageBroadcastNotification
     fileUploadedEvent: FileUploadedEvent
     participantsEvent: [UserWithAdmin!]
+    promoteMessageEvent: DisplayMessageDto
 }
 
 type VideoUserCountChangedDto {
@@ -2251,6 +2269,8 @@ func (ec *executionContext) fieldContext_ChatEvent_messageEvent(ctx context.Cont
 				return ec.fieldContext_DisplayMessageDto_fileItemUuid(ctx, field)
 			case "embedMessage":
 				return ec.fieldContext_DisplayMessageDto_embedMessage(ctx, field)
+			case "pinned":
+				return ec.fieldContext_DisplayMessageDto_pinned(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
 		},
@@ -2500,6 +2520,73 @@ func (ec *executionContext) fieldContext_ChatEvent_participantsEvent(ctx context
 				return ec.fieldContext_UserWithAdmin_admin(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserWithAdmin", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatEvent_promoteMessageEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_promoteMessageEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PromoteMessageEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DisplayMessageDto)
+	fc.Result = res
+	return ec.marshalODisplayMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDisplayMessageDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_promoteMessageEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DisplayMessageDto_id(ctx, field)
+			case "text":
+				return ec.fieldContext_DisplayMessageDto_text(ctx, field)
+			case "chatId":
+				return ec.fieldContext_DisplayMessageDto_chatId(ctx, field)
+			case "ownerId":
+				return ec.fieldContext_DisplayMessageDto_ownerId(ctx, field)
+			case "createDateTime":
+				return ec.fieldContext_DisplayMessageDto_createDateTime(ctx, field)
+			case "editDateTime":
+				return ec.fieldContext_DisplayMessageDto_editDateTime(ctx, field)
+			case "owner":
+				return ec.fieldContext_DisplayMessageDto_owner(ctx, field)
+			case "canEdit":
+				return ec.fieldContext_DisplayMessageDto_canEdit(ctx, field)
+			case "canDelete":
+				return ec.fieldContext_DisplayMessageDto_canDelete(ctx, field)
+			case "fileItemUuid":
+				return ec.fieldContext_DisplayMessageDto_fileItemUuid(ctx, field)
+			case "embedMessage":
+				return ec.fieldContext_DisplayMessageDto_embedMessage(ctx, field)
+			case "pinned":
+				return ec.fieldContext_DisplayMessageDto_pinned(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
 		},
 	}
 	return fc, nil
@@ -3084,6 +3171,50 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_embedMessage(ctx cont
 				return ec.fieldContext_EmbedMessageResponse_isParticipant(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EmbedMessageResponse", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayMessageDto_pinned(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DisplayMessageDto_pinned(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Pinned, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DisplayMessageDto_pinned(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4877,6 +5008,8 @@ func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Con
 				return ec.fieldContext_ChatEvent_fileUploadedEvent(ctx, field)
 			case "participantsEvent":
 				return ec.fieldContext_ChatEvent_participantsEvent(ctx, field)
+			case "promoteMessageEvent":
+				return ec.fieldContext_ChatEvent_promoteMessageEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatEvent", field.Name)
 		},
@@ -7986,6 +8119,10 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._ChatEvent_participantsEvent(ctx, field, obj)
 
+		case "promoteMessageEvent":
+
+			out.Values[i] = ec._ChatEvent_promoteMessageEvent(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8107,6 +8244,13 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 
 			out.Values[i] = ec._DisplayMessageDto_embedMessage(ctx, field, obj)
 
+		case "pinned":
+
+			out.Values[i] = ec._DisplayMessageDto_pinned(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

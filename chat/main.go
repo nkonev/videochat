@@ -163,6 +163,10 @@ func configureEcho(
 	e.PUT("/chat/:id/broadcast", mc.BroadcastMessage)
 	e.DELETE("/internal/remove-file-item", mc.RemoveFileItem)
 
+	e.GET("/chat/:id/message/pin", mc.GetPinnedMessages)
+	e.GET("/chat/:id/message/pin/promoted", mc.GetPinnedMessage)
+	e.PUT("/chat/:id/message/:messageId/pin", mc.PinMessage)
+
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			// do some work on application stop (like closing connections and files)

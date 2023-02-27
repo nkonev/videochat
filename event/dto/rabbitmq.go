@@ -19,6 +19,7 @@ type ChatEvent struct {
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
 	FileUploadedEvent            *FileUploadedEvent            `json:"fileUploadedEvent"`
 	Participants                 *[]*UserWithAdmin             `json:"participants"`
+	PromoteMessageNotification   *DisplayMessageDto            `json:"promoteMessageNotification"`
 }
 
 func (ChatEvent) Name() eventbus.EventName {

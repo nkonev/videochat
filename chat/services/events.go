@@ -28,6 +28,7 @@ type Events interface {
 	NotifyAboutChangeParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin)
 	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64)
 	NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
+	NotifyAboutPromote(c echo.Context, chatId int64, msg *dto.DisplayMessageDto, promote bool, participantIds []int64)
 }
 
 type eventsImpl struct {
@@ -377,6 +378,28 @@ func (not *eventsImpl) NotifyAboutChangeParticipants(c echo.Context, userIds []i
 			UserId:       participantId,
 			ChatId:       chatId,
 			Participants: &participantIdsToChange,
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		}
+	}
+}
+
+func (not *eventsImpl) NotifyAboutPromote(c echo.Context, chatId int64, msg *dto.DisplayMessageDto, promote bool, participantIds []int64) {
+
+	var eventType = ""
+	if promote {
+		eventType = "pinned_message_promote"
+	} else {
+		eventType = "pinned_message_unpromote"
+	}
+
+	for _, participantId := range participantIds {
+		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+			EventType:                  eventType,
+			PromoteMessageNotification: msg,
+			UserId:                     participantId,
+			ChatId:                     chatId,
 		})
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)

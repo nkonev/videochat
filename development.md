@@ -618,3 +618,8 @@ jsoup analogues for Golang
 ```
 curl -i -X PUT -H 'Content-Type: application/json' -d '{"text": "<a>danger</a> or not"}' --url 'http://localhost:8081/api/chat/public/clean-html-tags'
 ```
+
+```
+curl -i 'http://localhost:8081/api/chat/114/message/8/pin?pin=true' -X PUT -H 'Cookie: VIDEOCHAT_SESSION=MjI3Y2MxOWEtMTcwNC00NDk4LTkzNTItNWI5MzkyMzY5OTY2; VIDEOCHAT_XSRF_TOKEN=15ec7af3-2b30-428f-8472-923a8627ce09'
+curl -Ss 'http://localhost:8081/api/chat/114/message/pin' -H 'Cookie: VIDEOCHAT_SESSION=MjI3Y2MxOWEtMTcwNC00NDk4LTkzNTItNWI5MzkyMzY5OTY2; VIDEOCHAT_XSRF_TOKEN=15ec7af3-2b30-428f-8472-923a8627ce09' | jq '.'
+```

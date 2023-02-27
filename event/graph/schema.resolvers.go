@@ -216,30 +216,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	}
 	messageDto := e.MessageNotification
 	if messageDto != nil {
-		result.MessageEvent = &model.DisplayMessageDto{ // dto.DisplayMessageDto
-			ID:             messageDto.Id,
-			Text:           messageDto.Text,
-			ChatID:         messageDto.ChatId,
-			OwnerID:        messageDto.OwnerId,
-			CreateDateTime: messageDto.CreateDateTime,
-			EditDateTime:   messageDto.EditDateTime.Ptr(),
-			Owner:          convertUser(messageDto.Owner),
-			CanEdit:        messageDto.CanEdit,
-			CanDelete:      messageDto.CanDelete,
-			FileItemUUID:   messageDto.FileItemUuid,
-		}
-		embedMessageDto := messageDto.EmbedMessage
-		if embedMessageDto != nil {
-			result.MessageEvent.EmbedMessage = &model.EmbedMessageResponse{
-				ID:            embedMessageDto.Id,
-				ChatID:        embedMessageDto.ChatId,
-				ChatName:      embedMessageDto.ChatName,
-				Text:          embedMessageDto.Text,
-				Owner:         convertUser(embedMessageDto.Owner),
-				EmbedType:     embedMessageDto.EmbedType,
-				IsParticipant: embedMessageDto.IsParticipant,
-			}
-		}
+		result.MessageEvent = convertDisplayMessageDto(messageDto)
 	}
 
 	messageDeleted := e.MessageDeletedNotification
@@ -283,8 +260,43 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 		result.ParticipantsEvent = convertUsersWithAdmin(*participants)
 	}
 
+	promotePinnedMessageEvent := e.PromoteMessageNotification
+	if promotePinnedMessageEvent != nil {
+		result.PromoteMessageEvent = convertDisplayMessageDto(promotePinnedMessageEvent)
+	}
+
 	return result
 }
+
+func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayMessageDto {
+	var result = &model.DisplayMessageDto{ // dto.DisplayMessageDto
+		ID:             messageDto.Id,
+		Text:           messageDto.Text,
+		ChatID:         messageDto.ChatId,
+		OwnerID:        messageDto.OwnerId,
+		CreateDateTime: messageDto.CreateDateTime,
+		EditDateTime:   messageDto.EditDateTime.Ptr(),
+		Owner:          convertUser(messageDto.Owner),
+		CanEdit:        messageDto.CanEdit,
+		CanDelete:      messageDto.CanDelete,
+		FileItemUUID:   messageDto.FileItemUuid,
+		Pinned:         messageDto.Pinned,
+	}
+	embedMessageDto := messageDto.EmbedMessage
+	if embedMessageDto != nil {
+		result.EmbedMessage = &model.EmbedMessageResponse{
+			ID:            embedMessageDto.Id,
+			ChatID:        embedMessageDto.ChatId,
+			ChatName:      embedMessageDto.ChatName,
+			Text:          embedMessageDto.Text,
+			Owner:         convertUser(embedMessageDto.Owner),
+			EmbedType:     embedMessageDto.EmbedType,
+			IsParticipant: embedMessageDto.IsParticipant,
+		}
+	}
+	return result
+}
+
 func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 	//eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin
 	var ret = &model.GlobalEvent{

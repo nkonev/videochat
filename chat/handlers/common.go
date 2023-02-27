@@ -168,3 +168,9 @@ func createMessagePreview(cleanTagsPolicy *services.StripTagsPolicy, text, login
 func loginPrefix(login string) string {
 	return login + ": "
 }
+
+func createMessagePreviewWithoutLogin(cleanTagsPolicy *services.StripTagsPolicy, text string) string {
+	tmp := cleanTagsPolicy.Sanitize(text)
+	size := utils.Min(len(tmp), viper.GetInt("previewMaxTextSize"))
+	return tmp[:size]
+}

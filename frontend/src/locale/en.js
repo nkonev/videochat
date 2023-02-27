@@ -9,7 +9,7 @@ export default {
     mute_video: "Mute video",
     fullscreen: "Fullscreen",
     files: "Files",
-    find_user: "Find user",
+    find_user: "Find an user",
     new_chat: "New chat",
     edit_chat: "Edit chat",
     profile: "Profile",
@@ -62,6 +62,7 @@ export default {
     grant_admin: "Grant admin",
     you_brackets: "(you)",
     call: "Call",
+    call_up: "Call up",
     stop_call: "Stop call",
     force_mute: "Force mute",
     kick: "Kick from call",
@@ -155,5 +156,9 @@ export default {
     tet_a_tet: "Tet-a-tet dialog",
     copy_link_to_message: "Copy link to message",
     copy_link_to_chat: "Copy link to chat",
-    copy_selected: "Copy selected text"
+    copy_selected: "Copy selected text",
+    pinned_messages: "Pinned messages",
+    pin_message: "Pin the message",
+    no_pin_messages: "No pin messages",
+    remove_from_pinned: "Remove from pinned"
 }
