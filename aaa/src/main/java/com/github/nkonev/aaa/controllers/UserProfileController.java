@@ -92,7 +92,7 @@ public class UserProfileController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = {Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH}, produces = MediaType.APPLICATION_JSON_VALUE)
     public HttpHeaders checkAuthenticatedInternal(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
         LOGGER.info("Requesting internal user profile");
         Long expiresAt = getExpiresAt(session);

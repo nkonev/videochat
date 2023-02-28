@@ -123,7 +123,7 @@ http:
         attempts: 4
     auth-middleware:
       forwardAuth:
-        address: "http://host.docker.internal:8060/internal/profile"
+        address: "http://host.docker.internal:8060/internal/profile/auth"
         authRequestHeaders:
           - "Cookie"
           - "uber-trace-id"
