@@ -2,7 +2,6 @@
 api_key: "APIznJxWShGW3Kt"
 api_secret: "KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA"
 ws_url: "ws://livekit:7880"
-template_base: "http://video:1239"
 insecure: true
 redis:
   address: redis:6379

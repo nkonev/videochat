@@ -21,19 +21,6 @@ test:
 package-go:
 	CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"'
 
-# Do before
-# npm install -g yarn
-package-js:
-	cd /tmp && \
-	git clone https://github.com/livekit/egress.git && \
-	cd egress/template-default && \
-	yarn install && \
-	yarn run build && \
-	cd ${CURR} && \
-	rm -rf handlers/static-egress-layout/* && \
-	cp -R /tmp/egress/template-default/build/* handlers/static-egress-layout && \
-	rm -rf /tmp/egress
-
 BUILDDIR := ./build
 EXECUTABLE := video
 IMAGE = nkonev/chat-video:latest

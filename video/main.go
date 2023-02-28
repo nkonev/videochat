@@ -39,14 +39,12 @@ func main() {
 			createTypedConfig,
 			configureTracer,
 			configureApiEcho,
-			configureEgressLayoutEcho,
 			client.NewRestClient,
 			client.NewLivekitClient,
 			client.NewEgressClient,
 			handlers.NewUserHandler,
 			handlers.NewConfigHandler,
 			handlers.ConfigureApiStaticMiddleware,
-			handlers.ConfigureEgressLayoutStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
 			handlers.NewTokenHandler,
 			handlers.NewLivekitWebhookHandler,
@@ -73,7 +71,6 @@ func main() {
 		),
 		fx.Invoke(
 			runApiEcho,
-			runEgressLayoutEcho,
 			runScheduler,
 		),
 	)
@@ -116,10 +113,6 @@ func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) 
 }
 
 type ApiEcho struct {
-	*echo.Echo
-}
-
-type EgressLayoutEcho struct {
 	*echo.Echo
 }
 
@@ -184,36 +177,6 @@ func configureApiEcho(
 	return &ApiEcho{e}
 }
 
-func configureEgressLayoutEcho(
-	staticMiddleware handlers.EgressLayoutStaticMiddleware,
-	lc fx.Lifecycle,
-) *EgressLayoutEcho {
-	e := echo.New()
-	e.Logger.SetOutput(Logger.Writer())
-
-	e.HTTPErrorHandler = createCustomHTTPErrorHandler(e)
-
-	accessLoggerConfig := middleware.LoggerConfig{
-		Output: Logger.Writer(),
-		Format: `"remote_ip":"${remote_ip}",` +
-			`"method":"${method}","uri":"${uri}",` +
-			`"status":${status},` +
-			`,"bytes_in":${bytes_in},"bytes_out":${bytes_out},"traceId":"${header:uber-trace-id}"` + "\n",
-	}
-	e.Use(middleware.LoggerWithConfig(accessLoggerConfig))
-	e.Use(echo.MiddlewareFunc(staticMiddleware))
-
-	lc.Append(fx.Hook{
-		OnStop: func(ctx context.Context) error {
-			// do some work on application stop (like closing connections and files)
-			Logger.Infof("Stopping http server")
-			return e.Shutdown(ctx)
-		},
-	})
-
-	return &EgressLayoutEcho{e}
-}
-
 func configureTracer(lc fx.Lifecycle, cfg *config.ExtendedConfig) (*sdktrace.TracerProvider, error) {
 	Logger.Infof("Configuring Jaeger tracing")
 	endpoint := jaegerExporter.WithAgentEndpoint(
@@ -262,19 +225,6 @@ func runApiEcho(e *ApiEcho, cfg *config.ExtendedConfig) {
 		}
 	}()
 	Logger.Info("Api server started. Waiting for interrupt signal 2 (Ctrl+C)")
-}
-
-func runEgressLayoutEcho(e *EgressLayoutEcho, cfg *config.ExtendedConfig) {
-	address := cfg.HttpServerConfig.EgressLayoutAddress
-
-	Logger.Info("Starting egress layout server...")
-	// Start server in another goroutine
-	go func() {
-		if err := e.Start(address); err != nil {
-			Logger.Infof("server shut down: %v", err)
-		}
-	}()
-	Logger.Info("Egress layout server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
 func runScheduler(chatNotifierTask *redis.VideoCallUsersCountNotifierTask, chatDialerTask *redis.ChatDialerTask, videoRecordingTask *redis.RecordingNotifierTask) {
