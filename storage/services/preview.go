@@ -90,7 +90,7 @@ func (s PreviewService) CreatePreview(normalizedKey string, ctx context.Context)
 		ffCmd.Stderr = &stderr
 		err = ffCmd.Run()
 		if err != nil {
-			Logger.Errorf("Error during creating thumbnail for %v: "+fmt.Sprint(err)+": "+stderr.String(), normalizedKey)
+			Logger.Errorf("Error during creating thumbnail for key %v: %v: %v", normalizedKey, fmt.Sprint(err), stderr.String())
 			return
 		}
 		newKey := utils.SetVideoPreviewExtension(normalizedKey)
