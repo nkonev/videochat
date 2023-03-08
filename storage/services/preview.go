@@ -41,7 +41,7 @@ func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent, ctx context.Conte
 	if strings.HasPrefix(data.EventName, utils.ObjectCreated) {
 		s.CreatePreview(normalizedKey, ctx)
 
-		if pu, err := s.GetFileUploadedEvent(normalizedKey, data.ChatId, data.CorrelationId, ctx); err == nil {
+		if pu, err := s.getFileUploadedEvent(normalizedKey, data.ChatId, data.CorrelationId, ctx); err == nil {
 			s.rabbitFileUploadedPublisher.Publish(data.OwnerId, data.ChatId, pu, ctx)
 		} else {
 			Logger.Errorf("Error during constructing uploaded event %v for %v", err, normalizedKey)
@@ -130,7 +130,7 @@ func (s PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error
 	return byteBuffer, nil
 }
 
-func (s PreviewService) GetFileUploadedEvent(normalizedKey string, chatId int64, correlationId string, ctx context.Context) (*dto.FileUploadedEvent, error) {
+func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64, correlationId string, ctx context.Context) (*dto.FileUploadedEvent, error) {
 	_, downloadUrl, err := s.filesService.GetChatPrivateUrl(normalizedKey, chatId)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting url: %v", err)
@@ -139,9 +139,12 @@ func (s PreviewService) GetFileUploadedEvent(normalizedKey string, chatId int64,
 	var previewUrl *string = GetPreviewUrlSmart(downloadUrl)
 	var aType = GetType(downloadUrl)
 
+	currTime := time.Now().Unix()
+	var changedUrl = *previewUrl + "&time=" + utils.Int64ToString(currTime)
+
 	return &dto.FileUploadedEvent{
 		Url:           downloadUrl,
-		PreviewUrl:    previewUrl,
+		PreviewUrl:    &changedUrl,
 		Type:          aType,
 		CorrelationId: correlationId,
 	}, nil
