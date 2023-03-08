@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/minio/minio-go/v7"
 	"image"
@@ -83,14 +84,18 @@ func (s PreviewService) CreatePreview(normalizedKey string, ctx context.Context)
 			"-c:v", "png", "-f", "rawvideo", "-an", "-")
 
 		// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
-		output, err := ffCmd.Output()
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		ffCmd.Stdout = &out
+		ffCmd.Stderr = &stderr
+		err = ffCmd.Run()
 		if err != nil {
-			Logger.Errorf("Error during creating thumbnail %v for %v", err, normalizedKey)
+			Logger.Errorf("Error during creating thumbnail for %v: "+fmt.Sprint(err)+": "+stderr.String(), normalizedKey)
 			return
 		}
 		newKey := utils.SetVideoPreviewExtension(normalizedKey)
 
-		reader := bytes.NewReader(output)
+		reader := bytes.NewReader(out.Bytes())
 
 		byteBuffer, err := s.resizeImageToJpg(reader)
 		if err != nil {
