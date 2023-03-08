@@ -120,7 +120,7 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		Logger.Errorf("Error get chat private url: %v", err)
 		return nil, err
 	}
-	previewUrl := GetPreviewUrlSmart(h.minio, h.minioConfig.FilesPreview, downloadUrlWithoutQuery)
+	previewUrl := h.GetPreviewUrlSmart(downloadUrlWithoutQuery)
 
 	downloadUrl := ""
 	if originalFilename {
@@ -206,14 +206,14 @@ func (h *FilesService) GetChatPrivateUrl(minioKey string, chatId int64) (string,
 const Media_image = "image"
 const Media_video = "video"
 
-func GetPreviewUrlSmart(minioClient *minio.Client, previewBucket string, itemUrl string) *string {
+func (h *FilesService) GetPreviewUrlSmart(itemUrl string) *string {
 	recognizedType := ""
 	if utils.IsVideo(itemUrl) {
 		recognizedType = Media_video
-		return getPreviewUrl(minioClient, previewBucket, itemUrl, recognizedType)
+		return h.getPreviewUrl(itemUrl, recognizedType)
 	} else if utils.IsImage(itemUrl) {
 		recognizedType = Media_image
-		return getPreviewUrl(minioClient, previewBucket, itemUrl, recognizedType)
+		return h.getPreviewUrl(itemUrl, recognizedType)
 	}
 	return nil
 }
@@ -233,7 +233,7 @@ func GetType(itemUrl string) *string {
 	}
 }
 
-func getPreviewUrl(minioClient *minio.Client, previewBucket string, itemUrl string, requestedMediaType string) *string {
+func (h *FilesService) getPreviewUrl(itemUrl string, requestedMediaType string) *string {
 	var previewUrl *string = nil
 
 	parsedUrl, err := url.Parse(itemUrl)
@@ -250,7 +250,7 @@ func getPreviewUrl(minioClient *minio.Client, previewBucket string, itemUrl stri
 			q := parsedUrl.Query()
 			q.Set(utils.FileParam, previewMinioKey)
 
-			obj, err := minioClient.StatObject(context.Background(), previewBucket, previewMinioKey, minio.StatObjectOptions{})
+			obj, err := h.minio.StatObject(context.Background(), h.minioConfig.FilesPreview, previewMinioKey, minio.StatObjectOptions{})
 			if err == nil {
 				// if preview file presents we do set time. it is need to distinguish on front. it's required to update early requested file item without preview
 				q.Set(utils.TimeParam, utils.Int64ToString(obj.LastModified.Unix()))
