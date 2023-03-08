@@ -76,7 +76,7 @@ import {mapGetters} from 'vuex'
 import {GET_NOTIFICATIONS, GET_NOTIFICATIONS_SETTINGS, SET_NOTIFICATIONS_SETTINGS} from "@/store";
 import {getHumanReadableDate} from "./utils";
 import axios from "axios";
-import {chat, chat_name} from "@/routes";
+import {chat, chat_name, messageIdHashPrefix} from "@/routes";
 
 export default {
     data () {
@@ -121,21 +121,26 @@ export default {
         getLink(item) {
             let url = chat + "/" + item.chatId;
             if (item.messageId) {
-                url += require('./routes').messageIdHashPrefix + item.messageId;
+                url += messageIdHashPrefix + item.messageId;
             }
             return url;
         },
         onNotificationClick(item) {
-            const routeDto = { name: chat_name, params: { id: item.chatId }};
-            if (item.messageId) {
-                routeDto.hash = require('./routes').messageIdHashPrefix + item.messageId;
+            if (this.chatId != item.chatId) {
+                const routeDto = {name: chat_name, params: {id: item.chatId}};
+                if (item.messageId) {
+                    routeDto.hash = messageIdHashPrefix + item.messageId;
+                }
+                this.$router.push(routeDto)
+                    .catch(() => { })
+                    .then(() => {
+                        this.closeModal();
+                        axios.put('/api/notification/read/' + item.id);
+                    })
+            } else {
+                this.closeModal();
+                axios.put('/api/notification/read/' + item.id);
             }
-            this.$router.push(routeDto)
-                .catch(()=>{})
-                .then(()=> {
-                    this.closeModal();
-                    axios.put('/api/notification/read/' + item.id);
-                })
         },
         putNotificationsSettings() {
             axios.put('/api/notification/settings', this.notificationsSettings).then(({data}) => {
@@ -147,7 +152,10 @@ export default {
         ...mapGetters({
             notifications: GET_NOTIFICATIONS,
             notificationsSettings: GET_NOTIFICATIONS_SETTINGS,
-        })
+        }),
+        chatId() {
+            return this.$route.params.id
+        },
     },
     watch: {
         show(newValue) {
