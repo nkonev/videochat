@@ -136,15 +136,13 @@ func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64,
 		GetLogEntry(ctx).Errorf("Error during getting url: %v", err)
 		return nil, err
 	}
-	var previewUrl *string = GetPreviewUrlSmart(downloadUrl)
+	var previewUrl *string = GetPreviewUrlSmart(s.minio, s.minioConfig.FilesPreview, downloadUrl)
 	var aType = GetType(downloadUrl)
 
-	currTime := time.Now().Unix()
-	var changedUrl = *previewUrl + "&time=" + utils.Int64ToString(currTime)
-
 	return &dto.FileUploadedEvent{
+		Id:            normalizedKey,
 		Url:           downloadUrl,
-		PreviewUrl:    &changedUrl,
+		PreviewUrl:    previewUrl,
 		Type:          aType,
 		CorrelationId: correlationId,
 	}, nil

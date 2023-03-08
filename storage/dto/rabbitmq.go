@@ -8,6 +8,7 @@ type ChatEvent struct {
 }
 
 type FileUploadedEvent struct {
+	Id            string  `json:"id"`
 	Url           string  `json:"url"`
 	PreviewUrl    *string `json:"previewUrl"`
 	Type          *string `json:"aType"`

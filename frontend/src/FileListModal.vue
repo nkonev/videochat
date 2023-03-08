@@ -83,7 +83,7 @@
 <script>
 
 import bus, {
-    CLOSE_SIMPLE_MODAL, OPEN_FILE_UPLOAD_MODAL,
+    CLOSE_SIMPLE_MODAL, FILE_UPLOADED, OPEN_FILE_UPLOAD_MODAL,
     OPEN_SIMPLE_MODAL, OPEN_TEXT_EDIT_MODAL,
     OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, UPDATE_VIEW_FILES_DIALOG
 } from "./bus";
@@ -223,6 +223,13 @@ export default {
         resetInput() {
             this.searchString = null;
         },
+        onFileUploaded(dto) {
+            for (const fileItem of this.dto.files) {
+                if (fileItem.id == dto.id) {
+                    fileItem.previewUrl = dto.previewUrl;
+                }
+            }
+        },
     },
     filters: {
         formatSizeFilter(size) {
@@ -250,10 +257,12 @@ export default {
         this.doSearch = debounce(this.doSearch, 700);
         bus.$on(OPEN_VIEW_FILES_DIALOG, this.showModal);
         bus.$on(UPDATE_VIEW_FILES_DIALOG, this.updateFiles);
+        bus.$on(FILE_UPLOADED, this.onFileUploaded);
     },
     destroyed() {
         bus.$off(OPEN_VIEW_FILES_DIALOG, this.showModal);
         bus.$off(UPDATE_VIEW_FILES_DIALOG, this.updateFiles);
+        bus.$off(FILE_UPLOADED, this.onFileUploaded);
     },
 }
 </script>

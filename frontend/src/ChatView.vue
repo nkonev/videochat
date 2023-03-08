@@ -700,6 +700,7 @@
                                       text
                                     }
                                     fileUploadedEvent {
+                                      id
                                       url
                                       previewUrl
                                       aType

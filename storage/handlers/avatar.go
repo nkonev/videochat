@@ -101,7 +101,7 @@ func (h *abstractAvatarHandler) putSizedFile(c echo.Context, srcImage image.Imag
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
 		return "", "", err
 	}
-	relativeUrl := fmt.Sprintf("%v%v/%v?time=%v", viper.GetString("server.contextPath"), h.delegate.GetUrlPath(), filename, currTime)
+	relativeUrl := fmt.Sprintf("%v%v/%v?%v=%v", viper.GetString("server.contextPath"), h.delegate.GetUrlPath(), filename, utils.TimeParam, currTime)
 
 	return filename, relativeUrl, nil
 }

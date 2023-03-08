@@ -805,17 +805,17 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 	var list []*MediaDto = make([]*MediaDto, 0)
 
 	for _, item := range items {
-		list = append(list, convert(item, requestedMediaType))
+		list = append(list, convert(h.minio, h.minioConfig.FilesPreview, item))
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
 }
 
-func convert(item *dto.FileInfoDto, requestedMediaType string) *MediaDto {
+func convert(minioClient *minio.Client, previewBucket string, item *dto.FileInfoDto) *MediaDto {
 	if item == nil {
 		return nil
 	}
-	var previewUrl *string = services.GetPreviewUrl(item.Url, requestedMediaType)
+	var previewUrl *string = services.GetPreviewUrlSmart(minioClient, previewBucket, item.Url)
 
 	return &MediaDto{
 		Id:         item.Id,

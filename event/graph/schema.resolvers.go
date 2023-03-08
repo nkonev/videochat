@@ -270,6 +270,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	fileUploadedEvent := e.FileUploadedEvent
 	if fileUploadedEvent != nil {
 		result.FileUploadedEvent = &model.FileUploadedEvent{
+			ID:            fileUploadedEvent.Id,
 			URL:           fileUploadedEvent.Url,
 			PreviewURL:    fileUploadedEvent.PreviewUrl,
 			AType:         fileUploadedEvent.Type,

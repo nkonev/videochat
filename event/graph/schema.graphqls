@@ -86,6 +86,7 @@ type MessageBroadcastNotification {
 }
 
 type FileUploadedEvent {
+    id: String!
     url: String!
     previewUrl: String
     aType: String

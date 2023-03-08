@@ -77,6 +77,7 @@ type EmbedMessageResponse struct {
 }
 
 type FileUploadedEvent struct {
+	ID            string  `json:"id"`
 	URL           string  `json:"url"`
 	PreviewURL    *string `json:"previewUrl"`
 	AType         *string `json:"aType"`

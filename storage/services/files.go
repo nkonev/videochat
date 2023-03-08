@@ -21,17 +21,20 @@ import (
 const UrlStorageGetFilePublicExternal = "/public/download"
 
 type FilesService struct {
-	minio      *minio.Client
-	restClient *client.RestClient
+	minio       *minio.Client
+	restClient  *client.RestClient
+	minioConfig *utils.MinioConfig
 }
 
 func NewFilesService(
 	minio *minio.Client,
 	chatClient *client.RestClient,
+	minioConfig *utils.MinioConfig,
 ) *FilesService {
 	return &FilesService{
-		minio:      minio,
-		restClient: chatClient,
+		minio:       minio,
+		restClient:  chatClient,
+		minioConfig: minioConfig,
 	}
 }
 
@@ -117,7 +120,7 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		Logger.Errorf("Error get chat private url: %v", err)
 		return nil, err
 	}
-	previewUrl := GetPreviewUrlSmart(downloadUrlWithoutQuery)
+	previewUrl := GetPreviewUrlSmart(h.minio, h.minioConfig.FilesPreview, downloadUrlWithoutQuery)
 
 	downloadUrl := ""
 	if originalFilename {
@@ -203,14 +206,14 @@ func (h *FilesService) GetChatPrivateUrl(minioKey string, chatId int64) (string,
 const Media_image = "image"
 const Media_video = "video"
 
-func GetPreviewUrlSmart(itemUrl string) *string {
+func GetPreviewUrlSmart(minioClient *minio.Client, previewBucket string, itemUrl string) *string {
 	recognizedType := ""
 	if utils.IsVideo(itemUrl) {
 		recognizedType = Media_video
-		return GetPreviewUrl(itemUrl, recognizedType)
+		return getPreviewUrl(minioClient, previewBucket, itemUrl, recognizedType)
 	} else if utils.IsImage(itemUrl) {
 		recognizedType = Media_image
-		return GetPreviewUrl(itemUrl, recognizedType)
+		return getPreviewUrl(minioClient, previewBucket, itemUrl, recognizedType)
 	}
 	return nil
 }
@@ -230,22 +233,29 @@ func GetType(itemUrl string) *string {
 	}
 }
 
-func GetPreviewUrl(itemUrl string, requestedMediaType string) *string {
+func getPreviewUrl(minioClient *minio.Client, previewBucket string, itemUrl string, requestedMediaType string) *string {
 	var previewUrl *string = nil
 
 	parsedUrl, err := url.Parse(itemUrl)
 	if err == nil {
 		parsedUrl.Path = "/api/storage/embed/preview"
 		fileParam := parsedUrl.Query().Get(utils.FileParam)
-		newFileParam := ""
+		previewMinioKey := ""
 		if requestedMediaType == Media_video {
-			newFileParam = utils.SetVideoPreviewExtension(fileParam)
+			previewMinioKey = utils.SetVideoPreviewExtension(fileParam)
 		} else if requestedMediaType == Media_image {
-			newFileParam = utils.SetImagePreviewExtension(fileParam)
+			previewMinioKey = utils.SetImagePreviewExtension(fileParam)
 		}
-		if newFileParam != "" {
+		if previewMinioKey != "" {
 			q := parsedUrl.Query()
-			q.Set(utils.FileParam, newFileParam)
+			q.Set(utils.FileParam, previewMinioKey)
+
+			obj, err := minioClient.StatObject(context.Background(), previewBucket, previewMinioKey, minio.StatObjectOptions{})
+			if err == nil {
+				// if preview file presents we do set time. it is need to distinguish on front. it's required to update early requested file item without preview
+				q.Set(utils.TimeParam, utils.Int64ToString(obj.LastModified.Unix()))
+			}
+
 			parsedUrl.RawQuery = q.Encode()
 			tmp := parsedUrl.String()
 			previewUrl = &tmp

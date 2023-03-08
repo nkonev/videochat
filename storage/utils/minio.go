@@ -74,6 +74,7 @@ func SetImagePreviewExtension(key string) string {
 }
 
 const FileParam = "file"
+const TimeParam = "time"
 
 func ParseChatId(minioKey string) (int64, error) {
 	// "chat/116/ad36c70a-c9ae-4846-9c25-6d5f5ac94873/561ae246-7eff-45a6-a480-2b2be254c768.jpg"
