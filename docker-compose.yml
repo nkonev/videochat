@@ -133,7 +133,7 @@ services:
       - ./docker/livekit/livekit.yaml:/etc/livekit.yaml
 
   egress:
-    image: livekit/egress:v1.5.6
+    image: livekit/egress:v1.6.0
     restart: unless-stopped
     networks:
       backend:
