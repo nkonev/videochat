@@ -141,7 +141,7 @@ services:
         tag: chat-livekit
 
   egress:
-    image: livekit/egress:v1.5.6
+    image: livekit/egress:v1.6.0
     networks:
       backend:
     environment:
