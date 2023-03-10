@@ -7,8 +7,6 @@ services:
     # The Static Configuration
     command: --configFile=/traefik_conf/traefik.yml
     ports:
-      #      - 80:80
-      #      - 443:443
     - target: 80
       published: 80
       protocol: tcp
@@ -21,7 +19,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./traefik_conf:/traefik_conf
     networks:
-      - traefik_backend
       - backend
     logging:
       driver: "journald"
@@ -173,6 +170,3 @@ volumes:
 networks:
   backend:
     driver: overlay
-  traefik_backend:
-    external: true
-    name: proxy_backend
