@@ -122,6 +122,7 @@ export default {
         closeModal() {
             this.show = false;
             this.page = firstPage;
+            this.dto = dtoFactory();
         },
         unpinMessage(dto) {
             axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {

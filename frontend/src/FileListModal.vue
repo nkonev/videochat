@@ -162,6 +162,7 @@ export default {
             this.messageEditing = false;
             this.filePage = firstPage;
             this.searchString = null;
+            this.dto = dtoFactory();
         },
         doSearch(){
             this.updateFiles();
