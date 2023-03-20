@@ -225,6 +225,10 @@ export default {
             this.searchString = null;
         },
         onFileUploaded(dto) {
+            if (!this.show) {
+                return
+            }
+
             for (const fileItem of this.dto.files) {
                 if (fileItem.id == dto.id) {
                     fileItem.previewUrl = dto.previewUrl;

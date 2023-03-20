@@ -274,6 +274,10 @@
                 }
             },
             onChatEdit(dto) {
+                if (!this.show) {
+                    return
+                }
+
                 // actually it is need only to reflect canEdit and friends
                 this.dto = dto;
             },
@@ -359,6 +363,10 @@
             },
 
             onParticipantAdded(users) {
+                if (!this.show) {
+                    return
+                }
+
                 const tmp = cloneDeep(users);
                 this.transformParticipants(tmp);
                 for (const user of tmp) {
@@ -367,6 +375,10 @@
                 this.$forceUpdate();
             },
             onParticipantDeleted(users) {
+                if (!this.show) {
+                    return
+                }
+
                 const tmp = cloneDeep(users);
                 this.transformParticipants(tmp);
                 for (const user of tmp) {
@@ -375,6 +387,8 @@
                 this.$forceUpdate();
             },
             onParticipantEdited(users) {
+                if (!this.show) return
+
                 const tmp = cloneDeep(users);
                 this.transformParticipants(tmp);
                 for (const user of tmp) {
