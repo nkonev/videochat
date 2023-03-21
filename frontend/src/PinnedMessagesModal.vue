@@ -17,7 +17,9 @@
                                             <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                                         </v-list-item-title>
                                         <v-list-item-subtitle class="my-0">
-                                            {{ item.text }}
+                                            <router-link :to="getPinnedRouteObject(item)" style="text-decoration: none; cursor: pointer" class="text--primary">
+                                                {{ item.text }}
+                                            </router-link>
                                         </v-list-item-subtitle>
                                     </v-list-item-content>
 
@@ -63,6 +65,7 @@ import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
 import axios from "axios";
 import {getHumanReadableDate, formatSize, findIndex} from "./utils";
+import {chat_name, messageIdHashPrefix} from "@/routes";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -162,6 +165,9 @@ export default {
                     console.log("Skipping", dto)
                 }
             }
+        },
+        getPinnedRouteObject(item) {
+            return {name: chat_name, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
         },
     },
     filters: {

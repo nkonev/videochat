@@ -17,7 +17,7 @@
                             dismissible
                             prominent
                         >
-                            <router-link :to="getPinnedRoureObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
+                            <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
                                 {{ pinnedPromoted.text }}
                             </router-link>
                         </v-alert>
@@ -883,7 +883,7 @@
                     }
                 }
             },
-            getPinnedRoureObject(item) {
+            getPinnedRouteObject(item) {
                 return {name: chat_name, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
             },
             onPinnedMessagePromoted(item) {
