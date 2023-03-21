@@ -16,7 +16,6 @@
                             dark
                             dismissible
                             prominent
-                            :value="showPinnedPromoted"
                         >
                             <router-link :to="getPinnedRoureObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
                                 {{ pinnedPromoted.text }}
@@ -223,7 +222,6 @@
                 tooltipKey: 0,
                 initialHash: null,
                 pinnedPromoted: null,
-                showPinnedPromoted: false,
                 pinnedPromotedKey: +new Date()
             }
         },
@@ -589,7 +587,6 @@
                     return axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
                         if (response.status != 204) {
                             this.pinnedPromoted = response.data;
-                            this.showPinnedPromoted = true;
                         }
                     })
                 })
@@ -891,13 +888,11 @@
             },
             onPinnedMessagePromoted(item) {
                 this.pinnedPromoted = item;
-                this.showPinnedPromoted = true;
                 this.pinnedPromotedKey++;
             },
             onPinnedMessageUnpromoted(item) {
                 if (this.pinnedPromoted && this.pinnedPromoted.id == item.id) {
                     this.pinnedPromoted = null;
-                    this.showPinnedPromoted = false;
                 }
             },
         },
@@ -985,7 +980,6 @@
             this.closeQueryWatcher();
             document.removeEventListener("keydown", this.keydownListener);
             this.pinnedPromoted = null;
-            this.showPinnedPromoted = false;
             this.pinnedPromotedKey = null;
         },
         destroyed() {
