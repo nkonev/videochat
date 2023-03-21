@@ -155,6 +155,9 @@ export default {
             if (this.show) {
                 if (dto.chatId == this.chatId) {
                     this.removeItem(dto);
+                    if (!this.dto.data.length) {
+                        this.dto = dtoFactory();
+                    }
                 } else {
                     console.log("Skipping", dto)
                 }
