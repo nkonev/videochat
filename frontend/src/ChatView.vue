@@ -8,7 +8,7 @@
             </pane>
             <pane v-bind:size="messagesSize">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
-                    <div v-if="pinnedPromoted" style="position: absolute; z-index: 7; width: 100%">
+                    <div v-if="pinnedPromoted" style="position: absolute; z-index: 5; width: 100%">
                         <v-alert
                             :key="pinnedPromotedKey"
                             dense
