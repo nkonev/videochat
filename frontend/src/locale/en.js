@@ -160,5 +160,6 @@ export default {
     pinned_messages: "Pinned messages",
     pin_message: "Pin the message",
     no_pin_messages: "No pin messages",
-    remove_from_pinned: "Remove from pinned"
+    remove_from_pinned: "Remove from pinned",
+    available_to_search: "Available to search"
 }

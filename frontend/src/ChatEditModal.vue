@@ -68,6 +68,13 @@
                             dense
                         ></v-checkbox>
 
+                        <v-checkbox
+                            v-model="editDto.availableToSearch"
+                            :label="$vuetify.lang.t('$vuetify.available_to_search')"
+                            hide-details
+                            dense
+                        ></v-checkbox>
+
                         <template v-if="!isNew">
                             <v-container class="pb-0 px-0 pt-1">
                                 <v-img v-if="editDto.avatarBig || editDto.avatar"
@@ -108,6 +115,7 @@
             name: "",
             participantIds: [ ],
             canResend: false,
+            availableToSearch: true // it's default for all the new chats // TODO exclude private chats
         }
     };
 
@@ -167,6 +175,7 @@
                             avatar: response.data.avatar,
                             avatarBig: response.data.avatarBig,
                             canResend: response.data.canResend,
+                            availableToSearch: response.data.availableToSearch,
                         };
                     })
             },
@@ -209,6 +218,7 @@
                         avatar: this.editDto.avatar,
                         avatarBig: this.editDto.avatarBig,
                         canResend: this.editDto.canResend,
+                        availableToSearch: this.editDto.availableToSearch,
                     };
 
                     if (this.isNew) {
