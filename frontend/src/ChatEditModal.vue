@@ -115,7 +115,7 @@
             name: "",
             participantIds: [ ],
             canResend: false,
-            availableToSearch: true // it's default for all the new chats // TODO exclude private chats
+            availableToSearch: true // it's default for all the new chats, excluding tet-a-tet
         }
     };
 
