@@ -13,7 +13,6 @@
                         :label="$vuetify.lang.t('$vuetify.type_to_find_user')"
                         item-text="login"
                         item-value="id"
-                        :hide-selected="true"
                         hide-details
                         :search-input.sync="search"
                         dense
@@ -21,12 +20,14 @@
                         autofocus
                     >
                         <template v-slot:item="data">
-                            <v-list-item-avatar v-if="data.item.avatar" @click="onUserClicked(data.item)">
-                                <img :src="data.item.avatar">
-                            </v-list-item-avatar>
-                            <v-list-item-content @click="onUserClicked(data.item)">
-                                <v-list-item-title v-html="data.item.login"></v-list-item-title>
-                            </v-list-item-content>
+                            <v-list-item @click="onUserClicked(data.item)">
+                                <v-list-item-avatar v-if="data.item.avatar">
+                                    <img :src="data.item.avatar">
+                                </v-list-item-avatar>
+                                <v-list-item-content>
+                                    <v-list-item-title v-html="data.item.login"></v-list-item-title>
+                                </v-list-item-content>
+                            </v-list-item>
                         </template>
                     </v-autocomplete>
                 </v-card-text>
