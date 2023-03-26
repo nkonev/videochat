@@ -136,6 +136,7 @@ func configureEcho(
 	e.DELETE("/chat/:id", ch.DeleteChat)
 	e.PUT("/chat", ch.EditChat)
 	e.PUT("/chat/:id/leave", ch.LeaveChat)
+	e.PUT("/chat/:id/join", ch.JoinChat)
 	e.GET("/chat/:id/user", ch.GetParticipants)
 	e.PUT("/chat/:id/user", ch.AddParticipants)
 	e.PUT("/chat/:id/user/:participantId", ch.ChangeParticipant)

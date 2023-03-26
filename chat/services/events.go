@@ -96,6 +96,12 @@ func chatNotifyCommon(userIds []int64, not *eventsImpl, c echo.Context, newChatD
 				continue
 			}
 
+			isParticipant, err := tx.IsParticipant(participantId, newChatDto.Id)
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("error during checking is participant for userId=%v: %s", participantId, err)
+				continue
+			}
+
 			unreadMessages, err := tx.GetUnreadMessagesCount(newChatDto.Id, participantId)
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
@@ -103,7 +109,7 @@ func chatNotifyCommon(userIds []int64, not *eventsImpl, c echo.Context, newChatD
 			}
 
 			// see also handlers/chat.go:199 convertToDto()
-			copied.SetPersonalizedFields(admin, unreadMessages)
+			copied.SetPersonalizedFields(admin, unreadMessages, isParticipant)
 
 			for _, participant := range copied.Participants {
 				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)

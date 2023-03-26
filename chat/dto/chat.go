@@ -23,12 +23,14 @@ type BaseChatDto struct {
 	CanAudioMute        bool        `json:"canAudioMute"`
 	ParticipantsCount   int         `json:"participantsCount"`
 	CanResend           bool        `json:"canResend"`
+	AvailableToSearch   bool        `json:"availableToSearch"`
+	IsResultFromSearch  null.Bool   `json:"isResultFromSearch"`
 }
 
-func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64) {
+func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
 	copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
 	copied.CanDelete = null.BoolFrom(admin)
-	copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet)
+	copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet && participant)
 	copied.UnreadMessages = unreadMessages
 	copied.CanVideoKick = admin
 	copied.CanAudioMute = admin

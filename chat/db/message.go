@@ -116,12 +116,11 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 
 		rows, err := db.Query(fmt.Sprintf(`%v
 		WHERE 
-		    $3 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $3 ) 
-			AND m.id >= $4 
-			AND m.id <= $5 
+			    m.id >= $2 
+			AND m.id <= $3 
 		ORDER BY m.id %s 
-		LIMIT $2`, selectMessageClause(chatId), order),
-			userId, limit, chatId, leftMessageId, rightMessageId)
+		LIMIT $1`, selectMessageClause(chatId), order),
+			limit, leftMessageId, rightMessageId)
 
 		if err != nil {
 			Logger.Errorf("Error during get chat rows with search %v", err)
@@ -141,10 +140,10 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		return list, nil
 	} else {
 		order := "asc"
-		nonEquality := "m.id > $3"
+		nonEquality := "m.id > $2"
 		if reverse {
 			order = "desc"
-			nonEquality = "m.id < $3"
+			nonEquality = "m.id < $2"
 		}
 		var err error
 		var rows *sql.Rows
@@ -152,11 +151,11 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 			searchStringPercents := "%" + searchString + "%"
 			rows, err = db.Query(fmt.Sprintf(`%v
 			WHERE 
-		    	$4 IN (SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4) 
-				AND %s 
-				AND strip_tags(m.text) ILIKE $5 
+		    	    %s 
+				AND strip_tags(m.text) ILIKE $3 
 			ORDER BY m.id %s 
-			LIMIT $2`, selectMessageClause(chatId), nonEquality, order), userId, limit, startingFromItemId, chatId, searchStringPercents)
+			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
+				limit, startingFromItemId, searchStringPercents)
 			if err != nil {
 				Logger.Errorf("Error during get chat rows %v", err)
 				return nil, err
@@ -164,11 +163,10 @@ func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromIte
 		} else {
 			rows, err = db.Query(fmt.Sprintf(`%v
 			WHERE 
-			    $4 IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $4 ) 
-				AND %s 
+				  %s 
 			ORDER BY m.id %s 
-			LIMIT $2`, selectMessageClause(chatId), nonEquality, order),
-				userId, limit, startingFromItemId, chatId)
+			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
+				limit, startingFromItemId)
 			if err != nil {
 				Logger.Errorf("Error during get chat rows with search %v", err)
 				return nil, err

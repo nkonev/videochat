@@ -21,6 +21,7 @@ type Chat struct {
 	CanResend          bool
 	Avatar             null.String
 	AvatarBig          null.String
+	AvailableToSearch  bool
 }
 
 type ChatWithParticipants struct {
@@ -41,7 +42,7 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	}
 
 	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend)
+	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -80,7 +81,8 @@ func selectChatClause() string {
 				avatar_big,
 				last_update_date_time,
 				tet_a_tet,
-				can_resend
+				can_resend,
+				available_to_search
 			FROM chat
 `
 }
@@ -94,6 +96,7 @@ func provideScanToChat(chat *Chat) []any {
 		&chat.LastUpdateDateTime,
 		&chat.TetATet,
 		&chat.CanResend,
+		&chat.AvailableToSearch,
 	}
 }
 
@@ -141,7 +144,7 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 
 	rows, err = db.Query(selectChatClause()+fmt.Sprintf(`
 		WHERE 
-		    id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( title ILIKE $4  %s)
+		    ( ( id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) OR ( available_to_search IS TRUE ) ) AND ( title ILIKE $4 %s ) ) 
 			ORDER BY (last_update_date_time, id) DESC 
 			LIMIT $2 OFFSET $3
 	`, additionalUserIdsClause), participantId, limit, offset, searchString)
@@ -321,9 +324,9 @@ func (tx *Tx) DeleteChat(id int64) error {
 	}
 }
 
-func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String, canResend bool) (*time.Time, error) {
+func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String, canResend bool, availableToSearch bool) (*time.Time, error) {
 
-	if res, err := tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend); err != nil {
+	if res, err := tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch); err != nil {
 		Logger.Errorf("Error during editing chat id %v", err)
 		return nil, err
 	} else {

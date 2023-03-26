@@ -35,11 +35,12 @@ type EditChatDto struct {
 }
 
 type CreateChatDto struct {
-	Name           string      `json:"name"`
-	ParticipantIds *[]int64    `json:"participantIds"`
-	Avatar         null.String `json:"avatar"`
-	AvatarBig      null.String `json:"avatarBig"`
-	CanResend      bool        `json:"canResend"`
+	Name              string      `json:"name"`
+	ParticipantIds    *[]int64    `json:"participantIds"`
+	Avatar            null.String `json:"avatar"`
+	AvatarBig         null.String `json:"avatarBig"`
+	CanResend         bool        `json:"canResend"`
+	AvailableToSearch bool        `json:"availableToSearch"`
 }
 
 type ChatHandler struct {
@@ -97,13 +98,22 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		return err
 	}
 
+	chatsWithMe, err := ch.db.GetChatsWithMe(userPrincipalDto.UserId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error get chats with me from db %v", err)
+		return err
+	}
+
 	chatDtos := make([]*dto.ChatDto, 0)
 	for _, cc := range dbChats {
 		messages, err := ch.db.GetUnreadMessagesCount(cc.Id, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
-		cd := convertToDto(cc, []*dto.User{}, messages)
+
+		isParticipant := utils.Contains(chatsWithMe, cc.Id)
+
+		cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
 		chatDtos = append(chatDtos, cd)
 	}
 
@@ -138,7 +148,6 @@ func getChat(
 	c echo.Context,
 	chatId int64,
 	behalfParticipantId int64,
-	authResult *auth.AuthResult,
 	participantsSize, participantsOffset int,
 ) (*dto.ChatDto, error) {
 	fixedParticipantsSize := utils.FixSize(participantsSize)
@@ -163,7 +172,13 @@ func getChat(
 	if err != nil {
 		return nil, err
 	}
-	chatDto := convertToDto(cc, users, unreadMessages)
+
+	isParticipant, err := dbR.IsParticipant(behalfParticipantId, chatId)
+	if err != nil {
+		return nil, err
+	}
+
+	chatDto := convertToDto(cc, users, unreadMessages, isParticipant)
 
 	for _, participant := range users {
 		utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
@@ -188,11 +203,21 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 		return err
 	}
 
-	if chat, err := getChat(ch.db, ch.restClient, c, chatId, userPrincipalDto.UserId, userPrincipalDto, participantsSize, participantsOffset); err != nil {
+	if chat, err := getChat(ch.db, ch.restClient, c, chatId, userPrincipalDto.UserId, participantsSize, participantsOffset); err != nil {
 		return err
 	} else {
 		if chat == nil {
-			return c.NoContent(http.StatusNotFound)
+			exists, err := ch.db.IsChatExists(chatId)
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("error during checking chat existense: %s", err)
+				return err
+			}
+
+			if exists {
+				return c.JSON(http.StatusExpectationFailed, utils.H{"message": "You need to enter to this chat"})
+			} else {
+				return c.NoContent(http.StatusNotFound)
+			}
 		} else {
 			copiedChat, err := ch.getChatWithAdminedUsers(c, chat, ch.db)
 			if err != nil {
@@ -232,23 +257,27 @@ func (ch *ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto
 	return copiedChat, nil
 }
 
-func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64) *dto.ChatDto {
+func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64, participant bool) *dto.ChatDto {
 	b := dto.BaseChatDto{
-		Id:             c.Id,
-		Name:           c.Title,
-		ParticipantIds: c.ParticipantsIds,
-		Avatar:         c.Avatar,
-		AvatarBig:      c.AvatarBig,
-		IsTetATet:      c.TetATet,
-		CanResend:      c.CanResend,
-
+		Id:                c.Id,
+		Name:              c.Title,
+		ParticipantIds:    c.ParticipantsIds,
+		Avatar:            c.Avatar,
+		AvatarBig:         c.AvatarBig,
+		IsTetATet:         c.TetATet,
+		CanResend:         c.CanResend,
+		AvailableToSearch: c.AvailableToSearch,
 		// see also services/events.go:75 chatNotifyCommon()
 
 		ParticipantsCount:  c.ParticipantsCount,
 		LastUpdateDateTime: c.LastUpdateDateTime,
 	}
 
-	b.SetPersonalizedFields(c.IsAdmin, unreadMessages)
+	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
+
+	if !participant {
+		b.IsResultFromSearch = null.BoolFrom(true)
+	}
 
 	return &dto.ChatDto{
 		BaseChatDto:  b,
@@ -295,7 +324,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 			}
 		}
 
-		responseDto, err := getChat(tx, ch.restClient, c, id, userPrincipalDto.UserId, userPrincipalDto, 0, 0)
+		responseDto, err := getChat(tx, ch.restClient, c, id, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -315,8 +344,9 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 
 func convertToCreatableChat(d *CreateChatDto, policy *services.SanitizerPolicy) *db.Chat {
 	return &db.Chat{
-		Title:     TrimAmdSanitize(policy, d.Name),
-		CanResend: d.CanResend,
+		Title:             TrimAmdSanitize(policy, d.Name),
+		CanResend:         d.CanResend,
+		AvailableToSearch: d.AvailableToSearch,
 	}
 }
 
@@ -379,7 +409,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
 		}
-		_, err := tx.EditChat(bindTo.Id, TrimAmdSanitize(ch.policy, bindTo.Name), bindTo.Avatar, bindTo.AvatarBig, bindTo.CanResend)
+		_, err := tx.EditChat(bindTo.Id, TrimAmdSanitize(ch.policy, bindTo.Name), bindTo.Avatar, bindTo.AvatarBig, bindTo.CanResend, bindTo.AvailableToSearch)
 		if err != nil {
 			return err
 		}
@@ -392,7 +422,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			}
 		}
 
-		if responseDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, userPrincipalDto, 0, 0); err != nil {
+		if responseDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, 0, 0); err != nil {
 			return err
 		} else {
 			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
@@ -431,7 +461,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, nil, 0, 0); err != nil {
+		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, 0, 0); err != nil {
 			return err
 		} else {
 			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
@@ -442,6 +472,64 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 
 			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, tx)
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, tx)
+			return c.JSON(http.StatusAccepted, responseDto)
+		}
+	})
+	if errOuter != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
+	}
+	return errOuter
+}
+
+func (ch *ChatHandler) JoinChat(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
+		chat, err := tx.GetChatBasic(chatId)
+		if err != nil {
+			return err
+		}
+		if !chat.AvailableToSearch {
+			GetLogEntry(c.Request().Context()).Infof("Userv %s isn't allowed to loin to this chat beacuse chat isn't avaliable for search", userPrincipalDto.UserId)
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
+		isAdmin := false
+		if err := tx.AddParticipant(userPrincipalDto.UserId, chatId, isAdmin); err != nil {
+			return err
+		}
+
+		firstUser, err := tx.GetFirstParticipant(chatId)
+		if err != nil {
+			return err
+		}
+		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, 0, 0); err != nil {
+			return err
+		} else {
+			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+			if err != nil {
+				return c.NoContent(http.StatusInternalServerError)
+			}
+			ch.notificator.NotifyAboutNewParticipants(c, responseDto.ParticipantIds, chatId, []*dto.UserWithAdmin{
+				{
+					User: dto.User{
+						Id:    userPrincipalDto.UserId,
+						Login: userPrincipalDto.UserLogin,
+					},
+					Admin: isAdmin,
+				},
+			})
+
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})
@@ -509,7 +597,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 
 		ch.notificator.NotifyAboutChangeParticipants(c, participantIds, chatId, newUsersWithAdmin)
 
-		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, nil, 0, 0)
+		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -564,7 +652,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 
 		ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{interestingUserId})
 
-		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, nil, 0, 0)
+		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -663,7 +751,7 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		}
 		ch.notificator.NotifyAboutNewParticipants(c, participantIds, chatId, newUsersWithAdmin)
 
-		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, nil, 0, 0)
+		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -906,7 +994,7 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 			return err
 		}
 
-		responseDto, err := getChat(tx, ch.restClient, c, chatId2, userPrincipalDto.UserId, userPrincipalDto, 0, 0)
+		responseDto, err := getChat(tx, ch.restClient, c, chatId2, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}

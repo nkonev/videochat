@@ -31,8 +31,6 @@ import {hasLength, setIcon} from "@/utils";
 import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
 import {videochat_name} from "@/routes";
 
-const CheckForNewUrl = '/api/chat/message/check-for-new';
-
 let vm;
 
 function getCookieValue(name) {
@@ -85,7 +83,7 @@ axios.interceptors.response.use((response) => {
 }, (error) => {
   // https://github.com/axios/axios/issues/932#issuecomment-307390761
   // console.log("Catch error", error, error.request, error.response, error.config);
-  if (axios.isCancel(error)) {
+  if (axios.isCancel(error) || error.response.status == 417) {
     return Promise.reject(error)
   } else if (error && error.response && error.response.status == 401 ) {
     console.log("Catch 401 Unauthorized, emitting ", LOGGED_OUT);
@@ -98,7 +96,7 @@ axios.interceptors.response.use((response) => {
      const errorMessage  = "No free space left. Please contact the administrator.";
      vm.setError(null, errorMessage);
      return Promise.reject(error)
-  } else if (error.config.url != CheckForNewUrl && !error.config.url.includes('/message/read/')) {
+  } else if (!error.config.url.includes('/message/read/')) {
     const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
     console.error(consoleErrorMessage);
     const errorMessage  = "Http error. Check the console";
