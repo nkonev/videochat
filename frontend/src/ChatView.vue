@@ -565,7 +565,7 @@
                     return false
                 }
             },
-            getInfo() {
+            fetchAndSetChat() {
                 return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
                     console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
                     this.$store.commit(SET_TITLE, data.name);
@@ -575,10 +575,17 @@
                     this.$store.commit(SET_CAN_BROADCAST_TEXT_MESSAGE, data.canBroadcast);
                     this.$store.commit(SET_TET_A_TET, data.tetATet);
                     this.chatDto = data;
-                }).catch(reason => {
+                })
+            },
+            getInfo() {
+                return this.fetchAndSetChat().catch(reason => {
                     if (reason.response.status == 404) {
                         this.goToChatList();
                         return Promise.reject();
+                    } else if (reason.response.status == 417) {
+                        return axios.put(`/api/chat/${this.chatId}/join`).then(()=>{
+                            return this.fetchAndSetChat();
+                        })
                     } else {
                         return Promise.resolve();
                     }
@@ -620,10 +627,10 @@
                 });
             },
             onProfileSet() {
-                this.getInfo().then(()=>{
+                this.getInfo().then(() => {
                     this.graphQlSubscribe();
                     return this.updateVideoRecordingState();
-                }).then(()=>{
+                }).then(() => {
                     this.setHashVariables();
                     if (this.items.length === 0) {
                         this.reloadItems();
@@ -875,7 +882,9 @@
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});
             },
             onCloseContextMenu(){
-                this.$refs.contextMenuRef.onCloseContextMenu()
+                if (this.$refs.contextMenuRef) {
+                    this.$refs.contextMenuRef.onCloseContextMenu()
+                }
             },
             keydownListener(e) {
                 if (e.key === 'Escape') {
