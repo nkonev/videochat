@@ -601,7 +601,8 @@
                         if (response.status != 204) {
                             this.pinnedPromoted = response.data;
                         }
-                    })
+                    });
+                    return Promise.resolve();
                 })
             },
             goToChatList() {
@@ -632,9 +633,6 @@
                     return this.updateVideoRecordingState();
                 }).then(() => {
                     this.setHashVariables();
-                    if (this.items.length === 0) {
-                        this.reloadItems();
-                    }
                 });
             },
             onLoggedOut() {
