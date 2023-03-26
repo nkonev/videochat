@@ -45,7 +45,13 @@
 </template>
 
 <script>
-import bus, {OPEN_FILE_UPLOAD_MODAL, CLOSE_FILE_UPLOAD_MODAL, SET_FILE_ITEM_UUID, UPDATE_VIEW_FILES_DIALOG} from "./bus";
+import bus, {
+    OPEN_FILE_UPLOAD_MODAL,
+    CLOSE_FILE_UPLOAD_MODAL,
+    SET_FILE_ITEM_UUID,
+    UPDATE_VIEW_FILES_DIALOG,
+    FILE_UPLOAD_MODAL_START_UPLOADING
+} from "./bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
 import { formatSize } from "./utils";
@@ -64,6 +70,8 @@ export default {
             cancelSource: null,
             limitError: null,
             shouldSetFileUuidToMessage: false,
+            filesWerePredefined: false,
+            correlationId: null,
         }
     },
     filters: {
@@ -72,10 +80,15 @@ export default {
         },
     },
     methods: {
-        showModal(fileItemUuid, shouldSetFileUuidToMessage) {
+        showModal(fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId) {
             this.$data.show = true;
             this.$data.fileItemUuid = fileItemUuid;
             this.$data.shouldSetFileUuidToMessage = shouldSetFileUuidToMessage;
+            if (predefinedFiles) {
+                this.$data.files = predefinedFiles;
+                this.$data.filesWerePredefined = true;
+            }
+            this.correlationId = correlationId;
         },
         hideModal() {
             this.$data.show = false;
@@ -88,6 +101,8 @@ export default {
             this.limitError = null;
             this.$data.fileItemUuid = null;
             this.$data.shouldSetFileUuidToMessage = false;
+            this.$data.filesWerePredefined = false;
+            this.correlationId = null;
         },
         onProgressFunction(event) {
             this.progress = Math.round((100 * event.loaded) / event.total);
@@ -122,6 +137,9 @@ export default {
                 totalSize += file.size;
                 formData.append('files', file);
             }
+            if (this.correlationId) {
+                formData.append('correlationId', this.correlationId);
+            }
             return this.checkLimits(totalSize).then(()=>{
                 return axios.post(`/api/storage/${this.chatId}/file`+(this.fileItemUuid ? `/${this.fileItemUuid}` : ''), formData, config)
                     .then(response => {
@@ -130,6 +148,7 @@ export default {
                         }
                         this.uploading = false;
                         bus.$emit(UPDATE_VIEW_FILES_DIALOG);
+                        return response;
                     })
                     .catch((thrown) => {
                         if (axios.isCancel(thrown)) {
@@ -139,7 +158,10 @@ export default {
                             throw thrown
                         }
                     })
-                    .then(()=>{this.hideModal();})
+                    .then((response)=>{
+                        this.hideModal();
+                        return response;
+                    })
             }).catch(ex =>{
                 this.uploading = false;
                 return Promise.reject(ex);
@@ -169,11 +191,13 @@ export default {
     created() {
         bus.$on(OPEN_FILE_UPLOAD_MODAL, this.showModal);
         bus.$on(CLOSE_FILE_UPLOAD_MODAL, this.hideModal);
+        bus.$on(FILE_UPLOAD_MODAL_START_UPLOADING, this.upload);
         this.onProgressFunction = throttle(this.onProgressFunction, 100);
     },
     destroyed() {
         bus.$off(OPEN_FILE_UPLOAD_MODAL, this.showModal);
         bus.$off(CLOSE_FILE_UPLOAD_MODAL, this.hideModal);
+        bus.$off(FILE_UPLOAD_MODAL_START_UPLOADING, this.upload);
     },
     watch: {
         show(newValue) {

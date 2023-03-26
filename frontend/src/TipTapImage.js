@@ -13,18 +13,10 @@ export const buildImageHandler = (uploadFunction) => {
                             for (const item of items) {
                                 if (item.type.indexOf("image") === 0) {
                                     event.preventDefault();
-                                    const {schema} = view.state;
 
                                     const image = item.getAsFile();
 
-                                    uploadFunction(image).then(src => {
-                                        const node = schema.nodes.image.create({
-                                            src: src,
-                                        });
-                                        const transaction = view.state.tr.replaceSelectionWith(node);
-                                        view.dispatch(transaction)
-                                    });
-
+                                    uploadFunction(image);
                                 }
                             }
                         },

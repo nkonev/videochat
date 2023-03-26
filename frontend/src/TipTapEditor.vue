@@ -29,22 +29,15 @@ import axios from "axios";
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {hasLength, media_image, media_video} from "@/utils";
-import bus, { FILE_UPLOADED } from "./bus";
+import bus, {FILE_UPLOAD_MODAL_START_UPLOADING, FILE_UPLOADED, OPEN_FILE_UPLOAD_MODAL} from "./bus";
 import Video from "@/TipTapVideo";
 import { v4 as uuidv4 } from 'uuid';
 
 const empty = "";
 
 const embedUploadFunction = (chatId, fileObj, correlationId) => {
-    const formData = new FormData();
-    formData.append('files', fileObj);
-    formData.append('correlationId', correlationId);
-    return axios.post('/api/storage/'+chatId+'/file', formData)
-        .then((result) => {
-            let embed = result.data.embeds[0]; // Get url from response
-            console.debug("got embed", embed);
-            return embed;
-        })
+    bus.$emit(OPEN_FILE_UPLOAD_MODAL, null, false, [fileObj], correlationId);
+    bus.$emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 }
 
 export default {
@@ -104,15 +97,23 @@ export default {
         this.editor.chain().focus().setVideo({ src: src, poster: previewUrl }).run();
     },
     onFileUploaded(dto) {
-        if (dto.aType == media_video && hasLength(this.correlationId) && this.correlationId == dto.correlationId) {
-            this.setVideo(dto.url, dto.previewUrl)
+        if (hasLength(this.correlationId) && this.correlationId == dto.correlationId) {
+            if (dto.aType == media_video) {
+                this.setVideo(dto.url, dto.previewUrl)
+            } if (dto.aType == media_image) {
+                this.setImage(dto.url)
+            }
         }
     }
   },
   mounted() {
     bus.$on(FILE_UPLOADED, this.onFileUploaded);
 
-    const imagePluginInstance = buildImageHandler((image) => embedUploadFunction(this.chatId, image, null).then(embed => embed.url))
+    const imagePluginInstance = buildImageHandler(
+    (image) => {
+        this.correlationId = uuidv4();
+        embedUploadFunction(this.chatId, image, this.correlationId);
+    })
         .configure({
             inline: true,
             HTMLAttributes: {
@@ -169,11 +170,6 @@ export default {
       if (e.target.files.length) {
           const file = e.target.files[0];
           embedUploadFunction(this.chatId, file, this.correlationId)
-              .then(embed => {
-                  if (embed.type == media_image) {
-                      this.setImage(embed.url)
-                  }
-              })
       }
     }
   },

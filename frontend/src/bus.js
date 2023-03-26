@@ -33,6 +33,7 @@ export const REQUEST_CHANGE_VIDEO_PARAMETERS = "requestChangeVideoParameters";
 export const VIDEO_PARAMETERS_CHANGED = "videoParametersChanged";
 export const OPEN_FILE_UPLOAD_MODAL = "openFileUploadModal";
 export const CLOSE_FILE_UPLOAD_MODAL = "closeFileUploadModal";
+export const FILE_UPLOAD_MODAL_START_UPLOADING = "FileUploadModalStartUpload";
 export const OPEN_VIEW_FILES_DIALOG = "openViewFiles";
 export const UPDATE_VIEW_FILES_DIALOG = "updateFilesList";
 export const SET_FILE_ITEM_UUID = "setFileItemUuid";
