@@ -174,3 +174,23 @@ func (tx *Tx) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
 func (db *DB) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
 	return setAdminCommon(db, userId, chatId, newAdmin)
 }
+
+func (db *DB) GetChatsWithMe(userId int64) ([]int64, error) {
+	if rows, err := db.Query("SELECT DISTINCT chat_id FROM chat_participant WHERE user_id = $1", userId); err != nil {
+		return nil, err
+	} else {
+		defer rows.Close()
+		list := make([]int64, 0)
+		for rows.Next() {
+			var chatId int64
+			if err := rows.Scan(&chatId); err != nil {
+				Logger.Errorf("Error during scan chat rows %v", err)
+				return nil, err
+			} else {
+				list = append(list, chatId)
+			}
+		}
+		return list, nil
+	}
+
+}

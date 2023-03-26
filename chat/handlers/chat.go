@@ -98,6 +98,12 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		return err
 	}
 
+	chatsWithMe, err := ch.db.GetChatsWithMe(userPrincipalDto.UserId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error get chats with me from db %v", err)
+		return err
+	}
+
 	chatDtos := make([]*dto.ChatDto, 0)
 	for _, cc := range dbChats {
 		messages, err := ch.db.GetUnreadMessagesCount(cc.Id, userPrincipalDto.UserId)
@@ -105,7 +111,8 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 			return err
 		}
 
-		var isParticipant = isParticipant(cc.ParticipantsIds, userPrincipalDto.UserId)
+		isParticipant := utils.Contains(chatsWithMe, cc.Id)
+
 		cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
 		chatDtos = append(chatDtos, cd)
 	}
@@ -167,7 +174,11 @@ func getChat(
 		return nil, err
 	}
 
-	var isParticipant = isParticipant(cc.ParticipantsIds, behalfParticipantId)
+	isParticipant, err := dbR.IsParticipant(behalfParticipantId, chatId)
+	if err != nil {
+		return nil, err
+	}
+
 	chatDto := convertToDto(cc, users, unreadMessages, isParticipant)
 
 	for _, participant := range users {
@@ -175,17 +186,6 @@ func getChat(
 	}
 
 	return chatDto, nil
-}
-
-func isParticipant(participantsIds []int64, behalfParticipantId int64) bool {
-	var isParticipant bool = false
-	for _, participant := range participantsIds {
-		if participant == behalfParticipantId {
-			isParticipant = true
-			break
-		}
-	}
-	return isParticipant
 }
 
 func (ch *ChatHandler) GetChat(c echo.Context) error {
