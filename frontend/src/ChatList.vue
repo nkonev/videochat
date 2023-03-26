@@ -30,7 +30,7 @@
                         <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0"></v-badge>
                         <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0"/>
                     </v-list-item-title>
-                    <v-list-item-subtitle v-html="printParticipants(item)"></v-list-item-subtitle>
+                    <v-list-item-subtitle v-text="printParticipants(item)"></v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-action v-if="!isMobile()">
                     <v-container class="mb-0 mt-0 pl-0 pr-0 pb-0 pt-0">
