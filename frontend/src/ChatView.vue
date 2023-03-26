@@ -614,7 +614,7 @@
                 });
             },
             onProfileSet() {
-                this.getInfo();
+                this.getInfo(); // TODO maybe chain them into .then()
                 this.graphQlSubscribe();
                 this.updateVideoRecordingState();
                 this.setHashVariables();

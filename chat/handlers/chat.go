@@ -104,7 +104,9 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		cd := convertToDto(cc, []*dto.User{}, messages)
+
+		var isParticipant = isParticipant(cc.ParticipantsIds, userPrincipalDto.UserId)
+		cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
 		chatDtos = append(chatDtos, cd)
 	}
 
@@ -164,13 +166,26 @@ func getChat(
 	if err != nil {
 		return nil, err
 	}
-	chatDto := convertToDto(cc, users, unreadMessages)
+
+	var isParticipant = isParticipant(cc.ParticipantsIds, behalfParticipantId)
+	chatDto := convertToDto(cc, users, unreadMessages, isParticipant)
 
 	for _, participant := range users {
 		utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
 	}
 
 	return chatDto, nil
+}
+
+func isParticipant(participantsIds []int64, behalfParticipantId int64) bool {
+	var isParticipant bool = false
+	for _, participant := range participantsIds {
+		if participant == behalfParticipantId {
+			isParticipant = true
+			break
+		}
+	}
+	return isParticipant
 }
 
 func (ch *ChatHandler) GetChat(c echo.Context) error {
@@ -233,7 +248,7 @@ func (ch *ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto
 	return copiedChat, nil
 }
 
-func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64) *dto.ChatDto {
+func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64, participant bool) *dto.ChatDto {
 	b := dto.BaseChatDto{
 		Id:                c.Id,
 		Name:              c.Title,
@@ -249,7 +264,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		LastUpdateDateTime: c.LastUpdateDateTime,
 	}
 
-	b.SetPersonalizedFields(c.IsAdmin, unreadMessages)
+	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
 
 	return &dto.ChatDto{
 		BaseChatDto:  b,
