@@ -266,6 +266,10 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 
 	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
 
+	if !participant {
+		b.IsResultFromSearch = null.BoolFrom(true)
+	}
+
 	return &dto.ChatDto{
 		BaseChatDto:  b,
 		Participants: users,

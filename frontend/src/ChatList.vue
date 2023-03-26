@@ -24,13 +24,15 @@
                 </v-badge>
                 <v-list-item-content :id="'chat-item-' + item.id" :class="item.avatar ? 'ml-4' : ''">
                     <v-list-item-title>
-                        <span class="min-height">
+                        <span class="min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}">
                             {{getChatName(item)}}
                         </span>
                         <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0"></v-badge>
                         <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0"/>
                     </v-list-item-title>
-                    <v-list-item-subtitle v-text="printParticipants(item)"></v-list-item-subtitle>
+                    <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}">
+                        {{ printParticipants(item) }}
+                    </v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-action v-if="!isMobile()">
                     <v-container class="mb-0 mt-0 pl-0 pr-0 pb-0 pt-0">
@@ -226,12 +228,17 @@
                 bus.$emit(OPEN_CHAT_EDIT, chatId);
             },
             printParticipants(chat) {
+                let builder = "";
                 if (chat.tetATet) {
-                    return this.$vuetify.lang.t('$vuetify.tet_a_tet');
+                    builder += this.$vuetify.lang.t('$vuetify.tet_a_tet');
                 } else {
                     const logins = chat.participants.map(p => p.login);
-                    return logins.join(", ")
+                    builder += logins.join(", ")
                 }
+                if (this.isSearchResult(chat)) {
+                    builder = this.$vuetify.lang.t('$vuetify.this_is_search_result') + builder;
+                }
+                return builder;
             },
             deleteChat(chat) {
                 bus.$emit(OPEN_SIMPLE_MODAL, {
@@ -348,6 +355,9 @@
                     bldr += (" (" + this.$vuetify.lang.t('$vuetify.user_online') + ")");
                 }
                 return bldr;
+            },
+            isSearchResult(item) {
+                return item?.isResultFromSearch === true
             },
         },
         created() {

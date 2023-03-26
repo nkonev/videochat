@@ -161,5 +161,6 @@ export default {
     pin_message: "Закрепить сообщение",
     no_pin_messages: "Нет закреплённых сообщений",
     remove_from_pinned: "Удалить из закреплённых",
-    available_to_search: "Доступен для поиска"
+    available_to_search: "Доступен для поиска",
+    this_is_search_result: "Это результат поиска. Вы не участник этого чата. | "
 }

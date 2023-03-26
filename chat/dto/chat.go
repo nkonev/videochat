@@ -24,6 +24,7 @@ type BaseChatDto struct {
 	ParticipantsCount   int         `json:"participantsCount"`
 	CanResend           bool        `json:"canResend"`
 	AvailableToSearch   bool        `json:"availableToSearch"`
+	IsResultFromSearch  null.Bool   `json:"isResultFromSearch"`
 }
 
 func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {

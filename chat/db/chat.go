@@ -144,7 +144,7 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 
 	rows, err = db.Query(selectChatClause()+fmt.Sprintf(`
 		WHERE 
-		    ( id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( title ILIKE $4 %s ) ) OR ( available_to_search IS TRUE )
+		    ( ( id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) OR ( available_to_search IS TRUE ) ) AND ( title ILIKE $4 %s ) ) 
 			ORDER BY (last_update_date_time, id) DESC 
 			LIMIT $2 OFFSET $3
 	`, additionalUserIdsClause), participantId, limit, offset, searchString)
