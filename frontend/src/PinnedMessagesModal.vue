@@ -9,7 +9,7 @@
                         <template v-if="dto.totalCount > 0">
                             <template v-for="(item, index) in dto.data">
                                 <v-list-item class="ma-0 pa-0 mr-3">
-                                    <v-list-item-avatar class="ma-2 pa-0 pl-1">
+                                    <v-list-item-avatar class="ma-2 pa-0">
                                         <img :src="item.owner.avatar"/>
                                     </v-list-item-avatar>
                                     <v-list-item-content class="ma-0 pa-0 py-1">
