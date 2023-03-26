@@ -3,7 +3,7 @@
 # Videochat
 Your open source self-hosted videoconference platform.
 
-[![Chat image](./.screenshots/2_chat_participants_management.png)](./screenshots.md)
+[![Chat image](./.screenshots/14_most_of_features.png)](./screenshots.md)
 
 # Key features:
 * Well-integrated video calls into entire platform UI, no separated video rooms, text chats, etc...
