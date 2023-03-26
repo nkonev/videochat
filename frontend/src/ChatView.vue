@@ -8,54 +8,56 @@
             </pane>
             <pane v-bind:size="messagesSize">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
-                    <div v-if="pinnedPromoted" style="position: absolute; z-index: 5; width: 100%">
-                        <v-alert
-                            :key="pinnedPromotedKey"
-                            dense
-                            color="red lighten-2"
-                            dark
-                            dismissible
-                            prominent
-                        >
-                            <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
-                                {{ pinnedPromoted.text }}
-                            </router-link>
-                        </v-alert>
+                    <template v-if="isChatDtoLoaded()">
+                        <div v-if="pinnedPromoted" style="position: absolute; z-index: 5; width: 100%">
+                            <v-alert
+                                :key="pinnedPromotedKey"
+                                dense
+                                color="red lighten-2"
+                                dark
+                                dismissible
+                                prominent
+                            >
+                                <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
+                                    {{ pinnedPromoted.text }}
+                                </router-link>
+                            </v-alert>
 
-                    </div>
-                    <v-list  v-if="currentUser">
-                        <template v-for="(item, index) in items">
-                            <MessageItem
-                                :key="item.id"
-                                :item="item"
-                                :chatId="chatId"
-                                :my="item.owner.id === currentUser.id"
-                                :highlight="item.id == highlightMessageId"
-                                :canResend="chatDto.canResend"
-                                @contextmenu="onShowContextMenu($event, item)"
-                                @deleteMessage="deleteMessage"
-                                @editMessage="editMessage"
-                                @replyOnMessage="replyOnMessage"
-                                @shareMessage="shareMessage"
-                                @onFilesClicked="onFilesClicked"
-                            ></MessageItem>
-                        </template>
-                    </v-list>
-                    <MessageItemContextMenu
-                        ref="contextMenuRef"
-                        :canResend="chatDto.canResend"
-                        @deleteMessage="this.deleteMessage"
-                        @editMessage="this.editMessage"
-                        @replyOnMessage="this.replyOnMessage"
-                        @shareMessage="this.shareMessage"
-                        @onFilesClicked="this.onFilesClicked"
-                        @pinMessage="pinMessage"
-                        @removedFromPinned="removedFromPinned"
-                    />
-                    <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
-                        <template slot="no-more"><span/></template>
-                        <template slot="no-results"><span/></template>
-                    </infinite-loading>
+                        </div>
+                        <v-list>
+                            <template v-for="(item, index) in items">
+                                <MessageItem
+                                    :key="item.id"
+                                    :item="item"
+                                    :chatId="chatId"
+                                    :my="item.owner.id === currentUser.id"
+                                    :highlight="item.id == highlightMessageId"
+                                    :canResend="chatDto.canResend"
+                                    @contextmenu="onShowContextMenu($event, item)"
+                                    @deleteMessage="deleteMessage"
+                                    @editMessage="editMessage"
+                                    @replyOnMessage="replyOnMessage"
+                                    @shareMessage="shareMessage"
+                                    @onFilesClicked="onFilesClicked"
+                                ></MessageItem>
+                            </template>
+                        </v-list>
+                        <MessageItemContextMenu
+                            ref="contextMenuRef"
+                            :canResend="chatDto.canResend"
+                            @deleteMessage="this.deleteMessage"
+                            @editMessage="this.editMessage"
+                            @replyOnMessage="this.replyOnMessage"
+                            @shareMessage="this.shareMessage"
+                            @onFilesClicked="this.onFilesClicked"
+                            @pinMessage="pinMessage"
+                            @removedFromPinned="removedFromPinned"
+                        />
+                        <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
+                            <template slot="no-more"><span/></template>
+                            <template slot="no-results"><span/></template>
+                        </infinite-loading>
+                    </template>
                 </div>
 
                 <v-btn
@@ -193,6 +195,13 @@
         return message.data?.chatEvents
     };
 
+    const chatDtoFactory = () => {
+        return {
+            participantIds:[],
+            participants:[],
+        }
+    }
+
     export default {
         mixins: [
             queryMixin(),
@@ -205,10 +214,7 @@
                 infiniteId: +new Date(),
                 highlightMessageId: null,
 
-                chatDto: {
-                    participantIds:[],
-                    participants:[],
-                },
+                chatDto: chatDtoFactory(),
                 aDirection: directionTop,
                 infinityKey: 1,
                 scrollerDiv: null,
@@ -572,23 +578,23 @@
                 }).catch(reason => {
                     if (reason.response.status == 404) {
                         this.goToChatList();
+                        return Promise.reject();
+                    } else {
+                        return Promise.resolve();
                     }
                 }).then(() => {
-                    const chatId = this.chatId;
-                    if (chatId) {
-                        axios.get(`/api/video/${chatId}/users`)
-                            .then(response => response.data)
-                            .then(data => {
-                                bus.$emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
-                                this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, data.usersCount);
-                            });
-                    }
-                }).then(()=>{
-                    return axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
-                        if (response.status != 204) {
-                            this.pinnedPromoted = response.data;
-                        }
-                    })
+                    return axios.get(`/api/video/${this.chatId}/users`)
+                        .then(response => response.data)
+                        .then(data => {
+                            bus.$emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
+                            this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, data.usersCount);
+                        }).then(()=>{
+                            return axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
+                                if (response.status != 204) {
+                                    this.pinnedPromoted = response.data;
+                                }
+                            })
+                        })
                 })
             },
             goToChatList() {
@@ -614,14 +620,15 @@
                 });
             },
             onProfileSet() {
-                this.getInfo(); // TODO maybe chain them into .then()
-                this.graphQlSubscribe();
-                this.updateVideoRecordingState();
-                this.setHashVariables();
-
-                if (this.items.length === 0) {
-                    this.reloadItems();
-                }
+                this.getInfo().then(()=>{
+                    this.graphQlSubscribe();
+                    return this.updateVideoRecordingState();
+                }).then(()=>{
+                    this.setHashVariables();
+                    if (this.items.length === 0) {
+                        this.reloadItems();
+                    }
+                });
             },
             onLoggedOut() {
                 this.graphQlUnsubscribe();
@@ -631,8 +638,9 @@
             onWsRestoredRefresh() {
                 this.resetVariables();
                 // Reset direction in order to fix bug when user relogin and after press button "update" all messages disappears due to non-initial direction.
-                this.getInfo();
-                this.reloadItems();
+                this.getInfo().then(()=>{
+                    this.reloadItems();
+                });
             },
             resetVariables() {
                 this.aDirection = directionTop;
@@ -790,7 +798,7 @@
                 }
             },
             updateVideoRecordingState() {
-                axios.get(`/api/video/${this.chatId}/record/status`).then(({data}) => {
+                return axios.get(`/api/video/${this.chatId}/record/status`).then(({data}) => {
                     this.$store.commit(SET_CAN_MAKE_RECORD, data.canMakeRecord);
                     if (data.canMakeRecord) {
                         const record = data.recordInProcess;
@@ -895,6 +903,9 @@
                     this.pinnedPromoted = null;
                 }
             },
+            isChatDtoLoaded() {
+                return this.currentUser && this.chatDto.id
+            },
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
@@ -909,6 +920,7 @@
             this.setHashVariables();
         },
         mounted() {
+            this.scrollerDiv = document.getElementById("messagesScroller");
             window.addEventListener('resize', this.onResizedListener);
 
             this.$store.commit(SET_TITLE, `Chat #${this.chatId}`);
@@ -948,8 +960,6 @@
                 this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
             }, 500);
 
-            this.scrollerDiv = document.getElementById("messagesScroller");
-
             document.addEventListener("keydown", this.keydownListener);
         },
         beforeDestroy() {
@@ -981,6 +991,8 @@
             document.removeEventListener("keydown", this.keydownListener);
             this.pinnedPromoted = null;
             this.pinnedPromotedKey = null;
+
+            this.chatDto = chatDtoFactory();
         },
         destroyed() {
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);
