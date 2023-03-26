@@ -590,18 +590,18 @@
                         return Promise.resolve();
                     }
                 }).then(() => {
-                    return axios.get(`/api/video/${this.chatId}/users`)
+                    // async call
+                    axios.get(`/api/video/${this.chatId}/users`)
                         .then(response => response.data)
                         .then(data => {
                             bus.$emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
                             this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, data.usersCount);
-                        }).then(()=>{
-                            return axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
-                                if (response.status != 204) {
-                                    this.pinnedPromoted = response.data;
-                                }
-                            })
                         })
+                    axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
+                        if (response.status != 204) {
+                            this.pinnedPromoted = response.data;
+                        }
+                    })
                 })
             },
             goToChatList() {
