@@ -77,6 +77,14 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 		return err
 	}
 
+	isParticipant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
+	}
+	if !isParticipant {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
 	if messages, err := mc.db.GetMessages(chatId, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 		return err
