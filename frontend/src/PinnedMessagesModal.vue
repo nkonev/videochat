@@ -8,23 +8,27 @@
                     <v-list v-if="!loading">
                         <template v-if="dto.totalCount > 0">
                             <template v-for="(item, index) in dto.data">
-                                <v-list-item class="ma-0 pa-0 mr-3">
-                                    <v-list-item-avatar class="ma-2 pa-0">
+                                <v-list-item>
+                                    <v-list-item-avatar>
                                         <img :src="item.owner.avatar"/>
                                     </v-list-item-avatar>
-                                    <v-list-item-content class="ma-0 pa-0 py-1">
-                                        <v-list-item-title class="my-0">
+                                    <v-list-item-content class="py-2">
+                                        <v-list-item-title>
                                             <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                                         </v-list-item-title>
-                                        <v-list-item-subtitle class="my-0">
+                                        <v-list-item-subtitle>
                                             <router-link :to="getPinnedRouteObject(item)" style="text-decoration: none; cursor: pointer" class="text--primary">
                                                 {{ item.text }}
                                             </router-link>
                                         </v-list-item-subtitle>
                                     </v-list-item-content>
 
-                                    <v-icon class="mx-1" color="primary" @click="promotePinMessage(item)" dark :title="$vuetify.lang.t('$vuetify.pin_message')">mdi-pin</v-icon>
-                                    <v-icon class="mx-1" color="error" @click="unpinMessage(item)" dark :title="$vuetify.lang.t('$vuetify.remove_from_pinned')">mdi-delete</v-icon>
+                                    <v-btn icon @click="promotePinMessage(item)">
+                                        <v-icon color="primary" dark :title="$vuetify.lang.t('$vuetify.pin_message')">mdi-pin</v-icon>
+                                    </v-btn>
+                                    <v-btn icon @click="unpinMessage(item)">
+                                        <v-icon color="error" dark :title="$vuetify.lang.t('$vuetify.remove_from_pinned')">mdi-delete</v-icon>
+                                    </v-btn>
                                 </v-list-item>
                                 <v-divider></v-divider>
                             </template>
