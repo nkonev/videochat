@@ -3,7 +3,7 @@
         <splitpanes ref="spl" :class="['default-theme', this.isAllowedVideo() ? 'panes3' : 'panes2']" horizontal style="height: 100%"
                     :dbl-click-splitter="false"
                     @pane-add="onPanelAdd(isScrolledToBottom())" @pane-remove="onPanelRemove()" @resize="onPanelResized(isScrolledToBottom())">
-            <pane v-if="isAllowedVideo()" id="videoBlock" min-size="20" v-bind:size="videoSize">
+            <pane v-if="isAllowedVideo()" id="videoBlock" min-size="15" v-bind:size="videoSize">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane v-bind:size="messagesSize">
@@ -71,7 +71,7 @@
                     <v-icon>mdi-chevron-down</v-icon>
                 </v-btn>
             </pane>
-            <pane max-size="70" min-size="12" v-bind:size="editSize" v-if="!isMobile()">
+            <pane max-size="70" min-size="8" v-bind:size="editSize" v-if="!isMobile()">
                 <MessageEdit :chatId="chatId"/>
             </pane>
         </splitpanes>
