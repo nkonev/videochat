@@ -9,7 +9,7 @@
             <pane v-bind:size="messagesSize">
                 <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
                     <template v-if="isChatDtoLoaded()">
-                        <div v-if="pinnedPromoted" style="position: absolute; z-index: 5; width: 100%">
+                        <div v-if="pinnedPromoted" class="pinned-promoted">
                             <v-alert
                                 :key="pinnedPromotedKey"
                                 dense
@@ -1082,10 +1082,11 @@ $dot-size = 2px;
 $dot-space = 4px;
 $bg-color = $messageSelectedBackground;
 $dot-color = darkgrey;
+$panesZIndex = 5;
 
-.splitpanes {background-color: #f8f8f8;}
+.splitpanes {background-color: #f8f8f8; z-index: $panesZIndex;}
 
-.splitpanes__splitter {background-color: #ccc;position: relative; cursor: ns-resize}
+.splitpanes__splitter {background-color: #ccc;position: relative; cursor: ns-resize; z-index: $panesZIndex;}
 .splitpanes__splitter:before {
     content: '';
     position: absolute;
@@ -1101,16 +1102,22 @@ $dot-color = darkgrey;
     background-repeat: repeat;
 
     opacity: 0;
-    z-index: 1;
+    z-index: $panesZIndex;
 }
-.splitpanes__splitter:hover:before {opacity: 1;}
-.splitpanes--vertical > .splitpanes__splitter:before {left: -10px;right: -10px;height: 100%;}
-.splitpanes--horizontal > .splitpanes__splitter:before {top: -10px;bottom: -10px;width: 100%;}
+.splitpanes__splitter:hover:before {opacity: 1; z-index: $panesZIndex;}
+.splitpanes--vertical > .splitpanes__splitter:before {left: -10px;right: -10px;height: 100%; z-index: $panesZIndex;}
+.splitpanes--horizontal > .splitpanes__splitter:before {top: -10px;bottom: -10px;width: 100%; z-index: $panesZIndex;}
 .panes3 {
-    .splitpanes__splitter:nth-child(2):before {top: 0;bottom: -20px;width: 100%;}
-    .splitpanes__splitter:nth-child(4):before {top: -20px;bottom: 0;width: 100%;}
+    .splitpanes__splitter:nth-child(2):before {top: 0;bottom: -20px;width: 100%; z-index: $panesZIndex;}
+    .splitpanes__splitter:nth-child(4):before {top: -20px;bottom: 0;width: 100%; z-index: $panesZIndex;}
 }
 .panes2 {
-    .splitpanes__splitter:before {top: -20px;bottom: 0;width: 100%;}
+    .splitpanes__splitter:before {top: -20px;bottom: 0;width: 100%; z-index: $panesZIndex;}
+}
+
+.pinned-promoted {
+    position: absolute;
+    z-index: 4;
+    width: 100%
 }
 </style>
