@@ -443,11 +443,17 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @org.junit.jupiter.api.Test
     public void userSearchJohnSmithTrim() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.USER).param("searchString", " John Smith")
+                post(Constants.Urls.API+ Constants.Urls.USER + Constants.Urls.SEARCH)
+                        .content("""
+                                {
+                                    "searchString": "%s"
+                                }""".formatted(" John Smith"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(1))
-                .andExpect(jsonPath("$.data.[0].login").value("John Smith"))
+                .andExpect(jsonPath("$.users.length()").value(1))
+                .andExpect(jsonPath("$.users.[0].login").value("John Smith"))
                 .andReturn();
         String getStr = getPostRequest.getResponse().getContentAsString();
         LOGGER.info(getStr);
@@ -457,11 +463,18 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @org.junit.jupiter.api.Test
     public void userSearchJohnSmithIgnoreCase() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.USER).param("searchString", "john sMith")
+                post(Constants.Urls.API+ Constants.Urls.USER + Constants.Urls.SEARCH)
+                .content("""
+                        {
+                            "searchString": "%s"
+                        }""".formatted("john sMith"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(1))
-                .andExpect(jsonPath("$.data.[0].login").value("John Smith"))
+                .andExpect(jsonPath("$.users.length()").value(1))
+                .andExpect(jsonPath("$.users.[0].login").value("John Smith"))
                 .andReturn();
         String getStr = getPostRequest.getResponse().getContentAsString();
         LOGGER.info(getStr);
