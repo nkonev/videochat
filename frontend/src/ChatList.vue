@@ -1,7 +1,7 @@
 <template>
     <v-container class="ma-0 pa-0" style="height: 100%" fluid>
-        <v-list v-if="items.length">
-            <v-list-item @keydown.esc="onCloseContextMenu()" id="chat-list-items"
+        <v-list v-if="items.length" id="chat-list-items">
+            <v-list-item @keydown.esc="onCloseContextMenu()"
                     v-for="(item, index) in items"
                     :key="item.id"
                     @contextmenu.prevent="onShowContextMenu($event, item)"
