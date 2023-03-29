@@ -1,8 +1,7 @@
 <template>
     <v-container class="ma-0 pa-0" style="height: 100%" fluid>
         <v-list v-if="items.length">
-            <v-list-item-group v-model="group" color="primary" id="chat-list-items">
-            <v-list-item @keydown.esc="onCloseContextMenu()"
+            <v-list-item @keydown.esc="onCloseContextMenu()" id="chat-list-items"
                     v-for="(item, index) in items"
                     :key="item.id"
                     @contextmenu.prevent="onShowContextMenu($event, item)"
@@ -42,7 +41,6 @@
                     </v-container>
                 </v-list-item-action>
             </v-list-item>
-            </v-list-item-group>
         </v-list>
         <ChatListContextMenu ref="contextMenuRef" @editChat="this.editChat" @deleteChat="this.deleteChat" @leaveChat="this.leaveChat"/>
         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
@@ -119,7 +117,6 @@
                 page: 0,
                 items: [],
                 infiniteId: +new Date(),
-                group: -1,
                 itemsLoaded: false,
             }
         },
