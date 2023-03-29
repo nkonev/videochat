@@ -114,15 +114,12 @@ public class UserProfileController {
     public com.github.nkonev.aaa.dto.Wrapper<com.github.nkonev.aaa.dto.UserAccountDTOExtended> getUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestParam(value = "page", required=false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required=false, defaultValue = "0") int size,
-            @RequestParam(value = "searchString", required=false, defaultValue = "") String searchString
+            @RequestParam(value = "size", required=false, defaultValue = "0") int size
     ) {
         PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(page), PageUtils.fixSize(size), Sort.Direction.ASC, "id");
-        searchString = searchString.trim();
 
-        final String forDbSearch = "%" + searchString + "%";
-        List<UserAccount> resultPage = userAccountRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
-        long resultPageCount = userAccountRepository.findByUsernameContainsIgnoreCaseCount(forDbSearch);
+        List<UserAccount> resultPage = userAccountRepository.findAll(springDataPage).toList();
+        long resultPageCount = userAccountRepository.count();
 
         return new com.github.nkonev.aaa.dto.Wrapper<>(
                 resultPageCount,
@@ -144,12 +141,15 @@ public class UserProfileController {
     ) {}
 
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
-    @PostMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH)
+    @PostMapping(value = {
+            Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH,
+            Constants.Urls.API+Constants.Urls.USER+Constants.Urls.SEARCH
+    })
     public SearchUsersResponseDto searchUserInternal(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody SearchUsersRequestDto request
     ) {
-        LOGGER.info("Searching internal users");
+        LOGGER.info("Searching users");
         PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(request.page), PageUtils.fixSize(request.size), Sort.Direction.ASC, "id");
         var searchString = request.searchString.trim();
 

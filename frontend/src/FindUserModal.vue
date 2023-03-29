@@ -79,10 +79,12 @@
 
                 this.isLoading = true;
 
-                axios.get(`/api/user?searchString=${searchString}`)
+                axios.post(`/api/user/search`, {
+                    searchString: searchString
+                })
                     .then((response) => {
-                        console.log("Fetched users", response.data.data);
-                        this.people = [...this.people, ...response.data.data];
+                        console.log("Fetched users", response.data.users);
+                        this.people = [...this.people, ...response.data.users];
                     })
                     .finally(() => (this.isLoading = false))
             },
