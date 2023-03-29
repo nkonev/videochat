@@ -83,10 +83,13 @@
                     searchString: searchString
                 })
                     .then((response) => {
-                        console.log("Fetched users", response.data.users);
-                        this.people = [...this.people, ...response.data.users];
+                        const users = response.data.users;
+                        console.log("Fetched users", users);
+                        this.people = [...this.people, ...users];
                     })
-                    .finally(() => (this.isLoading = false))
+                    .finally(() => {
+                        this.isLoading = false;
+                    })
             },
             onUserClicked(item) {
                 this.$router.push(({ name: profile_name, params: { id: item.id}})).then(()=>this.closeModal());
