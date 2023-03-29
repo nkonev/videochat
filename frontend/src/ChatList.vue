@@ -139,7 +139,7 @@
                 this.infiniteId += 1;
                 console.log("Resetting infinite loader", this.infiniteId);
             },
-            searchStringChanged(searchString) {
+            searchStringChangedDebounced(searchString) {
                 this.resetVariables();
                 this.reloadItems();
             },
@@ -285,6 +285,10 @@
             onWsRestoredRefresh() {
                 this.searchStringChanged(null);
             },
+            searchStringChanged(str) {
+                this.itemsLoaded = false;
+                this.searchStringChangedDebounced(str);
+            },
             onVideoCallChanged(dto) {
                 let matched = false;
                 this.items.forEach(item => {
@@ -361,7 +365,7 @@
             },
         },
         created() {
-            this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
+            this.searchStringChangedDebounced = debounce(this.searchStringChangedDebounced, 700, {leading:false, trailing:true});
 
             bus.$on(PROFILE_SET, this.onLoggedIn);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
