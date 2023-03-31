@@ -48,26 +48,7 @@
             <template slot="no-results"><span/></template>
         </infinite-loading>
 
-        <v-container fill-height fluid v-if="shouldShowWelcome()" :style="$vuetify.breakpoint.lgAndUp ? 'max-width: 420px' : ''">
-            <v-row align="center" justify="center">
-                <v-col>
-                    <v-card>
-                        <v-card-title class="d-flex justify-space-around">{{$vuetify.lang.t('$vuetify.welcome_participant', currentUser.login)}}</v-card-title>
-                        <v-card-actions  class="d-flex justify-space-around">
-                            <v-btn color="primary" @click="createChat()" text>
-                                <v-icon>mdi-plus</v-icon>
-                                {{ $vuetify.lang.t('$vuetify.new_chat') }}
-                            </v-btn>
-                            <v-btn @click="findUser()" text>
-                                <v-icon>mdi-magnify</v-icon>
-                                {{ $vuetify.lang.t('$vuetify.find_user') }}
-                            </v-btn>
-                        </v-card-actions>
-                    </v-card>
-
-                </v-col>
-            </v-row>
-        </v-container>
+        <Welcome v-if="shouldShowWelcome()"/>
     </v-container>
 
 </template>
@@ -83,7 +64,7 @@
         USER_PROFILE_CHANGED,
         CLOSE_SIMPLE_MODAL,
         REFRESH_ON_WEBSOCKET_RESTORED,
-        VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET, OPEN_FIND_USER
+        VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET,
     } from "./bus";
     import {chat, chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
@@ -91,6 +72,7 @@
     import axios from "axios";
     import debounce from "lodash/debounce";
     import queryMixin from "@/queryMixin";
+    import Welcome from "@/Welcome"
 
     import {
         GET_USER,
@@ -123,6 +105,7 @@
         components:{
             InfiniteLoading,
             ChatListContextMenu,
+            Welcome,
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}),
@@ -306,12 +289,6 @@
             },
             shouldShowWelcome(){
                 return this.userIsSet && !this.items.length && this.itemsLoaded && !hasLength(this.searchString)
-            },
-            createChat() {
-                bus.$emit(OPEN_CHAT_EDIT, null);
-            },
-            findUser() {
-                bus.$emit(OPEN_FIND_USER)
             },
 
             transformItem(item) {
