@@ -118,6 +118,7 @@ export default {
     message_edit_italic: "Italic (Ctrl+I)",
     message_edit_underline: "Underline (Ctrl+U)",
     message_edit_strike: "Strike",
+    message_edit_monospace: "Monospace",
     message_edit_link: "Add link",
     message_edit_image: "Add image",
     message_edit_file: "Add file",

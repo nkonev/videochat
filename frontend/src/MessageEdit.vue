@@ -32,6 +32,10 @@
                                 <v-icon>mdi-format-strikethrough-variant</v-icon>
                             </v-btn>
 
+                            <v-btn icon tile :input-value="monospaceValue()" @click="monospaceClick" width="48px" :color="monospaceValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_monospace')">
+                                <v-icon>mdi-code-braces</v-icon>
+                            </v-btn>
+
                             <v-btn icon tile :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" width="48px" :color="linkValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_link')">
                                 <v-icon>mdi-link-variant</v-icon>
                             </v-btn>
@@ -240,8 +244,18 @@
             strikeValue() {
                 return this.$refs.tipTapRef.$data.editor.isActive('strike')
             },
+            monospaceValue() {
+                return this.$refs.tipTapRef.$data.editor.isActive('textStyle', { fontFamily: 'monospace' })
+            },
             strikeClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()
+            },
+            monospaceClick() {
+                if(!this.monospaceValue()) {
+                    this.$refs.tipTapRef.$data.editor.chain().focus().setFontFamily('monospace').run()
+                } else {
+                    this.$refs.tipTapRef.$data.editor.chain().focus().unsetFontFamily().run()
+                }
             },
             linkClick() {
                 const previousUrl = this.$refs.tipTapRef.$data.editor.getAttributes('link').href;
