@@ -898,8 +898,12 @@
                     }
                 }
             },
+            isVideoRoute() {
+                return this.$route.name == videochat_name
+            },
             getPinnedRouteObject(item) {
-                return {name: chat_name, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+                const routeName = this.isVideoRoute() ? videochat_name : chat_name;
+                return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
             },
             onPinnedMessagePromoted(item) {
                 this.pinnedPromoted = item;

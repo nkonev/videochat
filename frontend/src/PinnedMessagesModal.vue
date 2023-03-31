@@ -69,7 +69,7 @@ import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
 import axios from "axios";
 import {getHumanReadableDate, formatSize, findIndex} from "./utils";
-import {chat_name, messageIdHashPrefix} from "@/routes";
+import {chat_name, messageIdHashPrefix, videochat_name} from "@/routes";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -170,8 +170,12 @@ export default {
                 }
             }
         },
+        isVideoRoute() {
+            return this.$route.name == videochat_name
+        },
         getPinnedRouteObject(item) {
-            return {name: chat_name, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+            const routeName = this.isVideoRoute() ? videochat_name : chat_name;
+            return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
         },
     },
     filters: {
