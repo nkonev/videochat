@@ -52,7 +52,7 @@ export default {
     message_creating: "New message",
     message_broadcast: "Broadcast",
     user_is_writing: "is writing...",
-    user_open_chat: "Open chat",
+    user_open_chat: "Open tet-a-tet chat",
     user_online: "Online",
     user_offline: "Offline",
     participants_modal_title: "Participants",
