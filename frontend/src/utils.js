@@ -316,3 +316,5 @@ export const isArrEqual = (a, b) => {
     console.error("Unexpected branch", a, b);
     return true
 }
+
+export const availableChatsQuery = "_";

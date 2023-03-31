@@ -68,7 +68,14 @@
     } from "./bus";
     import {chat, chat_name} from "./routes";
     import InfiniteLoading from 'vue-infinite-loading';
-    import {findIndex, replaceOrAppend, replaceInArray, moveToFirstPosition, hasLength} from "./utils";
+    import {
+        findIndex,
+        replaceOrAppend,
+        replaceInArray,
+        moveToFirstPosition,
+        hasLength,
+        availableChatsQuery
+    } from "./utils";
     import axios from "axios";
     import debounce from "lodash/debounce";
     import queryMixin from "@/queryMixin";
@@ -120,6 +127,9 @@
                 console.log("Resetting infinite loader", this.infiniteId);
             },
             searchStringChangedDebounced(searchString) {
+                this.searchStringChangedStraight(searchString);
+            },
+            searchStringChangedStraight(searchString) {
                 this.resetVariables();
                 this.reloadItems();
             },
@@ -267,7 +277,11 @@
             },
             searchStringChanged(str) {
                 this.itemsLoaded = false;
-                this.searchStringChangedDebounced(str);
+                if (str == availableChatsQuery) {
+                    this.searchStringChangedStraight(str);
+                } else {
+                    this.searchStringChangedDebounced(str);
+                }
             },
             onVideoCallChanged(dto) {
                 let matched = false;
