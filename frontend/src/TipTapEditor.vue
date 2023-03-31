@@ -25,7 +25,7 @@ import TextStyle from "@tiptap/extension-text-style";
 import Color from '@tiptap/extension-color';
 import Highlight from "@tiptap/extension-highlight";
 import Mention from '@tiptap/extension-mention';
-import FontFamily from '@tiptap/extension-font-family';
+import Code from '@tiptap/extension-code';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {hasLength, media_image, media_video} from "@/utils";
@@ -159,7 +159,7 @@ export default {
               },
               suggestion: suggestion(this.chatId),
           }),
-          FontFamily,
+          Code,
       ],
       content: empty,
       onUpdate: () => this.onUpdateContent(),
