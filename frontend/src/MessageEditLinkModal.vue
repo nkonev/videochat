@@ -5,7 +5,7 @@
                 <v-card-title>{{ $vuetify.lang.t('$vuetify.message_edit_link') }}</v-card-title>
 
                 <v-card-text class="px-4 py-0">
-                    <v-text-field autofocus v-model="link" placeholder="https://google.com"/>
+                    <v-text-field autofocus v-model="link" placeholder="https://google.com" @keyup.native.enter="accept()"/>
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
