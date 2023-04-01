@@ -636,12 +636,6 @@
     //    }
     //}
 
-    #sendButtonContainer {
-        background white
-        // position absolute
-        //height 100%
-    }
-
 </style>
 
 <style lang="stylus">

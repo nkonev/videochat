@@ -395,6 +395,7 @@
 @import "common.styl"
 
 #sendButtonContainer {
+    background white
     min-height 25%
 }
 
