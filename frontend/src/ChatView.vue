@@ -1,26 +1,31 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
-        <splitpanes ref="spl" :class="['default-theme', this.isAllowedVideo() ? 'panes3' : 'panes2']" horizontal style="height: 100%"
+        <splitpanes ref="spl" :class="['default-theme', this.isAllowedVideo() ? 'panes3' : 'panes2']" style="height: 100%"
                     :dbl-click-splitter="false"
                     @pane-add="onPanelAdd(isScrolledToBottom())" @pane-remove="onPanelRemove()" @resize="onPanelResized(isScrolledToBottom())">
             <pane v-if="isAllowedVideo()" id="videoBlock" min-size="15" v-bind:size="videoSize">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
-            <pane v-bind:size="messagesSize">
-                <MessageList ref="messageListRef" :chatDto="chatDto"/>
-                <v-btn
-                    v-if="!isMobile() && !isScrolledToBottom()"
-                    color="primary"
-                    fab
-                    dark
-                    style="position: relative; bottom: 66px; margin-left: 100%; right: 66px; z-index: 2"
-                    @click="onClickScrollDown()"
-                >
-                    <v-icon>mdi-chevron-down</v-icon>
-                </v-btn>
-            </pane>
-            <pane max-size="70" min-size="8" v-bind:size="editSize" v-if="!isMobile()">
-                <MessageEdit :chatId="chatId"/>
+
+            <pane>
+                <splitpanes horizontal>
+                    <pane v-bind:size="messagesSize">
+                        <MessageList ref="messageListRef" :chatDto="chatDto"/>
+                        <v-btn
+                            v-if="!isMobile() && !isScrolledToBottom()"
+                            color="primary"
+                            fab
+                            dark
+                            style="position: relative; bottom: 66px; margin-left: 100%; right: 66px; z-index: 2"
+                            @click="onClickScrollDown()"
+                        >
+                            <v-icon>mdi-chevron-down</v-icon>
+                        </v-btn>
+                    </pane>
+                    <pane max-size="70" min-size="8" v-bind:size="editSize" v-if="!isMobile()">
+                        <MessageEdit :chatId="chatId"/>
+                    </pane>
+                </splitpanes>
             </pane>
         </splitpanes>
         <v-btn v-if="isMobile()"
