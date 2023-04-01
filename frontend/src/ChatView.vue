@@ -7,59 +7,7 @@
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane v-bind:size="messagesSize">
-                <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
-                    <template v-if="isChatDtoLoaded()">
-                        <div v-if="pinnedPromoted" class="pinned-promoted">
-                            <v-alert
-                                :key="pinnedPromotedKey"
-                                dense
-                                color="red lighten-2"
-                                dark
-                                dismissible
-                                prominent
-                            >
-                                <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
-                                    {{ pinnedPromoted.text }}
-                                </router-link>
-                            </v-alert>
-
-                        </div>
-                        <v-list>
-                            <template v-for="(item, index) in items">
-                                <MessageItem
-                                    :key="item.id"
-                                    :item="item"
-                                    :chatId="chatId"
-                                    :my="item.owner.id === currentUser.id"
-                                    :highlight="item.id == highlightMessageId"
-                                    :canResend="chatDto.canResend"
-                                    @contextmenu="onShowContextMenu($event, item)"
-                                    @deleteMessage="deleteMessage"
-                                    @editMessage="editMessage"
-                                    @replyOnMessage="replyOnMessage"
-                                    @shareMessage="shareMessage"
-                                    @onFilesClicked="onFilesClicked"
-                                ></MessageItem>
-                            </template>
-                        </v-list>
-                        <MessageItemContextMenu
-                            ref="contextMenuRef"
-                            :canResend="chatDto.canResend"
-                            @deleteMessage="this.deleteMessage"
-                            @editMessage="this.editMessage"
-                            @replyOnMessage="this.replyOnMessage"
-                            @shareMessage="this.shareMessage"
-                            @onFilesClicked="this.onFilesClicked"
-                            @pinMessage="pinMessage"
-                            @removedFromPinned="removedFromPinned"
-                        />
-                        <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
-                            <template slot="no-more"><span/></template>
-                            <template slot="no-results"><span/></template>
-                        </infinite-loading>
-                    </template>
-                </div>
-
+                <MessageList ref="messageListRef" :chatDto="chatDto"/>
                 <v-btn
                     v-if="!isMobile() && !isScrolledToBottom()"
                     color="primary"
@@ -96,8 +44,6 @@
 
 <script>
     import axios from "axios";
-    import InfiniteLoading from 'vue-infinite-loading';
-    import Vue from 'vue'
     import bus, {
         CHAT_DELETED,
         CHAT_EDITED,
@@ -106,31 +52,24 @@
         MESSAGE_EDITED,
         USER_TYPING,
         USER_PROFILE_CHANGED,
-        LOGGED_IN,
         LOGGED_OUT,
         VIDEO_CALL_USER_COUNT_CHANGED,
         MESSAGE_BROADCAST,
         REFRESH_ON_WEBSOCKET_RESTORED,
         OPEN_EDIT_MESSAGE,
-        CHAT_ADD,
         PROFILE_SET,
         FILE_UPLOADED,
         PARTICIPANT_ADDED,
         PARTICIPANT_DELETED,
         PARTICIPANT_EDITED,
-        OPEN_SIMPLE_MODAL,
-        CLOSE_SIMPLE_MODAL,
-        SET_EDIT_MESSAGE,
-        OPEN_RESEND_TO_MODAL,
-        OPEN_VIEW_FILES_DIALOG,
         VIDEO_DIAL_STATUS_CHANGED,
         PINNED_MESSAGE_PROMOTED,
         PINNED_MESSAGE_UNPROMOTED,
     } from "./bus";
-    import {chat, chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "./routes";
+    import { chat_list_name, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
     import ChatVideo from "./ChatVideo";
-    import MessageItemContextMenu from "./MessageItemContextMenu"
+    import MessageList from "./MessageList";
 
     import {mapGetters} from "vuex";
 
@@ -151,22 +90,9 @@
         SET_VIDEO_CHAT_USERS_COUNT
     } from "./store";
     import { Splitpanes, Pane } from 'splitpanes'
-    import {
-        embed_message_reply,
-        findIndex,
-        findIndexNonStrictly,
-        hasLength,
-        replaceInArray,
-        setAnswerPreviewFields
-    } from "./utils";
-    import MessageItem from "./MessageItem";
-    // import 'splitpanes/dist/splitpanes.css';
     import debounce from "lodash/debounce";
-    import throttle from "lodash/throttle";
-    import queryMixin from "@/queryMixin";
     import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
-    import cloneDeep from "lodash/cloneDeep";
-
+    // import 'splitpanes/dist/splitpanes.css';
 
     const defaultDesktopWithoutVideo = [80, 20];
     const defaultDesktopWithVideo = [30, 50, 20];
@@ -179,15 +105,6 @@
     const KEY_MOBILE_WITH_VIDEO_PANELS = 'mobileWithVideo';
     const KEY_MOBILE_WITHOUT_VIDEO_PANELS = 'mobileWithoutVideo'
 
-    const directionTop = 'top';
-    const directionBottom = 'bottom';
-
-    const maxItemsLength = 200;
-    const reduceToLength = 100;
-
-    const pageSize = 40;
-
-    const scrollingThreshold = 200; // px
 
     let writingUsersTimerId;
 
@@ -204,31 +121,15 @@
 
     export default {
         mixins: [
-            queryMixin(),
             graphqlSubscriptionMixin('chatEvents')
         ],
         data() {
             return {
-                startingFromItemId: null,
-                items: [],
-                infiniteId: +new Date(),
-                highlightMessageId: null,
-
                 chatDto: chatDtoFactory(),
-                aDirection: directionTop,
-                infinityKey: 1,
-                scrollerDiv: null,
-                scrollerProbeCurrent: 0,
-                scrollerProbePrevious: 0,
-                scrollerProbePreviousPrevious: 0,
-
                 writingUsers: [],
                 showTooltip: true,
                 broadcastMessage: null,
                 tooltipKey: 0,
-                initialHash: null,
-                pinnedPromoted: null,
-                pinnedPromotedKey: +new Date()
             }
         },
         computed: {
@@ -295,51 +196,8 @@
                     return stored[1]
                 }
             },
-            aDistance() {
-                return this.isTopDirection() ? 0 : 100
-            },
-            userIsSet() {
-                return !!this.currentUser
-            },
-            hasInitialHash() {
-                return hasLength(this.initialHash)
-            }
         },
         methods: {
-            // not working until you will change this.items list
-            reloadItems() {
-              this.infiniteId += 1;
-              console.log("Resetting infinite loader", this.infiniteId);
-            },
-            searchStringChanged(searchString) {
-                this.resetVariables();
-                this.reloadItems();
-            },
-
-            onScroll(e) {
-                this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
-                this.scrollerProbePrevious = this.scrollerProbeCurrent;
-                this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
-                console.debug("onScroll prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
-
-                this.trySwitchDirection();
-            },
-            isTopDirection() {
-                return this.aDirection === directionTop
-            },
-            trySwitchDirection() {
-                if (this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
-                    this.aDirection = directionBottom;
-                    this.infinityKey++;
-                    console.log("Infinity scrolling direction has been changed to bottom");
-                } else if (this.scrollerProbePreviousPrevious > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
-                    this.aDirection = directionTop;
-                    this.infinityKey++;
-                    console.log("Infinity scrolling direction has been changed to top");
-                } else {
-                    console.log("Infinity scrolling direction has been remained untouched");
-                }
-            },
             getStored() {
                 let keyWithVideo;
                 let keyWithoutVideo;
@@ -388,7 +246,7 @@
                                 this.$refs.spl.panes[2].size = stored[2]; // edit
                             }
                             if (wasScrolled) {
-                                this.scrollDown();
+                                this.$refs.messageListRef.scrollDown();
                             }
                         }
                     })
@@ -419,7 +277,7 @@
                 this.saveToStored(this.$refs.spl.panes.map(i => i.size));
                 this.$nextTick(()=>{
                     if (wasScrolled) {
-                        this.scrollDown();
+                        this.$refs.messageListRef.scrollDown();
                     }
                 })
             },
@@ -427,144 +285,6 @@
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
             },
 
-            addItem(dto) {
-                console.log("Adding item", dto);
-                this.items.push(dto);
-                this.reduceListIfNeed();
-                this.$forceUpdate();
-            },
-            changeItem(dto) {
-                console.log("Replacing item", dto);
-                replaceInArray(this.items, dto);
-                this.$forceUpdate();
-            },
-            removeItem(dto) {
-                console.log("Removing item", dto);
-                const idxToRemove = findIndex(this.items, dto);
-                this.items.splice(idxToRemove, 1);
-                this.$forceUpdate();
-            },
-
-            infiniteHandler($state) {
-                if (this.items.length) {
-                    if (this.isTopDirection()) {
-                        this.startingFromItemId = Math.min(...this.items.map(it => it.id));
-                    } else {
-                        this.startingFromItemId = Math.max(...this.items.map(it => it.id));
-                    }
-                    console.log("this.startingFromItemId set to", this.startingFromItemId);
-                }
-
-                if (!this.userIsSet) {
-                    $state.complete();
-                    return
-                }
-
-                axios.get(`/api/chat/${this.chatId}/message`, {
-                    params: {
-                        startingFromItemId: this.hasInitialHash ? this.highlightMessageId : this.startingFromItemId,
-                        size: pageSize,
-                        reverse: this.isTopDirection(),
-                        searchString: this.searchString,
-                        hasHash: this.hasInitialHash
-                    },
-                }).then(({data}) => {
-                    const list = data;
-                    if (list.length) {
-                        if (this.isTopDirection()) {
-                            this.items = list.reverse().concat(this.items);
-                        } else {
-                            this.items = this.items.concat(list);
-                        }
-                        if (this.items.length > pageSize) {
-                            this.clearRouteHash();
-                        }
-                        this.reduceListIfNeed();
-                        return true;
-                    } else {
-                        return false
-                    }
-                }).then(value => {
-                    if (value) {
-                        $state?.loaded();
-                    } else {
-                        $state?.complete();
-                    }
-                    if (this.hasInitialHash) {
-                        try {
-                            this.$vuetify.goTo('#' + this.initialHash, {container: this.scrollerDiv, duration: 0});
-                        } catch (err) {
-                            console.debug("Didn't scrolled", err)
-                        }
-                    }
-                    this.initialHash = null;
-                })
-            },
-            reduceListIfNeed() {
-                if (this.items.length > maxItemsLength) {
-                    setTimeout(() => {
-                        console.log("Reducing to", maxItemsLength);
-                        if (this.isTopDirection()) {
-                            this.items = this.items.slice(0, reduceToLength);
-                        } else {
-                            this.items = this.items.slice(-reduceToLength);
-                        }
-                    }, 1);
-                }
-            },
-            onNewMessage(dto) {
-                if (dto.chatId == this.chatId) {
-                    const wasScrolled = this.isScrolledToBottom();
-                    this.addItem(dto);
-                    if (this.currentUser.id == dto.ownerId || wasScrolled) {
-                        this.scrollDown();
-                    }
-                } else {
-                    console.log("Skipping", dto)
-                }
-            },
-            onDeleteMessage(dto) {
-                if (dto.chatId == this.chatId) {
-                    this.removeItem(dto);
-                } else {
-                    console.log("Skipping", dto)
-                }
-            },
-            onEditMessage(dto) {
-                if (dto.chatId == this.chatId) {
-                    const isScrolled = this.isScrolledToBottom();
-                    this.changeItem(dto);
-                    if (isScrolled) {
-                        this.scrollDown();
-                    }
-                } else {
-                    console.log("Skipping", dto)
-                }
-            },
-            onClickScrollDown() {
-                // condition is a dummy heuristic (because right now doe to outdated vue-infinite-loading we cannot scroll down several times. nevertheless I think it's a pretty good heuristic so I think it worth to remain it here after updating to vue 3 and another modern infinity scroller)
-                if (this.items.length <= pageSize * 2 && !this.getRouteHash()) {
-                    this.scrollDown();
-                } else {
-                    this.resetVariables();
-                    this.reloadItems();
-                }
-                this.clearRouteHash();
-                this.initialHash = null;
-            },
-            scrollDown() {
-                Vue.nextTick(() => {
-                    console.log("Scrolling down myDiv.scrollTop", this.scrollerDiv.scrollTop, "myDiv.scrollHeight", this.scrollerDiv.scrollHeight);
-                    this.scrollerDiv.scrollTop = this.scrollerDiv.scrollHeight;
-                });
-            },
-            isScrolledToBottom() {
-                if (this.scrollerDiv) {
-                    return this.scrollerDiv.scrollHeight - this.scrollerDiv.scrollTop - this.scrollerDiv.clientHeight < scrollingThreshold
-                } else {
-                    return false
-                }
-            },
             fetchAndSetChat() {
                 return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
                     console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
@@ -597,11 +317,7 @@
                             bus.$emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
                             this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, data.usersCount);
                         })
-                    axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
-                        if (response.status != 204) {
-                            this.pinnedPromoted = response.data;
-                        }
-                    });
+                    this.$refs.messageListRef.fetchPromotedMessage();
                     return Promise.resolve();
                 })
             },
@@ -632,35 +348,24 @@
                     this.graphQlSubscribe();
                     return this.updateVideoRecordingState();
                 }).then(() => {
-                    this.setHashVariables();
+                    this.$refs.messageListRef.setHashVariables();
                 });
             },
             onLoggedOut() {
                 this.graphQlUnsubscribe();
-                this.resetVariables();
+                this.$refs.messageListRef.resetVariables();
             },
 
             onWsRestoredRefresh() {
-                this.resetVariables();
+                this.$refs.messageListRef.resetVariables();
                 // Reset direction in order to fix bug when user relogin and after press button "update" all messages disappears due to non-initial direction.
                 this.getInfo().then(()=>{
-                    this.reloadItems();
+                    this.$refs.messageListRef.reloadItems();
                 });
-            },
-            resetVariables() {
-                this.aDirection = directionTop;
-                this.items = [];
-                this.startingFromItemId = null;
             },
             onVideoCallChanged(dto) {
                 if (dto.chatId == this.chatId) {
                     this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, dto.usersCount);
-                }
-            },
-            onResizedListener() {
-                const isScrolled = this.isScrolledToBottom();
-                if (isScrolled) {
-                    this.scrollDown();
                 }
             },
             openNewMessageDialog() { // on mobile OPEN_EDIT_MESSAGE with the null argument
@@ -813,82 +518,6 @@
                     }
                 })
             },
-            setHashVariables() {
-                this.initialHash = this.getRouteHash();
-                this.highlightMessageId = this.getMessageId(this.initialHash);
-            },
-            onShowContextMenu(e, menuableItem){
-                this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
-            },
-
-            deleteMessage(dto){
-                bus.$emit(OPEN_SIMPLE_MODAL, {
-                    buttonName: this.$vuetify.lang.t('$vuetify.delete_btn'),
-                    title: this.$vuetify.lang.t('$vuetify.delete_message_title', dto.id),
-                    text:  this.$vuetify.lang.t('$vuetify.delete_message_text'),
-                    actionFunction: ()=> {
-                        axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
-                            .then(() => {
-                                bus.$emit(CLOSE_SIMPLE_MODAL);
-                            })
-                    }
-                });
-            },
-            editMessage(dto){
-                const editMessageDto = cloneDeep(dto);
-                if (dto.embedMessage?.id) {
-                    setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner.login);
-                }
-                if (!this.isMobile()) {
-                    bus.$emit(SET_EDIT_MESSAGE, editMessageDto);
-                } else {
-                    bus.$emit(OPEN_EDIT_MESSAGE, editMessageDto);
-                }
-            },
-            replyOnMessage(dto) {
-                const replyMessage = {
-                    embedMessage: {
-                        id: dto.id,
-                        embedType: embed_message_reply
-                    },
-                };
-                setAnswerPreviewFields(replyMessage, dto.text, dto.owner.login);
-                if (!this.isMobile()) {
-                    bus.$emit(SET_EDIT_MESSAGE, replyMessage);
-                } else {
-                    bus.$emit(OPEN_EDIT_MESSAGE, replyMessage);
-                }
-            },
-            shareMessage(dto) {
-                bus.$emit(OPEN_RESEND_TO_MODAL, dto)
-            },
-            pinMessage(dto) {
-                axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {
-                    params: {
-                        pin: true
-                    },
-                });
-            },
-            removedFromPinned(dto) {
-                axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {
-                    params: {
-                        pin: false
-                    },
-                });
-            },
-            onFilesClicked(item) {
-                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});
-            },
-            onCloseContextMenu(){
-                if (this.$refs.contextMenuRef) {
-                    this.$refs.contextMenuRef.onCloseContextMenu()
-                }
-            },
-            keydownListener(e) {
-                if (e.key === 'Escape') {
-                    this.onCloseContextMenu()
-                }
-            },
             onChatDialStatusChange(dto) {
                 if (this.chatDto.tetATet) {
                     for (const videoDialChanged of dto.dials) {
@@ -898,41 +527,17 @@
                     }
                 }
             },
-            isVideoRoute() {
-                return this.$route.name == videochat_name
+            isScrolledToBottom() {
+                return this.$refs.messageListRef?.isScrolledToBottom();
             },
-            getPinnedRouteObject(item) {
-                const routeName = this.isVideoRoute() ? videochat_name : chat_name;
-                return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
-            },
-            onPinnedMessagePromoted(item) {
-                this.pinnedPromoted = item;
-                this.pinnedPromotedKey++;
-            },
-            onPinnedMessageUnpromoted(item) {
-                if (this.pinnedPromoted && this.pinnedPromoted.id == item.id) {
-                    this.pinnedPromoted = null;
-                }
-            },
-            isChatDtoLoaded() {
-                return this.currentUser && this.chatDto.id
+            onClickScrollDown() {
+                return this.$refs.messageListRef.onClickScrollDown();
             },
         },
         created() {
-            this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
-
-            this.onResizedListener = debounce(this.onResizedListener, 100, {leading:true, trailing:true});
             this.onPanelResized = debounce(this.onPanelResized, 100, {leading:true, trailing:true});
-
-            this.onScroll = throttle(this.onScroll, 400, {leading:true, trailing:true});
-
-            this.initQueryAndWatcher();
-
-            this.setHashVariables();
         },
         mounted() {
-            this.scrollerDiv = document.getElementById("messagesScroller");
-            window.addEventListener('resize', this.onResizedListener);
 
             this.$store.commit(SET_TITLE, `Chat #${this.chatId}`);
             this.$store.commit(SET_CHAT_USERS_COUNT, 0);
@@ -949,11 +554,8 @@
             this.$store.commit(SET_SHOW_CALL_BUTTON, true);
             this.$store.commit(SET_SHOW_HANG_BUTTON, false);
 
-            bus.$on(MESSAGE_ADD, this.onNewMessage);
-            bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$on(CHAT_EDITED, this.onChatChange);
             bus.$on(CHAT_DELETED, this.onChatDelete);
-            bus.$on(MESSAGE_EDITED, this.onEditMessage);
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(PROFILE_SET, this.onProfileSet);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
@@ -963,27 +565,20 @@
             bus.$on(USER_TYPING, this.onUserTyping);
             bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
             bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-            bus.$on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
-            bus.$on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
 
             writingUsersTimerId = setInterval(()=>{
                 const curr = + new Date();
                 this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
             }, 500);
 
-            document.addEventListener("keydown", this.keydownListener);
         },
         beforeDestroy() {
             this.graphQlUnsubscribe();
-            window.removeEventListener('resize', this.onResizedListener);
 
             this.$store.commit(SET_SEARCH_NAME, null);
 
-            bus.$off(MESSAGE_ADD, this.onNewMessage);
-            bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$off(CHAT_EDITED, this.onChatChange);
             bus.$off(CHAT_DELETED, this.onChatDelete);
-            bus.$off(MESSAGE_EDITED, this.onEditMessage);
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(PROFILE_SET, this.onProfileSet);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
@@ -993,15 +588,8 @@
             bus.$off(USER_TYPING, this.onUserTyping);
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
             bus.$off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-            bus.$off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
-            bus.$off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
 
             clearInterval(writingUsersTimerId);
-
-            this.closeQueryWatcher();
-            document.removeEventListener("keydown", this.keydownListener);
-            this.pinnedPromoted = null;
-            this.pinnedPromotedKey = null;
 
             this.chatDto = chatDtoFactory();
         },
@@ -1014,33 +602,12 @@
             this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, false);
         },
         components: {
-            InfiniteLoading,
             MessageEdit,
             ChatVideo,
             Splitpanes, Pane,
-            MessageItem,
-            MessageItemContextMenu
+            MessageList,
         },
         watch: {
-            '$route': {
-                // reacts on user manually typing hash - in this case we may trigger reload if we don't have the necessary message
-                handler: function(newRoute, oldRoute) {
-                    console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
-                    if (newRoute.name === chat_name || newRoute.name === videochat_name) {
-                        this.setHashVariables();
-                        if (this.hasInitialHash) {
-                            if (findIndexNonStrictly(this.items, {id: this.highlightMessageId}) === -1) {
-                                this.resetVariables();
-                                this.reloadItems(); // resets hash in infiniteHandler
-                            } else {
-                                this.initialHash = null; // reset cached hash explicitly in order not to subsequently use it in case when we have hash in scrolled to bottom
-                            }
-                        }
-                    }
-                },
-                immediate: true,
-                deep: true
-            },
             '$vuetify.lang.current': {
                 handler: function (newValue, oldValue) {
                     this.$store.commit(SET_SEARCH_NAME, this.$vuetify.lang.t('$vuetify.search_in_messages'));
@@ -1064,12 +631,6 @@
     //        height: calc(100vh - 116px)
     //    }
     //}
-
-
-    #messagesScroller {
-        overflow-y: scroll !important
-        background  white
-    }
 
     #sendButtonContainer {
         background white
@@ -1119,9 +680,4 @@ $panesZIndex = 5;
     .splitpanes__splitter:before {top: -20px;bottom: 0;width: 100%; z-index: $panesZIndex;}
 }
 
-.pinned-promoted {
-    position: absolute;
-    z-index: 4;
-    width: 100%
-}
 </style>
