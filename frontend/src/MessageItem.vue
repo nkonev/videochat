@@ -20,7 +20,7 @@
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
                 <div v-if="item.embedMessage" class="embedded-message">
-                    <template v-if="item.embedMessage.chatName">
+                    <template v-if="canRenderLinkToSource(item)">
                         <router-link class="list-item-head" :to="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</router-link>
                     </template>
                     <template v-else>
@@ -104,6 +104,16 @@
                     },
                     hash: messageIdHashPrefix + item.embedMessage.id
                 }
+            },
+            canRenderLinkToSource(item) {
+                if (item.embedMessage.embedType == embed_message_reply) {
+                    return true
+                } else if (item.embedMessage.embedType == embed_message_resend) {
+                    if (item.embedMessage.chatName) {
+                        return true
+                    }
+                }
+                return false
             },
             getEmbedHead(item){
                 if (item.embedMessage.embedType == embed_message_reply) {
