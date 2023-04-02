@@ -22,6 +22,8 @@ type NotificationEvent struct {
 	MentionNotification    *MentionNotification    `json:"mentionNotification"`
 	MissedCallNotification *MissedCallNotification `json:"missedCallNotification"`
 	ReplyNotification      *ReplyDto               `json:"replyNotification"`
+	ByUserId               int64                   `json:"byUserId"`
+	ByLogin                string                  `json:"byLogin"`
 }
 
 type GlobalEvent struct {

@@ -11,7 +11,7 @@
                                     <v-list-item-icon class="mr-4"><v-icon large>{{getNotificationIcon(item.notificationType)}}</v-icon></v-list-item-icon>
                                     <v-list-item-content class="py-2">
                                         <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
-                                        <v-list-item-subtitle>{{ getNotificationSubtitle(item.notificationType) }}</v-list-item-subtitle>
+                                        <v-list-item-subtitle>{{ getNotificationSubtitle(item) }}</v-list-item-subtitle>
                                         <v-list-item-subtitle>
                                             {{ getNotificationDate(item)}}
                                         </v-list-item-subtitle>
@@ -102,14 +102,14 @@ export default {
                     return "mdi-reply-outline"
             }
         },
-        getNotificationSubtitle(type) {
-            switch (type) {
+        getNotificationSubtitle(item) {
+            switch (item.notificationType) {
                 case "missed_call":
-                    return this.$vuetify.lang.t('$vuetify.notification_missed_call')
+                    return this.$vuetify.lang.t('$vuetify.notification_missed_call', item.byLogin)
                 case "mention":
-                    return this.$vuetify.lang.t('$vuetify.notification_mention')
+                    return this.$vuetify.lang.t('$vuetify.notification_mention', item.byLogin)
                 case "reply":
-                    return this.$vuetify.lang.t('$vuetify.notification_reply')
+                    return this.$vuetify.lang.t('$vuetify.notification_reply', item.byLogin)
             }
         },
         getNotificationTitle(item) {

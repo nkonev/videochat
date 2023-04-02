@@ -121,6 +121,8 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, call bool, c
 				ChatId:                 chatId,
 				UserId:                 callee,
 				MissedCallNotification: &dto.MissedCallNotification{chatName.Name},
+				ByUserId:               userPrincipalDto.UserId,
+				ByLogin:                userPrincipalDto.UserLogin,
 			}
 			err = vh.notificationPublisher.Publish(missedCall)
 			if err != nil {
@@ -311,6 +313,8 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 				ChatId:                 chatId,
 				UserId:                 chatName.UserId,
 				MissedCallNotification: &dto.MissedCallNotification{chatName.Name},
+				ByUserId:               userPrincipalDto.UserId,
+				ByLogin:                userPrincipalDto.UserLogin,
 			}
 			err = vh.notificationPublisher.Publish(missedCall)
 			if err != nil {

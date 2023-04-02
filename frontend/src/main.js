@@ -188,6 +188,8 @@ vm = new Vue({
                       notificationType
                       description
                       createDateTime
+                      byUserId
+                      byLogin
                     }
                   }
                 }

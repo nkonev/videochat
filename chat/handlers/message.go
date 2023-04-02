@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -300,11 +299,11 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		}
 
 		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
-		var addedMentions, strippedText = mc.findMentions(message.Text, users, message.Owner.Login, c.Request().Context())
+		var addedMentions, strippedText = mc.findMentions(message.Text, users)
 		var reply, userToSendTo = mc.wasReplyAdded(nil, message, chatId)
 		var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
-		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText)
-		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId)
+		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
+		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
 		return c.JSON(http.StatusCreated, message)
@@ -415,7 +414,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		var oldMentions, _ = mc.findMentions(oldMessage.Text, users, "", c.Request().Context())
+		var oldMentions, _ = mc.findMentions(oldMessage.Text, users)
 
 		err = tx.EditMessage(editableMessage)
 		if err != nil {
@@ -427,7 +426,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			return err
 		}
 
-		var newMentions, strippedText = mc.findMentions(message.Text, users, message.Owner.Login, c.Request().Context())
+		var newMentions, strippedText = mc.findMentions(message.Text, users)
 
 		var userIdsToNotifyAboutMentionCreated []int64
 		var userIdsToNotifyAboutMentionDeleted []int64
@@ -445,12 +444,12 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		}
 
 		var replyAdded, userToSendToAdded = mc.wasReplyAdded(oldMessage, message, chatId)
-		mc.notificator.NotifyAddReply(c, replyAdded, userToSendToAdded, userPrincipalDto.UserId)
+		mc.notificator.NotifyAddReply(c, replyAdded, userToSendToAdded, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
 		var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, message, chatId)
 		mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
 
 		var reallyAddedMentions = excludeMyself(userIdsToNotifyAboutMentionCreated, userPrincipalDto)
-		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText)
+		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
 		mc.notificator.NotifyRemoveMention(c, userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
 
 		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message)
@@ -513,7 +512,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	if err := mc.db.DeleteMessage(messageId, userPrincipalDto.UserId, chatId); err != nil {
 		return err
 	} else {
-		var oldMentions, _ = mc.findMentions(oldMessage.Text, users, "", c.Request().Context())
+		var oldMentions, _ = mc.findMentions(oldMessage.Text, users)
 		mc.notificator.NotifyRemoveMention(c, oldMentions, chatId, messageId)
 
 		cd := &dto.DisplayMessageDto{
@@ -943,11 +942,11 @@ func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, message 
 	patchForView(mc.stripAllTags, res)
 
 	// notify about promote to the pinned
-	mc.notificator.NotifyAboutPromote(c, chatId, res, promote, participantIds)
+	mc.notificator.NotifyAboutPromotePinnedMessage(c, chatId, res, promote, participantIds)
 	return nil
 }
 
-func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User, login string, c context.Context) ([]int64, string) {
+func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User) ([]int64, string) {
 	var result = []int64{}
 	withoutSourceTags := mc.stripSourceContent.Sanitize(messageText)
 	for _, user := range users {
@@ -957,7 +956,7 @@ func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.
 	}
 	withoutAnyHtml := mc.stripAllTags.Sanitize(withoutSourceTags)
 	if withoutAnyHtml != "" {
-		withoutAnyHtml = createMessagePreview(mc.stripAllTags, withoutAnyHtml, login)
+		withoutAnyHtml = createMessagePreviewWithoutLogin(mc.stripAllTags, withoutAnyHtml)
 	}
 	return result, withoutAnyHtml
 }
@@ -969,7 +968,7 @@ func (mc *MessageHandler) wasReplyAdded(oldMessage *db.Message, messageRendered 
 	}
 	if replyWasMissed && messageRendered.EmbedMessage != nil && messageRendered.EmbedMessage.Owner != nil && messageRendered.Owner != nil && messageRendered.EmbedMessage.EmbedType == dto.EmbedMessageTypeReply {
 
-		withoutAnyHtml := createMessagePreview(mc.stripAllTags, messageRendered.Text, messageRendered.Owner.Login)
+		withoutAnyHtml := createMessagePreviewWithoutLogin(mc.stripAllTags, messageRendered.Text)
 
 		return &dto.ReplyDto{
 			MessageId:        messageRendered.Id,
