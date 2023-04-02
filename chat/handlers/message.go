@@ -298,12 +298,17 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return err
 		}
 
+		chatNameForNotification, err := mc.getChatNameForNotification(tx, err, chatId)
+		if err != nil {
+			return err
+		}
+
 		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 		var addedMentions, strippedText = mc.findMentions(message.Text, users)
 		var reply, userToSendTo = mc.wasReplyAdded(nil, message, chatId)
 		var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
-		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
-		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
+		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
+		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
 		return c.JSON(http.StatusCreated, message)
@@ -312,6 +317,18 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
+}
+
+func (mc *MessageHandler) getChatNameForNotification(tx *db.Tx, err error, chatId int64) (string, error) {
+	chatBasic, err := tx.GetChatBasic(chatId)
+	if err != nil {
+		return "", err
+	}
+	chatName := chatBasic.Title
+	if chatBasic.TetATet {
+		chatName = ""
+	}
+	return chatName, nil
 }
 
 func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input *CreateMessageDto, receiver *db.Message) error {
@@ -443,13 +460,18 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			}
 		}
 
+		chatNameForNotification, err := mc.getChatNameForNotification(tx, err, chatId)
+		if err != nil {
+			return err
+		}
+
 		var replyAdded, userToSendToAdded = mc.wasReplyAdded(oldMessage, message, chatId)
-		mc.notificator.NotifyAddReply(c, replyAdded, userToSendToAdded, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
+		mc.notificator.NotifyAddReply(c, replyAdded, userToSendToAdded, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 		var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, message, chatId)
 		mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
 
 		var reallyAddedMentions = excludeMyself(userIdsToNotifyAboutMentionCreated, userPrincipalDto)
-		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
+		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 		mc.notificator.NotifyRemoveMention(c, userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
 
 		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message)

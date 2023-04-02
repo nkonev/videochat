@@ -24,6 +24,7 @@ type NotificationEvent struct {
 	ReplyNotification      *ReplyDto               `json:"replyNotification"`
 	ByUserId               int64                   `json:"byUserId"`
 	ByLogin                string                  `json:"byLogin"`
+	ChatTitle              string                  `json:"chatTitle"`
 }
 
 type GlobalEvent struct {

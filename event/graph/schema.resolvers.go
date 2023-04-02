@@ -398,6 +398,7 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 			CreateDateTime:   userNotification.CreateDateTime,
 			ByUserID:         userNotification.ByUserId,
 			ByLogin:          userNotification.ByLogin,
+			ChatTitle:        userNotification.ChatTitle,
 		}
 	}
 

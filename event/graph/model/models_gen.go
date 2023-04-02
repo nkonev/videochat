@@ -120,6 +120,7 @@ type NotificationDto struct {
 	CreateDateTime   time.Time `json:"createDateTime"`
 	ByUserID         int64     `json:"byUserId"`
 	ByLogin          string    `json:"byLogin"`
+	ChatTitle        string    `json:"chatTitle"`
 }
 
 type User struct {

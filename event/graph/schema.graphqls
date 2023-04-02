@@ -148,6 +148,7 @@ type NotificationDto {
     createDateTime: Time!
     byUserId: Int64!
     byLogin:  String!
+    chatTitle: String!
 }
 
 type GlobalEvent {

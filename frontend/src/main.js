@@ -190,6 +190,7 @@ vm = new Vue({
                       createDateTime
                       byUserId
                       byLogin
+                      chatTitle
                     }
                   }
                 }

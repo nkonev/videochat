@@ -38,15 +38,15 @@ func (db *DB) DeleteNotificationByMessageId(messageId int64, notificationType st
 	return id, nil
 }
 
-func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, notificationType string, description string, byUserId int64, byLogin string) (int64, time.Time, error) {
+func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, notificationType string, description string, byUserId int64, byLogin string, chatTitle string) (int64, time.Time, error) {
 
 	res := db.QueryRow(
-		`insert into notification(notification_type, description, message_id, user_id, chat_id, by_user_id, by_login) 
-			values ($1, $2, $3, $4, $5, $6, $7) 
+		`insert into notification(notification_type, description, message_id, user_id, chat_id, by_user_id, by_login, chat_title) 
+			values ($1, $2, $3, $4, $5, $6, $7, $8) 
 			on conflict(notification_type, message_id, user_id, chat_id) 
 			do update set description = excluded.description
 			RETURNING id, create_date_time`,
-		notificationType, description, messageId, userId, chatId, byUserId, byLogin)
+		notificationType, description, messageId, userId, chatId, byUserId, byLogin, chatTitle)
 	if res.Err() != nil {
 		return 0, time.Now(), res.Err()
 	}
@@ -61,7 +61,7 @@ func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, noti
 
 func (db *DB) GetNotifications(userId int64) ([]dto.NotificationDto, error) {
 	maxNotifications := viper.GetInt("maxNotifications")
-	rows, err := db.Query("select id, notification_type, description, chat_id, message_id, create_date_time, by_user_id, by_login from notification where user_id = $1 order by id desc limit $2", userId, maxNotifications)
+	rows, err := db.Query("select id, notification_type, description, chat_id, message_id, create_date_time, by_user_id, by_login, chat_title from notification where user_id = $1 order by id desc limit $2", userId, maxNotifications)
 	if err != nil {
 		Logger.Errorf("Error during getting notifications %v", err)
 		return nil, err
@@ -71,7 +71,7 @@ func (db *DB) GetNotifications(userId int64) ([]dto.NotificationDto, error) {
 	list := make([]dto.NotificationDto, 0)
 	for rows.Next() {
 		notificationDto := dto.NotificationDto{}
-		if err := rows.Scan(&notificationDto.Id, &notificationDto.NotificationType, &notificationDto.Description, &notificationDto.ChatId, &notificationDto.MessageId, &notificationDto.CreateDateTime, &notificationDto.ByUserId, &notificationDto.ByLogin); err != nil {
+		if err := rows.Scan(&notificationDto.Id, &notificationDto.NotificationType, &notificationDto.Description, &notificationDto.ChatId, &notificationDto.MessageId, &notificationDto.CreateDateTime, &notificationDto.ByUserId, &notificationDto.ByLogin, &notificationDto.ChatTitle); err != nil {
 			Logger.Errorf("Error during scan notification rows %v", err)
 			return nil, err
 		} else {

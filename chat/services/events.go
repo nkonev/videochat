@@ -21,12 +21,12 @@ type Events interface {
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string)
 	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
-	NotifyAddMention(c echo.Context, created []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string)
+	NotifyAddMention(c echo.Context, created []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string, chatTitle string)
 	NotifyRemoveMention(c echo.Context, deleted []int64, chatId int64, messageId int64)
 	NotifyAboutNewParticipants(c echo.Context, userIds []int64, chatId int64, users []*dto.UserWithAdmin)
 	NotifyAboutDeleteParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToRemove []int64)
 	NotifyAboutChangeParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin)
-	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string)
+	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, chatTitle string)
 	NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
 	NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.DisplayMessageDto, promote bool, participantIds []int64)
 }
@@ -280,7 +280,7 @@ func (not *eventsImpl) NotifyAboutMessageBroadcast(c echo.Context, chatId, userI
 
 }
 
-func (not *eventsImpl) NotifyAddMention(c echo.Context, userIds []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string) {
+func (not *eventsImpl) NotifyAddMention(c echo.Context, userIds []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string, chatTitle string) {
 	for _, participantId := range userIds {
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType: "mention_added",
@@ -290,8 +290,9 @@ func (not *eventsImpl) NotifyAddMention(c echo.Context, userIds []int64, chatId,
 				Id:   messageId,
 				Text: message,
 			},
-			ByUserId: behalfUserId,
-			ByLogin:  behalfLogin,
+			ByUserId:  behalfUserId,
+			ByLogin:   behalfLogin,
+			ChatTitle: chatTitle,
 		})
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
@@ -316,7 +317,7 @@ func (not *eventsImpl) NotifyRemoveMention(c echo.Context, userIds []int64, chat
 	}
 }
 
-func (not *eventsImpl) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string) {
+func (not *eventsImpl) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, chatTitle string) {
 	if userId != nil && *userId != behalfUserId {
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType:         "reply_added",
@@ -325,6 +326,7 @@ func (not *eventsImpl) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userI
 			ReplyNotification: reply,
 			ByUserId:          behalfUserId,
 			ByLogin:           behalfLogin,
+			ChatTitle:         chatTitle,
 		})
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)

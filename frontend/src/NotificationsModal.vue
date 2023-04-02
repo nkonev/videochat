@@ -74,7 +74,7 @@ import bus, {
 } from "./bus";
 import {mapGetters} from 'vuex'
 import {GET_NOTIFICATIONS, GET_NOTIFICATIONS_SETTINGS, SET_NOTIFICATIONS_SETTINGS} from "@/store";
-import {getHumanReadableDate} from "./utils";
+import {getHumanReadableDate, hasLength} from "./utils";
 import axios from "axios";
 import {chat, chat_name, messageIdHashPrefix} from "@/routes";
 
@@ -107,9 +107,17 @@ export default {
                 case "missed_call":
                     return this.$vuetify.lang.t('$vuetify.notification_missed_call', item.byLogin)
                 case "mention":
-                    return this.$vuetify.lang.t('$vuetify.notification_mention', item.byLogin)
+                    let builder1 = this.$vuetify.lang.t('$vuetify.notification_mention', item.byLogin)
+                    if (hasLength(item.chatTitle)) {
+                        builder1 += (this.$vuetify.lang.t('$vuetify.in') + "'" + item.chatTitle + "'");
+                    }
+                    return builder1
                 case "reply":
-                    return this.$vuetify.lang.t('$vuetify.notification_reply', item.byLogin)
+                    let builder2 = this.$vuetify.lang.t('$vuetify.notification_reply', item.byLogin)
+                    if (hasLength(item.chatTitle)) {
+                        builder2 += (this.$vuetify.lang.t('$vuetify.in') + "'" + item.chatTitle + "'")
+                    }
+                    return builder2
             }
         },
         getNotificationTitle(item) {
