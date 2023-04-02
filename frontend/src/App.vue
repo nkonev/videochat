@@ -118,11 +118,11 @@
             </template>
             <v-spacer></v-spacer>
 
-            <v-btn v-if="isShowSearch && showSearchButton && isMobile()" icon :title="searchName" @click="onOpenSearch()">
-                <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
+            <v-btn :key="searchMagnifyKey" v-if="isShowSearch && showSearchButton && isMobile()" icon :title="searchName" @click="onOpenSearch()">
+                <v-icon>{{ hasSearchString() ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
             </v-btn>
-            <v-card light v-if="isShowSearch && !showSearchButton || !isMobile()" :width="isMobile() ? '100%' : ''">
-                <v-text-field :autofocus="isMobile()" prepend-icon="mdi-magnify" hide-details single-line @input="clearRouteHash()" v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true"></v-text-field>
+            <v-card :key="searchFieldKey" light v-if="isShowSearch && !showSearchButton || !isMobile()" :width="isMobile() ? '100%' : ''">
+                <v-text-field :autofocus="isMobile()" prepend-icon="mdi-magnify" hide-details single-line @input="clearRouteHash()" v-model="appSearchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true"></v-text-field>
             </v-card>
 
             <template v-if="showSearchButton || !isMobile()">
@@ -303,6 +303,8 @@
                 initializingStaringVideoRecord: false,
                 initializingStoppingVideoRecord: false,
                 showSearchButton: true,
+                searchMagnifyKey: +new Date(),
+                searchFieldKey: +new Date(),
             }
         },
         components:{
@@ -490,11 +492,13 @@
                 }
             },
             resetInput() {
-                this.searchString = null;
+                this.setSearchString(null);
                 this.showSearchButton = true;
             },
             searchStringChanged(searchString) {
-                console.debug("doSearch", searchString);
+                console.debug("doSearch in App", searchString);
+                this.searchMagnifyKey++;
+                this.searchFieldKey++;
 
                 const currentRouteName = this.$route.name;
                 const routerNewState = {name: currentRouteName};
@@ -521,6 +525,9 @@
             },
             onOpenSearch() {
                 this.showSearchButton = false;
+            },
+            hasSearchString() {
+                return hasLength(this.getSearchString())
             }
         },
         computed: {
@@ -549,8 +556,15 @@
             notificationsCount() {
                 return this.$store.getters[GET_NOTIFICATIONS].length
             },
-            hasSearchString() {
-                return hasLength(this.searchString)
+            appSearchString: {
+                get(){
+                    let got = this.getSearchString();
+                    console.log("got", got)
+                    return  got;
+                },
+                set(newVal) {
+                    this.setSearchString(newVal)
+                }
             }
         },
         mounted() {
@@ -565,12 +579,8 @@
             this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS).then(() => {
                 this.$store.dispatch(FETCH_USER_PROFILE);
             })
-
-            this.initQueryAndWatcher();
         },
         destroyed() {
-            this.closeQueryWatcher();
-
             bus.$off(VIDEO_CALL_INVITED, this.onVideoCallInvited);
             bus.$off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
             bus.$off(PROFILE_SET, this.onProfileSet);

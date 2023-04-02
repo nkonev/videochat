@@ -431,7 +431,7 @@
             '$route': {
                 // reacts on user manually typing hash - in this case we may trigger reload if we don't have the necessary message
                 handler: function(newRoute, oldRoute) {
-                    console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
+                    console.debug("Watched on newRoute in MessageList", newRoute, " oldRoute", oldRoute);
                     if (newRoute.name === chat_name || newRoute.name === videochat_name) {
                         this.setHashVariables();
                         if (this.hasInitialHash) {
@@ -453,7 +453,6 @@
             this.onResizedListener = debounce(this.onResizedListener, 100, {leading:true, trailing:true});
             this.onScroll = throttle(this.onScroll, 400, {leading:true, trailing:true});
 
-            this.initQueryAndWatcher();
             this.setHashVariables();
         },
         mounted() {
@@ -469,7 +468,6 @@
             window.addEventListener('resize', this.onResizedListener);
         },
         beforeDestroy() {
-            this.closeQueryWatcher();
 
             window.removeEventListener('resize', this.onResizedListener);
             document.removeEventListener("keydown", this.keydownListener);

@@ -23,10 +23,11 @@
 </template>
 
 <script>
-import {GET_USER, SET_SEARCH_STRING} from "@/store";
+    import {GET_USER} from "@/store";
     import {mapGetters} from "vuex";
     import bus, {OPEN_CHAT_EDIT, OPEN_FIND_USER} from "@/bus";
-import {availableChatsQuery} from "@/utils";
+    import {availableChatsQuery} from "@/utils";
+    import { querySetter } from "./queryMixin";
 
     export default {
         computed: {
@@ -40,7 +41,7 @@ import {availableChatsQuery} from "@/utils";
                 bus.$emit(OPEN_FIND_USER)
             },
             availableChats() {
-                this.$store.commit(SET_SEARCH_STRING, availableChatsQuery);
+                querySetter(this.$router, availableChatsQuery);
             },
         }
     }

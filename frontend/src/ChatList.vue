@@ -189,12 +189,12 @@
                     return
                 }
 
-                console.debug("infiniteHandler", '"' + this.searchString + '"');
+                console.debug("infiniteHandler", '"' + this.getSearchString() + '"');
                 axios.get('/api/chat', {
                     params: {
                         page: this.page,
                         size: pageSize,
-                        searchString: this.searchString,
+                        searchString: this.getSearchString(),
                     },
                 }).then(({ data }) => {
                     const list = data.data;
@@ -276,6 +276,7 @@
                 this.searchStringChanged(null);
             },
             searchStringChanged(str) {
+                console.log("doSearch in ChatList", str);
                 this.itemsLoaded = false;
                 if (str == availableChatsQuery) {
                     this.searchStringChangedStraight(str);
@@ -302,7 +303,7 @@
                 this.$refs.contextMenuRef.onCloseContextMenu()
             },
             shouldShowWelcome(){
-                return this.userIsSet && !this.items.length && this.itemsLoaded && !hasLength(this.searchString)
+                return this.userIsSet && !this.items.length && this.itemsLoaded && !hasLength(this.getSearchString())
             },
 
             transformItem(item) {
@@ -364,12 +365,9 @@
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
-
-            this.initQueryAndWatcher();
         },
         beforeDestroy() {
             this.graphQlUnsubscribe();
-            this.closeQueryWatcher();
         },
         destroyed() {
             bus.$off(PROFILE_SET, this.onLoggedIn);
