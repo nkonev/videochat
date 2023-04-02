@@ -51,8 +51,8 @@ export default {
         getContextMenuItems() {
             const ret = [];
             if (this.menuableItem) {
-                if (!this.menuableItem.pinned) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.remove_from_pinned'), icon: 'mdi-pin-off-outline', action: () => this.$emit('pinChat', this.menuableItem) });
+                if (this.menuableItem.pinned) {
+                    ret.push({title: this.$vuetify.lang.t('$vuetify.remove_from_pinned'), icon: 'mdi-pin-off-outline', action: () => this.$emit('removedFromPinned', this.menuableItem) });
                 } else {
                     ret.push({title: this.$vuetify.lang.t('$vuetify.pin_chat'), icon: 'mdi-pin', action: () => this.$emit('pinChat', this.menuableItem) });
                 }

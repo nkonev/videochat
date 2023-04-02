@@ -48,6 +48,7 @@
             @deleteChat="this.deleteChat"
             @leaveChat="this.leaveChat"
             @pinChat="this.pinChat"
+            @removedFromPinned="this.removedFromPinned"
         />
         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
             <template slot="no-more"><span/></template>
@@ -263,7 +264,18 @@
                 });
             },
             pinChat(chat) {
-                console.log("Pin chat", chat)
+                axios.put(`/api/chat/${chat.id}/pin`, null, {
+                    params: {
+                        pin: true
+                    },
+                });
+            },
+            removedFromPinned(chat) {
+                axios.put(`/api/chat/${chat.id}/pin`, null, {
+                    params: {
+                        pin: false
+                    },
+                });
             },
             onChangeUnreadMessages(dto) {
                 const chatId = dto.chatId;

@@ -146,6 +146,7 @@ vm = new Vue({
                         admin
                       }
                       canResend
+                      pinned
                     }
                     chatDeletedEvent {
                       id
