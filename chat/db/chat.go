@@ -123,6 +123,8 @@ func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) 
 	}
 }
 
+const ReservedAvailableChats = "__AVAILABLE"
+
 func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
@@ -144,10 +146,10 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 
 	rows, err = db.Query(selectChatClause()+fmt.Sprintf(`
 		WHERE 
-		    ( ( id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) OR ( available_to_search IS TRUE ) ) AND ( title ILIKE $4 %s ) ) 
+		    ( ( id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) OR ( available_to_search IS TRUE ) ) AND ( $4 = '%s' or title ILIKE $4 %s ) ) 
 			ORDER BY (last_update_date_time, id) DESC 
 			LIMIT $2 OFFSET $3
-	`, additionalUserIdsClause), participantId, limit, offset, searchString)
+	`, ReservedAvailableChats, additionalUserIdsClause), participantId, limit, offset, searchString)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err

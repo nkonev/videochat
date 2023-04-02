@@ -19,6 +19,9 @@ import (
 	"strings"
 )
 
+const minChatNameLen = 1
+const maxChatNameLen = 256
+
 type ChatWrapper struct {
 	Data  []*dto.ChatDto `json:"data"`
 	Count int64          `json:"totalCount"` // total chat number for this user
@@ -56,11 +59,16 @@ func NewChatHandler(dbR *db.DB, notificator services.Events, restClient *client.
 }
 
 func (a *CreateChatDto) Validate() error {
-	return validation.ValidateStruct(a, validation.Field(&a.Name, validation.Required, validation.Length(1, 256)))
+	return validation.ValidateStruct(a,
+		validation.Field(&a.Name, validation.Required, validation.Length(minChatNameLen, maxChatNameLen), validation.NotIn(db.ReservedAvailableChats)),
+	)
 }
 
 func (a *EditChatDto) Validate() error {
-	return validation.ValidateStruct(a, validation.Field(&a.Name, validation.Required, validation.Length(1, 256)), validation.Field(&a.Id, validation.Required))
+	return validation.ValidateStruct(a,
+		validation.Field(&a.Name, validation.Required, validation.Length(minChatNameLen, maxChatNameLen), validation.NotIn(db.ReservedAvailableChats)),
+		validation.Field(&a.Id, validation.Required),
+	)
 }
 
 func (ch *ChatHandler) GetChats(c echo.Context) error {
