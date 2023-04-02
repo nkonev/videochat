@@ -42,7 +42,13 @@
                 </v-list-item-action>
             </v-list-item>
         </v-list>
-        <ChatListContextMenu ref="contextMenuRef" @editChat="this.editChat" @deleteChat="this.deleteChat" @leaveChat="this.leaveChat"/>
+        <ChatListContextMenu
+            ref="contextMenuRef"
+            @editChat="this.editChat"
+            @deleteChat="this.deleteChat"
+            @leaveChat="this.leaveChat"
+            @pinChat="this.pinChat"
+        />
         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
             <template slot="no-more"><span/></template>
             <template slot="no-results"><span/></template>
@@ -255,6 +261,9 @@
                             })
                     }
                 });
+            },
+            pinChat(chat) {
+                console.log("Pin chat", chat)
             },
             onChangeUnreadMessages(dto) {
                 const chatId = dto.chatId;
