@@ -7,6 +7,7 @@
                     @contextmenu.prevent="onShowContextMenu($event, item)"
                     @click.prevent="openChat(item)"
                     :href="getLink(item)"
+                    :class="getItemClass(item)"
             >
                 <v-badge
                     v-if="item.avatar"
@@ -372,6 +373,11 @@
             isSearchResult(item) {
                 return item?.isResultFromSearch === true
             },
+            getItemClass(item) {
+                return {
+                    'pinned': item.pinned,
+                }
+            },
         },
         created() {
             this.searchStringChangedDebounced = debounce(this.searchStringChangedDebounced, 700, {leading:false, trailing:true});
@@ -434,5 +440,8 @@
     .min-height {
         display inline-block
         min-height 22px
+    }
+    .pinned {
+        background-color #ff9c9c
     }
 </style>
