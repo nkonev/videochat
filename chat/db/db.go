@@ -47,6 +47,7 @@ type CommonOperations interface {
 	SetAdmin(userId int64, chatId int64, newAdmin bool) error
 	GetChatBasic(chatId int64) (*Chat, error)
 	GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error)
+	IsChatPinnedForThisUser(chatId int64, userId int64) (bool, error)
 }
 
 func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {

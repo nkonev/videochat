@@ -478,6 +478,49 @@ func (db *DB) IsChatExists(chatId int64) (bool, error) {
 
 }
 
+func pinChatCommon(co CommonOperations, chatId int64, userId int64, pin bool) error {
+	if pin {
+		_, err := co.Exec("insert into chat_pinned(user_id, chat_id) values ($1, $2) on conflict do nothing", userId, chatId)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := co.Exec("delete from chat_pinned where user_id = $1 and chat_id = $2", userId, chatId)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (db *DB) PinChat(chatId int64, userId int64, pin bool) error {
+	return pinChatCommon(db, chatId, userId, pin)
+}
+
+func (tx *Tx) PinChat(chatId int64, userId int64, pin bool) error {
+	return pinChatCommon(tx, chatId, userId, pin)
+}
+
+func isChatPinnedForThisUserCommon(co CommonOperations, chatId int64, userId int64) (bool, error) {
+	row := co.QueryRow(`SELECT EXISTS(SELECT 1 FROM chat_pinned WHERE user_id = $1 AND chat_id = $2)`, userId, chatId)
+	exists := false
+	err := row.Scan(&exists)
+	if err != nil {
+		Logger.Errorf("Error during get pinned chat exists %v", err)
+		return false, err
+	} else {
+		return exists, nil
+	}
+}
+
+func (db *DB) IsChatPinnedForThisUser(chatId int64, userId int64) (bool, error) {
+	return isChatPinnedForThisUserCommon(db, chatId, userId)
+}
+
+func (tx *Tx) IsChatPinnedForThisUser(chatId int64, userId int64) (bool, error) {
+	return isChatPinnedForThisUserCommon(tx, chatId, userId)
+}
+
 func (db *DB) DeleteAllParticipants() error {
 	// see aaa/src/main/resources/db/demo/V32000__demo.sql
 	// 1 admin

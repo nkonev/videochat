@@ -114,6 +114,13 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		isParticipant := utils.Contains(chatsWithMe, cc.Id)
 
 		cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
+
+		isPinned, err := ch.db.IsChatPinnedForThisUser(cd.Id, userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+		cd.Pinned = isPinned
+
 		chatDtos = append(chatDtos, cd)
 	}
 
@@ -183,6 +190,12 @@ func getChat(
 	for _, participant := range users {
 		utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
 	}
+
+	isPinned, err := dbR.IsChatPinnedForThisUser(chatId, behalfParticipantId)
+	if err != nil {
+		return nil, err
+	}
+	chatDto.Pinned = isPinned
 
 	return chatDto, nil
 }
@@ -613,6 +626,44 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
+}
+
+func (ch *ChatHandler) PinChat(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	pin, err := GetQueryParamAsBoolean(c, "pin")
+	if err != nil {
+		return err
+	}
+
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	return db.Transact(ch.db, func(tx *db.Tx) error {
+
+		err = tx.PinChat(chatId, userPrincipalDto.UserId, pin)
+		if err != nil {
+			return err
+		}
+
+		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
+		if err != nil {
+			return err
+		}
+		copiedChat, err := ch.getChatWithAdminedUsers(c, tmpDto, tx)
+		if err != nil {
+			return err
+		}
+		ch.notificator.NotifyAboutChangeChat(c, copiedChat, []int64{userPrincipalDto.UserId}, tx)
+
+		return c.JSON(http.StatusOK, copiedChat)
+	})
 }
 
 func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {

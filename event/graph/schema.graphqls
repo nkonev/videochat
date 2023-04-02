@@ -69,6 +69,7 @@ type ChatDto {
     participants:             [UserWithAdmin!]!
     participantsCount:        Int!
     canResend:           Boolean!
+    pinned:              Boolean!
 }
 
 type ChatDeletedDto {

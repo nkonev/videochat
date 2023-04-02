@@ -167,6 +167,7 @@ func configureEcho(
 	e.GET("/chat/:id/message/pin", mc.GetPinnedMessages)
 	e.GET("/chat/:id/message/pin/promoted", mc.GetPinnedMessage)
 	e.PUT("/chat/:id/message/:messageId/pin", mc.PinMessage)
+	e.PUT("/chat/:id/pin", ch.PinChat)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
