@@ -87,7 +87,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	var dbChats []*db.ChatWithParticipants
 	var additionalFoundUserIds = []int64{}
 
-	if searchString != "" {
+	if searchString != "" && searchString != db.ReservedAvailableChats {
 		searchString = TrimAmdSanitize(ch.policy, searchString)
 
 		users, _, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, 0, 0, c.Request().Context())
