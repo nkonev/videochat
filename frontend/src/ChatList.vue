@@ -35,6 +35,10 @@
                 </v-list-item-content>
                 <v-list-item-action v-if="!isMobile()">
                     <v-container class="mb-0 mt-0 pl-0 pr-0 pb-0 pt-0">
+                        <template v-if="!item.isResultFromSearch">
+                            <v-btn v-if="item.pinned" icon @click.stop.prevent="removedFromPinned(item)" :title="$vuetify.lang.t('$vuetify.remove_from_pinned')"><v-icon dark>mdi-pin-off-outline</v-icon></v-btn>
+                            <v-btn v-else icon @click.stop.prevent="pinChat(item)" :title="$vuetify.lang.t('$vuetify.pin_chat')"><v-icon dark>mdi-pin</v-icon></v-btn>
+                        </template>
                         <v-btn v-if="item.canEdit" icon color="primary" @click.stop.prevent="editChat(item)" :title="$vuetify.lang.t('$vuetify.edit_chat')"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
                         <v-btn v-if="item.canDelete" icon @click.stop.prevent="deleteChat(item)" :title="$vuetify.lang.t('$vuetify.delete_chat')" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
                         <v-btn v-if="item.canLeave" icon @click.stop.prevent="leaveChat(item)" :title="$vuetify.lang.t('$vuetify.leave_chat')"><v-icon dark>mdi-exit-run</v-icon></v-btn>

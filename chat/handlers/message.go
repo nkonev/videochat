@@ -276,7 +276,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		}
 		creatableMessage := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
 
-		err := mc.validateAndSetEmbedFieldsEmbedMessage(tx, bindTo, creatableMessage)
+		err := mc.validateAndSetEmbedFieldsEmbedMessage(tx, userPrincipalDto.UserId, bindTo, creatableMessage)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during checking embed %v", err)
 			return err
@@ -303,7 +303,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return err
 		}
 
-		chatNameForNotification, err := mc.getChatNameForNotification(tx, err, chatId)
+		chatNameForNotification, err := mc.getChatNameForNotification(tx, err, userPrincipalDto.UserId, chatId)
 		if err != nil {
 			return err
 		}
@@ -324,8 +324,8 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	return errOuter
 }
 
-func (mc *MessageHandler) getChatNameForNotification(tx *db.Tx, err error, chatId int64) (string, error) {
-	chatBasic, err := tx.GetChatBasic(chatId)
+func (mc *MessageHandler) getChatNameForNotification(tx *db.Tx, err error, userId, chatId int64) (string, error) {
+	chatBasic, err := tx.GetChatBasic(userId, chatId)
 	if err != nil {
 		return "", err
 	}
@@ -336,7 +336,7 @@ func (mc *MessageHandler) getChatNameForNotification(tx *db.Tx, err error, chatI
 	return chatName, nil
 }
 
-func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input *CreateMessageDto, receiver *db.Message) error {
+func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, userId int64, input *CreateMessageDto, receiver *db.Message) error {
 	if input.EmbedMessageRequest != nil {
 		if input.EmbedMessageRequest.Id == 0 {
 			return errors.New("Missed embed message id")
@@ -360,7 +360,7 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 			receiver.RequestEmbeddedMessageId = &input.EmbedMessageRequest.Id
 			receiver.RequestEmbeddedMessageType = &input.EmbedMessageRequest.EmbedType
 			// check if this input.EmbedChatId resendable
-			chat, err := tx.GetChatBasic(input.EmbedMessageRequest.ChatId)
+			chat, err := tx.GetChatBasic(userId, input.EmbedMessageRequest.ChatId)
 			if err != nil {
 				return err
 			}
@@ -419,7 +419,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
 		editableMessage := convertToEditableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
 
-		err := mc.validateAndSetEmbedFieldsEmbedMessage(tx, &bindTo.CreateMessageDto, editableMessage)
+		err := mc.validateAndSetEmbedFieldsEmbedMessage(tx, userPrincipalDto.UserId, &bindTo.CreateMessageDto, editableMessage)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during checking embed %v", err)
 			return err
@@ -465,7 +465,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			}
 		}
 
-		chatNameForNotification, err := mc.getChatNameForNotification(tx, err, chatId)
+		chatNameForNotification, err := mc.getChatNameForNotification(tx, err, userPrincipalDto.UserId, chatId)
 		if err != nil {
 			return err
 		}

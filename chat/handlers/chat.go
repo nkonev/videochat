@@ -504,7 +504,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 	}
 
 	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
-		chat, err := tx.GetChatBasic(chatId)
+		chat, err := tx.GetChatBasic(userPrincipalDto.UserId, chatId)
 		if err != nil {
 			return err
 		}
@@ -969,7 +969,7 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	} else {
 		if useCanResend {
-			chat, err := ch.db.GetChatBasic(chatId)
+			chat, err := ch.db.GetChatBasic(userId, chatId)
 			if err != nil {
 				return err
 			}

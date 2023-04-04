@@ -76,6 +76,7 @@ func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int
 	return true, chatId, nil
 }
 
+// expects $1 is userId
 func selectChatClause() string {
 	return `SELECT 
 				ch.id, 
@@ -88,7 +89,7 @@ func selectChatClause() string {
 				ch.available_to_search,
 				cp.user_id IS NOT NULL as pinned
 			FROM chat ch 
-				LEFT JOIN chat_pinned cp on ch.id = cp.chat_id
+				LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1)
 `
 }
 
@@ -357,7 +358,7 @@ func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String,
 }
 
 func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, error) {
-	row := co.QueryRow(selectChatClause()+` WHERE ch.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
+	row := co.QueryRow(selectChatClause()+` WHERE ch.id in (SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $2)`, participantId, chatId)
 	chat := Chat{}
 	err := row.Scan(provideScanToChat(&chat)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -380,8 +381,8 @@ func (tx *Tx) GetChat(participantId, chatId int64) (*Chat, error) {
 	return getChatCommon(tx, participantId, chatId)
 }
 
-func getChatBasicCommon(co CommonOperations, chatId int64) (*Chat, error) {
-	row := co.QueryRow(selectChatClause()+` WHERE ch.id = $1`, chatId)
+func getChatBasicCommon(co CommonOperations, participantId, chatId int64) (*Chat, error) {
+	row := co.QueryRow(selectChatClause()+` WHERE ch.id = $2`, participantId, chatId)
 	chat := Chat{}
 	err := row.Scan(provideScanToChat(&chat)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -396,12 +397,12 @@ func getChatBasicCommon(co CommonOperations, chatId int64) (*Chat, error) {
 	}
 }
 
-func (db *DB) GetChatBasic(chatId int64) (*Chat, error) {
-	return getChatBasicCommon(db, chatId)
+func (db *DB) GetChatBasic(participantId, chatId int64) (*Chat, error) {
+	return getChatBasicCommon(db, participantId, chatId)
 }
 
-func (tx *Tx) GetChatBasic(chatId int64) (*Chat, error) {
-	return getChatBasicCommon(tx, chatId)
+func (tx *Tx) GetChatBasic(participantId, chatId int64) (*Chat, error) {
+	return getChatBasicCommon(tx, participantId, chatId)
 }
 
 func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error) {
