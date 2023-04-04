@@ -7,7 +7,6 @@
                     @contextmenu.prevent="onShowContextMenu($event, item)"
                     @click.prevent="openChat(item)"
                     :href="getLink(item)"
-                    :class="getItemClass(item)"
             >
                 <v-badge
                     v-if="item.avatar"
@@ -24,7 +23,7 @@
                 </v-badge>
                 <v-list-item-content :id="'chat-item-' + item.id" :class="item.avatar ? 'ml-4' : ''">
                     <v-list-item-title>
-                        <span class="min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}">
+                        <span class="min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)">
                             {{getChatName(item)}}
                         </span>
                         <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0"></v-badge>
@@ -165,7 +164,6 @@
                 this.transformItem(dto);
                 if (this.hasItem(dto)) {
                     replaceInArray(this.items, dto);
-                    moveToFirstPosition(this.items, dto)
                 } else {
                     this.items.unshift(dto);
                 }
@@ -442,6 +440,6 @@
         min-height 22px
     }
     .pinned {
-        background-color #ff9c9c
+        font-weight bold
     }
 </style>
