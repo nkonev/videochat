@@ -109,7 +109,7 @@ func provideScanToChat(chat *Chat) []any {
 func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = db.Query(selectChatClause()+` WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (ch.last_update_date_time, ch.id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
+	rows, err = db.Query(selectChatClause()+` WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
@@ -151,7 +151,7 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 	rows, err = db.Query(selectChatClause()+fmt.Sprintf(`
 		WHERE 
 		    ( ( ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) OR ( ch.available_to_search IS TRUE ) ) AND ( $5 = '%s' or ch.title ILIKE $4 %s ) ) 
-			ORDER BY (ch.last_update_date_time, ch.id) DESC 
+			ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC 
 			LIMIT $2 OFFSET $3
 	`, ReservedAvailableChats, additionalUserIdsClause), participantId, limit, offset, searchStringWithPercents, searchString)
 	if err != nil {
