@@ -20,6 +20,9 @@ import (
 	"time"
 )
 
+const maxMessageLen = 1024 * 1024
+const minMessageLen = 1
+
 type EditMessageDto struct {
 	Id int64 `json:"id"`
 	CreateMessageDto
@@ -229,12 +232,14 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 }
 
 func (a *CreateMessageDto) Validate() error {
-	return validation.ValidateStruct(a, validation.Field(&a.Text, validation.Required, validation.Length(1, 1024*1024)))
+	return validation.ValidateStruct(a,
+		validation.Field(&a.Text, validation.Required, validation.Length(minMessageLen, maxMessageLen)),
+	)
 }
 
 func (a *EditMessageDto) Validate() error {
 	return validation.ValidateStruct(a,
-		validation.Field(&a.Text, validation.Required, validation.Length(1, 1024*1024)),
+		validation.Field(&a.Text, validation.Required, validation.Length(minMessageLen, maxMessageLen)),
 		validation.Field(&a.Id, validation.Required),
 	)
 }

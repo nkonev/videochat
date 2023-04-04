@@ -317,4 +317,4 @@ export const isArrEqual = (a, b) => {
     return true
 }
 
-export const availableChatsQuery = "_";
+export const availableChatsQuery = "__AVAILABLE";
