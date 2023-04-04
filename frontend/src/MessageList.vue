@@ -83,6 +83,7 @@
     import MessageItemContextMenu from "@/MessageItemContextMenu";
     import debounce from "lodash/debounce";
     import cloneDeep from "lodash/cloneDeep";
+    import Mark from "mark.js";
 
     const directionTop = 'top';
     const directionBottom = 'bottom';
@@ -287,6 +288,11 @@
                             console.debug("Didn't scrolled", err)
                         }
                     }
+                    if(hasLength(this.searchString)) {
+                        const instance = new Mark("div#messagesScroller");
+                        instance.mark(this.searchString);
+                    }
+
                     this.initialHash = null;
                 })
             },
