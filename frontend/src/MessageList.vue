@@ -437,7 +437,7 @@
             '$route': {
                 // reacts on user manually typing hash - in this case we may trigger reload if we don't have the necessary message
                 handler: function(newRoute, oldRoute) {
-                    console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
+                    console.debug("Watched on newRoute in MessageList", newRoute, " oldRoute", oldRoute);
                     if (newRoute.name === chat_name || newRoute.name === videochat_name) {
                         this.setHashVariables();
                         if (this.hasInitialHash) {
