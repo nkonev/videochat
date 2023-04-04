@@ -24,6 +24,7 @@ type Chat struct {
 	Avatar             null.String
 	AvatarBig          null.String
 	AvailableToSearch  bool
+	Pinned             bool
 }
 
 type ChatWithParticipants struct {
@@ -84,8 +85,10 @@ func selectChatClause() string {
 				ch.last_update_date_time,
 				ch.tet_a_tet,
 				ch.can_resend,
-				ch.available_to_search
+				ch.available_to_search,
+				cp.user_id IS NOT NULL as pinned
 			FROM chat ch 
+				LEFT JOIN chat_pinned cp on ch.id = cp.chat_id
 `
 }
 
@@ -99,6 +102,7 @@ func provideScanToChat(chat *Chat) []any {
 		&chat.TetATet,
 		&chat.CanResend,
 		&chat.AvailableToSearch,
+		&chat.Pinned,
 	}
 }
 
@@ -501,26 +505,6 @@ func (db *DB) PinChat(chatId int64, userId int64, pin bool) error {
 
 func (tx *Tx) PinChat(chatId int64, userId int64, pin bool) error {
 	return pinChatCommon(tx, chatId, userId, pin)
-}
-
-func isChatPinnedForThisUserCommon(co CommonOperations, chatId int64, userId int64) (bool, error) {
-	row := co.QueryRow(`SELECT EXISTS(SELECT 1 FROM chat_pinned WHERE user_id = $1 AND chat_id = $2)`, userId, chatId)
-	exists := false
-	err := row.Scan(&exists)
-	if err != nil {
-		Logger.Errorf("Error during get pinned chat exists %v", err)
-		return false, err
-	} else {
-		return exists, nil
-	}
-}
-
-func (db *DB) IsChatPinnedForThisUser(chatId int64, userId int64) (bool, error) {
-	return isChatPinnedForThisUserCommon(db, chatId, userId)
-}
-
-func (tx *Tx) IsChatPinnedForThisUser(chatId int64, userId int64) (bool, error) {
-	return isChatPinnedForThisUserCommon(tx, chatId, userId)
 }
 
 func (db *DB) DeleteAllParticipants() error {

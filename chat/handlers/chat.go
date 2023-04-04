@@ -123,12 +123,6 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 
 		cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
 
-		isPinned, err := ch.db.IsChatPinnedForThisUser(cd.Id, userPrincipalDto.UserId)
-		if err != nil {
-			return err
-		}
-		cd.Pinned = isPinned
-
 		chatDtos = append(chatDtos, cd)
 	}
 
@@ -198,12 +192,6 @@ func getChat(
 	for _, participant := range users {
 		utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
 	}
-
-	isPinned, err := dbR.IsChatPinnedForThisUser(chatId, behalfParticipantId)
-	if err != nil {
-		return nil, err
-	}
-	chatDto.Pinned = isPinned
 
 	return chatDto, nil
 }
@@ -288,6 +276,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		IsTetATet:         c.TetATet,
 		CanResend:         c.CanResend,
 		AvailableToSearch: c.AvailableToSearch,
+		Pinned:            c.Pinned,
 		// see also services/events.go:75 chatNotifyCommon()
 
 		ParticipantsCount:  c.ParticipantsCount,
