@@ -289,7 +289,7 @@
                         }
                     }
                     if (hasLength(this.searchString)) {
-                        const instance = new Mark("div#messagesScroller");
+                        const instance = new Mark("div#messagesScroller .message-item-text");
                         instance.mark(this.searchString);
                     }
 
