@@ -381,10 +381,18 @@ func (tx *Tx) GetChat(participantId, chatId int64) (*Chat, error) {
 	return getChatCommon(tx, participantId, chatId)
 }
 
-func getChatBasicCommon(co CommonOperations, participantId, chatId int64) (*Chat, error) {
-	row := co.QueryRow(selectChatClause()+` WHERE ch.id = $2`, participantId, chatId)
-	chat := Chat{}
-	err := row.Scan(provideScanToChat(&chat)[:]...)
+func getChatBasicCommon(co CommonOperations, chatId int64) (*BasicChatDto, error) {
+	row := co.QueryRow(`SELECT 
+				ch.id, 
+				ch.title, 
+				ch.tet_a_tet,
+				ch.can_resend,
+				ch.available_to_search
+			FROM chat ch 
+			WHERE ch.id = $1
+`, chatId)
+	chat := BasicChatDto{}
+	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -397,16 +405,16 @@ func getChatBasicCommon(co CommonOperations, participantId, chatId int64) (*Chat
 	}
 }
 
-func (db *DB) GetChatBasic(participantId, chatId int64) (*Chat, error) {
-	return getChatBasicCommon(db, participantId, chatId)
+func (db *DB) GetChatBasic(chatId int64) (*BasicChatDto, error) {
+	return getChatBasicCommon(db, chatId)
 }
 
-func (tx *Tx) GetChatBasic(participantId, chatId int64) (*Chat, error) {
-	return getChatBasicCommon(tx, participantId, chatId)
+func (tx *Tx) GetChatBasic(chatId int64) (*BasicChatDto, error) {
+	return getChatBasicCommon(tx, chatId)
 }
 
-func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error) {
-	result := map[int64]*BasicChatDto{}
+func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
+	result := map[int64]*BasicChatDtoExtended{}
 	if len(chatIds) == 0 {
 		return result, nil
 	}
@@ -425,16 +433,28 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 
 		first = false
 	}
-	rows, err := co.Query(fmt.Sprintf("SELECT c.id, c.title, (cp.user_id is not null), c.tet_a_tet FROM chat c LEFT JOIN chat_participant cp ON (c.id = cp.chat_id AND cp.user_id = $1) WHERE c.id IN (%s)", inClause), behalfParticipantId)
+	rows, err := co.Query(fmt.Sprintf(`
+		SELECT 
+			c.id, 
+			c.title,
+			(cp.user_id is not null),
+			c.tet_a_tet,
+			c.can_resend,
+			c.available_to_search
+		FROM chat c 
+		    LEFT JOIN chat_participant cp 
+		        ON (c.id = cp.chat_id AND cp.user_id = $1) 
+		WHERE c.id IN (%s)`, inClause),
+		behalfParticipantId)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
 	} else {
 		defer rows.Close()
-		list := make([]*BasicChatDto, 0)
+		list := make([]*BasicChatDtoExtended, 0)
 		for rows.Next() {
-			dto := new(BasicChatDto)
-			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet); err != nil {
+			dto := new(BasicChatDtoExtended)
+			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -448,19 +468,25 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 	}
 }
 
-func (db *DB) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error) {
+func (db *DB) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
 	return getChatsBasicCommon(db, chatIds, behalfParticipantId)
 }
 
-func (tx *Tx) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error) {
+func (tx *Tx) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
 	return getChatsBasicCommon(tx, chatIds, behalfParticipantId)
 }
 
 type BasicChatDto struct {
-	Id                      int64
-	Title                   string
+	Id                int64
+	Title             string
+	IsTetATet         bool
+	CanResend         bool
+	AvailableToSearch bool
+}
+
+type BasicChatDtoExtended struct {
+	BasicChatDto
 	BehalfUserIsParticipant bool
-	IsTetATet               bool
 }
 
 func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
