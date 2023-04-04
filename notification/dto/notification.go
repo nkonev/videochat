@@ -11,6 +11,9 @@ type NotificationDto struct {
 	NotificationType string    `json:"notificationType"`
 	Description      string    `json:"description"`
 	CreateDateTime   time.Time `json:"createDateTime"`
+	ByUserId         int64     `json:"byUserId"`
+	ByLogin          string    `json:"byLogin"`
+	ChatTitle        string    `json:"chatTitle"`
 }
 
 type NotificationSettings struct {

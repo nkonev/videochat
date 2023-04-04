@@ -50,7 +50,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				return
 			}
 
-			id, createDateTime, err := srv.dbs.PutNotification(&mentionNotification.Id, event.UserId, event.ChatId, notificationType, mentionNotification.Text)
+			id, createDateTime, err := srv.dbs.PutNotification(&mentionNotification.Id, event.UserId, event.ChatId, notificationType, mentionNotification.Text, event.ByUserId, event.ByLogin, event.ChatTitle)
 			if err != nil {
 				Logger.Errorf("Unable to put notification %v", err)
 				return
@@ -62,6 +62,9 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				NotificationType: notificationType,
 				Description:      mentionNotification.Text,
 				CreateDateTime:   createDateTime,
+				ByUserId:         event.ByUserId,
+				ByLogin:          event.ByLogin,
+				ChatTitle:        event.ChatTitle,
 			}, NotificationAdd, context.Background())
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)
@@ -94,7 +97,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 
 		notification := event.MissedCallNotification
 		notificationType := "missed_call"
-		id, createDateTime, err := srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, notification.Description)
+		id, createDateTime, err := srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, notification.Description, event.ByUserId, event.ByLogin, event.ChatTitle)
 		if err != nil {
 			Logger.Errorf("Unable to put notification %v", err)
 			return
@@ -107,6 +110,9 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			NotificationType: notificationType,
 			Description:      notification.Description,
 			CreateDateTime:   createDateTime,
+			ByUserId:         event.ByUserId,
+			ByLogin:          event.ByLogin,
+			ChatTitle:        event.ChatTitle,
 		}, NotificationAdd, context.Background())
 		if err != nil {
 			Logger.Errorf("Unable to send notification delete %v", err)
@@ -122,7 +128,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		notificationType := "reply"
 		switch event.EventType {
 		case "reply_added":
-			id, createDateTime, err := srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.ReplyableMessage)
+			id, createDateTime, err := srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.ReplyableMessage, event.ByUserId, event.ByLogin, event.ChatTitle)
 			if err != nil {
 				Logger.Errorf("Unable to put notification %v", err)
 				return
@@ -134,6 +140,9 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				NotificationType: notificationType,
 				Description:      notification.ReplyableMessage,
 				CreateDateTime:   createDateTime,
+				ByUserId:         event.ByUserId,
+				ByLogin:          event.ByLogin,
+				ChatTitle:        event.ChatTitle,
 			}, NotificationAdd, context.Background())
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)

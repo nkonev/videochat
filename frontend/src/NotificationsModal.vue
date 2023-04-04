@@ -11,7 +11,7 @@
                                     <v-list-item-icon class="mr-4"><v-icon large>{{getNotificationIcon(item.notificationType)}}</v-icon></v-list-item-icon>
                                     <v-list-item-content class="py-2">
                                         <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
-                                        <v-list-item-subtitle>{{ getNotificationSubtitle(item.notificationType) }}</v-list-item-subtitle>
+                                        <v-list-item-subtitle>{{ getNotificationSubtitle(item) }}</v-list-item-subtitle>
                                         <v-list-item-subtitle>
                                             {{ getNotificationDate(item)}}
                                         </v-list-item-subtitle>
@@ -74,7 +74,7 @@ import bus, {
 } from "./bus";
 import {mapGetters} from 'vuex'
 import {GET_NOTIFICATIONS, GET_NOTIFICATIONS_SETTINGS, SET_NOTIFICATIONS_SETTINGS} from "@/store";
-import {getHumanReadableDate} from "./utils";
+import {getHumanReadableDate, hasLength} from "./utils";
 import axios from "axios";
 import {chat, chat_name, messageIdHashPrefix} from "@/routes";
 
@@ -102,14 +102,22 @@ export default {
                     return "mdi-reply-outline"
             }
         },
-        getNotificationSubtitle(type) {
-            switch (type) {
+        getNotificationSubtitle(item) {
+            switch (item.notificationType) {
                 case "missed_call":
-                    return this.$vuetify.lang.t('$vuetify.notification_missed_call')
+                    return this.$vuetify.lang.t('$vuetify.notification_missed_call', item.byLogin)
                 case "mention":
-                    return this.$vuetify.lang.t('$vuetify.notification_mention')
+                    let builder1 = this.$vuetify.lang.t('$vuetify.notification_mention', item.byLogin)
+                    if (hasLength(item.chatTitle)) {
+                        builder1 += (this.$vuetify.lang.t('$vuetify.in') + "'" + item.chatTitle + "'");
+                    }
+                    return builder1
                 case "reply":
-                    return this.$vuetify.lang.t('$vuetify.notification_reply')
+                    let builder2 = this.$vuetify.lang.t('$vuetify.notification_reply', item.byLogin)
+                    if (hasLength(item.chatTitle)) {
+                        builder2 += (this.$vuetify.lang.t('$vuetify.in') + "'" + item.chatTitle + "'")
+                    }
+                    return builder2
             }
         },
         getNotificationTitle(item) {

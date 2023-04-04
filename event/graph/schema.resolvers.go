@@ -267,7 +267,6 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 
 	return result
 }
-
 func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayMessageDto {
 	var result = &model.DisplayMessageDto{ // dto.DisplayMessageDto
 		ID:             messageDto.Id,
@@ -296,7 +295,6 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 	}
 	return result
 }
-
 func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 	//eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin
 	var ret = &model.GlobalEvent{
@@ -398,6 +396,9 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 			NotificationType: userNotification.NotificationType,
 			Description:      userNotification.Description,
 			CreateDateTime:   userNotification.CreateDateTime,
+			ByUserID:         userNotification.ByUserId,
+			ByLogin:          userNotification.ByLogin,
+			ChatTitle:        userNotification.ChatTitle,
 		}
 	}
 
