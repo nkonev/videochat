@@ -643,10 +643,10 @@ func (ch *ChatHandler) PinChat(c echo.Context) error {
 	}
 
 	return db.Transact(ch.db, func(tx *db.Tx) error {
-		if admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId); err != nil {
+		if isParticipant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
 			return err
-		} else if !admin {
-			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, chatId))
+		} else if !isParticipant {
+			return errors.New(fmt.Sprintf("User %v is not isParticipant of chat %v", userPrincipalDto.UserId, chatId))
 		}
 
 		err = tx.PinChat(chatId, userPrincipalDto.UserId, pin)
