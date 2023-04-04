@@ -23,7 +23,7 @@
                 </v-badge>
                 <v-list-item-content :id="'chat-item-' + item.id" :class="item.avatar ? 'ml-4' : ''">
                     <v-list-item-title>
-                        <span class="min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)">
+                        <span class="chat-name min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)">
                             {{getChatName(item)}}
                         </span>
                         <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0"></v-badge>
@@ -89,8 +89,9 @@
     } from "./utils";
     import axios from "axios";
     import debounce from "lodash/debounce";
+    import Mark from "mark.js";
     import queryMixin from "@/queryMixin";
-    import Welcome from "@/Welcome"
+    import Welcome from "@/Welcome";
 
     import {
         GET_USER,
@@ -220,6 +221,11 @@
                         $state.complete();
                     }
                     this.itemsLoaded = true;
+
+                    if (hasLength(this.searchString)) {
+                        const instance = new Mark("div#chat-list-items .chat-name");
+                        instance.mark(this.searchString);
+                    }
                 });
             },
             editChat(chat) {

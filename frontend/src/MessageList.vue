@@ -288,7 +288,7 @@
                             console.debug("Didn't scrolled", err)
                         }
                     }
-                    if(hasLength(this.searchString)) {
+                    if (hasLength(this.searchString)) {
                         const instance = new Mark("div#messagesScroller");
                         instance.mark(this.searchString);
                     }
