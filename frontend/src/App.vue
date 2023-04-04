@@ -493,6 +493,7 @@
                 this.searchString = null;
                 this.showSearchButton = true;
             },
+            // reacts on input into search field
             searchStringChanged(searchString) {
                 console.debug("doSearch", searchString);
 
