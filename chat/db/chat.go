@@ -534,6 +534,25 @@ func (tx *Tx) PinChat(chatId int64, userId int64, pin bool) error {
 	return pinChatCommon(tx, chatId, userId, pin)
 }
 
+func (tx *Tx) IsChatPinned(chatId int64, behalfUserId int64) (bool, error) {
+	var res bool
+	row := tx.QueryRow(`SELECT 
+    	cp.user_id IS NOT NULL as pinned 
+		FROM chat ch 
+		    LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1) WHERE ch.id = $2`,
+		behalfUserId,
+		chatId,
+	)
+	if row.Err() != nil {
+		return false, row.Err()
+	}
+	if err := row.Scan(&res); err != nil {
+		Logger.Errorf("Error during getting pinned %v", err)
+		return false, err
+	}
+	return res, nil
+}
+
 func (db *DB) DeleteAllParticipants() error {
 	// see aaa/src/main/resources/db/demo/V32000__demo.sql
 	// 1 admin

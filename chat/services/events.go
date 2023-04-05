@@ -111,6 +111,14 @@ func chatNotifyCommon(userIds []int64, not *eventsImpl, c echo.Context, newChatD
 			// see also handlers/chat.go:199 convertToDto()
 			copied.SetPersonalizedFields(admin, unreadMessages, isParticipant)
 
+			pinned, err := tx.IsChatPinned(newChatDto.Id, participantId)
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("error during get pinned for userId=%v: %s", participantId, err)
+				continue
+			}
+
+			copied.Pinned = pinned
+
 			for _, participant := range copied.Participants {
 				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)
 			}
