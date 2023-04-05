@@ -85,7 +85,7 @@
         replaceInArray,
         moveToFirstPosition,
         hasLength,
-        availableChatsQuery
+        availableChatsQuery, dynamicSortMultiple
     } from "./utils";
     import axios from "axios";
     import debounce from "lodash/debounce";
@@ -162,6 +162,7 @@
                 console.log("Adding item", dto);
                 this.transformItem(dto);
                 this.items.unshift(dto);
+                this.sort(this.items);
                 this.$forceUpdate();
             },
             changeItem(dto) {
@@ -172,6 +173,7 @@
                 } else {
                     this.items.unshift(dto);
                 }
+                this.sort(this.items);
                 this.$forceUpdate();
             },
             removeItem(dto) {
@@ -385,6 +387,10 @@
                 return {
                     'pinned': item.pinned,
                 }
+            },
+            sort(items) {
+                // also see in chat/db/chat.go:GetChatsByLimitOffset
+                items.sort(dynamicSortMultiple("-pinned", "-lastUpdateDateTime", "-id"))
             },
         },
         created() {
