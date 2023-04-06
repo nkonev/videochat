@@ -178,6 +178,7 @@ vm = new Vue({
                     unreadMessagesNotification {
                       chatId
                       unreadMessages
+                      lastUpdateDateTime
                     }
                     allUnreadMessagesNotification {
                       allUnreadMessages

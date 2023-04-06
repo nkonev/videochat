@@ -134,6 +134,7 @@ type VideoDialChanges {
 type ChatUnreadMessageChanged {
     chatId: Int64!
     unreadMessages: Int64!
+    lastUpdateDateTime:  Time!
 }
 
 type AllUnreadMessages {

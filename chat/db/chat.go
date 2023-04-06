@@ -498,6 +498,18 @@ func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
 	}
 }
 
+func (tx *Tx) GetChatLastDatetimeChat(chatId int64) (time.Time, error) {
+	row := tx.QueryRow(`SELECT last_update_date_time FROM chat WHERE id = $1`, chatId)
+	var lastUpdateDateTime time.Time
+	err := row.Scan(&lastUpdateDateTime)
+	if err != nil {
+		Logger.Errorf("Error during get lastUpdateDateTime %v", err)
+		return lastUpdateDateTime, err
+	} else {
+		return lastUpdateDateTime, nil
+	}
+}
+
 func (db *DB) IsChatExists(chatId int64) (bool, error) {
 	row := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM chat WHERE id = $1)`, chatId)
 	exists := false

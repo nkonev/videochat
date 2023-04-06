@@ -50,8 +50,9 @@ type ChatEvent struct {
 }
 
 type ChatUnreadMessageChanged struct {
-	ChatID         int64 `json:"chatId"`
-	UnreadMessages int64 `json:"unreadMessages"`
+	ChatID             int64     `json:"chatId"`
+	UnreadMessages     int64     `json:"unreadMessages"`
+	LastUpdateDateTime time.Time `json:"lastUpdateDateTime"`
 }
 
 type DisplayMessageDto struct {

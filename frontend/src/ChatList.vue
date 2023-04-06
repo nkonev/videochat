@@ -293,6 +293,8 @@
                 let idxOf = findIndex(this.items, {id: chatId});
                 if (idxOf != -1) {
                     this.items[idxOf].unreadMessages = dto.unreadMessages;
+                    this.items[idxOf].lastUpdateDateTime = dto.lastUpdateDateTime;
+
                     this.sort(this.items);
                     this.$forceUpdate();
                 } else {
