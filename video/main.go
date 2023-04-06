@@ -162,6 +162,8 @@ func configureApiEcho(
 	e.PUT("/video/:id/dial/start", ih.ProcessDialStart)
 	e.PUT("/video/:id/dial/cancel", ih.ProcessCancelInvitation) // cancelling by invitee
 	e.PUT("/video/:id/dial/stop", ih.ProcessAsOwnerLeave)       // used by owner
+	e.PUT("/video/:id/ask-dials", ih.AskDials)
+
 	e.PUT("/video/:id/record/start", rh.StartRecording)
 	e.PUT("/video/:id/record/stop", rh.StopRecording)
 	e.GET("/video/:id/record/status", rh.StatusRecording)
