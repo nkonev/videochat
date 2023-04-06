@@ -101,7 +101,10 @@ func listen(
 				if err != nil {
 					Logger.Errorf("In processing queue %v error: %v", queue.Name, err)
 				}
-				msg.Ack(true)
+				err = msg.Ack(false)
+				if err != nil {
+					Logger.Errorf("In acking delivery for queue %v error: %v", queue.Name, err)
+				}
 			}()
 		}
 	}()
