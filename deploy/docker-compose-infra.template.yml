@@ -93,7 +93,7 @@ services:
         tag: chat-rabbitmq
 
   livekit:
-    image: livekit/livekit-server:v1.4.0
+    image: livekit/livekit-server:v1.4.1
     command: --config /etc/livekit.yaml
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
