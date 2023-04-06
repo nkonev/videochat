@@ -202,7 +202,7 @@
                             this.participantsDto = tmp;
                         }).finally(() => {
                             this.loading = false;
-                            axios.put('/api/video/' + this.chatId + '/ask-dials')
+                            axios.put('/api/video/' + this.chatId + '/dial/request-for-is-calling')
                     })
             },
             changeChatAdmin(item) {
