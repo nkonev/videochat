@@ -60,7 +60,7 @@
     import InfiniteLoading from 'vue-infinite-loading';
     import throttle from "lodash/throttle";
     import {mapGetters} from "vuex";
-    import {GET_USER} from "@/store";
+    import {GET_USER, UNSET_SEARCH_STRING} from "@/store";
     import bus, {
         CLOSE_SIMPLE_MODAL,
         MESSAGE_ADD,
@@ -441,6 +441,9 @@
                     if (newRoute.name === chat_name || newRoute.name === videochat_name) {
                         this.setHashVariables();
                         if (this.hasInitialHash) {
+                            // resets variables about searching
+                            this.$store.commit(UNSET_SEARCH_STRING); // UNSET_SEARCH_STRING - silently (w/o triggering subscr in queryMixing) - to prevent one extra loading if this has is aready in scope
+
                             if (findIndexNonStrictly(this.items, {id: this.highlightMessageId}) === -1) {
                                 this.resetVariables();
                                 this.reloadItems(); // resets hash in infiniteHandler
