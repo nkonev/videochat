@@ -60,13 +60,13 @@ func NewChatHandler(dbR *db.DB, notificator services.Events, restClient *client.
 
 func (a *CreateChatDto) Validate() error {
 	return validation.ValidateStruct(a,
-		validation.Field(&a.Name, validation.Required, validation.Length(minChatNameLen, maxChatNameLen), validation.NotIn(db.ReservedAvailableChats)),
+		validation.Field(&a.Name, validation.Required, validation.Length(minChatNameLen, maxChatNameLen), validation.NotIn(db.ReservedPublicallyAvailableForSearchChats)),
 	)
 }
 
 func (a *EditChatDto) Validate() error {
 	return validation.ValidateStruct(a,
-		validation.Field(&a.Name, validation.Required, validation.Length(minChatNameLen, maxChatNameLen), validation.NotIn(db.ReservedAvailableChats)),
+		validation.Field(&a.Name, validation.Required, validation.Length(minChatNameLen, maxChatNameLen), validation.NotIn(db.ReservedPublicallyAvailableForSearchChats)),
 		validation.Field(&a.Id, validation.Required),
 	)
 }
@@ -87,7 +87,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	var dbChats []*db.ChatWithParticipants
 	var additionalFoundUserIds = []int64{}
 
-	if searchString != "" && searchString != db.ReservedAvailableChats {
+	if searchString != "" && searchString != db.ReservedPublicallyAvailableForSearchChats {
 		searchString = TrimAmdSanitize(ch.policy, searchString)
 
 		users, _, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, 0, 0, c.Request().Context())
