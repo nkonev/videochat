@@ -85,7 +85,8 @@
         replaceOrAppend,
         replaceInArray,
         hasLength,
-        availableChatsQuery, dynamicSortMultiple
+        publicallyAvailableChatsQuery,
+        dynamicSortMultiple
     } from "./utils";
     import axios from "axios";
     import debounce from "lodash/debounce";
@@ -320,7 +321,7 @@
             },
             searchStringChanged(str) {
                 this.itemsLoaded = false;
-                if (str == availableChatsQuery) {
+                if (str == publicallyAvailableChatsQuery) {
                     this.searchStringChangedStraight(str);
                 } else {
                     this.searchStringChangedDebounced(str);

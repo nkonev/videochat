@@ -26,7 +26,7 @@
 import {GET_USER, SET_SEARCH_STRING} from "@/store";
     import {mapGetters} from "vuex";
     import bus, {OPEN_CHAT_EDIT, OPEN_FIND_USER} from "@/bus";
-import {availableChatsQuery} from "@/utils";
+import {publicallyAvailableChatsQuery} from "@/utils";
 
     export default {
         computed: {
@@ -40,7 +40,7 @@ import {availableChatsQuery} from "@/utils";
                 bus.$emit(OPEN_FIND_USER)
             },
             availableChats() {
-                this.$store.commit(SET_SEARCH_STRING, availableChatsQuery);
+                this.$store.commit(SET_SEARCH_STRING, publicallyAvailableChatsQuery);
             },
         }
     }
