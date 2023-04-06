@@ -110,6 +110,7 @@
                 aDirection: directionTop,
                 infinityKey: 1,
                 scrollerDiv: null,
+                markInstance: null,
                 initialHash: null,
 
                 scrollerProbeCurrent: 0,
@@ -146,6 +147,7 @@
                     if (this.currentUser.id == dto.ownerId || wasScrolled) {
                         this.scrollDown();
                     }
+                    this.performMarking();
                 } else {
                     console.log("Skipping", dto)
                 }
@@ -164,6 +166,7 @@
                     if (isScrolled) {
                         this.scrollDown();
                     }
+                    this.performMarking();
                 } else {
                     console.log("Skipping", dto)
                 }
@@ -289,11 +292,18 @@
                         }
                     }
                     if (hasLength(this.searchString)) {
-                        const instance = new Mark("div#messagesScroller .message-item-text");
-                        instance.mark(this.searchString);
+                        this.markInstance.mark(this.searchString);
                     }
-
+                    this.performMarking();
                     this.initialHash = null;
+                })
+            },
+            performMarking() {
+                Vue.nextTick(() => {
+                    if (hasLength(this.searchString)) {
+                        this.markInstance.unmark();
+                        this.markInstance.mark(this.searchString);
+                    }
                 })
             },
             reduceListIfNeed() {
@@ -467,6 +477,7 @@
         },
         mounted() {
             this.scrollerDiv = document.getElementById("messagesScroller");
+            this.markInstance = new Mark("div#messagesScroller .message-item-text");
 
             bus.$on(MESSAGE_ADD, this.onNewMessage);
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);

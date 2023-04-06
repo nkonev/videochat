@@ -65,6 +65,7 @@
 </template>
 
 <script>
+    import Vue from 'vue';
     import bus, {
         CHAT_ADD,
         CHAT_EDITED,
@@ -83,7 +84,6 @@
         findIndex,
         replaceOrAppend,
         replaceInArray,
-        moveToFirstPosition,
         hasLength,
         availableChatsQuery, dynamicSortMultiple
     } from "./utils";
@@ -119,6 +119,7 @@
                 items: [],
                 infiniteId: +new Date(),
                 itemsLoaded: false,
+                markInstance: null,
             }
         },
         components:{
@@ -164,6 +165,7 @@
                 this.items.unshift(dto);
                 this.sort(this.items);
                 this.$forceUpdate();
+                this.performMarking();
             },
             changeItem(dto) {
                 console.log("Replacing item", dto);
@@ -175,6 +177,7 @@
                 }
                 this.sort(this.items);
                 this.$forceUpdate();
+                this.performMarking();
             },
             removeItem(dto) {
                 if (this.hasItem(dto)) {
@@ -224,11 +227,16 @@
                     }
                     this.itemsLoaded = true;
 
-                    if (hasLength(this.searchString)) {
-                        const instance = new Mark("div#chat-list-items .chat-name");
-                        instance.mark(this.searchString);
-                    }
+                    this.performMarking();
                 });
+            },
+            performMarking() {
+                Vue.nextTick(() => {
+                    if (hasLength(this.searchString)) {
+                        this.markInstance.unmark();
+                        this.markInstance.mark(this.searchString);
+                    }
+                })
             },
             editChat(chat) {
                 const chatId = chat.id;
@@ -427,6 +435,8 @@
             bus.$off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
         },
         mounted() {
+            this.markInstance = new Mark("div#chat-list-items .chat-name");
+
             this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
             this.$store.commit(SET_CHAT_USERS_COUNT, 0);
             this.$store.commit(SET_SHOW_SEARCH, true);
