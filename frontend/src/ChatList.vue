@@ -353,7 +353,7 @@
                 item.online = false;
             },
             getTetATetParticipantIds(items) {
-                return items.filter((item) => item.tetATet).map((item) => item.participants.filter((p) => p.id != this.currentUser?.id)[0].id);
+                return items.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.currentUser?.id)[0]);
             },
             onUserOnlineChanged(rawData) {
                 const dtos = rawData?.data?.userOnlineEvents;
