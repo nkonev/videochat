@@ -86,7 +86,7 @@
         replaceInArray,
         hasLength,
         publicallyAvailableForSearchChatsQuery,
-        dynamicSortMultiple
+        dynamicSortMultiple, isArrEqual
     } from "./utils";
     import axios from "axios";
     import debounce from "lodash/debounce";
@@ -108,6 +108,7 @@
 
     import ChatListContextMenu from "@/ChatListContextMenu";
     import graphqlSubscriptionMixin from "@/graphqlSubscriptionMixin";
+    import cloneDeep from "lodash/cloneDeep";
 
     const pageSize = 40;
 
@@ -132,7 +133,10 @@
             ...mapGetters({currentUser: GET_USER}),
             userIsSet() {
                 return !!this.currentUser
-            }
+            },
+            tetAtetParticipants() {
+                return this.getTetATetParticipantIds(this.items);
+            },
         },
         methods:{
             // not working until you will change this.items list
@@ -353,7 +357,11 @@
                 item.online = false;
             },
             getTetATetParticipantIds(items) {
-                return items.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.currentUser?.id)[0]);
+                if (!items) {
+                    return [];
+                }
+                const tmps = cloneDeep(items);
+                return tmps.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.currentUser?.id)[0]);
             },
             onUserOnlineChanged(rawData) {
                 const dtos = rawData?.data?.userOnlineEvents;
@@ -372,7 +380,7 @@
             getGraphQlSubscriptionQuery() {
                 return `
                 subscription {
-                    userOnlineEvents(userIds:[${this.getTetATetParticipantIds(this.items)}]) {
+                    userOnlineEvents(userIds:[${this.tetAtetParticipants}]) {
                         id
                         online
                     }
@@ -452,12 +460,13 @@
                 this.$store.commit(SET_SEARCH_NAME, this.$vuetify.lang.t('$vuetify.search_in_chats'));
             },
           },
-          items(newValue, oldValue) {
-              const newParticipants = this.getTetATetParticipantIds(newValue);
-              if (newParticipants.length == 0) {
+          tetAtetParticipants: function(newValue, oldValue) {
+              if (newValue.length == 0) {
                   this.graphQlUnsubscribe();
               } else {
-                  this.graphQlSubscribe();
+                  if (!isArrEqual(oldValue, newValue)) {
+                      this.graphQlSubscribe();
+                  }
               }
           },
         },
