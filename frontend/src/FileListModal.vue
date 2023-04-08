@@ -30,14 +30,15 @@
                                             {{ item.size | formatSizeFilter }}
                                             <span v-if="item.owner"> {{ $vuetify.lang.t('$vuetify.files_by') }} {{item.owner.login}}</span>
                                             <span> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                                            <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">
-                                                {{ $vuetify.lang.t('$vuetify.files_public_url') }}
-                                            </a>
                                         </v-card-subtitle>
                                         </v-container>
                                     </v-img>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
+
+                                        <v-btn icon @click="copyUrl(item)" :title="$vuetify.lang.t('$vuetify.copy_url')">
+                                            <v-icon dark>mdi-content-copy</v-icon>
+                                        </v-btn>
 
                                         <v-btn icon v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.lang.t('$vuetify.edit')"><v-icon>mdi-pencil</v-icon></v-btn>
 
@@ -237,6 +238,9 @@ export default {
         },
         onDownloadFileClick(item) {
             window.open(item.url);
+        },
+        copyUrl(item) {
+            navigator.clipboard.writeText(item.url);
         },
     },
     filters: {
