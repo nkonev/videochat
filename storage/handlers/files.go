@@ -10,7 +10,6 @@ import (
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
 	"net/http"
-	"net/url"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
@@ -20,7 +19,6 @@ import (
 	"nkonev.name/storage/utils"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type FilesHandler struct {
@@ -433,57 +431,6 @@ func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId i
 }
 
 const NotFoundImage = "/api/storage/assets/not_found.png"
-
-// TODO seems not needed anymore
-func (h *FilesHandler) DownloadHandler(c echo.Context) error {
-	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
-		return errors.New("Error during getting auth context")
-	}
-
-	bucketName := h.minioConfig.Files
-
-	// check user belongs to chat
-	fileId := c.QueryParam(utils.FileParam)
-	objectInfo, err := h.publicMinio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
-	if err != nil {
-		if errTyped, ok := err.(minio.ErrorResponse); ok {
-			if errTyped.Code == "NoSuchKey" {
-				return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
-			}
-		}
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	chatId, _, fileName, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	//originalString := c.QueryParam("original")
-	//original := utils.ParseBooleanOr(originalString, false)
-
-	belongs, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v for %v", err, fileName)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
-		return c.NoContent(http.StatusUnauthorized)
-	}
-	// end check
-
-	u, e := h.publicMinio.PresignedGetObject(context.Background(), bucketName, fileId, time.Hour*24, url.Values{})
-	if e != nil {
-		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
-	}
-	anUrl := fmt.Sprintf("%v", u)
-
-	return c.JSON(http.StatusOK, &utils.H{"url": anUrl})
-}
 
 type PublishRequest struct {
 	Public bool   `json:"public"`
