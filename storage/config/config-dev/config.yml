@@ -36,7 +36,6 @@ minio:
   internalEndpoint: 127.0.0.1:9000
   interContainerUrl: http://minio:9000
   publicUrl: http://127.0.0.1:8081/api/minio
-  publicSecure: false
   publicDownloadTtl: 24h
   accessKeyId: AKIAIOSFODNN7EXAMPLE
   secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
