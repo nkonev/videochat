@@ -13,6 +13,7 @@ import (
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"os/exec"
 	"strings"
@@ -20,13 +21,13 @@ import (
 )
 
 type PreviewService struct {
-	minio                       *minio.Client
+	minio                       *s3.InternalMinioClient
 	minioConfig                 *utils.MinioConfig
 	rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher
 	filesService                *FilesService
 }
 
-func NewPreviewService(minio *minio.Client, minioConfig *utils.MinioConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
+func NewPreviewService(minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
 	return &PreviewService{
 		minio:                       minio,
 		minioConfig:                 minioConfig,

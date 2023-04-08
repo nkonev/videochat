@@ -13,26 +13,31 @@ import (
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"sort"
 	"strings"
+	"time"
 )
 
 const UrlStorageGetFilePublicExternal = "/public/download"
 
 type FilesService struct {
-	minio       *minio.Client
+	minio       *s3.InternalMinioClient
+	publicMinio *s3.PublicMinioClient
 	restClient  *client.RestClient
 	minioConfig *utils.MinioConfig
 }
 
 func NewFilesService(
-	minio *minio.Client,
+	minio *s3.InternalMinioClient,
+	publicMinio *s3.PublicMinioClient,
 	chatClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
 ) *FilesService {
 	return &FilesService{
 		minio:       minio,
+		publicMinio: publicMinio,
 		restClient:  chatClient,
 		minioConfig: minioConfig,
 	}
@@ -115,19 +120,23 @@ func (h *FilesService) GetListFilesInFileItem(
 }
 
 func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool, originalFilename bool) (*dto.FileInfoDto, error) {
-	downloadUrlRequestForOriginalFilename, downloadUrlWithoutQuery, err := h.GetChatPrivateUrl(objInfo.Key, chatId)
+	_, downloadUrlWithoutQuery, err := h.GetChatPrivateUrl(objInfo.Key, chatId)
 	if err != nil {
 		Logger.Errorf("Error get chat private url: %v", err)
 		return nil, err
 	}
 	previewUrl := h.GetPreviewUrlSmart(downloadUrlWithoutQuery)
 
-	downloadUrl := ""
-	if originalFilename {
-		downloadUrl = downloadUrlRequestForOriginalFilename
-	} else {
-		downloadUrl = downloadUrlWithoutQuery
+	//if originalFilename {
+	//	downloadUrl = downloadUrlRequestForOriginalFilename
+	//} else {
+	//	downloadUrl = downloadUrlWithoutQuery
+	//}
+	u, err := h.publicMinio.PresignedGetObject(context.Background(), h.minioConfig.Files, objInfo.Key, time.Hour*24, url.Values{})
+	if err != nil {
+		return nil, err
 	}
+	downloadUrl := fmt.Sprintf("%v", u)
 
 	metadata := objInfo.UserMetadata
 

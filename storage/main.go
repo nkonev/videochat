@@ -27,6 +27,7 @@ import (
 	"nkonev.name/storage/producer"
 	"nkonev.name/storage/rabbitmq"
 	"nkonev.name/storage/redis"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
@@ -41,7 +42,8 @@ func main() {
 		fx.Logger(Logger),
 		fx.Provide(
 			configureTracer,
-			configureMinio,
+			configureInternalMinio,
+			configurePublicMinio,
 			configureMinioEntities,
 			configureEcho,
 			redis.RedisV8,
@@ -166,7 +168,7 @@ func configureEcho(
 	return e
 }
 
-func configureMinio() (*minio.Client, error) {
+func configureInternalMinio() (*s3.InternalMinioClient, error) {
 	endpoint := viper.GetString("minio.endpoint")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
@@ -180,7 +182,25 @@ func configureMinio() (*minio.Client, error) {
 		return nil, err
 	}
 
-	return minioClient, nil
+	return &s3.InternalMinioClient{minioClient}, nil
+}
+
+func configurePublicMinio() (*s3.PublicMinioClient, error) {
+	endpoint := viper.GetString("minio.publicEndpoint")
+	accessKeyID := viper.GetString("minio.accessKeyId")
+	secretAccessKey := viper.GetString("minio.secretAccessKey")
+	secure := viper.GetBool("minio.publicSecure")
+
+	// Initialize minio client object.
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: secure,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &s3.PublicMinioClient{minioClient}, nil
 }
 
 func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
@@ -233,7 +253,7 @@ func runEcho(e *echo.Echo) {
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
+func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig, error) {
 	var ua, ca, f, p string
 	var err error
 	if ua, err = utils.EnsureAndGetUserAvatarBucket(client); err != nil {

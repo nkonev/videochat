@@ -34,7 +34,9 @@ jaeger:
 
 minio:
   endpoint: 127.0.0.1:9000
-  containerEndpoint: http://minio:9000
+  interContainerEndpoint: http://minio:9000
+  publicEndpoint: 127.0.0.1:9000
+  publicSecure: false
   accessKeyId: AKIAIOSFODNN7EXAMPLE
   secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   location: "europe-east"

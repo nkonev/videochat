@@ -10,18 +10,22 @@ import (
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
 	"net/http"
+	"net/url"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type FilesHandler struct {
-	minio        *minio.Client
+	minio        *s3.InternalMinioClient
+	publicMinio  *s3.PublicMinioClient
 	restClient   *client.RestClient
 	minioConfig  *utils.MinioConfig
 	filesService *services.FilesService
@@ -36,13 +40,15 @@ const correlationIdKey = "correlationId"
 const UrlStorageGetFile = "/storage/public/download"
 
 func NewFilesHandler(
-	minio *minio.Client,
+	minio *s3.InternalMinioClient,
+	publicMinio *s3.PublicMinioClient,
 	restClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
 	filesService *services.FilesService,
 ) *FilesHandler {
 	return &FilesHandler{
 		minio:        minio,
+		publicMinio:  publicMinio,
 		restClient:   restClient,
 		minioConfig:  minioConfig,
 		filesService: filesService,
@@ -428,6 +434,7 @@ func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId i
 
 const NotFoundImage = "/api/storage/assets/not_found.png"
 
+// TODO seems not needed anymore
 func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -439,7 +446,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
-	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	objectInfo, err := h.publicMinio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
 	if err != nil {
 		if errTyped, ok := err.(minio.ErrorResponse); ok {
 			if errTyped.Code == "NoSuchKey" {
@@ -455,12 +462,12 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	originalString := c.QueryParam("original")
-	original := utils.ParseBooleanOr(originalString, false)
+	//originalString := c.QueryParam("original")
+	//original := utils.ParseBooleanOr(originalString, false)
 
 	belongs, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v for %v", err, fileName)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
@@ -469,18 +476,13 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	}
 	// end check
 
-	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
-	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
-	if original {
-		c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+fileName+"\"")
-	}
-	object, e := h.minio.GetObject(context.Background(), bucketName, fileId, minio.GetObjectOptions{})
+	u, e := h.publicMinio.PresignedGetObject(context.Background(), bucketName, fileId, time.Hour*24, url.Values{})
 	if e != nil {
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
 	}
-	defer object.Close()
+	anUrl := fmt.Sprintf("%v", u)
 
-	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
+	return c.JSON(http.StatusOK, &utils.H{"url": anUrl})
 }
 
 type PublishRequest struct {
@@ -723,7 +725,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 		return err
 	}
 
-	endpoint := viper.GetString("minio.containerEndpoint")
+	endpoint := viper.GetString("minio.interContainerEndpoint")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 
