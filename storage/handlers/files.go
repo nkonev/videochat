@@ -725,7 +725,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 		return err
 	}
 
-	endpoint := viper.GetString("minio.interContainerEndpoint")
+	endpoint := viper.GetString("minio.interContainerUrl")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 

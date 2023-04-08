@@ -169,7 +169,7 @@ func configureEcho(
 }
 
 func configureInternalMinio() (*s3.InternalMinioClient, error) {
-	endpoint := viper.GetString("minio.endpoint")
+	endpoint := viper.GetString("minio.internalEndpoint")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 
