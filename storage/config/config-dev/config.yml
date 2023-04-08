@@ -37,6 +37,7 @@ minio:
   interContainerUrl: http://minio:9000
   publicEndpoint: 127.0.0.1:9000
   publicSecure: false
+  publicDownloadTtl: 24h
   accessKeyId: AKIAIOSFODNN7EXAMPLE
   secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   location: "europe-east"

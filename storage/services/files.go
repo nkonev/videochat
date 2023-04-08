@@ -17,7 +17,6 @@ import (
 	"nkonev.name/storage/utils"
 	"sort"
 	"strings"
-	"time"
 )
 
 const UrlStorageGetFilePublicExternal = "/public/download"
@@ -119,6 +118,17 @@ func (h *FilesService) GetListFilesInFileItem(
 	return list, count, nil
 }
 
+func (h *FilesService) GetDownloadUrl(aKey string) (string, error) {
+	ttl := viper.GetDuration("minio.publicDownloadTtl")
+
+	u, err := h.publicMinio.PresignedGetObject(context.Background(), h.minioConfig.Files, aKey, ttl, url.Values{})
+	if err != nil {
+		return "", err
+	}
+	downloadUrl := fmt.Sprintf("%v", u)
+	return downloadUrl, nil
+}
+
 func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool, originalFilename bool) (*dto.FileInfoDto, error) {
 	_, downloadUrlWithoutQuery, err := h.GetChatPrivateUrl(objInfo.Key, chatId)
 	if err != nil {
@@ -127,44 +137,41 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 	}
 	previewUrl := h.GetPreviewUrlSmart(downloadUrlWithoutQuery)
 
-	//if originalFilename {
-	//	downloadUrl = downloadUrlRequestForOriginalFilename
-	//} else {
-	//	downloadUrl = downloadUrlWithoutQuery
-	//}
-	u, err := h.publicMinio.PresignedGetObject(context.Background(), h.minioConfig.Files, objInfo.Key, time.Hour*24, url.Values{})
-	if err != nil {
-		return nil, err
-	}
-	downloadUrl := fmt.Sprintf("%v", u)
-
 	metadata := objInfo.UserMetadata
 
-	_, fileOwnerId, fileName, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
+	_, fileOwnerId, _, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
 	if err != nil {
 		Logger.Errorf("Error get metadata: %v", err)
 		return nil, err
 	}
 
-	public, err := DeserializeTags(tagging)
+	// TODO think about the case when any user can download the file
+	isPublic, err := DeserializeTags(tagging)
 	if err != nil {
-		Logger.Errorf("Error get tags: %v", err)
+		Logger.Errorf("Error during deserializing object tags %v", err)
 		return nil, err
 	}
 
-	publicUrl, err := h.getPublicUrl(public, objInfo.Key)
+	filename := getFilename(objInfo.Key)
+
+	downloadUrl, err := h.GetDownloadUrl(objInfo.Key)
 	if err != nil {
-		Logger.Errorf("Error get public url: %v", err)
+		Logger.Errorf("Error during getting downlad url %v", err)
 		return nil, err
+	}
+
+	var publicUrl *string
+	if isPublic {
+		publicUrl = &downloadUrl
 	}
 
 	info := &dto.FileInfoDto{
 		Id:           objInfo.Key,
-		Filename:     fileName,
+		Filename:     filename,
 		Url:          downloadUrl,
 		Size:         objInfo.Size,
 		CanDelete:    fileOwnerId == behalfUserId,
-		CanEdit:      fileOwnerId == behalfUserId && strings.HasSuffix(fileName, ".txt"),
+		CanEdit:      fileOwnerId == behalfUserId && strings.HasSuffix(objInfo.Key, ".txt"),
 		CanShare:     fileOwnerId == behalfUserId,
 		LastModified: objInfo.LastModified,
 		OwnerId:      fileOwnerId,
@@ -174,21 +181,10 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 	return info, nil
 }
 
-func (h *FilesService) getPublicUrl(public bool, fileName string) (*string, error) {
-	if !public {
-		return nil, nil
-	}
-
-	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + UrlStorageGetFilePublicExternal)
-	if err != nil {
-		return nil, err
-	}
-
-	query := downloadUrl.Query()
-	query.Add(utils.FileParam, fileName)
-	downloadUrl.RawQuery = query.Encode()
-	str := downloadUrl.String()
-	return &str, nil
+func getFilename(key string) string {
+	split := strings.Split(key, "/")
+	aLen := len(split)
+	return split[aLen-1]
 }
 
 func (h *FilesService) getBaseUrlForDownload() string {

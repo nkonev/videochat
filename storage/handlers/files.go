@@ -58,6 +58,8 @@ type EmbedDto struct {
 	Type *string `json:"type"`
 }
 
+// TODO check if file already exists with this name
+// TODO generate uuid id and store it in metadata
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -76,15 +78,15 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 
 	bucketName := h.minioConfig.Files
 
-	fileItemUuid := uuid.New().String()
+	chatFileItemUuid := uuid.New().String()
 
 	fileItemUuidString := c.Param("fileItemUuid")
 	if fileItemUuidString != "" {
-		fileItemUuid = fileItemUuidString
+		chatFileItemUuid = fileItemUuidString
 	}
 
 	// check this fileItem belongs to user
-	filenameChatPrefix := fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
+	filenameChatPrefix := fmt.Sprintf("chat/%v/%v/", chatId, chatFileItemUuid)
 	belongs, err := h.checkFileItemBelongsToUser(filenameChatPrefix, c, chatId, bucketName, userPrincipalDto)
 	if err != nil {
 		return err
@@ -116,7 +118,6 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		}
 
 		contentType := file.Header.Get("Content-Type")
-		dotExt := utils.GetDotExtension(file)
 
 		GetLogEntry(c.Request().Context()).Debugf("Determined content type: %v", contentType)
 
@@ -126,8 +127,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		}
 		defer src.Close()
 
-		fileUuid := uuid.New().String()
-		filename := fmt.Sprintf("chat/%v/%v/%v%v", chatId, fileItemUuid, fileUuid, dotExt)
+		filename := fmt.Sprintf("chat/%v/%v/%v", chatId, chatFileItemUuid, file.Filename)
 
 		var userMetadata = services.SerializeMetadata(file, userPrincipalDto, chatId, correlationId)
 
@@ -136,9 +136,9 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 			return err
 		}
 
-		_, downloadUrl, err := h.filesService.GetChatPrivateUrl(filename, chatId)
+		downloadUrl, err := h.filesService.GetDownloadUrl(filename)
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during getting url: %v", err)
+			Logger.Errorf("Error during getting downlad url %v", err)
 			continue
 		}
 		var aType = services.GetType(downloadUrl)
@@ -152,7 +152,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	// get count
 	count := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid, "count": count, "embeds": embeds})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": chatFileItemUuid, "count": count, "embeds": embeds})
 }
 
 type ReplaceTextFileDto struct {
@@ -566,53 +566,6 @@ func (h *FilesHandler) countFilesUnderFileUuid(chatId int64, fileItemUuid string
 		counter++
 	}
 	return counter
-}
-
-func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
-	bucketName := h.minioConfig.Files
-
-	// check file is public
-	fileId := c.QueryParam(utils.FileParam)
-	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	_, _, fileName, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	tagging, err := h.minio.GetObjectTagging(context.Background(), bucketName, fileId, minio.GetObjectTaggingOptions{})
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	isPublic, err := services.DeserializeTags(tagging)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	if !isPublic {
-		GetLogEntry(c.Request().Context()).Errorf("File %v is not public", fileId)
-		return c.NoContent(http.StatusUnauthorized)
-	}
-	// end check
-
-	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
-	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
-	c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+fileName+"\"")
-
-	object, e := h.minio.GetObject(context.Background(), bucketName, fileId, minio.GetObjectOptions{})
-	if e != nil {
-		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
-	}
-	defer object.Close()
-
-	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
 
 func (h *FilesHandler) LimitsHandler(c echo.Context) error {
