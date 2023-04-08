@@ -24,7 +24,7 @@
                                     >
                                         <v-container class="file-info-title ma-0 pa-0">
                                         <v-card-title>
-                                            <span @click="onDownloadFileClick(item)" class="download-link">{{item.filename}}</span>
+                                            <a :href="item.url" target="_blank" class="download-link">{{item.filename}}</a>
                                         </v-card-title>
                                         <v-card-subtitle>
                                             {{ item.size | formatSizeFilter }}
@@ -235,9 +235,6 @@ export default {
                     fileItem.previewUrl = dto.previewUrl;
                 }
             }
-        },
-        onDownloadFileClick(item) {
-            window.open(item.url);
         },
         copyUrl(item) {
             navigator.clipboard.writeText(item.url);
