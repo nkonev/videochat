@@ -32,6 +32,10 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:1230
+    minio-service:
+      loadBalancer:
+        servers:
+          - url: http://minio:9000
 
   routers:
     frontend-router:
@@ -108,6 +112,13 @@ http:
       middlewares:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
+    minio-router:
+      rule: "PathPrefix(`/api/minio`)"
+      service: minio-service
+      middlewares:
+        - "minio-strip-prefix-middleware"
+        - "retry-middleware"
+        - "minio-fix-host"
 
   middlewares:
     api-strip-prefix-middleware:
@@ -118,6 +129,14 @@ http:
       stripPrefix:
         prefixes:
           - "/api/livekit"
+    minio-strip-prefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/api/minio"
+    minio-fix-host:
+      headers:
+        customRequestHeaders:
+          Host: "127.0.0.1:9000"
     retry-middleware:
       retry:
         attempts: 4

@@ -125,6 +125,17 @@ func (h *FilesService) GetDownloadUrl(aKey string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	publicUrlPrefix := viper.GetString("minio.publicUrl")
+	parsed, err := url.Parse(publicUrlPrefix)
+	if err != nil {
+		return "", err
+	}
+
+	u.Path = parsed.Path + u.Path
+	u.Host = parsed.Host
+	u.Scheme = parsed.Scheme
+
 	downloadUrl := fmt.Sprintf("%v", u)
 	return downloadUrl, nil
 }
@@ -145,24 +156,12 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		return nil, err
 	}
 
-	// TODO think about the case when any user can download the file
-	isPublic, err := DeserializeTags(tagging)
-	if err != nil {
-		Logger.Errorf("Error during deserializing object tags %v", err)
-		return nil, err
-	}
-
 	filename := getFilename(objInfo.Key)
 
 	downloadUrl, err := h.GetDownloadUrl(objInfo.Key)
 	if err != nil {
 		Logger.Errorf("Error during getting downlad url %v", err)
 		return nil, err
-	}
-
-	var publicUrl *string
-	if isPublic {
-		publicUrl = &downloadUrl
 	}
 
 	info := &dto.FileInfoDto{
@@ -175,7 +174,6 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		CanShare:     fileOwnerId == behalfUserId,
 		LastModified: objInfo.LastModified,
 		OwnerId:      fileOwnerId,
-		PublicUrl:    publicUrl,
 		PreviewUrl:   previewUrl,
 	}
 	return info, nil
