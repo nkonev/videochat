@@ -43,7 +43,6 @@ func main() {
 		fx.Provide(
 			configureTracer,
 			configureInternalMinio,
-			configurePublicMinio,
 			configureMinioEntities,
 			configureEcho,
 			redis.RedisV8,
@@ -181,24 +180,6 @@ func configureInternalMinio() (*s3.InternalMinioClient, error) {
 	}
 
 	return &s3.InternalMinioClient{minioClient}, nil
-}
-
-func configurePublicMinio() (*s3.PublicMinioClient, error) {
-	endpoint := viper.GetString("minio.publicEndpoint")
-	accessKeyID := viper.GetString("minio.accessKeyId")
-	secretAccessKey := viper.GetString("minio.secretAccessKey")
-	secure := viper.GetBool("minio.publicSecure")
-
-	// Initialize minio client object.
-	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: secure,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &s3.PublicMinioClient{minioClient}, nil
 }
 
 func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {

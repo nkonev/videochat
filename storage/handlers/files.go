@@ -23,7 +23,6 @@ import (
 
 type FilesHandler struct {
 	minio        *s3.InternalMinioClient
-	publicMinio  *s3.PublicMinioClient
 	restClient   *client.RestClient
 	minioConfig  *utils.MinioConfig
 	filesService *services.FilesService
@@ -35,18 +34,15 @@ type RenameDto struct {
 
 const filesMultipartKey = "files"
 const correlationIdKey = "correlationId"
-const UrlStorageGetFile = "/storage/public/download"
 
 func NewFilesHandler(
 	minio *s3.InternalMinioClient,
-	publicMinio *s3.PublicMinioClient,
 	restClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
 	filesService *services.FilesService,
 ) *FilesHandler {
 	return &FilesHandler{
 		minio:        minio,
-		publicMinio:  publicMinio,
 		restClient:   restClient,
 		minioConfig:  minioConfig,
 		filesService: filesService,

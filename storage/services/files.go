@@ -19,24 +19,19 @@ import (
 	"strings"
 )
 
-const UrlStorageGetFilePublicExternal = "/public/download"
-
 type FilesService struct {
 	minio       *s3.InternalMinioClient
-	publicMinio *s3.PublicMinioClient
 	restClient  *client.RestClient
 	minioConfig *utils.MinioConfig
 }
 
 func NewFilesService(
 	minio *s3.InternalMinioClient,
-	publicMinio *s3.PublicMinioClient,
 	chatClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
 ) *FilesService {
 	return &FilesService{
 		minio:       minio,
-		publicMinio: publicMinio,
 		restClient:  chatClient,
 		minioConfig: minioConfig,
 	}
@@ -121,7 +116,7 @@ func (h *FilesService) GetListFilesInFileItem(
 func (h *FilesService) GetDownloadUrl(aKey string) (string, error) {
 	ttl := viper.GetDuration("minio.publicDownloadTtl")
 
-	u, err := h.publicMinio.PresignedGetObject(context.Background(), h.minioConfig.Files, aKey, ttl, url.Values{})
+	u, err := h.minio.PresignedGetObject(context.Background(), h.minioConfig.Files, aKey, ttl, url.Values{})
 	if err != nil {
 		return "", err
 	}
