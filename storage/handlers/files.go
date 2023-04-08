@@ -54,7 +54,6 @@ type EmbedDto struct {
 	Type *string `json:"type"`
 }
 
-// TODO check if file already exists with this name
 // TODO generate uuid id and store it in metadata
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
@@ -124,6 +123,12 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		defer src.Close()
 
 		filename := fmt.Sprintf("chat/%v/%v/%v", chatId, chatFileItemUuid, file.Filename)
+
+		_, err = h.minio.StatObject(context.Background(), bucketName, filename, minio.StatObjectOptions{})
+		if err == nil {
+			GetLogEntry(c.Request().Context()).Errorf("Already exists: %v", filename)
+			return c.NoContent(http.StatusConflict)
+		}
 
 		var userMetadata = services.SerializeMetadata(file, userPrincipalDto, chatId, correlationId)
 
