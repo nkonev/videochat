@@ -121,18 +121,26 @@ func (h *FilesService) GetDownloadUrl(aKey string) (string, error) {
 		return "", err
 	}
 
-	publicUrlPrefix := viper.GetString("minio.publicUrl")
-	parsed, err := url.Parse(publicUrlPrefix)
+	err = ChangeUrl(u)
 	if err != nil {
 		return "", err
 	}
 
-	u.Path = parsed.Path + u.Path
-	u.Host = parsed.Host
-	u.Scheme = parsed.Scheme
-
 	downloadUrl := fmt.Sprintf("%v", u)
 	return downloadUrl, nil
+}
+
+func ChangeUrl(url *url.URL) error {
+	publicUrlPrefix := viper.GetString("minio.publicUrl")
+	parsed, err := url.Parse(publicUrlPrefix)
+	if err != nil {
+		return err
+	}
+
+	url.Path = parsed.Path + url.Path
+	url.Host = parsed.Host
+	url.Scheme = parsed.Scheme
+	return nil
 }
 
 func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool, originalFilename bool) (*dto.FileInfoDto, error) {

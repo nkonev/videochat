@@ -118,6 +118,8 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	}
 
 	// TODO check enough size taking on account free disk space probe (see LimitsHandler)
+
+	// var userMetadata = services.SerializeMetadata(file, userPrincipalDto, chatId, correlationId)
 	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
 	var vals = url.Values{}
 	vals.Set("x-amz-meta-olol", "bcd")
@@ -128,6 +130,11 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, filename, uploadDuration, vals)
 	if err != nil {
 		Logger.Errorf("Error during getting downlad url %v", err)
+		return err
+	}
+
+	err = services.ChangeUrl(u)
+	if err != nil {
 		return err
 	}
 
