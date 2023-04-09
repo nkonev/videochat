@@ -120,7 +120,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	// TODO check enough size taking on account free disk space probe (see LimitsHandler)
 	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
 	var vals = url.Values{}
-	vals.Set("a", "b")
+	vals.Set("x-amz-meta-olol", "bcd")
 	if reqDto.CorrelationId != nil && *reqDto.CorrelationId != "" {
 		vals.Set("correlationId", *reqDto.CorrelationId)
 	}
