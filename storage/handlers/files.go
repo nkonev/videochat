@@ -10,6 +10,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
 	"net/http"
+	"net/url"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
@@ -33,7 +34,6 @@ type RenameDto struct {
 }
 
 const filesMultipartKey = "files"
-const correlationIdKey = "correlationId"
 
 func NewFilesHandler(
 	minio *s3.InternalMinioClient,
@@ -54,6 +54,17 @@ type EmbedDto struct {
 	Type *string `json:"type"`
 }
 
+type UploadRequest struct {
+	CorrelationId *string `json:"correlationId"`
+	FileItemUuid  *string `json:"fileItemUuid"`
+	FileSize      int64   `json:"fileSize"`
+	FileName      string  `json:"fileName"`
+}
+
+type UploadResponse struct {
+	Url string `json:"url"`
+}
+
 // TODO generate uuid id and store it in metadata
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
@@ -71,13 +82,19 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
+	reqDto := new(UploadRequest)
+	err = c.Bind(reqDto)
+	if err != nil {
+		return err
+	}
+
 	bucketName := h.minioConfig.Files
 
 	chatFileItemUuid := uuid.New().String()
 
-	fileItemUuidString := c.Param("fileItemUuid")
-	if fileItemUuidString != "" {
-		chatFileItemUuid = fileItemUuidString
+	fileItemUuidString := reqDto.FileItemUuid
+	if fileItemUuidString != nil && *fileItemUuidString != "" {
+		chatFileItemUuid = *fileItemUuidString
 	}
 
 	// check this fileItem belongs to user
@@ -91,69 +108,30 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	}
 	// end check
 
-	form, err := c.MultipartForm()
+	filename := fmt.Sprintf("chat/%v/%v/%v", chatId, chatFileItemUuid, reqDto.FileName)
+
+	// check that this file does not exist
+	_, err = h.minio.StatObject(context.Background(), bucketName, filename, minio.StatObjectOptions{})
+	if err == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Already exists: %v", filename)
+		return c.NoContent(http.StatusConflict)
+	}
+
+	// TODO check enough size taking on account free disk space probe (see LimitsHandler)
+	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
+	var vals = url.Values{}
+	vals.Set("a", "b")
+	if reqDto.CorrelationId != nil && *reqDto.CorrelationId != "" {
+		vals.Set("correlationId", *reqDto.CorrelationId)
+	}
+
+	u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, filename, uploadDuration, vals)
 	if err != nil {
+		Logger.Errorf("Error during getting downlad url %v", err)
 		return err
 	}
-	files := form.File[filesMultipartKey]
-	correlationIds := form.Value[correlationIdKey]
-	correlationId := ""
-	if len(correlationIds) == 1 {
-		correlationId = correlationIds[0]
-	}
 
-	var embeds = []EmbedDto{}
-	for _, file := range files {
-		userLimitOk, _, _, err := checkUserLimit(h.minio, bucketName, userPrincipalDto, file.Size)
-		if err != nil {
-			return err
-		}
-		if !userLimitOk {
-			return c.JSON(http.StatusRequestEntityTooLarge, &utils.H{"status": "fail"})
-		}
-
-		contentType := file.Header.Get("Content-Type")
-
-		GetLogEntry(c.Request().Context()).Debugf("Determined content type: %v", contentType)
-
-		src, err := file.Open()
-		if err != nil {
-			return err
-		}
-		defer src.Close()
-
-		filename := fmt.Sprintf("chat/%v/%v/%v", chatId, chatFileItemUuid, file.Filename)
-
-		_, err = h.minio.StatObject(context.Background(), bucketName, filename, minio.StatObjectOptions{})
-		if err == nil {
-			GetLogEntry(c.Request().Context()).Errorf("Already exists: %v", filename)
-			return c.NoContent(http.StatusConflict)
-		}
-
-		var userMetadata = services.SerializeMetadata(file, userPrincipalDto, chatId, correlationId)
-
-		if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, file.Size, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
-			return err
-		}
-
-		downloadUrl, err := h.filesService.GetDownloadUrl(filename)
-		if err != nil {
-			Logger.Errorf("Error during getting downlad url %v", err)
-			continue
-		}
-		var aType = services.GetType(downloadUrl)
-
-		embeds = append(embeds, EmbedDto{
-			Url:  downloadUrl,
-			Type: aType,
-		})
-	}
-
-	// get count
-	count := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
-
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": chatFileItemUuid, "count": count, "embeds": embeds})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "url": fmt.Sprintf("%v", u)})
 }
 
 type ReplaceTextFileDto struct {
