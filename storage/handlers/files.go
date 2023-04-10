@@ -65,7 +65,6 @@ type UploadResponse struct {
 	Url string `json:"url"`
 }
 
-// TODO generate uuid id and store it in metadata
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
