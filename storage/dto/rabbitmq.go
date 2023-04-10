@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/google/uuid"
+
 type ChatEvent struct {
 	EventType         string             `json:"eventType"`
 	ChatId            int64              `json:"chatId"`
@@ -8,9 +10,9 @@ type ChatEvent struct {
 }
 
 type FileUploadedEvent struct {
-	Id            string  `json:"id"`
-	Url           string  `json:"url"`
-	PreviewUrl    *string `json:"previewUrl"`
-	Type          *string `json:"aType"`
-	CorrelationId string  `json:"correlationId"`
+	Id            uuid.UUID `json:"id"`
+	Url           string    `json:"url"`
+	PreviewUrl    *string   `json:"previewUrl"`
+	Type          *string   `json:"aType"`
+	CorrelationId string    `json:"correlationId"`
 }

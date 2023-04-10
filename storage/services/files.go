@@ -363,6 +363,14 @@ func GetOriginalKeyFromMetadata(userMetadata minio.StringMap, hasAmzPrefix bool)
 	return originalKeyParam, nil
 }
 
+func FileIdKey(hasAmzPrefix bool) string {
+	var prefix = ""
+	if hasAmzPrefix {
+		prefix = xAmzMetaPrefix
+	}
+	return prefix + strings.Title(fileIdKey)
+}
+
 func ChatIdKey(hasAmzPrefix bool) string {
 	var prefix = ""
 	if hasAmzPrefix {

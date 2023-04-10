@@ -2,6 +2,7 @@ package listener
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
 	"nkonev.name/storage/dto"
@@ -22,6 +23,12 @@ func CreateMinioEventsListener(previewService *services.PreviewService) MinioEve
 		result := gjson.Get(strData, "Records.0.s3.object.userMetadata")
 		chatId := result.Get(services.ChatIdKey(true)).Int()
 		ownerId := result.Get(services.OwnerIdKey(true)).Int()
+		fileIdStr := result.Get(services.FileIdKey(true)).String()
+		fileId, err := uuid.Parse(fileIdStr)
+		if err != nil {
+			Logger.Errorf("Unable to parse fileId for %v", fileIdStr)
+			return err
+		}
 		correlationId := result.Get(services.CorrelationIdKey(true)).String()
 		var minioEvent = &dto.MinioEvent{
 			EventName:     eventName,
@@ -29,6 +36,7 @@ func CreateMinioEventsListener(previewService *services.PreviewService) MinioEve
 			ChatId:        chatId,
 			OwnerId:       ownerId,
 			CorrelationId: correlationId,
+			FileId:        fileId,
 		}
 		ctx := context.Background()
 
