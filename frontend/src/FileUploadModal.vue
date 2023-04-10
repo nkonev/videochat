@@ -133,55 +133,48 @@ export default {
             console.log("Sending file to storage");
 
             let totalSize = 0;
-            const promises = [];
+            const getPresignedUrlPromises = [];
             for (const file of this.files) {
                 totalSize += file.size;
-                promises.push(axios.put(`/api/storage/${this.chatId}/url`, {
+                getPresignedUrlPromises.push(axios.put(`/api/storage/${this.chatId}/url`, {
                     fileItemUuid: this.fileItemUuid, // nullable
                     fileSize: file.size,
                     fileName: file.name,
                     correlationId: this.correlationId, // nullable
                 }).then((response) => {
-                    return response.data;
+                    return {url: response.data.url, file: file};
                 }))
             }
-            const urlResponses = await Promise.all(promises);
+            const urlResponses = await Promise.all(getPresignedUrlPromises);
 
-            return this.checkLimits(totalSize).then(async ()=>{
-                const promises = [];
+            return this.checkLimits(totalSize).then(async ()=> {
                 for (const presignedUrlResponse of urlResponses) {
-                    promises.add( // TODO remove this.files[0]
-                        axios.put(presignedUrlResponse.url, this.files[0], config).then(response => {
-                            if (this.$data.shouldSetFileUuidToMessage) {
-                                bus.$emit(SET_FILE_ITEM_UUID, {
-                                    fileItemUuid: response.data.fileItemUuid,
-                                    count: response.data.count
-                                });
-                            }
-                            this.uploading = false;
-                            bus.$emit(UPDATE_VIEW_FILES_DIALOG);
-                            return response;
-                        })
-                    );
-                    await Promise.all(promises);
-                    // TODO
-                        // .catch((thrown) => {
-                        //     if (axios.isCancel(thrown)) {
-                        //         console.log('Request canceled', thrown.message);
-                        //         this.hideModal();
-                        //     } else {
-                        //         throw thrown
-                        //     }
-                        // })
-                        // .then((response) => {
-                        //     this.hideModal();
-                        //     return response;
-                        // })
+                    try {
+                        await axios.put(presignedUrlResponse.url, presignedUrlResponse.file, config)
+                            .then(response => {
+                                if (this.$data.shouldSetFileUuidToMessage) {
+                                    bus.$emit(SET_FILE_ITEM_UUID, {
+                                        fileItemUuid: response.data.fileItemUuid,
+                                        count: response.data.count
+                                    });
+                                }
+                                this.uploading = false;
+                                bus.$emit(UPDATE_VIEW_FILES_DIALOG);
+                                return response;
+                            })
+                    } catch(thrown) {
+                        this.uploading = false;
+                        if (axios.isCancel(thrown)) {
+                            console.log('Request canceled', thrown.message);
+                            break
+                        } else {
+                            return Promise.reject(ex);
+                        }
+                    }
                 }
-            }).catch(ex =>{
-                this.uploading = false;
-                return Promise.reject(ex);
-            });
+                this.hideModal();
+                return Promise.resolve();
+            })
         },
         cancel() {
             this.cancelSource.cancel()
