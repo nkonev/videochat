@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
-	"mime/multipart"
 	"net/url"
-	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
@@ -153,13 +152,13 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 
 	metadata := objInfo.UserMetadata
 
-	_, fileOwnerId, _, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
+	_, fileOwnerId, fileId, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
 	if err != nil {
 		Logger.Errorf("Error get metadata: %v", err)
 		return nil, err
 	}
 
-	filename := getFilename(objInfo.Key)
+	filename := ReadFilename(objInfo.Key)
 
 	downloadUrl, err := h.GetDownloadUrl(objInfo.Key)
 	if err != nil {
@@ -168,7 +167,7 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 	}
 
 	info := &dto.FileInfoDto{
-		Id:           objInfo.Key,
+		Id:           fileId,
 		Filename:     filename,
 		Url:          downloadUrl,
 		Size:         objInfo.Size,
@@ -180,12 +179,6 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		PreviewUrl:   previewUrl,
 	}
 	return info, nil
-}
-
-func getFilename(key string) string {
-	split := strings.Split(key, "/")
-	aLen := len(split)
-	return split[aLen-1]
 }
 
 func (h *FilesService) getBaseUrlForDownload() string {
@@ -277,24 +270,78 @@ func (h *FilesService) getPreviewUrl(itemUrl string, requestedMediaType string) 
 
 const publicKey = "public"
 
-const filenameKey = "filename"
+const fileIdKey = "fileid"
 const ownerIdKey = "ownerid"
 const chatIdKey = "chatid"
 const correlationIdKey = "correlationid"
 
 const originalKey = "originalkey"
 
-func SerializeMetadata(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult, chatId int64, correlationId string) map[string]string {
-	return SerializeMetadataSimple(file.Filename, userPrincipalDto.UserId, chatId, correlationId)
-}
-
-func SerializeMetadataSimple(filename string, userId int64, chatId int64, correlationId string) map[string]string {
+func SerializeMetadataSimple(fileId uuid.UUID, userId int64, chatId int64, correlationId *string) map[string]string {
 	var userMetadata = map[string]string{}
-	userMetadata[filenameKey] = filename
+	userMetadata[fileIdKey] = fileId.String()
 	userMetadata[ownerIdKey] = utils.Int64ToString(userId)
 	userMetadata[chatIdKey] = utils.Int64ToString(chatId)
-	userMetadata[correlationIdKey] = correlationId
+	if correlationId != nil {
+		userMetadata[correlationIdKey] = *correlationId
+	}
 	return userMetadata
+}
+
+const xAmzMetaPrefix = "X-Amz-Meta-"
+
+func SerializeMetadataAndStore(urlValues *url.Values, fileId uuid.UUID, userId int64, chatId int64, correlationId *string) {
+	urlValues.Set(xAmzMetaPrefix+strings.Title(fileIdKey), fileId.String())
+	urlValues.Set(xAmzMetaPrefix+strings.Title(ownerIdKey), utils.Int64ToString(userId))
+	urlValues.Set(xAmzMetaPrefix+strings.Title(chatIdKey), utils.Int64ToString(chatId))
+	if correlationId != nil {
+		urlValues.Set(xAmzMetaPrefix+strings.Title(correlationIdKey), *correlationId)
+	}
+}
+
+func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, uuid.UUID, string, error) {
+	var prefix = ""
+	if hasAmzPrefix {
+		prefix = xAmzMetaPrefix
+	}
+	fileIdStr, ok := userMetadata[prefix+strings.Title(fileIdKey)]
+	if !ok {
+		return 0, 0, uuid.New(), "", errors.New("Unable to get fileId")
+	}
+	fileId, err := uuid.Parse(fileIdStr)
+	if err != nil {
+		return 0, 0, uuid.New(), "", errors.New("Unable to parse fileId")
+	}
+
+	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
+	if !ok {
+		return 0, 0, uuid.New(), "", errors.New("Unable to get owner id")
+	}
+	ownerId, err := utils.ParseInt64(ownerIdString)
+	if err != nil {
+		return 0, 0, uuid.New(), "", err
+	}
+
+	chatIdString, ok := userMetadata[prefix+strings.Title(chatIdKey)]
+	if !ok {
+		return 0, 0, uuid.New(), "", errors.New("Unable to get chat id")
+	}
+	chatId, err := utils.ParseInt64(chatIdString)
+	if err != nil {
+		return 0, 0, uuid.New(), "", err
+	}
+	correlationId := userMetadata[prefix+strings.Title(correlationIdKey)]
+
+	return chatId, ownerId, fileId, correlationId, nil
+}
+
+func GenerateFilename(filename string, chatFileItemUuid string, chatId int64) string {
+	return fmt.Sprintf("chat/%v/%v/%v", chatId, chatFileItemUuid, filename)
+}
+
+func ReadFilename(key string) string {
+	arr := strings.Split(key, "/")
+	return arr[len(arr)-1]
 }
 
 func SerializeOriginalKeyToMetadata(originalKeyParam string) map[string]string {
@@ -302,8 +349,6 @@ func SerializeOriginalKeyToMetadata(originalKeyParam string) map[string]string {
 	userMetadata[originalKey] = originalKeyParam
 	return userMetadata
 }
-
-const xAmzMetaPrefix = "X-Amz-Meta-"
 
 func GetOriginalKeyFromMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (string, error) {
 	var prefix = ""
@@ -316,37 +361,6 @@ func GetOriginalKeyFromMetadata(userMetadata minio.StringMap, hasAmzPrefix bool)
 		return "", errors.New("Unable to get originalKey")
 	}
 	return originalKeyParam, nil
-}
-
-func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, string, error) {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	filename, ok := userMetadata[prefix+strings.Title(filenameKey)]
-	if !ok {
-		return 0, 0, "", "", errors.New("Unable to get filename")
-	}
-	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
-	if !ok {
-		return 0, 0, "", "", errors.New("Unable to get owner id")
-	}
-	ownerId, err := utils.ParseInt64(ownerIdString)
-	if err != nil {
-		return 0, 0, "", "", err
-	}
-
-	chatIdString, ok := userMetadata[prefix+strings.Title(chatIdKey)]
-	if !ok {
-		return 0, 0, "", "", errors.New("Unable to get chat id")
-	}
-	chatId, err := utils.ParseInt64(chatIdString)
-	if err != nil {
-		return 0, 0, "", "", err
-	}
-	correlationId := userMetadata[prefix+strings.Title(correlationIdKey)]
-
-	return chatId, ownerId, filename, correlationId, nil
 }
 
 func ChatIdKey(hasAmzPrefix bool) string {

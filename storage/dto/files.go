@@ -1,11 +1,12 @@
 package dto
 
 import (
+	"github.com/google/uuid"
 	"time"
 )
 
 type FileInfoDto struct {
-	Id           string    `json:"id"`
+	Id           uuid.UUID `json:"id"`
 	Filename     string    `json:"filename"`
 	Url          string    `json:"url"`
 	PreviewUrl   *string   `json:"previewUrl"`

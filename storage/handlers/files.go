@@ -108,7 +108,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	}
 	// end check
 
-	filename := fmt.Sprintf("chat/%v/%v/%v", chatId, chatFileItemUuid, reqDto.FileName)
+	filename := services.GenerateFilename(reqDto.FileName, chatFileItemUuid, chatId)
 
 	// check that this file does not exist
 	_, err = h.minio.StatObject(context.Background(), bucketName, filename, minio.StatObjectOptions{})
@@ -119,15 +119,12 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 
 	// TODO check enough size taking on account free disk space probe (see LimitsHandler)
 
-	// var userMetadata = services.SerializeMetadata(file, userPrincipalDto, chatId, correlationId)
 	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
-	var vals = url.Values{}
-	vals.Set("x-amz-meta-olol", "bcd")
-	if reqDto.CorrelationId != nil && *reqDto.CorrelationId != "" {
-		vals.Set("correlationId", *reqDto.CorrelationId)
-	}
+	var urlVals = url.Values{}
 
-	u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, filename, uploadDuration, vals)
+	services.SerializeMetadataAndStore(&urlVals, uuid.New(), userPrincipalDto.UserId, chatId, reqDto.CorrelationId)
+
+	u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, filename, uploadDuration, urlVals)
 	if err != nil {
 		Logger.Errorf("Error during getting downlad url %v", err)
 		return err
@@ -195,16 +192,15 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	}
 
 	contentType := bindTo.ContentType
-	dotExt := utils.GetDotExtensionStr(bindTo.Filename)
 
 	GetLogEntry(c.Request().Context()).Debugf("Determined content type: %v", contentType)
 
 	src := strings.NewReader(bindTo.Text)
 
-	fileUuid := getFileId(bindTo.Id)
-	filename := fmt.Sprintf("chat/%v/%v/%v%v", chatId, fileItemUuid, fileUuid, dotExt)
+	chatFileItemUuid := getFileId(bindTo.Id)
+	filename := services.GenerateFilename(bindTo.Filename, chatFileItemUuid, chatId)
 
-	var userMetadata = services.SerializeMetadataSimple(bindTo.Filename, userPrincipalDto.UserId, chatId, "")
+	var userMetadata = services.SerializeMetadataSimple(uuid.New(), userPrincipalDto.UserId, chatId, nil)
 
 	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
@@ -280,14 +276,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 	var filter func(info *minio.ObjectInfo) bool = nil
 	if searchString != "" {
 		filter = func(info *minio.ObjectInfo) bool {
-			metadata := info.UserMetadata
-
-			_, _, fileName, _, err := services.DeserializeMetadata(metadata, true)
-			if err != nil {
-				Logger.Errorf("Error get metadata: %v", err)
-				return false
-			}
-			normalizedFileName := strings.ToLower(fileName)
+			normalizedFileName := strings.ToLower(services.ReadFilename(info.Key))
 			return strings.Contains(normalizedFileName, searchString)
 		}
 	}
@@ -615,13 +604,11 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 
-	metadata := services.SerializeMetadataSimple(bindTo.FileName, bindTo.OwnerId, bindTo.ChatId, "")
+	metadata := services.SerializeMetadataSimple(uuid.New(), bindTo.OwnerId, bindTo.ChatId, nil)
 
-	fileItemUuid := uuid.New().String()
-	fileUuid := uuid.New().String()
-	dotExt := utils.GetDotExtensionStr(bindTo.FileName)
+	chatFileItemUuid := uuid.New().String()
 
-	minioFilename := fmt.Sprintf("/chat/%v/%v/%v%v", bindTo.ChatId, fileItemUuid, fileUuid, dotExt)
+	filename := services.GenerateFilename(bindTo.FileName, chatFileItemUuid, bindTo.ChatId)
 
 	response := S3Response{
 		AccessKey: accessKeyID,
@@ -630,17 +617,17 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 		Endpoint:  endpoint,
 		Bucket:    h.minioConfig.Files,
 		Metadata:  metadata,
-		Filepath:  minioFilename,
+		Filepath:  filename,
 	}
 
 	return c.JSON(http.StatusOK, response)
 }
 
 type MediaDto struct {
-	Id         string  `json:"id"`
-	Filename   string  `json:"filename"`
-	Url        string  `json:"url"`
-	PreviewUrl *string `json:"previewUrl"`
+	Id         uuid.UUID `json:"id"`
+	Filename   string    `json:"filename"`
+	Url        string    `json:"url"`
+	PreviewUrl *string   `json:"previewUrl"`
 }
 
 func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
