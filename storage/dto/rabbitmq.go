@@ -14,5 +14,5 @@ type FileUploadedEvent struct {
 	Url           string    `json:"url"`
 	PreviewUrl    *string   `json:"previewUrl"`
 	Type          *string   `json:"aType"`
-	CorrelationId string    `json:"correlationId"`
+	CorrelationId string    `json:"correlationId"` // TODO optional - make a pointer
 }
