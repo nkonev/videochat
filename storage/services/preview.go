@@ -138,7 +138,7 @@ func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64,
 		GetLogEntry(ctx).Errorf("Error during getting url: %v", err)
 		return nil, err
 	}
-	var previewUrl *string = s.filesService.GetPreviewUrlSmart(downloadUrl)
+	var previewUrl *string = s.filesService.GetPreviewUrlSmart(normalizedKey)
 	var aType = GetType(downloadUrl)
 
 	return &dto.FileUploadedEvent{

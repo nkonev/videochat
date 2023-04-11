@@ -240,7 +240,7 @@ func (h *FilesService) getPreviewUrl(aKey string, requestedMediaType string) *st
 	}
 	if previewMinioKey != "" {
 		query := respUrl.Query()
-		query.Add(utils.FileParam, aKey)
+		query.Set(utils.FileParam, previewMinioKey)
 
 		obj, err := h.minio.StatObject(context.Background(), h.minioConfig.FilesPreview, previewMinioKey, minio.StatObjectOptions{})
 		if err == nil {
