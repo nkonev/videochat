@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"mime/multipart"
 	. "nkonev.name/storage/logger"
 	"regexp"
 	"strconv"
@@ -172,10 +171,6 @@ type Tuple struct {
 	MinioKey string `json:"minioKey"`
 	Filename string `json:"filename"`
 	Exists   bool   `json:"exists"`
-}
-
-func GetDotExtension(file *multipart.FileHeader) string {
-	return GetDotExtensionStr(file.Filename)
 }
 
 func GetDotExtensionStr(fileName string) string {

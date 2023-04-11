@@ -689,7 +689,7 @@ func convert(filesService *services.FilesService, item *dto.FileInfoDto) *MediaD
 	if item == nil {
 		return nil
 	}
-	var previewUrl *string = filesService.GetPreviewUrlSmart(item.Url)
+	var previewUrl *string = item.PreviewUrl
 
 	return &MediaDto{
 		Id:         item.Id,
