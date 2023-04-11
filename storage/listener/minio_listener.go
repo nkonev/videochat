@@ -29,7 +29,11 @@ func CreateMinioEventsListener(previewService *services.PreviewService) MinioEve
 			Logger.Errorf("Unable to parse fileId for %v", fileIdStr)
 			return err
 		}
-		correlationId := result.Get(services.CorrelationIdKey(true)).String()
+		correlationIdStr := result.Get(services.CorrelationIdKey(true)).String()
+		var correlationId *string
+		if correlationIdStr != "" {
+			correlationId = &correlationIdStr
+		}
 		var minioEvent = &dto.MinioEvent{
 			EventName:     eventName,
 			Key:           key,

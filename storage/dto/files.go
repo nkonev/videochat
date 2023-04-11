@@ -24,6 +24,6 @@ type MinioEvent struct {
 	Key           string
 	ChatId        int64
 	OwnerId       int64
-	CorrelationId string
+	CorrelationId *string
 	FileId        uuid.UUID
 }
