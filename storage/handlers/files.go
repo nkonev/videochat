@@ -679,23 +679,22 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 	var list []*MediaDto = make([]*MediaDto, 0)
 
 	for _, item := range items {
-		list = append(list, convert(h.filesService, item))
+		list = append(list, convert(item))
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
 }
 
-func convert(filesService *services.FilesService, item *dto.FileInfoDto) *MediaDto {
+func convert(item *dto.FileInfoDto) *MediaDto {
 	if item == nil {
 		return nil
 	}
-	var previewUrl *string = item.PreviewUrl
 
 	return &MediaDto{
 		Id:         item.Id,
 		Filename:   item.Filename,
 		Url:        item.Url,
-		PreviewUrl: previewUrl,
+		PreviewUrl: item.PreviewUrl,
 	}
 }
 
