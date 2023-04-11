@@ -180,23 +180,6 @@ func (h *FilesService) getBaseUrlForDownload() string {
 	return viper.GetString("server.contextPath") + "/storage"
 }
 
-func (h *FilesService) GetChatPrivateUrl(minioKey string, chatId int64) (string, string, error) {
-	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + "/download")
-	if err != nil {
-		return "", "", err
-	}
-
-	query := downloadUrl.Query()
-	query.Add(utils.FileParam, minioKey)
-	downloadUrl.RawQuery = query.Encode()
-	str := downloadUrl.String()
-
-	withoutQuery := str
-	str += "&original=true"
-
-	return str, withoutQuery, nil
-}
-
 const Media_image = "image"
 const Media_video = "video"
 
