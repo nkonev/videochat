@@ -139,7 +139,7 @@ func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64,
 		return nil, err
 	}
 	var previewUrl *string = s.filesService.GetPreviewUrlSmart(normalizedKey)
-	var aType = GetType(downloadUrl)
+	var aType = GetType(normalizedKey)
 
 	return &dto.FileUploadedEvent{
 		Id:            fileId,
