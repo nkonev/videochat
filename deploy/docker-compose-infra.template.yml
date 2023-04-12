@@ -62,7 +62,7 @@ services:
         - "traefik.http.routers.minio-router.entrypoints=http"
         - "traefik.http.routers.minio-router.middlewares=minio-strip-prefix-middleware,retry-middleware@file,minio-fix-host-middleware"
         - "traefik.http.middlewares.minio-strip-prefix-middleware.stripprefix.prefixes=/api/s3"
-        - "traefik.http.middlewares.minio-fix-host-middleware.stripprefix.headers.customRequestHeaders.Host=127.0.0.1:9000"
+        - "traefik.http.middlewares.minio-fix-host-middleware.headers.customRequestHeaders.Host=127.0.0.1:9000"
 
     environment:
       - MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE
