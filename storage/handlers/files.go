@@ -126,6 +126,8 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	}
 
 	// TODO for image, video from files_uploaded, /candidates we need to constant return redirect url instead of its (temporary) presigned url
+	// TODO check /replace, check /internal/s3 (along with video recording)
+	// TODO decide what to do with "make public"
 
 	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
 	var urlVals = url.Values{}
