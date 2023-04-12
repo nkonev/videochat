@@ -113,7 +113,7 @@ http:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
     minio-router:
-      rule: "PathPrefix(`/api/minio`)"
+      rule: "PathPrefix(`/api/s3`)"
       service: minio-service
       middlewares:
         - "minio-strip-prefix-middleware"
@@ -132,7 +132,7 @@ http:
     minio-strip-prefix-middleware:
       stripPrefix:
         prefixes:
-          - "/api/minio"
+          - "/api/s3"
     minio-fix-host:
       headers:
         customRequestHeaders:
