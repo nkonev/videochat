@@ -28,8 +28,9 @@ services:
     environment:
         - STORAGE_MINIO.INTERNALENDPOINT=minio:9000
         - STORAGE_MINIO.INTERCONTAINERURL=http://minio:9000
-        - STORAGE_MINIO.PUBLICENDPOINT=api.site.local:9000
-        - STORAGE_MINIO.PUBLICSECURE=false
+        - STORAGE_MINIO.PUBLICURL=http://api.site.local:8081/api/s3
+        - STORAGE_MINIO.PUBLICDOWNLOADTTL=24h
+        - STORAGE_MINIO.PUBLICUPLOADTTL=24h
         - STORAGE_CHAT.URL.BASE=http://chat:1235
         - STORAGE_AAA.URL.BASE=http://aaa:8060
         - STORAGE_LIMITS.STAT.DIR=/data

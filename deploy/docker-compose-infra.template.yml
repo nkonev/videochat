@@ -54,6 +54,16 @@ services:
   minio:
     image: bitnami/minio:2023.1.12-debian-11-r1
     hostname: minio
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.minio-service.loadbalancer.server.port=9000"
+        - "traefik.http.routers.minio-router.rule=PathPrefix(`/api/s3`)"
+        - "traefik.http.routers.minio-router.entrypoints=http"
+        - "traefik.http.routers.minio-router.middlewares=minio-strip-prefix-middleware,retry-middleware@file,minio-fix-host-middleware"
+        - "traefik.http.middlewares.minio-strip-prefix-middleware.stripprefix.prefixes=/api/s3"
+        - "traefik.http.middlewares.minio-fix-host-middleware.stripprefix.headers.customRequestHeaders.Host=127.0.0.1:9000"
+
     environment:
       - MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE
       - MINIO_ROOT_PASSWORD=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY

@@ -118,7 +118,7 @@ http:
       middlewares:
         - "minio-strip-prefix-middleware"
         - "retry-middleware"
-        - "minio-fix-host"
+        - "minio-fix-host-middleware"
 
   middlewares:
     api-strip-prefix-middleware:
@@ -133,7 +133,7 @@ http:
       stripPrefix:
         prefixes:
           - "/api/s3"
-    minio-fix-host:
+    minio-fix-host-middleware:
       headers:
         customRequestHeaders:
           Host: "127.0.0.1:9000"
