@@ -209,3 +209,4 @@ func GetType(aDto interface{}) string {
 
 const UrlStoragePublicGetFile = "/storage/public/download"
 const UrlStorageGetFile = "/storage/download"
+const UrlStorageGetFilePublicExternal = "/public/download"

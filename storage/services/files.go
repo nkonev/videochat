@@ -155,6 +155,23 @@ func ChangeMinioUrl(url *url.URL) error {
 	return nil
 }
 
+func (h *FilesService) getPublicUrl(public bool, fileName string) (*string, error) {
+	if !public {
+		return nil, nil
+	}
+
+	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + utils.UrlStorageGetFilePublicExternal)
+	if err != nil {
+		return nil, err
+	}
+
+	query := downloadUrl.Query()
+	query.Add(utils.FileParam, fileName)
+	downloadUrl.RawQuery = query.Encode()
+	str := downloadUrl.String()
+	return &str, nil
+}
+
 func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool, originalFilename bool) (*dto.FileInfoDto, error) {
 	previewUrl := h.GetPreviewUrlSmart(objInfo.Key)
 
@@ -167,6 +184,18 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 	}
 
 	filename := ReadFilename(objInfo.Key)
+
+	public, err := DeserializeTags(tagging)
+	if err != nil {
+		Logger.Errorf("Error get tags: %v", err)
+		return nil, err
+	}
+
+	publicUrl, err := h.getPublicUrl(public, objInfo.Key)
+	if err != nil {
+		Logger.Errorf("Error get public url: %v", err)
+		return nil, err
+	}
 
 	downloadUrl, err := h.GetConstantDownloadUrl(objInfo.Key)
 	if err != nil {
@@ -184,6 +213,7 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		CanShare:     fileOwnerId == behalfUserId,
 		LastModified: objInfo.LastModified,
 		OwnerId:      fileOwnerId,
+		PublicUrl:    publicUrl,
 		PreviewUrl:   previewUrl,
 	}
 	return info, nil

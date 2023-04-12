@@ -165,6 +165,5 @@ export default {
     available_to_search: "Available to search",
     this_is_search_result: "This is search result. You are not a participant of this chat. Click to join. | ",
     public_chats: "Public chats",
-    pin_chat: "Pin the chat",
-    copy_url: "Copy url"
+    pin_chat: "Pin the chat"
 }
