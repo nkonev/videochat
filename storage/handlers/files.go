@@ -33,7 +33,7 @@ type RenameDto struct {
 	Newname string `json:"newname"`
 }
 
-const filesMultipartKey = "files"
+const NotFoundImage = "/api/storage/assets/not_found.png"
 
 func NewFilesHandler(
 	minio *s3.InternalMinioClient,
@@ -125,7 +125,6 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
 	}
 
-	// TODO for image, video from files_uploaded, /candidates we need to constant return redirect url instead of its (temporary) presigned url
 	// TODO check /replace, check /internal/s3 (along with video recording)
 	// TODO decide what to do with "make public"
 
@@ -140,7 +139,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		return err
 	}
 
-	err = services.ChangeUrl(u)
+	err = services.ChangeMinioUrl(u)
 	if err != nil {
 		return err
 	}
@@ -414,8 +413,6 @@ func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId i
 	}
 	return true, nil
 }
-
-const NotFoundImage = "/api/storage/assets/not_found.png"
 
 type PublishRequest struct {
 	Public bool   `json:"public"`
@@ -758,4 +755,89 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
 
 	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
+}
+
+func (h *FilesHandler) DownloadHandler(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	bucketName := h.minioConfig.Files
+
+	// check user belongs to chat
+	fileId := c.QueryParam(utils.FileParam)
+	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	if err != nil {
+		if errTyped, ok := err.(minio.ErrorResponse); ok {
+			if errTyped.Code == "NoSuchKey" {
+				return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
+			}
+		}
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	chatId, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	belongs, err := h.restClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context())
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !belongs {
+		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	// send redirect to presigned
+	downloadUrl, err := h.filesService.GetTemporaryDownloadUrl(objectInfo.Key)
+	if err != nil {
+		return err
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, downloadUrl)
+}
+
+func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
+	bucketName := h.minioConfig.Files
+
+	// check file is public
+	fileId := c.QueryParam(utils.FileParam)
+	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	tagging, err := h.minio.GetObjectTagging(context.Background(), bucketName, fileId, minio.GetObjectTaggingOptions{})
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	isPublic, err := services.DeserializeTags(tagging)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	if !isPublic {
+		GetLogEntry(c.Request().Context()).Errorf("File %v is not public", fileId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	// send redirect to presigned
+	downloadUrl, err := h.filesService.GetTemporaryDownloadUrl(objectInfo.Key)
+	if err != nil {
+		return err
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, downloadUrl)
 }

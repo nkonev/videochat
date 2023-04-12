@@ -111,7 +111,7 @@ func (h *FilesService) GetListFilesInFileItem(
 	return list, count, nil
 }
 
-func (h *FilesService) GetDownloadUrl(aKey string) (string, error) {
+func (h *FilesService) GetTemporaryDownloadUrl(aKey string) (string, error) {
 	ttl := viper.GetDuration("minio.publicDownloadTtl")
 
 	u, err := h.minio.PresignedGetObject(context.Background(), h.minioConfig.Files, aKey, ttl, url.Values{})
@@ -119,7 +119,7 @@ func (h *FilesService) GetDownloadUrl(aKey string) (string, error) {
 		return "", err
 	}
 
-	err = ChangeUrl(u)
+	err = ChangeMinioUrl(u)
 	if err != nil {
 		return "", err
 	}
@@ -128,7 +128,21 @@ func (h *FilesService) GetDownloadUrl(aKey string) (string, error) {
 	return downloadUrl, nil
 }
 
-func ChangeUrl(url *url.URL) error {
+func (h *FilesService) GetConstantDownloadUrl(aKey string) (string, error) {
+	downloadUrl, err := url.Parse(viper.GetString("server.contextPath") + utils.UrlStorageGetFile)
+	if err != nil {
+		return "", err
+	}
+
+	query := downloadUrl.Query()
+	query.Add(utils.FileParam, aKey)
+	downloadUrl.RawQuery = query.Encode()
+
+	downloadUrlStr := fmt.Sprintf("%v", downloadUrl)
+	return downloadUrlStr, nil
+}
+
+func ChangeMinioUrl(url *url.URL) error {
 	publicUrlPrefix := viper.GetString("minio.publicUrl")
 	parsed, err := url.Parse(publicUrlPrefix)
 	if err != nil {
@@ -154,7 +168,7 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 
 	filename := ReadFilename(objInfo.Key)
 
-	downloadUrl, err := h.GetDownloadUrl(objInfo.Key)
+	downloadUrl, err := h.GetConstantDownloadUrl(objInfo.Key)
 	if err != nil {
 		Logger.Errorf("Error during getting downlad url %v", err)
 		return nil, err

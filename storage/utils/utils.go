@@ -206,3 +206,6 @@ func GetType(aDto interface{}) string {
 	strName := fmt.Sprintf("%T", aDto)
 	return strName
 }
+
+const UrlStoragePublicGetFile = "/storage/public/download"
+const UrlStorageGetFile = "/storage/download"
