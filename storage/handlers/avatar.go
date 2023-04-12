@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"nkonev.name/storage/auth"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"strconv"
 	"time"
@@ -36,7 +37,7 @@ type abstractMethods interface {
 }
 
 type abstractAvatarHandler struct {
-	minio       *minio.Client
+	minio       *s3.InternalMinioClient
 	minioConfig *utils.MinioConfig
 	delegate    abstractMethods
 }
@@ -141,7 +142,7 @@ type UserAvatarHandler struct {
 	abstractAvatarHandler
 }
 
-func NewUserAvatarHandler(minio *minio.Client, minioConfig *utils.MinioConfig) *UserAvatarHandler {
+func NewUserAvatarHandler(minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig) *UserAvatarHandler {
 	uah := UserAvatarHandler{}
 	uah.minio = minio
 	uah.delegate = &uah
@@ -172,7 +173,7 @@ type ChatAvatarHandler struct {
 	abstractAvatarHandler
 }
 
-func NewChatAvatarHandler(minio *minio.Client, minioConfig *utils.MinioConfig) *ChatAvatarHandler {
+func NewChatAvatarHandler(minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig) *ChatAvatarHandler {
 	uah := ChatAvatarHandler{}
 	uah.minio = minio
 	uah.delegate = &uah

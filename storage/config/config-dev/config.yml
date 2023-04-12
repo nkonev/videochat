@@ -33,8 +33,11 @@ jaeger:
   port: 6831
 
 minio:
-  endpoint: 127.0.0.1:9000
-  containerEndpoint: http://minio:9000
+  internalEndpoint: 127.0.0.1:9000
+  interContainerUrl: http://minio:9000
+  publicUrl: http://localhost:8081/api/s3
+  publicDownloadTtl: 24h
+  publicUploadTtl: 24h
   accessKeyId: AKIAIOSFODNN7EXAMPLE
   secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   location: "europe-east"

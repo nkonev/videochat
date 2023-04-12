@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/logger"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 )
 
@@ -30,7 +31,7 @@ func CleanFilesOfDeletedChatScheduler(
 }
 
 type CleanFilesOfDeletedChatService struct {
-	minioClient        *minio.Client
+	minioClient        *s3.InternalMinioClient
 	minioBucketsConfig *utils.MinioConfig
 	chatClient         *client.RestClient
 }
@@ -78,7 +79,7 @@ func (srv *CleanFilesOfDeletedChatService) processChats(filenameChatPrefix strin
 	logger.Logger.Infof("End of processChats job")
 }
 
-func NewCleanFilesOfDeletedChatService(minioClient *minio.Client, minioBucketsConfig *utils.MinioConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {
+func NewCleanFilesOfDeletedChatService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {
 	return &CleanFilesOfDeletedChatService{
 		minioClient:        minioClient,
 		minioBucketsConfig: minioBucketsConfig,

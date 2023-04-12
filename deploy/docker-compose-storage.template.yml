@@ -26,8 +26,11 @@ services:
         - "traefik.http.routers.storage-version-router.entrypoints=http"
         - "traefik.http.routers.storage-version-router.middlewares=storage-stripprefix-middleware"
     environment:
-        - STORAGE_MINIO.ENDPOINT=minio:9000
-        - STORAGE_MINIO.CONTAINERENDPOINT=http://minio:9000
+        - STORAGE_MINIO.INTERNALENDPOINT=minio:9000
+        - STORAGE_MINIO.INTERCONTAINERURL=http://minio:9000
+        - STORAGE_MINIO.PUBLICURL=http://api.site.local:8081/api/s3
+        - STORAGE_MINIO.PUBLICDOWNLOADTTL=24h
+        - STORAGE_MINIO.PUBLICUPLOADTTL=24h
         - STORAGE_CHAT.URL.BASE=http://chat:1235
         - STORAGE_AAA.URL.BASE=http://aaa:8060
         - STORAGE_LIMITS.STAT.DIR=/data

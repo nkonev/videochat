@@ -6,10 +6,11 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/s3"
 	"strings"
 )
 
-func ensureBucket(minioClient *minio.Client, bucketName, location string) error {
+func ensureBucket(minioClient *s3.InternalMinioClient, bucketName, location string) error {
 	// Check to see if we already own this bucket (which happens if you run this twice)
 	exists, err := minioClient.BucketExists(context.Background(), bucketName)
 	if err == nil && exists {
@@ -31,28 +32,28 @@ func ensureBucket(minioClient *minio.Client, bucketName, location string) error 
 	}
 }
 
-func EnsureAndGetUserAvatarBucket(minioClient *minio.Client) (string, error) {
+func EnsureAndGetUserAvatarBucket(minioClient *s3.InternalMinioClient) (string, error) {
 	bucketName := viper.GetString("minio.bucket.userAvatar")
 	bucketLocation := viper.GetString("minio.location")
 	err := ensureBucket(minioClient, bucketName, bucketLocation)
 	return bucketName, err
 }
 
-func EnsureAndGetChatAvatarBucket(minioClient *minio.Client) (string, error) {
+func EnsureAndGetChatAvatarBucket(minioClient *s3.InternalMinioClient) (string, error) {
 	bucketName := viper.GetString("minio.bucket.chatAvatar")
 	bucketLocation := viper.GetString("minio.location")
 	err := ensureBucket(minioClient, bucketName, bucketLocation)
 	return bucketName, err
 }
 
-func EnsureAndGetFilesBucket(minioClient *minio.Client) (string, error) {
+func EnsureAndGetFilesBucket(minioClient *s3.InternalMinioClient) (string, error) {
 	bucketName := viper.GetString("minio.bucket.files")
 	bucketLocation := viper.GetString("minio.location")
 	err := ensureBucket(minioClient, bucketName, bucketLocation)
 	return bucketName, err
 }
 
-func EnsureAndGetFilesPreviewBucket(minioClient *minio.Client) (string, error) {
+func EnsureAndGetFilesPreviewBucket(minioClient *s3.InternalMinioClient) (string, error) {
 	bucketName := viper.GetString("minio.bucket.filesPreview")
 	bucketLocation := viper.GetString("minio.location")
 	err := ensureBucket(minioClient, bucketName, bucketLocation)

@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"mime/multipart"
 	. "nkonev.name/storage/logger"
 	"regexp"
 	"strconv"
@@ -174,10 +173,6 @@ type Tuple struct {
 	Exists   bool   `json:"exists"`
 }
 
-func GetDotExtension(file *multipart.FileHeader) string {
-	return GetDotExtensionStr(file.Filename)
-}
-
 func GetDotExtensionStr(fileName string) string {
 	split := strings.Split(fileName, ".")
 	if len(split) > 1 {
@@ -211,3 +206,7 @@ func GetType(aDto interface{}) string {
 	strName := fmt.Sprintf("%T", aDto)
 	return strName
 }
+
+const UrlStoragePublicGetFile = "/storage/public/download"
+const UrlStorageGetFile = "/storage/download"
+const UrlStorageGetFilePublicExternal = "/public/download"

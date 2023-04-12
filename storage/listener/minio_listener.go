@@ -22,7 +22,11 @@ func CreateMinioEventsListener(previewService *services.PreviewService) MinioEve
 		result := gjson.Get(strData, "Records.0.s3.object.userMetadata")
 		chatId := result.Get(services.ChatIdKey(true)).Int()
 		ownerId := result.Get(services.OwnerIdKey(true)).Int()
-		correlationId := result.Get(services.CorrelationIdKey(true)).String()
+		correlationIdStr := result.Get(services.CorrelationIdKey(true)).String()
+		var correlationId *string
+		if correlationIdStr != "" {
+			correlationId = &correlationIdStr
+		}
 		var minioEvent = &dto.MinioEvent{
 			EventName:     eventName,
 			Key:           key,
