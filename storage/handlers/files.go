@@ -116,7 +116,14 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusConflict)
 	}
 
-	// TODO check enough size taking on account free disk space probe (see LimitsHandler)
+	// check enough size taking on account free disk space probe (see LimitsHandler)
+	ok, consumption, available, err := checkUserLimit(h.minio, bucketName, userPrincipalDto, reqDto.FileSize)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
+	}
 
 	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
 	var urlVals = url.Values{}
