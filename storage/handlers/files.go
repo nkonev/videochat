@@ -125,6 +125,8 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
 	}
 
+	// TODO for image, video from files_iploaded, /candidates we need to return redirect url instead of its presigned url
+
 	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
 	var urlVals = url.Values{}
 
