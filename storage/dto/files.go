@@ -1,12 +1,11 @@
 package dto
 
 import (
-	"github.com/google/uuid"
 	"time"
 )
 
 type FileInfoDto struct {
-	Id           uuid.UUID `json:"id"`
+	Id           string    `json:"id"`
 	Filename     string    `json:"filename"`
 	Url          string    `json:"url"`
 	PreviewUrl   *string   `json:"previewUrl"`
@@ -25,5 +24,4 @@ type MinioEvent struct {
 	ChatId        int64
 	OwnerId       int64
 	CorrelationId *string
-	FileId        uuid.UUID
 }

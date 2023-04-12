@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/disintegration/imaging"
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"image"
 	"image/jpeg"
@@ -43,7 +42,7 @@ func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent, ctx context.Conte
 	if strings.HasPrefix(data.EventName, utils.ObjectCreated) {
 		s.CreatePreview(normalizedKey, ctx)
 
-		if pu, err := s.getFileUploadedEvent(normalizedKey, data.ChatId, data.CorrelationId, data.FileId, ctx); err == nil {
+		if pu, err := s.getFileUploadedEvent(normalizedKey, data.ChatId, data.CorrelationId, ctx); err == nil {
 			s.rabbitFileUploadedPublisher.Publish(data.OwnerId, data.ChatId, pu, ctx)
 		} else {
 			Logger.Errorf("Error during constructing uploaded event %v for %v", err, normalizedKey)
@@ -132,7 +131,7 @@ func (s PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error
 	return byteBuffer, nil
 }
 
-func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64, correlationId *string, fileId uuid.UUID, ctx context.Context) (*dto.FileUploadedEvent, error) {
+func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64, correlationId *string, ctx context.Context) (*dto.FileUploadedEvent, error) {
 	downloadUrl, err := s.filesService.GetDownloadUrl(normalizedKey)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting url: %v", err)
@@ -142,7 +141,7 @@ func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64,
 	var aType = GetType(normalizedKey)
 
 	return &dto.FileUploadedEvent{
-		Id:            fileId,
+		Id:            normalizedKey,
 		Url:           downloadUrl,
 		PreviewUrl:    previewUrl,
 		Type:          aType,

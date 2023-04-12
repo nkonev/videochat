@@ -121,7 +121,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
 	var urlVals = url.Values{}
 
-	services.SerializeMetadataAndStore(&urlVals, uuid.New(), userPrincipalDto.UserId, chatId, reqDto.CorrelationId)
+	services.SerializeMetadataAndStore(&urlVals, userPrincipalDto.UserId, chatId, reqDto.CorrelationId)
 
 	u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, filename, uploadDuration, urlVals)
 	if err != nil {
@@ -199,7 +199,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	chatFileItemUuid := getFileId(bindTo.Id)
 	filename := services.GenerateFilename(bindTo.Filename, chatFileItemUuid, chatId)
 
-	var userMetadata = services.SerializeMetadataSimple(uuid.New(), userPrincipalDto.UserId, chatId, nil)
+	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil)
 
 	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
@@ -386,7 +386,7 @@ func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c e
 }
 
 func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId int64, userPrincipalDto *auth.AuthResult, hasAmzPrefix bool) (bool, error) {
-	gotChatId, gotOwnerId, _, _, err := services.DeserializeMetadata(objInfo.UserMetadata, hasAmzPrefix)
+	gotChatId, gotOwnerId, _, err := services.DeserializeMetadata(objInfo.UserMetadata, hasAmzPrefix)
 	if err != nil {
 		Logger.Errorf("Error deserializeMetadata: %v", err)
 		return false, err
@@ -433,7 +433,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	chatId, ownerId, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
+	chatId, ownerId, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -603,7 +603,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 
-	metadata := services.SerializeMetadataSimple(uuid.New(), bindTo.OwnerId, bindTo.ChatId, nil)
+	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, bindTo.ChatId, nil)
 
 	chatFileItemUuid := uuid.New().String()
 
@@ -623,10 +623,10 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 }
 
 type MediaDto struct {
-	Id         uuid.UUID `json:"id"`
-	Filename   string    `json:"filename"`
-	Url        string    `json:"url"`
-	PreviewUrl *string   `json:"previewUrl"`
+	Id         string  `json:"id"`
+	Filename   string  `json:"filename"`
+	Url        string  `json:"url"`
+	PreviewUrl *string `json:"previewUrl"`
 }
 
 func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
