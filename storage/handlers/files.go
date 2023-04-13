@@ -141,7 +141,9 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "url": fmt.Sprintf("%v", u)})
+	existingCount := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
+
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "url": fmt.Sprintf("%v", u), "fileItemUuid": chatFileItemUuid, "existingCount": existingCount})
 }
 
 type ReplaceTextFileDto struct {

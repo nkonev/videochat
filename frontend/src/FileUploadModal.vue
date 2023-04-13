@@ -89,6 +89,7 @@ export default {
                 this.$data.filesWerePredefined = true;
             }
             this.correlationId = correlationId;
+            console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId);
         },
         hideModal() {
             this.$data.show = false;
@@ -133,32 +134,34 @@ export default {
             console.log("Sending file to storage");
 
             let totalSize = 0;
-            const getPresignedUrlPromises = [];
+            const urlResponses = [];
             for (const file of this.files) {
                 totalSize += file.size;
-                getPresignedUrlPromises.push(axios.put(`/api/storage/${this.chatId}/url`, {
+                const response = await axios.put(`/api/storage/${this.chatId}/url`, {
                     fileItemUuid: this.fileItemUuid, // nullable
                     fileSize: file.size,
                     fileName: file.name,
                     correlationId: this.correlationId, // nullable
-                }).then((response) => {
-                    return {url: response.data.url, file: file};
-                }))
+                })
+                this.fileItemUuid = response.data.fileItemUuid;
+                urlResponses.push({
+                    url: response.data.url,
+                    file: file,
+                    existingCount: response.data.existingCount,
+                });
             }
-            const urlResponses = await Promise.all(getPresignedUrlPromises);
 
             return this.checkLimits(totalSize).then(async ()=> {
-                for (const presignedUrlResponse of urlResponses) {
+                for (const [index, presignedUrlResponse] of urlResponses.entries()) {
                     try {
                         await axios.put(presignedUrlResponse.url, presignedUrlResponse.file, config)
                             .then(response => {
                                 if (this.$data.shouldSetFileUuidToMessage) {
                                     bus.$emit(SET_FILE_ITEM_UUID, {
-                                        fileItemUuid: response.data.fileItemUuid,
-                                        count: response.data.count
+                                        fileItemUuid: this.fileItemUuid,
+                                        count: (presignedUrlResponse.existingCount + index + 1)
                                     });
                                 }
-                                this.uploading = false;
                                 bus.$emit(UPDATE_VIEW_FILES_DIALOG);
                                 return response;
                             })
@@ -172,6 +175,7 @@ export default {
                         }
                     }
                 }
+                this.uploading = false;
                 this.hideModal();
                 return Promise.resolve();
             })
