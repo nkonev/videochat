@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"nkonev.name/storage/auth"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"syscall"
 	"time"
@@ -117,7 +118,7 @@ func getMaxAllowedConsumption(isUnlimited bool) (int64, error) {
 	}
 }
 
-func calcUserFilesConsumption(minioClient *minio.Client, bucketName string) int64 {
+func calcUserFilesConsumption(minioClient *s3.InternalMinioClient, bucketName string) int64 {
 	var totalBucketConsumption int64
 	doneCh := make(chan struct{})
 	defer close(doneCh)
@@ -129,7 +130,7 @@ func calcUserFilesConsumption(minioClient *minio.Client, bucketName string) int6
 	return totalBucketConsumption
 }
 
-func checkUserLimit(minioClient *minio.Client, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64) (bool, int64, int64, error) {
+func checkUserLimit(minioClient *s3.InternalMinioClient, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64) (bool, int64, int64, error) {
 	limitsEnabled := viper.GetBool("limits.enabled")
 	// TODO take on account userId
 	consumption := calcUserFilesConsumption(minioClient, bucketName)

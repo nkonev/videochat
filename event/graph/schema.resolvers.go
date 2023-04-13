@@ -321,6 +321,7 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 			ParticipantsCount:   chatDtoWithAdmin.ParticipantsCount,
 			Participants:        convertUsersWithAdmin(chatDtoWithAdmin.Participants),
 			CanResend:           chatDtoWithAdmin.CanResend,
+			Pinned:              chatDtoWithAdmin.Pinned,
 		}
 	}
 
@@ -375,8 +376,9 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 	unreadMessages := e.UnreadMessagesNotification
 	if unreadMessages != nil {
 		ret.UnreadMessagesNotification = &model.ChatUnreadMessageChanged{
-			ChatID:         unreadMessages.ChatId,
-			UnreadMessages: unreadMessages.UnreadMessages,
+			ChatID:             unreadMessages.ChatId,
+			UnreadMessages:     unreadMessages.UnreadMessages,
+			LastUpdateDateTime: unreadMessages.LastUpdateDateTime,
 		}
 	}
 

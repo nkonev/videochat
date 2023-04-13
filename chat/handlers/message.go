@@ -181,7 +181,7 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, message)
 }
 
-func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chats map[int64]*db.BasicChatDto, behalfUserId int64) *dto.DisplayMessageDto {
+func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64) *dto.DisplayMessageDto {
 	user := owners[dbMessage.OwnerId]
 	if user == nil {
 		user = &dto.User{Login: fmt.Sprintf("user%v", dbMessage.OwnerId), Id: dbMessage.OwnerId}
@@ -330,7 +330,7 @@ func (mc *MessageHandler) getChatNameForNotification(tx *db.Tx, err error, chatI
 		return "", err
 	}
 	chatName := chatBasic.Title
-	if chatBasic.TetATet {
+	if chatBasic.IsTetATet {
 		chatName = ""
 	}
 	return chatName, nil

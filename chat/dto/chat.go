@@ -25,6 +25,7 @@ type BaseChatDto struct {
 	CanResend           bool        `json:"canResend"`
 	AvailableToSearch   bool        `json:"availableToSearch"`
 	IsResultFromSearch  null.Bool   `json:"isResultFromSearch"`
+	Pinned              bool        `json:"pinned"`
 }
 
 func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
@@ -109,8 +110,9 @@ type ChatName struct {
 }
 
 type ChatUnreadMessageChanged struct {
-	ChatId         int64 `json:"chatId"`
-	UnreadMessages int64 `json:"unreadMessages"`
+	ChatId             int64     `json:"chatId"`
+	UnreadMessages     int64     `json:"unreadMessages"`
+	LastUpdateDateTime time.Time `json:"lastUpdateDateTime"`
 }
 
 type BasicChatDto struct {

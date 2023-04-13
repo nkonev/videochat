@@ -65,13 +65,9 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 		return
 	}
 
-	var userIds = []int64{}
-	for _, userId := range userIdsToDial {
-		userIds = append(userIds, userId)
-	}
-	Logger.Infof("Calling userIds %v from chat %v", userIds, chatId)
+	Logger.Infof("Calling userIds %v from chat %v", userIdsToDial, chatId)
 
-	inviteNames, err := srv.chatClient.GetChatNameForInvite(chatId, behalfUserId, userIds, ctx)
+	inviteNames, err := srv.chatClient.GetChatNameForInvite(chatId, behalfUserId, userIdsToDial, ctx)
 	if err != nil {
 		Logger.Error(err, "Failed during getting chat invite names")
 		return
@@ -90,6 +86,26 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 	}
 
 	// send state changes
+	var videoIsInvitingDto = dto.VideoIsInvitingDto{
+		ChatId:       chatId,
+		UserIds:      userIdsToDial,
+		Status:       true,
+		BehalfUserId: behalfUserId,
+	}
+	err = srv.dialStatusPublisher.Publish(&videoIsInvitingDto)
+	if err != nil {
+		Logger.Error(err, "Failed during marshal VideoIsInvitingDto")
+		return
+	}
+}
+
+func (srv *ChatDialerService) SendDialStatusChanged(ctx context.Context, behalfUserId int64, chatId int64) {
+	userIdsToDial, err := srv.redisService.GetUsersToDial(ctx, chatId)
+	if err != nil {
+		Logger.Warnf("Error %v", err)
+		return
+	}
+
 	var videoIsInvitingDto = dto.VideoIsInvitingDto{
 		ChatId:       chatId,
 		UserIds:      userIdsToDial,

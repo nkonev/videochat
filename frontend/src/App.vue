@@ -493,12 +493,12 @@
                 this.searchString = null;
                 this.showSearchButton = true;
             },
+            // reacts on input into search field
             searchStringChanged(searchString) {
-                console.debug("doSearch", searchString);
+                console.debug("doSearch in App", searchString);
 
-                const currentRouteName = this.$route.name;
-                const routerNewState = {name: currentRouteName};
-                if (searchString && searchString != "") {
+                const routerNewState = {name: this.$route.name};
+                if (hasLength(searchString)) {
                     routerNewState.query = {[searchQueryParameter]: searchString};
                 } else {
                     this.showSearchButton = true;

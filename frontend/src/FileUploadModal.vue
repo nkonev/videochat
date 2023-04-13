@@ -122,50 +122,59 @@ export default {
                 }
             });
         },
-        upload() {
+        async upload() {
             this.uploading = true;
             this.cancelSource = CancelToken.source();
             const config = {
-                headers: { 'content-type': 'multipart/form-data' },
+                // headers: { 'content-type': 'multipart/form-data' },
                 onUploadProgress: this.onProgressFunction,
                 cancelToken: this.cancelSource.token
             }
             console.log("Sending file to storage");
-            const formData = new FormData();
+
             let totalSize = 0;
+            const getPresignedUrlPromises = [];
             for (const file of this.files) {
                 totalSize += file.size;
-                formData.append('files', file);
+                getPresignedUrlPromises.push(axios.put(`/api/storage/${this.chatId}/url`, {
+                    fileItemUuid: this.fileItemUuid, // nullable
+                    fileSize: file.size,
+                    fileName: file.name,
+                    correlationId: this.correlationId, // nullable
+                }).then((response) => {
+                    return {url: response.data.url, file: file};
+                }))
             }
-            if (this.correlationId) {
-                formData.append('correlationId', this.correlationId);
-            }
-            return this.checkLimits(totalSize).then(()=>{
-                return axios.post(`/api/storage/${this.chatId}/file`+(this.fileItemUuid ? `/${this.fileItemUuid}` : ''), formData, config)
-                    .then(response => {
-                        if (this.$data.shouldSetFileUuidToMessage) {
-                            bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: response.data.fileItemUuid, count: response.data.count});
-                        }
+            const urlResponses = await Promise.all(getPresignedUrlPromises);
+
+            return this.checkLimits(totalSize).then(async ()=> {
+                for (const presignedUrlResponse of urlResponses) {
+                    try {
+                        await axios.put(presignedUrlResponse.url, presignedUrlResponse.file, config)
+                            .then(response => {
+                                if (this.$data.shouldSetFileUuidToMessage) {
+                                    bus.$emit(SET_FILE_ITEM_UUID, {
+                                        fileItemUuid: response.data.fileItemUuid,
+                                        count: response.data.count
+                                    });
+                                }
+                                this.uploading = false;
+                                bus.$emit(UPDATE_VIEW_FILES_DIALOG);
+                                return response;
+                            })
+                    } catch(thrown) {
                         this.uploading = false;
-                        bus.$emit(UPDATE_VIEW_FILES_DIALOG);
-                        return response;
-                    })
-                    .catch((thrown) => {
                         if (axios.isCancel(thrown)) {
                             console.log('Request canceled', thrown.message);
-                            this.hideModal();
+                            break
                         } else {
-                            throw thrown
+                            return Promise.reject(ex);
                         }
-                    })
-                    .then((response)=>{
-                        this.hideModal();
-                        return response;
-                    })
-            }).catch(ex =>{
-                this.uploading = false;
-                return Promise.reject(ex);
-            });
+                    }
+                }
+                this.hideModal();
+                return Promise.resolve();
+            })
         },
         cancel() {
             this.cancelSource.cancel()

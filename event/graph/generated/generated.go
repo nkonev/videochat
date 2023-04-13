@@ -72,6 +72,7 @@ type ComplexityRoot struct {
 		ParticipantIds      func(childComplexity int) int
 		Participants        func(childComplexity int) int
 		ParticipantsCount   func(childComplexity int) int
+		Pinned              func(childComplexity int) int
 		TetATet             func(childComplexity int) int
 		UnreadMessages      func(childComplexity int) int
 	}
@@ -88,8 +89,9 @@ type ComplexityRoot struct {
 	}
 
 	ChatUnreadMessageChanged struct {
-		ChatID         func(childComplexity int) int
-		UnreadMessages func(childComplexity int) int
+		ChatID             func(childComplexity int) int
+		LastUpdateDateTime func(childComplexity int) int
+		UnreadMessages     func(childComplexity int) int
 	}
 
 	DisplayMessageDto struct {
@@ -371,6 +373,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatDto.ParticipantsCount(childComplexity), true
 
+	case "ChatDto.pinned":
+		if e.complexity.ChatDto.Pinned == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.Pinned(childComplexity), true
+
 	case "ChatDto.tetATet":
 		if e.complexity.ChatDto.TetATet == nil {
 			break
@@ -447,6 +456,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatUnreadMessageChanged.ChatID(childComplexity), true
+
+	case "ChatUnreadMessageChanged.lastUpdateDateTime":
+		if e.complexity.ChatUnreadMessageChanged.LastUpdateDateTime == nil {
+			break
+		}
+
+		return e.complexity.ChatUnreadMessageChanged.LastUpdateDateTime(childComplexity), true
 
 	case "ChatUnreadMessageChanged.unreadMessages":
 		if e.complexity.ChatUnreadMessageChanged.UnreadMessages == nil {
@@ -1123,6 +1139,7 @@ type ChatDto {
     participants:             [UserWithAdmin!]!
     participantsCount:        Int!
     canResend:           Boolean!
+    pinned:              Boolean!
 }
 
 type ChatDeletedDto {
@@ -1187,6 +1204,7 @@ type VideoDialChanges {
 type ChatUnreadMessageChanged {
     chatId: Int64!
     unreadMessages: Int64!
+    lastUpdateDateTime:  Time!
 }
 
 type AllUnreadMessages {
@@ -2194,6 +2212,50 @@ func (ec *executionContext) fieldContext_ChatDto_canResend(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatDto_pinned(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_pinned(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Pinned, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_pinned(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChatEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChatEvent_eventType(ctx, field)
 	if err != nil {
@@ -2702,6 +2764,50 @@ func (ec *executionContext) fieldContext_ChatUnreadMessageChanged_unreadMessages
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatUnreadMessageChanged_lastUpdateDateTime(ctx context.Context, field graphql.CollectedField, obj *model.ChatUnreadMessageChanged) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatUnreadMessageChanged_lastUpdateDateTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastUpdateDateTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatUnreadMessageChanged_lastUpdateDateTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatUnreadMessageChanged",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3881,6 +3987,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(ctx context.Conte
 				return ec.fieldContext_ChatDto_participantsCount(ctx, field)
 			case "canResend":
 				return ec.fieldContext_ChatDto_canResend(ctx, field)
+			case "pinned":
+				return ec.fieldContext_ChatDto_pinned(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatDto", field.Name)
 		},
@@ -4210,6 +4318,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_unreadMessagesNotification(
 				return ec.fieldContext_ChatUnreadMessageChanged_chatId(ctx, field)
 			case "unreadMessages":
 				return ec.fieldContext_ChatUnreadMessageChanged_unreadMessages(ctx, field)
+			case "lastUpdateDateTime":
+				return ec.fieldContext_ChatUnreadMessageChanged_lastUpdateDateTime(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatUnreadMessageChanged", field.Name)
 		},
@@ -8232,6 +8342,13 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "pinned":
+
+			out.Values[i] = ec._ChatDto_pinned(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8319,6 +8436,13 @@ func (ec *executionContext) _ChatUnreadMessageChanged(ctx context.Context, sel a
 		case "unreadMessages":
 
 			out.Values[i] = ec._ChatUnreadMessageChanged_unreadMessages(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "lastUpdateDateTime":
+
+			out.Values[i] = ec._ChatUnreadMessageChanged_lastUpdateDateTime(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

@@ -146,6 +146,7 @@ vm = new Vue({
                         admin
                       }
                       canResend
+                      pinned
                     }
                     chatDeletedEvent {
                       id
@@ -177,6 +178,7 @@ vm = new Vue({
                     unreadMessagesNotification {
                       chatId
                       unreadMessages
+                      lastUpdateDateTime
                     }
                     allUnreadMessagesNotification {
                       allUnreadMessages

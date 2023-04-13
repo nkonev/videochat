@@ -13,6 +13,7 @@ import (
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"os/exec"
 	"strings"
@@ -20,13 +21,13 @@ import (
 )
 
 type PreviewService struct {
-	minio                       *minio.Client
+	minio                       *s3.InternalMinioClient
 	minioConfig                 *utils.MinioConfig
 	rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher
 	filesService                *FilesService
 }
 
-func NewPreviewService(minio *minio.Client, minioConfig *utils.MinioConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
+func NewPreviewService(minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
 	return &PreviewService{
 		minio:                       minio,
 		minioConfig:                 minioConfig,
@@ -130,14 +131,14 @@ func (s PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error
 	return byteBuffer, nil
 }
 
-func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64, correlationId string, ctx context.Context) (*dto.FileUploadedEvent, error) {
-	_, downloadUrl, err := s.filesService.GetChatPrivateUrl(normalizedKey, chatId)
+func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64, correlationId *string, ctx context.Context) (*dto.FileUploadedEvent, error) {
+	downloadUrl, err := s.filesService.GetConstantDownloadUrl(normalizedKey)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting url: %v", err)
 		return nil, err
 	}
-	var previewUrl *string = s.filesService.GetPreviewUrlSmart(downloadUrl)
-	var aType = GetType(downloadUrl)
+	var previewUrl *string = s.filesService.GetPreviewUrlSmart(normalizedKey)
+	var aType = GetType(normalizedKey)
 
 	return &dto.FileUploadedEvent{
 		Id:            normalizedKey,

@@ -23,7 +23,7 @@
                 </v-badge>
                 <v-list-item-content :id="'chat-item-' + item.id" :class="item.avatar ? 'ml-4' : ''">
                     <v-list-item-title>
-                        <span class="min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}">
+                        <span class="chat-name min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)">
                             {{getChatName(item)}}
                         </span>
                         <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0"></v-badge>
@@ -35,6 +35,10 @@
                 </v-list-item-content>
                 <v-list-item-action v-if="!isMobile()">
                     <v-container class="mb-0 mt-0 pl-0 pr-0 pb-0 pt-0">
+                        <template v-if="!item.isResultFromSearch">
+                            <v-btn v-if="item.pinned" icon @click.stop.prevent="removedFromPinned(item)" :title="$vuetify.lang.t('$vuetify.remove_from_pinned')"><v-icon dark>mdi-pin-off-outline</v-icon></v-btn>
+                            <v-btn v-else icon @click.stop.prevent="pinChat(item)" :title="$vuetify.lang.t('$vuetify.pin_chat')"><v-icon dark>mdi-pin</v-icon></v-btn>
+                        </template>
                         <v-btn v-if="item.canEdit" icon color="primary" @click.stop.prevent="editChat(item)" :title="$vuetify.lang.t('$vuetify.edit_chat')"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
                         <v-btn v-if="item.canDelete" icon @click.stop.prevent="deleteChat(item)" :title="$vuetify.lang.t('$vuetify.delete_chat')" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
                         <v-btn v-if="item.canLeave" icon @click.stop.prevent="leaveChat(item)" :title="$vuetify.lang.t('$vuetify.leave_chat')"><v-icon dark>mdi-exit-run</v-icon></v-btn>
@@ -42,7 +46,14 @@
                 </v-list-item-action>
             </v-list-item>
         </v-list>
-        <ChatListContextMenu ref="contextMenuRef" @editChat="this.editChat" @deleteChat="this.deleteChat" @leaveChat="this.leaveChat"/>
+        <ChatListContextMenu
+            ref="contextMenuRef"
+            @editChat="this.editChat"
+            @deleteChat="this.deleteChat"
+            @leaveChat="this.leaveChat"
+            @pinChat="this.pinChat"
+            @removedFromPinned="this.removedFromPinned"
+        />
         <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
             <template slot="no-more"><span/></template>
             <template slot="no-results"><span/></template>
@@ -54,6 +65,7 @@
 </template>
 
 <script>
+    import Vue from 'vue';
     import bus, {
         CHAT_ADD,
         CHAT_EDITED,
@@ -72,14 +84,15 @@
         findIndex,
         replaceOrAppend,
         replaceInArray,
-        moveToFirstPosition,
         hasLength,
-        availableChatsQuery
+        publicallyAvailableForSearchChatsQuery,
+        dynamicSortMultiple, isArrEqual
     } from "./utils";
     import axios from "axios";
     import debounce from "lodash/debounce";
+    import Mark from "mark.js";
     import queryMixin from "@/queryMixin";
-    import Welcome from "@/Welcome"
+    import Welcome from "@/Welcome";
 
     import {
         GET_USER,
@@ -95,6 +108,7 @@
 
     import ChatListContextMenu from "@/ChatListContextMenu";
     import graphqlSubscriptionMixin from "@/graphqlSubscriptionMixin";
+    import cloneDeep from "lodash/cloneDeep";
 
     const pageSize = 40;
 
@@ -107,6 +121,7 @@
                 items: [],
                 infiniteId: +new Date(),
                 itemsLoaded: false,
+                markInstance: null,
             }
         },
         components:{
@@ -118,7 +133,10 @@
             ...mapGetters({currentUser: GET_USER}),
             userIsSet() {
                 return !!this.currentUser
-            }
+            },
+            tetAtetParticipants() {
+                return this.getTetATetParticipantIds(this.items);
+            },
         },
         methods:{
             // not working until you will change this.items list
@@ -150,18 +168,21 @@
                 console.log("Adding item", dto);
                 this.transformItem(dto);
                 this.items.unshift(dto);
+                this.sort(this.items);
                 this.$forceUpdate();
+                this.performMarking();
             },
             changeItem(dto) {
                 console.log("Replacing item", dto);
                 this.transformItem(dto);
                 if (this.hasItem(dto)) {
                     replaceInArray(this.items, dto);
-                    moveToFirstPosition(this.items, dto)
                 } else {
                     this.items.unshift(dto);
                 }
+                this.sort(this.items);
                 this.$forceUpdate();
+                this.performMarking();
             },
             removeItem(dto) {
                 if (this.hasItem(dto)) {
@@ -210,7 +231,17 @@
                         $state.complete();
                     }
                     this.itemsLoaded = true;
+
+                    this.performMarking();
                 });
+            },
+            performMarking() {
+                Vue.nextTick(() => {
+                    if (hasLength(this.searchString)) {
+                        this.markInstance.unmark();
+                        this.markInstance.mark(this.searchString);
+                    }
+                })
             },
             editChat(chat) {
                 const chatId = chat.id;
@@ -256,11 +287,28 @@
                     }
                 });
             },
+            pinChat(chat) {
+                axios.put(`/api/chat/${chat.id}/pin`, null, {
+                    params: {
+                        pin: true
+                    },
+                });
+            },
+            removedFromPinned(chat) {
+                axios.put(`/api/chat/${chat.id}/pin`, null, {
+                    params: {
+                        pin: false
+                    },
+                });
+            },
             onChangeUnreadMessages(dto) {
                 const chatId = dto.chatId;
                 let idxOf = findIndex(this.items, {id: chatId});
                 if (idxOf != -1) {
                     this.items[idxOf].unreadMessages = dto.unreadMessages;
+                    this.items[idxOf].lastUpdateDateTime = dto.lastUpdateDateTime;
+
+                    this.sort(this.items);
                     this.$forceUpdate();
                 } else {
                     console.log("Not found to update unread messages", dto)
@@ -277,7 +325,7 @@
             },
             searchStringChanged(str) {
                 this.itemsLoaded = false;
-                if (str == availableChatsQuery) {
+                if (str == publicallyAvailableForSearchChatsQuery) {
                     this.searchStringChangedStraight(str);
                 } else {
                     this.searchStringChangedDebounced(str);
@@ -309,7 +357,11 @@
                 item.online = false;
             },
             getTetATetParticipantIds(items) {
-                return items.filter((item) => item.tetATet).map((item) => item.participants.filter((p) => p.id != this.currentUser?.id)[0].id);
+                if (!items) {
+                    return [];
+                }
+                const tmps = cloneDeep(items);
+                return tmps.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.currentUser?.id)[0]);
             },
             onUserOnlineChanged(rawData) {
                 const dtos = rawData?.data?.userOnlineEvents;
@@ -328,7 +380,7 @@
             getGraphQlSubscriptionQuery() {
                 return `
                 subscription {
-                    userOnlineEvents(userIds:[${this.getTetATetParticipantIds(this.items)}]) {
+                    userOnlineEvents(userIds:[${this.tetAtetParticipants}]) {
                         id
                         online
                     }
@@ -350,6 +402,15 @@
             },
             isSearchResult(item) {
                 return item?.isResultFromSearch === true
+            },
+            getItemClass(item) {
+                return {
+                    'pinned': item.pinned,
+                }
+            },
+            sort(items) {
+                // also see in chat/db/chat.go:GetChatsByLimitOffset
+                items.sort(dynamicSortMultiple("-pinned", "-lastUpdateDateTime", "-id"))
             },
         },
         created() {
@@ -383,6 +444,8 @@
             bus.$off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
         },
         mounted() {
+            this.markInstance = new Mark("div#chat-list-items .chat-name");
+
             this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
             this.$store.commit(SET_CHAT_USERS_COUNT, 0);
             this.$store.commit(SET_SHOW_SEARCH, true);
@@ -397,12 +460,13 @@
                 this.$store.commit(SET_SEARCH_NAME, this.$vuetify.lang.t('$vuetify.search_in_chats'));
             },
           },
-          items(newValue, oldValue) {
-              const newParticipants = this.getTetATetParticipantIds(newValue);
-              if (newParticipants.length == 0) {
+          tetAtetParticipants: function(newValue, oldValue) {
+              if (newValue.length == 0) {
                   this.graphQlUnsubscribe();
               } else {
-                  this.graphQlSubscribe();
+                  if (!isArrEqual(oldValue, newValue)) {
+                      this.graphQlSubscribe();
+                  }
               }
           },
         },
@@ -413,5 +477,8 @@
     .min-height {
         display inline-block
         min-height 22px
+    }
+    .pinned {
+        font-weight bold
     }
 </style>

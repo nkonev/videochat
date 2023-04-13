@@ -69,6 +69,7 @@ type ChatDto {
     participants:             [UserWithAdmin!]!
     participantsCount:        Int!
     canResend:           Boolean!
+    pinned:              Boolean!
 }
 
 type ChatDeletedDto {
@@ -133,6 +134,7 @@ type VideoDialChanges {
 type ChatUnreadMessageChanged {
     chatId: Int64!
     unreadMessages: Int64!
+    lastUpdateDateTime:  Time!
 }
 
 type AllUnreadMessages {

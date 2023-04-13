@@ -7,6 +7,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/logger"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
@@ -30,7 +31,7 @@ func ActualizePreviewsScheduler(
 }
 
 type ActualizePreviewsService struct {
-	minioClient        *minio.Client
+	minioClient        *s3.InternalMinioClient
 	minioBucketsConfig *utils.MinioConfig
 	previewService     *services.PreviewService
 }
@@ -101,7 +102,7 @@ func (srv *ActualizePreviewsService) processFiles(filenameChatPrefix string, c c
 	logger.Logger.Infof("End of actualize previews job")
 }
 
-func NewActualizePreviewsService(minioClient *minio.Client, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService) *ActualizePreviewsService {
+func NewActualizePreviewsService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService) *ActualizePreviewsService {
 	return &ActualizePreviewsService{
 		minioClient:        minioClient,
 		minioBucketsConfig: minioBucketsConfig,

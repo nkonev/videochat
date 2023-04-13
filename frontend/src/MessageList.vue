@@ -60,7 +60,7 @@
     import InfiniteLoading from 'vue-infinite-loading';
     import throttle from "lodash/throttle";
     import {mapGetters} from "vuex";
-    import {GET_USER} from "@/store";
+    import {GET_USER, UNSET_SEARCH_STRING} from "@/store";
     import bus, {
         CLOSE_SIMPLE_MODAL,
         MESSAGE_ADD,
@@ -83,6 +83,7 @@
     import MessageItemContextMenu from "@/MessageItemContextMenu";
     import debounce from "lodash/debounce";
     import cloneDeep from "lodash/cloneDeep";
+    import Mark from "mark.js";
 
     const directionTop = 'top';
     const directionBottom = 'bottom';
@@ -109,6 +110,7 @@
                 aDirection: directionTop,
                 infinityKey: 1,
                 scrollerDiv: null,
+                markInstance: null,
                 initialHash: null,
 
                 scrollerProbeCurrent: 0,
@@ -145,6 +147,7 @@
                     if (this.currentUser.id == dto.ownerId || wasScrolled) {
                         this.scrollDown();
                     }
+                    this.performMarking();
                 } else {
                     console.log("Skipping", dto)
                 }
@@ -163,6 +166,7 @@
                     if (isScrolled) {
                         this.scrollDown();
                     }
+                    this.performMarking();
                 } else {
                     console.log("Skipping", dto)
                 }
@@ -287,7 +291,19 @@
                             console.debug("Didn't scrolled", err)
                         }
                     }
+                    if (hasLength(this.searchString)) {
+                        this.markInstance.mark(this.searchString);
+                    }
+                    this.performMarking();
                     this.initialHash = null;
+                })
+            },
+            performMarking() {
+                Vue.nextTick(() => {
+                    if (hasLength(this.searchString)) {
+                        this.markInstance.unmark();
+                        this.markInstance.mark(this.searchString);
+                    }
                 })
             },
             reduceListIfNeed() {
@@ -431,10 +447,13 @@
             '$route': {
                 // reacts on user manually typing hash - in this case we may trigger reload if we don't have the necessary message
                 handler: function(newRoute, oldRoute) {
-                    console.debug("Watched on newRoute", newRoute, " oldRoute", oldRoute);
+                    console.debug("Watched on newRoute in MessageList", newRoute, " oldRoute", oldRoute);
                     if (newRoute.name === chat_name || newRoute.name === videochat_name) {
                         this.setHashVariables();
                         if (this.hasInitialHash) {
+                            // resets variables about searching
+                            this.$store.commit(UNSET_SEARCH_STRING); // UNSET_SEARCH_STRING - silently (w/o triggering subscr in queryMixing) - to prevent one extra loading if this has is aready in scope
+
                             if (findIndexNonStrictly(this.items, {id: this.highlightMessageId}) === -1) {
                                 this.resetVariables();
                                 this.reloadItems(); // resets hash in infiniteHandler
@@ -458,6 +477,7 @@
         },
         mounted() {
             this.scrollerDiv = document.getElementById("messagesScroller");
+            this.markInstance = new Mark("div#messagesScroller .message-item-text");
 
             bus.$on(MESSAGE_ADD, this.onNewMessage);
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);

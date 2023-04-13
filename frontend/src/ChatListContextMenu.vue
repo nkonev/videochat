@@ -51,6 +51,21 @@ export default {
         getContextMenuItems() {
             const ret = [];
             if (this.menuableItem) {
+                if (!this.menuableItem.isResultFromSearch) {
+                    if (this.menuableItem.pinned) {
+                        ret.push({
+                            title: this.$vuetify.lang.t('$vuetify.remove_from_pinned'),
+                            icon: 'mdi-pin-off-outline',
+                            action: () => this.$emit('removedFromPinned', this.menuableItem)
+                        });
+                    } else {
+                        ret.push({
+                            title: this.$vuetify.lang.t('$vuetify.pin_chat'),
+                            icon: 'mdi-pin',
+                            action: () => this.$emit('pinChat', this.menuableItem)
+                        });
+                    }
+                }
                 if (this.menuableItem.canEdit) {
                     ret.push({title: this.$vuetify.lang.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.$emit('editChat', this.menuableItem) });
                 }

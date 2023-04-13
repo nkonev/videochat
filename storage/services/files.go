@@ -7,27 +7,24 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
-	"mime/multipart"
 	"net/url"
-	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"sort"
 	"strings"
 )
 
-const UrlStorageGetFilePublicExternal = "/public/download"
-
 type FilesService struct {
-	minio       *minio.Client
+	minio       *s3.InternalMinioClient
 	restClient  *client.RestClient
 	minioConfig *utils.MinioConfig
 }
 
 func NewFilesService(
-	minio *minio.Client,
+	minio *s3.InternalMinioClient,
 	chatClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
 ) *FilesService {
@@ -114,28 +111,79 @@ func (h *FilesService) GetListFilesInFileItem(
 	return list, count, nil
 }
 
-func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool, originalFilename bool) (*dto.FileInfoDto, error) {
-	downloadUrlRequestForOriginalFilename, downloadUrlWithoutQuery, err := h.GetChatPrivateUrl(objInfo.Key, chatId)
+func (h *FilesService) GetTemporaryDownloadUrl(aKey string) (string, error) {
+	ttl := viper.GetDuration("minio.publicDownloadTtl")
+
+	u, err := h.minio.PresignedGetObject(context.Background(), h.minioConfig.Files, aKey, ttl, url.Values{})
 	if err != nil {
-		Logger.Errorf("Error get chat private url: %v", err)
+		return "", err
+	}
+
+	err = ChangeMinioUrl(u)
+	if err != nil {
+		return "", err
+	}
+
+	downloadUrl := fmt.Sprintf("%v", u)
+	return downloadUrl, nil
+}
+
+func (h *FilesService) GetConstantDownloadUrl(aKey string) (string, error) {
+	downloadUrl, err := url.Parse(viper.GetString("server.contextPath") + utils.UrlStorageGetFile)
+	if err != nil {
+		return "", err
+	}
+
+	query := downloadUrl.Query()
+	query.Add(utils.FileParam, aKey)
+	downloadUrl.RawQuery = query.Encode()
+
+	downloadUrlStr := fmt.Sprintf("%v", downloadUrl)
+	return downloadUrlStr, nil
+}
+
+func ChangeMinioUrl(url *url.URL) error {
+	publicUrlPrefix := viper.GetString("minio.publicUrl")
+	parsed, err := url.Parse(publicUrlPrefix)
+	if err != nil {
+		return err
+	}
+
+	url.Path = parsed.Path + url.Path
+	url.Host = parsed.Host
+	url.Scheme = parsed.Scheme
+	return nil
+}
+
+func (h *FilesService) getPublicUrl(public bool, fileName string) (*string, error) {
+	if !public {
+		return nil, nil
+	}
+
+	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + utils.UrlStorageGetFilePublicExternal)
+	if err != nil {
 		return nil, err
 	}
-	previewUrl := h.GetPreviewUrlSmart(downloadUrlWithoutQuery)
 
-	downloadUrl := ""
-	if originalFilename {
-		downloadUrl = downloadUrlRequestForOriginalFilename
-	} else {
-		downloadUrl = downloadUrlWithoutQuery
-	}
+	query := downloadUrl.Query()
+	query.Add(utils.FileParam, fileName)
+	downloadUrl.RawQuery = query.Encode()
+	str := downloadUrl.String()
+	return &str, nil
+}
+
+func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool, originalFilename bool) (*dto.FileInfoDto, error) {
+	previewUrl := h.GetPreviewUrlSmart(objInfo.Key)
 
 	metadata := objInfo.UserMetadata
 
-	_, fileOwnerId, fileName, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
+	_, fileOwnerId, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
 	if err != nil {
 		Logger.Errorf("Error get metadata: %v", err)
 		return nil, err
 	}
+
+	filename := ReadFilename(objInfo.Key)
 
 	public, err := DeserializeTags(tagging)
 	if err != nil {
@@ -149,13 +197,19 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		return nil, err
 	}
 
+	downloadUrl, err := h.GetConstantDownloadUrl(objInfo.Key)
+	if err != nil {
+		Logger.Errorf("Error during getting downlad url %v", err)
+		return nil, err
+	}
+
 	info := &dto.FileInfoDto{
 		Id:           objInfo.Key,
-		Filename:     fileName,
+		Filename:     filename,
 		Url:          downloadUrl,
 		Size:         objInfo.Size,
 		CanDelete:    fileOwnerId == behalfUserId,
-		CanEdit:      fileOwnerId == behalfUserId && strings.HasSuffix(fileName, ".txt"),
+		CanEdit:      fileOwnerId == behalfUserId && strings.HasSuffix(objInfo.Key, ".txt"),
 		CanShare:     fileOwnerId == behalfUserId,
 		LastModified: objInfo.LastModified,
 		OwnerId:      fileOwnerId,
@@ -165,55 +219,21 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 	return info, nil
 }
 
-func (h *FilesService) getPublicUrl(public bool, fileName string) (*string, error) {
-	if !public {
-		return nil, nil
-	}
-
-	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + UrlStorageGetFilePublicExternal)
-	if err != nil {
-		return nil, err
-	}
-
-	query := downloadUrl.Query()
-	query.Add(utils.FileParam, fileName)
-	downloadUrl.RawQuery = query.Encode()
-	str := downloadUrl.String()
-	return &str, nil
-}
-
 func (h *FilesService) getBaseUrlForDownload() string {
 	return viper.GetString("server.contextPath") + "/storage"
-}
-
-func (h *FilesService) GetChatPrivateUrl(minioKey string, chatId int64) (string, string, error) {
-	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + "/download")
-	if err != nil {
-		return "", "", err
-	}
-
-	query := downloadUrl.Query()
-	query.Add(utils.FileParam, minioKey)
-	downloadUrl.RawQuery = query.Encode()
-	str := downloadUrl.String()
-
-	withoutQuery := str
-	str += "&original=true"
-
-	return str, withoutQuery, nil
 }
 
 const Media_image = "image"
 const Media_video = "video"
 
-func (h *FilesService) GetPreviewUrlSmart(itemUrl string) *string {
+func (h *FilesService) GetPreviewUrlSmart(aKey string) *string {
 	recognizedType := ""
-	if utils.IsVideo(itemUrl) {
+	if utils.IsVideo(aKey) {
 		recognizedType = Media_video
-		return h.getPreviewUrl(itemUrl, recognizedType)
-	} else if utils.IsImage(itemUrl) {
+		return h.getPreviewUrl(aKey, recognizedType)
+	} else if utils.IsImage(aKey) {
 		recognizedType = Media_image
-		return h.getPreviewUrl(itemUrl, recognizedType)
+		return h.getPreviewUrl(aKey, recognizedType)
 	}
 	return nil
 }
@@ -233,37 +253,33 @@ func GetType(itemUrl string) *string {
 	}
 }
 
-func (h *FilesService) getPreviewUrl(itemUrl string, requestedMediaType string) *string {
+func (h *FilesService) getPreviewUrl(aKey string, requestedMediaType string) *string {
 	var previewUrl *string = nil
 
-	parsedUrl, err := url.Parse(itemUrl)
-	if err == nil {
-		parsedUrl.Path = "/api/storage/embed/preview"
-		fileParam := parsedUrl.Query().Get(utils.FileParam)
-		previewMinioKey := ""
-		if requestedMediaType == Media_video {
-			previewMinioKey = utils.SetVideoPreviewExtension(fileParam)
-		} else if requestedMediaType == Media_image {
-			previewMinioKey = utils.SetImagePreviewExtension(fileParam)
-		}
-		if previewMinioKey != "" {
-			q := parsedUrl.Query()
-			q.Set(utils.FileParam, previewMinioKey)
+	respUrl := url.URL{}
+	respUrl.Path = "/api/storage/embed/preview"
+	previewMinioKey := ""
+	if requestedMediaType == Media_video {
+		previewMinioKey = utils.SetVideoPreviewExtension(aKey)
+	} else if requestedMediaType == Media_image {
+		previewMinioKey = utils.SetImagePreviewExtension(aKey)
+	}
+	if previewMinioKey != "" {
+		query := respUrl.Query()
+		query.Set(utils.FileParam, previewMinioKey)
 
-			obj, err := h.minio.StatObject(context.Background(), h.minioConfig.FilesPreview, previewMinioKey, minio.StatObjectOptions{})
-			if err == nil {
-				// if preview file presents we do set time. it is need to distinguish on front. it's required to update early requested file item without preview
-				q.Set(utils.TimeParam, utils.Int64ToString(obj.LastModified.Unix()))
-			}
-
-			parsedUrl.RawQuery = q.Encode()
-			tmp := parsedUrl.String()
-			previewUrl = &tmp
-		} else {
-			Logger.Errorf("Unknown requested type %v", requestedMediaType)
+		obj, err := h.minio.StatObject(context.Background(), h.minioConfig.FilesPreview, previewMinioKey, minio.StatObjectOptions{})
+		if err == nil {
+			// if preview file presents we do set time. it is need to distinguish on front. it's required to update early requested file item without preview
+			query.Set(utils.TimeParam, utils.Int64ToString(obj.LastModified.Unix()))
 		}
+
+		respUrl.RawQuery = query.Encode()
+
+		tmp := respUrl.String()
+		previewUrl = &tmp
 	} else {
-		Logger.Errorf("Error during parse url %v", err)
+		Logger.Errorf("Unknown requested type %v", requestedMediaType)
 	}
 
 	return previewUrl
@@ -271,24 +287,67 @@ func (h *FilesService) getPreviewUrl(itemUrl string, requestedMediaType string) 
 
 const publicKey = "public"
 
-const filenameKey = "filename"
 const ownerIdKey = "ownerid"
 const chatIdKey = "chatid"
 const correlationIdKey = "correlationid"
 
 const originalKey = "originalkey"
 
-func SerializeMetadata(file *multipart.FileHeader, userPrincipalDto *auth.AuthResult, chatId int64, correlationId string) map[string]string {
-	return SerializeMetadataSimple(file.Filename, userPrincipalDto.UserId, chatId, correlationId)
-}
-
-func SerializeMetadataSimple(filename string, userId int64, chatId int64, correlationId string) map[string]string {
+func SerializeMetadataSimple(userId int64, chatId int64, correlationId *string) map[string]string {
 	var userMetadata = map[string]string{}
-	userMetadata[filenameKey] = filename
 	userMetadata[ownerIdKey] = utils.Int64ToString(userId)
 	userMetadata[chatIdKey] = utils.Int64ToString(chatId)
-	userMetadata[correlationIdKey] = correlationId
+	if correlationId != nil {
+		userMetadata[correlationIdKey] = *correlationId
+	}
 	return userMetadata
+}
+
+const xAmzMetaPrefix = "X-Amz-Meta-"
+
+func SerializeMetadataAndStore(urlValues *url.Values, userId int64, chatId int64, correlationId *string) {
+	urlValues.Set(xAmzMetaPrefix+strings.Title(ownerIdKey), utils.Int64ToString(userId))
+	urlValues.Set(xAmzMetaPrefix+strings.Title(chatIdKey), utils.Int64ToString(chatId))
+	if correlationId != nil {
+		urlValues.Set(xAmzMetaPrefix+strings.Title(correlationIdKey), *correlationId)
+	}
+}
+
+func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, error) {
+	var prefix = ""
+	if hasAmzPrefix {
+		prefix = xAmzMetaPrefix
+	}
+
+	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
+	if !ok {
+		return 0, 0, "", errors.New("Unable to get owner id")
+	}
+	ownerId, err := utils.ParseInt64(ownerIdString)
+	if err != nil {
+		return 0, 0, "", err
+	}
+
+	chatIdString, ok := userMetadata[prefix+strings.Title(chatIdKey)]
+	if !ok {
+		return 0, 0, "", errors.New("Unable to get chat id")
+	}
+	chatId, err := utils.ParseInt64(chatIdString)
+	if err != nil {
+		return 0, 0, "", err
+	}
+	correlationId := userMetadata[prefix+strings.Title(correlationIdKey)]
+
+	return chatId, ownerId, correlationId, nil
+}
+
+func GenerateFilename(filename string, chatFileItemUuid string, chatId int64) string {
+	return fmt.Sprintf("chat/%v/%v/%v", chatId, chatFileItemUuid, filename)
+}
+
+func ReadFilename(key string) string {
+	arr := strings.Split(key, "/")
+	return arr[len(arr)-1]
 }
 
 func SerializeOriginalKeyToMetadata(originalKeyParam string) map[string]string {
@@ -296,8 +355,6 @@ func SerializeOriginalKeyToMetadata(originalKeyParam string) map[string]string {
 	userMetadata[originalKey] = originalKeyParam
 	return userMetadata
 }
-
-const xAmzMetaPrefix = "X-Amz-Meta-"
 
 func GetOriginalKeyFromMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (string, error) {
 	var prefix = ""
@@ -310,37 +367,6 @@ func GetOriginalKeyFromMetadata(userMetadata minio.StringMap, hasAmzPrefix bool)
 		return "", errors.New("Unable to get originalKey")
 	}
 	return originalKeyParam, nil
-}
-
-func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, string, error) {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	filename, ok := userMetadata[prefix+strings.Title(filenameKey)]
-	if !ok {
-		return 0, 0, "", "", errors.New("Unable to get filename")
-	}
-	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
-	if !ok {
-		return 0, 0, "", "", errors.New("Unable to get owner id")
-	}
-	ownerId, err := utils.ParseInt64(ownerIdString)
-	if err != nil {
-		return 0, 0, "", "", err
-	}
-
-	chatIdString, ok := userMetadata[prefix+strings.Title(chatIdKey)]
-	if !ok {
-		return 0, 0, "", "", errors.New("Unable to get chat id")
-	}
-	chatId, err := utils.ParseInt64(chatIdString)
-	if err != nil {
-		return 0, 0, "", "", err
-	}
-	correlationId := userMetadata[prefix+strings.Title(correlationIdKey)]
-
-	return chatId, ownerId, filename, correlationId, nil
 }
 
 func ChatIdKey(hasAmzPrefix bool) string {

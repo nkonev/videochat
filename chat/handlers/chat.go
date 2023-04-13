@@ -60,13 +60,13 @@ func NewChatHandler(dbR *db.DB, notificator services.Events, restClient *client.
 
 func (a *CreateChatDto) Validate() error {
 	return validation.ValidateStruct(a,
-		validation.Field(&a.Name, validation.Required, validation.Length(minChatNameLen, maxChatNameLen), validation.NotIn(db.ReservedAvailableChats)),
+		validation.Field(&a.Name, validation.Required, validation.Length(minChatNameLen, maxChatNameLen), validation.NotIn(db.ReservedPublicallyAvailableForSearchChats)),
 	)
 }
 
 func (a *EditChatDto) Validate() error {
 	return validation.ValidateStruct(a,
-		validation.Field(&a.Name, validation.Required, validation.Length(minChatNameLen, maxChatNameLen), validation.NotIn(db.ReservedAvailableChats)),
+		validation.Field(&a.Name, validation.Required, validation.Length(minChatNameLen, maxChatNameLen), validation.NotIn(db.ReservedPublicallyAvailableForSearchChats)),
 		validation.Field(&a.Id, validation.Required),
 	)
 }
@@ -87,7 +87,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	var dbChats []*db.ChatWithParticipants
 	var additionalFoundUserIds = []int64{}
 
-	if searchString != "" && searchString != db.ReservedAvailableChats {
+	if searchString != "" && searchString != db.ReservedPublicallyAvailableForSearchChats {
 		searchString = TrimAmdSanitize(ch.policy, searchString)
 
 		users, _, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, 0, 0, c.Request().Context())
@@ -122,6 +122,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		isParticipant := utils.Contains(chatsWithMe, cc.Id)
 
 		cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
+
 		chatDtos = append(chatDtos, cd)
 	}
 
@@ -275,6 +276,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		IsTetATet:         c.TetATet,
 		CanResend:         c.CanResend,
 		AvailableToSearch: c.AvailableToSearch,
+		Pinned:            c.Pinned,
 		// see also services/events.go:75 chatNotifyCommon()
 
 		ParticipantsCount:  c.ParticipantsCount,
@@ -465,6 +467,12 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 			return err
 		}
 
+		participantIds, err := tx.GetAllParticipantIds(chatId)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
 		firstUser, err := tx.GetFirstParticipant(chatId)
 		if err != nil {
 			return err
@@ -476,9 +484,9 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutDeleteParticipants(c, responseDto.ParticipantIds, chatId, []int64{userPrincipalDto.UserId})
+			ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{userPrincipalDto.UserId})
 
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
@@ -527,7 +535,12 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutNewParticipants(c, responseDto.ParticipantIds, chatId, []*dto.UserWithAdmin{
+			participantIds, err := tx.GetAllParticipantIds(chatId)
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
+				return c.NoContent(http.StatusInternalServerError)
+			}
+			ch.notificator.NotifyAboutNewParticipants(c, participantIds, chatId, []*dto.UserWithAdmin{
 				{
 					User: dto.User{
 						Id:    userPrincipalDto.UserId,
@@ -537,7 +550,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 				},
 			})
 
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, responseDto.ParticipantIds, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})
@@ -623,6 +636,49 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 	return errOuter
 }
 
+func (ch *ChatHandler) PinChat(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	pin, err := GetQueryParamAsBoolean(c, "pin")
+	if err != nil {
+		return err
+	}
+
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	return db.Transact(ch.db, func(tx *db.Tx) error {
+		if isParticipant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
+			return err
+		} else if !isParticipant {
+			return errors.New(fmt.Sprintf("User %v is not isParticipant of chat %v", userPrincipalDto.UserId, chatId))
+		}
+
+		err = tx.PinChat(chatId, userPrincipalDto.UserId, pin)
+		if err != nil {
+			return err
+		}
+
+		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
+		if err != nil {
+			return err
+		}
+		copiedChat, err := ch.getChatWithAdminedUsers(c, tmpDto, tx)
+		if err != nil {
+			return err
+		}
+		ch.notificator.NotifyAboutChangeChat(c, copiedChat, []int64{userPrincipalDto.UserId}, tx)
+
+		return c.JSON(http.StatusOK, copiedChat)
+	})
+}
+
 func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
@@ -668,7 +724,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		ch.notificator.NotifyAboutChangeChat(c, copiedChat, tmpDto.ParticipantIds, tx)
+		ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
 
 		ch.notificator.NotifyAboutDeleteChat(c, chatId, []int64{interestingUserId}, tx)
 
@@ -767,7 +823,7 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		ch.notificator.NotifyAboutChangeChat(c, copiedChat, tmpDto.ParticipantIds, tx)
+		ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
 
 		return c.NoContent(http.StatusAccepted)
 	})

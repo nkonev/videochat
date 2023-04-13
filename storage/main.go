@@ -27,6 +27,7 @@ import (
 	"nkonev.name/storage/producer"
 	"nkonev.name/storage/rabbitmq"
 	"nkonev.name/storage/redis"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
@@ -41,7 +42,7 @@ func main() {
 		fx.Logger(Logger),
 		fx.Provide(
 			configureTracer,
-			configureMinio,
+			configureInternalMinio,
 			configureMinioEntities,
 			configureEcho,
 			redis.RedisV8,
@@ -141,19 +142,18 @@ func configureEcho(
 	e.GET(fmt.Sprintf("%v/:filename", uah.GetUrlPath()), uah.Download)
 	e.POST("/storage/chat/:chatId/avatar", cha.PutAvatar)
 	e.GET(fmt.Sprintf("%v/:filename", cha.GetUrlPath()), cha.Download)
-	e.POST("/storage/:chatId/file", fh.UploadHandler)
 	e.POST("/internal/s3", fh.S3Handler)
-	e.POST("/storage/:chatId/file/:fileItemUuid", fh.UploadHandler)
+	e.PUT("/storage/:chatId/url", fh.UploadHandler)
 	e.PUT("/storage/:chatId/replace/file", fh.ReplaceHandler)
 	e.GET("/storage/:chatId", fh.ListHandler)
 	e.DELETE("/storage/:chatId/file", fh.DeleteHandler)
-	e.GET("/storage/download", fh.DownloadHandler)
-	e.GET(handlers.UrlStorageGetFile, fh.PublicDownloadHandler)
 	e.PUT("/storage/publish/file", fh.SetPublic)
 	e.GET("/storage/:chatId/file/count/:fileItemUuid", fh.CountHandler)
 	e.GET("/storage/:chatId/file", fh.LimitsHandler)
 	e.GET("/storage/:chatId/embed/candidates", fh.ListCandidatesForEmbed)
 	e.GET("/storage/embed/preview", fh.PreviewDownloadHandler)
+	e.GET(utils.UrlStoragePublicGetFile, fh.PublicDownloadHandler)
+	e.GET(utils.UrlStorageGetFile, fh.DownloadHandler)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -166,8 +166,8 @@ func configureEcho(
 	return e
 }
 
-func configureMinio() (*minio.Client, error) {
-	endpoint := viper.GetString("minio.endpoint")
+func configureInternalMinio() (*s3.InternalMinioClient, error) {
+	endpoint := viper.GetString("minio.internalEndpoint")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 
@@ -180,7 +180,7 @@ func configureMinio() (*minio.Client, error) {
 		return nil, err
 	}
 
-	return minioClient, nil
+	return &s3.InternalMinioClient{minioClient}, nil
 }
 
 func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
@@ -233,7 +233,7 @@ func runEcho(e *echo.Echo) {
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func configureMinioEntities(client *minio.Client) (*utils.MinioConfig, error) {
+func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig, error) {
 	var ua, ca, f, p string
 	var err error
 	if ua, err = utils.EnsureAndGetUserAvatarBucket(client); err != nil {

@@ -23,6 +23,7 @@ type BaseChatDto struct {
 	CanAudioMute        bool        `json:"canAudioMute"`
 	ParticipantsCount   int         `json:"participantsCount"`
 	CanResend           bool        `json:"canResend"`
+	Pinned              bool        `json:"pinned"`
 }
 
 type ChatDeletedDto struct {
@@ -80,6 +81,7 @@ type ChatDtoWithAdmin struct {
 }
 
 type ChatUnreadMessageChanged struct {
-	ChatId         int64 `json:"chatId"`
-	UnreadMessages int64 `json:"unreadMessages"`
+	ChatId             int64     `json:"chatId"`
+	UnreadMessages     int64     `json:"unreadMessages"`
+	LastUpdateDateTime time.Time `json:"lastUpdateDateTime"`
 }

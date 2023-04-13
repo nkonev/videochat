@@ -190,18 +190,19 @@
                 console.log("Getting info about participants in modal, chatId=", this.chatId);
                 this.loading = true;
                 return axios.get('/api/chat/' + this.chatId + '/user', {
-                    params: {
-                        page: this.translatePage(),
-                        size: pageSize,
-                        searchString: this.userSearchString
-                    },
-                })
-                    .then((response) => {
-                        const tmp = cloneDeep(response.data);
-                        this.transformParticipants(tmp.participants);
-                        this.participantsDto = tmp;
-                    }).finally(() => {
-                        this.loading = false;
+                            params: {
+                                page: this.translatePage(),
+                                size: pageSize,
+                                searchString: this.userSearchString
+                            },
+                        })
+                        .then((response) => {
+                            const tmp = cloneDeep(response.data);
+                            this.transformParticipants(tmp.participants);
+                            this.participantsDto = tmp;
+                        }).finally(() => {
+                            this.loading = false;
+                            axios.put('/api/video/' + this.chatId + '/dial/request-for-is-calling')
                     })
             },
             changeChatAdmin(item) {

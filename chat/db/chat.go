@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const ReservedAvailableChats = "__AVAILABLE"
+const ReservedPublicallyAvailableForSearchChats = "__AVAILABLE"
 
 // db model
 type Chat struct {
@@ -24,6 +24,7 @@ type Chat struct {
 	Avatar             null.String
 	AvatarBig          null.String
 	AvailableToSearch  bool
+	Pinned             bool
 }
 
 type ChatWithParticipants struct {
@@ -75,17 +76,20 @@ func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int
 	return true, chatId, nil
 }
 
+// expects $1 is userId
 func selectChatClause() string {
 	return `SELECT 
-				id, 
-				title, 
-				avatar, 
-				avatar_big,
-				last_update_date_time,
-				tet_a_tet,
-				can_resend,
-				available_to_search
-			FROM chat
+				ch.id, 
+				ch.title, 
+				ch.avatar, 
+				ch.avatar_big,
+				ch.last_update_date_time,
+				ch.tet_a_tet,
+				ch.can_resend,
+				ch.available_to_search,
+				cp.user_id IS NOT NULL as pinned
+			FROM chat ch 
+				LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1)
 `
 }
 
@@ -99,13 +103,14 @@ func provideScanToChat(chat *Chat) []any {
 		&chat.TetATet,
 		&chat.CanResend,
 		&chat.AvailableToSearch,
+		&chat.Pinned,
 	}
 }
 
 func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = db.Query(selectChatClause()+` WHERE id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (last_update_date_time, id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
+	rows, err = db.Query(selectChatClause()+` WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
@@ -141,15 +146,15 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 	}
 	var additionalUserIdsClause = ""
 	if len(additionalFoundUserIds) > 0 {
-		additionalUserIdsClause = fmt.Sprintf(" OR ( tet_a_tet IS true AND id IN ( SELECT chat_id FROM chat_participant WHERE user_id IN (%s) ) ) ", additionalUserIds)
+		additionalUserIdsClause = fmt.Sprintf(" OR ( ch.tet_a_tet IS true AND ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id IN (%s) ) ) ", additionalUserIds)
 	}
 
 	rows, err = db.Query(selectChatClause()+fmt.Sprintf(`
 		WHERE 
-		    ( ( id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) OR ( available_to_search IS TRUE ) ) AND ( $5 = '%s' or title ILIKE $4 %s ) ) 
-			ORDER BY (last_update_date_time, id) DESC 
+		    ( ( ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) OR ( ch.available_to_search IS TRUE ) ) AND ( $5 = '%s' or ch.title ILIKE $4 %s ) ) 
+			ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC 
 			LIMIT $2 OFFSET $3
-	`, ReservedAvailableChats, additionalUserIdsClause), participantId, limit, offset, searchStringWithPercents, searchString)
+	`, ReservedPublicallyAvailableForSearchChats, additionalUserIdsClause), participantId, limit, offset, searchStringWithPercents, searchString)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
@@ -353,7 +358,7 @@ func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String,
 }
 
 func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, error) {
-	row := co.QueryRow(selectChatClause()+` WHERE chat.id in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $1)`, chatId, participantId)
+	row := co.QueryRow(selectChatClause()+` WHERE ch.id in (SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $2)`, participantId, chatId)
 	chat := Chat{}
 	err := row.Scan(provideScanToChat(&chat)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -376,10 +381,18 @@ func (tx *Tx) GetChat(participantId, chatId int64) (*Chat, error) {
 	return getChatCommon(tx, participantId, chatId)
 }
 
-func getChatBasicCommon(co CommonOperations, chatId int64) (*Chat, error) {
-	row := co.QueryRow(selectChatClause()+` WHERE chat.id = $1`, chatId)
-	chat := Chat{}
-	err := row.Scan(provideScanToChat(&chat)[:]...)
+func getChatBasicCommon(co CommonOperations, chatId int64) (*BasicChatDto, error) {
+	row := co.QueryRow(`SELECT 
+				ch.id, 
+				ch.title, 
+				ch.tet_a_tet,
+				ch.can_resend,
+				ch.available_to_search
+			FROM chat ch 
+			WHERE ch.id = $1
+`, chatId)
+	chat := BasicChatDto{}
+	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -392,16 +405,16 @@ func getChatBasicCommon(co CommonOperations, chatId int64) (*Chat, error) {
 	}
 }
 
-func (db *DB) GetChatBasic(chatId int64) (*Chat, error) {
+func (db *DB) GetChatBasic(chatId int64) (*BasicChatDto, error) {
 	return getChatBasicCommon(db, chatId)
 }
 
-func (tx *Tx) GetChatBasic(chatId int64) (*Chat, error) {
+func (tx *Tx) GetChatBasic(chatId int64) (*BasicChatDto, error) {
 	return getChatBasicCommon(tx, chatId)
 }
 
-func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error) {
-	result := map[int64]*BasicChatDto{}
+func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
+	result := map[int64]*BasicChatDtoExtended{}
 	if len(chatIds) == 0 {
 		return result, nil
 	}
@@ -420,16 +433,28 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 
 		first = false
 	}
-	rows, err := co.Query(fmt.Sprintf("SELECT c.id, c.title, (cp.user_id is not null), c.tet_a_tet FROM chat c LEFT JOIN chat_participant cp ON (c.id = cp.chat_id AND cp.user_id = $1) WHERE c.id IN (%s)", inClause), behalfParticipantId)
+	rows, err := co.Query(fmt.Sprintf(`
+		SELECT 
+			c.id, 
+			c.title,
+			(cp.user_id is not null),
+			c.tet_a_tet,
+			c.can_resend,
+			c.available_to_search
+		FROM chat c 
+		    LEFT JOIN chat_participant cp 
+		        ON (c.id = cp.chat_id AND cp.user_id = $1) 
+		WHERE c.id IN (%s)`, inClause),
+		behalfParticipantId)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err
 	} else {
 		defer rows.Close()
-		list := make([]*BasicChatDto, 0)
+		list := make([]*BasicChatDtoExtended, 0)
 		for rows.Next() {
-			dto := new(BasicChatDto)
-			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet); err != nil {
+			dto := new(BasicChatDtoExtended)
+			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -443,19 +468,25 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 	}
 }
 
-func (db *DB) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error) {
+func (db *DB) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
 	return getChatsBasicCommon(db, chatIds, behalfParticipantId)
 }
 
-func (tx *Tx) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDto, error) {
+func (tx *Tx) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
 	return getChatsBasicCommon(tx, chatIds, behalfParticipantId)
 }
 
 type BasicChatDto struct {
-	Id                      int64
-	Title                   string
+	Id                int64
+	Title             string
+	IsTetATet         bool
+	CanResend         bool
+	AvailableToSearch bool
+}
+
+type BasicChatDtoExtended struct {
+	BasicChatDto
 	BehalfUserIsParticipant bool
-	IsTetATet               bool
 }
 
 func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
@@ -464,6 +495,18 @@ func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
 		return err
 	} else {
 		return nil
+	}
+}
+
+func (tx *Tx) GetChatLastDatetimeChat(chatId int64) (time.Time, error) {
+	row := tx.QueryRow(`SELECT last_update_date_time FROM chat WHERE id = $1`, chatId)
+	var lastUpdateDateTime time.Time
+	err := row.Scan(&lastUpdateDateTime)
+	if err != nil {
+		Logger.Errorf("Error during get lastUpdateDateTime %v", err)
+		return lastUpdateDateTime, err
+	} else {
+		return lastUpdateDateTime, nil
 	}
 }
 
@@ -478,6 +521,48 @@ func (db *DB) IsChatExists(chatId int64) (bool, error) {
 		return exists, nil
 	}
 
+}
+
+func pinChatCommon(co CommonOperations, chatId int64, userId int64, pin bool) error {
+	if pin {
+		_, err := co.Exec("insert into chat_pinned(user_id, chat_id) values ($1, $2) on conflict do nothing", userId, chatId)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := co.Exec("delete from chat_pinned where user_id = $1 and chat_id = $2", userId, chatId)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (db *DB) PinChat(chatId int64, userId int64, pin bool) error {
+	return pinChatCommon(db, chatId, userId, pin)
+}
+
+func (tx *Tx) PinChat(chatId int64, userId int64, pin bool) error {
+	return pinChatCommon(tx, chatId, userId, pin)
+}
+
+func (tx *Tx) IsChatPinned(chatId int64, behalfUserId int64) (bool, error) {
+	var res bool
+	row := tx.QueryRow(`SELECT 
+    	cp.user_id IS NOT NULL as pinned 
+		FROM chat ch 
+		    LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1) WHERE ch.id = $2`,
+		behalfUserId,
+		chatId,
+	)
+	if row.Err() != nil {
+		return false, row.Err()
+	}
+	if err := row.Scan(&res); err != nil {
+		Logger.Errorf("Error during getting pinned %v", err)
+		return false, err
+	}
+	return res, nil
 }
 
 func (db *DB) DeleteAllParticipants() error {

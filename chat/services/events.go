@@ -111,6 +111,14 @@ func chatNotifyCommon(userIds []int64, not *eventsImpl, c echo.Context, newChatD
 			// see also handlers/chat.go:199 convertToDto()
 			copied.SetPersonalizedFields(admin, unreadMessages, isParticipant)
 
+			pinned, err := tx.IsChatPinned(newChatDto.Id, participantId)
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("error during get pinned for userId=%v: %s", participantId, err)
+				continue
+			}
+
+			copied.Pinned = pinned
+
 			for _, participant := range copied.Participants {
 				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)
 			}
@@ -128,6 +136,12 @@ func chatNotifyCommon(userIds []int64, not *eventsImpl, c echo.Context, newChatD
 }
 
 func (not *eventsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx) {
+	lastUpdated, err := tx.GetChatLastDatetimeChat(chatId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("error during get ChatLastDatetime for chat=%v: %s", chatId, err)
+		return
+	}
+
 	for _, participantId := range userIds {
 		GetLogEntry(c.Request().Context()).Debugf("Sending notification about unread messages to participantChannel: %v", participantId)
 
@@ -138,8 +152,9 @@ func (not *eventsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, c
 		}
 
 		payload := &dto.ChatUnreadMessageChanged{
-			ChatId:         chatId,
-			UnreadMessages: unreadMessages,
+			ChatId:             chatId,
+			UnreadMessages:     unreadMessages,
+			LastUpdateDateTime: lastUpdated,
 		}
 
 		err = not.rabbitEventPublisher.Publish(dto.GlobalEvent{

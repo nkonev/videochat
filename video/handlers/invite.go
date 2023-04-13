@@ -10,6 +10,7 @@ import (
 	"nkonev.name/video/logger"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
+	"nkonev.name/video/redis"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
 )
@@ -20,17 +21,19 @@ type InviteHandler struct {
 	dialStatusPublisher   *producer.RabbitDialStatusPublisher
 	notificationPublisher *producer.RabbitNotificationsPublisher
 	userService           *services.UserService
+	chatDialerService     *redis.ChatDialerService
 }
 
 const MissedCall = "missed_call"
 
-func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService) *InviteHandler {
+func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService, chatDialerService *redis.ChatDialerService) *InviteHandler {
 	return &InviteHandler{
 		dialRedisRepository:   dialService,
 		chatClient:            chatClient,
 		dialStatusPublisher:   dialStatusPublisher,
 		notificationPublisher: notificationPublisher,
 		userService:           userService,
+		chatDialerService:     chatDialerService,
 	}
 }
 
@@ -323,5 +326,28 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 		}
 	}
 
+	return c.NoContent(http.StatusOK)
+}
+
+func (vh *InviteHandler) AskDials(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		Logger.Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	// check my access to chat
+	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	vh.chatDialerService.SendDialStatusChanged(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	return c.NoContent(http.StatusOK)
 }
