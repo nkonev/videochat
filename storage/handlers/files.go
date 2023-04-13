@@ -125,8 +125,6 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
 	}
 
-	// TODO decide what to do with "make public"
-
 	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
 	var urlVals = url.Values{}
 
