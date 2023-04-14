@@ -258,6 +258,7 @@
                     console.error("Store is null");
                 }
             },
+            // TODO problem is - this function is not aware of vertical video
             onPanelRemove() {
                 console.log("On panel removed", this.$refs.spl.panes);
                 const stored = this.getStored();
