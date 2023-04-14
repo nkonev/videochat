@@ -96,7 +96,7 @@
     import { Splitpanes, Pane } from 'splitpanes'
     import debounce from "lodash/debounce";
     import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
-    // import 'splitpanes/dist/splitpanes.css';
+    import 'splitpanes/dist/splitpanes.css';
 
     const defaultDesktopWithoutVideo = [80, 20];
     const defaultDesktopWithVideo = [30, 50, 20];
@@ -641,41 +641,5 @@
 <style lang="stylus">
 @import "common.styl"
 
-$dot-size = 2px;
-$dot-space = 4px;
-$bg-color = $messageSelectedBackground;
-$dot-color = darkgrey;
-$panesZIndex = 5;
-
-.splitpanes {background-color: #f8f8f8; z-index: $panesZIndex;}
-
-.splitpanes__splitter {background-color: #ccc;position: relative; cursor: ns-resize; z-index: $panesZIndex;}
-.splitpanes__splitter:before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    transition: opacity 0.1s;
-
-    // https://www.w3resource.com/html-css-exercise/html-css-practical-exercises/html-css-practical-exercise-28.php
-    background-color: $bg-color;
-    background-image: radial-gradient($bg-color 20%, transparent 40%), radial-gradient($dot-color 20%, transparent 40%);
-    background-size: $dot-space $dot-space;
-    background-position: 0 0, $dot-size $dot-size;
-    background-repeat: repeat;
-
-    opacity: 0;
-    z-index: $panesZIndex;
-}
-.splitpanes__splitter:hover:before {opacity: 1; z-index: $panesZIndex;}
-.splitpanes--vertical > .splitpanes__splitter:before {left: -10px;right: -10px;height: 100%; z-index: $panesZIndex;}
-.splitpanes--horizontal > .splitpanes__splitter:before {top: -10px;bottom: -10px;width: 100%; z-index: $panesZIndex;}
-.panes3 {
-    .splitpanes__splitter:nth-child(2):before {top: 0;bottom: -20px;width: 100%; z-index: $panesZIndex;}
-    .splitpanes__splitter:nth-child(4):before {top: -20px;bottom: 0;width: 100%; z-index: $panesZIndex;}
-}
-.panes2 {
-    .splitpanes__splitter:before {top: -20px;bottom: 0;width: 100%; z-index: $panesZIndex;}
-}
 
 </style>
