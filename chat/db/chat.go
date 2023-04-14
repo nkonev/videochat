@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const ReservedPublicallyAvailableForSearchChats = "__AVAILABLE"
+const ReservedPublicallyAvailableForSearchChats = "__AVAILABLE_FOR_SEARCH"
 
 // db model
 type Chat struct {

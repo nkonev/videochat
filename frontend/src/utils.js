@@ -317,7 +317,7 @@ export const isArrEqual = (a, b) => {
     return true
 }
 
-export const publicallyAvailableForSearchChatsQuery = "__AVAILABLE";
+export const publicallyAvailableForSearchChatsQuery = "__AVAILABLE_FOR_SEARCH";
 
 
 export function dynamicSort(property) {

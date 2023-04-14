@@ -63,7 +63,6 @@
                                           </span>
                                     </template>
                                 </template>
-
                                 <template v-if="dto.canEdit && item.id != currentUser.id">
                                     <v-btn icon @click="deleteParticipant(item)" color="error" :title="$vuetify.lang.t('$vuetify.delete_from_chat')"><v-icon dark>mdi-delete</v-icon></v-btn>
                                 </template>
@@ -85,6 +84,7 @@
                     </template>
 
                     <v-progress-circular
+                        class="ma-4 pa-4"
                         v-if="loading"
                         indeterminate
                         color="primary"
