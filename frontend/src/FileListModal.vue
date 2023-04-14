@@ -24,7 +24,7 @@
                                     >
                                         <v-container class="file-info-title ma-0 pa-0">
                                         <v-card-title>
-                                            <a :href="item.url" target="_blank" class="download-link">{{item.filename}}</a>
+                                            <a :href="item.url" download class="download-link">{{item.filename}}</a>
                                         </v-card-title>
                                         <v-card-subtitle>
                                             {{ item.size | formatSizeFilter }}
