@@ -142,7 +142,11 @@
 
             onNewMessage(dto) {
                 if (dto.chatId == this.chatId) {
+                    const wasScrolled = this.isScrolledToBottom();
                     this.addItem(dto);
+                    if (this.currentUser.id == dto.ownerId || wasScrolled) {
+                        this.scrollDown();
+                    }
                     this.performMarking();
                 } else {
                     console.log("Skipping", dto)
@@ -157,7 +161,11 @@
             },
             onEditMessage(dto) {
                 if (dto.chatId == this.chatId) {
+                    const isScrolled = this.isScrolledToBottom();
                     this.changeItem(dto);
+                    if (isScrolled) {
+                        this.scrollDown();
+                    }
                     this.performMarking();
                 } else {
                     console.log("Skipping", dto)
@@ -176,12 +184,13 @@
             },
             scrollDown() {
                 Vue.nextTick(() => {
-                    this.scrollerDiv.scrollTop = 0;
+                    console.log("Scrolling down myDiv.scrollTop", this.scrollerDiv.scrollTop, "myDiv.scrollHeight", this.scrollerDiv.scrollHeight);
+                    this.scrollerDiv.scrollTop = this.scrollerDiv.scrollHeight;
                 });
             },
             isScrolledToBottom() {
                 if (this.scrollerDiv) {
-                    return Math.abs(this.scrollerDiv.scrollTop) < scrollingThreshold
+                    return this.scrollerDiv.scrollHeight - this.scrollerDiv.scrollTop - this.scrollerDiv.clientHeight < scrollingThreshold
                 } else {
                     return false
                 }
@@ -322,6 +331,12 @@
             isTopDirection() {
                 return this.aDirection === directionTop
             },
+            onResizedListener() {
+                const isScrolled = this.isScrolledToBottom();
+                if (isScrolled) {
+                    this.scrollDown();
+                }
+            },
             setHashVariables() {
                 this.initialHash = this.getRouteHash();
                 this.highlightMessageId = this.getMessageId(this.initialHash);
@@ -454,6 +469,7 @@
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
+            this.onResizedListener = debounce(this.onResizedListener, 100, {leading:true, trailing:true});
             this.onScroll = throttle(this.onScroll, 400, {leading:true, trailing:true});
 
             this.initQueryAndWatcher();
@@ -470,10 +486,12 @@
             bus.$on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
 
             document.addEventListener("keydown", this.keydownListener);
+            window.addEventListener('resize', this.onResizedListener);
         },
         beforeDestroy() {
             this.closeQueryWatcher();
 
+            window.removeEventListener('resize', this.onResizedListener);
             document.removeEventListener("keydown", this.keydownListener);
 
             bus.$off(MESSAGE_ADD, this.onNewMessage);
@@ -493,10 +511,8 @@
     #messagesScroller {
         overflow-y: scroll !important
         background  white
-
-        display: flex;
-        flex-direction: column-reverse;
     }
+
     .pinned-promoted {
         position: absolute;
         z-index: 4;

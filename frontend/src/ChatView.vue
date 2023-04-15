@@ -2,7 +2,7 @@
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
         <splitpanes ref="spl" :class="['default-theme', this.isAllowedVideo() ? 'panes3' : 'panes2']" horizontal style="height: 100%"
                     :dbl-click-splitter="false"
-                    @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()" @resize="onPanelResized()">
+                    @pane-add="onPanelAdd(isScrolledToBottom())" @pane-remove="onPanelRemove()" @resize="onPanelResized(isScrolledToBottom())">
             <pane v-if="isAllowedVideo()" id="videoBlock" min-size="15" v-bind:size="videoSize">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
@@ -233,7 +233,7 @@
                     localStorage.setItem(keyWithoutVideo, JSON.stringify(arr));
                 }
             },
-            onPanelAdd() {
+            onPanelAdd(wasScrolled) {
                 console.log("On panel add", this.$refs.spl.panes);
                 const stored = this.getStored();
                 if (stored) {
@@ -244,6 +244,9 @@
                             this.$refs.spl.panes[1].size = stored[1]; // messages
                             if (this.$refs.spl.panes[2]) {
                                 this.$refs.spl.panes[2].size = stored[2]; // edit
+                            }
+                            if (wasScrolled) {
+                                this.$refs.messageListRef.scrollDown();
                             }
                         }
                     })
@@ -269,9 +272,14 @@
                     console.error("Store is null");
                 }
             },
-            onPanelResized() {
+            onPanelResized(wasScrolled) {
                 // console.log("On panel resized", this.$refs.spl.panes);
                 this.saveToStored(this.$refs.spl.panes.map(i => i.size));
+                this.$nextTick(()=>{
+                    if (wasScrolled) {
+                        this.$refs.messageListRef.scrollDown();
+                    }
+                })
             },
             isAllowedVideo() {
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
