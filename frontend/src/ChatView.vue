@@ -1,10 +1,10 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
-        <splitpanes ref="spl" :class="['default-theme', this.isAllowedVideo() ? 'panes3' : 'panes2']" style="height: 100%"
+        <splitpanes ref="splOuter" :class="['default-theme', this.isAllowedVideo() ? 'panes3' : 'panes2']" style="height: 100%"
                     :dbl-click-splitter="false"
-                    @pane-add="onPanelAdd(isScrolledToBottom())" @pane-remove="onPanelRemove()" @resize="onPanelResized(isScrolledToBottom())">
+                    @resize="onPanelResized(isScrolledToBottom())">
             <pane>
-                <splitpanes horizontal>
+                <splitpanes ref="splInner" horizontal @resize="onPanelResized(isScrolledToBottom())">
                     <pane v-bind:size="messagesSize">
                         <MessageList ref="messageListRef" :chatDto="chatDto"/>
                         <v-btn
@@ -238,16 +238,16 @@
                 }
             },
             onPanelAdd(wasScrolled) {
-                console.log("On panel add", this.$refs.spl.panes);
+                console.log("On panel add", this.$refs.splOuter.panes);
                 const stored = this.getStored();
                 if (stored) {
                     console.log("Restoring from storage", stored);
                     this.$nextTick(() => {
-                        if (this.$refs.spl) {
-                            this.$refs.spl.panes[0].size = stored[0]; // video
-                            this.$refs.spl.panes[1].size = stored[1]; // messages
-                            if (this.$refs.spl.panes[2]) {
-                                this.$refs.spl.panes[2].size = stored[2]; // edit
+                        if (this.$refs.splOuter) {
+                            this.$refs.splOuter.panes[0].size = stored[0]; // video
+                            this.$refs.splOuter.panes[1].size = stored[1]; // messages
+                            if (this.$refs.splOuter.panes[2]) {
+                                this.$refs.splOuter.panes[2].size = stored[2]; // edit
                             }
                             if (wasScrolled) {
                                 this.$refs.messageListRef.scrollDown();
@@ -260,15 +260,15 @@
             },
             // TODO problem is - this function is not aware of vertical video
             onPanelRemove() {
-                console.log("On panel removed", this.$refs.spl.panes);
+                console.log("On panel removed", this.$refs.splOuter.panes);
                 const stored = this.getStored();
                 if (stored) {
                     console.log("Restoring from storage", stored);
                     this.$nextTick(() => {
-                        if (this.$refs.spl) {
-                            this.$refs.spl.panes[0].size = stored[0]; // messages
-                            if (this.$refs.spl.panes[1]) {
-                                this.$refs.spl.panes[1].size = stored[1]; // edit
+                        if (this.$refs.splOuter) {
+                            this.$refs.splOuter.panes[0].size = stored[0]; // messages
+                            if (this.$refs.splOuter.panes[1]) {
+                                this.$refs.splOuter.panes[1].size = stored[1]; // edit
                             }
                         }
 
@@ -278,13 +278,13 @@
                 }
             },
             onPanelResized(wasScrolled) {
-                // console.log("On panel resized", this.$refs.spl.panes);
-                this.saveToStored(this.$refs.spl.panes.map(i => i.size));
-                this.$nextTick(()=>{
-                    if (wasScrolled) {
-                        this.$refs.messageListRef.scrollDown();
-                    }
-                })
+                console.log("On panel resized", this.$refs.splOuter.panes.map(i => i.size), this.$refs.splInner.panes.map(i => i.size));
+                // this.saveToStored(this.$refs.splOuter.panes.map(i => i.size));
+                // this.$nextTick(()=>{
+                //     if (wasScrolled) {
+                //         this.$refs.messageListRef.scrollDown();
+                //     }
+                // })
             },
             isAllowedVideo() {
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
