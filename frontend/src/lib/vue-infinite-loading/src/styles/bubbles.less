@@ -1,0 +1,59 @@
+.loading-bubbles {
+  @size: 1px;
+  @radius: 12px;
+  @shallow: 3px;
+  @c-basic: #666;
+  @{deep} .bubble-item {
+    background: @c-basic;
+    animation: loading-bubbles linear .75s infinite;
+    &:first-child {
+      margin-top: -@size/2 + -@radius;
+      margin-left: -@size/2;
+    }
+    &:nth-child(2) {
+      margin-top: -@size/2 + -@radius * .73;
+      margin-left: -@size/2 + @radius * .73;
+    }
+    &:nth-child(3) {
+      margin-top: -@size/2;
+      margin-left: -@size/2 + @radius;
+    }
+    &:nth-child(4) {
+      margin-top: -@size/2 + @radius * .73;
+      margin-left: -@size/2 + @radius * .73;
+    }
+    &:nth-child(5) {
+      margin-top: -@size/2 + @radius;
+      margin-left: -@size/2;
+    }
+    &:nth-child(6) {
+      margin-top: -@size/2 + @radius * .73;
+      margin-left: -@size/2 + -@radius * .73;
+    }
+    &:nth-child(7) {
+      margin-top: -@size/2;
+      margin-left: -@size/2 + -@radius;
+    }
+    &:last-child {
+      margin-top: -@size/2 + -@radius * .73;
+      margin-left: -@size/2 + -@radius * .73;
+    }
+  }
+  @keyframes loading-bubbles {
+    0% {
+      width: @size;
+      height: @size;
+      box-shadow: 0 0 0 @shallow @c-basic;
+    }
+    90% {
+      width: @size;
+      height: @size;
+      box-shadow: 0 0 0 0 @c-basic;
+    }
+    100% {
+      width: @size;
+      height: @size;
+      box-shadow: 0 0 0 @shallow @c-basic;
+    }
+  }
+}

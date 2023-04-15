@@ -79,7 +79,7 @@
         VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET,
     } from "./bus";
     import {chat, chat_name} from "./routes";
-    import InfiniteLoading from 'vue-infinite-loading';
+    import InfiniteLoading from './lib/vue-infinite-loading/src/components/InfiniteLoading.vue';
     import {
         findIndex,
         replaceOrAppend,
