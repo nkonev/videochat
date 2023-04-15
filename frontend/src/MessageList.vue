@@ -1,5 +1,5 @@
 <template>
-    <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
+    <div id="messagesScroller" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
         <template v-if="isChatDtoLoaded()">
             <div v-if="pinnedPromoted" class="pinned-promoted">
                 <v-alert
@@ -509,6 +509,7 @@
 
 <style scoped lang="stylus">
     #messagesScroller {
+        height: 100%
         overflow-y: scroll !important
         background  white
     }
