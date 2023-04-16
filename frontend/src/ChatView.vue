@@ -672,7 +672,7 @@
     //}
 
     .pinned-promoted {
-        position: fixed;
+        position: absolute;
         z-index: 4;
         width: 100%
     }
