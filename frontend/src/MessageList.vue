@@ -1,21 +1,6 @@
 <template>
-    <div id="messagesScroller" style="overflow-y: auto; height: 100%" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
+    <div id="messagesScroller" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
         <template v-if="isChatDtoLoaded()">
-            <div v-if="pinnedPromoted" class="pinned-promoted">
-                <v-alert
-                    :key="pinnedPromotedKey"
-                    dense
-                    color="red lighten-2"
-                    dark
-                    dismissible
-                    prominent
-                >
-                    <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
-                        {{ pinnedPromoted.text }}
-                    </router-link>
-                </v-alert>
-
-            </div>
             <v-list>
                 <template v-for="(item, index) in items">
                     <MessageItem
@@ -45,7 +30,7 @@
                 @pinMessage="pinMessage"
                 @removedFromPinned="removedFromPinned"
             />
-            <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance">
+            <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance" :use-scroll-bar-storage="false">
                 <template slot="no-more"><span/></template>
                 <template slot="no-results"><span/></template>
             </infinite-loading>
@@ -57,7 +42,7 @@
 <script>
     import axios from "axios";
     import Vue from 'vue';
-    import InfiniteLoading from 'vue-infinite-loading';
+    import InfiniteLoading from './lib/vue-infinite-loading/src/components/InfiniteLoading.vue';
     import throttle from "lodash/throttle";
     import {mapGetters} from "vuex";
     import {GET_USER, UNSET_SEARCH_STRING} from "@/store";
@@ -84,6 +69,21 @@
     import debounce from "lodash/debounce";
     import cloneDeep from "lodash/cloneDeep";
     import Mark from "mark.js";
+    const InfiniteLoadingOriginal = Vue.extend(InfiniteLoading);
+    const InfinityClass = InfiniteLoadingOriginal.extend({
+        methods: {
+            getCurrentDistance() {
+                let distance;
+
+                if (this.direction === 'top') {
+                    distance = this.scrollParent.scrollHeight - Math.abs(this.scrollParent.scrollTop - this.scrollParent.clientHeight)
+                } else {
+                    distance = this.scrollParent.scrollTop;
+                }
+                return Math.abs(distance);
+            },
+        }
+    });
 
     const directionTop = 'top';
     const directionBottom = 'bottom';
@@ -108,16 +108,14 @@
                 infiniteId: +new Date(),
                 highlightMessageId: null,
                 aDirection: directionTop,
-                infinityKey: 1,
                 scrollerDiv: null,
                 markInstance: null,
                 initialHash: null,
+                infinityKey: 1, // need to re-initialize infinite scroller after switching direction (user starts scroll back(down)) after reaching top of the page
 
                 scrollerProbeCurrent: 0,
                 scrollerProbePrevious: 0,
                 scrollerProbePreviousPrevious: 0,
-                pinnedPromoted: null,
-                pinnedPromotedKey: +new Date()
             }
         },
 
@@ -142,11 +140,7 @@
 
             onNewMessage(dto) {
                 if (dto.chatId == this.chatId) {
-                    const wasScrolled = this.isScrolledToBottom();
                     this.addItem(dto);
-                    if (this.currentUser.id == dto.ownerId || wasScrolled) {
-                        this.scrollDown();
-                    }
                     this.performMarking();
                 } else {
                     console.log("Skipping", dto)
@@ -161,11 +155,7 @@
             },
             onEditMessage(dto) {
                 if (dto.chatId == this.chatId) {
-                    const isScrolled = this.isScrolledToBottom();
                     this.changeItem(dto);
-                    if (isScrolled) {
-                        this.scrollDown();
-                    }
                     this.performMarking();
                 } else {
                     console.log("Skipping", dto)
@@ -175,22 +165,23 @@
                 // condition is a dummy heuristic (because right now doe to outdated vue-infinite-loading we cannot scroll down several times. nevertheless I think it's a pretty good heuristic so I think it worth to remain it here after updating to vue 3 and another modern infinity scroller)
                 if (this.items.length <= pageSize * 2 && !this.getRouteHash()) {
                     this.scrollDown();
+                    this.clearRouteHash();
+                    this.initialHash = null;
                 } else {
                     this.resetVariables();
+                    this.clearRouteHash();
+                    this.initialHash = null;
                     this.reloadItems();
                 }
-                this.clearRouteHash();
-                this.initialHash = null;
             },
             scrollDown() {
                 Vue.nextTick(() => {
-                    console.log("Scrolling down myDiv.scrollTop", this.scrollerDiv.scrollTop, "myDiv.scrollHeight", this.scrollerDiv.scrollHeight);
-                    this.scrollerDiv.scrollTop = this.scrollerDiv.scrollHeight;
+                    this.scrollerDiv.scrollTop = 0;
                 });
             },
             isScrolledToBottom() {
                 if (this.scrollerDiv) {
-                    return this.scrollerDiv.scrollHeight - this.scrollerDiv.scrollTop - this.scrollerDiv.clientHeight < scrollingThreshold
+                    return Math.abs(this.scrollerDiv.scrollTop) < scrollingThreshold
                 } else {
                     return false
                 }
@@ -205,11 +196,11 @@
                 this.trySwitchDirection();
             },
             trySwitchDirection() {
-                if (this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
+                if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
                     this.aDirection = directionBottom;
                     this.infinityKey++;
                     console.log("Infinity scrolling direction has been changed to bottom");
-                } else if (this.scrollerProbePreviousPrevious > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
+                } else if (this.scrollerProbeCurrent != 0 && this.scrollerProbePreviousPrevious > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
                     this.aDirection = directionTop;
                     this.infinityKey++;
                     console.log("Infinity scrolling direction has been changed to top");
@@ -219,15 +210,6 @@
             },
             isChatDtoLoaded() {
                 return this.currentUser && this.chatDto.id
-            },
-            onPinnedMessagePromoted(item) {
-                this.pinnedPromoted = item;
-                this.pinnedPromotedKey++;
-            },
-            onPinnedMessageUnpromoted(item) {
-                if (this.pinnedPromoted && this.pinnedPromoted.id == item.id) {
-                    this.pinnedPromoted = null;
-                }
             },
             keydownListener(e) {
                 if (e.key === 'Escape') {
@@ -331,12 +313,6 @@
             isTopDirection() {
                 return this.aDirection === directionTop
             },
-            onResizedListener() {
-                const isScrolled = this.isScrolledToBottom();
-                if (isScrolled) {
-                    this.scrollDown();
-                }
-            },
             setHashVariables() {
                 this.initialHash = this.getRouteHash();
                 this.highlightMessageId = this.getMessageId(this.initialHash);
@@ -403,24 +379,10 @@
             onFilesClicked(item) {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});
             },
-            isVideoRoute() {
-                return this.$route.name == videochat_name
-            },
-            getPinnedRouteObject(item) {
-                const routeName = this.isVideoRoute() ? videochat_name : chat_name;
-                return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
-            },
             resetVariables() {
                 this.aDirection = directionTop;
                 this.items = [];
                 this.startingFromItemId = null;
-            },
-            fetchPromotedMessage() {
-                axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
-                    if (response.status != 204) {
-                        this.pinnedPromoted = response.data;
-                    }
-                });
             },
         },
         computed: {
@@ -429,7 +391,7 @@
                 return this.$route.params.id
             },
             aDistance() {
-                return this.isTopDirection() ? 0 : 100
+                return this.isTopDirection() ? 100 : 100
             },
             userIsSet() {
                 return !!this.currentUser
@@ -439,7 +401,7 @@
             },
         },
         components: {
-            InfiniteLoading,
+            InfiniteLoading: InfinityClass,
             MessageItem,
             MessageItemContextMenu
         },
@@ -469,7 +431,6 @@
         },
         created() {
             this.searchStringChanged = debounce(this.searchStringChanged, 700, {leading:false, trailing:true});
-            this.onResizedListener = debounce(this.onResizedListener, 100, {leading:true, trailing:true});
             this.onScroll = throttle(this.onScroll, 400, {leading:true, trailing:true});
 
             this.initQueryAndWatcher();
@@ -482,26 +443,17 @@
             bus.$on(MESSAGE_ADD, this.onNewMessage);
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
-            bus.$on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
-            bus.$on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
 
             document.addEventListener("keydown", this.keydownListener);
-            window.addEventListener('resize', this.onResizedListener);
         },
         beforeDestroy() {
             this.closeQueryWatcher();
 
-            window.removeEventListener('resize', this.onResizedListener);
             document.removeEventListener("keydown", this.keydownListener);
 
             bus.$off(MESSAGE_ADD, this.onNewMessage);
             bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
-            bus.$off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
-            bus.$off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
-
-            this.pinnedPromoted = null;
-            this.pinnedPromotedKey = null;
         },
 
     }
@@ -509,14 +461,11 @@
 
 <style scoped lang="stylus">
     #messagesScroller {
+        height: 100%
         overflow-y: scroll !important
         background  white
-    }
 
-    .pinned-promoted {
-        position: absolute;
-        z-index: 4;
-        width: 100%
+        display: flex;
+        flex-direction: column-reverse;
     }
-
 </style>

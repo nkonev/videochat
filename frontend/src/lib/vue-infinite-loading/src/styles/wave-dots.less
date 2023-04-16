@@ -1,0 +1,54 @@
+.loading-wave-dots {
+  @size: 8px;
+  @wave: -6px;
+  @delay: .14s;
+  position: relative;
+  @{deep} .wave-item {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: inline-block;
+    margin-top: -@size/2;
+    width: @size;
+    height: @size;
+    border-radius: 50%;
+    animation: loading-wave-dots linear 2.8s infinite;
+    &:first-child {
+      margin-left: -@size/2 + -@size * 4;
+    }
+    &:nth-child(2) {
+      margin-left: -@size/2 + -@size * 2;
+      animation-delay: @delay;
+    }
+    &:nth-child(3) {
+      margin-left: -@size/2;
+      animation-delay: @delay * 2;
+    }
+    &:nth-child(4) {
+      margin-left: -@size/2 + @size * 2;
+      animation-delay: @delay * 3;
+    }
+    &:last-child {
+      margin-left: -@size/2 + @size * 4;
+      animation-delay: @delay * 4;
+    }
+  }
+  @keyframes loading-wave-dots {
+    0% {
+      transform: translateY(0);
+      background: #bbb;
+    }
+    10% {
+      transform: translateY(@wave);
+      background: #999;
+    }
+    20% {
+      transform: translateY(0);
+      background: #bbb;
+    }
+    100% {
+      transform: translateY(0);
+      background: #bbb;
+    }
+  }
+}
