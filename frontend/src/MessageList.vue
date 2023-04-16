@@ -182,12 +182,16 @@
                 // condition is a dummy heuristic (because right now doe to outdated vue-infinite-loading we cannot scroll down several times. nevertheless I think it's a pretty good heuristic so I think it worth to remain it here after updating to vue 3 and another modern infinity scroller)
                 if (this.items.length <= pageSize * 2 && !this.getRouteHash()) {
                     this.scrollDown();
+                    this.clearRouteHash();
+                    this.initialHash = null;
                 } else {
                     this.resetVariables();
-                    this.reloadItems();
+                    this.clearRouteHash();
+                    this.initialHash = null;
+                    Vue.nextTick(() => {
+                        this.reloadItems();
+                    });
                 }
-                this.clearRouteHash();
-                this.initialHash = null;
             },
             scrollDown() {
                 Vue.nextTick(() => {
