@@ -521,6 +521,7 @@
         position: absolute;
         z-index: 4;
         width: 100%
+        top: 0;
     }
 
 </style>
