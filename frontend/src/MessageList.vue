@@ -111,7 +111,7 @@
                 scrollerDiv: null,
                 markInstance: null,
                 initialHash: null,
-                infinityKey: 1,
+                infinityKey: 1, // need to re-initialize infinite scroller after switching direction (user starts scroll back(down)) after reaching top of the page
 
                 scrollerProbeCurrent: 0,
                 scrollerProbePrevious: 0,
