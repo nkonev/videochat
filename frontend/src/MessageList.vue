@@ -30,7 +30,7 @@
                 @pinMessage="pinMessage"
                 @removedFromPinned="removedFromPinned"
             />
-            <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance" :use-scroll-bar-storage="false">
+            <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance" :use-scroll-bar-storage="false">
                 <template slot="no-more"><span/></template>
                 <template slot="no-results"><span/></template>
             </infinite-loading>
@@ -111,6 +111,7 @@
                 scrollerDiv: null,
                 markInstance: null,
                 initialHash: null,
+                infinityKey: 1,
 
                 scrollerProbeCurrent: 0,
                 scrollerProbePrevious: 0,
@@ -197,9 +198,11 @@
             trySwitchDirection() {
                 if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
                     this.aDirection = directionBottom;
+                    this.infinityKey++;
                     console.log("Infinity scrolling direction has been changed to bottom");
                 } else if (this.scrollerProbeCurrent != 0 && this.scrollerProbePreviousPrevious > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
                     this.aDirection = directionTop;
+                    this.infinityKey++;
                     console.log("Infinity scrolling direction has been changed to top");
                 } else {
                     console.log("Infinity scrolling direction has been remained untouched");
