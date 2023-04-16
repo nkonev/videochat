@@ -1,21 +1,6 @@
 <template>
     <div id="messagesScroller" @scroll.passive="onScroll" v-on:keyup.esc="onCloseContextMenu()">
         <template v-if="isChatDtoLoaded()">
-            <div v-if="pinnedPromoted" class="pinned-promoted">
-                <v-alert
-                    :key="pinnedPromotedKey"
-                    dense
-                    color="red lighten-2"
-                    dark
-                    dismissible
-                    prominent
-                >
-                    <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
-                        {{ pinnedPromoted.text }}
-                    </router-link>
-                </v-alert>
-
-            </div>
             <v-list>
                 <template v-for="(item, index) in items">
                     <MessageItem
@@ -131,8 +116,6 @@
                 scrollerProbeCurrent: 0,
                 scrollerProbePrevious: 0,
                 scrollerProbePreviousPrevious: 0,
-                pinnedPromoted: null,
-                pinnedPromotedKey: +new Date()
             }
         },
 
@@ -229,15 +212,6 @@
             },
             isChatDtoLoaded() {
                 return this.currentUser && this.chatDto.id
-            },
-            onPinnedMessagePromoted(item) {
-                this.pinnedPromoted = item;
-                this.pinnedPromotedKey++;
-            },
-            onPinnedMessageUnpromoted(item) {
-                if (this.pinnedPromoted && this.pinnedPromoted.id == item.id) {
-                    this.pinnedPromoted = null;
-                }
             },
             keydownListener(e) {
                 if (e.key === 'Escape') {
@@ -407,24 +381,10 @@
             onFilesClicked(item) {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});
             },
-            isVideoRoute() {
-                return this.$route.name == videochat_name
-            },
-            getPinnedRouteObject(item) {
-                const routeName = this.isVideoRoute() ? videochat_name : chat_name;
-                return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
-            },
             resetVariables() {
                 this.aDirection = directionTop;
                 this.items = [];
                 this.startingFromItemId = null;
-            },
-            fetchPromotedMessage() {
-                axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
-                    if (response.status != 204) {
-                        this.pinnedPromoted = response.data;
-                    }
-                });
             },
         },
         computed: {
@@ -485,8 +445,6 @@
             bus.$on(MESSAGE_ADD, this.onNewMessage);
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
-            bus.$on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
-            bus.$on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
 
             document.addEventListener("keydown", this.keydownListener);
         },
@@ -498,11 +456,6 @@
             bus.$off(MESSAGE_ADD, this.onNewMessage);
             bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
-            bus.$off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
-            bus.$off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
-
-            this.pinnedPromoted = null;
-            this.pinnedPromotedKey = null;
         },
 
     }
@@ -517,11 +470,4 @@
         display: flex;
         flex-direction: column-reverse;
     }
-    .pinned-promoted {
-        position: absolute;
-        z-index: 4;
-        width: 100%
-        top: 0;
-    }
-
 </style>

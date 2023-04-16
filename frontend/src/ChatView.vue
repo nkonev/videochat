@@ -7,6 +7,21 @@
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
             <pane v-bind:size="messagesSize">
+                <div v-if="pinnedPromoted" class="pinned-promoted">
+                    <v-alert
+                        :key="pinnedPromotedKey"
+                        dense
+                        color="red lighten-2"
+                        dark
+                        dismissible
+                        prominent
+                    >
+                        <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
+                            {{ pinnedPromoted.text }}
+                        </router-link>
+                    </v-alert>
+                </div>
+
                 <MessageList ref="messageListRef" :chatDto="chatDto"/>
                 <v-btn
                     v-if="!isMobile() && !isScrolledToBottom()"
@@ -66,7 +81,7 @@
         PINNED_MESSAGE_PROMOTED,
         PINNED_MESSAGE_UNPROMOTED,
     } from "./bus";
-    import { chat_list_name, videochat_name} from "./routes";
+    import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
     import ChatVideo from "./ChatVideo";
     import MessageList from "./MessageList";
@@ -130,6 +145,8 @@
                 showTooltip: true,
                 broadcastMessage: null,
                 tooltipKey: 0,
+                pinnedPromoted: null,
+                pinnedPromotedKey: +new Date()
             }
         },
         computed: {
@@ -309,7 +326,7 @@
                             bus.$emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
                             this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, data.usersCount);
                         })
-                    this.$refs.messageListRef.fetchPromotedMessage();
+                    this.fetchPromotedMessage();
                     return Promise.resolve();
                 })
             },
@@ -525,6 +542,29 @@
             onClickScrollDown() {
                 return this.$refs.messageListRef.onClickScrollDown();
             },
+            fetchPromotedMessage() {
+                axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
+                    if (response.status != 204) {
+                        this.pinnedPromoted = response.data;
+                    }
+                });
+            },
+            onPinnedMessagePromoted(item) {
+                this.pinnedPromoted = item;
+                this.pinnedPromotedKey++;
+            },
+            onPinnedMessageUnpromoted(item) {
+                if (this.pinnedPromoted && this.pinnedPromoted.id == item.id) {
+                    this.pinnedPromoted = null;
+                }
+            },
+            getPinnedRouteObject(item) {
+                const routeName = this.isVideoRoute() ? videochat_name : chat_name;
+                return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+            },
+            isVideoRoute() {
+                return this.$route.name == videochat_name
+            },
         },
         created() {
             this.onPanelResized = debounce(this.onPanelResized, 100, {leading:true, trailing:true});
@@ -557,6 +597,8 @@
             bus.$on(USER_TYPING, this.onUserTyping);
             bus.$on(MESSAGE_BROADCAST, this.onUserBroadcast);
             bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+            bus.$on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
+            bus.$on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
 
             writingUsersTimerId = setInterval(()=>{
                 const curr = + new Date();
@@ -580,8 +622,13 @@
             bus.$off(USER_TYPING, this.onUserTyping);
             bus.$off(MESSAGE_BROADCAST, this.onUserBroadcast);
             bus.$off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+            bus.$off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
+            bus.$off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
 
             clearInterval(writingUsersTimerId);
+
+            this.pinnedPromoted = null;
+            this.pinnedPromotedKey = null;
 
             this.chatDto = chatDtoFactory();
         },
@@ -623,6 +670,12 @@
     //        height: calc(100vh - 116px)
     //    }
     //}
+
+    .pinned-promoted {
+        position: fixed;
+        z-index: 4;
+        width: 100%
+    }
 
 </style>
 
