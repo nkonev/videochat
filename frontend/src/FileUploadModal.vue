@@ -14,7 +14,7 @@
                         small-chips
                         truncate-length="15"
                         @change="updateFiles"
-                        :error-messages="limitError"
+                        :error-messages="limitError ? [limitError] : []"
                     ></v-file-input>
 
                     <v-progress-linear
@@ -115,7 +115,7 @@ export default {
                     desiredSize: totalSize,
                 }}).then(value => {
                 if (value.data.status != "ok") {
-                    this.limitError = [`Too large, ${formatSize(value.data.available)} available`];
+                    this.limitError = `Too large, ${formatSize(value.data.available)} available`;
                     return Promise.reject(this.limitError);
                 } else {
                     this.limitError = null;
@@ -151,34 +151,39 @@ export default {
                 });
             }
 
-            return this.checkLimits(totalSize).then(async ()=> {
-                for (const [index, presignedUrlResponse] of urlResponses.entries()) {
-                    try {
-                        await axios.put(presignedUrlResponse.url, presignedUrlResponse.file, config)
-                            .then(response => {
-                                if (this.$data.shouldSetFileUuidToMessage) {
-                                    bus.$emit(SET_FILE_ITEM_UUID, {
-                                        fileItemUuid: this.fileItemUuid,
-                                        count: (presignedUrlResponse.existingCount + index + 1)
-                                    });
-                                }
-                                bus.$emit(UPDATE_VIEW_FILES_DIALOG);
-                                return response;
-                            })
-                    } catch(thrown) {
-                        this.uploading = false;
-                        if (axios.isCancel(thrown)) {
-                            console.log('Request canceled', thrown.message);
-                            break
-                        } else {
-                            return Promise.reject(ex);
-                        }
+            try {
+                await this.checkLimits(totalSize)
+            } catch (errMsg) {
+                this.uploading = false;
+                return Promise.resolve();
+            }
+
+            for (const [index, presignedUrlResponse] of urlResponses.entries()) {
+                try {
+                    await axios.put(presignedUrlResponse.url, presignedUrlResponse.file, config)
+                        .then(response => {
+                            if (this.$data.shouldSetFileUuidToMessage) {
+                                bus.$emit(SET_FILE_ITEM_UUID, {
+                                    fileItemUuid: this.fileItemUuid,
+                                    count: (presignedUrlResponse.existingCount + index + 1)
+                                });
+                            }
+                            bus.$emit(UPDATE_VIEW_FILES_DIALOG);
+                            return response;
+                        })
+                } catch(thrown) {
+                    this.uploading = false;
+                    if (axios.isCancel(thrown)) {
+                        console.log('Request canceled', thrown.message);
+                        break
+                    } else {
+                        return Promise.reject(thrown);
                     }
                 }
-                this.uploading = false;
-                this.hideModal();
-                return Promise.resolve();
-            })
+            }
+            this.uploading = false;
+            this.hideModal();
+            return Promise.resolve();
         },
         cancel() {
             this.cancelSource.cancel()
