@@ -141,11 +141,11 @@ vm = new Vue({
                       canAudioMute
                       participantsCount
                       participants {
-                        shortInfo
                         id
                         login
                         avatar
                         admin
+                        shortInfo
                       }
                       canResend
                       pinned
