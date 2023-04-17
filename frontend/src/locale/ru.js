@@ -165,5 +165,7 @@ export default {
     available_to_search: "Доступен для поиска",
     this_is_search_result: "Это результат поиска. Вы не участник этого чата. Кликните чтобы вступить. | ",
     public_chats: "Публичные чаты",
-    pin_chat: "Закрепить чат"
+    pin_chat: "Закрепить чат",
+    short_info: "Краткая информация",
+    change_short_info: "Изменить краткую информацию"
 }

@@ -338,6 +338,11 @@ public class UserAccountConverter {
             email = email.trim();
             userAccount = userAccount.withEmail(email);
         }
+        if (!StringUtils.isEmpty(userAccountDTO.shortInfo())) {
+            userAccount = userAccount.withShortInfo(userAccountDTO.shortInfo());
+        } else {
+            userAccount = userAccount.withShortInfo(null);
+        }
         return userAccount;
     }
 
@@ -363,6 +368,10 @@ public class UserAccountConverter {
             email = email.trim();
             userAccount = userAccount.withEmail(email);
         }
+        if (!StringUtils.isEmpty(userAccountDTO.shortInfo())) {
+            userAccount = userAccount.withShortInfo(userAccountDTO.shortInfo());
+        }
+
         return userAccount;
     }
 

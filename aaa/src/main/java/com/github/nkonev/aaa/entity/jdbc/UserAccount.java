@@ -124,6 +124,25 @@ public record UserAccount(
         );
     }
 
+    public UserAccount withShortInfo(String newShortInfo) {
+        return new UserAccount(
+                id,
+                creationType,
+                username,
+                password,
+                avatar,
+                avatarBig,
+                newShortInfo,
+                expired,
+                locked,
+                enabled,
+                role,
+                email,
+                lastLoginDateTime,
+                oauth2Identifiers
+        );
+    }
+
     public UserAccount withLocked(boolean newLocked) {
         return new UserAccount(
                 id,
