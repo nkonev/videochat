@@ -22,6 +22,7 @@ import (
 
 const maxMessageLen = 1024 * 1024
 const minMessageLen = 1
+const allUsers = "all"
 
 type EditMessageDto struct {
 	Id int64 `json:"id"`
@@ -977,7 +978,9 @@ func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.
 	var result = []int64{}
 	withoutSourceTags := mc.stripSourceContent.Sanitize(messageText)
 	for _, user := range users {
-		if strings.Contains(withoutSourceTags, "@"+user.Login) {
+		if strings.Contains(withoutSourceTags, "@"+allUsers) {
+			result = append(result, user.Id)
+		} else if strings.Contains(withoutSourceTags, "@"+user.Login) {
 			result = append(result, user.Id)
 		}
 	}
