@@ -15,6 +15,7 @@
 
                     <v-list-item-content>
                         <v-list-item-title class="user-login">{{currentUser.login}}</v-list-item-title>
+                        <v-list-item-subtitle v-if="showCurrentUserSubtitle()">{{currentUser.shortInfo}}</v-list-item-subtitle>
                     </v-list-item-content>
                 </v-list-item>
             </template>
@@ -350,6 +351,9 @@
                 if (!this.isMobile()) {
                     this.goProfile();
                 }
+            },
+            showCurrentUserSubtitle(){
+                return hasLength(this?.currentUser.shortInfo)
             },
             createChat() {
                 bus.$emit(OPEN_CHAT_EDIT, null);

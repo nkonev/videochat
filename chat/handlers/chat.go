@@ -1121,6 +1121,7 @@ type simpleChat struct {
 	Name      string
 	IsTetATet bool
 	Avatar    null.String
+	ShortInfo null.String
 }
 
 func (r *simpleChat) GetId() int64 {
@@ -1141,6 +1142,10 @@ func (r *simpleChat) SetName(s string) {
 
 func (r *simpleChat) SetAvatar(s null.String) {
 	r.Avatar = s
+}
+
+func (r *simpleChat) SetShortInfo(s null.String) {
+	r.ShortInfo = s
 }
 
 func (r *simpleChat) GetIsTetATet() bool {

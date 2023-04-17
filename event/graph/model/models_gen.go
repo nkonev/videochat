@@ -21,6 +21,7 @@ type ChatDto struct {
 	Name                string           `json:"name"`
 	Avatar              *string          `json:"avatar"`
 	AvatarBig           *string          `json:"avatarBig"`
+	ShortInfo           *string          `json:"shortInfo"`
 	LastUpdateDateTime  time.Time        `json:"lastUpdateDateTime"`
 	ParticipantIds      []int64          `json:"participantIds"`
 	CanEdit             *bool            `json:"canEdit"`
@@ -126,9 +127,10 @@ type NotificationDto struct {
 }
 
 type User struct {
-	ID     int64   `json:"id"`
-	Login  string  `json:"login"`
-	Avatar *string `json:"avatar"`
+	ID        int64   `json:"id"`
+	Login     string  `json:"login"`
+	Avatar    *string `json:"avatar"`
+	ShortInfo *string `json:"shortInfo"`
 }
 
 type UserOnline struct {
@@ -142,10 +144,11 @@ type UserTypingDto struct {
 }
 
 type UserWithAdmin struct {
-	ID     int64   `json:"id"`
-	Login  string  `json:"login"`
-	Avatar *string `json:"avatar"`
-	Admin  bool    `json:"admin"`
+	ID        int64   `json:"id"`
+	Login     string  `json:"login"`
+	Avatar    *string `json:"avatar"`
+	Admin     bool    `json:"admin"`
+	ShortInfo *string `json:"shortInfo"`
 }
 
 type VideoCallInvitationDto struct {
