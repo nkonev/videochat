@@ -15,17 +15,20 @@ public record EditUserDTO (
     @Email
     String email,
 
-    String avatarBig
+    String avatarBig,
+
+    String shortInfo
 ) {
 
-    public EditUserDTO(String login, String avatar, String avatarBig, String password, String email) {
+    public EditUserDTO(String login, String avatar, String avatarBig, String shortInfo, String password, String email) {
         this(
                 login,
                 avatar,
                 password,
                 null,
                 email,
-                avatarBig
+                avatarBig,
+                shortInfo
         );
     }
 
@@ -36,7 +39,8 @@ public record EditUserDTO (
                 password,
                 removeAvatar,
                 email,
-                avatarBig
+                avatarBig,
+                shortInfo
         );
     }
 
@@ -47,7 +51,8 @@ public record EditUserDTO (
                 newPassword,
                 removeAvatar,
                 email,
-                avatarBig
+                avatarBig,
+                shortInfo
         );
     }
 
@@ -58,7 +63,8 @@ public record EditUserDTO (
                 password,
                 removeAvatar,
                 newEmail,
-                avatarBig
+                avatarBig,
+                shortInfo
         );
     }
 }

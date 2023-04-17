@@ -18,6 +18,8 @@ public record UserAccount(
     String avatar, // avatar url
     String avatarBig, // avatar url
 
+    String shortInfo, // job title, short bio, ...
+
     boolean expired,
     boolean locked,
     boolean enabled, // synonym to "confirmed"
@@ -35,6 +37,7 @@ public record UserAccount(
                 newPassword,
                 avatar,
                 avatarBig,
+                shortInfo,
                 expired,
                 locked,
                 enabled,
@@ -53,6 +56,7 @@ public record UserAccount(
                 password,
                 avatar,
                 avatarBig,
+                shortInfo,
                 expired,
                 locked,
                 enabled,
@@ -71,6 +75,7 @@ public record UserAccount(
                 password,
                 newAvatar,
                 avatarBig,
+                shortInfo,
                 expired,
                 locked,
                 enabled,
@@ -89,6 +94,7 @@ public record UserAccount(
                 password,
                 avatar,
                 newAvatarBig,
+                shortInfo,
                 expired,
                 locked,
                 enabled,
@@ -107,6 +113,7 @@ public record UserAccount(
                 password,
                 avatar,
                 avatarBig,
+                shortInfo,
                 expired,
                 locked,
                 enabled,
@@ -125,6 +132,7 @@ public record UserAccount(
                 password,
                 avatar,
                 avatarBig,
+                shortInfo,
                 expired,
                 newLocked,
                 enabled,
@@ -143,6 +151,7 @@ public record UserAccount(
                 password,
                 avatar,
                 avatarBig,
+                shortInfo,
                 expired,
                 locked,
                 newEnabled,
@@ -161,6 +170,7 @@ public record UserAccount(
                 password,
                 avatar,
                 avatarBig,
+                shortInfo,
                 expired,
                 locked,
                 enabled,
@@ -179,6 +189,7 @@ public record UserAccount(
                 password,
                 avatar,
                 avatarBig,
+                shortInfo,
                 expired,
                 locked,
                 enabled,

@@ -61,7 +61,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         final String username = "newbie";
         final String password = "password";
 
-        EditUserDTO createUserDTO = new EditUserDTO(username, null, null, password, email);
+        EditUserDTO createUserDTO = new EditUserDTO(username, null, null,  null, password, email);
 
         // register
         MvcResult createAccountRequest = mockMvc.perform(
@@ -141,7 +141,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         final String email = "newbie@example.com";
         final String username = "newbie";
 
-        EditUserDTO createUserDTO = new EditUserDTO(username, null, null, null, email);
+        EditUserDTO createUserDTO = new EditUserDTO(username, null, null, null, null, email);
 
         // register
         MvcResult createAccountResult = mockMvc.perform(
@@ -164,7 +164,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         final String email = "newbie@example.com";
         final String username = "newbie";
 
-        EditUserDTO createUserDTO = new EditUserDTO(username, null, null, "123", email);
+        EditUserDTO createUserDTO = new EditUserDTO(username, null, null, null, "123", email);
 
         // register
         MvcResult createAccountResult = mockMvc.perform(
@@ -187,7 +187,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         final String username = TestConstants.USER_ALICE;
         final String password = "password";
 
-        EditUserDTO createUserDTO = new EditUserDTO(username, null, null, password, email);
+        EditUserDTO createUserDTO = new EditUserDTO(username, null, null, null, password, email);
 
         // register
         MvcResult createAccountResult = mockMvc.perform(
@@ -212,7 +212,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
 
         UserAccount userAccountBefore = userAccountRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("user account not found in test"));
 
-        EditUserDTO createUserDTO = new EditUserDTO(username, null, null, password, email);
+        EditUserDTO createUserDTO = new EditUserDTO(username, null, null, null, password, email);
 
         // register
         MvcResult createAccountResult = mockMvc.perform(

@@ -46,6 +46,7 @@ public class UserAccountConverter {
                 userAccount.username(),
                 userAccount.avatar(),
                 userAccount.avatarBig(),
+                userAccount.shortInfo(),
                 userAccount.password(),
                 userAccount.expired(),
                 userAccount.locked(),
@@ -64,6 +65,7 @@ public class UserAccountConverter {
                 userAccount.getUsername(),
                 userAccount.getAvatar(),
                 userAccount.getAvatarBig(),
+                userAccount.userAccountDTO().shortInfo(),
                 userAccount.getEmail(),
                 lastLoginDateTime,
                 userAccount.getOauth2Identifiers(),
@@ -97,6 +99,7 @@ public class UserAccountConverter {
                 userAccount.username(),
                 userAccount.avatar(),
                 userAccount.avatarBig(),
+                userAccount.shortInfo(),
                 userAccount.lastLoginDateTime(),
                 convertOauth(userAccount.oauth2Identifiers())
         );
@@ -115,6 +118,7 @@ public class UserAccountConverter {
                 userAccount.username(),
                 userAccount.avatar(),
                 userAccount.avatarBig(),
+                userAccount.shortInfo(),
                 dataDTO,
                 userAccount.lastLoginDateTime(),
                 convertOauth(userAccount.oauth2Identifiers()),
@@ -154,6 +158,7 @@ public class UserAccountConverter {
                 passwordEncoder.encode(password),
                 userAccountDTO.avatar(),
                 userAccountDTO.avatarBig(),
+                userAccountDTO.shortInfo(),
                 expired,
                 locked,
                 enabled,
@@ -196,6 +201,7 @@ public class UserAccountConverter {
                 null,
                 maybeImageUrl,
                 null,
+                null,
                 expired,
                 locked,
                 enabled,
@@ -217,6 +223,7 @@ public class UserAccountConverter {
                 null,
                 CreationType.VKONTAKTE,
                 login,
+                null,
                 null,
                 null,
                 null,
@@ -244,6 +251,7 @@ public class UserAccountConverter {
                 null,
                 maybeImageUrl,
                 null,
+                null,
                 expired,
                 locked,
                 enabled,
@@ -268,6 +276,7 @@ public class UserAccountConverter {
                 null,
                 maybeImageUrl,
                 null,
+                null,
                 expired,
                 locked,
                 enabled,
@@ -289,6 +298,7 @@ public class UserAccountConverter {
                 null,
                 CreationType.LDAP,
                 login,
+                null,
                 null,
                 null,
                 null,
@@ -363,7 +373,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 userAccount.email(),
-                userAccount.avatarBig()
+                userAccount.avatarBig(),
+                userAccount.shortInfo()
         );
     }
 
