@@ -19,6 +19,8 @@ export const UNSET_SEARCH_STRING = 'unsetSearchString';
 
 export const GET_TITLE = 'getTitle';
 export const SET_TITLE = 'setTitle';
+export const GET_AVATAR = "getAvatar";
+export const SET_AVATAR = "setAvatar";
 export const GET_SHOW_SEARCH = 'getShowSearch';
 export const SET_SHOW_SEARCH = 'setShowSearch';
 export const GET_SEARCH_NAME = 'getSearchName';
@@ -68,6 +70,7 @@ const store = new Vuex.Store({
         muteVideo: false,
         muteAudio: false,
         title: "",
+        avatar: null,
         isShowSearch: true,
         searchName: null,
         chatId: null,
@@ -124,6 +127,9 @@ const store = new Vuex.Store({
         },
         [SET_TITLE](state, payload) {
             state.title = payload;
+        },
+        [SET_AVATAR](state, payload) {
+            state.avatar = payload;
         },
         [SET_SHOW_SEARCH](state, payload) {
             state.isShowSearch = payload;
@@ -200,6 +206,9 @@ const store = new Vuex.Store({
         },
         [GET_TITLE](state) {
             return state.title;
+        },
+        [GET_AVATAR](state) {
+            return state.avatar;
         },
         [GET_SHOW_SEARCH](state) {
             return state.isShowSearch;
