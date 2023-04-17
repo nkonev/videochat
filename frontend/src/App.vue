@@ -638,6 +638,7 @@
         height 36px
         min-width 36px
         min-height 36px
+        z-index 1
     }
 
 </style>
