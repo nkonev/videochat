@@ -20,6 +20,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.github.nkonev.aaa.Constants.FORBIDDEN_USERNAMES;
+
 @Component
 public class UserAccountConverter {
 
@@ -143,7 +145,7 @@ public class UserAccountConverter {
         final UserRole newUserRole = getDefaultUserRole();
 
         validateLoginAndEmail(userAccountDTO);
-        userAccountDTO = validateAndTrimLogin(userAccountDTO);
+        userAccountDTO = trimAndValidateNonAouth2Login(userAccountDTO);
         String password = userAccountDTO.password();
         try {
             validateUserPassword(password);
@@ -170,20 +172,30 @@ public class UserAccountConverter {
     }
 
     public static String validateAndTrimLogin(String login){
-        Assert.notNull(login, "login cannot be null");
-        login = login.trim();
-        Assert.hasLength(login, "login should have length");
-        Assert.isTrue(!login.startsWith(FacebookOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
-        Assert.isTrue(!login.startsWith(VkontakteOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
-        Assert.isTrue(!login.startsWith(GoogleOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
-        Assert.isTrue(!login.startsWith(KeycloakOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+        login = login != null ? login.trim() : null;
+
+        if (StringUtils.isEmpty(login)) {
+            throw new BadRequestException("empty login");
+        }
+        if (FORBIDDEN_USERNAMES.contains(login)) {
+            throw new BadRequestException("forbidden login");
+        }
 
         return login;
     }
 
+    public static void validateLoginNonAouth2(String login){
+        Assert.isTrue(!login.startsWith(FacebookOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+        Assert.isTrue(!login.startsWith(VkontakteOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+        Assert.isTrue(!login.startsWith(GoogleOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+        Assert.isTrue(!login.startsWith(KeycloakOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+    }
 
-    private static com.github.nkonev.aaa.dto.EditUserDTO validateAndTrimLogin(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO) {
-        return userAccountDTO.withLogin(validateAndTrimLogin(userAccountDTO.login()));
+
+    public static com.github.nkonev.aaa.dto.EditUserDTO trimAndValidateNonAouth2Login(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO) {
+        var ret = userAccountDTO.withLogin(validateAndTrimLogin(userAccountDTO.login()));
+        validateLoginNonAouth2(ret.login());
+        return ret;
     }
 
     // used for just get user id
@@ -319,7 +331,7 @@ public class UserAccountConverter {
 
     public static UserAccount updateUserAccountEntity(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
         Assert.hasLength(userAccountDTO.login(), "login should have length");
-        userAccountDTO = validateAndTrimLogin(userAccountDTO);
+        userAccountDTO = trimAndValidateNonAouth2Login(userAccountDTO);
         String password = userAccountDTO.password();
         if (!StringUtils.isEmpty(password)) {
             validateUserPassword(password);
@@ -348,7 +360,7 @@ public class UserAccountConverter {
 
     public static UserAccount updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
         if (!StringUtils.isEmpty(userAccountDTO.login())) {
-            userAccountDTO = validateAndTrimLogin(userAccountDTO);
+            userAccountDTO = trimAndValidateNonAouth2Login(userAccountDTO);
             userAccount = userAccount.withUsername(userAccountDTO.login());
         }
         String password = userAccountDTO.password();
