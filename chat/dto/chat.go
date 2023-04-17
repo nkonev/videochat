@@ -10,6 +10,7 @@ type BaseChatDto struct {
 	Name                string      `json:"name"`
 	Avatar              null.String `json:"avatar"`
 	AvatarBig           null.String `json:"avatarBig"`
+	ShortInfo           null.String `json:"shortInfo"`
 	LastUpdateDateTime  time.Time   `json:"lastUpdateDateTime"`
 	ParticipantIds      []int64     `json:"participantIds"`
 	CanEdit             null.Bool   `json:"canEdit"`
@@ -55,6 +56,7 @@ type ChatDtoWithTetATet interface {
 	GetIsTetATet() bool
 	SetName(s string)
 	SetAvatar(s null.String)
+	SetShortInfo(s null.String)
 }
 
 func (r *ChatDto) GetId() int64 {
@@ -91,6 +93,10 @@ func (r *BaseChatDto) GetAvatar() null.String {
 
 func (r *BaseChatDto) SetAvatar(s null.String) {
 	r.Avatar = s
+}
+
+func (r *BaseChatDto) SetShortInfo(s null.String) {
+	r.ShortInfo = s
 }
 
 func (r *BaseChatDto) GetIsTetATet() bool {

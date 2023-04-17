@@ -242,10 +242,10 @@ public class UserProfileController {
 
         UserAccount exists = findUserAccount(userAccount);
 
+        userAccountDTO = UserAccountConverter.trimAndValidateNonAouth2Login(userAccountDTO);
+
         // check email already present
         if (!userService.checkEmailIsFree(userAccountDTO, exists)) return UserAccountConverter.convertToEditUserDto(exists);
-
-        userService.checkLoginIsCorrect(userAccountDTO);
 
         // check login already present
         userService.checkLoginIsFree(userAccountDTO, exists);

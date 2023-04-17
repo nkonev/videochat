@@ -15,6 +15,7 @@
 
                     <v-list-item-content>
                         <v-list-item-title class="user-login">{{currentUser.login}}</v-list-item-title>
+                        <v-list-item-subtitle v-if="showCurrentUserSubtitle()">{{currentUser.shortInfo}}</v-list-item-subtitle>
                     </v-list-item-content>
                 </v-list-item>
             </template>
@@ -110,6 +111,7 @@
                 </v-badge>
 
                 <v-spacer></v-spacer>
+                <img v-if="chatAvatar" class="v-avatar chat-avatar" :src="chatAvatar"/>
                 <v-toolbar-title color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked" :style="{'cursor': chatId ? 'pointer' : 'default'}">
                     <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text">{{title}}</div>
                     <div v-if="chatUsersCount" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
@@ -228,6 +230,7 @@
         GET_SHOW_HANG_BUTTON,
         GET_SHOW_SEARCH,
         GET_TITLE,
+        GET_AVATAR,
         GET_USER,
         GET_VIDEO_CHAT_USERS_COUNT,
         UNSET_USER,
@@ -348,6 +351,9 @@
                 if (!this.isMobile()) {
                     this.goProfile();
                 }
+            },
+            showCurrentUserSubtitle(){
+                return hasLength(this?.currentUser.shortInfo)
             },
             createChat() {
                 bus.$emit(OPEN_CHAT_EDIT, null);
@@ -534,6 +540,7 @@
                 showChatEditButton: GET_SHOW_CHAT_EDIT_BUTTON,
                 chatId: GET_CHAT_ID,
                 title: GET_TITLE,
+                chatAvatar: GET_AVATAR,
                 chatUsersCount: GET_CHAT_USERS_COUNT,
                 isShowSearch: GET_SHOW_SEARCH,
                 searchName: GET_SEARCH_NAME,
@@ -624,6 +631,14 @@
             background-color: #4e5fbb;
             border-radius: 4px;
         }
+    }
+
+    .chat-avatar {
+        display: block;
+        max-width: 36px;
+        max-height: 36px;
+        width: auto;
+        height: auto;
     }
 
 </style>

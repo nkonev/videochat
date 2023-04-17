@@ -5,14 +5,13 @@ import com.github.nkonev.aaa.exception.OAuth2IdConflictException;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import org.slf4j.Logger;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
+import static com.github.nkonev.aaa.converter.UserAccountConverter.validateAndTrimLogin;
 
 public abstract class AbstractOAuth2UserService {
 
@@ -69,6 +68,7 @@ public abstract class AbstractOAuth2UserService {
 
     protected UserAccountDetailsDTO createOrGetExistsUser(String oauthId, String login, Map<String, Object> attributes, Set<String> roles) {
         UserAccount userAccount;
+        validateAndTrimLogin(login);
         Optional<UserAccount> userAccountOpt = findByOauthId(oauthId);
         if (!userAccountOpt.isPresent()){
 

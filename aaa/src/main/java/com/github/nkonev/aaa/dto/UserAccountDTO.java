@@ -20,16 +20,19 @@ public record UserAccountDTO (
 
     String avatarBig,
 
+    String shortInfo,
+
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern= Constants.DATE_FORMAT)
     LocalDateTime lastLoginDateTime,
 
     OAuth2IdentifiersDTO oauth2Identifiers
 ) {
-    public UserAccountDTO(Long id, String login, String avatar, String avatarBig, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauth2Identifiers) {
+    public UserAccountDTO(Long id, String login, String avatar, String avatarBig, String shortInfo, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauth2Identifiers) {
         this.id = id;
         this.login = login;
         this.avatar = avatar;
         this.avatarBig = avatarBig;
+        this.shortInfo = shortInfo;
         this.lastLoginDateTime = lastLoginDateTime;
         this.oauth2Identifiers = oauth2Identifiers;
     }

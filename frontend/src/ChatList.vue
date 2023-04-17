@@ -249,6 +249,9 @@
                 bus.$emit(OPEN_CHAT_EDIT, chatId);
             },
             printParticipants(chat) {
+                if (hasLength(chat.shortInfo)) {
+                    return chat.shortInfo
+                }
                 let builder = "";
                 if (chat.tetATet) {
                     builder += this.$vuetify.lang.t('$vuetify.tet_a_tet');

@@ -218,6 +218,33 @@
             </v-col>
         </v-row>
 
+
+        <v-divider class="mx-4"></v-divider>
+        <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.short_info') }}</v-card-title>
+        <v-btn v-if="!showShortInfoInput" class="mx-4 mb-4" color="primary" dark @click="showShortInfoInput = !showShortInfoInput; shortInfoPrevious = currentUser.shortInfo">
+            {{ $vuetify.lang.t('$vuetify.change_short_info') }}
+            <v-icon dark right>mdi-information</v-icon>
+        </v-btn>
+        <v-row v-if="showShortInfoInput" no-gutters>
+            <v-col cols="12" >
+                <v-row :align="'center'" no-gutters>
+                    <v-col class="ml-4">
+                        <v-text-field
+                            v-model="currentUser.shortInfo"
+                            label="Short info"
+                            @keyup.native.enter="sendShortInfo()"
+                        ></v-text-field>
+                    </v-col>
+                    <v-col md="auto" class="ml-1 mr-4">
+                        <v-row :align="'center'" no-gutters>
+                            <v-icon @click="sendShortInfo()" color="primary">mdi-check-bold</v-icon>
+                            <v-icon @click="showShortInfoInput = false; currentUser.shortInfo = shortInfoPrevious">mdi-cancel</v-icon>
+                        </v-row>
+                    </v-col>
+                </v-row>
+            </v-col>
+        </v-row>
+
     </v-card>
     <v-alert type="warning" v-else>
         You are not logged in
@@ -258,10 +285,12 @@ export default {
             showLoginInput: false,
             showPasswordInput: false,
             showEmailInput: false,
+            showShortInfoInput: false,
 
             loginPrevious: "",
             password: "",
-            emailPrevious: ""
+            emailPrevious: "",
+            shortInfoPrevious: null
         }
     },
     computed: {
@@ -314,6 +343,13 @@ export default {
                 .then((response) => {
                     this.$store.dispatch(FETCH_USER_PROFILE);
                     this.showEmailInput = false;
+                })
+        },
+        sendShortInfo() {
+            axios.patch('/api/profile', {shortInfo: this.currentUser.shortInfo})
+                .then((response) => {
+                    this.$store.dispatch(FETCH_USER_PROFILE);
+                    this.showShortInfoInput = false;
                 })
         },
         removeVk() {

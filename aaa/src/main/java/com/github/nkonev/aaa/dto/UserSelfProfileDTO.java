@@ -23,6 +23,7 @@ public record UserSelfProfileDTO(
             String username,
             String avatar,
             String avatarBig,
+            String shortInfo,
             String email,
             LocalDateTime lastLoginDateTime,
             OAuth2IdentifiersDTO oauth2Identifiers,
@@ -34,6 +35,7 @@ public record UserSelfProfileDTO(
                 username,
                 avatar,
                 avatarBig,
+                shortInfo,
                 lastLoginDateTime,
                 oauth2Identifiers
         ), email, roles, expiresAt);

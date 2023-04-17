@@ -307,6 +307,7 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 			Name:                chatDtoWithAdmin.Name,
 			Avatar:              chatDtoWithAdmin.Avatar.Ptr(),
 			AvatarBig:           chatDtoWithAdmin.AvatarBig.Ptr(),
+			ShortInfo:           chatDtoWithAdmin.ShortInfo.Ptr(),
 			LastUpdateDateTime:  chatDtoWithAdmin.LastUpdateDateTime,
 			ParticipantIds:      chatDtoWithAdmin.ParticipantIds,
 			CanEdit:             chatDtoWithAdmin.CanEdit.Ptr(),
@@ -411,9 +412,10 @@ func convertUser(owner *dto.User) *model.User {
 		return nil
 	}
 	return &model.User{
-		ID:     owner.Id,
-		Login:  owner.Login,
-		Avatar: owner.Avatar.Ptr(),
+		ID:        owner.Id,
+		Login:     owner.Login,
+		Avatar:    owner.Avatar.Ptr(),
+		ShortInfo: owner.ShortInfo.Ptr(),
 	}
 }
 func convertUsers(participants []*dto.User) []*model.User {
@@ -431,10 +433,11 @@ func convertUserWithAdmin(owner *dto.UserWithAdmin) *model.UserWithAdmin {
 		return nil
 	}
 	return &model.UserWithAdmin{
-		ID:     owner.Id,
-		Login:  owner.Login,
-		Avatar: owner.Avatar.Ptr(),
-		Admin:  owner.Admin,
+		ID:        owner.Id,
+		Login:     owner.Login,
+		Avatar:    owner.Avatar.Ptr(),
+		Admin:     owner.Admin,
+		ShortInfo: owner.ShortInfo.Ptr(),
 	}
 }
 func convertUsersWithAdmin(participants []*dto.UserWithAdmin) []*model.UserWithAdmin {

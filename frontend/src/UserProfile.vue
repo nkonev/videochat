@@ -21,6 +21,7 @@
                     </template>
                 </v-list-item-title>
                 <v-list-item-subtitle v-if="viewableUser.email">{{ viewableUser.email }}</v-list-item-subtitle>
+                <v-list-item-subtitle v-if="displayShortInfo(viewableUser)">{{ viewableUser.shortInfo }}</v-list-item-subtitle>
 
                 <v-container class="ma-0 pa-0">
                     <v-btn v-if="isNotMyself()" color="primary" @click="tetATet(viewableUser.id)">
@@ -93,6 +94,7 @@ import axios from "axios";
 import {chat_name} from "./routes";
 import {mapGetters} from "vuex";
 import graphqlSubscriptionMixin from "@/graphqlSubscriptionMixin";
+import {hasLength} from "@/utils";
 
 export default {
     mixins: [graphqlSubscriptionMixin('userOnlineInProfile')],
@@ -155,6 +157,9 @@ export default {
         },
         onNextSubscriptionElement(items) {
             this.onUserOnlineChanged(items);
+        },
+        displayShortInfo(user){
+            return hasLength(user.shortInfo)
         },
     },
     mounted() {

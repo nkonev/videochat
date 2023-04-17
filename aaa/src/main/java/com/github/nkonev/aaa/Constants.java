@@ -3,6 +3,8 @@ package com.github.nkonev.aaa;
 
 import com.github.nkonev.aaa.security.OAuth2Providers;
 
+import java.util.Set;
+
 /**
  * Created by nik on 23.05.17.
  */
@@ -50,6 +52,8 @@ public class Constants {
     }
 
     public static final String DELETED = "deleted";
+
+    public static final Set<String> FORBIDDEN_USERNAMES = Set.of(DELETED, "all");
 
     public static final int MIN_PASSWORD_LENGTH = 6;
     public static final int MAX_PASSWORD_LENGTH = 30;

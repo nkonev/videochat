@@ -127,6 +127,7 @@ vm = new Vue({
                       name
                       avatar
                       avatarBig
+                      shortInfo
                       lastUpdateDateTime
                       participantIds
                       canEdit
@@ -144,6 +145,7 @@ vm = new Vue({
                         login
                         avatar
                         admin
+                        shortInfo
                       }
                       canResend
                       pinned

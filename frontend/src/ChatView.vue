@@ -96,7 +96,7 @@
     import {mapGetters} from "vuex";
 
     import {
-        GET_USER,
+        GET_USER, SET_AVATAR,
         SET_CAN_BROADCAST_TEXT_MESSAGE,
         SET_CAN_MAKE_RECORD,
         SET_CHAT_ID,
@@ -306,6 +306,7 @@
                 return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
                     console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
                     this.$store.commit(SET_TITLE, data.name);
+                    this.$store.commit(SET_AVATAR, data.avatar);
                     this.$store.commit(SET_CHAT_USERS_COUNT, data.participantsCount);
                     this.$store.commit(SET_CHAT_ID, this.chatId);
                     this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, data.canEdit);
@@ -346,6 +347,7 @@
                     this.chatDto = dto;
                     this.$store.commit(SET_CHAT_USERS_COUNT, this.chatDto.participantsCount);
                     this.$store.commit(SET_TITLE, this.chatDto.name);
+                    this.$store.commit(SET_AVATAR, this.chatDto.avatar);
                 }
             },
             onChatDelete(dto) {
@@ -429,6 +431,7 @@
                                     id
                                     login
                                     avatar
+                                    shortInfo
                                   }
                                   canEdit
                                   canDelete
@@ -442,6 +445,7 @@
                                       id
                                       login
                                       avatar
+                                      shortInfo
                                     }
                                     embedType
                                     isParticipant
@@ -639,6 +643,9 @@
             this.pinnedPromotedKey = null;
 
             this.chatDto = chatDtoFactory();
+
+            this.$store.commit(SET_AVATAR, null);
+
         },
         destroyed() {
             this.$store.commit(SET_SHOW_CALL_BUTTON, false);

@@ -73,6 +73,7 @@ type ComplexityRoot struct {
 		Participants        func(childComplexity int) int
 		ParticipantsCount   func(childComplexity int) int
 		Pinned              func(childComplexity int) int
+		ShortInfo           func(childComplexity int) int
 		TetATet             func(childComplexity int) int
 		UnreadMessages      func(childComplexity int) int
 	}
@@ -175,9 +176,10 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Avatar func(childComplexity int) int
-		ID     func(childComplexity int) int
-		Login  func(childComplexity int) int
+		Avatar    func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Login     func(childComplexity int) int
+		ShortInfo func(childComplexity int) int
 	}
 
 	UserOnline struct {
@@ -191,10 +193,11 @@ type ComplexityRoot struct {
 	}
 
 	UserWithAdmin struct {
-		Admin  func(childComplexity int) int
-		Avatar func(childComplexity int) int
-		ID     func(childComplexity int) int
-		Login  func(childComplexity int) int
+		Admin     func(childComplexity int) int
+		Avatar    func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Login     func(childComplexity int) int
+		ShortInfo func(childComplexity int) int
 	}
 
 	VideoCallInvitationDto struct {
@@ -379,6 +382,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatDto.Pinned(childComplexity), true
+
+	case "ChatDto.shortInfo":
+		if e.complexity.ChatDto.ShortInfo == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.ShortInfo(childComplexity), true
 
 	case "ChatDto.tetATet":
 		if e.complexity.ChatDto.TetATet == nil {
@@ -873,6 +883,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Login(childComplexity), true
 
+	case "User.shortInfo":
+		if e.complexity.User.ShortInfo == nil {
+			break
+		}
+
+		return e.complexity.User.ShortInfo(childComplexity), true
+
 	case "UserOnline.id":
 		if e.complexity.UserOnline.ID == nil {
 			break
@@ -928,6 +945,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserWithAdmin.Login(childComplexity), true
+
+	case "UserWithAdmin.shortInfo":
+		if e.complexity.UserWithAdmin.ShortInfo == nil {
+			break
+		}
+
+		return e.complexity.UserWithAdmin.ShortInfo(childComplexity), true
 
 	case "VideoCallInvitationDto.chatId":
 		if e.complexity.VideoCallInvitationDto.ChatID == nil {
@@ -1076,6 +1100,7 @@ type User {
     id:     Int64!
     login:  String!
     avatar: String
+    shortInfo:           String
 }
 
 type UserOnline {
@@ -1118,6 +1143,7 @@ type UserWithAdmin {
     login:  String!
     avatar: String
     admin: Boolean!
+    shortInfo:           String
 }
 
 type ChatDto {
@@ -1125,6 +1151,7 @@ type ChatDto {
     name:                String!
     avatar:              String
     avatarBig:           String
+    shortInfo:           String
     lastUpdateDateTime:  Time!
     participantIds:      [Int64!]!
     canEdit:             Boolean
@@ -1583,6 +1610,47 @@ func (ec *executionContext) _ChatDto_avatarBig(ctx context.Context, field graphq
 }
 
 func (ec *executionContext) fieldContext_ChatDto_avatarBig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatDto_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_shortInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShortInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ChatDto",
 		Field:      field,
@@ -2117,6 +2185,8 @@ func (ec *executionContext) fieldContext_ChatDto_participants(ctx context.Contex
 				return ec.fieldContext_UserWithAdmin_avatar(ctx, field)
 			case "admin":
 				return ec.fieldContext_UserWithAdmin_admin(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_UserWithAdmin_shortInfo(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserWithAdmin", field.Name)
 		},
@@ -2607,6 +2677,8 @@ func (ec *executionContext) fieldContext_ChatEvent_participantsEvent(ctx context
 				return ec.fieldContext_UserWithAdmin_avatar(ctx, field)
 			case "admin":
 				return ec.fieldContext_UserWithAdmin_admin(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_UserWithAdmin_shortInfo(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserWithAdmin", field.Name)
 		},
@@ -3116,6 +3188,8 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_owner(ctx context.Con
 				return ec.fieldContext_User_login(ctx, field)
 			case "avatar":
 				return ec.fieldContext_User_avatar(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_User_shortInfo(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -3565,6 +3639,8 @@ func (ec *executionContext) fieldContext_EmbedMessageResponse_owner(ctx context.
 				return ec.fieldContext_User_login(ctx, field)
 			case "avatar":
 				return ec.fieldContext_User_avatar(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_User_shortInfo(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -3959,6 +4035,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(ctx context.Conte
 				return ec.fieldContext_ChatDto_avatar(ctx, field)
 			case "avatarBig":
 				return ec.fieldContext_ChatDto_avatarBig(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_ChatDto_shortInfo(ctx, field)
 			case "lastUpdateDateTime":
 				return ec.fieldContext_ChatDto_lastUpdateDateTime(ctx, field)
 			case "participantIds":
@@ -4083,6 +4161,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_userEvent(ctx context.Conte
 				return ec.fieldContext_User_login(ctx, field)
 			case "avatar":
 				return ec.fieldContext_User_avatar(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_User_shortInfo(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -5589,6 +5669,47 @@ func (ec *executionContext) fieldContext_User_avatar(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _User_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_shortInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShortInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserOnline_id(ctx context.Context, field graphql.CollectedField, obj *model.UserOnline) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserOnline_id(ctx, field)
 	if err != nil {
@@ -5933,6 +6054,47 @@ func (ec *executionContext) fieldContext_UserWithAdmin_admin(ctx context.Context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserWithAdmin_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.UserWithAdmin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserWithAdmin_shortInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShortInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserWithAdmin_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserWithAdmin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8253,6 +8415,10 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 
 			out.Values[i] = ec._ChatDto_avatarBig(ctx, field, obj)
 
+		case "shortInfo":
+
+			out.Values[i] = ec._ChatDto_shortInfo(ctx, field, obj)
+
 		case "lastUpdateDateTime":
 
 			out.Values[i] = ec._ChatDto_lastUpdateDateTime(ctx, field, obj)
@@ -8999,6 +9165,10 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 			out.Values[i] = ec._User_avatar(ctx, field, obj)
 
+		case "shortInfo":
+
+			out.Values[i] = ec._User_shortInfo(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9115,6 +9285,10 @@ func (ec *executionContext) _UserWithAdmin(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "shortInfo":
+
+			out.Values[i] = ec._UserWithAdmin_shortInfo(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

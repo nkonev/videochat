@@ -485,7 +485,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         UserAccount userAccount = new UserAccount(
                 null,
                 CreationType.REGISTRATION,
-                login, null, null, null, false, false, true,
+                login, null, null, null, null,false, false, true,
                 UserRole.ROLE_USER, login+"@example.com", null, null);
         userAccount = userAccountRepository.save(userAccount);
 

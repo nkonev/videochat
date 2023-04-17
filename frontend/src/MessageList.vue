@@ -16,6 +16,8 @@
                         @replyOnMessage="replyOnMessage"
                         @shareMessage="shareMessage"
                         @onFilesClicked="onFilesClicked"
+                        @pinMessage="pinMessage"
+                        @removedFromPinned="removedFromPinned"
                     ></MessageItem>
                 </template>
             </v-list>

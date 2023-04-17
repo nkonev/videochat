@@ -957,6 +957,10 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	users = append(users, &dto.User{
+		Id:    -2, // -1 is reserved for 'deleted' in ./aaa/src/main/resources/db/migration/V1__init.sql
+		Login: allUsers,
+	})
 
 	return c.JSON(http.StatusOK, users)
 }
@@ -1121,6 +1125,7 @@ type simpleChat struct {
 	Name      string
 	IsTetATet bool
 	Avatar    null.String
+	ShortInfo null.String
 }
 
 func (r *simpleChat) GetId() int64 {
@@ -1141,6 +1146,10 @@ func (r *simpleChat) SetName(s string) {
 
 func (r *simpleChat) SetAvatar(s null.String) {
 	r.Avatar = s
+}
+
+func (r *simpleChat) SetShortInfo(s null.String) {
+	r.ShortInfo = s
 }
 
 func (r *simpleChat) GetIsTetATet() bool {

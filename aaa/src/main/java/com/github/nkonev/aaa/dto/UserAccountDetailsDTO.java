@@ -42,6 +42,7 @@ public record UserAccountDetailsDTO (
             String login,
             String avatar,
             String avatarBig,
+            String shortInfo,
             String password,
             boolean expired,
             boolean locked,
@@ -53,7 +54,7 @@ public record UserAccountDetailsDTO (
     ) {
         this(
                 new UserAccountDTO(
-                    id, login, avatar, avatarBig, lastLoginDateTime, oauthIdentifiers
+                    id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers
                 ),
                 new HashMap<>(), null, null, password, expired, locked, enabled, roles, email
         );
@@ -158,7 +159,7 @@ public record UserAccountDetailsDTO (
     public UserAccountDetailsDTO withOauth2Identifiers(OAuth2IdentifiersDTO newOauth2Identifiers) {
         return new UserAccountDetailsDTO(
                 new UserAccountDTO(
-                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.lastLoginDateTime(), newOauth2Identifiers
+                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.shortInfo(), userAccountDTO.lastLoginDateTime(), newOauth2Identifiers
                 ),
                 oauth2Attributes,
                 idToken,

@@ -6,6 +6,7 @@ type User {
     id:     Int64!
     login:  String!
     avatar: String
+    shortInfo:           String
 }
 
 type UserOnline {
@@ -48,6 +49,7 @@ type UserWithAdmin {
     login:  String!
     avatar: String
     admin: Boolean!
+    shortInfo:           String
 }
 
 type ChatDto {
@@ -55,6 +57,7 @@ type ChatDto {
     name:                String!
     avatar:              String
     avatarBig:           String
+    shortInfo:           String
     lastUpdateDateTime:  Time!
     participantIds:      [Int64!]!
     canEdit:             Boolean

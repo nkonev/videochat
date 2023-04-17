@@ -13,9 +13,11 @@
                 <template v-if="!isMobile()">
                     <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                     <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
-                    <router-link class="mx-2 hash" :to="getMessageLink(item)" :title="$vuetify.lang.t('$vuetify.link')">#</router-link>
                     <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
                     <v-icon v-if="canResend" class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
+                    <v-icon v-if="!item.pinned" class="mx-1" small :title="$vuetify.lang.t('$vuetify.pin_message')" @click="pinMessage(item)">mdi-pin</v-icon>
+                    <v-icon v-if="item.pinned" class="mx-1" small :title="$vuetify.lang.t('$vuetify.remove_from_pinned')" @click="removedFromPinned(item)">mdi-pin-off-outline</v-icon>
+                    <router-link class="mx-1 hash" :to="getMessageLink(item)" :title="$vuetify.lang.t('$vuetify.link')">#</router-link>
                 </template>
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
@@ -70,6 +72,12 @@
             },
             onFilesClicked(dto) {
                 this.$emit('onFilesClicked', dto)
+            },
+            pinMessage(dto) {
+                this.$emit('pinMessage', dto)
+            },
+            removedFromPinned(dto) {
+                this.$emit('removedFromPinned', dto)
             },
 
             getOwner(owner) {
@@ -219,6 +227,8 @@
   .hash {
       align-items: center;
       display: inline-flex;
+      font-size: larger;
+      text-decoration: none;
   }
 
   .highlight {

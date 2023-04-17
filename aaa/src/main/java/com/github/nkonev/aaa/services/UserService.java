@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import static com.github.nkonev.aaa.Constants.FORBIDDEN_USERNAMES;
+
 @Service
 public class UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
@@ -49,12 +51,6 @@ public class UserService {
             return false; // we care for user email leak
         } else {
             return true;
-        }
-    }
-
-    public void checkLoginIsCorrect(EditUserDTO userAccountDTO) {
-        if (StringUtils.isEmpty(userAccountDTO.login())) {
-            throw new BadRequestException("empty login");
         }
     }
 

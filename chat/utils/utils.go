@@ -163,6 +163,7 @@ func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participan
 	if chatDto.GetIsTetATet() && participant.Id != behalfParticipantId {
 		chatDto.SetName(participant.Login)
 		chatDto.SetAvatar(participant.Avatar)
+		chatDto.SetShortInfo(participant.ShortInfo)
 	}
 }
 

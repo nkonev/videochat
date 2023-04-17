@@ -6,7 +6,6 @@ import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.EditUserDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
-import com.github.nkonev.aaa.exception.UserAlreadyPresentException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.services.EmailService;
 import com.github.nkonev.aaa.services.UserService;
@@ -61,7 +60,8 @@ public class RegistrationController {
     @PostMapping(value = Constants.Urls.API+ Constants.Urls.REGISTER)
     @ResponseBody
     public void register(@RequestBody @Valid EditUserDTO userAccountDTO) {
-        userService.checkLoginIsCorrect(userAccountDTO);
+        userAccountDTO = UserAccountConverter.trimAndValidateNonAouth2Login(userAccountDTO);
+
         userService.checkLoginIsFree(userAccountDTO);
         if(!userService.checkEmailIsFree(userAccountDTO)){
             return; // we care for user email leak

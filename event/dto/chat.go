@@ -10,6 +10,7 @@ type BaseChatDto struct {
 	Name                string      `json:"name"`
 	Avatar              null.String `json:"avatar"`
 	AvatarBig           null.String `json:"avatarBig"`
+	ShortInfo           null.String `json:"shortInfo"`
 	LastUpdateDateTime  time.Time   `json:"lastUpdateDateTime"`
 	ParticipantIds      []int64     `json:"participantIds"`
 	CanEdit             null.Bool   `json:"canEdit"`
@@ -33,45 +34,6 @@ type ChatDeletedDto struct {
 type ChatDto struct {
 	BaseChatDto
 	Participants []*User `json:"participants"`
-}
-
-type ChatDtoWithTetATet interface {
-	GetId() int64
-	GetName() string
-	GetIsTetATet() bool
-	SetName(s string)
-}
-
-func (r *ChatDto) GetId() int64 {
-	return r.Id
-}
-
-func (r *ChatDto) GetName() string {
-	return r.Name
-}
-
-func (r *ChatDto) SetName(s string) {
-	r.Name = s
-}
-
-func (r *ChatDto) GetIsTetATet() bool {
-	return r.IsTetATet
-}
-
-func (r *BaseChatDto) GetId() int64 {
-	return r.Id
-}
-
-func (r *BaseChatDto) GetName() string {
-	return r.Name
-}
-
-func (r *BaseChatDto) SetName(s string) {
-	r.Name = s
-}
-
-func (r *BaseChatDto) GetIsTetATet() bool {
-	return r.IsTetATet
 }
 
 // copied view for GET /chat/:id
