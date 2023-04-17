@@ -126,7 +126,7 @@
         setStoredScreenSimulcast,
         setStoredRoomDynacast,
         setStoredRoomAdaptiveStream
-    } from "./utils";
+    } from "./localStore";
     import {videochat_name} from "./routes";
     import videoServerSettingsMixin from "@/videoServerSettingsMixin";
 

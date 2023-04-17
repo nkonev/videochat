@@ -27,11 +27,13 @@ import {
 } from "@/store";
 import {
     defaultAudioMute,
-    getStoredAudioDevicePresents,
-    getStoredVideoDevicePresents,
     getWebsocketUrlPrefix,
     isMobileFireFox
 } from "@/utils";
+import {
+    getStoredAudioDevicePresents,
+    getStoredVideoDevicePresents,
+} from "@/localStore";
 import bus, {
     ADD_SCREEN_SOURCE,
     ADD_VIDEO_SOURCE,

@@ -4,7 +4,7 @@ import Vuetify from 'vuetify/lib/framework' // https://vuetifyjs.com/en/features
 
 import en from '../locale/en';
 import ru from '../locale/ru';
-import { getStoredLanguage } from "@/utils";
+import { getStoredLanguage } from "@/localStore";
 
 // https://www.npmjs.com/package/@fortawesome/vue-fontawesome
 import { library } from '@fortawesome/fontawesome-svg-core'

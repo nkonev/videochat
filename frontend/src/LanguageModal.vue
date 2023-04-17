@@ -23,7 +23,7 @@
                         </v-btn>
 
                     </v-btn-toggle>
-                  
+
                 </v-card-text>
 
                 <v-card-actions class="pa-4">
@@ -41,7 +41,7 @@
     import bus, {
       OPEN_LANGUAGE_MODAL,
     } from "./bus";
-    import {getStoredLanguage, setStoredLanguage} from "@/utils";
+    import {getStoredLanguage, setStoredLanguage} from "@/localStore";
 
     export default {
         data () {
