@@ -127,6 +127,7 @@ vm = new Vue({
                       name
                       avatar
                       avatarBig
+                      shortInfo
                       lastUpdateDateTime
                       participantIds
                       canEdit
@@ -140,6 +141,7 @@ vm = new Vue({
                       canAudioMute
                       participantsCount
                       participants {
+                        shortInfo
                         id
                         login
                         avatar

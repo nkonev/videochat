@@ -423,6 +423,7 @@
                                     id
                                     login
                                     avatar
+                                    shortInfo
                                   }
                                   canEdit
                                   canDelete
@@ -436,6 +437,7 @@
                                       id
                                       login
                                       avatar
+                                      shortInfo
                                     }
                                     embedType
                                     isParticipant
