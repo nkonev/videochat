@@ -100,10 +100,13 @@
         chatEditMessageDtoFactory,
         colorBackground,
         colorText, getAnswerPreviewFields,
-        getStoredChatEditMessageDto, media_image, media_video, removeStoredChatEditMessageDto,
-        setStoredChatEditMessageDto
+        media_image, media_video
     } from "@/utils";
-
+    import {
+        getStoredChatEditMessageDto,
+        removeStoredChatEditMessageDto,
+        setStoredChatEditMessageDto
+    } from "@/localStore"
 
     export default {
         props:['chatId', 'fullHeight'],
@@ -315,7 +318,7 @@
                 this.loadFromStore();
             },
             loadFromStore() {
-                this.editMessageDto = getStoredChatEditMessageDto(this.chatId);
+                this.editMessageDto = getStoredChatEditMessageDto(this.chatId, chatEditMessageDtoFactory());
                 if (this.editMessageDto.ownerId && this.editMessageDto.ownerId != this.currentUser?.id) {
                     console.log("Removing owner from saved message")
                     this.editMessageDto.ownerId = null;

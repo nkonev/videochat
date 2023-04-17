@@ -1,10 +1,11 @@
+import { hasLength, isSet } from "@/utils";
 import {
     getScreenResolution,
     getStoredRoomAdaptiveStream,
     getStoredRoomDynacast,
     getStoredScreenSimulcast,
-    getStoredVideoSimulcast, getVideoResolution, hasLength, isSet
-} from "@/utils";
+    getStoredVideoSimulcast, getVideoResolution
+} from "@/localStore"
 import axios from "axios";
 
 export default () => {
