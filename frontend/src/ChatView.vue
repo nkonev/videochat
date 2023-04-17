@@ -4,8 +4,8 @@
                     :dbl-click-splitter="false"
                     @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()" @resize="onPanelResized()">
 
-            <pane>
-                <splitpanes ref="splInner" horizontal @resize="onPanelResized(isScrolledToBottom())">
+            <pane v-bind:size="editAndMessageSize">
+                <splitpanes ref="splInner" horizontal @resize="onPanelResized()">
                     <pane v-bind:size="messagesSize">
 
                         <div v-if="pinnedPromoted" class="pinned-promoted">
@@ -115,6 +115,7 @@
     import debounce from "lodash/debounce";
     import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
     import 'splitpanes/dist/splitpanes.css';
+    import {getStoredVideoPosition, VIDEO_POSITION_ON_THE_TOP} from "@/localStore";
 
     const defaultDesktopWithoutVideo = [80, 20];
     const defaultDesktopWithVideo = [30, 50, 20];
@@ -122,8 +123,10 @@
     const defaultMobileWithoutVideo = [100];
     const defaultMobileWithVideo = [40, 60];
 
-    const KEY_DESKTOP_WITH_VIDEO_PANELS = 'desktopWithVideo';
-    const KEY_DESKTOP_WITHOUT_VIDEO_PANELS = 'desktopWithoutVideo'
+    const KEY_DESKTOP_TOP_WITH_VIDEO_PANELS = 'desktopTopWithVideo';
+    const KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS = 'desktopTopWithoutVideo'
+    const KEY_DESKTOP_SIDE_WITH_VIDEO_PANELS = 'desktopSideWithVideo';
+    const KEY_DESKTOP_SIDE_WITHOUT_VIDEO_PANELS = 'desktopSideWithoutVideo'
     const KEY_MOBILE_WITH_VIDEO_PANELS = 'mobileWithVideo';
     const KEY_MOBILE_WITHOUT_VIDEO_PANELS = 'mobileWithoutVideo'
 
@@ -220,14 +223,23 @@
                     return stored[1]
                 }
             },
+            editAndMessageSize() {
+
+            }
         },
         methods: {
             getStored() {
                 let keyWithVideo;
                 let keyWithoutVideo;
                 if (!this.isMobile()) {
-                    keyWithVideo = KEY_DESKTOP_WITH_VIDEO_PANELS;
-                    keyWithoutVideo = KEY_DESKTOP_WITHOUT_VIDEO_PANELS;
+                    const videoPosition = getStoredVideoPosition();
+                    if (videoPosition == VIDEO_POSITION_ON_THE_TOP) {
+                        keyWithVideo = KEY_DESKTOP_TOP_WITH_VIDEO_PANELS;
+                        keyWithoutVideo = KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS;
+                    } else {
+                        keyWithVideo = KEY_DESKTOP_SIDE_WITH_VIDEO_PANELS;
+                        keyWithoutVideo = KEY_DESKTOP_SIDE_WITHOUT_VIDEO_PANELS;
+                    }
                 } else {
                     keyWithVideo = KEY_MOBILE_WITH_VIDEO_PANELS;
                     keyWithoutVideo = KEY_MOBILE_WITHOUT_VIDEO_PANELS;
@@ -244,8 +256,14 @@
                 let keyWithVideo;
                 let keyWithoutVideo;
                 if (!this.isMobile()) {
-                    keyWithVideo = KEY_DESKTOP_WITH_VIDEO_PANELS;
-                    keyWithoutVideo = KEY_DESKTOP_WITHOUT_VIDEO_PANELS;
+                    const videoPosition = getStoredVideoPosition();
+                    if (videoPosition == VIDEO_POSITION_ON_THE_TOP) {
+                        keyWithVideo = KEY_DESKTOP_TOP_WITH_VIDEO_PANELS;
+                        keyWithoutVideo = KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS;
+                    } else {
+                        keyWithVideo = KEY_DESKTOP_SIDE_WITH_VIDEO_PANELS;
+                        keyWithoutVideo = KEY_DESKTOP_SIDE_WITHOUT_VIDEO_PANELS;
+                    }
                 } else {
                     keyWithVideo = KEY_MOBILE_WITH_VIDEO_PANELS;
                     keyWithoutVideo = KEY_MOBILE_WITHOUT_VIDEO_PANELS;
@@ -257,6 +275,8 @@
                     localStorage.setItem(keyWithoutVideo, JSON.stringify(arr));
                 }
             },
+
+
             onPanelAdd() {
                 console.log("On panel add", this.$refs.splOuter.panes);
                 const stored = this.getStored();
@@ -275,29 +295,32 @@
                     console.error("Store is null");
                 }
             },
-            // TODO problem is - this function is not aware of vertical video
             onPanelRemove() {
                 console.log("On panel removed", this.$refs.splOuter.panes);
-                // const stored = this.getStored();
-                // if (stored) {
-                //     console.log("Restoring from storage", stored);
-                //     this.$nextTick(() => {
-                //         if (this.$refs.splOuter) {
-                //             this.$refs.splOuter.panes[0].size = stored[0]; // messages
-                //             if (this.$refs.splOuter.panes[1]) {
-                //                 this.$refs.splOuter.panes[1].size = stored[1]; // edit
-                //             }
-                //         }
-                //
-                //     })
-                // } else {
-                //     console.error("Store is null");
-                // }
+                const stored = this.getStored();
+                if (stored) {
+                    console.log("Restoring from storage", stored);
+                    this.$nextTick(() => {
+                        if (this.$refs.splOuter) {
+                            this.$refs.splOuter.panes[0].size = stored[0]; // messages
+                            if (this.$refs.splOuter.panes[1]) {
+                                this.$refs.splOuter.panes[1].size = stored[1]; // edit
+                            }
+                        }
+
+                    })
+                } else {
+                    console.error("Store is null");
+                }
             },
+
             onPanelResized() {
-                console.log("On panel resized", this.$refs.splOuter.panes.map(i => i.size), this.$refs.splInner.panes.map(i => i.size));
-                // this.saveToStored(this.$refs.spl.panes.map(i => i.size));
+                const outerPaneSizes = this.$refs.splOuter.panes.map(i => i.size);
+                const innerPaneSizes = this.$refs.splInner.panes.map(i => i.size);
+                console.log("On panel resized", outerPaneSizes, innerPaneSizes);
+                this.saveToStored([...outerPaneSizes, ...innerPaneSizes]);
             },
+
             isAllowedVideo() {
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
             },
