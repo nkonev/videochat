@@ -223,7 +223,7 @@
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.lang.t('$vuetify.short_info') }}</v-card-title>
         <v-btn v-if="!showShortInfoInput" class="mx-4 mb-4" color="primary" dark @click="showShortInfoInput = !showShortInfoInput; shortInfoPrevious = currentUser.shortInfo">
             {{ $vuetify.lang.t('$vuetify.change_short_info') }}
-            <v-icon dark right>mdi-information-box-outline</v-icon>
+            <v-icon dark right>mdi-information</v-icon>
         </v-btn>
         <v-row v-if="showShortInfoInput" no-gutters>
             <v-col cols="12" >
