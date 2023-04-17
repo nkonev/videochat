@@ -61,7 +61,7 @@ export const setStoredAudioPresents = (v) => {
     localStorage.setItem(KEY_AUDIO_PRESENTS, JSON.stringify(v));
 }
 
-export const KEY_LANGUAGE= 'language';
+export const KEY_LANGUAGE = 'language';
 
 export const getStoredLanguage = () => {
     let v = JSON.parse(localStorage.getItem(KEY_LANGUAGE));
@@ -71,6 +71,10 @@ export const getStoredLanguage = () => {
         v = JSON.parse(localStorage.getItem(KEY_LANGUAGE));
     }
     return v;
+}
+
+export const setStoredLanguage = (v) => {
+    localStorage.setItem(KEY_LANGUAGE, JSON.stringify(v));
 }
 
 export const KEY_VIDEO_SIMULCAST = 'videoSimulcast';
@@ -136,11 +140,6 @@ export const setStoredRoomAdaptiveStream = (v) => {
     localStorage.setItem(KEY_ROOM_ADAPTIVE_STREAM, JSON.stringify(v));
 }
 
-
-export const setStoredLanguage = (v) => {
-    localStorage.setItem(KEY_LANGUAGE, JSON.stringify(v));
-}
-
 export const KEY_CHAT_EDIT_MESSAGE_DTO = 'chatEditMessageDto';
 
 export const getStoredChatEditMessageDto = (chatId, defVal) => {
@@ -157,4 +156,24 @@ export const setStoredChatEditMessageDto = (v, chatId) => {
 
 export const removeStoredChatEditMessageDto = (chatId) => {
     localStorage.removeItem(KEY_CHAT_EDIT_MESSAGE_DTO + '_' + chatId);
+}
+
+export const VIDEO_POSITION_AUTO = 'auto';
+export const VIDEO_POSITION_ON_THE_TOP = 'onTheTop'; // as usual
+export const VIDEO_POSITION_SIDE = 'side'; // new
+
+export const KEY_VIDEO_POSITION = 'videoPosition';
+
+export const getStoredVideoPosition = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_VIDEO_POSITION));
+    if (v === null) {
+        console.log("Resetting videoPosition to default");
+        setStoredVideoPosition(VIDEO_POSITION_AUTO);
+        v = JSON.parse(localStorage.getItem(KEY_VIDEO_POSITION));
+    }
+    return v;
+}
+
+export const setStoredVideoPosition = (v) => {
+    localStorage.setItem(KEY_VIDEO_POSITION, JSON.stringify(v));
 }

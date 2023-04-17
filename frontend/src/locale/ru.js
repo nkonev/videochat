@@ -167,5 +167,9 @@ export default {
     public_chats: "Публичные чаты",
     pin_chat: "Закрепить чат",
     short_info: "Краткая информация",
-    change_short_info: "Изменить краткую информацию"
+    change_short_info: "Изменить краткую информацию",
+    video_position: "Позиция видео",
+    video_position_on_the_top: "Наверху",
+    video_position_side: "На стороне",
+    video_position_auto: "Авто"
 }

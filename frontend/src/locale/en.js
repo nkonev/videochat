@@ -167,5 +167,9 @@ export default {
     public_chats: "Public chats",
     pin_chat: "Pin the chat",
     short_info: "Short info",
-    change_short_info: "Change short info"
+    change_short_info: "Change short info",
+    video_position: "Video position",
+    video_position_on_the_top: "Top",
+    video_position_side: "Side",
+    video_position_auto: "Auto"
 }

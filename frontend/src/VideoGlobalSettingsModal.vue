@@ -47,6 +47,15 @@
                         v-model="screenResolution"
                     ></v-select>
 
+                    <v-select
+                        :messages="$vuetify.lang.t('$vuetify.video_position')"
+                        :items="positionItems"
+                        dense
+                        solo
+                        @change="changeVideoPosition"
+                        v-model="videoPosition"
+                    ></v-select>
+
                     <v-row no-gutters>
                         <v-col
                         >
@@ -125,7 +134,11 @@
         setStoredVideoSimulcast,
         setStoredScreenSimulcast,
         setStoredRoomDynacast,
-        setStoredRoomAdaptiveStream
+        setStoredRoomAdaptiveStream,
+        VIDEO_POSITION_AUTO,
+        VIDEO_POSITION_ON_THE_TOP,
+        VIDEO_POSITION_SIDE,
+        setStoredVideoPosition, getStoredVideoPosition
     } from "./localStore";
     import {videochat_name} from "./routes";
     import videoServerSettingsMixin from "@/videoServerSettingsMixin";
@@ -139,12 +152,14 @@
 
                 audioPresents: null,
                 videoPresents: null,
+                videoPosition: null,
             }
         },
         methods: {
             showModal() {
                 this.audioPresents = getStoredAudioDevicePresents();
                 this.videoPresents = getStoredVideoDevicePresents();
+                this.videoPosition = getStoredVideoPosition();
 
                 this.initServerData();
 
@@ -218,11 +233,17 @@
                 setStoredRoomAdaptiveStream(v);
                 bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
+            changeVideoPosition(v) {
+                setStoredVideoPosition(v)
+            }
         },
         computed: {
             qualityItems() {
                 // ./frontend/node_modules/livekit-client/dist/room/track/options.d.ts
                 return ['h180', 'h360', 'h720', 'h1080', 'h1440', 'h2160']
+            },
+            positionItems() {
+                return [VIDEO_POSITION_AUTO, VIDEO_POSITION_ON_THE_TOP, VIDEO_POSITION_SIDE]
             },
             chatId() {
                 return this.$route.params.id
