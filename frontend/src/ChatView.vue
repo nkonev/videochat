@@ -4,7 +4,7 @@
                     :dbl-click-splitter="false"
                     @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()" @resize="onPanelResized()">
 
-            <pane v-bind:size="editAndMessageSize">
+            <pane v-bind:size="editAndMessagesSize">
                 <splitpanes ref="splInner" horizontal @resize="onPanelResized()">
                     <pane v-bind:size="messagesSize">
 
@@ -117,18 +117,12 @@
     import 'splitpanes/dist/splitpanes.css';
     import {getStoredVideoPosition, VIDEO_POSITION_ON_THE_TOP} from "@/localStore";
 
-    const defaultDesktopWithoutVideo = [80, 20];
-    const defaultDesktopWithVideo = [30, 50, 20];
-
-    const defaultMobileWithoutVideo = [100];
-    const defaultMobileWithVideo = [40, 60];
-
-    const KEY_DESKTOP_TOP_WITH_VIDEO_PANELS = 'desktopTopWithVideo';
-    const KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS = 'desktopTopWithoutVideo'
-    const KEY_DESKTOP_SIDE_WITH_VIDEO_PANELS = 'desktopSideWithVideo';
-    const KEY_DESKTOP_SIDE_WITHOUT_VIDEO_PANELS = 'desktopSideWithoutVideo'
-    const KEY_MOBILE_WITH_VIDEO_PANELS = 'mobileWithVideo';
-    const KEY_MOBILE_WITHOUT_VIDEO_PANELS = 'mobileWithoutVideo'
+    const KEY_DESKTOP_TOP_WITH_VIDEO_PANELS = 'desktopTopWithVideo2';
+    const KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS = 'desktopTopWithoutVideo2'
+    const KEY_DESKTOP_SIDE_WITH_VIDEO_PANELS = 'desktopSideWithVideo2';
+    const KEY_DESKTOP_SIDE_WITHOUT_VIDEO_PANELS = 'desktopSideWithoutVideo2'
+    const KEY_MOBILE_WITH_VIDEO_PANELS = 'mobileWithVideo2';
+    const KEY_MOBILE_WITHOUT_VIDEO_PANELS = 'mobileWithoutVideo2'
 
 
     let writingUsersTimerId;
@@ -142,6 +136,10 @@
             participantIds:[],
             participants:[],
         }
+    }
+
+    const emptyStoredPanes = () => {
+        return {}
     }
 
     export default {
@@ -164,67 +162,23 @@
                 return this.$route.params.id
             },
             ...mapGetters({currentUser: GET_USER}),
-            videoSize() {
-                let defaultWithVideo;
-                let defaultWithoutVideo;
-                if (!this.isMobile()) {
-                    defaultWithVideo = defaultDesktopWithVideo;
-                    defaultWithoutVideo = defaultDesktopWithoutVideo;
-                } else {
-                    defaultWithVideo = defaultMobileWithVideo;
-                    defaultWithoutVideo = defaultMobileWithoutVideo;
-                }
 
-                let stored = this.getStored();
-                if (!stored) {
-                    this.saveToStored(this.isAllowedVideo() ? defaultWithVideo : defaultWithoutVideo)
-                    stored = this.getStored();
-                }
-                if (this.isAllowedVideo()) {
-                    return stored[0]
-                } else {
-                    console.error("Unable to get video size if video is not enabled");
-                    return 0
-                }
+            videoSize() {
+                const stored = this.readFromStore();
+                return stored.video;
             },
             messagesSize() {
-                let defaultWithVideo;
-                let defaultWithoutVideo;
-                if (!this.isMobile()) {
-                    defaultWithVideo = defaultDesktopWithVideo;
-                    defaultWithoutVideo = defaultDesktopWithoutVideo;
-                } else {
-                    defaultWithVideo = defaultMobileWithVideo;
-                    defaultWithoutVideo = defaultMobileWithoutVideo;
-                }
-
-                let stored = this.getStored();
-                if (!stored) {
-                    this.saveToStored(this.isAllowedVideo() ? defaultWithVideo : defaultWithoutVideo)
-                    stored = this.getStored();
-                }
-                if (this.isAllowedVideo()) {
-                    return stored[1]
-                } else {
-                    return stored[0]
-                }
+                const stored = this.readFromStore();
+                return stored.messages;
             },
             editSize() {
                 // not need here because it's not used in mobile
-
-                let stored = this.getStored();
-                if (!stored) {
-                    this.saveToStored(this.isAllowedVideo() ? defaultDesktopWithVideo : defaultDesktopWithoutVideo)
-                    stored = this.getStored();
-                }
-                if (this.isAllowedVideo()) {
-                    return stored[2]
-                } else {
-                    return stored[1]
-                }
+                const stored = this.getStored();
+                return stored.edit;
             },
-            editAndMessageSize() {
-
+            editAndMessagesSize() {
+                const stored = this.getStored();
+                return stored.editAndMessages;
             }
         },
         methods: {
@@ -247,12 +201,12 @@
 
                 const mbItem = this.isAllowedVideo() ? localStorage.getItem(keyWithVideo) : localStorage.getItem(keyWithoutVideo);
                 if (!mbItem) {
-                    return null;
+                    return emptyStoredPanes();
                 } else {
                     return JSON.parse(mbItem);
                 }
             },
-            saveToStored(arr) {
+            saveToStored(obj) {
                 let keyWithVideo;
                 let keyWithoutVideo;
                 if (!this.isMobile()) {
@@ -270,9 +224,9 @@
                 }
 
                 if (this.isAllowedVideo()) {
-                    localStorage.setItem(keyWithVideo, JSON.stringify(arr));
+                    localStorage.setItem(keyWithVideo, JSON.stringify(obj));
                 } else {
-                    localStorage.setItem(keyWithoutVideo, JSON.stringify(arr));
+                    localStorage.setItem(keyWithoutVideo, JSON.stringify(obj));
                 }
             },
 
@@ -283,13 +237,7 @@
                 if (stored) {
                     console.log("Restoring from storage", stored);
                     this.$nextTick(() => {
-                        if (this.$refs.splOuter) {
-                            this.$refs.splOuter.panes[0].size = stored[0]; // video
-                            this.$refs.splOuter.panes[1].size = stored[1]; // messages
-                            if (this.$refs.splOuter.panes[2]) {
-                                this.$refs.splOuter.panes[2].size = stored[2]; // edit
-                            }
-                        }
+                        this.restorePanelsSize(stored);
                     })
                 } else {
                     console.error("Store is null");
@@ -301,13 +249,7 @@
                 if (stored) {
                     console.log("Restoring from storage", stored);
                     this.$nextTick(() => {
-                        if (this.$refs.splOuter) {
-                            this.$refs.splOuter.panes[0].size = stored[0]; // messages
-                            if (this.$refs.splOuter.panes[1]) {
-                                this.$refs.splOuter.panes[1].size = stored[1]; // edit
-                            }
-                        }
-
+                        this.restorePanelsSize(stored);
                     })
                 } else {
                     console.error("Store is null");
@@ -315,10 +257,41 @@
             },
 
             onPanelResized() {
+                this.saveToStored(this.prepareForStore());
+            },
+
+            readFromStore() {
+                let stored = this.getStored();
+                if (!stored) {
+                    this.saveToStored(emptyStoredPanes())
+                    stored = this.getStored();
+                }
+                return stored
+            },
+            prepareForStore() {
                 const outerPaneSizes = this.$refs.splOuter.panes.map(i => i.size);
                 const innerPaneSizes = this.$refs.splInner.panes.map(i => i.size);
-                console.log("On panel resized", outerPaneSizes, innerPaneSizes);
-                this.saveToStored([...outerPaneSizes, ...innerPaneSizes]);
+                const ret = {
+                    editAndMessages: outerPaneSizes[0],
+                    messages: innerPaneSizes[0],
+                    edit: innerPaneSizes[1]
+                };
+                if (outerPaneSizes[1]) {
+                    ret.video = outerPaneSizes[1];
+                }
+                return ret
+            },
+            restorePanelsSize(stored) {
+                if (this.$refs.splOuter) {
+                    this.$refs.splOuter.panes[0].size = stored.editAndMessages;
+                    if (this.$refs.splOuter.panes[1]) {
+                        this.$refs.splOuter.panes[1].size = stored.video;
+                    }
+                }
+                if (this.$refs.splInner) {
+                    this.$refs.splInner.panes[0].size = stored.messages;
+                    this.$refs.splInner.panes[1].size = stored.edit;
+                }
             },
 
             isAllowedVideo() {
