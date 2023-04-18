@@ -125,6 +125,19 @@ export default {
         },
         async upload() {
             this.uploading = true;
+
+            let totalSize = 0;
+            for (const file of this.files) {
+                totalSize += file.size;
+            }
+
+            try {
+                await this.checkLimits(totalSize)
+            } catch (errMsg) {
+                this.uploading = false;
+                return Promise.resolve();
+            }
+
             this.cancelSource = CancelToken.source();
             const config = {
                 // headers: { 'content-type': 'multipart/form-data' },
@@ -133,10 +146,8 @@ export default {
             }
             console.log("Sending file to storage");
 
-            let totalSize = 0;
             const urlResponses = [];
             for (const file of this.files) {
-                totalSize += file.size;
                 const response = await axios.put(`/api/storage/${this.chatId}/url`, {
                     fileItemUuid: this.fileItemUuid, // nullable
                     fileSize: file.size,
@@ -149,13 +160,6 @@ export default {
                     file: file,
                     existingCount: response.data.existingCount,
                 });
-            }
-
-            try {
-                await this.checkLimits(totalSize)
-            } catch (errMsg) {
-                this.uploading = false;
-                return Promise.resolve();
             }
 
             for (const [index, presignedUrlResponse] of urlResponses.entries()) {
