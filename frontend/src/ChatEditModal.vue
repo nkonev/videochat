@@ -82,6 +82,7 @@
                                        :aspect-ratio="16/9"
                                        min-width="200"
                                        min-height="200"
+                                       max-height="300"
                                        @click="openAvatarDialog"
                                 >
                                 </v-img>
