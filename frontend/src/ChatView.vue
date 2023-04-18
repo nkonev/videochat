@@ -282,6 +282,7 @@
                 return ret
             },
             restorePanelsSize(stored) {
+                // TODO it is non-mobile, AUTO or SIDE
                 if (this.$refs.splOuter) {
                     this.$refs.splOuter.panes[0].size = stored.editAndMessages;
                     if (this.$refs.splOuter.panes[1]) {
