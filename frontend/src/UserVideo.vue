@@ -177,11 +177,14 @@ export default {
 
 <style lang="stylus" scoped>
     .video-container-element {
-        height 100%
+        // height 100%
+        width 100%
         position relative
         display flex
         flex-direction column
         align-items: baseline;
+        margin-top auto
+        margin-bottom auto
         //width: fit-content
         //block-size: fit-content
         //box-sizing: content-box
@@ -199,6 +202,7 @@ export default {
         // object-fit: contain;
         //box-sizing: border-box;
         height 100% !important
+        width: 100% !important
         z-index 2
     }
 

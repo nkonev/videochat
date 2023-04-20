@@ -479,16 +479,17 @@ export default {
 <style lang="stylus" scoped>
 #video-container {
     display: flex;
-    flex-direction: row;
     overflow-x: scroll;
-    overflow-y: hidden;
-    scrollbar-width: none;
+    overflow-y: scroll;
+    scrollbar-width: auto;
+    background black
     //scroll-snap-align width
     //scroll-padding 0
     height 100%
     width 100%
     //object-fit: contain;
     //box-sizing: border-box
+    flex-direction: column;
 }
 
 </style>
