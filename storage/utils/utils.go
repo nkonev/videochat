@@ -176,7 +176,9 @@ type Tuple struct {
 func GetDotExtensionStr(fileName string) string {
 	split := strings.Split(fileName, ".")
 	if len(split) > 1 {
-		return "." + split[len(split)-1]
+		ext := split[len(split)-1]
+		ext = strings.ToLower(ext)
+		return "." + ext
 	} else {
 		return ""
 	}
@@ -194,12 +196,22 @@ func SetExtension(fileName string, newExtension string) string {
 
 func IsImage(minioKey string) bool {
 	imageTypes := viper.GetStringSlice("types.image")
-	return StringContains(imageTypes, GetDotExtensionStr(minioKey))
+	imageTypes2 := toLower(imageTypes)
+	return StringContains(imageTypes2, GetDotExtensionStr(minioKey))
 }
 
 func IsVideo(minioKey string) bool {
 	videoTypes := viper.GetStringSlice("types.video")
-	return StringContains(videoTypes, GetDotExtensionStr(minioKey))
+	videoTypes2 := toLower(videoTypes)
+	return StringContains(videoTypes2, GetDotExtensionStr(minioKey))
+}
+
+func toLower(imageTypes []string) []string {
+	var imageTypes2 []string = []string{}
+	for _, it := range imageTypes {
+		imageTypes2 = append(imageTypes2, strings.ToLower(it))
+	}
+	return imageTypes2
 }
 
 func GetType(aDto interface{}) string {
