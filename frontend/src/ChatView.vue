@@ -5,7 +5,11 @@
                     @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()" @resize="onPanelResized()">
 
             <pane v-bind:size="editAndMessagesSize">
-                <splitpanes ref="splInner" horizontal @resize="onPanelResized()">
+                <splitpanes ref="splInner" horizontal @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()"  @resize="onPanelResized()">
+                    <pane v-if="videoIsOnTop() && isAllowedVideo()" id="videoBlock" min-size="15" v-bind:size="videoSize">
+                        <ChatVideo :chatDto="chatDto"/>
+                    </pane>
+
                     <pane v-bind:size="messagesSize">
 
                         <div v-if="pinnedPromoted" class="pinned-promoted">
@@ -40,7 +44,7 @@
                     </pane>
                 </splitpanes>
             </pane>
-            <pane v-if="isAllowedVideo()" id="videoBlock" min-size="15" v-bind:size="videoSize">
+            <pane v-if="videoIsAtSide() && isAllowedVideo()" id="videoBlock" min-size="15" v-bind:size="videoSize">
                 <ChatVideo :chatDto="chatDto"/>
             </pane>
 
@@ -115,7 +119,7 @@
     import debounce from "lodash/debounce";
     import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
     import 'splitpanes/dist/splitpanes.css';
-    import {getStoredVideoPosition, VIDEO_POSITION_ON_THE_TOP} from "@/localStore";
+    import {getStoredVideoPosition, VIDEO_POSITION_ON_THE_TOP, VIDEO_POSITION_SIDE} from "@/localStore";
 
     const KEY_DESKTOP_TOP_WITH_VIDEO_PANELS = 'desktopTopWithVideo2';
     const KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS = 'desktopTopWithoutVideo2'
@@ -186,8 +190,7 @@
                 let keyWithVideo;
                 let keyWithoutVideo;
                 if (!this.isMobile()) {
-                    const videoPosition = getStoredVideoPosition();
-                    if (videoPosition == VIDEO_POSITION_ON_THE_TOP) {
+                    if (this.videoIsOnTop()) {
                         keyWithVideo = KEY_DESKTOP_TOP_WITH_VIDEO_PANELS;
                         keyWithoutVideo = KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS;
                     } else {
@@ -210,8 +213,7 @@
                 let keyWithVideo;
                 let keyWithoutVideo;
                 if (!this.isMobile()) {
-                    const videoPosition = getStoredVideoPosition();
-                    if (videoPosition == VIDEO_POSITION_ON_THE_TOP) {
+                    if (this.videoIsOnTop()) {
                         keyWithVideo = KEY_DESKTOP_TOP_WITH_VIDEO_PANELS;
                         keyWithoutVideo = KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS;
                     } else {
@@ -233,27 +235,18 @@
 
             onPanelAdd() {
                 console.log("On panel add", this.$refs.splOuter.panes);
-                const stored = this.getStored();
-                if (stored) {
-                    console.log("Restoring from storage", stored);
-                    this.$nextTick(() => {
-                        this.restorePanelsSize(stored);
-                    })
-                } else {
-                    console.error("Store is null");
-                }
+                this.$nextTick(() => {
+                    const stored = this.getStored();
+                    this.restorePanelsSize(stored);
+                })
+
             },
             onPanelRemove() {
                 console.log("On panel removed", this.$refs.splOuter.panes);
-                const stored = this.getStored();
-                if (stored) {
-                    console.log("Restoring from storage", stored);
-                    this.$nextTick(() => {
-                        this.restorePanelsSize(stored);
-                    })
-                } else {
-                    console.error("Store is null");
-                }
+                this.$nextTick(() => {
+                    const stored = this.getStored();
+                    this.restorePanelsSize(stored);
+                })
             },
 
             onPanelResized() {
@@ -271,32 +264,66 @@
             prepareForStore() {
                 const outerPaneSizes = this.$refs.splOuter.panes.map(i => i.size);
                 const innerPaneSizes = this.$refs.splInner.panes.map(i => i.size);
-                const ret = {
-                    editAndMessages: outerPaneSizes[0],
-                    messages: innerPaneSizes[0],
-                    edit: innerPaneSizes[1]
-                };
-                if (outerPaneSizes[1]) {
-                    ret.video = outerPaneSizes[1];
+                if (this.videoIsOnTop()) {
+                    if (innerPaneSizes.length == 3) {
+                        return {
+                            video: innerPaneSizes[0],
+                            messages: innerPaneSizes[1],
+                            edit: innerPaneSizes[2]
+                        };
+                    } else {
+                        return {
+                            messages: innerPaneSizes[0],
+                            edit: innerPaneSizes[1]
+                        };
+                    }
+                } else { // side
+                    const ret = {
+                        editAndMessages: outerPaneSizes[0],
+                        messages: innerPaneSizes[0],
+                        edit: innerPaneSizes[1]
+                    };
+                    if (outerPaneSizes[1]) {
+                        ret.video = outerPaneSizes[1];
+                    }
+                    return ret
                 }
-                return ret
             },
             restorePanelsSize(stored) {
-                // TODO it is non-mobile, AUTO or SIDE
-                if (this.$refs.splOuter) {
-                    this.$refs.splOuter.panes[0].size = stored.editAndMessages;
-                    if (this.$refs.splOuter.panes[1]) {
-                        this.$refs.splOuter.panes[1].size = stored.video;
+                console.log("Restoring from", stored);
+                if (this.videoIsOnTop()) {
+                    if (this.$refs.splInner.panes.length == 3) {
+                        this.$refs.splInner.panes[0].size = stored.video;
+                        this.$refs.splInner.panes[1].size = stored.messages;
+                        this.$refs.splInner.panes[2].size = stored.edit;
+                    } else {
+                        this.$refs.splInner.panes[0].size = stored.messages;
+                        this.$refs.splInner.panes[1].size = stored.edit;
                     }
-                }
-                if (this.$refs.splInner) {
-                    this.$refs.splInner.panes[0].size = stored.messages;
-                    this.$refs.splInner.panes[1].size = stored.edit;
+                } else { // side
+                    if (this.$refs.splOuter) {
+                        this.$refs.splOuter.panes[0].size = stored.editAndMessages;
+                        if (this.$refs.splOuter.panes[1]) {
+                            this.$refs.splOuter.panes[1].size = stored.video;
+                        }
+                    }
+                    if (this.$refs.splInner) {
+                        this.$refs.splInner.panes[0].size = stored.messages;
+                        this.$refs.splInner.panes[1].size = stored.edit;
+                    }
                 }
             },
 
             isAllowedVideo() {
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
+            },
+
+            videoIsOnTop() {
+                return getStoredVideoPosition() == VIDEO_POSITION_ON_THE_TOP;
+            },
+
+            videoIsAtSide() {
+                return getStoredVideoPosition() == VIDEO_POSITION_SIDE;
             },
 
             fetchAndSetChat() {
