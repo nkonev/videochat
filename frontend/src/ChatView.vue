@@ -119,7 +119,12 @@
     import debounce from "lodash/debounce";
     import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
     import 'splitpanes/dist/splitpanes.css';
-    import {getStoredVideoPosition, VIDEO_POSITION_ON_THE_TOP, VIDEO_POSITION_SIDE} from "@/localStore";
+    import {
+        getStoredVideoPosition,
+        VIDEO_POSITION_AUTO,
+        VIDEO_POSITION_ON_THE_TOP,
+        VIDEO_POSITION_SIDE
+    } from "@/localStore";
 
     const KEY_DESKTOP_TOP_WITH_VIDEO_PANELS = 'desktopTopWithVideo2';
     const KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS = 'desktopTopWithoutVideo2'
@@ -319,11 +324,16 @@
             },
 
             videoIsOnTop() {
-                return getStoredVideoPosition() == VIDEO_POSITION_ON_THE_TOP;
+                const stored = getStoredVideoPosition();
+                if (stored == VIDEO_POSITION_AUTO) {
+                    return this.isMobile()
+                } else {
+                    return getStoredVideoPosition() == VIDEO_POSITION_ON_THE_TOP;
+                }
             },
 
             videoIsAtSide() {
-                return getStoredVideoPosition() == VIDEO_POSITION_SIDE;
+                return !this.videoIsOnTop();
             },
 
             fetchAndSetChat() {
