@@ -86,14 +86,6 @@
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
             <template v-if="showSearchButton || !isMobile()">
-                <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
-                <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
-                <v-btn v-if="showRecordStartButton" icon @click="startRecord()" :loading="initializingStaringVideoRecord" :title="$vuetify.lang.t('$vuetify.start_record')">
-                    <v-icon>mdi-record-rec</v-icon>
-                </v-btn>
-                <v-btn v-if="showRecordStopButton" icon @click="stopRecord()" :loading="initializingStoppingVideoRecord" :title="$vuetify.lang.t('$vuetify.stop_record')">
-                    <v-icon color="red">mdi-record-rec</v-icon>
-                </v-btn>
                 <v-badge
                     v-if="showCallButton || showHangButton"
                     :content="videoChatUsersCount"
@@ -110,6 +102,14 @@
                     </v-btn>
                 </v-badge>
 
+                <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
+                <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
+                <v-btn v-if="showRecordStartButton" icon @click="startRecord()" :loading="initializingStaringVideoRecord" :title="$vuetify.lang.t('$vuetify.start_record')">
+                    <v-icon>mdi-record-rec</v-icon>
+                </v-btn>
+                <v-btn v-if="showRecordStopButton" icon @click="stopRecord()" :loading="initializingStoppingVideoRecord" :title="$vuetify.lang.t('$vuetify.stop_record')">
+                    <v-icon color="red">mdi-record-rec</v-icon>
+                </v-btn>
                 <v-spacer></v-spacer>
                 <img v-if="chatAvatar" class="v-avatar chat-avatar" :src="chatAvatar"/>
                 <v-toolbar-title color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked" :style="{'cursor': chatId ? 'pointer' : 'default'}">
