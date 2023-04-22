@@ -1,11 +1,11 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
-        <splitpanes ref="splOuter" :class="['default-theme', this.isAllowedVideo() ? 'panes3' : 'panes2']" style="height: 100%"
+        <splitpanes ref="splOuter" class="default-theme" style="height: 100%"
                     :dbl-click-splitter="false"
                     @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()" @resize="onPanelResized()">
 
             <pane v-bind:size="editAndMessagesSize">
-                <splitpanes ref="splInner" horizontal @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()"  @resize="onPanelResized()">
+                <splitpanes ref="splInner" class="default-theme" horizontal @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()"  @resize="onPanelResized()">
                     <pane v-if="videoIsOnTop() && isAllowedVideo()" id="videoBlock" min-size="15" v-bind:size="videoSize">
                         <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()" />
                     </pane>
