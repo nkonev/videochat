@@ -1,5 +1,5 @@
 <template>
-    <v-col cols="12" class="ma-0 pa-0" id="video-container">
+    <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoIsOnTop ? 'video-container-position-top' : 'video-container-position-side'">
     </v-col>
 </template>
 
@@ -53,7 +53,7 @@ const last = 'last';
 
 export default {
     mixins: [videoServerSettingsMixin(), queryMixin()],
-    props: ['chatDto'],
+    props: ['chatDto', 'videoIsOnTop'],
     data() {
         return {
             room: null,
@@ -73,7 +73,8 @@ export default {
             const component = new UserVideoClass({vuetify: vuetify,
                 propsData: {
                     id: videoTagId,
-                    localVideoProperties: localVideoProperties
+                    localVideoProperties: localVideoProperties,
+                    videoIsOnTop: this.videoIsOnTop,
                 }
             });
             component.$mount();
@@ -480,16 +481,27 @@ export default {
 #video-container {
     display: flex;
     overflow-x: scroll;
-    overflow-y: scroll;
-    scrollbar-width: auto;
-    background black
     //scroll-snap-align width
     //scroll-padding 0
     height 100%
     width 100%
     //object-fit: contain;
     //box-sizing: border-box
+}
+
+.video-container-position-top {
+    flex-direction: row;
+    overflow-y: hidden;
+    scrollbar-width: none;
+
+}
+
+.video-container-position-side {
+    overflow-y: scroll;
+    scrollbar-width: auto;
+    background black
     flex-direction: column;
 }
+
 
 </style>

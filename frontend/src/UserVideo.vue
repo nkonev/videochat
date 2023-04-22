@@ -1,5 +1,5 @@
 <template>
-    <div class="video-container-element" @mouseenter="showControls=true" @mouseleave="showControls=false">
+    <div class="video-container-element" :class="videoIsOnTop ? 'video-container-element-position-top' : 'video-container-element-position-side'" @mouseenter="showControls=true" @mouseleave="showControls=false">
         <div class="video-container-element-control" v-show="showControls">
             <v-btn v-if="isLocal && audioPublication != null" icon @click="doMuteAudio(!audioMute); muteAudioBlink=false" :title="audioMute ? $vuetify.lang.t('$vuetify.unmute_audio') : $vuetify.lang.t('$vuetify.mute_audio')"><v-icon large :class="['video-container-element-control-item', muteAudioBlink && audioMute ? 'info-blink' : '']">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
             <v-btn v-if="isLocal && videoPublication != null" icon @click="doMuteVideo(!videoMute)" :title="videoMute ? $vuetify.lang.t('$vuetify.unmute_video') : $vuetify.lang.t('$vuetify.mute_video')"><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
@@ -7,8 +7,8 @@
             <v-btn v-if="isLocal" icon @click="onClose()" :title="$vuetify.lang.t('$vuetify.close')"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
         <span v-if="!isLocal && avatarIsSet" class="video-container-element-hint">{{ $vuetify.lang.t('$vuetify.video_is_not_shown') }}</span>
-        <img v-show="avatarIsSet && videoMute" class="video-element" :src="avatar"/>
-        <video v-show="!videoMute || !avatarIsSet" class="video-element" :id="id" autoPlay playsInline ref="videoRef"/>
+        <img v-show="avatarIsSet && videoMute" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :src="avatar"/>
+        <video v-show="!videoMute || !avatarIsSet" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :id="id" autoPlay playsInline ref="videoRef"/>
         <p @click="showControls=!showControls" v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
@@ -49,6 +49,9 @@ export default {
         },
         localVideoProperties: {
             type: Object
+        },
+        videoIsOnTop: {
+            type: Boolean
         }
     },
 
@@ -177,17 +180,23 @@ export default {
 
 <style lang="stylus" scoped>
     .video-container-element {
-        // height 100%
-        width 100%
         position relative
         display flex
         flex-direction column
         align-items: baseline;
-        margin-top auto
-        margin-bottom auto
         //width: fit-content
         //block-size: fit-content
         //box-sizing: content-box
+    }
+
+    .video-container-element-position-top {
+        height 100%
+    }
+
+    .video-container-element-position-side {
+        width 100%
+        margin-top auto
+        margin-bottom auto
     }
 
     .video-container-element:nth-child(even) {
@@ -202,8 +211,15 @@ export default {
         // object-fit: contain;
         //box-sizing: border-box;
         height 100% !important
-        width: 100% !important
         z-index 2
+    }
+
+    .video-element-top {
+
+    }
+
+    .video-element-side {
+        width: 100% !important
     }
 
     .video-container-element-control {
