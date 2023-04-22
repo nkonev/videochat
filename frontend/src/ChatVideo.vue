@@ -350,7 +350,7 @@ export default {
             if (publication.trackName.startsWith("track_video__screen_true")) {
                 return second
             }
-            return last
+            return first
         },
 
         async stopRoom() {
