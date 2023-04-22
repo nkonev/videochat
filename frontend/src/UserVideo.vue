@@ -210,12 +210,10 @@ export default {
     .video-element {
         // object-fit: contain;
         //box-sizing: border-box;
-        height 100% !important
+        height: 100% !important
+        min-width: 100% !important
+        object-fit: cover;
         z-index 2
-    }
-
-    .video-element-top {
-
     }
 
     .video-element-side {
