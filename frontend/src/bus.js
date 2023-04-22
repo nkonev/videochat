@@ -59,3 +59,5 @@ export const OPEN_RESEND_TO_MODAL = "openSendTo";
 export const OPEN_PINNED_MESSAGES_MODAL = "openPinnedMessagesModal";
 export const PINNED_MESSAGE_PROMOTED = "pinnedMessagePromoted";
 export const PINNED_MESSAGE_UNPROMOTED = "pinnedMessageUnpromoted";
+export const VIDEO_OPENED = "videoOpened";
+export const VIDEO_CLOSED = "videoClosed";

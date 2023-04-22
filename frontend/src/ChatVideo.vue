@@ -37,7 +37,7 @@ import {
 import bus, {
     ADD_SCREEN_SOURCE,
     ADD_VIDEO_SOURCE,
-    REQUEST_CHANGE_VIDEO_PARAMETERS, VIDEO_DIAL_STATUS_CHANGED,
+    REQUEST_CHANGE_VIDEO_PARAMETERS, VIDEO_CLOSED, VIDEO_DIAL_STATUS_CHANGED, VIDEO_OPENED,
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus";
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
@@ -435,6 +435,7 @@ export default {
         }),
     },
     async mounted() {
+        bus.$emit(VIDEO_OPENED);
         this.chatId = this.chatDto.id;
         this.participantIds = this.chatDto.participantIds;
 
@@ -457,6 +458,7 @@ export default {
             this.videoContainerDiv = null;
             this.inRestarting = false;
         });
+        bus.$emit(VIDEO_CLOSED);
 
         this.$store.commit(SET_SHOW_CALL_BUTTON, true);
         this.$store.commit(SET_SHOW_HANG_BUTTON, false);

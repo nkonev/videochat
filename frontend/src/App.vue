@@ -260,7 +260,7 @@
         ADD_SCREEN_SOURCE,
         VIDEO_RECORDING_CHANGED,
         OPEN_NOTIFICATIONS_DIALOG,
-        PROFILE_SET, WEBSOCKET_RESTORED, OPEN_PINNED_MESSAGES_MODAL,
+        PROFILE_SET, WEBSOCKET_RESTORED, OPEN_PINNED_MESSAGES_MODAL, VIDEO_OPENED, VIDEO_CLOSED,
     } from "./bus";
     import ChatEditModal from "./ChatEditModal";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -298,6 +298,7 @@
         data () {
             return {
                 drawer: this.$vuetify.breakpoint.lgAndUp,
+                prevDrawer: false,
                 invitedVideoChatId: 0,
                 invitedVideoChatName: null,
                 invitedVideoChatAlert: false,
@@ -460,6 +461,13 @@
             onWsRestored() {
                 this.showWebsocketRestored = true;
             },
+            onVideoOpened() {
+                this.prevDrawer = this.drawer;
+                this.drawer = false;
+            },
+            onVideoClosed() {
+                this.drawer = this.prevDrawer;
+            },
             displayChatFiles() {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId});
             },
@@ -568,6 +576,8 @@
             bus.$on(PROFILE_SET, this.onProfileSet);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(WEBSOCKET_RESTORED, this.onWsRestored);
+            bus.$on(VIDEO_OPENED, this.onVideoOpened);
+            bus.$on(VIDEO_CLOSED, this.onVideoClosed);
 
             this.$store.dispatch(FETCH_AVAILABLE_OAUTH2_PROVIDERS).then(() => {
                 this.$store.dispatch(FETCH_USER_PROFILE);
@@ -583,6 +593,8 @@
             bus.$off(PROFILE_SET, this.onProfileSet);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(WEBSOCKET_RESTORED, this.onWsRestored);
+            bus.$off(VIDEO_OPENED, this.onVideoOpened);
+            bus.$off(VIDEO_CLOSED, this.onVideoClosed);
         },
     }
 </script>
