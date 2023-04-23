@@ -188,7 +188,7 @@ export default {
             track.detach();
             this.removeComponent(participant.identity, track);
 
-            this.refreshLocalMicrophoneButtons();
+            this.refreshLocalMicrophoneAppBarButtons();
         },
         removeComponent(userIdentity, track) {
             for (const component of this.userVideoComponents.getByUser(userIdentity)) {
@@ -305,7 +305,7 @@ export default {
                         const participantTracks = this.room.localParticipant.getTracks();
                         this.drawNewComponentOrInsertIntoExisting(this.room.localParticipant, participantTracks, first, localVideoProperties);
 
-                        this.refreshLocalMicrophoneButtons();
+                        this.refreshLocalMicrophoneAppBarButtons();
                     } catch (e) {
                         this.setError(e, "Error during reacting on local track published");
                     }
@@ -363,15 +363,17 @@ export default {
             }
             return first
         },
-        refreshLocalMicrophoneButtons() {
-            const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity);
-            if (onlyOneLocalComponentWithAudio) {
-                this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, true);
-                const muted = onlyOneLocalComponentWithAudio.audioMute;
-                this.refreshLocalMutedInAppBar(muted);
-            } else {
-                this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, false);
-            }
+        refreshLocalMicrophoneAppBarButtons() {
+            setTimeout(()=> {
+                const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity);
+                if (onlyOneLocalComponentWithAudio) {
+                    this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, true);
+                    const muted = onlyOneLocalComponentWithAudio.audioMute;
+                    this.refreshLocalMutedInAppBar(muted);
+                } else {
+                    this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, false);
+                }
+            }, 1)
         },
         onlyOneLocalTrackWithMicrophone(userIdentity) {
             const userComponents = this.userVideoComponents.getByUser(userIdentity);
