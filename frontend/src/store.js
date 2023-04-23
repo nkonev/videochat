@@ -66,6 +66,8 @@ export const GET_SHOW_MICROPHONE_ON_BUTTON = 'getShowMicroOn';
 export const SET_SHOW_MICROPHONE_ON_BUTTON = 'setShowMicroOn';
 export const GET_SHOW_MICROPHONE_OFF_BUTTON = 'getShowMicroOff';
 export const SET_SHOW_MICROPHONE_OFF_BUTTON = 'setShowMicroOff';
+export const GET_CAN_SHOW_MICROPHONE_BUTTON = 'getCanShowMicro';
+export const SET_CAN_SHOW_MICROPHONE_BUTTON = 'setCanShowMicro';
 
 const store = new Vuex.Store({
     state: {
@@ -99,6 +101,7 @@ const store = new Vuex.Store({
         tetATet: false,
         showMicrophoneOnButton: false,
         showMicrophoneOffButton: false,
+        canShowMicrophoneButton: false,
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -190,6 +193,9 @@ const store = new Vuex.Store({
         [SET_SHOW_MICROPHONE_OFF_BUTTON](state, payload) {
             state.showMicrophoneOffButton = payload;
         },
+        [SET_CAN_SHOW_MICROPHONE_BUTTON](state, payload) {
+            state.canShowMicrophoneButton = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -269,6 +275,9 @@ const store = new Vuex.Store({
         },
         [GET_SHOW_MICROPHONE_OFF_BUTTON](state) {
             return state.showMicrophoneOffButton;
+        },
+        [GET_CAN_SHOW_MICROPHONE_BUTTON](state) {
+            return state.canShowMicrophoneButton;
         },
     },
     actions: {

@@ -102,8 +102,10 @@
                     </v-btn>
                 </v-badge>
 
-                <v-btn v-if="showHangButton && !isMobile() && showMicrophoneOnButton" icon @click="offMicrophone()" :title="$vuetify.lang.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
-                <v-btn v-if="showHangButton && !isMobile() && showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.lang.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
+                <template v-if="canShowMicrophoneButton">
+                    <v-btn v-if="showHangButton && !isMobile() && showMicrophoneOnButton" icon @click="offMicrophone()" :title="$vuetify.lang.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
+                    <v-btn v-if="showHangButton && !isMobile() && showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.lang.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
+                </template>
 
                 <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
                 <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
@@ -246,7 +248,11 @@
         UNSET_NOTIFICATIONS,
         FETCH_AVAILABLE_OAUTH2_PROVIDERS,
         GET_SEARCH_NAME,
-        GET_SHOULD_PHONE_BLINK, GET_TET_A_TET, GET_SHOW_MICROPHONE_ON_BUTTON, GET_SHOW_MICROPHONE_OFF_BUTTON
+        GET_SHOULD_PHONE_BLINK,
+        GET_TET_A_TET,
+        GET_SHOW_MICROPHONE_ON_BUTTON,
+        GET_SHOW_MICROPHONE_OFF_BUTTON,
+        GET_CAN_SHOW_MICROPHONE_BUTTON
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -573,6 +579,7 @@
                 tetATet: GET_TET_A_TET,
                 showMicrophoneOnButton: GET_SHOW_MICROPHONE_ON_BUTTON,
                 showMicrophoneOffButton: GET_SHOW_MICROPHONE_OFF_BUTTON,
+                canShowMicrophoneButton: GET_CAN_SHOW_MICROPHONE_BUTTON,
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return this.currentUser.avatar;

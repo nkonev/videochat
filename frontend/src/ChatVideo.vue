@@ -27,7 +27,7 @@ import store, {
     SET_SHOW_RECORD_STOP_BUTTON,
     GET_CAN_MAKE_RECORD,
     GET_USER,
-    SET_SHOW_MICROPHONE_ON_BUTTON, SET_SHOW_MICROPHONE_OFF_BUTTON
+    SET_SHOW_MICROPHONE_ON_BUTTON, SET_SHOW_MICROPHONE_OFF_BUTTON, SET_CAN_SHOW_MICROPHONE_BUTTON
 } from "@/store";
 import {
     defaultAudioMute,
@@ -366,11 +366,11 @@ export default {
         refreshLocalMicrophoneButtons() {
             const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity);
             if (onlyOneLocalComponentWithAudio) {
+                this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, true);
                 const muted = onlyOneLocalComponentWithAudio.audioMute;
                 this.refreshLocalMutedInAppBar(muted);
             } else {
-                this.$store.commit(SET_SHOW_MICROPHONE_ON_BUTTON, false);
-                this.$store.commit(SET_SHOW_MICROPHONE_OFF_BUTTON, false);
+                this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, false);
             }
         },
         onlyOneLocalTrackWithMicrophone(userIdentity) {
@@ -383,15 +383,14 @@ export default {
             }
         },
         onLocalMicrophoneMutedByAppBarButton(value) {
-            console.log("onLocalMicrophoneMutedByAppBarButton", value);
             const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity)
             if (onlyOneLocalComponentWithAudio) {
                 onlyOneLocalComponentWithAudio.doMuteAudio(value);
                 const muted = onlyOneLocalComponentWithAudio.audioMute;
                 this.refreshLocalMutedInAppBar(muted);
             } else {
-                this.$store.commit(SET_SHOW_MICROPHONE_ON_BUTTON, false);
-                this.$store.commit(SET_SHOW_MICROPHONE_OFF_BUTTON, false);
+                // just for case
+                this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, false);
             }
         },
 
