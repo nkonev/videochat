@@ -1,7 +1,7 @@
 <template>
     <div class="video-container-element" :class="videoIsOnTop ? 'video-container-element-position-top' : 'video-container-element-position-side'" @mouseenter="showControls=true" @mouseleave="showControls=false">
         <div class="video-container-element-control" v-show="showControls">
-            <v-btn v-if="isLocal && audioPublication != null" icon @click="doMuteAudio(!audioMute); muteAudioBlink=false" :title="audioMute ? $vuetify.lang.t('$vuetify.unmute_audio') : $vuetify.lang.t('$vuetify.mute_audio')"><v-icon large :class="['video-container-element-control-item', muteAudioBlink && audioMute ? 'info-blink' : '']">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
+            <v-btn v-if="isLocal && audioPublication != null" icon @click="doMuteAudio(!audioMute)" :title="audioMute ? $vuetify.lang.t('$vuetify.unmute_audio') : $vuetify.lang.t('$vuetify.mute_audio')"><v-icon large :class="['video-container-element-control-item', muteAudioBlink && audioMute ? 'info-blink' : '']">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
             <v-btn v-if="isLocal && videoPublication != null" icon @click="doMuteVideo(!videoMute)" :title="videoMute ? $vuetify.lang.t('$vuetify.unmute_video') : $vuetify.lang.t('$vuetify.mute_video')"><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
             <v-btn icon @click="onEnterFullscreen" :title="$vuetify.lang.t('$vuetify.fullscreen')"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
             <v-btn v-if="isLocal" icon @click="onClose()" :title="$vuetify.lang.t('$vuetify.close')"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
@@ -16,9 +16,12 @@
 <script>
 
 import {hasLength} from "@/utils";
+import refreshLocalMutedInAppBarMixin from "@/refreshLocalMutedInAppBarMixin";
 
 export default {
 	name: 'UserVideo',
+
+    mixins: [refreshLocalMutedInAppBarMixin()],
 
     data()  {
         const loadingMessage = this.$vuetify.lang.t('$vuetify.loading');
@@ -52,7 +55,10 @@ export default {
         },
         videoIsOnTop: {
             type: Boolean
-        }
+        },
+        initialShowControls: {
+            type: Boolean
+        },
     },
 
     methods: {
@@ -141,6 +147,9 @@ export default {
                 this.audioPublication?.unmute();
             }
             this.setDisplayAudioMute(requestedState);
+
+            this.muteAudioBlink = false;
+            this.refreshLocalMutedInAppBar(requestedState);
         },
         doMuteVideo(requestedState) {
             if (requestedState) {
@@ -154,6 +163,9 @@ export default {
             this.localVideoProperties.localParticipant.unpublishTrack(this.videoPublication?.videoTrack);
             this.localVideoProperties.localParticipant.unpublishTrack(this.audioPublication?.audioTrack);
         },
+        isComponentLocal() {
+            return this.isLocal
+        }
     },
     computed: {
         avatarIsSet() {
@@ -170,7 +182,7 @@ export default {
         }
     },
     created(){
-        this.showControls = this.isLocal;
+        this.showControls = this.initialShowControls;
     },
     destroyed() {
 

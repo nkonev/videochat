@@ -61,3 +61,4 @@ export const PINNED_MESSAGE_PROMOTED = "pinnedMessagePromoted";
 export const PINNED_MESSAGE_UNPROMOTED = "pinnedMessageUnpromoted";
 export const VIDEO_OPENED = "videoOpened";
 export const VIDEO_CLOSED = "videoClosed";
+export const SET_LOCAL_MICROPHONE_MUTED = "setLocalMicrophoneMuted";

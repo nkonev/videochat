@@ -102,6 +102,9 @@
                     </v-btn>
                 </v-badge>
 
+                <v-btn v-if="showHangButton && !isMobile() && showMicrophoneOnButton" icon @click="offMicrophone()" :title="$vuetify.lang.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
+                <v-btn v-if="showHangButton && !isMobile() && showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.lang.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
+
                 <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')"><v-icon>mdi-monitor-screenshot</v-icon></v-btn>
                 <v-btn v-if="showHangButton" icon @click="addVideoSource()" :title="$vuetify.lang.t('$vuetify.source_add')"><v-icon>mdi-video-plus</v-icon></v-btn>
                 <v-btn v-if="showRecordStartButton" icon @click="startRecord()" :loading="initializingStaringVideoRecord" :title="$vuetify.lang.t('$vuetify.start_record')">
@@ -243,7 +246,7 @@
         UNSET_NOTIFICATIONS,
         FETCH_AVAILABLE_OAUTH2_PROVIDERS,
         GET_SEARCH_NAME,
-        GET_SHOULD_PHONE_BLINK, GET_TET_A_TET
+        GET_SHOULD_PHONE_BLINK, GET_TET_A_TET, GET_SHOW_MICROPHONE_ON_BUTTON, GET_SHOW_MICROPHONE_OFF_BUTTON
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -260,7 +263,12 @@
         ADD_SCREEN_SOURCE,
         VIDEO_RECORDING_CHANGED,
         OPEN_NOTIFICATIONS_DIALOG,
-        PROFILE_SET, WEBSOCKET_RESTORED, OPEN_PINNED_MESSAGES_MODAL, VIDEO_OPENED, VIDEO_CLOSED,
+        PROFILE_SET,
+        WEBSOCKET_RESTORED,
+        OPEN_PINNED_MESSAGES_MODAL,
+        VIDEO_OPENED,
+        VIDEO_CLOSED,
+        SET_LOCAL_MICROPHONE_MUTED,
     } from "./bus";
     import ChatEditModal from "./ChatEditModal";
     import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
@@ -535,6 +543,12 @@
             },
             onOpenSearch() {
                 this.showSearchButton = false;
+            },
+            onMicrophone() {
+                bus.$emit(SET_LOCAL_MICROPHONE_MUTED, false);
+            },
+            offMicrophone() {
+                bus.$emit(SET_LOCAL_MICROPHONE_MUTED, true);
             }
         },
         computed: {
@@ -557,6 +571,8 @@
                 errorColor: GET_ERROR_COLOR,
                 shouldPhoneBlink: GET_SHOULD_PHONE_BLINK,
                 tetATet: GET_TET_A_TET,
+                showMicrophoneOnButton: GET_SHOW_MICROPHONE_ON_BUTTON,
+                showMicrophoneOffButton: GET_SHOW_MICROPHONE_OFF_BUTTON,
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return this.currentUser.avatar;

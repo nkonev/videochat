@@ -18,12 +18,16 @@ import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import { retry } from '@lifeomic/attempt';
-import {
+import store, {
     SET_SHOW_CALL_BUTTON,
     SET_SHOW_HANG_BUTTON,
     SET_SHOW_RECORD_START_BUTTON,
     GET_SHOW_RECORD_STOP_BUTTON,
-    SET_VIDEO_CHAT_USERS_COUNT, SET_SHOW_RECORD_STOP_BUTTON, GET_CAN_MAKE_RECORD, GET_USER
+    SET_VIDEO_CHAT_USERS_COUNT,
+    SET_SHOW_RECORD_STOP_BUTTON,
+    GET_CAN_MAKE_RECORD,
+    GET_USER,
+    SET_SHOW_MICROPHONE_ON_BUTTON, SET_SHOW_MICROPHONE_OFF_BUTTON
 } from "@/store";
 import {
     defaultAudioMute,
@@ -37,13 +41,14 @@ import {
 import bus, {
     ADD_SCREEN_SOURCE,
     ADD_VIDEO_SOURCE,
-    REQUEST_CHANGE_VIDEO_PARAMETERS, VIDEO_CLOSED, VIDEO_DIAL_STATUS_CHANGED, VIDEO_OPENED,
+    REQUEST_CHANGE_VIDEO_PARAMETERS, SET_LOCAL_MICROPHONE_MUTED, VIDEO_CLOSED, VIDEO_OPENED,
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus";
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
 import {chat_name, videochat_name} from "@/routes";
 import videoServerSettingsMixin from "@/videoServerSettingsMixin";
 import queryMixin from "@/queryMixin";
+import refreshLocalMutedInAppBarMixin from "@/refreshLocalMutedInAppBarMixin";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
@@ -52,7 +57,7 @@ const second = 'second';
 const last = 'last';
 
 export default {
-    mixins: [videoServerSettingsMixin(), queryMixin()],
+    mixins: [videoServerSettingsMixin(), queryMixin(), refreshLocalMutedInAppBarMixin()],
     props: ['chatDto', 'videoIsOnTop'],
     data() {
         return {
@@ -75,7 +80,9 @@ export default {
                     id: videoTagId,
                     localVideoProperties: localVideoProperties,
                     videoIsOnTop: this.videoIsOnTop,
-                }
+                    initialShowControls: localVideoProperties != null && this.isMobile()
+                },
+                store
             });
             component.$mount();
             if (position == first) {
@@ -180,6 +187,8 @@ export default {
             // when local tracks are ended, update UI to remove them from rendering
             track.detach();
             this.removeComponent(participant.identity, track);
+
+            this.refreshLocalMicrophoneButtons();
         },
         removeComponent(userIdentity, track) {
             for (const component of this.userVideoComponents.getByUser(userIdentity)) {
@@ -295,6 +304,8 @@ export default {
                         };
                         const participantTracks = this.room.localParticipant.getTracks();
                         this.drawNewComponentOrInsertIntoExisting(this.room.localParticipant, participantTracks, first, localVideoProperties);
+
+                        this.refreshLocalMicrophoneButtons();
                     } catch (e) {
                         this.setError(e, "Error during reacting on local track published");
                     }
@@ -351,6 +362,37 @@ export default {
                 return second
             }
             return first
+        },
+        refreshLocalMicrophoneButtons() {
+            const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity);
+            if (onlyOneLocalComponentWithAudio) {
+                const muted = onlyOneLocalComponentWithAudio.audioMute;
+                this.refreshLocalMutedInAppBar(muted);
+            } else {
+                this.$store.commit(SET_SHOW_MICROPHONE_ON_BUTTON, false);
+                this.$store.commit(SET_SHOW_MICROPHONE_OFF_BUTTON, false);
+            }
+        },
+        onlyOneLocalTrackWithMicrophone(userIdentity) {
+            const userComponents = this.userVideoComponents.getByUser(userIdentity);
+            const localComponentsWithAudio = userComponents.filter((component) => component.isComponentLocal() && component.getAudioStreamId() != null)
+            if (localComponentsWithAudio.length == 1) {
+                return localComponentsWithAudio[0]
+            } else {
+                return null
+            }
+        },
+        onLocalMicrophoneMutedByAppBarButton(value) {
+            console.log("onLocalMicrophoneMutedByAppBarButton", value);
+            const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity)
+            if (onlyOneLocalComponentWithAudio) {
+                onlyOneLocalComponentWithAudio.doMuteAudio(value);
+                const muted = onlyOneLocalComponentWithAudio.audioMute;
+                this.refreshLocalMutedInAppBar(muted);
+            } else {
+                this.$store.commit(SET_SHOW_MICROPHONE_ON_BUTTON, false);
+                this.$store.commit(SET_SHOW_MICROPHONE_OFF_BUTTON, false);
+            }
         },
 
         async stopRoom() {
@@ -469,11 +511,13 @@ export default {
         bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
+        bus.$on(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
     },
     destroyed() {
         bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
         bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
         bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
+        bus.$off(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
     }
 }
 

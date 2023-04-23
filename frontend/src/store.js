@@ -62,6 +62,10 @@ export const GET_TET_A_TET = 'getTetATet';
 export const SET_TET_A_TET = 'setTetATet';
 export const NOTIFICATION_ADD = 'notificationAdd';
 export const NOTIFICATION_DELETE = 'notificationDelete';
+export const GET_SHOW_MICROPHONE_ON_BUTTON = 'getShowMicroOn';
+export const SET_SHOW_MICROPHONE_ON_BUTTON = 'setShowMicroOn';
+export const GET_SHOW_MICROPHONE_OFF_BUTTON = 'getShowMicroOff';
+export const SET_SHOW_MICROPHONE_OFF_BUTTON = 'setShowMicroOff';
 
 const store = new Vuex.Store({
     state: {
@@ -93,6 +97,8 @@ const store = new Vuex.Store({
         notificationsSettings: {},
         shouldPhoneBlink: false,
         tetATet: false,
+        showMicrophoneOnButton: false,
+        showMicrophoneOffButton: false,
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -178,6 +184,12 @@ const store = new Vuex.Store({
         [SET_TET_A_TET](state, payload) {
             state.tetATet = payload;
         },
+        [SET_SHOW_MICROPHONE_ON_BUTTON](state, payload) {
+            state.showMicrophoneOnButton = payload;
+        },
+        [SET_SHOW_MICROPHONE_OFF_BUTTON](state, payload) {
+            state.showMicrophoneOffButton = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -251,6 +263,12 @@ const store = new Vuex.Store({
         },
         [GET_TET_A_TET](state) {
             return state.tetATet;
+        },
+        [GET_SHOW_MICROPHONE_ON_BUTTON](state) {
+            return state.showMicrophoneOnButton;
+        },
+        [GET_SHOW_MICROPHONE_OFF_BUTTON](state) {
+            return state.showMicrophoneOffButton;
         },
     },
     actions: {
