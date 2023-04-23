@@ -162,7 +162,7 @@ export default {
     pin_message: "Pin the message",
     no_pin_messages: "No pin messages",
     remove_from_pinned: "Remove from pinned",
-    available_to_search: "Available to search and join",
+    available_to_search: "Available for searching and joining",
     this_is_search_result: "This is search result. You are not a participant of this chat. Click to join. | ",
     public_chats: "Public chats",
     pin_chat: "Pin the chat",
