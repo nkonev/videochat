@@ -95,6 +95,10 @@ export default {
         },
         setDisplayAudioMute(b) {
             this.audioMute = b;
+
+            if (this.isLocal) {
+                this.refreshLocalMutedInAppBar(b);
+            }
         },
         setStreamMuted(b) {
             this.$refs.videoRef.muted = b;
@@ -149,7 +153,6 @@ export default {
             this.setDisplayAudioMute(requestedState);
 
             this.muteAudioBlink = false;
-            this.refreshLocalMutedInAppBar(requestedState);
         },
         doMuteVideo(requestedState) {
             if (requestedState) {

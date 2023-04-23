@@ -364,16 +364,12 @@ export default {
             return first
         },
         refreshLocalMicrophoneAppBarButtons() {
-            setTimeout(()=> {
-                const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity);
-                if (onlyOneLocalComponentWithAudio) {
-                    this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, true);
-                    const muted = onlyOneLocalComponentWithAudio.audioMute;
-                    this.refreshLocalMutedInAppBar(muted);
-                } else {
-                    this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, false);
-                }
-            }, 1)
+            const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity);
+            if (onlyOneLocalComponentWithAudio) {
+                this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, true);
+            } else {
+                this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, false);
+            }
         },
         onlyOneLocalTrackWithMicrophone(userIdentity) {
             const userComponents = this.userVideoComponents.getByUser(userIdentity);
