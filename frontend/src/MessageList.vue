@@ -320,7 +320,10 @@
                 this.highlightMessageId = this.getMessageId(this.initialHash);
             },
             onShowContextMenu(e, menuableItem){
-                this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+                const tag = e?.target?.tagName?.toLowerCase();
+                if (tag != "img" && tag != "video") {
+                    this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+                }
             },
 
             deleteMessage(dto){
