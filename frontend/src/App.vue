@@ -86,30 +86,29 @@
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
             <template v-if="showSearchButton || !isMobile()">
-                <template v-if="showCallButton || showHangButton">
-                    <v-badge
-                        :content="videoChatUsersCount"
-                        :value="videoChatUsersCount"
-                        color="green"
-                        overlap
-                        offset-y="1.8em"
-                    >
-                        <v-btn v-if="showCallButton" icon @click="createCall()" :title="tetATet ? $vuetify.lang.t('$vuetify.call_up') : $vuetify.lang.t('$vuetify.enter_into_call')">
-                            <v-icon color="green">{{tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
-                        </v-btn>
-                        <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
-                            <v-icon :class="shouldPhoneBlink ? 'call-blink' : 'red--text'">mdi-phone</v-icon>
-                        </v-btn>
-                    </v-badge>
-                    <v-btn v-if="!isMobile()" icon @click="copyCallLink()" :title="$vuetify.lang.t('$vuetify.copy_video_call_link')">
-                        <v-icon>mdi-content-copy</v-icon>
+                <v-badge v-if="showCallButton || showHangButton"
+                    :content="videoChatUsersCount"
+                    :value="videoChatUsersCount"
+                    color="green"
+                    overlap
+                    offset-y="1.8em"
+                >
+                    <v-btn v-if="showCallButton" icon @click="createCall()" :title="tetATet ? $vuetify.lang.t('$vuetify.call_up') : $vuetify.lang.t('$vuetify.enter_into_call')">
+                        <v-icon color="green">{{tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                     </v-btn>
-                </template>
+                    <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
+                        <v-icon :class="shouldPhoneBlink ? 'call-blink' : 'red--text'">mdi-phone</v-icon>
+                    </v-btn>
+                </v-badge>
 
                 <template v-if="canShowMicrophoneButton">
                     <v-btn v-if="showHangButton && !isMobile() && showMicrophoneOnButton" icon @click="offMicrophone()" :title="$vuetify.lang.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
                     <v-btn v-if="showHangButton && !isMobile() && showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.lang.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
                 </template>
+
+                <v-btn v-if="!isMobile()" icon @click="copyCallLink()" :title="$vuetify.lang.t('$vuetify.copy_video_call_link')">
+                    <v-icon>mdi-content-copy</v-icon>
+                </v-btn>
 
                 <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')">
                     <v-icon>mdi-monitor-screenshot</v-icon>
