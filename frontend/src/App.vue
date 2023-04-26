@@ -106,7 +106,7 @@
                     <v-btn v-if="showHangButton && !isMobile() && showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.lang.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
                 </template>
 
-                <v-btn v-if="!isMobile()" icon @click="copyCallLink()" :title="$vuetify.lang.t('$vuetify.copy_video_call_link')">
+                <v-btn v-if="(showCallButton || showHangButton) && !isMobile()" icon @click="copyCallLink()" :title="$vuetify.lang.t('$vuetify.copy_video_call_link')">
                     <v-icon>mdi-content-copy</v-icon>
                 </v-btn>
 
