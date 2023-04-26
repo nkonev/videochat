@@ -93,10 +93,10 @@
             <v-btn fab v-if="showHangButton" small @click="addVideoSource()">
                 <v-icon>mdi-video-plus</v-icon>
             </v-btn>
-            <v-btn fab v-if="showRecordStartButton" small @click="startRecord()">
+            <v-btn fab v-if="showRecordStartButton" small @click="startRecord()" :loading="initializingStaringVideoRecord">
                 <v-icon>mdi-record-rec</v-icon>
             </v-btn>
-            <v-btn fab v-if="showRecordStopButton" small @click="stopRecord()">
+            <v-btn fab v-if="showRecordStopButton" small @click="stopRecord()" :loading="initializingStoppingVideoRecord">
                 <v-icon color="red">mdi-record-rec</v-icon>
             </v-btn>
 
@@ -141,12 +141,13 @@
     import {mapGetters} from "vuex";
 
     import {
+        GET_INITIALIZING_STARTING_VIDEO_RECORD, GET_INITIALIZING_STOPPING_VIDEO_RECORD,
         GET_SHOW_HANG_BUTTON, GET_SHOW_RECORD_START_BUTTON, GET_SHOW_RECORD_STOP_BUTTON,
         GET_USER, SET_AVATAR,
         SET_CAN_BROADCAST_TEXT_MESSAGE,
         SET_CAN_MAKE_RECORD,
         SET_CHAT_ID,
-        SET_CHAT_USERS_COUNT,
+        SET_CHAT_USERS_COUNT, SET_INITIALIZING_STARTING_VIDEO_RECORD, SET_INITIALIZING_STOPPING_VIDEO_RECORD,
         SET_SEARCH_NAME, SET_SHOULD_PHONE_BLINK,
         SET_SHOW_CALL_BUTTON,
         SET_SHOW_CHAT_EDIT_BUTTON,
@@ -237,6 +238,8 @@
                 showHangButton: GET_SHOW_HANG_BUTTON,
                 showRecordStartButton: GET_SHOW_RECORD_START_BUTTON,
                 showRecordStopButton: GET_SHOW_RECORD_STOP_BUTTON,
+                initializingStaringVideoRecord: GET_INITIALIZING_STARTING_VIDEO_RECORD,
+                initializingStoppingVideoRecord: GET_INITIALIZING_STOPPING_VIDEO_RECORD,
             }),
         },
         methods: {
@@ -673,9 +676,11 @@
             },
             startRecord() {
                 axios.put(`/api/video/${this.chatId}/record/start`);
+                this.$store.commit(SET_INITIALIZING_STARTING_VIDEO_RECORD, true)
             },
             stopRecord() {
                 axios.put(`/api/video/${this.chatId}/record/stop`);
+                this.$store.commit(SET_INITIALIZING_STOPPING_VIDEO_RECORD, true)
             },
         },
         created() {

@@ -68,6 +68,10 @@ export const GET_SHOW_MICROPHONE_OFF_BUTTON = 'getShowMicroOff';
 export const SET_SHOW_MICROPHONE_OFF_BUTTON = 'setShowMicroOff';
 export const GET_CAN_SHOW_MICROPHONE_BUTTON = 'getCanShowMicro';
 export const SET_CAN_SHOW_MICROPHONE_BUTTON = 'setCanShowMicro';
+export const GET_INITIALIZING_STARTING_VIDEO_RECORD = 'getInitializingStaringVideoRecord';
+export const SET_INITIALIZING_STARTING_VIDEO_RECORD = 'setInitializingStaringVideoRecord';
+export const GET_INITIALIZING_STOPPING_VIDEO_RECORD = 'getInitializingStoppingVideoRecord';
+export const SET_INITIALIZING_STOPPING_VIDEO_RECORD = 'setInitializingStoppingVideoRecord';
 
 const store = new Vuex.Store({
     state: {
@@ -102,6 +106,8 @@ const store = new Vuex.Store({
         showMicrophoneOnButton: false,
         showMicrophoneOffButton: false,
         canShowMicrophoneButton: false,
+        initializingStaringVideoRecord: false,
+        initializingStoppingVideoRecord: false,
     },
     mutations: {
         [SET_USER](state, payload) {
@@ -196,6 +202,12 @@ const store = new Vuex.Store({
         [SET_CAN_SHOW_MICROPHONE_BUTTON](state, payload) {
             state.canShowMicrophoneButton = payload;
         },
+        [SET_INITIALIZING_STARTING_VIDEO_RECORD](state, payload) {
+            state.initializingStaringVideoRecord = payload;
+        },
+        [SET_INITIALIZING_STOPPING_VIDEO_RECORD](state, payload) {
+            state.initializingStoppingVideoRecord = payload;
+        },
     },
     getters: {
         [GET_USER](state) {
@@ -278,6 +290,12 @@ const store = new Vuex.Store({
         },
         [GET_CAN_SHOW_MICROPHONE_BUTTON](state) {
             return state.canShowMicrophoneButton;
+        },
+        [GET_INITIALIZING_STARTING_VIDEO_RECORD](state) {
+            return state.initializingStaringVideoRecord;
+        },
+        [GET_INITIALIZING_STOPPING_VIDEO_RECORD](state) {
+            return state.initializingStoppingVideoRecord;
         },
     },
     actions: {

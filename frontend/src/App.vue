@@ -260,7 +260,12 @@
         GET_TET_A_TET,
         GET_SHOW_MICROPHONE_ON_BUTTON,
         GET_SHOW_MICROPHONE_OFF_BUTTON,
-        GET_CAN_SHOW_MICROPHONE_BUTTON
+        GET_CAN_SHOW_MICROPHONE_BUTTON,
+        SET_TITLE,
+        SET_INITIALIZING_STARTING_VIDEO_RECORD,
+        SET_INITIALIZING_STOPPING_VIDEO_RECORD,
+        GET_INITIALIZING_STARTING_VIDEO_RECORD,
+        GET_INITIALIZING_STOPPING_VIDEO_RECORD
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -326,8 +331,6 @@
                 invitedVideoChatAlert: false,
                 showWebsocketRestored: false,
                 lastAnswered: 0,
-                initializingStaringVideoRecord: false,
-                initializingStoppingVideoRecord: false,
                 showSearchButton: true,
             }
         },
@@ -507,11 +510,11 @@
             },
             startRecord() {
                 axios.put(`/api/video/${this.chatId}/record/start`);
-                this.initializingStaringVideoRecord = true;
+                this.$store.commit(SET_INITIALIZING_STARTING_VIDEO_RECORD, true)
             },
             stopRecord() {
                 axios.put(`/api/video/${this.chatId}/record/stop`);
-                this.initializingStoppingVideoRecord = true;
+                this.$store.commit(SET_INITIALIZING_STOPPING_VIDEO_RECORD, true)
             },
             onVideRecordingChanged(e) {
                 if (this.isVideoRoute()) {
@@ -522,10 +525,10 @@
                     this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, e.recordInProgress);
                 }
                 if (this.initializingStaringVideoRecord && e.recordInProgress) {
-                    this.initializingStaringVideoRecord = false;
+                    this.$store.commit(SET_INITIALIZING_STARTING_VIDEO_RECORD, false)
                 }
                 if (this.initializingStoppingVideoRecord && !e.recordInProgress) {
-                    this.initializingStoppingVideoRecord = false;
+                    this.$store.commit(SET_INITIALIZING_STOPPING_VIDEO_RECORD, false)
                 }
             },
             resetInput() {
@@ -591,6 +594,8 @@
                 showMicrophoneOnButton: GET_SHOW_MICROPHONE_ON_BUTTON,
                 showMicrophoneOffButton: GET_SHOW_MICROPHONE_OFF_BUTTON,
                 canShowMicrophoneButton: GET_CAN_SHOW_MICROPHONE_BUTTON,
+                initializingStaringVideoRecord: GET_INITIALIZING_STARTING_VIDEO_RECORD,
+                initializingStoppingVideoRecord: GET_INITIALIZING_STOPPING_VIDEO_RECORD,
             }), // currentUser is here, 'getUser' -- in store.js
             currentUserAvatar() {
                 return this.currentUser.avatar;
