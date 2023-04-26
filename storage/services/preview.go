@@ -121,7 +121,7 @@ func (s PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error
 		Logger.Errorf("Error during decoding image: %v", err)
 		return nil, err
 	}
-	dstImage := imaging.Resize(srcImage, 400, 300, imaging.Lanczos)
+	dstImage := imaging.Resize(srcImage, 0, 360, imaging.Lanczos)
 	byteBuffer := new(bytes.Buffer)
 	err = jpeg.Encode(byteBuffer, dstImage, nil)
 	if err != nil {
