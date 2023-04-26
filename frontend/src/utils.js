@@ -1,4 +1,5 @@
 import { format, parseISO, differenceInDays } from 'date-fns';
+import {chat, messageIdHashPrefix, video_suffix} from "@/routes";
 
 export const defaultAudioMute = true;
 
@@ -191,4 +192,9 @@ export function dynamicSortMultiple() {
         }
         return result;
     }
+}
+
+export const copyCallLink = (chatId) => {
+    const link = getUrlPrefix() + chat + '/' + chatId + video_suffix;
+    navigator.clipboard.writeText(link);
 }

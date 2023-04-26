@@ -171,5 +171,6 @@ export default {
     video_position: "Позиция видео",
     video_position_on_the_top: "Наверху",
     video_position_side: "На стороне",
-    video_position_auto: "Авто"
+    video_position_auto: "Авто",
+    copy_video_call_link: "Скопировать ссылку на видеоконференцию"
 }

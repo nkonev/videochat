@@ -49,17 +49,58 @@
             </pane>
 
         </splitpanes>
-        <v-btn v-if="isMobile()"
-            color="primary"
-            fab
-            dark
-            bottom
-            right
+
+        <v-speed-dial
+            v-model="fab"
+            v-if="isMobile()"
+            :bottom="true"
+            :right="true"
+            direction="top"
             fixed
-            @click="openNewMessageDialog()"
         >
-            <v-icon>mdi-message-plus</v-icon>
-        </v-btn>
+            <template v-slot:activator>
+                <v-btn
+                    v-model="fab"
+                    color="blue darken-2"
+                    dark
+                    fab
+                >
+                    <v-icon v-if="fab">
+                        mdi-close
+                    </v-icon>
+                    <v-icon v-else>
+                        mdi-plus
+                    </v-icon>
+                </v-btn>
+            </template>
+            <v-btn
+                fab
+                color="primary"
+                small
+                @click="openNewMessageDialog()"
+            >
+                <v-icon>mdi-message-plus-outline</v-icon>
+            </v-btn>
+            <v-btn
+                fab
+                color="success"
+                small
+                @click="copyCallLink()"
+            >
+                <v-icon>mdi-content-copy</v-icon>
+            </v-btn>
+
+            <v-btn fab v-if="showHangButton" small @click="addVideoSource()">
+                <v-icon>mdi-video-plus</v-icon>
+            </v-btn>
+            <v-btn fab v-if="showRecordStartButton" small @click="startRecord()">
+                <v-icon>mdi-record-rec</v-icon>
+            </v-btn>
+            <v-btn fab v-if="showRecordStopButton" small @click="stopRecord()">
+                <v-icon color="red">mdi-record-rec</v-icon>
+            </v-btn>
+
+        </v-speed-dial>
 
         <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#chatViewContainer'" bottom v-model="showTooltip" :key="tooltipKey">
             <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} {{ $vuetify.lang.t('$vuetify.user_is_writing') }}</span>
@@ -90,7 +131,7 @@
         PARTICIPANT_EDITED,
         VIDEO_DIAL_STATUS_CHANGED,
         PINNED_MESSAGE_PROMOTED,
-        PINNED_MESSAGE_UNPROMOTED,
+        PINNED_MESSAGE_UNPROMOTED, ADD_VIDEO_SOURCE_DIALOG,
     } from "./bus";
     import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
@@ -100,6 +141,7 @@
     import {mapGetters} from "vuex";
 
     import {
+        GET_SHOW_HANG_BUTTON, GET_SHOW_RECORD_START_BUTTON, GET_SHOW_RECORD_STOP_BUTTON,
         GET_USER, SET_AVATAR,
         SET_CAN_BROADCAST_TEXT_MESSAGE,
         SET_CAN_MAKE_RECORD,
@@ -125,6 +167,7 @@
         VIDEO_POSITION_ON_THE_TOP,
         VIDEO_POSITION_SIDE
     } from "@/localStore";
+    import {copyCallLink} from "@/utils";
 
     const KEY_DESKTOP_TOP_WITH_VIDEO_PANELS = 'desktopTopWithVideo2';
     const KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS = 'desktopTopWithoutVideo2'
@@ -163,7 +206,8 @@
                 broadcastMessage: null,
                 tooltipKey: 0,
                 pinnedPromoted: null,
-                pinnedPromotedKey: +new Date()
+                pinnedPromotedKey: +new Date(),
+                fab: false
             }
         },
         computed: {
@@ -188,7 +232,12 @@
             editAndMessagesSize() {
                 const stored = this.getStored();
                 return stored.editAndMessages;
-            }
+            },
+            ...mapGetters({
+                showHangButton: GET_SHOW_HANG_BUTTON,
+                showRecordStartButton: GET_SHOW_RECORD_START_BUTTON,
+                showRecordStopButton: GET_SHOW_RECORD_STOP_BUTTON,
+            }),
         },
         methods: {
             getStored() {
@@ -299,11 +348,17 @@
                 if (this.videoIsOnTop()) {
                     if (this.$refs.splInner.panes.length == 3) {
                         this.$refs.splInner.panes[0].size = stored.video;
-                        this.$refs.splInner.panes[1].size = stored.messages;
-                        this.$refs.splInner.panes[2].size = stored.edit;
+                        if (this.$refs.splInner.panes[1]) {
+                            this.$refs.splInner.panes[1].size = stored.messages;
+                        }
+                        if (this.$refs.splInner.panes[2]) {
+                            this.$refs.splInner.panes[2].size = stored.edit;
+                        }
                     } else {
                         this.$refs.splInner.panes[0].size = stored.messages;
-                        this.$refs.splInner.panes[1].size = stored.edit;
+                        if (this.$refs.splInner.panes[1]) {
+                            this.$refs.splInner.panes[1].size = stored.edit;
+                        }
                     }
                 } else { // side
                     if (this.$refs.splOuter) {
@@ -424,7 +479,9 @@
             openNewMessageDialog() { // on mobile OPEN_EDIT_MESSAGE with the null argument
                 bus.$emit(OPEN_EDIT_MESSAGE, null);
             },
-
+            copyCallLink(){
+                copyCallLink(this.chatId)
+            },
             onUserTyping(data) {
                 console.debug("OnUserTyping", data);
 
@@ -610,6 +667,15 @@
             },
             isVideoRoute() {
                 return this.$route.name == videochat_name
+            },
+            addVideoSource() {
+                bus.$emit(ADD_VIDEO_SOURCE_DIALOG);
+            },
+            startRecord() {
+                axios.put(`/api/video/${this.chatId}/record/start`);
+            },
+            stopRecord() {
+                axios.put(`/api/video/${this.chatId}/record/stop`);
             },
         },
         created() {
