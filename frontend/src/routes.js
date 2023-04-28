@@ -1,5 +1,6 @@
 export const root = '/';
 export const chat = '/chat';
+export const blog = '/blog';
 export const profile = '/profile';
 export const video_suffix = '/video';
 

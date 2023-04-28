@@ -17,22 +17,33 @@ const isDevelopment = (argv) => {
     return argv.mode === DEVELOPMENT_MODE
 }
 
+const getLiveReload = (argv) => {
+    return isDevelopment(argv) ? `
+        <script type="application/javascript">
+            const livereloadProtocolHost = window.location.protocol + "//" + window.location.hostname;
+            const scriptTag = document.createElement('script');
+            scriptTag.src = livereloadProtocolHost + ":${LIVE_RELOAD_PORT}/livereload.js";
+            document.head.appendChild(scriptTag);
+        </script>
+        ` : ""
+}
+
 module.exports = (env, argv) => {
     const currDate = +new Date();
     const pluginsArray = [
         // new BundleAnalyzerPlugin({defaultSizes: "parsed"}),
-        new HtmlWebpackPlugin({
-            // Load a custom template (lodash by default)
+        new HtmlWebpackPlugin({ // Load a custom template (lodash by default)
             currDate: currDate,
-            livereload: isDevelopment(argv) ? `
-                <script type="application/javascript">
-                    const livereloadProtocolHost = window.location.protocol + "//" + window.location.hostname;
-                    const scriptTag = document.createElement('script');
-                    scriptTag.src = livereloadProtocolHost + ":${LIVE_RELOAD_PORT}/livereload.js";
-                    document.head.appendChild(scriptTag);
-                </script>
-                ` : "",
+            livereload: getLiveReload(argv),
             template: './src/index.template.html',
+            filename: 'index.html',
+            inject: false
+        }),
+        new HtmlWebpackPlugin({ // Load a custom template (lodash by default)
+            currDate: currDate,
+            livereload: getLiveReload(argv),
+            template: './src/indexBlog.template.html',
+            filename: 'indexBlog.html',
             inject: false
         }),
         new CopyPlugin({patterns: [
@@ -58,7 +69,10 @@ module.exports = (env, argv) => {
     }
 
     const webpackCfg = {
-        entry: ["regenerator-runtime/runtime.js", "./src/main.js"],
+        entry: {
+            main: "./src/main.js",
+            blogMain: "./src/blogMain.js"
+        },
         output: {
             path: contentBase,
             filename: `[name]_${currDate}.js`,

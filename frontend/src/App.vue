@@ -28,6 +28,11 @@
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.chats') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
+                <v-list-item @click.prevent="goBlog()" :href="require('./routes').blog">
+                    <v-list-item-icon><v-icon>mdi-postage-stamp</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.blog') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
                 <v-list-item @click="createChat()">
                     <v-list-item-icon><v-icon>mdi-plus</v-icon></v-list-item-icon>
                     <v-list-item-content><v-list-item-title id="new-chat-dialog-button">{{ $vuetify.lang.t('$vuetify.new_chat') }}</v-list-item-title></v-list-item-content>
@@ -289,7 +294,7 @@
         SET_LOCAL_MICROPHONE_MUTED,
     } from "./bus";
     import ChatEditModal from "./ChatEditModal";
-    import {chat_name, profile_self_name, chat_list_name, videochat_name} from "./routes";
+    import {chat_name, profile_self_name, chat_list_name, videochat_name, blog} from "./routes";
     import SimpleModal from "./SimpleModal";
     import ChooseAvatarModal from "./ChooseAvatarModal";
     import ChatParticipantsModal from "./ChatParticipantsModal";
@@ -368,6 +373,9 @@
             },
             goHome() {
                 this.$router.push(({ name: chat_list_name}))
+            },
+            goBlog() {
+                window.location = blog
             },
             goProfile() {
                 this.$router.push(({ name: profile_self_name}))
