@@ -3,7 +3,7 @@ import {expect} from "@playwright/test";
 
 // https://playwright.dev/docs/pom
 export default class ChatList {
-    constructor(page, ) {
+    constructor(page) {
         this.page = page;
     }
     async navigate() {
@@ -44,6 +44,11 @@ export default class ChatList {
 
     getRowsLocator() {
         return this.page.locator('#chat-list-items .v-list-item .v-list-item__title');
+    }
+
+    async openChat(idx) {
+        const chatElement = this.page.locator(`#chat-list-items>a>>nth=${idx}`);
+        await chatElement.click();
     }
 
     async assertChatItemCount(expected) {
