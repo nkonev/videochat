@@ -40,7 +40,12 @@ test('login vkontakte and google then create chat then write a message', async (
     await googleChatList.openChat(0);
 
     const googleChatViewPage = new ChatView(googlePage);
-    const receivedMessage = await googleChatViewPage.getMessage(0);
-    expect(receivedMessage).toBe(helloMike);
+    const receivedMikeMessage = await googleChatViewPage.getMessage(0);
+    expect(receivedMikeMessage).toBe(helloMike);
+    const helloJoe = "Hello, Joe!";
+    await googleChatViewPage.sendMessage(helloJoe);
+
+    const receivedJoeMessage = await vkChatViewPage.getMessage(1);
+    expect(receivedJoeMessage).toBe(helloJoe);
 });
 
