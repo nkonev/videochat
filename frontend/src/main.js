@@ -233,7 +233,7 @@ vm = new Vue({
   },
   created(){
     Vue.prototype.isMobile = () => {
-      return !this.$vuetify.breakpoint.smAndUp
+      return this.$vuetify.breakpoint.mobile
     };
     Vue.prototype.getRouteHash = (preserveHash) => {
       const tmp = this.$route.hash;
