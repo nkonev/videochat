@@ -100,6 +100,17 @@
                 <v-icon color="red">mdi-record-rec</v-icon>
             </v-btn>
 
+            <v-btn
+                v-if="!isScrolledToBottom()"
+                color="primary"
+                fab
+                dark
+                small
+                @click="onClickScrollDown()"
+            >
+                <v-icon>mdi-chevron-down</v-icon>
+            </v-btn>
+
         </v-speed-dial>
 
         <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#chatViewContainer'" bottom v-model="showTooltip" :key="tooltipKey">
