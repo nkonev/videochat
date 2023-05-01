@@ -202,7 +202,22 @@
         }
     }
 
-    const emptyStoredPanes = () => {
+    const emptyStoredPanes = (key) => {
+        switch (key) {
+            case KEY_DESKTOP_TOP_WITH_VIDEO_PANELS:
+                return {editAndMessages:100, messages:50, edit:20, video: 30}
+            case KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS:
+                return {editAndMessages:100, messages:70, edit:30}
+            case KEY_DESKTOP_SIDE_WITH_VIDEO_PANELS:
+                return {editAndMessages:50, messages:60, edit:40, video: 50}
+            case KEY_DESKTOP_SIDE_WITHOUT_VIDEO_PANELS:
+                return {editAndMessages:100, messages:80, edit:20}
+            case KEY_MOBILE_WITH_VIDEO_PANELS:
+                return {editAndMessages:100, messages:60, video:40}
+            case KEY_MOBILE_WITHOUT_VIDEO_PANELS:
+                return {editAndMessages:100, messages:100}
+        }
+        console.warn("Not found default panel sizes")
         return {}
     }
 
@@ -270,9 +285,10 @@
                     keyWithoutVideo = KEY_MOBILE_WITHOUT_VIDEO_PANELS;
                 }
 
-                const mbItem = this.isAllowedVideo() ? localStorage.getItem(keyWithVideo) : localStorage.getItem(keyWithoutVideo);
+                const key = this.isAllowedVideo() ? keyWithVideo : keyWithoutVideo;
+                const mbItem = localStorage.getItem(key);
                 if (!mbItem) {
-                    return emptyStoredPanes();
+                    return emptyStoredPanes(key);
                 } else {
                     return JSON.parse(mbItem);
                 }
