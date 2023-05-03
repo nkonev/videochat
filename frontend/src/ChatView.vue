@@ -185,8 +185,10 @@
     const KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS = 'desktopTopWithoutVideo2'
     const KEY_DESKTOP_SIDE_WITH_VIDEO_PANELS = 'desktopSideWithVideo2';
     const KEY_DESKTOP_SIDE_WITHOUT_VIDEO_PANELS = 'desktopSideWithoutVideo2'
-    const KEY_MOBILE_WITH_VIDEO_PANELS = 'mobileWithVideo2';
-    const KEY_MOBILE_WITHOUT_VIDEO_PANELS = 'mobileWithoutVideo2'
+    const KEY_MOBILE_TOP_WITH_VIDEO_PANELS = 'mobileTopWithVideo2';
+    const KEY_MOBILE_TOP_WITHOUT_VIDEO_PANELS = 'mobileTopWithoutVideo2'
+    const KEY_MOBILE_SIDE_WITH_VIDEO_PANELS = 'mobileSideWithVideo2';
+    const KEY_MOBILE_SIDE_WITHOUT_VIDEO_PANELS = 'mobileSideWithoutVideo2'
 
 
     let writingUsersTimerId;
@@ -212,10 +214,15 @@
                 return {editAndMessages:50, messages:60, edit:40, video: 50}
             case KEY_DESKTOP_SIDE_WITHOUT_VIDEO_PANELS:
                 return {editAndMessages:100, messages:80, edit:20}
-            case KEY_MOBILE_WITH_VIDEO_PANELS:
+            case KEY_MOBILE_TOP_WITH_VIDEO_PANELS:
                 return {editAndMessages:100, messages:60, video:40}
-            case KEY_MOBILE_WITHOUT_VIDEO_PANELS:
+            case KEY_MOBILE_TOP_WITHOUT_VIDEO_PANELS:
                 return {editAndMessages:100, messages:100}
+            case KEY_MOBILE_SIDE_WITH_VIDEO_PANELS:
+                return {editAndMessages:100, messages:100, video:40}
+            case KEY_MOBILE_SIDE_WITHOUT_VIDEO_PANELS:
+                return {editAndMessages:100, messages:100}
+
         }
         console.warn("Not found default panel sizes")
         return {}
@@ -281,8 +288,13 @@
                         keyWithoutVideo = KEY_DESKTOP_SIDE_WITHOUT_VIDEO_PANELS;
                     }
                 } else {
-                    keyWithVideo = KEY_MOBILE_WITH_VIDEO_PANELS;
-                    keyWithoutVideo = KEY_MOBILE_WITHOUT_VIDEO_PANELS;
+                    if (this.videoIsOnTop()) {
+                        keyWithVideo = KEY_MOBILE_TOP_WITH_VIDEO_PANELS;
+                        keyWithoutVideo = KEY_MOBILE_TOP_WITHOUT_VIDEO_PANELS;
+                    } else {
+                        keyWithVideo = KEY_MOBILE_SIDE_WITH_VIDEO_PANELS;
+                        keyWithoutVideo = KEY_MOBILE_SIDE_WITHOUT_VIDEO_PANELS;
+                    }
                 }
 
                 const key = this.isAllowedVideo() ? keyWithVideo : keyWithoutVideo;
@@ -305,8 +317,13 @@
                         keyWithoutVideo = KEY_DESKTOP_SIDE_WITHOUT_VIDEO_PANELS;
                     }
                 } else {
-                    keyWithVideo = KEY_MOBILE_WITH_VIDEO_PANELS;
-                    keyWithoutVideo = KEY_MOBILE_WITHOUT_VIDEO_PANELS;
+                    if (this.videoIsOnTop()) {
+                        keyWithVideo = KEY_MOBILE_TOP_WITH_VIDEO_PANELS;
+                        keyWithoutVideo = KEY_MOBILE_TOP_WITHOUT_VIDEO_PANELS;
+                    } else {
+                        keyWithVideo = KEY_MOBILE_SIDE_WITH_VIDEO_PANELS;
+                        keyWithoutVideo = KEY_MOBILE_SIDE_WITHOUT_VIDEO_PANELS;
+                    }
                 }
 
                 if (this.isAllowedVideo()) {
