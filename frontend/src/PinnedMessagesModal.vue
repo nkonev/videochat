@@ -63,12 +63,12 @@
 <script>
 
 import bus, {
-    OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_UNPROMOTED,
+    OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
 } from "./bus";
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
 import axios from "axios";
-import {getHumanReadableDate, formatSize, findIndex} from "./utils";
+import {getHumanReadableDate, formatSize, findIndex, replaceOrAppend} from "./utils";
 import {chat_name, messageIdHashPrefix, videochat_name} from "@/routes";
 
 const firstPage = 1;
@@ -158,13 +158,28 @@ export default {
             this.dto.data.splice(idxToRemove, 1);
             this.$forceUpdate();
         },
+        replaceItem(dto) {
+            console.log("Replacing item", dto);
+
+            replaceOrAppend(this.dto.data, [dto]);
+
+            this.$forceUpdate();
+        },
         onPinnedMessageUnpromoted(dto) {
             if (this.show) {
-                if (dto.chatId == this.chatId) {
-                    this.removeItem(dto);
-                    if (!this.dto.data.length) {
-                        this.dto = dtoFactory();
-                    }
+                if (dto.message.chatId == this.chatId) {
+                    this.removeItem(dto.message);
+                    this.dto.totalCount = dto.totalCount;
+                } else {
+                    console.log("Skipping", dto)
+                }
+            }
+        },
+        onPinnedMessagePromoted(dto) {
+            if (this.show) {
+                if (dto.message.chatId == this.chatId) {
+                    this.replaceItem(dto.message);
+                    this.dto.totalCount = dto.totalCount;
                 } else {
                     console.log("Skipping", dto)
                 }
@@ -199,10 +214,12 @@ export default {
     },
     created() {
         bus.$on(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
+        bus.$on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
         bus.$on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     },
     destroyed() {
         bus.$off(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
+        bus.$off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
         bus.$off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     },
 }

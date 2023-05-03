@@ -9,6 +9,11 @@ const CHAT_EVENTS = "events.chat"
 const GLOBAL_EVENTS = "events.global"
 const USER_ONLINE = "user.online"
 
+type PinnedMessageEvent struct {
+	Message    DisplayMessageDto `json:"message"`
+	TotalCount int64             `json:"totalCount"`
+}
+
 type ChatEvent struct {
 	EventType                    string                        `json:"eventType"`
 	ChatId                       int64                         `json:"chatId"`
@@ -19,7 +24,7 @@ type ChatEvent struct {
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
 	FileUploadedEvent            *FileUploadedEvent            `json:"fileUploadedEvent"`
 	Participants                 *[]*UserWithAdmin             `json:"participants"`
-	PromoteMessageNotification   *DisplayMessageDto            `json:"promoteMessageNotification"`
+	PromoteMessageNotification   *PinnedMessageEvent           `json:"promoteMessageNotification"`
 }
 
 func (ChatEvent) Name() eventbus.EventName {

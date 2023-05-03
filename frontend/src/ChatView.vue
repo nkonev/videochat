@@ -626,7 +626,10 @@
                                       admin
                                     }
                                     promoteMessageEvent {
-                                      ...DisplayMessageDtoFragment
+                                      totalCount
+                                      message {
+                                        ...DisplayMessageDtoFragment
+                                      }
                                     }
                                   }
                                 }
@@ -702,11 +705,11 @@
                 });
             },
             onPinnedMessagePromoted(item) {
-                this.pinnedPromoted = item;
+                this.pinnedPromoted = item.message;
                 this.pinnedPromotedKey++;
             },
             onPinnedMessageUnpromoted(item) {
-                if (this.pinnedPromoted && this.pinnedPromoted.id == item.id) {
+                if (this.pinnedPromoted && this.pinnedPromoted.id == item.message.id) {
                     this.pinnedPromoted = null;
                 }
             },

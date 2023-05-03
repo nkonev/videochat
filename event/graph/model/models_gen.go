@@ -47,7 +47,7 @@ type ChatEvent struct {
 	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
 	FileUploadedEvent     *FileUploadedEvent            `json:"fileUploadedEvent"`
 	ParticipantsEvent     []*UserWithAdmin              `json:"participantsEvent"`
-	PromoteMessageEvent   *DisplayMessageDto            `json:"promoteMessageEvent"`
+	PromoteMessageEvent   *PinnedMessageEvent           `json:"promoteMessageEvent"`
 }
 
 type ChatUnreadMessageChanged struct {
@@ -124,6 +124,11 @@ type NotificationDto struct {
 	ByUserID         int64     `json:"byUserId"`
 	ByLogin          string    `json:"byLogin"`
 	ChatTitle        string    `json:"chatTitle"`
+}
+
+type PinnedMessageEvent struct {
+	Message    *DisplayMessageDto `json:"message"`
+	TotalCount int64              `json:"totalCount"`
 }
 
 type User struct {

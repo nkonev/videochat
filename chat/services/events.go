@@ -28,7 +28,7 @@ type Events interface {
 	NotifyAboutChangeParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin)
 	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, chatTitle string)
 	NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
-	NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.DisplayMessageDto, promote bool, participantIds []int64)
+	NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64)
 }
 
 type eventsImpl struct {
@@ -412,7 +412,7 @@ func (not *eventsImpl) NotifyAboutChangeParticipants(c echo.Context, userIds []i
 	}
 }
 
-func (not *eventsImpl) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.DisplayMessageDto, promote bool, participantIds []int64) {
+func (not *eventsImpl) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64) {
 
 	var eventType = ""
 	if promote {

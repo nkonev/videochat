@@ -1,5 +1,10 @@
 package dto
 
+type PinnedMessageEvent struct {
+	Message    DisplayMessageDto `json:"message"`
+	TotalCount int64             `json:"totalCount"`
+}
+
 type ChatEvent struct {
 	EventType                    string                        `json:"eventType"`
 	ChatId                       int64                         `json:"chatId"`
@@ -9,7 +14,7 @@ type ChatEvent struct {
 	UserTypingNotification       *UserTypingNotification       `json:"userTypingNotification"`
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
 	Participants                 *[]*UserWithAdmin             `json:"participants"`
-	PromoteMessageNotification   *DisplayMessageDto            `json:"promoteMessageNotification"`
+	PromoteMessageNotification   *PinnedMessageEvent           `json:"promoteMessageNotification"`
 }
 
 type GlobalEvent struct {

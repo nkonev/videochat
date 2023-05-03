@@ -98,6 +98,11 @@ type FileUploadedEvent {
     correlationId: String
 }
 
+type PinnedMessageEvent {
+    message: DisplayMessageDto!
+    totalCount: Int64!
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
@@ -106,7 +111,7 @@ type ChatEvent {
     messageBroadcastEvent: MessageBroadcastNotification
     fileUploadedEvent: FileUploadedEvent
     participantsEvent: [UserWithAdmin!]
-    promoteMessageEvent: DisplayMessageDto
+    promoteMessageEvent: PinnedMessageEvent
 }
 
 type VideoUserCountChangedDto {

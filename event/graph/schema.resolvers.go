@@ -262,7 +262,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 
 	promotePinnedMessageEvent := e.PromoteMessageNotification
 	if promotePinnedMessageEvent != nil {
-		result.PromoteMessageEvent = convertDisplayMessageDto(promotePinnedMessageEvent)
+		result.PromoteMessageEvent = convertPinnedMessageEvent(promotePinnedMessageEvent)
 	}
 
 	return result
@@ -294,6 +294,12 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 		}
 	}
 	return result
+}
+func convertPinnedMessageEvent(e *dto.PinnedMessageEvent) *model.PinnedMessageEvent {
+	return &model.PinnedMessageEvent{
+		Message:    convertDisplayMessageDto(&e.Message),
+		TotalCount: e.TotalCount,
+	}
 }
 func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 	//eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin

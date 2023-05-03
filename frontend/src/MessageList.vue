@@ -53,11 +53,10 @@
         MESSAGE_ADD,
         MESSAGE_DELETED, MESSAGE_EDITED, OPEN_EDIT_MESSAGE, OPEN_RESEND_TO_MODAL,
         OPEN_SIMPLE_MODAL, OPEN_VIEW_FILES_DIALOG,
-        PINNED_MESSAGE_PROMOTED,
-        PINNED_MESSAGE_UNPROMOTED, SET_EDIT_MESSAGE
+        SET_EDIT_MESSAGE
     } from "@/bus";
     import queryMixin from "@/queryMixin";
-    import {chat_name, messageIdHashPrefix, videochat_name} from "@/routes";
+    import {chat_name, videochat_name} from "@/routes";
     import {
         embed_message_reply,
         findIndex,

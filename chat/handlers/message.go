@@ -766,8 +766,13 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 			// notify as about changed message
 			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
 
+			count0, err := tx.GetPinnedMessagesCount(chatId)
+			if err != nil {
+				return err
+			}
+
 			// notify about newly promoted result (promoted can be different)
-			err = mc.sendPromotePinnedMessageEvent(c, message, tx, chatId, participantIds, userPrincipalDto.UserId, true)
+			err = mc.sendPromotePinnedMessageEvent(c, message, tx, chatId, participantIds, userPrincipalDto.UserId, true, count0)
 			if err != nil {
 				return err
 			}
@@ -798,7 +803,12 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 			// notify as about changed message
 			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
 
-			err = mc.sendPromotePinnedMessageEvent(c, message, tx, chatId, participantIds, userPrincipalDto.UserId, false)
+			count1, err := tx.GetPinnedMessagesCount(chatId)
+			if err != nil {
+				return err
+			}
+
+			err = mc.sendPromotePinnedMessageEvent(c, message, tx, chatId, participantIds, userPrincipalDto.UserId, false, count1)
 			if err != nil {
 				return err
 			}
@@ -814,7 +824,12 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 					return err
 				}
 				if promoted != nil {
-					err = mc.sendPromotePinnedMessageEvent(c, promoted, tx, chatId, participantIds, userPrincipalDto.UserId, true)
+					count2, err := tx.GetPinnedMessagesCount(chatId)
+					if err != nil {
+						return err
+					}
+
+					err = mc.sendPromotePinnedMessageEvent(c, promoted, tx, chatId, participantIds, userPrincipalDto.UserId, true, count2)
 					if err != nil {
 						return err
 					}
@@ -951,7 +966,7 @@ func patchForView(cleanTagsPolicy *services.StripTagsPolicy, message *dto.Displa
 	message.Text = createMessagePreviewWithoutLogin(cleanTagsPolicy, message.Text)
 }
 
-func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, message *db.Message, tx *db.Tx, chatId int64, participantIds []int64, behalfUserId int64, promote bool) error {
+func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, message *db.Message, tx *db.Tx, chatId int64, participantIds []int64, behalfUserId int64, promote bool, count int64) error {
 
 	if message == nil {
 		return nil
@@ -970,7 +985,10 @@ func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, message 
 	patchForView(mc.stripAllTags, res)
 
 	// notify about promote to the pinned
-	mc.notificator.NotifyAboutPromotePinnedMessage(c, chatId, res, promote, participantIds)
+	mc.notificator.NotifyAboutPromotePinnedMessage(c, chatId, &dto.PinnedMessageEvent{
+		Message:    *res,
+		TotalCount: count,
+	}, promote, participantIds)
 	return nil
 }
 
