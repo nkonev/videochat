@@ -399,7 +399,9 @@
                     }
                     if (this.$refs.splInner) {
                         this.$refs.splInner.panes[0].size = stored.messages;
-                        this.$refs.splInner.panes[1].size = stored.edit;
+                        if (this.$refs.splInner.panes[1]) {
+                            this.$refs.splInner.panes[1].size = stored.edit;
+                        }
                     }
                 }
             },
