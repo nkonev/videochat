@@ -90,7 +90,7 @@ type MessageBroadcastNotification {
     text: String!
 }
 
-type FileUploadedEvent {
+type PreviewCreatedEvent {
     id: String!
     url: String!
     previewUrl: String
@@ -103,15 +103,36 @@ type PinnedMessageEvent {
     totalCount: Int64!
 }
 
+type FileInfoDto {
+    id: String!
+    filename: String!
+    url: String!
+    publicUrl: String
+    previewUrl: String
+    size: Int64!
+    canDelete:           Boolean!
+    canEdit:             Boolean!
+    canShare:             Boolean!
+    lastModified: Time!
+    ownerId: Int64!
+    owner:  User
+}
+
+type WrappedFileInfoDto {
+    fileInfoDto: FileInfoDto
+    count: Int64!
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
     messageDeletedEvent: MessageDeletedDto
     userTypingEvent: UserTypingDto
     messageBroadcastEvent: MessageBroadcastNotification
-    fileUploadedEvent: FileUploadedEvent
+    previewCreatedEvent: PreviewCreatedEvent
     participantsEvent: [UserWithAdmin!]
     promoteMessageEvent: PinnedMessageEvent
+    fileEvent: WrappedFileInfoDto
 }
 
 type VideoUserCountChangedDto {

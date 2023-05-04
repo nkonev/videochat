@@ -21,14 +21,15 @@ import (
 )
 
 type RestClient struct {
-	client              *http.Client
-	baseUrl             string
-	accessPath          string
-	removeFileItemPath  string
-	aaaBaseUrl          string
-	aaaGetUsersUrl      string
-	checkChatExistsPath string
-	tracer              trace.Tracer
+	client                 *http.Client
+	baseUrl                string
+	accessPath             string
+	removeFileItemPath     string
+	aaaBaseUrl             string
+	aaaGetUsersUrl         string
+	checkChatExistsPath    string
+	chatParticipantIdsPath string
+	tracer                 trace.Tracer
 }
 
 func newRestClient() *http.Client {
@@ -48,14 +49,15 @@ func NewChatAccessClient() *RestClient {
 	trcr := otel.Tracer("rest/client")
 
 	return &RestClient{
-		client:              client,
-		baseUrl:             viper.GetString("chat.url.base"),
-		accessPath:          viper.GetString("chat.url.access"),
-		removeFileItemPath:  viper.GetString("chat.url.removeFileItem"),
-		aaaBaseUrl:          viper.GetString("aaa.url.base"),
-		aaaGetUsersUrl:      viper.GetString("aaa.url.getUsers"),
-		checkChatExistsPath: viper.GetString("chat.url.checkChatExistsPath"),
-		tracer:              trcr,
+		client:                 client,
+		baseUrl:                viper.GetString("chat.url.base"),
+		accessPath:             viper.GetString("chat.url.access"),
+		removeFileItemPath:     viper.GetString("chat.url.removeFileItem"),
+		aaaBaseUrl:             viper.GetString("aaa.url.base"),
+		aaaGetUsersUrl:         viper.GetString("aaa.url.getUsers"),
+		checkChatExistsPath:    viper.GetString("chat.url.checkChatExistsPath"),
+		chatParticipantIdsPath: viper.GetString("chat.url.chatParticipants"),
+		tracer:                 trcr,
 	}
 }
 
@@ -227,4 +229,54 @@ func (h *RestClient) CheckIsChatExists(chatId int64, c context.Context) (bool, e
 		return false, err
 	}
 	return resultMap.Exists, nil
+}
+
+func (h *RestClient) GetChatParticipantIds(chatId int64, c context.Context) ([]int64, error) {
+	contentType := "application/json;charset=UTF-8"
+	fullUrl := h.baseUrl + h.chatParticipantIdsPath
+
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl + "?chatId=" + utils.Int64ToString(chatId))
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during parse chat participant ids url:", err)
+		return nil, err
+	}
+	request := &http.Request{
+		Method: "GET",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+
+	ctx, span := h.tracer.Start(c, "chat.GetParticipantIds")
+	defer span.End()
+	request = request.WithContext(ctx)
+
+	resp, err := h.client.Do(request)
+	if err != nil {
+		GetLogEntry(c).Warningln("Failed to request chat participant ids response:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		GetLogEntry(c).Warningln("Chat response responded non-200 code: ", code)
+		return nil, err
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed to decode chat participant ids response:", err)
+		return nil, err
+	}
+
+	userIds := new([]int64)
+	if err := json.Unmarshal(bodyBytes, userIds); err != nil {
+		GetLogEntry(c).Errorln("Failed to parse chat participant ids:", err)
+		return nil, err
+	}
+	return *userIds, nil
 }

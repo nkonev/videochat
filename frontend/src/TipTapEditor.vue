@@ -29,7 +29,7 @@ import Code from '@tiptap/extension-code';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {hasLength, media_image, media_video} from "@/utils";
-import bus, {FILE_UPLOAD_MODAL_START_UPLOADING, FILE_UPLOADED, OPEN_FILE_UPLOAD_MODAL} from "./bus";
+import bus, {FILE_UPLOAD_MODAL_START_UPLOADING, PREVIEW_CREATED, OPEN_FILE_UPLOAD_MODAL} from "./bus";
 import Video from "@/TipTapVideo";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -96,7 +96,7 @@ export default {
     setVideo(src, previewUrl) {
         this.editor.chain().focus().setVideo({ src: src, poster: previewUrl }).run();
     },
-    onFileUploaded(dto) {
+    onPreviewCreated(dto) {
         if (hasLength(this.correlationId) && this.correlationId == dto.correlationId) {
             if (dto.aType == media_video) {
                 this.setVideo(dto.url, dto.previewUrl)
@@ -107,7 +107,7 @@ export default {
     }
   },
   mounted() {
-    bus.$on(FILE_UPLOADED, this.onFileUploaded);
+    bus.$on(PREVIEW_CREATED, this.onPreviewCreated);
 
     const imagePluginInstance = buildImageHandler(
     (image) => {
@@ -176,7 +176,7 @@ export default {
   },
 
   beforeDestroy() {
-    bus.$off(FILE_UPLOADED, this.onFileUploaded);
+    bus.$off(PREVIEW_CREATED, this.onPreviewCreated);
     this.editor.destroy();
     this.fileInput = null;
   },

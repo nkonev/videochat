@@ -42,7 +42,6 @@ func (h *FilesService) GetListFilesInFileItem(
 	c context.Context,
 	filter func(*minio.ObjectInfo) bool,
 	requestOwners bool,
-	originalFilename bool,
 	size, offset int,
 ) ([]*dto.FileInfoDto, int, error) {
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
@@ -79,7 +78,7 @@ func (h *FilesService) GetListFilesInFileItem(
 				return nil, 0, err
 			}
 
-			info, err := h.GetFileInfo(behalfUserId, objInfo, chatId, tagging, true, originalFilename)
+			info, err := h.GetFileInfo(behalfUserId, objInfo, chatId, tagging, true)
 			if err != nil {
 				GetLogEntry(c).Errorf("Error get file info: %v, skipping", err)
 				continue
@@ -109,6 +108,20 @@ func (h *FilesService) GetListFilesInFileItem(
 	}
 
 	return list, count, nil
+}
+
+func (h *FilesService) GetCount(ctx context.Context, filenameChatPrefix string) (int, error) {
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), h.minioConfig.Files, minio.ListObjectsOptions{
+		Prefix:    filenameChatPrefix,
+		Recursive: true,
+	})
+
+	var count int = 0
+	for objInfo := range objects {
+		GetLogEntry(ctx).Debugf("Object '%v'", objInfo.Key)
+		count++
+	}
+	return count, nil
 }
 
 func (h *FilesService) GetTemporaryDownloadUrl(aKey string) (string, error) {
@@ -172,7 +185,7 @@ func (h *FilesService) getPublicUrl(public bool, fileName string) (*string, erro
 	return &str, nil
 }
 
-func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool, originalFilename bool) (*dto.FileInfoDto, error) {
+func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool) (*dto.FileInfoDto, error) {
 	previewUrl := h.GetPreviewUrlSmart(objInfo.Key)
 
 	metadata := objInfo.UserMetadata

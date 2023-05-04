@@ -14,6 +14,11 @@ type PinnedMessageEvent struct {
 	TotalCount int64             `json:"totalCount"`
 }
 
+type WrappedFileInfoDto struct {
+	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
+	Count       int64        `json:"count"`
+}
+
 type ChatEvent struct {
 	EventType                    string                        `json:"eventType"`
 	ChatId                       int64                         `json:"chatId"`
@@ -22,9 +27,10 @@ type ChatEvent struct {
 	MessageDeletedNotification   *MessageDeletedDto            `json:"messageDeletedNotification"`
 	UserTypingNotification       *UserTypingNotification       `json:"userTypingNotification"`
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
-	FileUploadedEvent            *FileUploadedEvent            `json:"fileUploadedEvent"`
+	PreviewCreatedEvent          *PreviewCreatedEvent          `json:"previewCreatedEvent"`
 	Participants                 *[]*UserWithAdmin             `json:"participants"`
 	PromoteMessageNotification   *PinnedMessageEvent           `json:"promoteMessageNotification"`
+	FileEvent                    *WrappedFileInfoDto           `json:"fileEvent"`
 }
 
 func (ChatEvent) Name() eventbus.EventName {
@@ -62,7 +68,7 @@ func (GlobalEvent) Name() eventbus.EventName {
 	return GLOBAL_EVENTS
 }
 
-type FileUploadedEvent struct {
+type PreviewCreatedEvent struct {
 	Id            string  `json:"id"`
 	Url           string  `json:"url"`
 	PreviewUrl    *string `json:"previewUrl"`
@@ -79,4 +85,19 @@ type ArrayUserOnline []UserOnline
 
 func (ArrayUserOnline) Name() eventbus.EventName {
 	return USER_ONLINE
+}
+
+type FileInfoDto struct {
+	Id           string    `json:"id"`
+	Filename     string    `json:"filename"`
+	Url          string    `json:"url"`
+	PublicUrl    *string   `json:"publicUrl"`
+	PreviewUrl   *string   `json:"previewUrl"`
+	Size         int64     `json:"size"`
+	CanDelete    bool      `json:"canDelete"`
+	CanEdit      bool      `json:"canEdit"`
+	CanShare     bool      `json:"canShare"`
+	LastModified time.Time `json:"lastModified"`
+	OwnerId      int64     `json:"ownerId"`
+	Owner        *User     `json:"owner"`
 }

@@ -80,11 +80,12 @@ type ComplexityRoot struct {
 
 	ChatEvent struct {
 		EventType             func(childComplexity int) int
-		FileUploadedEvent     func(childComplexity int) int
+		FileEvent             func(childComplexity int) int
 		MessageBroadcastEvent func(childComplexity int) int
 		MessageDeletedEvent   func(childComplexity int) int
 		MessageEvent          func(childComplexity int) int
 		ParticipantsEvent     func(childComplexity int) int
+		PreviewCreatedEvent   func(childComplexity int) int
 		PromoteMessageEvent   func(childComplexity int) int
 		UserTypingEvent       func(childComplexity int) int
 	}
@@ -120,12 +121,19 @@ type ComplexityRoot struct {
 		Text          func(childComplexity int) int
 	}
 
-	FileUploadedEvent struct {
-		AType         func(childComplexity int) int
-		CorrelationID func(childComplexity int) int
-		ID            func(childComplexity int) int
-		PreviewURL    func(childComplexity int) int
-		URL           func(childComplexity int) int
+	FileInfoDto struct {
+		CanDelete    func(childComplexity int) int
+		CanEdit      func(childComplexity int) int
+		CanShare     func(childComplexity int) int
+		Filename     func(childComplexity int) int
+		ID           func(childComplexity int) int
+		LastModified func(childComplexity int) int
+		Owner        func(childComplexity int) int
+		OwnerID      func(childComplexity int) int
+		PreviewURL   func(childComplexity int) int
+		PublicURL    func(childComplexity int) int
+		Size         func(childComplexity int) int
+		URL          func(childComplexity int) int
 	}
 
 	GlobalEvent struct {
@@ -168,6 +176,14 @@ type ComplexityRoot struct {
 	PinnedMessageEvent struct {
 		Message    func(childComplexity int) int
 		TotalCount func(childComplexity int) int
+	}
+
+	PreviewCreatedEvent struct {
+		AType         func(childComplexity int) int
+		CorrelationID func(childComplexity int) int
+		ID            func(childComplexity int) int
+		PreviewURL    func(childComplexity int) int
+		URL           func(childComplexity int) int
 	}
 
 	Query struct {
@@ -228,6 +244,11 @@ type ComplexityRoot struct {
 	VideoUserCountChangedDto struct {
 		ChatID     func(childComplexity int) int
 		UsersCount func(childComplexity int) int
+	}
+
+	WrappedFileInfoDto struct {
+		Count       func(childComplexity int) int
+		FileInfoDto func(childComplexity int) int
 	}
 }
 
@@ -416,12 +437,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatEvent.EventType(childComplexity), true
 
-	case "ChatEvent.fileUploadedEvent":
-		if e.complexity.ChatEvent.FileUploadedEvent == nil {
+	case "ChatEvent.fileEvent":
+		if e.complexity.ChatEvent.FileEvent == nil {
 			break
 		}
 
-		return e.complexity.ChatEvent.FileUploadedEvent(childComplexity), true
+		return e.complexity.ChatEvent.FileEvent(childComplexity), true
 
 	case "ChatEvent.messageBroadcastEvent":
 		if e.complexity.ChatEvent.MessageBroadcastEvent == nil {
@@ -450,6 +471,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatEvent.ParticipantsEvent(childComplexity), true
+
+	case "ChatEvent.previewCreatedEvent":
+		if e.complexity.ChatEvent.PreviewCreatedEvent == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.PreviewCreatedEvent(childComplexity), true
 
 	case "ChatEvent.promoteMessageEvent":
 		if e.complexity.ChatEvent.PromoteMessageEvent == nil {
@@ -619,40 +647,89 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EmbedMessageResponse.Text(childComplexity), true
 
-	case "FileUploadedEvent.aType":
-		if e.complexity.FileUploadedEvent.AType == nil {
+	case "FileInfoDto.canDelete":
+		if e.complexity.FileInfoDto.CanDelete == nil {
 			break
 		}
 
-		return e.complexity.FileUploadedEvent.AType(childComplexity), true
+		return e.complexity.FileInfoDto.CanDelete(childComplexity), true
 
-	case "FileUploadedEvent.correlationId":
-		if e.complexity.FileUploadedEvent.CorrelationID == nil {
+	case "FileInfoDto.canEdit":
+		if e.complexity.FileInfoDto.CanEdit == nil {
 			break
 		}
 
-		return e.complexity.FileUploadedEvent.CorrelationID(childComplexity), true
+		return e.complexity.FileInfoDto.CanEdit(childComplexity), true
 
-	case "FileUploadedEvent.id":
-		if e.complexity.FileUploadedEvent.ID == nil {
+	case "FileInfoDto.canShare":
+		if e.complexity.FileInfoDto.CanShare == nil {
 			break
 		}
 
-		return e.complexity.FileUploadedEvent.ID(childComplexity), true
+		return e.complexity.FileInfoDto.CanShare(childComplexity), true
 
-	case "FileUploadedEvent.previewUrl":
-		if e.complexity.FileUploadedEvent.PreviewURL == nil {
+	case "FileInfoDto.filename":
+		if e.complexity.FileInfoDto.Filename == nil {
 			break
 		}
 
-		return e.complexity.FileUploadedEvent.PreviewURL(childComplexity), true
+		return e.complexity.FileInfoDto.Filename(childComplexity), true
 
-	case "FileUploadedEvent.url":
-		if e.complexity.FileUploadedEvent.URL == nil {
+	case "FileInfoDto.id":
+		if e.complexity.FileInfoDto.ID == nil {
 			break
 		}
 
-		return e.complexity.FileUploadedEvent.URL(childComplexity), true
+		return e.complexity.FileInfoDto.ID(childComplexity), true
+
+	case "FileInfoDto.lastModified":
+		if e.complexity.FileInfoDto.LastModified == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.LastModified(childComplexity), true
+
+	case "FileInfoDto.owner":
+		if e.complexity.FileInfoDto.Owner == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.Owner(childComplexity), true
+
+	case "FileInfoDto.ownerId":
+		if e.complexity.FileInfoDto.OwnerID == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.OwnerID(childComplexity), true
+
+	case "FileInfoDto.previewUrl":
+		if e.complexity.FileInfoDto.PreviewURL == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.PreviewURL(childComplexity), true
+
+	case "FileInfoDto.publicUrl":
+		if e.complexity.FileInfoDto.PublicURL == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.PublicURL(childComplexity), true
+
+	case "FileInfoDto.size":
+		if e.complexity.FileInfoDto.Size == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.Size(childComplexity), true
+
+	case "FileInfoDto.url":
+		if e.complexity.FileInfoDto.URL == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.URL(childComplexity), true
 
 	case "GlobalEvent.allUnreadMessagesNotification":
 		if e.complexity.GlobalEvent.AllUnreadMessagesNotification == nil {
@@ -842,6 +919,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PinnedMessageEvent.TotalCount(childComplexity), true
+
+	case "PreviewCreatedEvent.aType":
+		if e.complexity.PreviewCreatedEvent.AType == nil {
+			break
+		}
+
+		return e.complexity.PreviewCreatedEvent.AType(childComplexity), true
+
+	case "PreviewCreatedEvent.correlationId":
+		if e.complexity.PreviewCreatedEvent.CorrelationID == nil {
+			break
+		}
+
+		return e.complexity.PreviewCreatedEvent.CorrelationID(childComplexity), true
+
+	case "PreviewCreatedEvent.id":
+		if e.complexity.PreviewCreatedEvent.ID == nil {
+			break
+		}
+
+		return e.complexity.PreviewCreatedEvent.ID(childComplexity), true
+
+	case "PreviewCreatedEvent.previewUrl":
+		if e.complexity.PreviewCreatedEvent.PreviewURL == nil {
+			break
+		}
+
+		return e.complexity.PreviewCreatedEvent.PreviewURL(childComplexity), true
+
+	case "PreviewCreatedEvent.url":
+		if e.complexity.PreviewCreatedEvent.URL == nil {
+			break
+		}
+
+		return e.complexity.PreviewCreatedEvent.URL(childComplexity), true
 
 	case "Query.ping":
 		if e.complexity.Query.Ping == nil {
@@ -1042,6 +1154,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.VideoUserCountChangedDto.UsersCount(childComplexity), true
 
+	case "WrappedFileInfoDto.count":
+		if e.complexity.WrappedFileInfoDto.Count == nil {
+			break
+		}
+
+		return e.complexity.WrappedFileInfoDto.Count(childComplexity), true
+
+	case "WrappedFileInfoDto.fileInfoDto":
+		if e.complexity.WrappedFileInfoDto.FileInfoDto == nil {
+			break
+		}
+
+		return e.complexity.WrappedFileInfoDto.FileInfoDto(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -1203,7 +1329,7 @@ type MessageBroadcastNotification {
     text: String!
 }
 
-type FileUploadedEvent {
+type PreviewCreatedEvent {
     id: String!
     url: String!
     previewUrl: String
@@ -1216,15 +1342,36 @@ type PinnedMessageEvent {
     totalCount: Int64!
 }
 
+type FileInfoDto {
+    id: String!
+    filename: String!
+    url: String!
+    publicUrl: String
+    previewUrl: String
+    size: Int64!
+    canDelete:           Boolean!
+    canEdit:             Boolean!
+    canShare:             Boolean!
+    lastModified: Time!
+    ownerId: Int64!
+    owner:  User
+}
+
+type WrappedFileInfoDto {
+    fileInfoDto: FileInfoDto
+    count: Int64!
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
     messageDeletedEvent: MessageDeletedDto
     userTypingEvent: UserTypingDto
     messageBroadcastEvent: MessageBroadcastNotification
-    fileUploadedEvent: FileUploadedEvent
+    previewCreatedEvent: PreviewCreatedEvent
     participantsEvent: [UserWithAdmin!]
     promoteMessageEvent: PinnedMessageEvent
+    fileEvent: WrappedFileInfoDto
 }
 
 type VideoUserCountChangedDto {
@@ -2604,8 +2751,8 @@ func (ec *executionContext) fieldContext_ChatEvent_messageBroadcastEvent(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _ChatEvent_fileUploadedEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChatEvent_fileUploadedEvent(ctx, field)
+func (ec *executionContext) _ChatEvent_previewCreatedEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_previewCreatedEvent(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2618,7 +2765,7 @@ func (ec *executionContext) _ChatEvent_fileUploadedEvent(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FileUploadedEvent, nil
+		return obj.PreviewCreatedEvent, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2627,12 +2774,12 @@ func (ec *executionContext) _ChatEvent_fileUploadedEvent(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.FileUploadedEvent)
+	res := resTmp.(*model.PreviewCreatedEvent)
 	fc.Result = res
-	return ec.marshalOFileUploadedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐFileUploadedEvent(ctx, field.Selections, res)
+	return ec.marshalOPreviewCreatedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐPreviewCreatedEvent(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ChatEvent_fileUploadedEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ChatEvent_previewCreatedEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ChatEvent",
 		Field:      field,
@@ -2641,17 +2788,17 @@ func (ec *executionContext) fieldContext_ChatEvent_fileUploadedEvent(ctx context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_FileUploadedEvent_id(ctx, field)
+				return ec.fieldContext_PreviewCreatedEvent_id(ctx, field)
 			case "url":
-				return ec.fieldContext_FileUploadedEvent_url(ctx, field)
+				return ec.fieldContext_PreviewCreatedEvent_url(ctx, field)
 			case "previewUrl":
-				return ec.fieldContext_FileUploadedEvent_previewUrl(ctx, field)
+				return ec.fieldContext_PreviewCreatedEvent_previewUrl(ctx, field)
 			case "aType":
-				return ec.fieldContext_FileUploadedEvent_aType(ctx, field)
+				return ec.fieldContext_PreviewCreatedEvent_aType(ctx, field)
 			case "correlationId":
-				return ec.fieldContext_FileUploadedEvent_correlationId(ctx, field)
+				return ec.fieldContext_PreviewCreatedEvent_correlationId(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type FileUploadedEvent", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PreviewCreatedEvent", field.Name)
 		},
 	}
 	return fc, nil
@@ -2752,6 +2899,53 @@ func (ec *executionContext) fieldContext_ChatEvent_promoteMessageEvent(ctx conte
 				return ec.fieldContext_PinnedMessageEvent_totalCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PinnedMessageEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatEvent_fileEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_fileEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.WrappedFileInfoDto)
+	fc.Result = res
+	return ec.marshalOWrappedFileInfoDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐWrappedFileInfoDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_fileEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "fileInfoDto":
+				return ec.fieldContext_WrappedFileInfoDto_fileInfoDto(ctx, field)
+			case "count":
+				return ec.fieldContext_WrappedFileInfoDto_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type WrappedFileInfoDto", field.Name)
 		},
 	}
 	return fc, nil
@@ -3740,8 +3934,8 @@ func (ec *executionContext) fieldContext_EmbedMessageResponse_isParticipant(ctx 
 	return fc, nil
 }
 
-func (ec *executionContext) _FileUploadedEvent_id(ctx context.Context, field graphql.CollectedField, obj *model.FileUploadedEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FileUploadedEvent_id(ctx, field)
+func (ec *executionContext) _FileInfoDto_id(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3771,9 +3965,9 @@ func (ec *executionContext) _FileUploadedEvent_id(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FileUploadedEvent_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FileInfoDto_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "FileUploadedEvent",
+		Object:     "FileInfoDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3784,8 +3978,52 @@ func (ec *executionContext) fieldContext_FileUploadedEvent_id(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _FileUploadedEvent_url(ctx context.Context, field graphql.CollectedField, obj *model.FileUploadedEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FileUploadedEvent_url(ctx, field)
+func (ec *executionContext) _FileInfoDto_filename(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_filename(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Filename, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_filename(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_url(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_url(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3815,9 +4053,9 @@ func (ec *executionContext) _FileUploadedEvent_url(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FileUploadedEvent_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FileInfoDto_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "FileUploadedEvent",
+		Object:     "FileInfoDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3828,8 +4066,49 @@ func (ec *executionContext) fieldContext_FileUploadedEvent_url(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _FileUploadedEvent_previewUrl(ctx context.Context, field graphql.CollectedField, obj *model.FileUploadedEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FileUploadedEvent_previewUrl(ctx, field)
+func (ec *executionContext) _FileInfoDto_publicUrl(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_publicUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PublicURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_publicUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_previewUrl(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_previewUrl(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3856,9 +4135,9 @@ func (ec *executionContext) _FileUploadedEvent_previewUrl(ctx context.Context, f
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FileUploadedEvent_previewUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FileInfoDto_previewUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "FileUploadedEvent",
+		Object:     "FileInfoDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3869,8 +4148,8 @@ func (ec *executionContext) fieldContext_FileUploadedEvent_previewUrl(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _FileUploadedEvent_aType(ctx context.Context, field graphql.CollectedField, obj *model.FileUploadedEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FileUploadedEvent_aType(ctx, field)
+func (ec *executionContext) _FileInfoDto_size(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_size(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3883,35 +4162,38 @@ func (ec *executionContext) _FileUploadedEvent_aType(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.AType, nil
+		return obj.Size, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(int64)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FileUploadedEvent_aType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FileInfoDto_size(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "FileUploadedEvent",
+		Object:     "FileInfoDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _FileUploadedEvent_correlationId(ctx context.Context, field graphql.CollectedField, obj *model.FileUploadedEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FileUploadedEvent_correlationId(ctx, field)
+func (ec *executionContext) _FileInfoDto_canDelete(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_canDelete(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3924,7 +4206,227 @@ func (ec *executionContext) _FileUploadedEvent_correlationId(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CorrelationID, nil
+		return obj.CanDelete, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_canDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_canEdit(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_canEdit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanEdit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_canEdit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_canShare(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_canShare(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanShare, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_canShare(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_lastModified(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_lastModified(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastModified, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_lastModified(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_ownerId(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_ownerId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OwnerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_ownerId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_owner(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Owner, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3933,19 +4435,29 @@ func (ec *executionContext) _FileUploadedEvent_correlationId(ctx context.Context
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FileUploadedEvent_correlationId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FileInfoDto_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "FileUploadedEvent",
+		Object:     "FileInfoDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "login":
+				return ec.fieldContext_User_login(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_User_shortInfo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -5244,6 +5756,217 @@ func (ec *executionContext) fieldContext_PinnedMessageEvent_totalCount(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _PreviewCreatedEvent_id(ctx context.Context, field graphql.CollectedField, obj *model.PreviewCreatedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PreviewCreatedEvent_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PreviewCreatedEvent_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PreviewCreatedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PreviewCreatedEvent_url(ctx context.Context, field graphql.CollectedField, obj *model.PreviewCreatedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PreviewCreatedEvent_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PreviewCreatedEvent_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PreviewCreatedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PreviewCreatedEvent_previewUrl(ctx context.Context, field graphql.CollectedField, obj *model.PreviewCreatedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PreviewCreatedEvent_previewUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PreviewURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PreviewCreatedEvent_previewUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PreviewCreatedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PreviewCreatedEvent_aType(ctx context.Context, field graphql.CollectedField, obj *model.PreviewCreatedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PreviewCreatedEvent_aType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PreviewCreatedEvent_aType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PreviewCreatedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PreviewCreatedEvent_correlationId(ctx context.Context, field graphql.CollectedField, obj *model.PreviewCreatedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PreviewCreatedEvent_correlationId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CorrelationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PreviewCreatedEvent_correlationId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PreviewCreatedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_ping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_ping(ctx, field)
 	if err != nil {
@@ -5477,12 +6200,14 @@ func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Con
 				return ec.fieldContext_ChatEvent_userTypingEvent(ctx, field)
 			case "messageBroadcastEvent":
 				return ec.fieldContext_ChatEvent_messageBroadcastEvent(ctx, field)
-			case "fileUploadedEvent":
-				return ec.fieldContext_ChatEvent_fileUploadedEvent(ctx, field)
+			case "previewCreatedEvent":
+				return ec.fieldContext_ChatEvent_previewCreatedEvent(ctx, field)
 			case "participantsEvent":
 				return ec.fieldContext_ChatEvent_participantsEvent(ctx, field)
 			case "promoteMessageEvent":
 				return ec.fieldContext_ChatEvent_promoteMessageEvent(ctx, field)
+			case "fileEvent":
+				return ec.fieldContext_ChatEvent_fileEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatEvent", field.Name)
 		},
@@ -6654,6 +7379,117 @@ func (ec *executionContext) _VideoUserCountChangedDto_chatId(ctx context.Context
 func (ec *executionContext) fieldContext_VideoUserCountChangedDto_chatId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VideoUserCountChangedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WrappedFileInfoDto_fileInfoDto(ctx context.Context, field graphql.CollectedField, obj *model.WrappedFileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WrappedFileInfoDto_fileInfoDto(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileInfoDto, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.FileInfoDto)
+	fc.Result = res
+	return ec.marshalOFileInfoDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐFileInfoDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileInfoDto(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WrappedFileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_FileInfoDto_id(ctx, field)
+			case "filename":
+				return ec.fieldContext_FileInfoDto_filename(ctx, field)
+			case "url":
+				return ec.fieldContext_FileInfoDto_url(ctx, field)
+			case "publicUrl":
+				return ec.fieldContext_FileInfoDto_publicUrl(ctx, field)
+			case "previewUrl":
+				return ec.fieldContext_FileInfoDto_previewUrl(ctx, field)
+			case "size":
+				return ec.fieldContext_FileInfoDto_size(ctx, field)
+			case "canDelete":
+				return ec.fieldContext_FileInfoDto_canDelete(ctx, field)
+			case "canEdit":
+				return ec.fieldContext_FileInfoDto_canEdit(ctx, field)
+			case "canShare":
+				return ec.fieldContext_FileInfoDto_canShare(ctx, field)
+			case "lastModified":
+				return ec.fieldContext_FileInfoDto_lastModified(ctx, field)
+			case "ownerId":
+				return ec.fieldContext_FileInfoDto_ownerId(ctx, field)
+			case "owner":
+				return ec.fieldContext_FileInfoDto_owner(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FileInfoDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WrappedFileInfoDto_count(ctx context.Context, field graphql.CollectedField, obj *model.WrappedFileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WrappedFileInfoDto_count(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Count, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WrappedFileInfoDto_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WrappedFileInfoDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -8677,9 +9513,9 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._ChatEvent_messageBroadcastEvent(ctx, field, obj)
 
-		case "fileUploadedEvent":
+		case "previewCreatedEvent":
 
-			out.Values[i] = ec._ChatEvent_fileUploadedEvent(ctx, field, obj)
+			out.Values[i] = ec._ChatEvent_previewCreatedEvent(ctx, field, obj)
 
 		case "participantsEvent":
 
@@ -8688,6 +9524,10 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 		case "promoteMessageEvent":
 
 			out.Values[i] = ec._ChatEvent_promoteMessageEvent(ctx, field, obj)
+
+		case "fileEvent":
+
+			out.Values[i] = ec._ChatEvent_fileEvent(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8896,41 +9736,90 @@ func (ec *executionContext) _EmbedMessageResponse(ctx context.Context, sel ast.S
 	return out
 }
 
-var fileUploadedEventImplementors = []string{"FileUploadedEvent"}
+var fileInfoDtoImplementors = []string{"FileInfoDto"}
 
-func (ec *executionContext) _FileUploadedEvent(ctx context.Context, sel ast.SelectionSet, obj *model.FileUploadedEvent) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, fileUploadedEventImplementors)
+func (ec *executionContext) _FileInfoDto(ctx context.Context, sel ast.SelectionSet, obj *model.FileInfoDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fileInfoDtoImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("FileUploadedEvent")
+			out.Values[i] = graphql.MarshalString("FileInfoDto")
 		case "id":
 
-			out.Values[i] = ec._FileUploadedEvent_id(ctx, field, obj)
+			out.Values[i] = ec._FileInfoDto_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "filename":
+
+			out.Values[i] = ec._FileInfoDto_filename(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "url":
 
-			out.Values[i] = ec._FileUploadedEvent_url(ctx, field, obj)
+			out.Values[i] = ec._FileInfoDto_url(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "publicUrl":
+
+			out.Values[i] = ec._FileInfoDto_publicUrl(ctx, field, obj)
+
 		case "previewUrl":
 
-			out.Values[i] = ec._FileUploadedEvent_previewUrl(ctx, field, obj)
+			out.Values[i] = ec._FileInfoDto_previewUrl(ctx, field, obj)
 
-		case "aType":
+		case "size":
 
-			out.Values[i] = ec._FileUploadedEvent_aType(ctx, field, obj)
+			out.Values[i] = ec._FileInfoDto_size(ctx, field, obj)
 
-		case "correlationId":
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "canDelete":
 
-			out.Values[i] = ec._FileUploadedEvent_correlationId(ctx, field, obj)
+			out.Values[i] = ec._FileInfoDto_canDelete(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "canEdit":
+
+			out.Values[i] = ec._FileInfoDto_canEdit(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "canShare":
+
+			out.Values[i] = ec._FileInfoDto_canShare(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "lastModified":
+
+			out.Values[i] = ec._FileInfoDto_lastModified(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "ownerId":
+
+			out.Values[i] = ec._FileInfoDto_ownerId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "owner":
+
+			out.Values[i] = ec._FileInfoDto_owner(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9193,6 +10082,53 @@ func (ec *executionContext) _PinnedMessageEvent(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var previewCreatedEventImplementors = []string{"PreviewCreatedEvent"}
+
+func (ec *executionContext) _PreviewCreatedEvent(ctx context.Context, sel ast.SelectionSet, obj *model.PreviewCreatedEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, previewCreatedEventImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PreviewCreatedEvent")
+		case "id":
+
+			out.Values[i] = ec._PreviewCreatedEvent_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "url":
+
+			out.Values[i] = ec._PreviewCreatedEvent_url(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "previewUrl":
+
+			out.Values[i] = ec._PreviewCreatedEvent_previewUrl(ctx, field, obj)
+
+		case "aType":
+
+			out.Values[i] = ec._PreviewCreatedEvent_aType(ctx, field, obj)
+
+		case "correlationId":
+
+			out.Values[i] = ec._PreviewCreatedEvent_correlationId(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9613,6 +10549,38 @@ func (ec *executionContext) _VideoUserCountChangedDto(ctx context.Context, sel a
 		case "chatId":
 
 			out.Values[i] = ec._VideoUserCountChangedDto_chatId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var wrappedFileInfoDtoImplementors = []string{"WrappedFileInfoDto"}
+
+func (ec *executionContext) _WrappedFileInfoDto(ctx context.Context, sel ast.SelectionSet, obj *model.WrappedFileInfoDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, wrappedFileInfoDtoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WrappedFileInfoDto")
+		case "fileInfoDto":
+
+			out.Values[i] = ec._WrappedFileInfoDto_fileInfoDto(ctx, field, obj)
+
+		case "count":
+
+			out.Values[i] = ec._WrappedFileInfoDto_count(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -10574,11 +11542,11 @@ func (ec *executionContext) marshalOEmbedMessageResponse2ᚖnkonevᚗnameᚋeven
 	return ec._EmbedMessageResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOFileUploadedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐFileUploadedEvent(ctx context.Context, sel ast.SelectionSet, v *model.FileUploadedEvent) graphql.Marshaler {
+func (ec *executionContext) marshalOFileInfoDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐFileInfoDto(ctx context.Context, sel ast.SelectionSet, v *model.FileInfoDto) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._FileUploadedEvent(ctx, sel, v)
+	return ec._FileInfoDto(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOInt642ᚖint64(ctx context.Context, v interface{}) (*int64, error) {
@@ -10623,6 +11591,13 @@ func (ec *executionContext) marshalOPinnedMessageEvent2ᚖnkonevᚗnameᚋevent�
 		return graphql.Null
 	}
 	return ec._PinnedMessageEvent(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPreviewCreatedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐPreviewCreatedEvent(ctx context.Context, sel ast.SelectionSet, v *model.PreviewCreatedEvent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PreviewCreatedEvent(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
@@ -10760,6 +11735,13 @@ func (ec *executionContext) marshalOVideoUserCountChangedDto2ᚖnkonevᚗnameᚋ
 		return graphql.Null
 	}
 	return ec._VideoUserCountChangedDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOWrappedFileInfoDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐWrappedFileInfoDto(ctx context.Context, sel ast.SelectionSet, v *model.WrappedFileInfoDto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._WrappedFileInfoDto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

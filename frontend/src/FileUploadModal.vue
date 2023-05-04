@@ -13,7 +13,7 @@
                         show-size
                         small-chips
                         truncate-length="15"
-                        @change="updateFiles"
+                        @change="updateChosenFiles"
                         :error-messages="limitError ? [limitError] : []"
                     ></v-file-input>
 
@@ -49,7 +49,6 @@ import bus, {
     OPEN_FILE_UPLOAD_MODAL,
     CLOSE_FILE_UPLOAD_MODAL,
     SET_FILE_ITEM_UUID,
-    UPDATE_VIEW_FILES_DIALOG,
     FILE_UPLOAD_MODAL_START_UPLOADING
 } from "./bus";
 import axios from "axios";
@@ -172,7 +171,6 @@ export default {
                                     count: (presignedUrlResponse.existingCount + index + 1)
                                 });
                             }
-                            bus.$emit(UPDATE_VIEW_FILES_DIALOG);
                             return response;
                         })
                 } catch(thrown) {
@@ -192,8 +190,8 @@ export default {
         cancel() {
             this.cancelSource.cancel()
         },
-        updateFiles(files) {
-            console.log("updateFiles", files);
+        updateChosenFiles(files) {
+            console.log("updateChosenFiles", files);
             this.files = [...files];
             this.limitError = null;
             let totalSize = 0;

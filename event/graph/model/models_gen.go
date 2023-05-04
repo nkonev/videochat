@@ -45,9 +45,10 @@ type ChatEvent struct {
 	MessageDeletedEvent   *MessageDeletedDto            `json:"messageDeletedEvent"`
 	UserTypingEvent       *UserTypingDto                `json:"userTypingEvent"`
 	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
-	FileUploadedEvent     *FileUploadedEvent            `json:"fileUploadedEvent"`
+	PreviewCreatedEvent   *PreviewCreatedEvent          `json:"previewCreatedEvent"`
 	ParticipantsEvent     []*UserWithAdmin              `json:"participantsEvent"`
 	PromoteMessageEvent   *PinnedMessageEvent           `json:"promoteMessageEvent"`
+	FileEvent             *WrappedFileInfoDto           `json:"fileEvent"`
 }
 
 type ChatUnreadMessageChanged struct {
@@ -81,12 +82,19 @@ type EmbedMessageResponse struct {
 	IsParticipant bool    `json:"isParticipant"`
 }
 
-type FileUploadedEvent struct {
-	ID            string  `json:"id"`
-	URL           string  `json:"url"`
-	PreviewURL    *string `json:"previewUrl"`
-	AType         *string `json:"aType"`
-	CorrelationID *string `json:"correlationId"`
+type FileInfoDto struct {
+	ID           string    `json:"id"`
+	Filename     string    `json:"filename"`
+	URL          string    `json:"url"`
+	PublicURL    *string   `json:"publicUrl"`
+	PreviewURL   *string   `json:"previewUrl"`
+	Size         int64     `json:"size"`
+	CanDelete    bool      `json:"canDelete"`
+	CanEdit      bool      `json:"canEdit"`
+	CanShare     bool      `json:"canShare"`
+	LastModified time.Time `json:"lastModified"`
+	OwnerID      int64     `json:"ownerId"`
+	Owner        *User     `json:"owner"`
 }
 
 type GlobalEvent struct {
@@ -129,6 +137,14 @@ type NotificationDto struct {
 type PinnedMessageEvent struct {
 	Message    *DisplayMessageDto `json:"message"`
 	TotalCount int64              `json:"totalCount"`
+}
+
+type PreviewCreatedEvent struct {
+	ID            string  `json:"id"`
+	URL           string  `json:"url"`
+	PreviewURL    *string `json:"previewUrl"`
+	AType         *string `json:"aType"`
+	CorrelationID *string `json:"correlationId"`
 }
 
 type User struct {
@@ -179,4 +195,9 @@ type VideoRecordingChangedDto struct {
 type VideoUserCountChangedDto struct {
 	UsersCount int64 `json:"usersCount"`
 	ChatID     int64 `json:"chatId"`
+}
+
+type WrappedFileInfoDto struct {
+	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
+	Count       int64        `json:"count"`
 }

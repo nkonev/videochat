@@ -289,7 +289,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 		}
 	}
 
-	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, true, true, filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -363,7 +363,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 
-	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, true, true, filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -476,7 +476,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	info, err := h.filesService.GetFileInfo(userPrincipalDto.UserId, objectInfo, chatId, tagging, false, true)
+	info, err := h.filesService.GetFileInfo(userPrincipalDto.UserId, objectInfo, chatId, tagging, false)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getFileInfo %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -678,7 +678,7 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 		}
 	}
 
-	items, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, false, filesSize, filesOffset)
+	items, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}

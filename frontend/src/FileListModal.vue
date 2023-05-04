@@ -83,20 +83,20 @@
 <script>
 
 import bus, {
-    CLOSE_SIMPLE_MODAL, FILE_UPLOADED, OPEN_FILE_UPLOAD_MODAL,
+    CLOSE_SIMPLE_MODAL, PREVIEW_CREATED, OPEN_FILE_UPLOAD_MODAL,
     OPEN_SIMPLE_MODAL, OPEN_TEXT_EDIT_MODAL,
-    OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, UPDATE_VIEW_FILES_DIALOG
+    OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, FILE_CREATED, FILE_REMOVED
 } from "./bus";
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
 import axios from "axios";
-import {getHumanReadableDate, replaceInArray, formatSize, hasLength} from "./utils";
+import {getHumanReadableDate, replaceInArray, formatSize, hasLength, findIndex, replaceOrAppend} from "./utils";
 import debounce from "lodash/debounce";
 
 const firstPage = 1;
 const pageSize = 20;
 
-const dtoFactory = () => {return {files: []} };
+const dtoFactory = () => {return {files: [], count: 0} };
 
 export default {
     data () {
@@ -185,17 +185,13 @@ export default {
                         }
                     })
                         .then((response) => {
-                            this.dto = response.data;
                             if (this.$data.messageEditing) {
                                 bus.$emit(SET_FILE_ITEM_UUID, {fileItemUuid: this.fileItemUuid, count: response.data.count});
                             }
 
-                            if (this.dto.count == 0) {
+                            if (response.data.count == 0) {
                                 if (this.filePage > firstPage) {
                                     this.filePage--;
-                                    this.updateFiles();
-                                } else {
-                                    this.closeModal();
                                 }
                             }
                             bus.$emit(CLOSE_SIMPLE_MODAL);
@@ -224,16 +220,43 @@ export default {
         resetInput() {
             this.searchString = null;
         },
-        onFileUploaded(dto) {
+        onPreviewCreated(dto) {
             if (!this.show) {
                 return
             }
 
+            console.log("Replacing preview", dto);
             for (const fileItem of this.dto.files) {
                 if (fileItem.id == dto.id) {
                     fileItem.previewUrl = dto.previewUrl;
+                    break
                 }
             }
+        },
+        removeItem(dto) {
+            console.log("Removing item", dto);
+            const idxToRemove = findIndex(this.dto.files, dto);
+            this.dto.files.splice(idxToRemove, 1);
+            this.$forceUpdate();
+        },
+        replaceItem(dto) {
+            console.log("Replacing item", dto);
+            replaceOrAppend(this.dto.files, [dto]);
+            this.$forceUpdate();
+        },
+        onFileCreated(dto) {
+            if (!this.show) {
+                return
+            }
+            this.dto.count = dto.count;
+            this.replaceItem(dto.fileInfoDto);
+        },
+        onFileRemoved(dto) {
+            if (!this.show) {
+                return
+            }
+            this.dto.count = dto.count;
+            this.removeItem(dto.fileInfoDto);
         },
     },
     filters: {
@@ -261,13 +284,15 @@ export default {
     created() {
         this.doSearch = debounce(this.doSearch, 700);
         bus.$on(OPEN_VIEW_FILES_DIALOG, this.showModal);
-        bus.$on(UPDATE_VIEW_FILES_DIALOG, this.updateFiles);
-        bus.$on(FILE_UPLOADED, this.onFileUploaded);
+        bus.$on(PREVIEW_CREATED, this.onPreviewCreated);
+        bus.$on(FILE_CREATED, this.onFileCreated);
+        bus.$on(FILE_REMOVED, this.onFileRemoved);
     },
     destroyed() {
         bus.$off(OPEN_VIEW_FILES_DIALOG, this.showModal);
-        bus.$off(UPDATE_VIEW_FILES_DIALOG, this.updateFiles);
-        bus.$off(FILE_UPLOADED, this.onFileUploaded);
+        bus.$off(PREVIEW_CREATED, this.onPreviewCreated);
+        bus.$off(FILE_CREATED, this.onFileCreated);
+        bus.$off(FILE_REMOVED, this.onFileRemoved);
     },
 }
 </script>

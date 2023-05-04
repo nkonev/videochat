@@ -244,9 +244,9 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 		}
 	}
 
-	fileUploadedEvent := e.FileUploadedEvent
+	fileUploadedEvent := e.PreviewCreatedEvent
 	if fileUploadedEvent != nil {
-		result.FileUploadedEvent = &model.FileUploadedEvent{
+		result.PreviewCreatedEvent = &model.PreviewCreatedEvent{
 			ID:            fileUploadedEvent.Id,
 			URL:           fileUploadedEvent.Url,
 			PreviewURL:    fileUploadedEvent.PreviewUrl,
@@ -263,6 +263,27 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	promotePinnedMessageEvent := e.PromoteMessageNotification
 	if promotePinnedMessageEvent != nil {
 		result.PromoteMessageEvent = convertPinnedMessageEvent(promotePinnedMessageEvent)
+	}
+
+	fileEvent := e.FileEvent
+	if fileEvent != nil {
+		result.FileEvent = &model.WrappedFileInfoDto{
+			FileInfoDto: &model.FileInfoDto{
+				ID:           fileEvent.FileInfoDto.Id,
+				Filename:     fileEvent.FileInfoDto.Filename,
+				URL:          fileEvent.FileInfoDto.Url,
+				PublicURL:    fileEvent.FileInfoDto.PublicUrl,
+				PreviewURL:   fileEvent.FileInfoDto.PreviewUrl,
+				Size:         fileEvent.FileInfoDto.Size,
+				CanDelete:    fileEvent.FileInfoDto.CanDelete,
+				CanEdit:      fileEvent.FileInfoDto.CanEdit,
+				CanShare:     fileEvent.FileInfoDto.CanShare,
+				LastModified: fileEvent.FileInfoDto.LastModified,
+				OwnerID:      fileEvent.FileInfoDto.OwnerId,
+				Owner:        convertUser(fileEvent.FileInfoDto.Owner),
+			},
+			Count: fileEvent.Count,
+		}
 	}
 
 	return result

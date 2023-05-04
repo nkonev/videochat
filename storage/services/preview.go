@@ -16,7 +16,6 @@ import (
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"os/exec"
-	"strings"
 	"time"
 )
 
@@ -36,21 +35,24 @@ func NewPreviewService(minio *s3.InternalMinioClient, minioConfig *utils.MinioCo
 	}
 }
 
-func (s PreviewService) HandleMinioEvent(data *dto.MinioEvent, ctx context.Context) {
+func (s *PreviewService) HandleMinioEvent(participantIds []int64, data *dto.MinioEvent, ctx context.Context) {
 	Logger.Debugf("Got %v", data)
 	normalizedKey := utils.StripBucketName(data.Key, s.minioConfig.Files)
-	if strings.HasPrefix(data.EventName, utils.ObjectCreated) {
-		s.CreatePreview(normalizedKey, ctx)
-
-		if pu, err := s.getFileUploadedEvent(normalizedKey, data.ChatId, data.CorrelationId, ctx); err == nil {
-			s.rabbitFileUploadedPublisher.Publish(data.OwnerId, data.ChatId, pu, ctx)
-		} else {
-			Logger.Errorf("Error during constructing uploaded event %v for %v", err, normalizedKey)
+	s.CreatePreview(normalizedKey, ctx)
+	if pu, err := s.getFileUploadedEvent(normalizedKey, data.ChatId, data.CorrelationId, ctx); err == nil {
+		for _, participantId := range participantIds {
+			err = s.rabbitFileUploadedPublisher.Publish(participantId, data.ChatId, pu, ctx)
+			if err != nil {
+				Logger.Errorf("Error during ending: %v", err)
+				continue
+			}
 		}
+	} else {
+		Logger.Errorf("Error during constructing uploaded event %v for %v", err, normalizedKey)
 	}
 }
 
-func (s PreviewService) CreatePreview(normalizedKey string, ctx context.Context) {
+func (s *PreviewService) CreatePreview(normalizedKey string, ctx context.Context) {
 	if utils.IsImage(normalizedKey) {
 		object, err := s.minio.GetObject(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectOptions{})
 		if err != nil {
@@ -115,7 +117,7 @@ func (s PreviewService) CreatePreview(normalizedKey string, ctx context.Context)
 	return
 }
 
-func (s PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error) {
+func (s *PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error) {
 	srcImage, _, err := image.Decode(reader)
 	if err != nil {
 		Logger.Errorf("Error during decoding image: %v", err)
@@ -131,7 +133,7 @@ func (s PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error
 	return byteBuffer, nil
 }
 
-func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64, correlationId *string, ctx context.Context) (*dto.FileUploadedEvent, error) {
+func (s *PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64, correlationId *string, ctx context.Context) (*dto.PreviewCreatedEvent, error) {
 	downloadUrl, err := s.filesService.GetConstantDownloadUrl(normalizedKey)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting url: %v", err)
@@ -140,7 +142,7 @@ func (s PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64,
 	var previewUrl *string = s.filesService.GetPreviewUrlSmart(normalizedKey)
 	var aType = GetType(normalizedKey)
 
-	return &dto.FileUploadedEvent{
+	return &dto.PreviewCreatedEvent{
 		Id:            normalizedKey,
 		Url:           downloadUrl,
 		PreviewUrl:    previewUrl,

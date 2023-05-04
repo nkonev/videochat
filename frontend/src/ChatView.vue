@@ -136,13 +136,13 @@
         REFRESH_ON_WEBSOCKET_RESTORED,
         OPEN_EDIT_MESSAGE,
         PROFILE_SET,
-        FILE_UPLOADED,
+        PREVIEW_CREATED,
         PARTICIPANT_ADDED,
         PARTICIPANT_DELETED,
         PARTICIPANT_EDITED,
         VIDEO_DIAL_STATUS_CHANGED,
         PINNED_MESSAGE_PROMOTED,
-        PINNED_MESSAGE_UNPROMOTED, ADD_VIDEO_SOURCE_DIALOG,
+        PINNED_MESSAGE_UNPROMOTED, ADD_VIDEO_SOURCE_DIALOG, FILE_CREATED, FILE_REMOVED,
     } from "./bus";
     import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "./routes";
     import MessageEdit from "./MessageEdit";
@@ -612,7 +612,7 @@
                                       userId
                                       text
                                     }
-                                    fileUploadedEvent {
+                                    previewCreatedEvent {
                                       id
                                       url
                                       previewUrl
@@ -630,6 +630,27 @@
                                       message {
                                         ...DisplayMessageDtoFragment
                                       }
+                                    }
+                                    fileEvent {
+                                      fileInfoDto {
+                                        id
+                                        filename
+                                        url
+                                        publicUrl
+                                        previewUrl
+                                        size
+                                        canDelete
+                                        canEdit
+                                        canShare
+                                        lastModified
+                                        ownerId
+                                        owner {
+                                          id
+                                          login
+                                          avatar
+                                        }
+                                      }
+                                      count
                                     }
                                   }
                                 }
@@ -651,9 +672,9 @@
                 } else if (getChatEventsData(e).eventType === "user_broadcast") {
                     const d = getChatEventsData(e).messageBroadcastEvent;
                     bus.$emit(MESSAGE_BROADCAST, d);
-                } else if (getChatEventsData(e).eventType === "file_uploaded") {
-                    const d = getChatEventsData(e).fileUploadedEvent;
-                    bus.$emit(FILE_UPLOADED, d);
+                } else if (getChatEventsData(e).eventType === "preview_created") {
+                    const d = getChatEventsData(e).previewCreatedEvent;
+                    bus.$emit(PREVIEW_CREATED, d);
                 } else if (getChatEventsData(e).eventType === "participant_added") {
                     const d = getChatEventsData(e).participantsEvent;
                     bus.$emit(PARTICIPANT_ADDED, d);
@@ -669,6 +690,12 @@
                 } else if (getChatEventsData(e).eventType === "pinned_message_unpromote") {
                     const d = getChatEventsData(e).promoteMessageEvent;
                     bus.$emit(PINNED_MESSAGE_UNPROMOTED, d);
+                } else if (getChatEventsData(e).eventType === "file_created") {
+                    const d = getChatEventsData(e).fileEvent;
+                    bus.$emit(FILE_CREATED, d);
+                } else if (getChatEventsData(e).eventType === "file_removed") {
+                    const d = getChatEventsData(e).fileEvent;
+                    bus.$emit(FILE_REMOVED, d);
                 }
             },
             updateVideoRecordingState() {

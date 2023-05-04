@@ -19,6 +19,11 @@ type FileInfoDto struct {
 	Owner        *User     `json:"owner"`
 }
 
+type WrappedFileInfoDto struct {
+	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
+	Count       int64        `json:"count"`
+}
+
 type MinioEvent struct {
 	EventName     string
 	Key           string

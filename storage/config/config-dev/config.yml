@@ -60,6 +60,8 @@ chat:
     access: "/internal/access"
     removeFileItem: "/internal/remove-file-item"
     checkChatExistsPath: "/internal/is-chat-exists"
+    chatParticipants: "/internal/participant-ids"
+
 aaa:
   url:
     base: "http://localhost:8060"

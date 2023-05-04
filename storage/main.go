@@ -61,6 +61,7 @@ func main() {
 			rabbitmq.CreateRabbitMqConnection,
 			services.NewFilesService,
 			services.NewPreviewService,
+			services.NewEventService,
 		),
 		fx.Invoke(
 			runScheduler,
@@ -280,6 +281,7 @@ func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig,
 					Config: notification.Config{
 						Events: []notification.EventType{
 							utils.ObjectCreated + ":*",
+							utils.ObjectRemoved + ":*",
 						},
 					},
 				},
