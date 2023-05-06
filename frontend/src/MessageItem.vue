@@ -164,43 +164,9 @@
     height 100%
   }
 
-  .message-item-root {
-      // align-items: center;
-      display: flex;
-      flex: 1 1 100%;
-      letter-spacing: normal;
-      min-height: 48px;
-      outline: none;
-      padding: 0 16px;
-      padding-right: 16px;
-      padding-left: 16px;
-      position: relative;
-      text-decoration: none;
-  }
-  .message-item-with-buttons-wrapper {
-      flex 1 1
-  }
-  .message-item-wrapper {
-      border-radius 10px
-      background #efefef
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: baseline;
-      width: fit-content;
-      word-wrap break-word
-      overflow-wrap break-word
-
-      .after-embed {
-          padding-top: 0
-      }
-  }
 
   .with-space {
       white-space: pre;
-  }
-  .my {
-      background $messageSelectedBackground
   }
 
   .hash {
