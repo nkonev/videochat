@@ -45,6 +45,7 @@ func main() {
 			configureEcho,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
+			handlers.NewBlogHandler,
 			configureMigrations,
 			db.ConfigureDb,
 			services.NewEvents,
@@ -105,6 +106,7 @@ func configureEcho(
 	lc fx.Lifecycle,
 	ch *handlers.ChatHandler,
 	mc *handlers.MessageHandler,
+	bh *handlers.BlogHandler,
 	tp *sdktrace.TracerProvider,
 ) *echo.Echo {
 
@@ -168,6 +170,12 @@ func configureEcho(
 	e.GET("/chat/:id/message/pin/promoted", mc.GetPinnedMessage)
 	e.PUT("/chat/:id/message/:messageId/pin", mc.PinMessage)
 	e.PUT("/chat/:id/pin", ch.PinChat)
+
+	e.PUT("/chat/:id/blog", bh.MakeBlog)
+	e.POST("/blog", bh.CreateBlog)
+	e.DELETE("/blog/:id", bh.DeleteBlog)
+	e.GET("/blog", bh.GetBlogs)
+	e.GET("/blog/:id", bh.GetComments)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
