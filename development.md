@@ -635,3 +635,6 @@ curl -Ss 'http://localhost:8081/api/chat/114/message/pin' -H 'Cookie: VIDEOCHAT_
 ```
 
 
+```
+curl -Ss --url 'http://localhost:8081/api/blog' -H 'Cookie: VIDEOCHAT_SESSION=YTRiMzhlNzktY2E2Yi00ZTFkLTkyMWEtNGJkZTIyMDBlYzQx' | jq '.'
+```

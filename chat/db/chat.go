@@ -139,10 +139,10 @@ func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) 
 	}
 }
 
-func (db *DB) GetBlogPostsByLimitOffset(limit int, offset int) ([]*Blog, error) {
+func getBlogPostsByLimitOffsetCommon(co CommonOperations, limit int, offset int) ([]*Blog, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = db.Query(`SELECT 
+	rows, err = co.Query(`SELECT 
 				ch.id, 
 				ch.title,
 				ch.create_date_time
@@ -164,6 +164,63 @@ func (db *DB) GetBlogPostsByLimitOffset(limit int, offset int) ([]*Blog, error) 
 		}
 		return list, nil
 	}
+}
+
+func (tx *Tx) GetBlogPostsByLimitOffset(limit int, offset int) ([]*Blog, error) {
+	return getBlogPostsByLimitOffsetCommon(tx, limit, offset)
+}
+
+func (db *DB) GetBlogPostsByLimitOffset(limit int, offset int) ([]*Blog, error) {
+	return getBlogPostsByLimitOffsetCommon(db, limit, offset)
+}
+
+type BlogPost struct {
+	ChatId    int64
+	MessageId int64
+	OwnerId   int64
+	Text      string
+}
+
+func blogPostsCommon(co CommonOperations, ids []int64) ([]*BlogPost, error) {
+	var builder = ""
+	var first = true
+	for _, chatId := range ids {
+		if !first {
+			builder += " union "
+		}
+		builder += fmt.Sprintf("(select %v, id, owner_id, text from message_chat_%v where blog_post is true limit 1)", chatId, chatId)
+
+		first = false
+	}
+
+	var rows *sql.Rows
+	var err error
+	rows, err = co.Query(builder)
+	if err != nil {
+		Logger.Errorf("Error during get chat rows %v", err)
+		return nil, err
+	} else {
+		defer rows.Close()
+		list := make([]*BlogPost, 0)
+		for rows.Next() {
+			chat := BlogPost{}
+			if err := rows.Scan(&chat.ChatId, &chat.MessageId, &chat.OwnerId, &chat.Text); err != nil {
+				Logger.Errorf("Error during scan chat rows %v", err)
+				return nil, err
+			} else {
+				list = append(list, &chat)
+			}
+		}
+		return list, nil
+	}
+}
+
+func (tx *Tx) BlogPosts(ids []int64) ([]*BlogPost, error) {
+	return blogPostsCommon(tx, ids)
+}
+
+func (db *DB) BlogPosts(ids []int64) ([]*BlogPost, error) {
+	return blogPostsCommon(db, ids)
 }
 
 func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {

@@ -10,6 +10,7 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
+	"time"
 )
 
 type BlogHandler struct {
@@ -79,9 +80,11 @@ func (h *BlogHandler) CreateBlogPost(c echo.Context) error {
 }
 
 type BlogPostPreviewDto struct {
-	Id      int64  `json:"id"`
-	Title   string `json:"title"`
-	Preview string `json:"preview"`
+	Id             int64     `json:"id"` // chatId
+	Title          string    `json:"title"`
+	CreateDateTime time.Time `json:"createDateTime"`
+	OwnerId        *int64    `json:"ownerId"`
+	Preview        *string   `json:"preview"`
 }
 
 func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
@@ -96,13 +99,44 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 	size := utils.FixSizeString(c.QueryParam("size"))
 	offset := utils.GetOffset(page, size)
 
-	// get chats where blog=true
-	blogs, err := h.db.GetBlogPostsByLimitOffset(size, offset)
-	if err != nil {
-		return err
-	}
-	// get their message where blog_post=true for sake to make preview
-	return c.JSON(http.StatusOK, blogs)
+	return db.Transact(h.db, func(tx *db.Tx) error {
+		// get chats where blog=true
+		blogs, err := tx.GetBlogPostsByLimitOffset(size, offset)
+		if err != nil {
+			return err
+		}
+
+		var blogIds []int64 = make([]int64, 0)
+		for _, blog := range blogs {
+			blogIds = append(blogIds, blog.Id)
+		}
+		posts, err := tx.BlogPosts(blogIds)
+		if err != nil {
+			return err
+		}
+		var response = make([]*BlogPostPreviewDto, 0)
+		for _, blog := range blogs {
+
+			blogPost := &BlogPostPreviewDto{
+				Id:             blog.Id,
+				CreateDateTime: blog.CreateDateTime,
+				Title:          blog.Title,
+			}
+
+			for _, post := range posts {
+				if post.ChatId == blog.Id {
+					blogPost.Preview = &post.Text
+					blogPost.OwnerId = &post.OwnerId
+					break
+				}
+			}
+
+			response = append(response, blogPost)
+		}
+
+		// get their message where blog_post=true for sake to make preview
+		return c.JSON(http.StatusOK, response)
+	})
 }
 
 //	func (h *BlogHandler) GetComments(c echo.Context) error {

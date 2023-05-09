@@ -47,6 +47,8 @@ type CommonOperations interface {
 	SetAdmin(userId int64, chatId int64, newAdmin bool) error
 	GetChatBasic(chatId int64) (*BasicChatDto, error)
 	GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error)
+	GetBlogPostsByLimitOffset(limit int, offset int) ([]*Blog, error)
+	BlogPosts(ids []int64) ([]*BlogPost, error)
 }
 
 func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {
