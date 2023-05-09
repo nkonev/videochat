@@ -25,6 +25,13 @@ type Chat struct {
 	AvatarBig          null.String
 	AvailableToSearch  bool
 	Pinned             bool
+	Blog               bool
+}
+
+type Blog struct {
+	Id             int64
+	Title          string
+	CreateDateTime time.Time
 }
 
 type ChatWithParticipants struct {
@@ -45,7 +52,7 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	}
 
 	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch)
+	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -87,7 +94,8 @@ func selectChatClause() string {
 				ch.tet_a_tet,
 				ch.can_resend,
 				ch.available_to_search,
-				cp.user_id IS NOT NULL as pinned
+				cp.user_id IS NOT NULL as pinned,
+				ch.blog
 			FROM chat ch 
 				LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1)
 `
@@ -104,6 +112,7 @@ func provideScanToChat(chat *Chat) []any {
 		&chat.CanResend,
 		&chat.AvailableToSearch,
 		&chat.Pinned,
+		&chat.Blog,
 	}
 }
 
@@ -120,6 +129,33 @@ func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) 
 		for rows.Next() {
 			chat := Chat{}
 			if err := rows.Scan(provideScanToChat(&chat)[:]...); err != nil {
+				Logger.Errorf("Error during scan chat rows %v", err)
+				return nil, err
+			} else {
+				list = append(list, &chat)
+			}
+		}
+		return list, nil
+	}
+}
+
+func (db *DB) GetBlogPostsByLimitOffset(limit int, offset int) ([]*Blog, error) {
+	var rows *sql.Rows
+	var err error
+	rows, err = db.Query(`SELECT 
+				ch.id, 
+				ch.title,
+				ch.create_date_time
+			FROM chat ch WHERE ch.blog is TRUE ORDER BY (ch.last_update_date_time, ch.id) DESC LIMIT $1 OFFSET $2`, limit, offset)
+	if err != nil {
+		Logger.Errorf("Error during get chat rows %v", err)
+		return nil, err
+	} else {
+		defer rows.Close()
+		list := make([]*Blog, 0)
+		for rows.Next() {
+			chat := Blog{}
+			if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -563,6 +599,14 @@ func (tx *Tx) IsChatPinned(chatId int64, behalfUserId int64) (bool, error) {
 		return false, err
 	}
 	return res, nil
+}
+
+func (tx *Tx) RenameChat(chatId int64, title string) error {
+	_, err := tx.Exec("update chat set title = $1 where id = $2", title, chatId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (db *DB) DeleteAllParticipants() error {

@@ -37,6 +37,7 @@ type Message struct {
 
 	Pinned      bool
 	PinPromoted bool
+	BlogPost    bool
 }
 
 func selectMessageClause(chatId int64) string {
@@ -55,7 +56,8 @@ func selectMessageClause(chatId int64) string {
 			m.embed_chat_id as embedded_message_resend_chat_id,
 			m.embed_owner_id as embedded_message_resend_owner_id,
 			m.pinned,
-			m.pin_promoted
+			m.pin_promoted,
+			m.blog_post
 		FROM message_chat_%v m 
 		LEFT JOIN message_chat_%v me 
 			ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
@@ -79,6 +81,7 @@ func provideScanToMessage(message *Message) []any {
 		&message.ResponseEmbeddedMessageResendOwnerId,
 		&message.Pinned,
 		&message.PinPromoted,
+		&message.BlogPost,
 	}
 }
 
@@ -335,7 +338,7 @@ func (tx *Tx) EditMessage(m *Message) error {
 		return errors.New("error during initializing embed struct")
 	}
 
-	if res, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2, embed_message_id = $5, embed_chat_id = $6, embed_owner_id = $7, embed_message_type = $8 WHERE owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType); err != nil {
+	if res, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2, embed_message_id = $5, embed_chat_id = $6, embed_owner_id = $7, embed_message_type = $8, blog_post = $9 WHERE owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType, m.BlogPost); err != nil {
 		Logger.Errorf("Error during editing message id %v", err)
 		return err
 	} else {

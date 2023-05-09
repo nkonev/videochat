@@ -171,11 +171,10 @@ func configureEcho(
 	e.PUT("/chat/:id/message/:messageId/pin", mc.PinMessage)
 	e.PUT("/chat/:id/pin", ch.PinChat)
 
-	e.PUT("/chat/:id/blog", bh.MakeBlog)
-	e.POST("/blog", bh.CreateBlog)
-	e.DELETE("/blog/:id", bh.DeleteBlog)
-	e.GET("/blog", bh.GetBlogs)
-	e.GET("/blog/:id", bh.GetComments)
+	e.POST("/blog", bh.CreateBlogPost)
+	e.PUT("/blog/rename", bh.RenameBlogPost)
+	e.GET("/blog", bh.GetBlogPosts)
+	//e.GET("/blog/:id", bh.GetComments)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

@@ -44,6 +44,7 @@ type CreateChatDto struct {
 	AvatarBig         null.String `json:"avatarBig"`
 	CanResend         bool        `json:"canResend"`
 	AvailableToSearch bool        `json:"availableToSearch"`
+	Blog              bool        `json:"blog"`
 }
 
 type ChatHandler struct {
@@ -281,6 +282,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 
 		ParticipantsCount:  c.ParticipantsCount,
 		LastUpdateDateTime: c.LastUpdateDateTime,
+		Blog:               c.Blog,
 	}
 
 	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
@@ -357,6 +359,7 @@ func convertToCreatableChat(d *CreateChatDto, policy *services.SanitizerPolicy) 
 		Title:             TrimAmdSanitize(policy, d.Name),
 		CanResend:         d.CanResend,
 		AvailableToSearch: d.AvailableToSearch,
+		Blog:              d.Blog,
 	}
 }
 

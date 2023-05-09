@@ -55,6 +55,13 @@ http:
         - "auth-middleware"
         - "api-strip-prefix-middleware"
         - "retry-middleware"
+    blog-router:
+      rule: "PathPrefix(`/api/blog`)"
+      service: chat-service
+      middlewares:
+        - "auth-middleware"
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
     storage-router:
       rule: "PathPrefix(`/api/storage`)"
       service: storage-service

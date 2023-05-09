@@ -197,6 +197,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 		Owner:          user,
 		FileItemUuid:   dbMessage.FileItemUuid,
 		Pinned:         dbMessage.Pinned,
+		BlogPost:       dbMessage.BlogPost,
 	}
 
 	if dbMessage.ResponseEmbeddedMessageReplyOwnerId != nil {

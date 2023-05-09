@@ -38,6 +38,7 @@ type DisplayMessageDto struct {
 	FileItemUuid   *uuid.UUID            `json:"fileItemUuid"`
 	EmbedMessage   *EmbedMessageResponse `json:"embedMessage"`
 	Pinned         bool                  `json:"pinned"`
+	BlogPost       bool                  `json:"blogPost"`
 }
 
 func (copied *DisplayMessageDto) SetPersonalizedFields(participantId int64) {
