@@ -188,7 +188,7 @@ func blogPostsCommon(co CommonOperations, ids []int64) ([]*BlogPost, error) {
 		if !first {
 			builder += " union "
 		}
-		builder += fmt.Sprintf("(select %v, id, owner_id, text from message_chat_%v where blog_post is true limit 1)", chatId, chatId)
+		builder += fmt.Sprintf("(select %v, id, owner_id, text from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
 
 		first = false
 	}
