@@ -36,7 +36,7 @@
                         <v-list-item-content>
                             <v-list-item-title>{{ item?.owner?.login }}</v-list-item-title>
                             <v-list-item-subtitle>
-                                {{ getDate(item) }}
+                                {{ $vuetify.lang.t('$vuetify.in') + getDate(item) }}
                             </v-list-item-subtitle>
                         </v-list-item-content>
                     </v-list-item>
