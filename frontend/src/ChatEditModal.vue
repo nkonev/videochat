@@ -75,6 +75,13 @@
                             dense
                         ></v-checkbox>
 
+                        <v-checkbox
+                            v-model="editDto.blog"
+                            :label="$vuetify.lang.t('$vuetify.blog')"
+                            hide-details
+                            dense
+                        ></v-checkbox>
+
                         <template v-if="!isNew">
                             <v-container class="pb-0 px-0 pt-1">
                                 <v-img v-if="editDto.avatarBig || editDto.avatar"
@@ -177,6 +184,7 @@
                             avatarBig: response.data.avatarBig,
                             canResend: response.data.canResend,
                             availableToSearch: response.data.availableToSearch,
+                            blog: response.data.blog,
                         };
                     })
             },
@@ -222,6 +230,7 @@
                         avatarBig: this.editDto.avatarBig,
                         canResend: this.editDto.canResend,
                         availableToSearch: this.editDto.availableToSearch,
+                        blog: this.editDto.blog,
                     };
 
                     if (this.isNew) {

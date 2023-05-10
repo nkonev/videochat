@@ -471,9 +471,9 @@ func (tx *Tx) DeleteChat(id int64) error {
 	}
 }
 
-func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String, canResend bool, availableToSearch bool) (*time.Time, error) {
+func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String, canResend bool, availableToSearch bool, blog bool) (*time.Time, error) {
 
-	if res, err := tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch); err != nil {
+	if res, err := tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, blog); err != nil {
 		Logger.Errorf("Error during editing chat id %v", err)
 		return nil, err
 	} else {

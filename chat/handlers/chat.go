@@ -428,7 +428,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
 		}
-		_, err := tx.EditChat(bindTo.Id, TrimAmdSanitize(ch.policy, bindTo.Name), bindTo.Avatar, bindTo.AvatarBig, bindTo.CanResend, bindTo.AvailableToSearch)
+		_, err := tx.EditChat(bindTo.Id, TrimAmdSanitize(ch.policy, bindTo.Name), bindTo.Avatar, bindTo.AvatarBig, bindTo.CanResend, bindTo.AvailableToSearch, bindTo.Blog)
 		if err != nil {
 			return err
 		}
