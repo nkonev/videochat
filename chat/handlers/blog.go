@@ -4,6 +4,7 @@ import (
 	"errors"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/db"
@@ -14,16 +15,18 @@ import (
 )
 
 type BlogHandler struct {
-	db          *db.DB
-	notificator services.Events
-	policy      *services.SanitizerPolicy
+	db              *db.DB
+	notificator     services.Events
+	policy          *services.SanitizerPolicy
+	stripTagsPolicy *services.StripTagsPolicy
 }
 
-func NewBlogHandler(db *db.DB, notificator services.Events, policy *services.SanitizerPolicy) *BlogHandler {
+func NewBlogHandler(db *db.DB, notificator services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy) *BlogHandler {
 	return &BlogHandler{
-		db:          db,
-		notificator: notificator,
-		policy:      policy,
+		db:              db,
+		notificator:     notificator,
+		policy:          policy,
+		stripTagsPolicy: stripTagsPolicy,
 	}
 }
 
@@ -84,6 +87,7 @@ type BlogPostPreviewDto struct {
 	Title          string    `json:"title"`
 	CreateDateTime time.Time `json:"createDateTime"`
 	OwnerId        *int64    `json:"ownerId"`
+	MessageId      *int64    `json:"messageId"`
 	Preview        *string   `json:"preview"`
 }
 
@@ -125,8 +129,12 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 
 			for _, post := range posts {
 				if post.ChatId == blog.Id {
-					blogPost.Preview = &post.Text
+					tmp := h.stripTagsPolicy.Sanitize(post.Text)
+					max := viper.GetInt("blogPreviewMaxTextSize")
+					tmp = tmp[:utils.Min(max, len(tmp))]
+					blogPost.Preview = &tmp
 					blogPost.OwnerId = &post.OwnerId
+					blogPost.MessageId = &post.MessageId
 					break
 				}
 			}
