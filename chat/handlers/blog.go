@@ -7,7 +7,9 @@ import (
 	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
+	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
+	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
@@ -19,14 +21,16 @@ type BlogHandler struct {
 	notificator     services.Events
 	policy          *services.SanitizerPolicy
 	stripTagsPolicy *services.StripTagsPolicy
+	restClient      *client.RestClient
 }
 
-func NewBlogHandler(db *db.DB, notificator services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy) *BlogHandler {
+func NewBlogHandler(db *db.DB, notificator services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy, restClient *client.RestClient) *BlogHandler {
 	return &BlogHandler{
 		db:              db,
 		notificator:     notificator,
 		policy:          policy,
 		stripTagsPolicy: stripTagsPolicy,
+		restClient:      restClient,
 	}
 }
 
@@ -87,6 +91,7 @@ type BlogPostPreviewDto struct {
 	Title          string    `json:"title"`
 	CreateDateTime time.Time `json:"createDateTime"`
 	OwnerId        *int64    `json:"ownerId"`
+	Owner          *dto.User `json:"owner"`
 	MessageId      *int64    `json:"messageId"`
 	Preview        *string   `json:"preview"`
 }
@@ -140,6 +145,20 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			}
 
 			response = append(response, blogPost)
+		}
+
+		var participantIdSet = map[int64]bool{}
+		for _, respDto := range response {
+			if respDto.OwnerId != nil {
+				participantIdSet[*respDto.OwnerId] = true
+			}
+		}
+		var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
+
+		for _, respDto := range response {
+			if respDto.OwnerId != nil {
+				respDto.Owner = users[*respDto.OwnerId]
+			}
 		}
 
 		// get their message where blog_post=true for sake to make preview
