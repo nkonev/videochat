@@ -37,4 +37,4 @@ jaeger:
 previewMaxTextSize: 240
 # Along with resending, it makes all files in private chat available to GET by any logged in user
 canResendFromTetATet: true
-blogPreviewMaxTextSize: 800
+blogPreviewMaxTextSize: 400

@@ -138,11 +138,7 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			for _, post := range posts {
 				if post.ChatId == blog.Id {
 					blogPost.ImageUrl = h.tryGetFirstImage(post.Text)
-
-					tmp := h.stripTagsPolicy.Sanitize(post.Text)
-					max := viper.GetInt("blogPreviewMaxTextSize")
-					tmp = tmp[:utils.Min(max, len(tmp))]
-					blogPost.Preview = &tmp
+					blogPost.Preview = h.cutText(post.Text)
 					blogPost.OwnerId = &post.OwnerId
 					blogPost.MessageId = &post.MessageId
 					break
@@ -227,4 +223,12 @@ func (h *BlogHandler) tryGetFirstImage(text string) *string {
 		}
 	}
 	return nil
+}
+
+func (h *BlogHandler) cutText(text string) *string {
+	tmp := h.stripTagsPolicy.Sanitize(text)
+	runes := []rune(tmp)
+	size := utils.Min(viper.GetInt("blogPreviewMaxTextSize"), len(runes))
+	ret := string(runes[:size])
+	return &ret
 }

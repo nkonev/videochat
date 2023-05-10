@@ -161,8 +161,10 @@ func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, er
 
 func createMessagePreview(cleanTagsPolicy *services.StripTagsPolicy, text, login string) string {
 	tmp := cleanTagsPolicy.Sanitize(loginPrefix(login) + text)
-	size := utils.Min(len(tmp), viper.GetInt("previewMaxTextSize"))
-	return tmp[:size]
+	runes := []rune(tmp)
+	size := utils.Min(len(runes), viper.GetInt("previewMaxTextSize"))
+	ret := string(runes[:size])
+	return ret
 }
 
 func loginPrefix(login string) string {
@@ -171,6 +173,8 @@ func loginPrefix(login string) string {
 
 func createMessagePreviewWithoutLogin(cleanTagsPolicy *services.StripTagsPolicy, text string) string {
 	tmp := cleanTagsPolicy.Sanitize(text)
-	size := utils.Min(len(tmp), viper.GetInt("previewMaxTextSize"))
-	return tmp[:size]
+	runes := []rune(tmp)
+	size := utils.Min(len(runes), viper.GetInt("previewMaxTextSize"))
+	ret := string(runes[:size])
+	return ret
 }
