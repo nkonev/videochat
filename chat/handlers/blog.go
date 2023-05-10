@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"github.com/PuerkitoBio/goquery"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
@@ -13,6 +14,7 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
+	"strings"
 	"time"
 )
 
@@ -94,6 +96,7 @@ type BlogPostPreviewDto struct {
 	Owner          *dto.User `json:"owner"`
 	MessageId      *int64    `json:"messageId"`
 	Preview        *string   `json:"preview"`
+	ImageUrl       *string   `json:"imageUrl"`
 }
 
 func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
@@ -134,6 +137,8 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 
 			for _, post := range posts {
 				if post.ChatId == blog.Id {
+					blogPost.ImageUrl = h.tryGetFirstImage(post.Text)
+
 					tmp := h.stripTagsPolicy.Sanitize(post.Text)
 					max := viper.GetInt("blogPreviewMaxTextSize")
 					tmp = tmp[:utils.Min(max, len(tmp))]
@@ -204,4 +209,22 @@ func (h *BlogHandler) RenameBlogPost(c echo.Context) error {
 		return err
 	})
 
+}
+
+func (h *BlogHandler) tryGetFirstImage(text string) *string {
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
+	if err != nil {
+		Logger.Warnf("Unagle to get image: %v", err)
+		return nil
+	}
+
+	maybeImage := doc.Find("img").First()
+	if maybeImage != nil {
+		src, exists := maybeImage.Attr("src")
+		if exists {
+			return &src
+		}
+	}
+	return nil
 }
