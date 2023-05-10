@@ -19,10 +19,6 @@
                     </v-container>
                 </v-img>
 
-                <v-card-subtitle class="pb-0">
-                    {{ getDate(item) }}
-                </v-card-subtitle>
-
                 <v-card-text class="text--primary pb-0">
                     {{ item.preview }}
                 </v-card-text>
@@ -39,6 +35,9 @@
 
                         <v-list-item-content>
                             <v-list-item-title>{{ item?.owner?.login }}</v-list-item-title>
+                            <v-list-item-subtitle>
+                                {{ getDate(item) }}
+                            </v-list-item-subtitle>
                         </v-list-item-content>
                     </v-list-item>
                 </v-card-actions>
