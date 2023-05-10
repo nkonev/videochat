@@ -112,12 +112,18 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		return err
 	}
 
+	var chatIds []int64 = make([]int64, 0)
+	for _, cc := range dbChats {
+		chatIds = append(chatIds, cc.Id)
+	}
+	unreadMessageBatch, err := ch.db.GetUnreadMessagesCountBatch(chatIds, userPrincipalDto.UserId)
+	if err != nil {
+		return err
+	}
+
 	chatDtos := make([]*dto.ChatDto, 0)
 	for _, cc := range dbChats {
-		messages, err := ch.db.GetUnreadMessagesCount(cc.Id, userPrincipalDto.UserId)
-		if err != nil {
-			return err
-		}
+		messages := unreadMessageBatch[cc.Id]
 
 		isParticipant := utils.Contains(chatsWithMe, cc.Id)
 

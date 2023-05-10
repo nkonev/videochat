@@ -219,6 +219,33 @@ type ChatQueryByIds struct {
 	Ids []int64
 }
 
+type ParticipantIds struct {
+	ChatId         int64
+	ParticipantIds []int64
+}
+
+func convertToWithParticipantsBatch(chat *Chat, participantIdsBatch []*ParticipantIds, isAdminBatch map[int64]bool, participantsCountBatch map[int64]int) (*ChatWithParticipants, error) {
+	participantsCount := participantsCountBatch[chat.Id]
+
+	var participantsIds []int64 = make([]int64, 0)
+	for _, pidsb := range participantIdsBatch {
+		if pidsb.ChatId == chat.Id {
+			participantsIds = pidsb.ParticipantIds
+			break
+		}
+	}
+
+	admin := isAdminBatch[chat.Id]
+
+	ccc := &ChatWithParticipants{
+		Chat:              *chat,
+		ParticipantsIds:   participantsIds,
+		IsAdmin:           admin,
+		ParticipantsCount: participantsCount,
+	}
+	return ccc, nil
+}
+
 func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
 	var err error
 	var chats []*Chat
@@ -232,11 +259,31 @@ func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, s
 	if err != nil {
 		return nil, err
 	} else {
-		fixedParticipantsSize := utils.FixSize(participantsSize)
-		list := make([]*ChatWithParticipants, 0)
+		var chatIds []int64 = make([]int64, 0)
 		for _, cc := range chats {
+			chatIds = append(chatIds, cc.Id)
+		}
 
-			if ccc, err := convertToWithParticipants(db, cc, userPrincipalDto.UserId, fixedParticipantsSize, participantsOffset); err != nil {
+		fixedParticipantsSize := utils.FixSize(participantsSize)
+		participantIdsBatch, err := db.GetParticipantIdsBatch(chatIds, fixedParticipantsSize)
+		if err != nil {
+			return nil, err
+		}
+
+		isAdminBatch, err := db.IsAdminBatch(userPrincipalDto.UserId, chatIds)
+		if err != nil {
+			return nil, err
+		}
+
+		participantsCountBatch, err := db.GetParticipantsCountBatch(chatIds)
+		if err != nil {
+			return nil, err
+		}
+
+		list := make([]*ChatWithParticipants, 0)
+
+		for _, cc := range chats {
+			if ccc, err := convertToWithParticipantsBatch(cc, participantIdsBatch, isAdminBatch, participantsCountBatch); err != nil {
 				return nil, err
 			} else {
 				list = append(list, ccc)
