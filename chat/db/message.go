@@ -410,6 +410,57 @@ func (tx *Tx) GetUnreadMessagesCount(chatId int64, userId int64) (int64, error) 
 	return getUnreadMessagesCountCommon(tx, chatId, userId)
 }
 
+func getUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, userId int64) (map[int64]int64, error) {
+	res := map[int64]int64{}
+
+	if len(chatIds) == 0 {
+		return res, nil
+	}
+
+	var builder = ""
+	var first = true
+	for _, chatId := range chatIds {
+		if !first {
+			builder += " union "
+		}
+		builder += fmt.Sprintf("(SELECT %v, * FROM UNREAD_MESSAGES(%v, %v))", chatId, chatId, userId)
+
+		first = false
+	}
+
+	var rows *sql.Rows
+	var err error
+	rows, err = co.Query(builder)
+	if err != nil {
+		Logger.Errorf("Error during get chat rows %v", err)
+		return nil, err
+	} else {
+		defer rows.Close()
+		for _, cid := range chatIds {
+			res[cid] = 0
+		}
+		for rows.Next() {
+			var chatId int64
+			var count int64
+			if err := rows.Scan(&chatId, &count); err != nil {
+				Logger.Errorf("Error during scan chat rows %v", err)
+				return nil, err
+			} else {
+				res[chatId] = count
+			}
+		}
+		return res, nil
+	}
+}
+
+func (db *DB) GetUnreadMessagesCountBatch(chatIds []int64, userId int64) (map[int64]int64, error) {
+	return getUnreadMessagesCountBatchCommon(db, chatIds, userId)
+}
+
+func (tx *Tx) GetUnreadMessagesCountBatch(chatIds []int64, userId int64) (map[int64]int64, error) {
+	return getUnreadMessagesCountBatchCommon(tx, chatIds, userId)
+}
+
 func (tx *Tx) HasPinnedMessages(chatId int64) (hasPinnedMessages bool, err error) {
 	row := tx.QueryRow(fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM message_chat_%v WHERE pinned IS TRUE)", chatId))
 	err = row.Scan(&hasPinnedMessages)

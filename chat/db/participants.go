@@ -1,7 +1,11 @@
 package db
 
 import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/utils"
 )
 
 // db model
@@ -46,6 +50,53 @@ func (tx *Tx) GetParticipantIds(chatId int64, participantsSize, participantsOffs
 
 func (db *DB) GetParticipantIds(chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
 	return getParticipantIdsCommon(db, chatId, participantsSize, participantsOffset)
+}
+
+func getParticipantIdsBatchCommon(qq CommonOperations, chatIds []int64, participantsSize int) ([]*ParticipantIds, error) {
+	res := make([]*ParticipantIds, 0)
+	if len(chatIds) == 0 {
+		return res, nil
+	}
+
+	var builder = ""
+	var first = true
+	for _, chatId := range chatIds {
+		if !first {
+			builder += ", "
+		}
+		builder += utils.Int64ToString(chatId)
+		first = false
+	}
+	if rows, err := qq.Query(fmt.Sprintf("SELECT chat_id, jsonb_agg(user_id) FROM chat_participant WHERE chat_id in (%v) group by chat_id;", builder)); err != nil {
+		return nil, err
+	} else {
+		defer rows.Close()
+		for rows.Next() {
+			var pi = new(ParticipantIds)
+			var arr string
+			if err := rows.Scan(&pi.ChatId, &arr); err != nil {
+				Logger.Errorf("Error during scan chat rows %v", err)
+				return nil, err
+			} else {
+				err := json.Unmarshal([]byte(arr), &pi.ParticipantIds)
+				if err != nil {
+					return nil, err
+				}
+
+				pi.ParticipantIds = pi.ParticipantIds[:utils.Min(len(pi.ParticipantIds), int(participantsSize))]
+				res = append(res, pi)
+			}
+		}
+		return res, nil
+	}
+}
+
+func (tx *Tx) GetParticipantIdsBatch(chatIds []int64, participantsSize int) ([]*ParticipantIds, error) {
+	return getParticipantIdsBatchCommon(tx, chatIds, participantsSize)
+}
+
+func (db *DB) GetParticipantIdsBatch(chatIds []int64, participantsSize int) ([]*ParticipantIds, error) {
+	return getParticipantIdsBatchCommon(db, chatIds, participantsSize)
 }
 
 func getAllParticipantIdsCommon(qq CommonOperations, chatId int64) ([]int64, error) {
@@ -94,6 +145,57 @@ func (db *DB) GetParticipantsCount(chatId int64) (int, error) {
 	return getParticipantsCountCommon(db, chatId)
 }
 
+func getParticipantsCountBatchCommon(qq CommonOperations, chatIds []int64) (map[int64]int, error) {
+	res := map[int64]int{}
+
+	if len(chatIds) == 0 {
+		return res, nil
+	}
+
+	var builder = ""
+	var first = true
+	for _, chatId := range chatIds {
+		if !first {
+			builder += " union "
+		}
+		builder += fmt.Sprintf("(SELECT %v, count(*) FROM chat_participant WHERE chat_id = %v)", chatId, chatId)
+
+		first = false
+	}
+
+	var rows *sql.Rows
+	var err error
+	rows, err = qq.Query(builder)
+	if err != nil {
+		Logger.Errorf("Error during get chat rows %v", err)
+		return nil, err
+	} else {
+		defer rows.Close()
+		for _, cid := range chatIds {
+			res[cid] = 0
+		}
+		for rows.Next() {
+			var chatId int64
+			var count int
+			if err := rows.Scan(&chatId, &count); err != nil {
+				Logger.Errorf("Error during scan chat rows %v", err)
+				return nil, err
+			} else {
+				res[chatId] = count
+			}
+		}
+		return res, nil
+	}
+}
+
+func (tx *Tx) GetParticipantsCountBatch(chatIds []int64) (map[int64]int, error) {
+	return getParticipantsCountBatchCommon(tx, chatIds)
+}
+
+func (db *DB) GetParticipantsCountBatch(chatIds []int64) (map[int64]int, error) {
+	return getParticipantsCountBatchCommon(db, chatIds)
+}
+
 func getIsAdminCommon(qq CommonOperations, userId int64, chatId int64) (bool, error) {
 	var admin bool = false
 	row := qq.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 AND admin = true LIMIT 1)`, userId, chatId)
@@ -110,6 +212,54 @@ func (tx *Tx) IsAdmin(userId int64, chatId int64) (bool, error) {
 
 func (db *DB) IsAdmin(userId int64, chatId int64) (bool, error) {
 	return getIsAdminCommon(db, userId, chatId)
+}
+
+func getIsAdminBatchCommon(qq CommonOperations, userId int64, chatIds []int64) (map[int64]bool, error) {
+	var result = map[int64]bool{}
+
+	if len(chatIds) == 0 {
+		return result, nil
+	}
+
+	for _, chatId := range chatIds {
+		result[chatId] = false // prefill all with false
+	}
+
+	var builder = ""
+	var first = true
+	for _, chatId := range chatIds {
+		if !first {
+			builder += ", "
+		}
+		builder += utils.Int64ToString(chatId)
+		first = false
+	}
+
+	if rows, err := qq.Query(fmt.Sprintf(`SELECT chat_id, admin FROM chat_participant WHERE user_id = $1 AND chat_id IN (%v) AND admin = true`, builder), userId); err != nil {
+		return nil, err
+	} else {
+		defer rows.Close()
+
+		for rows.Next() {
+			var admin bool = false
+			var chatId int64 = 0
+			if err := rows.Scan(&chatId, &admin); err != nil {
+				Logger.Errorf("Error during scan chat rows %v", err)
+				return nil, err
+			} else {
+				result[chatId] = admin
+			}
+		}
+		return result, nil
+	}
+}
+
+func (tx *Tx) IsAdminBatch(userId int64, chatIds []int64) (map[int64]bool, error) {
+	return getIsAdminBatchCommon(tx, userId, chatIds)
+}
+
+func (db *DB) IsAdminBatch(userId int64, chatIds []int64) (map[int64]bool, error) {
+	return getIsAdminBatchCommon(db, userId, chatIds)
 }
 
 func isParticipantCommon(qq CommonOperations, userId int64, chatId int64) (bool, error) {
