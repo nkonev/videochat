@@ -27,7 +27,7 @@
                     {{ item.preview }}
                 </v-card-text>
 
-                <v-card-actions>
+                <v-card-actions v-if="item?.owner != null">
                     <v-list-item class="grow">
                         <v-list-item-avatar color="grey darken-3">
                             <v-img
