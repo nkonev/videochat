@@ -256,23 +256,6 @@ jobs:
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}"
           (cd video; make push-docker && echo "Will deploy video" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.VideoUpdateCommand }} )
 
-  drawio:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v3
-      - name: Convert drawio file to png image
-        uses: rlespinasse/drawio-export-action@v1.x
-        with:
-          path: .drawio
-          format: png
-          output: exported
-          transparent: true
-      - name: show after
-        run: ls -lah .drawio/exported
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          file_pattern: .drawio/exported/*.png
-          commit_message: Convert drawio to png
   integration-test:
     runs-on: ubuntu-22.04
     steps:

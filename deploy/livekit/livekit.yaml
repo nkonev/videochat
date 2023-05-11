@@ -36,8 +36,5 @@ webhook:
   urls:
     - 'http://video:1237/internal/livekit-webhook'
 
-egress:
-  use_psrpc: true
-
 signal_relay:
   enabled: true
