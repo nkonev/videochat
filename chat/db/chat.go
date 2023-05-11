@@ -527,12 +527,13 @@ func getChatBasicCommon(co CommonOperations, chatId int64) (*BasicChatDto, error
 				ch.title, 
 				ch.tet_a_tet,
 				ch.can_resend,
-				ch.available_to_search
+				ch.available_to_search,
+				ch.blog
 			FROM chat ch 
 			WHERE ch.id = $1
 `, chatId)
 	chat := BasicChatDto{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch)
+	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch, &chat.IsBlog)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -580,7 +581,8 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 			(cp.user_id is not null),
 			c.tet_a_tet,
 			c.can_resend,
-			c.available_to_search
+			c.available_to_search,
+			c.blog
 		FROM chat c 
 		    LEFT JOIN chat_participant cp 
 		        ON (c.id = cp.chat_id AND cp.user_id = $1) 
@@ -594,7 +596,7 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 		list := make([]*BasicChatDtoExtended, 0)
 		for rows.Next() {
 			dto := new(BasicChatDtoExtended)
-			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch); err != nil {
+			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
@@ -622,6 +624,7 @@ type BasicChatDto struct {
 	IsTetATet         bool
 	CanResend         bool
 	AvailableToSearch bool
+	IsBlog            bool
 }
 
 type BasicChatDtoExtended struct {

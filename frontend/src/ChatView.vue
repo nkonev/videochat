@@ -591,6 +591,8 @@
                                     isParticipant
                                   }
                                   pinned
+                                  blogPost
+                                  canMakeBlogPost
                                 }
 
                                 subscription{

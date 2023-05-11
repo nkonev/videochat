@@ -171,6 +171,7 @@ func configureEcho(
 	e.PUT("/chat/:id/message/:messageId/pin", mc.PinMessage)
 	e.PUT("/chat/:id/pin", ch.PinChat)
 
+	e.PUT("/chat/:id/message/:messageId/blog-post", mc.MakeBlogPost)
 	e.POST("/blog", bh.CreateBlogPost)
 	e.PUT("/blog/rename", bh.RenameBlogPost)
 	e.GET("/blog", bh.GetBlogPosts)

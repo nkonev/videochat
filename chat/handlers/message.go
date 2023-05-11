@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"github.com/getlantern/deepcopy"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/google/uuid"
 	"github.com/guregu/null"
@@ -119,13 +120,13 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	}
 }
 
-func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {
+func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, *db.BasicChatDtoExtended, error) {
 	if message, err := co.GetMessage(chatId, behalfUserId, messageId); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
-		return nil, err
+		return nil, nil, err
 	} else {
 		if message == nil {
-			return nil, nil
+			return nil, nil, nil
 		}
 		var ownersSet = map[int64]bool{}
 		var chatsPreSet = map[int64]bool{}
@@ -133,11 +134,12 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 
 		chatsSet, err := co.GetChatsBasic(chatsPreSet, behalfUserId)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
+		var chat = chatsSet[chatId]
 		var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
-		return convertToMessageDto(message, owners, chatsSet, behalfUserId), nil
+		return convertToMessageDto(message, owners, chatsSet, behalfUserId), chat, nil
 	}
 }
 
@@ -152,6 +154,7 @@ func populateSets(message *db.Message, ownersSet map[int64]bool, chatsPreSet map
 		var embeddedMessageResendChatId = *message.ResponseEmbeddedMessageResendChatId
 		chatsPreSet[embeddedMessageResendChatId] = true
 	}
+	chatsPreSet[message.ChatId] = true
 }
 
 func (mc *MessageHandler) GetMessage(c echo.Context) error {
@@ -171,7 +174,7 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 		return err
 	}
 
-	message, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+	message, _, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
 	if err != nil {
 		return err
 	}
@@ -200,6 +203,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 		BlogPost:       dbMessage.BlogPost,
 	}
 
+	chat := chats[dbMessage.ChatId]
 	if dbMessage.ResponseEmbeddedMessageReplyOwnerId != nil {
 		embeddedUser := owners[*dbMessage.ResponseEmbeddedMessageReplyOwnerId]
 		ret.EmbedMessage = &dto.EmbedMessageResponse{
@@ -228,7 +232,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 		ret.Text = ""
 	}
 
-	ret.SetPersonalizedFields(behalfUserId)
+	ret.SetPersonalizedFields(behalfUserId, chat.IsBlog)
 
 	return ret
 }
@@ -300,7 +304,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		message, err := getMessage(c, tx, mc.restClient, chatId, id, userPrincipalDto.UserId)
+		message, chat, err := getMessage(c, tx, mc.restClient, chatId, id, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -316,7 +320,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
 		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
-		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
+		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message, chat.IsBlog)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
 		return c.JSON(http.StatusCreated, message)
 	})
@@ -445,7 +449,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			return err
 		}
 
-		message, err := getMessage(c, tx, mc.restClient, chatId, bindTo.Id, userPrincipalDto.UserId)
+		message, chat, err := getMessage(c, tx, mc.restClient, chatId, bindTo.Id, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -481,7 +485,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 		mc.notificator.NotifyRemoveMention(c, userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
 
-		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message)
+		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message, chat.IsBlog)
 
 		return c.JSON(http.StatusCreated, &utils.H{"id": bindTo.Id})
 	})
@@ -548,7 +552,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 			Id:     messageId,
 			ChatId: chatId,
 		}
-		mc.notificator.NotifyAboutDeleteMessage(c, participantIds, chatId, cd)
+		mc.notificator.NotifyAboutDeleteMessage(c, participantIds, chatId, cd, false)
 
 		var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, nil, chatId)
 		mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
@@ -685,11 +689,11 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		message, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userId)
+		message, chat, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userId)
 		if err != nil {
 			return err
 		}
-		mc.notificator.NotifyAboutEditMessage(c, ids, chatId, message)
+		mc.notificator.NotifyAboutEditMessage(c, ids, chatId, message, chat.IsBlog)
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -747,25 +751,9 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				return err
 			}
 
-			// prepare message obj
-			message, err := tx.GetMessage(chatId, userPrincipalDto.UserId, messageId)
-			if err != nil {
-				return err
-			}
-			if message == nil {
-				return nil
-			}
-			var ownersSet = map[int64]bool{}
-			var chatsPreSet = map[int64]bool{}
-			populateSets(message, ownersSet, chatsPreSet)
-			chatsSet, err := tx.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
-			if err != nil {
-				return err
-			}
-			var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
-			res := convertToMessageDto(message, owners, chatsSet, userPrincipalDto.UserId)
-			// notify as about changed message
-			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
+			res, chat, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+
+			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chat.IsBlog)
 
 			count0, err := tx.GetPinnedMessagesCount(chatId)
 			if err != nil {
@@ -773,7 +761,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 			}
 
 			// notify about newly promoted result (promoted can be different)
-			err = mc.sendPromotePinnedMessageEvent(c, message, tx, chatId, participantIds, userPrincipalDto.UserId, true, count0)
+			err = mc.sendPromotePinnedMessageEvent(c, res, tx, chatId, participantIds, userPrincipalDto.UserId, true, count0, chat.IsBlog)
 			if err != nil {
 				return err
 			}
@@ -788,28 +776,15 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				return err
 			}
 
-			message, err := tx.GetMessage(chatId, userPrincipalDto.UserId, messageId)
-			if err != nil {
-				return err
-			}
-			var ownersSet = map[int64]bool{}
-			var chatsPreSet = map[int64]bool{}
-			populateSets(message, ownersSet, chatsPreSet)
-			chatsSet, err := tx.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
-			if err != nil {
-				return err
-			}
-			var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
-			res := convertToMessageDto(message, owners, chatsSet, userPrincipalDto.UserId)
-			// notify as about changed message
-			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
+			res, chat, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chat.IsBlog)
 
 			count1, err := tx.GetPinnedMessagesCount(chatId)
 			if err != nil {
 				return err
 			}
 
-			err = mc.sendPromotePinnedMessageEvent(c, message, tx, chatId, participantIds, userPrincipalDto.UserId, false, count1)
+			err = mc.sendPromotePinnedMessageEvent(c, res, tx, chatId, participantIds, userPrincipalDto.UserId, false, count1, chat.IsBlog)
 			if err != nil {
 				return err
 			}
@@ -830,7 +805,9 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 						return err
 					}
 
-					err = mc.sendPromotePinnedMessageEvent(c, promoted, tx, chatId, participantIds, userPrincipalDto.UserId, true, count2)
+					res2, chat2, err := getMessage(c, tx, mc.restClient, chatId, promoted.Id, userPrincipalDto.UserId)
+
+					err = mc.sendPromotePinnedMessageEvent(c, res2, tx, chatId, participantIds, userPrincipalDto.UserId, true, count2, chat2.IsBlog)
 					if err != nil {
 						return err
 					}
@@ -844,6 +821,71 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 		return err
 	}
 	return c.NoContent(http.StatusOK)
+}
+
+func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	messageId, err := GetPathParamAsInt64(c, "messageId")
+	if err != nil {
+		return err
+	}
+
+	return db.Transact(mc.db, func(tx *db.Tx) error {
+		_, ownerId, err := tx.GetMessageBasic(chatId, messageId)
+		if err != nil {
+			return err
+		}
+
+		if ownerId == nil {
+			return c.NoContent(http.StatusNoContent)
+		}
+
+		if *ownerId != userPrincipalDto.UserId {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
+		prevBlogPostMessageId, err := tx.GetBlogPostMessageId(chatId)
+		if err != nil {
+			return err
+		}
+
+		err = tx.SetBlogPost(chatId, messageId)
+		if err != nil {
+			return err
+		}
+
+		participantIds, err := tx.GetAllParticipantIds(chatId)
+		if err != nil {
+			return err
+		}
+
+		// send edit for previous message - it lost "blog_post == true"
+		if prevBlogPostMessageId != nil {
+			res0, chat0, err := getMessage(c, tx, mc.restClient, chatId, *prevBlogPostMessageId, userPrincipalDto.UserId)
+			if err != nil {
+				return err
+			}
+			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res0, chat0.IsBlog)
+		}
+		// notify about new "blog_post == true"
+		res, chat, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chat.IsBlog)
+
+		return c.JSON(http.StatusOK, res)
+	})
 }
 
 type MessageWrapper struct {
@@ -967,29 +1009,22 @@ func patchForView(cleanTagsPolicy *services.StripTagsPolicy, message *dto.Displa
 	message.Text = createMessagePreviewWithoutLogin(cleanTagsPolicy, message.Text)
 }
 
-func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, message *db.Message, tx *db.Tx, chatId int64, participantIds []int64, behalfUserId int64, promote bool, count int64) error {
+func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, displayMessage *dto.DisplayMessageDto, tx *db.Tx, chatId int64, participantIds []int64, behalfUserId int64, promote bool, count int64, blog bool) error {
+	var copiedMsg = &dto.DisplayMessageDto{}
 
-	if message == nil {
-		return nil
-	}
-	var ownersSet = map[int64]bool{}
-	var chatsPreSet = map[int64]bool{}
-	populateSets(message, ownersSet, chatsPreSet)
-
-	chatsSet, err := tx.GetChatsBasic(chatsPreSet, behalfUserId)
+	err := deepcopy.Copy(copiedMsg, displayMessage)
 	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy message: %s", err)
 		return err
 	}
 
-	var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
-	res := convertToMessageDto(message, owners, chatsSet, behalfUserId)
-	patchForView(mc.stripAllTags, res)
+	patchForView(mc.stripAllTags, copiedMsg)
 
 	// notify about promote to the pinned
 	mc.notificator.NotifyAboutPromotePinnedMessage(c, chatId, &dto.PinnedMessageEvent{
-		Message:    *res,
+		Message:    *copiedMsg,
 		TotalCount: count,
-	}, promote, participantIds)
+	}, promote, participantIds, blog)
 	return nil
 }
 

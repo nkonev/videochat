@@ -173,5 +173,6 @@ export default {
     video_position_side: "На стороне",
     video_position_auto: "Авто",
     copy_video_call_link: "Скопировать ссылку на видеоконференцию",
-    blog: "Блог"
+    blog: "Блог",
+    make_blog_post: "Сделать постом в блоге"
 }

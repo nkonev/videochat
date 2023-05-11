@@ -173,5 +173,6 @@ export default {
     video_position_side: "Side",
     video_position_auto: "Auto",
     copy_video_call_link: "Copy video call link",
-    blog: "Blog"
+    blog: "Blog",
+    make_blog_post: "Make blog post"
 }

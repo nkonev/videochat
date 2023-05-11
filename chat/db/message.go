@@ -274,6 +274,19 @@ func (tx *Tx) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 	return getMessageCommon(tx, chatId, userId, messageId)
 }
 
+func (tx *Tx) SetBlogPost(chatId int64, messageId int64) error {
+	_, err := tx.Exec(fmt.Sprintf("UPDATE message_chat_%v SET blog_post = false", chatId))
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(fmt.Sprintf("UPDATE message_chat_%v SET blog_post = true WHERE id = $1", chatId), messageId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, error) {
 	row := tx.QueryRow(fmt.Sprintf(`SELECT 
     	m.text,
@@ -295,6 +308,30 @@ func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, e
 		return nil, nil, err
 	} else {
 		return &result, &owner, nil
+	}
+}
+
+func (tx *Tx) GetBlogPostMessageId(chatId int64) (*int64, error) {
+	row := tx.QueryRow(fmt.Sprintf(`
+							SELECT 
+								m.id 
+							FROM message_chat_%v m 
+							WHERE 
+								m.blog_post IS TRUE
+							ORDER BY id LIMIT 1
+						`, chatId),
+	)
+	var id int64
+	err := row.Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return nil, nil
+	}
+	if err != nil {
+		Logger.Errorf("Error during get message row %v", err)
+		return nil, err
+	} else {
+		return &id, nil
 	}
 }
 

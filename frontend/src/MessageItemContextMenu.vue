@@ -73,6 +73,9 @@ export default {
                     ret.push({title: this.$vuetify.lang.t('$vuetify.share'), icon: 'mdi-share', action: () => this.$emit('shareMessage', this.menuableItem) });
                 }
                 ret.push({title: this.$vuetify.lang.t('$vuetify.copy_link_to_message'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
+                if (!this.menuableItem.blogPost && this.menuableItem.canMakeBlogPost) {
+                    ret.push({title: this.$vuetify.lang.t('$vuetify.make_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('makeBlogPost', this.menuableItem)});
+                }
             }
             return ret;
         },

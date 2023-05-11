@@ -37,6 +37,8 @@ type DisplayMessageDto {
     fileItemUuid:   UUID
     embedMessage:   EmbedMessageResponse
     pinned:         Boolean!
+    blogPost:       Boolean!
+    canMakeBlogPost: Boolean!
 }
 
 type MessageDeletedDto {
