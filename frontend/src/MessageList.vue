@@ -18,6 +18,7 @@
                         @onFilesClicked="onFilesClicked"
                         @pinMessage="pinMessage"
                         @removedFromPinned="removedFromPinned"
+                        @goToBlog="goToBlog"
                     ></MessageItem>
                 </template>
             </v-list>
@@ -32,6 +33,7 @@
                 @pinMessage="pinMessage"
                 @removedFromPinned="removedFromPinned"
                 @makeBlogPost="makeBlogPost"
+                @goToBlog="goToBlog"
             />
             <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance" :use-scroll-bar-storage="false">
                 <template slot="no-more"><span/></template>
@@ -383,6 +385,9 @@
             },
             makeBlogPost(dto) {
                 axios.put(`/api/chat/${this.chatId}/message/${dto.id}/blog-post`);
+            },
+            goToBlog(dto) {
+                console.log("Go to blog post for", dto)
             },
             onFilesClicked(item) {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});

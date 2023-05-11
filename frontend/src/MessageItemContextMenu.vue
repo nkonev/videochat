@@ -76,6 +76,9 @@ export default {
                 if (!this.menuableItem.blogPost && this.menuableItem.canMakeBlogPost) {
                     ret.push({title: this.$vuetify.lang.t('$vuetify.make_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('makeBlogPost', this.menuableItem)});
                 }
+                if (this.menuableItem.blogPost) {
+                    ret.push({title: this.$vuetify.lang.t('$vuetify.go_to_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('goToBlog', this.menuableItem)});
+                }
             }
             return ret;
         },

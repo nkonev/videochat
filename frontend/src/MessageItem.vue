@@ -17,6 +17,7 @@
                     <v-icon v-if="canResend" class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
                     <v-icon v-if="!item.pinned" class="mx-1" small :title="$vuetify.lang.t('$vuetify.pin_message')" @click="pinMessage(item)">mdi-pin</v-icon>
                     <v-icon v-if="item.pinned" class="mx-1" small :title="$vuetify.lang.t('$vuetify.remove_from_pinned')" @click="removedFromPinned(item)">mdi-pin-off-outline</v-icon>
+                    <v-icon v-if="item.blogPost" class="mx-1" small :title="$vuetify.lang.t('$vuetify.go_to_blog_post')" @click="goToBlog(item)">mdi-postage-stamp</v-icon>
                     <router-link class="mx-1 hash" :to="getMessageLink(item)" :title="$vuetify.lang.t('$vuetify.link')">#</router-link>
                 </template>
             </v-container>
@@ -78,6 +79,9 @@
             },
             removedFromPinned(dto) {
                 this.$emit('removedFromPinned', dto)
+            },
+            goToBlog(dto) {
+                this.$emit('goToBlog', dto)
             },
 
             getOwner(owner) {
@@ -150,6 +154,7 @@
 
 <style lang="stylus">
   @import "common.styl"
+  $messageBlogBackground = #f036ff
 
   .embedded-message {
       background: $embedMessageColor;
