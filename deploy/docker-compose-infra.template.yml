@@ -103,7 +103,7 @@ services:
         tag: chat-rabbitmq
 
   livekit:
-    image: livekit/livekit-server:v1.4.1
+    image: livekit/livekit-server:v1.4.2
     command: --config /etc/livekit.yaml
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
@@ -148,7 +148,7 @@ services:
         tag: chat-livekit
 
   egress:
-    image: livekit/egress:v1.6.0
+    image: livekit/egress:v1.7.0
     networks:
       backend:
     environment:
