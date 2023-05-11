@@ -407,11 +407,6 @@ spring.security.oauth2.client.registration.keycloak.redirect-uri={baseUrl}/api/l
 spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484/auth/realms/my_realm
 ```
 
-# Architecture:
-
-![Architecture](./.drawio/exported/app-Page-1.png "Title")
-
-
 ## Start docker-compose
 ```bash
 docker-compose up -d
