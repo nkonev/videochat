@@ -30,7 +30,7 @@
 
                 <v-list-item @click.prevent="goBlog()" :href="require('./routes').blog">
                     <v-list-item-icon><v-icon>mdi-postage-stamp</v-icon></v-list-item-icon>
-                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.blog') }}</v-list-item-title></v-list-item-content>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.blogs') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
                 <v-list-item @click="createChat()">

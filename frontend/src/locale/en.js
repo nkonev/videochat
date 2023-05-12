@@ -174,6 +174,7 @@ export default {
     video_position_auto: "Auto",
     copy_video_call_link: "Copy video call link",
     blog: "Blog",
+    blogs: "Blogs",
     make_blog_post: "Make blog post",
     go_to_blog_post: "Go to blog post",
     go_to_chat: "Go to chat",

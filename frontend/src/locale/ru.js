@@ -174,6 +174,7 @@ export default {
     video_position_auto: "Авто",
     copy_video_call_link: "Скопировать ссылку на видеоконференцию",
     blog: "Блог",
+    blogs: "Блоги",
     make_blog_post: "Сделать постом в блоге",
     go_to_blog_post: "Перейти в блог",
     go_to_chat: "Перейти в чат",
