@@ -59,7 +59,7 @@
         SET_EDIT_MESSAGE
     } from "@/bus";
     import queryMixin from "@/queryMixin";
-    import {chat_name, videochat_name} from "@/routes";
+    import {blog, chat_name, videochat_name} from "@/routes";
     import {
         embed_message_reply,
         findIndex,
@@ -386,8 +386,11 @@
             makeBlogPost(dto) {
                 axios.put(`/api/chat/${this.chatId}/message/${dto.id}/blog-post`);
             },
-            goToBlog(dto) {
-                console.log("Go to blog post for", dto)
+            getBlogLink() {
+                return blog + '/post/' + this.chatId;
+            },
+            goToBlog() {
+                window.location = this.getBlogLink();
             },
             onFilesClicked(item) {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});

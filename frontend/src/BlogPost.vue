@@ -19,7 +19,7 @@
                             <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
                         </v-list-item-content>
                         <div class="ma-0 pa-0 go-to-chat">
-                            <v-btn class="" icon @click="toChat()" :title="$vuetify.lang.t('$vuetify.go_to_chat')"><v-icon dark>mdi-forum</v-icon></v-btn>
+                            <v-btn icon :href="getLink()" @click="toChat()" :title="$vuetify.lang.t('$vuetify.go_to_chat')"><v-icon dark>mdi-forum</v-icon></v-btn>
                         </div>
                     </div>
                 </v-list-item>
@@ -51,6 +51,7 @@
     import MessageItem from "@/MessageItem";
     import {SET_SHOW_SEARCH} from "@/blogStore";
     import {getHumanReadableDate, hasLength} from "@/utils";
+    import {chat, messageIdHashPrefix} from "@/routes";
 
     const blogDtoFactory = () => {
         return {
@@ -150,8 +151,11 @@
             }
         },
         methods: {
+            getLink() {
+                return chat + '/' + this.blogDto.chatId + messageIdHashPrefix + this.blogDto.messageId;
+            },
             toChat() {
-
+                window.location = this.getLink();
             },
             getBlog(id) {
                 axios.get('/api/blog/'+id).then(({data}) => {
