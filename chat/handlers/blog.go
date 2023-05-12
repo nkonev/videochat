@@ -211,12 +211,13 @@ func (h *BlogHandler) cutText(text string) *string {
 }
 
 type BlogPostResponse struct {
-	ChatId    int64     `json:"chatId"`
-	Title     string    `json:"title"`
-	OwnerId   *int64    `json:"ownerId"`
-	Owner     *dto.User `json:"owner"`
-	MessageId *int64    `json:"messageId"`
-	Text      *string   `json:"text"`
+	ChatId         int64     `json:"chatId"`
+	Title          string    `json:"title"`
+	OwnerId        *int64    `json:"ownerId"`
+	Owner          *dto.User `json:"owner"`
+	MessageId      *int64    `json:"messageId"`
+	Text           *string   `json:"text"`
+	CreateDateTime time.Time `json:"createDateTime"`
 }
 
 func (h *BlogHandler) GetBlogPost(c echo.Context) error {
@@ -238,8 +239,9 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	}
 
 	response := BlogPostResponse{
-		ChatId: chatBasic.Id,
-		Title:  chatBasic.Title,
+		ChatId:         chatBasic.Id,
+		Title:          chatBasic.Title,
+		CreateDateTime: chatBasic.CreateDateTime,
 	}
 
 	posts, err := h.db.BlogPosts([]int64{blogId})
@@ -257,7 +259,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
 
 		if len(users) == 1 {
-			user := users[0]
+			user := users[post.OwnerId]
 			response.Owner = user
 		}
 	}

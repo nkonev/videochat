@@ -41,7 +41,7 @@
                             <v-list-item-content>
                                 <v-list-item-title><a @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{ item?.owner?.login }}</a></v-list-item-title>
                                 <v-list-item-subtitle>
-                                    {{ $vuetify.lang.t('$vuetify.in') + getDate(item) }}
+                                    {{ getDate(item) }}
                                 </v-list-item-subtitle>
                             </v-list-item-content>
                         </v-list-item>

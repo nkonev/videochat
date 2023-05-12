@@ -15,7 +15,8 @@
 
                     <div class="ma-0 pa-0 d-flex top-panel">
                         <v-list-item-content>
-                            <v-list-item-title>{{blogDto.owner.login}}</v-list-item-title><v-list-item-title>at 2022-12-30</v-list-item-title>
+                            <v-list-item-title>{{blogDto.owner.login}}</v-list-item-title>
+                            <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
                         </v-list-item-content>
                         <div class="ma-0 pa-0 go-to-chat">
                             <v-btn class="" icon @click="toChat()" :title="$vuetify.lang.t('$vuetify.go_to_chat')"><v-icon dark>mdi-forum</v-icon></v-btn>
@@ -49,6 +50,7 @@
     import axios from "axios";
     import MessageItem from "@/MessageItem";
     import {SET_SHOW_SEARCH} from "@/blogStore";
+    import {getHumanReadableDate, hasLength} from "@/utils";
 
     const blogDtoFactory = () => {
         return {
@@ -154,9 +156,15 @@
             getBlog(id) {
                 axios.get('/api/blog/'+id).then(({data}) => {
                     this.blogDto = data;
-                    console.log("Got", this.blogDto)
                 });
 
+            },
+            getDate(date) {
+                if (hasLength(date)) {
+                    return getHumanReadableDate(date)
+                } else {
+                    return null
+                }
             },
         },
         components: {
