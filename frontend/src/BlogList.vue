@@ -28,7 +28,7 @@
 
                     <v-card-actions v-if="item?.owner != null">
                         <v-list-item class="grow">
-                            <a @click.prevent="onParticipantClick(item.owner)" :href="getLink(item.owner)">
+                            <a @click.prevent="onParticipantClick(item.owner)" :href="getProfileLink(item.owner)">
                                 <v-list-item-avatar>
                                     <v-img
                                         class="elevation-6"
@@ -39,7 +39,7 @@
                             </a>
 
                             <v-list-item-content>
-                                <v-list-item-title><a @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{ item?.owner?.login }}</a></v-list-item-title>
+                                <v-list-item-title><a @click.prevent="onParticipantClick(item)" :href="getProfileLink(item)">{{ item?.owner?.login }}</a></v-list-item-title>
                                 <v-list-item-subtitle>
                                     {{ getDate(item) }}
                                 </v-list-item-subtitle>
@@ -140,7 +140,7 @@
                 const routeDto = { name: profile_name, params: { id: user.id }};
                 this.$router.push(routeDto);
             },
-            getLink(user) {
+            getProfileLink(user) {
                 let url = profile + "/" + user.id;
                 return url;
             },

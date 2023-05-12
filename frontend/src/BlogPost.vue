@@ -5,21 +5,23 @@
         <div class="pr-1 mr-1 pl-1 mt-0 message-item-root" >
             <div class="message-item-with-buttons-wrapper">
                 <v-list-item class="grow" v-if="blogDto?.owner">
-                    <v-list-item-avatar>
-                        <v-img
-                            class="elevation-6"
-                            alt=""
-                            :src="blogDto.owner.avatar"
-                        ></v-img>
-                    </v-list-item-avatar>
+                    <a @click.prevent="onParticipantClick(blogDto.owner)" :href="getProfileLink(blogDto.owner)">
+                        <v-list-item-avatar>
+                            <v-img
+                                class="elevation-6"
+                                alt=""
+                                :src="blogDto.owner.avatar"
+                            ></v-img>
+                        </v-list-item-avatar>
+                    </a>
 
                     <div class="ma-0 pa-0 d-flex top-panel">
                         <v-list-item-content>
-                            <v-list-item-title>{{blogDto.owner.login}}</v-list-item-title>
+                            <v-list-item-title><a @click.prevent="onParticipantClick(blogDto.owner)" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
                             <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
                         </v-list-item-content>
                         <div class="ma-0 pa-0 go-to-chat">
-                            <v-btn icon :href="getLink()" @click="toChat()" :title="$vuetify.lang.t('$vuetify.go_to_chat')"><v-icon dark>mdi-forum</v-icon></v-btn>
+                            <v-btn icon :href="getChatLink()" @click="toChat()" :title="$vuetify.lang.t('$vuetify.go_to_chat')"><v-icon dark>mdi-forum</v-icon></v-btn>
                         </div>
                     </div>
                 </v-list-item>
@@ -56,7 +58,7 @@
     import MessageItem from "@/MessageItem";
     import {SET_SHOW_SEARCH} from "@/blogStore";
     import {getHumanReadableDate, hasLength, replaceOrAppend} from "@/utils";
-    import {chat, messageIdHashPrefix} from "@/routes";
+    import {chat, messageIdHashPrefix, profile, profile_name} from "@/routes";
     import InfiniteLoading from "@/lib/vue-infinite-loading/src/components/InfiniteLoading";
 
     const pageSize = 40;
@@ -77,11 +79,19 @@
             }
         },
         methods: {
-            getLink() {
+            onParticipantClick(user) {
+                const routeDto = { name: profile_name, params: { id: user.id }};
+                this.$router.push(routeDto);
+            },
+            getProfileLink(user) {
+                let url = profile + "/" + user.id;
+                return url;
+            },
+            getChatLink() {
                 return chat + '/' + this.blogDto.chatId + messageIdHashPrefix + this.blogDto.messageId;
             },
             toChat() {
-                window.location = this.getLink();
+                window.location = this.getChatLink();
             },
             getBlog(id) {
                 axios.get('/api/blog/'+id).then(({data}) => {

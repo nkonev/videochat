@@ -756,6 +756,51 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
 
+func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
+	bucketName := h.minioConfig.FilesPreview
+
+	// check user belongs to chat
+	fileId := c.QueryParam(utils.FileParam)
+	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	if err != nil {
+		if errTyped, ok := err.(minio.ErrorResponse); ok {
+			if errTyped.Code == "NoSuchKey" {
+				return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
+			}
+		}
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	chatId, err := utils.ParseChatId(fileId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	belongs, err := h.restClient.CheckAccess(nil, chatId, c.Request().Context())
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !belongs {
+		GetLogEntry(c.Request().Context()).Errorf("Chat %v is not public", chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	object, e := h.minio.GetObject(context.Background(), bucketName, fileId, minio.GetObjectOptions{})
+	if e != nil {
+		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
+	}
+	defer object.Close()
+
+	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
+	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
+
+	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
+}
+
 func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	var userId *int64
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)

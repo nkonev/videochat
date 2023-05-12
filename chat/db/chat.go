@@ -146,7 +146,7 @@ func getBlogPostsByLimitOffsetCommon(co CommonOperations, limit int, offset int)
 				ch.id, 
 				ch.title,
 				ch.create_date_time
-			FROM chat ch WHERE ch.blog is TRUE ORDER BY (ch.last_update_date_time, ch.id) DESC LIMIT $1 OFFSET $2`, limit, offset)
+			FROM chat ch WHERE ch.blog is TRUE ORDER BY (ch.create_date_time, ch.id) DESC LIMIT $1 OFFSET $2`, limit, offset)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
 		return nil, err

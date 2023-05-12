@@ -153,6 +153,7 @@ func configureEcho(
 	e.GET("/storage/:chatId/file", fh.LimitsHandler)
 	e.GET("/storage/:chatId/embed/candidates", fh.ListCandidatesForEmbed)
 	e.GET("/storage/embed/preview", fh.PreviewDownloadHandler)
+	e.GET(utils.UrlStoragePublicPreviewFile, fh.PublicPreviewDownloadHandler)
 	e.GET(utils.UrlStoragePublicGetFile, fh.PublicDownloadHandler)
 	e.GET(utils.UrlStorageGetFile, fh.DownloadHandler)
 

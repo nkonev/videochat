@@ -106,7 +106,7 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 				if post.ChatId == blog.Id {
 					mbImage := h.tryGetFirstImage(post.Text)
 					if mbImage != nil {
-						tmpVar, err := h.makeUrlPublic(*mbImage)
+						tmpVar, err := h.makeUrlPublic(*mbImage, "")
 						if err != nil {
 							Logger.Warnf("Unagle to change url: %v", err)
 							break
@@ -336,12 +336,37 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 		if maybeImage != nil {
 			src, exists := maybeImage.Attr("src")
 			if exists {
-				newurl, err := h.makeUrlPublic(src)
+				newurl, err := h.makeUrlPublic(src, "")
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeImage.SetAttr("src", newurl)
+			}
+		}
+	})
+
+	doc.Find("video").Each(func(i int, s *goquery.Selection) {
+		maybeVideo := s.First()
+		if maybeVideo != nil {
+			src, srcExists := maybeVideo.Attr("src")
+			if srcExists {
+				newurl, err := h.makeUrlPublic(src, "")
+				if err != nil {
+					Logger.Warnf("Unagle to change url: %v", err)
+					return
+				}
+				maybeVideo.SetAttr("src", newurl)
+			}
+
+			poster, posterExists := maybeVideo.Attr("poster")
+			if posterExists {
+				newurl, err := h.makeUrlPublic(poster, "/embed/preview")
+				if err != nil {
+					Logger.Warnf("Unagle to change url: %v", err)
+					return
+				}
+				maybeVideo.SetAttr("poster", newurl)
 			}
 		}
 	})
@@ -354,14 +379,14 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 	return ret
 }
 
-func (h *BlogHandler) makeUrlPublic(src string) (string, error) {
+func (h *BlogHandler) makeUrlPublic(src string, additionalSegment string) (string, error) {
 	parsed, err := url.Parse(src)
 	if err != nil {
 		return "", err
 	}
 	fileParam := parsed.Query().Get(utils.FileParam)
 
-	patchedPath := "/api" + utils.UrlStoragePublicGetFile
+	patchedPath := "/api" + utils.UrlStoragePublicGetFile + additionalSegment
 
 	parsed.Query().Set(utils.FileParam, fileParam)
 	parsed.Path = patchedPath
