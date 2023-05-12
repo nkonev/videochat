@@ -111,6 +111,8 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 						break
 					}
 					blogPost.ImageUrl = &tmpVar
+				} else {
+					blogPost.ImageUrl = blog.Avatar.Ptr()
 				}
 				t := post.Text
 				blogPost.Text = &t

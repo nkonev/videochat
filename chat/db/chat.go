@@ -32,6 +32,7 @@ type Blog struct {
 	Id             int64
 	Title          string
 	CreateDateTime time.Time
+	Avatar         null.String
 }
 
 type ChatWithParticipants struct {
@@ -145,7 +146,8 @@ func getBlogPostsByLimitOffsetCommon(co CommonOperations, limit int, offset int)
 	rows, err = co.Query(`SELECT 
 				ch.id, 
 				ch.title,
-				ch.create_date_time
+				ch.create_date_time,
+				ch.avatar
 			FROM chat ch WHERE ch.blog is TRUE ORDER BY (ch.create_date_time, ch.id) DESC LIMIT $1 OFFSET $2`, limit, offset)
 	if err != nil {
 		Logger.Errorf("Error during get chat rows %v", err)
@@ -155,7 +157,7 @@ func getBlogPostsByLimitOffsetCommon(co CommonOperations, limit int, offset int)
 		list := make([]*Blog, 0)
 		for rows.Next() {
 			chat := Blog{}
-			if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime); err != nil {
+			if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime, &chat.Avatar); err != nil {
 				Logger.Errorf("Error during scan chat rows %v", err)
 				return nil, err
 			} else {
