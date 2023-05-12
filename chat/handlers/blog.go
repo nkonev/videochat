@@ -76,81 +76,80 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		isSearch = true
 	}
 
-	return db.Transact(h.db, func(tx *db.Tx) error {
-		// get chats where blog=true
-		blogs, err := tx.GetBlogPostsByLimitOffset(getSize(size, isSearch), getOffset(offset, isSearch))
-		if err != nil {
-			return err
+	// get chats where blog=true
+	blogs, err := h.db.GetBlogPostsByLimitOffset(getSize(size, isSearch), getOffset(offset, isSearch))
+	if err != nil {
+		return err
+	}
+
+	var blogIds []int64 = make([]int64, 0)
+	for _, blog := range blogs {
+		blogIds = append(blogIds, blog.Id)
+	}
+
+	// get their message where blog_post=true for sake to make preview
+	posts, err := h.db.BlogPosts(blogIds)
+	if err != nil {
+		return err
+	}
+	var response = make([]*BlogPostPreviewDto, 0)
+	for _, blog := range blogs {
+
+		blogPost := &BlogPostPreviewDto{
+			Id:             blog.Id,
+			CreateDateTime: blog.CreateDateTime,
+			Title:          blog.Title,
 		}
 
-		var blogIds []int64 = make([]int64, 0)
-		for _, blog := range blogs {
-			blogIds = append(blogIds, blog.Id)
-		}
-
-		// get their message where blog_post=true for sake to make preview
-		posts, err := tx.BlogPosts(blogIds)
-		if err != nil {
-			return err
-		}
-		var response = make([]*BlogPostPreviewDto, 0)
-		for _, blog := range blogs {
-
-			blogPost := &BlogPostPreviewDto{
-				Id:             blog.Id,
-				CreateDateTime: blog.CreateDateTime,
-				Title:          blog.Title,
-			}
-
-			for _, post := range posts {
-				if post.ChatId == blog.Id {
-					mbImage := h.tryGetFirstImage(post.Text)
-					if mbImage != nil {
-						tmpVar, err := h.makeUrlPublic(*mbImage, "")
-						if err != nil {
-							Logger.Warnf("Unagle to change url: %v", err)
-							break
-						}
-						blogPost.ImageUrl = &tmpVar
+		for _, post := range posts {
+			if post.ChatId == blog.Id {
+				mbImage := h.tryGetFirstImage(post.Text)
+				if mbImage != nil {
+					tmpVar, err := h.makeUrlPublic(*mbImage, "")
+					if err != nil {
+						Logger.Warnf("Unagle to change url: %v", err)
+						break
 					}
-					t := post.Text
-					blogPost.Text = &t
-					blogPost.Preview = h.cutText(post.Text)
-					oid := post.OwnerId
-					blogPost.OwnerId = &oid
-					mid := post.MessageId
-					blogPost.MessageId = &mid
-					break
+					blogPost.ImageUrl = &tmpVar
 				}
-			}
-
-			response = append(response, blogPost)
-		}
-
-		var participantIdSet = map[int64]bool{}
-		for _, respDto := range response {
-			if respDto.OwnerId != nil {
-				participantIdSet[*respDto.OwnerId] = true
-			}
-		}
-		var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
-
-		for _, respDto := range response {
-			if respDto.OwnerId != nil {
-				respDto.Owner = users[*respDto.OwnerId]
+				t := post.Text
+				blogPost.Text = &t
+				blogPost.Preview = h.cutText(post.Text)
+				oid := post.OwnerId
+				blogPost.OwnerId = &oid
+				mid := post.MessageId
+				blogPost.MessageId = &mid
+				break
 			}
 		}
 
-		if isSearch {
-			search, err := h.performSearchAndPaging(searchString, response, size, offset)
-			if err != nil {
-				return err
-			}
-			return c.JSON(http.StatusOK, search)
-		} else {
-			return c.JSON(http.StatusOK, response)
+		response = append(response, blogPost)
+	}
+
+	var participantIdSet = map[int64]bool{}
+	for _, respDto := range response {
+		if respDto.OwnerId != nil {
+			participantIdSet[*respDto.OwnerId] = true
 		}
-	})
+	}
+	var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
+
+	for _, respDto := range response {
+		if respDto.OwnerId != nil {
+			respDto.Owner = users[*respDto.OwnerId]
+		}
+	}
+
+	if isSearch {
+		search, err := h.performSearchAndPaging(searchString, response, size, offset)
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, search)
+	} else {
+		return c.JSON(http.StatusOK, response)
+	}
+
 }
 
 func (h *BlogHandler) performSearchAndPaging(searchString string, searchable []*BlogPostPreviewDto, size, offset int) ([]*BlogPostPreviewDto, error) {
