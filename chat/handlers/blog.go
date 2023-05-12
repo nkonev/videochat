@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"net/http"
+	"net/url"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
@@ -103,7 +104,15 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 
 			for _, post := range posts {
 				if post.ChatId == blog.Id {
-					blogPost.ImageUrl = h.tryGetFirstImage(post.Text)
+					mbImage := h.tryGetFirstImage(post.Text)
+					if mbImage != nil {
+						tmpVar, err := h.makeUrlPublic(*mbImage)
+						if err != nil {
+							Logger.Warnf("Unagle to change url: %v", err)
+							break
+						}
+						blogPost.ImageUrl = &tmpVar
+					}
 					t := post.Text
 					blogPost.Text = &t
 					blogPost.Preview = h.cutText(post.Text)
@@ -247,7 +256,8 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		post := posts[0]
 		response.OwnerId = &post.OwnerId
 		response.MessageId = &post.MessageId
-		response.Text = &post.Text
+		patchedText := h.patchStorageUrlToPublic(post.Text)
+		response.Text = &patchedText
 
 		var participantIdSet = map[int64]bool{}
 		participantIdSet[post.OwnerId] = true
@@ -304,13 +314,58 @@ func (h *BlogHandler) GetBlogPostMessages(c echo.Context) error {
 	var owners = getUsersRemotelyOrEmpty(ownersSet, h.restClient, c)
 	messageDtos := make([]*dto.DisplayMessageDto, 0)
 	for _, cc := range messages {
-		messageDtos = append(messageDtos, convertToMessageDto(cc, owners, chatsSet, NonExistentUser))
+		msg := convertToMessageDto(cc, owners, chatsSet, NonExistentUser)
+		msg.Text = h.patchStorageUrlToPublic(msg.Text)
+		messageDtos = append(messageDtos, msg)
 	}
 
 	GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
 	return c.JSON(http.StatusOK, messageDtos)
 }
 
-//func (h *BlogHandler) patchStorageUrlToPublic(in string) string {
-//
-//}
+func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
+	if err != nil {
+		Logger.Warnf("Unagle to get image: %v", err)
+		return ""
+	}
+
+	doc.Find("img").Each(func(i int, s *goquery.Selection) {
+		maybeImage := s.First()
+		if maybeImage != nil {
+			src, exists := maybeImage.Attr("src")
+			if exists {
+				newurl, err := h.makeUrlPublic(src)
+				if err != nil {
+					Logger.Warnf("Unagle to change url: %v", err)
+					return
+				}
+				maybeImage.SetAttr("src", newurl)
+			}
+		}
+	})
+
+	ret, err := doc.Html()
+	if err != nil {
+		Logger.Warnf("Unagle to get image: %v", err)
+		return ""
+	}
+	return ret
+}
+
+func (h *BlogHandler) makeUrlPublic(src string) (string, error) {
+	parsed, err := url.Parse(src)
+	if err != nil {
+		return "", err
+	}
+	fileParam := parsed.Query().Get(utils.FileParam)
+
+	patchedPath := "/api" + utils.UrlStoragePublicGetFile
+
+	parsed.Query().Set(utils.FileParam, fileParam)
+	parsed.Path = patchedPath
+
+	newurl := parsed.String()
+	return newurl, nil
+}

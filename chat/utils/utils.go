@@ -178,3 +178,6 @@ func Min(a, b int) int {
 	}
 	return b
 }
+
+const FileParam = "file"
+const UrlStoragePublicGetFile = "/storage/public/download"

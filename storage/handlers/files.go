@@ -827,8 +827,23 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	}
 
 	if !isPublic {
-		GetLogEntry(c.Request().Context()).Errorf("File %v is not public", fileId)
-		return c.NoContent(http.StatusUnauthorized)
+		GetLogEntry(c.Request().Context()).Infof("File %v is not public, checking is chat blog", fileId)
+
+		chatId, err := utils.ParseChatId(objectInfo.Key)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during parsing chatId: %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		belongs, err := h.restClient.CheckAccess(nil, chatId, c.Request().Context())
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		if !belongs {
+			GetLogEntry(c.Request().Context()).Errorf("File %v is not public", fileId)
+			return c.NoContent(http.StatusUnauthorized)
+		}
 	}
 	// end check
 

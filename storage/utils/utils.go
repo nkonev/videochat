@@ -26,10 +26,10 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	return regexps
 }
 
-func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string, expl string) bool {
+func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
-			Logger.Infof("Skipping authentication for %v because it matches %v from %v", uri, regexp0.String(), expl)
+			Logger.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
 			return true
 		}
 	}

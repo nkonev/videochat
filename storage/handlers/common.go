@@ -64,17 +64,11 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 func authorize(request *http.Request) (*auth.AuthResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
-	if utils.CheckUrlInWhitelist(whitelist, request.RequestURI, "whitelist") {
+	if utils.CheckUrlInWhitelist(whitelist, request.RequestURI) {
 		return nil, true, nil
 	}
 	auth, err := ExtractAuth(request)
 	if err != nil {
-		trylistStr := viper.GetStringSlice("auth.try")
-		trylist := utils.StringsToRegexpArray(trylistStr)
-		if utils.CheckUrlInWhitelist(trylist, request.RequestURI, "trylist") {
-			return nil, true, nil
-		}
-
 		GetLogEntry(request.Context()).Infof("Error during extract AuthResult: %v", err)
 		return nil, false, nil
 	}

@@ -61,13 +61,6 @@ http:
       middlewares:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
-    storage-download-router:
-      rule: "PathPrefix(`/api/storage/download`)"
-      service: storage-service
-      middlewares:
-        - "try-auth-middleware"
-        - "api-strip-prefix-middleware"
-        - "retry-middleware"
     storage-router:
       rule: "PathPrefix(`/api/storage`)"
       service: storage-service
@@ -156,13 +149,6 @@ http:
     auth-middleware:
       forwardAuth:
         address: "http://host.docker.internal:8060/internal/profile/auth"
-        authRequestHeaders:
-          - "Cookie"
-          - "uber-trace-id"
-        authResponseHeadersRegex: "^X-Auth-"
-    try-auth-middleware:
-      forwardAuth:
-        address: "http://host.docker.internal:8060/internal/profile/try-auth"
         authRequestHeaders:
           - "Cookie"
           - "uber-trace-id"
