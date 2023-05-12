@@ -979,6 +979,18 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	chat, err := ch.db.GetChatBasic(chatId)
+	if err != nil {
+		return err
+	}
+	if chat == nil {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// blogs are public
+	if chat.IsBlog {
+		return c.NoContent(http.StatusOK)
+	}
+
 	userId, err := GetQueryParamAsInt64(c, "userId")
 	if err != nil {
 		return err
@@ -993,13 +1005,6 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	} else {
 		if useCanResend {
-			chat, err := ch.db.GetChatBasic(chatId)
-			if err != nil {
-				return err
-			}
-			if chat == nil {
-				return c.NoContent(http.StatusUnauthorized)
-			}
 			if chat.CanResend {
 				return c.NoContent(http.StatusOK)
 			} else {

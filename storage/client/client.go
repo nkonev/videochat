@@ -61,10 +61,14 @@ func NewChatAccessClient() *RestClient {
 	}
 }
 
-func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) (bool, error) {
-	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v&considerCanResend=true", h.baseUrl, h.accessPath, userId, chatId)
+func (h *RestClient) CheckAccess(userId *int64, chatId int64, c context.Context) (bool, error) {
+	builder := fmt.Sprintf("%v%v?chatId=%v&considerCanResend=true", h.baseUrl, h.accessPath, chatId)
+	if userId != nil {
+		builder += "&userId=" + utils.Int64ToString(*userId)
+	}
+	url0 := builder
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", url0, nil)
 	if err != nil {
 		GetLogEntry(c).Error(err, "Error during create GET")
 		return false, err
