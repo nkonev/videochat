@@ -802,10 +802,10 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 }
 
 func (h *FilesHandler) DownloadHandler(c echo.Context) error {
-	var userId *int64
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if ok {
-		userId = &userPrincipalDto.UserId
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
 	}
 
 	bucketName := h.minioConfig.Files
@@ -828,13 +828,13 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.restClient.CheckAccess(userId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userId, chatId)
+		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
