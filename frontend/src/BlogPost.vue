@@ -37,7 +37,7 @@
                 <MessageItem
                     :key="item.id"
                     :item="item"
-                    :chatId="chatId"
+                    :chatId="item.chatId"
                     :my="item.my"
                     :isInBlog="true"
                 ></MessageItem>
@@ -63,9 +63,6 @@
         data() {
             return {
                 blogDto: blogDtoFactory(),
-                chatId: 34,
-                text: "<p>Lorem upsum</p><p>dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>" +
-                      "<p>Lorem upsum</p><p>dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>",
                 items: [
                     {
                         "id": 2822,
