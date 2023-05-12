@@ -48,46 +48,6 @@ func (a *CreateBlogDto) Validate() error {
 	)
 }
 
-func (h *BlogHandler) CreateBlogPost(c echo.Context) error {
-	// auth check
-	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
-		return errors.New("Error during getting auth context")
-	}
-
-	var bindTo = new(CreateBlogDto)
-	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
-		return err
-	}
-
-	if valid, err := ValidateAndRespondError(c, bindTo); err != nil || !valid {
-		return err
-	}
-
-	return db.Transact(h.db, func(tx *db.Tx) error {
-		// db.CreateChat (blog=true)
-		chatId, _, err := tx.CreateChat(&db.Chat{
-			Title:             TrimAmdSanitize(h.policy, bindTo.Title),
-			CanResend:         true,
-			AvailableToSearch: true,
-			Blog:              true,
-		})
-		if err != nil {
-			return err
-		}
-		// db.InsertMessage
-		_, _, _, err = tx.CreateMessage(&db.Message{
-			Text:     TrimAmdSanitize(h.policy, bindTo.Text),
-			ChatId:   chatId,
-			OwnerId:  userPrincipalDto.UserId,
-			BlogPost: true,
-		})
-		return err
-	})
-}
-
 type BlogPostPreviewDto struct {
 	Id             int64     `json:"id"` // chatId
 	Title          string    `json:"title"`
