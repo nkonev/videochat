@@ -170,11 +170,13 @@
 <style lang="stylus">
     .post-title {
         background rgba(0, 0, 0, 0.5);
+
+        .post-title-text {
+            color white
+            text-decoration none
+        }
     }
     .myclass {
         flex: 1 1 300px;
-    }
-    .post-title-text {
-        color white
     }
 </style>
