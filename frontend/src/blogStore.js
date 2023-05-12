@@ -1,13 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import axios from "axios";
 
 Vue.use(Vuex);
 
-export const GET_USER = 'getUser';
-export const SET_USER = 'setUser';
-export const UNSET_USER = 'unsetUser';
-export const FETCH_USER_PROFILE = 'fetchUserProfile';
 export const GET_SEARCH_STRING = 'getSearchString';
 export const SET_SEARCH_STRING = 'setSearchString';
 export const UNSET_SEARCH_STRING = 'unsetSearchString';
@@ -25,7 +20,6 @@ export const SET_SHOW_SEARCH = 'setShowSearch';
 
 const store = new Vuex.Store({
     state: {
-        currentUser: null,
         searchString: null,
         searchName: null,
         showAlert: false,
@@ -34,14 +28,8 @@ const store = new Vuex.Store({
         isShowSearch: true,
     },
     mutations: {
-        [SET_USER](state, payload) {
-            state.currentUser = payload;
-        },
         [SET_SEARCH_STRING](state, payload) {
             state.searchString = payload;
-        },
-        [UNSET_USER](state) {
-            state.currentUser = null;
         },
         [UNSET_SEARCH_STRING](state) {
             state.searchString = "";
@@ -63,9 +51,6 @@ const store = new Vuex.Store({
         },
     },
     getters: {
-        [GET_USER](state) {
-            return state.currentUser;
-        },
         [GET_SEARCH_STRING](state) {
             return state.searchString;
         },
@@ -86,12 +71,7 @@ const store = new Vuex.Store({
         },
     },
     actions: {
-        [FETCH_USER_PROFILE](context) {
-            axios.get(`/api/profile`).then(( {data} ) => {
-                console.debug("fetched profile =", data);
-                context.commit(SET_USER, data);
-            });
-        },
+
     }
 });
 

@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import {GET_SEARCH_NAME, GET_SEARCH_STRING, GET_SHOW_SEARCH, GET_USER, SET_SEARCH_STRING} from "@/blogStore";
+import {GET_SEARCH_NAME, GET_SEARCH_STRING, GET_SHOW_SEARCH, SET_SEARCH_STRING} from "@/blogStore";
 import {mapGetters} from 'vuex'
 import bus, {SEARCH_STRING_CHANGED} from "@/blogBus";
 
@@ -69,7 +69,6 @@ export default {
             }
         },
         ...mapGetters({
-            currentUser: GET_USER,
             searchName: GET_SEARCH_NAME,
             isShowSearch: GET_SHOW_SEARCH,
         }),

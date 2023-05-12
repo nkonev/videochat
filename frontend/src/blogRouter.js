@@ -1,8 +1,10 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Error404 from "./Error404";
+import {profile_name} from "@/routes";
 const BlogList = () => import("./BlogList");
 const BlogPost = () => import("./BlogPost");
+const UserProfile = () => import("./UserProfile");
 
 // This installs <router-view> and <router-link>,
 // and injects $router and $route to all router-enabled child components
@@ -15,6 +17,7 @@ const router = new Router({
     routes: [
         { name: "blog", path: '/blog', component: BlogList},
         { name: "post", path: '/blog/post', component: BlogPost},
+        { name: profile_name, path: '/profile/:id', component: UserProfile},
         { path: '*', component: Error404 },
     ]
 });
