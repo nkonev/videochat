@@ -16,7 +16,9 @@
                         :src="item.imageUrl"
                     >
                         <v-container class="post-title ma-0 pa-0">
-                            <v-card-title class="text-h5 font-weight-bold">{{ item.title }}</v-card-title>
+                            <v-card-title class="text-h5 font-weight-bold">
+                                <router-link :to="getBlogPostLink(item)" class="post-title-text">{{ item.title }}</router-link>
+                            </v-card-title>
                         </v-container>
                     </v-img>
 
@@ -64,6 +66,7 @@
     import debounce from "lodash/debounce";
     import bus, {SEARCH_STRING_CHANGED} from "@/blogBus";
     import Mark from "mark.js";
+    import {blog_post_name} from "@/blogRoutes";
 
     const pageSize = 40;
 
@@ -126,6 +129,14 @@
                     }
                 })
             },
+            getBlogPostLink(item) {
+                return {
+                    name: blog_post_name,
+                    params: {
+                        id: item.id
+                    }
+                }
+            },
         },
         components: {
             InfiniteLoading
@@ -162,5 +173,8 @@
     }
     .myclass {
         flex: 1 1 300px;
+    }
+    .post-title-text {
+        color white
     }
 </style>

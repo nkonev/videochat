@@ -30,7 +30,7 @@
 import {GET_SEARCH_NAME, GET_SEARCH_STRING, GET_SHOW_SEARCH, SET_SEARCH_STRING} from "@/blogStore";
 import {mapGetters} from 'vuex'
 import bus, {SEARCH_STRING_CHANGED} from "@/blogBus";
-import {blog, blog_post} from "@/blogRoutes";
+import {blog} from "@/blogRoutes";
 
 let unsubscribe;
 
@@ -47,12 +47,7 @@ export default {
                 disabled: false,
                 exactPath: true,
                 to: blog,
-            },
-            {
-                text: 'nkonev',
-                disabled: false,
-                to: blog_post,
-            },
+            }
         ],
     }),
     methods: {
