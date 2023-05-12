@@ -31,18 +31,24 @@
             </div>
         </div>
 
-        <v-list>
-            <!-- TODO MessageList.vue -->
-            <template v-for="(item, index) in items">
-                <MessageItem
-                    :key="item.id"
-                    :item="item"
-                    :chatId="item.chatId"
-                    :my="item.my"
-                    :isInBlog="true"
-                ></MessageItem>
-            </template>
-        </v-list>
+        <template v-if="blogDto.messageId">
+            <v-list>
+                <template v-for="(item, index) in items">
+                    <MessageItem
+                        :key="item.id"
+                        :item="item"
+                        :chatId="item.chatId"
+                        :my="item.my"
+                        :isInBlog="true"
+                    ></MessageItem>
+                </template>
+            </v-list>
+
+            <infinite-loading @infinite="infiniteHandler">
+                <template slot="no-more"><span/></template>
+                <template slot="no-results"><span/></template>
+            </infinite-loading>
+        </template>
     </div>
 </template>
 
@@ -50,8 +56,10 @@
     import axios from "axios";
     import MessageItem from "@/MessageItem";
     import {SET_SHOW_SEARCH} from "@/blogStore";
-    import {getHumanReadableDate, hasLength} from "@/utils";
+    import {getHumanReadableDate, hasLength, replaceOrAppend} from "@/utils";
     import {chat, messageIdHashPrefix} from "@/routes";
+
+    const pageSize = 40;
 
     const blogDtoFactory = () => {
         return {
@@ -63,88 +71,9 @@
         data() {
             return {
                 blogDto: blogDtoFactory(),
-                items: [
-                    {
-                        "id": 2822,
-                        "text": "<p>Testw</p>",
-                        "chatId": 34,
-                        "ownerId": 1,
-                        "createDateTime": "2023-04-13T16:06:21.569617Z",
-                        "editDateTime": "2023-05-06T01:02:18.329121Z",
-                        "owner": {
-                            "id": 1,
-                            "login": "admin",
-                            "avatar": "/api/storage/public/user/avatar/1_AVATAR_200x200.jpg?time=1676930657",
-                            "shortInfo": "Admin account"
-                        },
-                        "canEdit": true,
-                        "canDelete": true,
-                        "fileItemUuid": "17b13878-2a0d-4860-a6d6-2ad8545901b0",
-                        "embedMessage": null,
-                        "pinned": false,
-                        "my": false,
-                    },
-                    {
-                        "id": 2823,
-                        "text": "<p>Lorem</p>",
-                        "chatId": 34,
-                        "ownerId": 1,
-                        "createDateTime": "2023-04-13T16:06:21.569617Z",
-                        "editDateTime": "2023-05-06T01:02:18.329121Z",
-                        "owner": {
-                            "id": 1,
-                            "login": "admin",
-                            "avatar": "/api/storage/public/user/avatar/1_AVATAR_200x200.jpg?time=1676930657",
-                            "shortInfo": "Admin account"
-                        },
-                        "canEdit": true,
-                        "canDelete": true,
-                        "fileItemUuid": "17b13878-2a0d-4860-a6d6-2ad8545901b0",
-                        "embedMessage": null,
-                        "pinned": false,
-                        "my": false,
-                    },
-                    {
-                        "id": 2824,
-                        "text": "<b>Ipsum</b>",
-                        "chatId": 34,
-                        "ownerId": 1,
-                        "createDateTime": "2023-04-13T16:06:21.569617Z",
-                        "editDateTime": "2023-05-06T01:02:18.329121Z",
-                        "owner": {
-                            "id": 1,
-                            "login": "admin",
-                            "avatar": "/api/storage/public/user/avatar/1_AVATAR_200x200.jpg?time=1676930657",
-                            "shortInfo": "Admin account"
-                        },
-                        "canEdit": true,
-                        "canDelete": true,
-                        "fileItemUuid": "17b13878-2a0d-4860-a6d6-2ad8545901b0",
-                        "embedMessage": null,
-                        "pinned": false,
-                        "my": true,
-                    },
-                    {
-                        "id": 2825,
-                        "text": "<p>Dolor</p>",
-                        "chatId": 34,
-                        "ownerId": 1,
-                        "createDateTime": "2023-04-13T16:06:21.569617Z",
-                        "editDateTime": "2023-05-06T01:02:18.329121Z",
-                        "owner": {
-                            "id": 1,
-                            "login": "admin",
-                            "avatar": "/api/storage/public/user/avatar/1_AVATAR_200x200.jpg?time=1676930657",
-                            "shortInfo": "Admin account"
-                        },
-                        "canEdit": true,
-                        "canDelete": true,
-                        "fileItemUuid": "17b13878-2a0d-4860-a6d6-2ad8545901b0",
-                        "embedMessage": null,
-                        "pinned": false,
-                        "my": true,
-                    },
-                ]
+                startingFromItemId: null,
+                page: 0,
+                items: [ ]
             }
         },
         methods: {
@@ -157,8 +86,8 @@
             getBlog(id) {
                 axios.get('/api/blog/'+id).then(({data}) => {
                     this.blogDto = data;
+                    this.startingFromItemId = data.messageId;
                 });
-
             },
             getDate(date) {
                 if (hasLength(date)) {
@@ -166,6 +95,24 @@
                 } else {
                     return null
                 }
+            },
+            infiniteHandler($state) {
+                axios.get(`/api/chat/${this.blogDto.chatId}/message`, {
+                    params: {
+                        startingFromItemId: this.startingFromItemId,
+                        page: this.page,
+                        size: pageSize,
+                    },
+                }).then(({ data }) => {
+                    const list = data.data;
+                    if (list.length) {
+                        this.page += 1;
+                        replaceOrAppend(this.items, list);
+                        $state.loaded();
+                    } else {
+                        $state.complete();
+                    }
+                });
             },
         },
         components: {
@@ -177,6 +124,9 @@
         },
         beforeDestroy() {
             this.blogDto = blogDtoFactory();
+            this.startingFromItemId = null;
+            this.page = 0;
+            this.items = [];
         },
     }
 </script>

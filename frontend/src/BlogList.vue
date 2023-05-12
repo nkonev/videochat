@@ -79,13 +79,11 @@
                 items: [],
                 page: 0,
                 infiniteId: +new Date(),
-                itemsLoaded: false,
                 markInstance: null,
             }
         },
         methods: {
             infiniteHandler($state) {
-                this.itemsLoaded = false;
                 axios.get('/api/blog', {
                     params: {
                         page: this.page,
@@ -101,7 +99,6 @@
                     } else {
                         $state.complete();
                     }
-                    this.itemsLoaded = true;
                     this.performMarking();
                 });
             },
@@ -115,7 +112,6 @@
             resetVariables() {
                 this.items = [];
                 this.page = 0;
-                this.itemsLoaded = false;
             },
             searchStringChangedDebounced(searchString) {
                 this.searchStringChangedStraight(searchString);

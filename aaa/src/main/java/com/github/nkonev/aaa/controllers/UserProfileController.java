@@ -4,6 +4,7 @@ import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.dto.UserRole;
+import com.github.nkonev.aaa.dto.UserSelfProfileDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.exception.DataNotFoundException;
@@ -92,15 +93,34 @@ public class UserProfileController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = {Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = {
+            Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE,
+            Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH
+    }, produces = MediaType.APPLICATION_JSON_VALUE)
     public HttpHeaders checkAuthenticatedInternal(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
-        LOGGER.info("Requesting internal user profile");
+        LOGGER.info("Requesting internal user profile for auth");
         Long expiresAt = getExpiresAt(session);
         var dto = checkAuthenticated(userAccount, session);
+        return getAuthHeaders(userAccount, session, expiresAt, dto);
+    }
+
+    @GetMapping(value = Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.TRY_AUTH, produces = MediaType.APPLICATION_JSON_VALUE)
+    public HttpHeaders tryCheckAuthenticatedInternal(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
+        LOGGER.info("Requesting internal user profile for try auth");
+        if (userAccount != null) {
+            Long expiresAt = getExpiresAt(session);
+            var dto = checkAuthenticated(userAccount, session);
+            return getAuthHeaders(userAccount, session, expiresAt, dto);
+        } else {
+            return new HttpHeaders();
+        }
+    }
+
+    private static HttpHeaders getAuthHeaders(UserAccountDetailsDTO userAccount, HttpSession session, Long expiresAt, UserSelfProfileDTO dto) {
         HttpHeaders headers = new HttpHeaders();
         headers.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.login().getBytes()));
-        headers.set(X_AUTH_USER_ID, ""+userAccount.getId());
-        headers.set(X_AUTH_EXPIRESIN, ""+expiresAt);
+        headers.set(X_AUTH_USER_ID, "" + userAccount.getId());
+        headers.set(X_AUTH_EXPIRESIN, "" + expiresAt);
         headers.set(X_AUTH_SESSION_ID, session.getId());
         headers.set(X_AUTH_AVATAR, userAccount.getAvatar());
         convertRolesToStringList(userAccount.getRoles()).forEach(s -> {
@@ -108,7 +128,6 @@ public class UserProfileController {
         });
         return headers;
     }
-
 
     @GetMapping(value = Constants.Urls.API+Constants.Urls.USER)
     public com.github.nkonev.aaa.dto.Wrapper<com.github.nkonev.aaa.dto.UserAccountDTOExtended> getUsers(

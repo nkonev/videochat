@@ -13,8 +13,9 @@ http:
 auth:
   exclude:
     - "^/storage/public.*"
-    - "^/storage/download.*"
     - "^/internal.*"
+  try:
+    - "^/storage/download.*"
 
 types:
   image:
