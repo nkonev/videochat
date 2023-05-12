@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Error404 from "./Error404";
 import {profile_name} from "@/routes";
+import {blog, blog_post} from "@/blogRoutes";
 const BlogList = () => import("./BlogList");
 const BlogPost = () => import("./BlogPost");
 const UserProfile = () => import("./UserProfile");
@@ -15,8 +16,8 @@ const router = new Router({
     mode: 'history',
     // https://router.vuejs.org/en/api/options.html#routes
     routes: [
-        { name: "blog", path: '/blog', component: BlogList},
-        { name: "post", path: '/blog/post', component: BlogPost},
+        { name: "blog", path: blog, component: BlogList},
+        { name: "post", path: blog_post, component: BlogPost},
         { name: profile_name, path: '/profile/:id', component: UserProfile},
         { path: '*', component: Error404 },
     ]

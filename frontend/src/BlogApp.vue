@@ -30,6 +30,7 @@
 import {GET_SEARCH_NAME, GET_SEARCH_STRING, GET_SHOW_SEARCH, SET_SEARCH_STRING} from "@/blogStore";
 import {mapGetters} from 'vuex'
 import bus, {SEARCH_STRING_CHANGED} from "@/blogBus";
+import {blog, blog_post} from "@/blogRoutes";
 
 let unsubscribe;
 
@@ -44,12 +45,13 @@ export default {
             {
                 text: 'Blog',
                 disabled: false,
-                href: '/blog',
+                exactPath: true,
+                to: blog,
             },
             {
                 text: 'nkonev',
                 disabled: false,
-                href: '/blog/post',
+                to: blog_post,
             },
         ],
     }),
