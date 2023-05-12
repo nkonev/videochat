@@ -97,6 +97,11 @@
                 }
             },
             infiniteHandler($state) {
+                if (this.items.length) {
+                    this.startingFromItemId = Math.max(...this.items.map(it => it.id));
+                    console.log("this.startingFromItemId set to", this.startingFromItemId);
+                }
+
                 axios.get(`/api/chat/${this.blogDto.chatId}/message`, {
                     params: {
                         startingFromItemId: this.startingFromItemId,
