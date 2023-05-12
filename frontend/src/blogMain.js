@@ -5,13 +5,13 @@ import axios from "axios";
 import bus, {
     LOGGED_OUT,
     PROFILE_SET,
-} from './bus';
+} from './blogBus';
 import store, {
     SET_ERROR_COLOR,
     SET_LAST_ERROR,
     SET_SHOW_ALERT,
     UNSET_USER
-} from './store'
+} from './blogStore';
 import router from './blogRouter.js'
 
 let vm;

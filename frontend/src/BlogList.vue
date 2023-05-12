@@ -1,7 +1,7 @@
 <template>
 
     <v-container class="ma-0 pa-0" style="height: 100%" fluid>
-        <div class="d-flex flex-wrap align-start">
+        <div class="d-flex flex-wrap align-start" id="blog-post-list">
 
                 <v-card
                     v-for="(item, index) in items"
@@ -56,9 +56,14 @@
 </template>
 
 <script>
-    import {getHumanReadableDate, replaceOrAppend} from "@/utils";
+    import Vue from 'vue';
+    import {getHumanReadableDate, hasLength, replaceOrAppend} from "@/utils";
     import axios from "axios";
     import InfiniteLoading from './lib/vue-infinite-loading/src/components/InfiniteLoading.vue';
+    import {GET_SEARCH_STRING, SET_SEARCH_NAME, SET_SHOW_SEARCH} from "@/blogStore";
+    import debounce from "lodash/debounce";
+    import bus, {SEARCH_STRING_CHANGED} from "@/blogBus";
+    import Mark from "mark.js";
 
     const pageSize = 40;
 
@@ -69,7 +74,7 @@
                 page: 0,
                 infiniteId: +new Date(),
                 itemsLoaded: false,
-                searchString: ""
+                markInstance: null,
             }
         },
         methods: {
@@ -81,7 +86,7 @@
                         size: pageSize,
                         searchString: this.searchString,
                     },
-                }).then(({ data }) => {
+                }).then(({data}) => {
                     const list = data;
                     if (list.length) {
                         this.page += 1;
@@ -91,18 +96,63 @@
                         $state.complete();
                     }
                     this.itemsLoaded = true;
+                    this.performMarking();
                 });
             },
             getDate(item) {
                 return getHumanReadableDate(item.createDateTime)
             },
+            reloadItems() {
+                this.infiniteId += 1;
+                console.log("Resetting infinite loader", this.infiniteId);
+            },
+            resetVariables() {
+                this.items = [];
+                this.page = 0;
+                this.itemsLoaded = false;
+            },
+            searchStringChangedDebounced(searchString) {
+                this.searchStringChangedStraight(searchString);
+            },
+            searchStringChangedStraight(searchString) {
+                this.resetVariables();
+                this.reloadItems();
+            },
+            performMarking() {
+                Vue.nextTick(() => {
+                    if (hasLength(this.searchString)) {
+                        this.markInstance.unmark();
+                        this.markInstance.mark(this.searchString);
+                    }
+                })
+            },
         },
         components: {
             InfiniteLoading
         },
+        computed: {
+            searchString: {
+                get() {
+                    return this.$store.getters[GET_SEARCH_STRING];
+                },
+            }
+        },
         mounted() {
+            this.markInstance = new Mark("div#blog-post-list");
 
-        }
+            this.$store.commit(SET_SEARCH_NAME, 'Search by posts');
+            this.$store.commit(SET_SHOW_SEARCH, true);
+        },
+        created() {
+            this.searchStringChangedDebounced = debounce(this.searchStringChangedDebounced, 700, {
+                leading: false,
+                trailing: true
+            });
+            bus.$on(SEARCH_STRING_CHANGED, this.searchStringChangedDebounced);
+        },
+        destroyed() {
+            bus.$off(SEARCH_STRING_CHANGED, this.searchStringChangedDebounced);
+        },
     }
 </script>
 

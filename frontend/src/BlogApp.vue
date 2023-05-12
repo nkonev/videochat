@@ -7,8 +7,8 @@
             </v-breadcrumbs>
 
             <v-spacer></v-spacer>
-            <v-card light :width="isMobile() ? '100%' : ''">
-                <v-text-field :autofocus="isMobile()" prepend-icon="mdi-magnify" hide-details single-line clearable clear-icon="mdi-close-circle"></v-text-field>
+            <v-card v-if="isShowSearch" light :width="isMobile() ? '100%' : ''">
+                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
             </v-card>
         </v-app-bar>
 
@@ -27,6 +27,12 @@
 </template>
 
 <script>
+import {GET_SEARCH_NAME, GET_SEARCH_STRING, GET_SHOW_SEARCH, GET_USER, SET_SEARCH_STRING} from "@/blogStore";
+import {mapGetters} from 'vuex'
+import bus, {SEARCH_STRING_CHANGED} from "@/blogBus";
+
+let unsubscribe;
+
 export default {
     data: () => ({
         items: [
@@ -47,6 +53,37 @@ export default {
             },
         ],
     }),
+    methods: {
+        resetInput() {
+            this.searchString = null;
+        },
+    },
+    computed: {
+        searchString: {
+            get() {
+                return this.$store.getters[GET_SEARCH_STRING];
+            },
+            set(newVal) {
+                this.$store.commit(SET_SEARCH_STRING, newVal);
+                return newVal;
+            }
+        },
+        ...mapGetters({
+            currentUser: GET_USER,
+            searchName: GET_SEARCH_NAME,
+            isShowSearch: GET_SHOW_SEARCH,
+        }),
+    },
+    created() {
+        unsubscribe = this.$store.subscribe((mutation, state) => {
+            if (mutation.type == SET_SEARCH_STRING) {
+                bus.$emit(SEARCH_STRING_CHANGED, mutation.payload);
+            }
+        });
+    },
+    beforeDestroy() {
+        unsubscribe();
+    }
 }
 </script>
 

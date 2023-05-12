@@ -95,8 +95,25 @@ type BlogPostPreviewDto struct {
 	OwnerId        *int64    `json:"ownerId"`
 	Owner          *dto.User `json:"owner"`
 	MessageId      *int64    `json:"messageId"`
+	Text           *string   `json:"-"`
 	Preview        *string   `json:"preview"`
 	ImageUrl       *string   `json:"imageUrl"`
+}
+
+func getSize(size int, isSearch bool) int {
+	if isSearch {
+		return viper.GetInt("blogSearchSize")
+	} else {
+		return size
+	}
+}
+
+func getOffset(offset int, isSearch bool) int {
+	if isSearch {
+		return 0
+	} else {
+		return offset
+	}
 }
 
 func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
@@ -110,10 +127,18 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 	page := utils.FixPageString(c.QueryParam("page"))
 	size := utils.FixSizeString(c.QueryParam("size"))
 	offset := utils.GetOffset(page, size)
+	searchString := c.QueryParam("searchString")
+	searchString = strings.TrimSpace(searchString)
+
+	isSearch := false
+
+	if len(searchString) != 0 {
+		isSearch = true
+	}
 
 	return db.Transact(h.db, func(tx *db.Tx) error {
 		// get chats where blog=true
-		blogs, err := tx.GetBlogPostsByLimitOffset(size, offset)
+		blogs, err := tx.GetBlogPostsByLimitOffset(getSize(size, isSearch), getOffset(offset, isSearch))
 		if err != nil {
 			return err
 		}
@@ -138,9 +163,13 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			for _, post := range posts {
 				if post.ChatId == blog.Id {
 					blogPost.ImageUrl = h.tryGetFirstImage(post.Text)
+					t := post.Text
+					blogPost.Text = &t
 					blogPost.Preview = h.cutText(post.Text)
-					blogPost.OwnerId = &post.OwnerId
-					blogPost.MessageId = &post.MessageId
+					oid := post.OwnerId
+					blogPost.OwnerId = &oid
+					mid := post.MessageId
+					blogPost.MessageId = &mid
 					break
 				}
 			}
@@ -162,9 +191,47 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			}
 		}
 
-		// get their message where blog_post=true for sake to make preview
-		return c.JSON(http.StatusOK, response)
+		if isSearch {
+			search, err := h.performSearchAndPaging(searchString, response, size, offset)
+			if err != nil {
+				return err
+			}
+			return c.JSON(http.StatusOK, search)
+		} else {
+			return c.JSON(http.StatusOK, response)
+		}
 	})
+}
+
+func (h *BlogHandler) performSearchAndPaging(searchString string, searchable []*BlogPostPreviewDto, size, offset int) ([]*BlogPostPreviewDto, error) {
+	searchString = strings.ToLower(searchString)
+
+	var intermediateList = make([]*BlogPostPreviewDto, 0)
+
+	for _, blogPostPreviewDto := range searchable {
+		if strings.Contains(strings.ToLower(blogPostPreviewDto.Title), searchString) ||
+			(blogPostPreviewDto.Preview != nil && strings.Contains(strings.ToLower(*blogPostPreviewDto.Text), searchString)) {
+			intermediateList = append(intermediateList, blogPostPreviewDto)
+		}
+	}
+
+	var list = make([]*BlogPostPreviewDto, 0)
+	var counter = 0
+	var respCounter = 0
+
+	for _, objInfo := range intermediateList {
+		if counter >= offset {
+			list = append(list, objInfo)
+			respCounter++
+			if respCounter >= size {
+				break
+			}
+		}
+		counter++
+	}
+
+	// get their message where blog_post=true for sake to make preview
+	return list, nil
 }
 
 //	func (h *BlogHandler) GetComments(c echo.Context) error {

@@ -41,6 +41,7 @@
 
 <script>
     import MessageItem from "@/MessageItem";
+    import {SET_SHOW_SEARCH} from "@/blogStore";
 
     export default {
         data() {
@@ -134,7 +135,10 @@
         },
         components: {
             MessageItem
-        }
+        },
+        mounted() {
+            this.$store.commit(SET_SHOW_SEARCH, false);
+        },
     }
 </script>
 
