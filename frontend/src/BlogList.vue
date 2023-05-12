@@ -28,16 +28,18 @@
 
                     <v-card-actions v-if="item?.owner != null">
                         <v-list-item class="grow">
-                            <v-list-item-avatar color="grey darken-3">
-                                <v-img
-                                    class="elevation-6"
-                                    alt=""
-                                    :src="item?.owner?.avatar"
-                                ></v-img>
-                            </v-list-item-avatar>
+                            <a @click.prevent="onParticipantClick(item.owner)" :href="getLink(item.owner)">
+                                <v-list-item-avatar>
+                                    <v-img
+                                        class="elevation-6"
+                                        alt=""
+                                        :src="item?.owner?.avatar"
+                                    ></v-img>
+                                </v-list-item-avatar>
+                            </a>
 
                             <v-list-item-content>
-                                <v-list-item-title>{{ item?.owner?.login }}</v-list-item-title>
+                                <v-list-item-title><a @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{ item?.owner?.login }}</a></v-list-item-title>
                                 <v-list-item-subtitle>
                                     {{ $vuetify.lang.t('$vuetify.in') + getDate(item) }}
                                 </v-list-item-subtitle>
@@ -67,6 +69,7 @@
     import bus, {SEARCH_STRING_CHANGED} from "@/blogBus";
     import Mark from "mark.js";
     import {blog_post_name} from "@/blogRoutes";
+    import {profile, profile_name} from "@/routes";
 
     const pageSize = 40;
 
@@ -136,6 +139,14 @@
                         id: item.id
                     }
                 }
+            },
+            onParticipantClick(user) {
+                const routeDto = { name: profile_name, params: { id: user.id }};
+                this.$router.push(routeDto);
+            },
+            getLink(user) {
+                let url = profile + "/" + user.id;
+                return url;
             },
         },
         components: {

@@ -249,7 +249,12 @@ func (h *BlogHandler) tryGetFirstImage(text string) *string {
 func (h *BlogHandler) cutText(text string) *string {
 	tmp := h.stripTagsPolicy.Sanitize(text)
 	runes := []rune(tmp)
-	size := utils.Min(viper.GetInt("blogPreviewMaxTextSize"), len(runes))
+	sizeToCut := viper.GetInt("blogPreviewMaxTextSize")
+	textLen := len(runes)
+	size := utils.Min(sizeToCut, textLen)
 	ret := string(runes[:size])
+	if textLen > sizeToCut {
+		ret += "..."
+	}
 	return &ret
 }
