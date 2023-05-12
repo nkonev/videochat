@@ -5,7 +5,7 @@
         <div class="pr-1 mr-1 pl-1 mt-0 message-item-root" >
             <div class="message-item-with-buttons-wrapper">
                 <v-list-item class="grow">
-                    <v-list-item-avatar color="grey darken-3">
+                    <v-list-item-avatar>
                         <v-img
                             class="elevation-6"
                             alt=""
@@ -13,9 +13,14 @@
                         ></v-img>
                     </v-list-item-avatar>
 
-                    <v-list-item-content>
-                        <v-list-item-title>Nikita Konev</v-list-item-title><v-list-item-title>at 2022-12-30</v-list-item-title>
-                    </v-list-item-content>
+                    <div class="ma-0 pa-0 d-flex top-panel">
+                        <v-list-item-content>
+                            <v-list-item-title>Nikita Konev</v-list-item-title><v-list-item-title>at 2022-12-30</v-list-item-title>
+                        </v-list-item-content>
+                        <div class="ma-0 pa-0 go-to-chat">
+                            <v-btn class="" icon @click="toChat()" :title="$vuetify.lang.t('$vuetify.go_to_chat')"><v-icon dark>mdi-forum</v-icon></v-btn>
+                        </div>
+                    </div>
                 </v-list-item>
 
 
@@ -33,6 +38,7 @@
                     :item="item"
                     :chatId="chatId"
                     :my="item.my"
+                    :isInBlog="true"
                 ></MessageItem>
             </template>
         </v-list>
@@ -133,6 +139,11 @@
                 ]
             }
         },
+        methods: {
+            toChat() {
+
+            }
+        },
         components: {
             MessageItem
         },
@@ -144,4 +155,12 @@
 
 <style lang="stylus">
     @import "common.styl"
+
+    .top-panel {
+        width 100%
+    }
+
+    .go-to-chat {
+        align-self center
+    }
 </style>

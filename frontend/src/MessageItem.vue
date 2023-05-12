@@ -9,8 +9,8 @@
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
                 <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item)" small :title="$vuetify.lang.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
-                <template v-if="!isMobile()">
+                <template v-if="!isMobile() && !isInBlog">
+                    <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item)" small :title="$vuetify.lang.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
                     <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                     <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
                     <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
@@ -51,7 +51,7 @@
     import {chat_name, messageIdHashPrefix} from "./routes"
 
     export default {
-        props: ['item', 'chatId', 'my', 'highlight', 'canResend'],
+        props: ['item', 'chatId', 'my', 'highlight', 'canResend', 'isInBlog'],
         methods: {
             onMessageClick(dto) {
                 axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`)
