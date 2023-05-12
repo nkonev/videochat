@@ -10,26 +10,22 @@ import bus, {
     UNREAD_MESSAGES_CHANGED,
     USER_PROFILE_CHANGED,
     LOGGED_OUT,
-    LOGGED_IN,
     VIDEO_CALL_INVITED,
     VIDEO_CALL_USER_COUNT_CHANGED,
     VIDEO_DIAL_STATUS_CHANGED,
     PROFILE_SET,
     VIDEO_RECORDING_CHANGED,
-    OPEN_SIMPLE_MODAL,
-    CLOSE_SIMPLE_MODAL,
 } from './bus';
 import store, {
-    FETCH_AVAILABLE_OAUTH2_PROVIDERS, NOTIFICATION_ADD, NOTIFICATION_DELETE,
+    NOTIFICATION_ADD, NOTIFICATION_DELETE,
     SET_ERROR_COLOR,
     SET_LAST_ERROR,
     SET_SHOW_ALERT,
     UNSET_USER
 } from './store'
 import router from './router.js'
-import {hasLength, setIcon} from "@/utils";
+import {hasLength} from "@/utils";
 import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
-import {videochat_name} from "@/routes";
 
 let vm;
 
