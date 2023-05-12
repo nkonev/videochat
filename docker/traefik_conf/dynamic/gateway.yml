@@ -61,6 +61,12 @@ http:
       middlewares:
         - "api-strip-prefix-middleware"
         - "retry-middleware"
+    blog-storage-router:
+      rule: "PathPrefix(`/api/storage/download`)"
+      service: storage-service
+      middlewares:
+        - "api-strip-prefix-middleware"
+        - "retry-middleware"
     storage-router:
       rule: "PathPrefix(`/api/storage`)"
       service: storage-service

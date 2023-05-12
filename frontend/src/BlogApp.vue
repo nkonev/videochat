@@ -2,7 +2,7 @@
     <v-app>
         <v-app-bar app color='indigo' dark dense>
             <v-breadcrumbs
-                :items="items"
+                :items="getBreadcrumbs()"
             >
             </v-breadcrumbs>
 
@@ -30,29 +30,41 @@
 import {GET_SEARCH_NAME, GET_SEARCH_STRING, GET_SHOW_SEARCH, SET_SEARCH_STRING} from "@/blogStore";
 import {mapGetters} from 'vuex'
 import bus, {SEARCH_STRING_CHANGED} from "@/blogBus";
-import {blog} from "@/blogRoutes";
+import {blog, blog_post_name} from "@/blogRoutes";
 
 let unsubscribe;
 
 export default {
     data: () => ({
-        items: [
-            {
-                text: 'Videochat',
-                disabled: false,
-                href: '/',
-            },
-            {
-                text: 'Blog',
-                disabled: false,
-                exactPath: true,
-                to: blog,
-            }
-        ],
     }),
     methods: {
         resetInput() {
             this.searchString = null;
+        },
+        getBreadcrumbs() {
+            const ret = [
+                {
+                    text: 'Videochat',
+                    disabled: false,
+                    href: '/',
+                },
+                {
+                    text: 'Blog',
+                    disabled: false,
+                    exactPath: true,
+                    to: blog,
+                },
+            ];
+            if (this.$route.name == blog_post_name) {
+                ret.push(
+                    {
+                        text: 'Post',
+                        disabled: false,
+                        to: '/blog/post',
+                    },
+                )
+            }
+            return ret
         },
     },
     computed: {

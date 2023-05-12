@@ -173,7 +173,7 @@ func configureEcho(
 
 	e.PUT("/chat/:id/message/:messageId/blog-post", mc.MakeBlogPost)
 	e.GET("/blog", bh.GetBlogPosts)
-	//e.GET("/blog/:id", bh.GetComments)
+	e.GET("/blog/:id", bh.GetBlogPost)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

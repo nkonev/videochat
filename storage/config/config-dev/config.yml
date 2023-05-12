@@ -13,6 +13,7 @@ http:
 auth:
   exclude:
     - "^/storage/public.*"
+    - "^/storage/download.*"
     - "^/internal.*"
 
 types:

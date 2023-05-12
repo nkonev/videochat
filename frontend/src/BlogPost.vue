@@ -1,21 +1,21 @@
 <template>
     <div>
-        <h1>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. </h1>
+        <h1>{{blogDto.title}}</h1>
 
         <div class="pr-1 mr-1 pl-1 mt-0 message-item-root" >
             <div class="message-item-with-buttons-wrapper">
-                <v-list-item class="grow">
+                <v-list-item class="grow" v-if="blogDto?.owner">
                     <v-list-item-avatar>
                         <v-img
                             class="elevation-6"
                             alt=""
-                            src="https://avataaars.io/?avatarStyle=Transparent&topType=ShortHairShortCurly&accessoriesType=Prescription02&hairColor=Black&facialHairType=Blank&clotheType=Hoodie&clotheColor=White&eyeType=Default&eyebrowType=DefaultNatural&mouthType=Default&skinColor=Light"
+                            :src="blogDto.owner.avatar"
                         ></v-img>
                     </v-list-item-avatar>
 
                     <div class="ma-0 pa-0 d-flex top-panel">
                         <v-list-item-content>
-                            <v-list-item-title>Nikita Konev</v-list-item-title><v-list-item-title>at 2022-12-30</v-list-item-title>
+                            <v-list-item-title>{{blogDto.owner.login}}</v-list-item-title><v-list-item-title>at 2022-12-30</v-list-item-title>
                         </v-list-item-content>
                         <div class="ma-0 pa-0 go-to-chat">
                             <v-btn class="" icon @click="toChat()" :title="$vuetify.lang.t('$vuetify.go_to_chat')"><v-icon dark>mdi-forum</v-icon></v-btn>
@@ -25,7 +25,7 @@
 
 
                 <div class="pa-0 ma-0 mt-1 message-item-wrapper my">
-                    <v-container v-html="text" class="message-item-text ml-0"></v-container>
+                    <v-container v-html="blogDto.text" class="message-item-text ml-0"></v-container>
                 </div>
             </div>
         </div>
@@ -46,12 +46,20 @@
 </template>
 
 <script>
+    import axios from "axios";
     import MessageItem from "@/MessageItem";
     import {SET_SHOW_SEARCH} from "@/blogStore";
+
+    const blogDtoFactory = () => {
+        return {
+            chatId: 0
+        }
+    }
 
     export default {
         data() {
             return {
+                blogDto: blogDtoFactory(),
                 chatId: 34,
                 text: "<p>Lorem upsum</p><p>dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>" +
                       "<p>Lorem upsum</p><p>dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>",
@@ -142,13 +150,24 @@
         methods: {
             toChat() {
 
-            }
+            },
+            getBlog(id) {
+                axios.get('/api/blog/'+id).then(({data}) => {
+                    this.blogDto = data;
+                    console.log("Got", this.blogDto)
+                });
+
+            },
         },
         components: {
             MessageItem
         },
         mounted() {
             this.$store.commit(SET_SHOW_SEARCH, false);
+            this.getBlog(this.$route.params.id);
+        },
+        beforeDestroy() {
+            this.blogDto = blogDtoFactory();
         },
     }
 </script>
