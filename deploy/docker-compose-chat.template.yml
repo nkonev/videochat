@@ -17,6 +17,10 @@ services:
         - "traefik.http.routers.chat-router.entrypoints=http"
         - "traefik.http.routers.chat-router.middlewares=auth-middleware@file,api-strip-prefix-middleware@file,retry-middleware@file"
 
+        - "traefik.http.routers.blog-router.rule=PathPrefix(`/api/blog`)"
+        - "traefik.http.routers.blog-router.entrypoints=http"
+        - "traefik.http.routers.blog-router.middlewares=api-strip-prefix-middleware@file,retry-middleware@file"
+
         - "traefik.http.routers.chat-public-router.rule=PathPrefix(`/api/chat/public`)"
         - "traefik.http.routers.chat-public-router.entrypoints=http"
         - "traefik.http.routers.chat-public-router.middlewares=api-strip-prefix-middleware@file,retry-middleware@file"
