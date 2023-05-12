@@ -56,7 +56,7 @@ module.exports = (env, argv) => {
             // all options are optional
             filename: `[name]_${currDate}.css`,
             chunkFilename: `[id]_${currDate}.css`,
-            ignoreOrder: true, // Enable to remove warnings about conflicting order
+            ignoreOrder: false, // Enable to remove warnings about conflicting order
         }),
     ];
     if (isDevelopment(argv)) {

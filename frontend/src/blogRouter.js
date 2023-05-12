@@ -5,7 +5,6 @@ import {profile_name} from "@/routes";
 import {blog, blog_post_name} from "@/blogRoutes";
 const BlogList = () => import("./BlogList");
 const BlogPost = () => import("./BlogPost");
-const UserProfile = () => import("./UserProfile");
 
 // This installs <router-view> and <router-link>,
 // and injects $router and $route to all router-enabled child components
@@ -18,7 +17,7 @@ const router = new Router({
     routes: [
         { name: "blog", path: blog, component: BlogList},
         { name: blog_post_name, path: '/blog/post/:id', component: BlogPost},
-        { name: profile_name, path: '/profile/:id', component: UserProfile},
+        { name: profile_name, path: '/profile/:id'},
         { path: '*', component: Error404 },
     ]
 });

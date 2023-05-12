@@ -8,6 +8,7 @@ import store, {
     SET_SHOW_ALERT,
 } from './blogStore';
 import router from './blogRouter.js'
+import {profile_name} from "@/routes";
 
 let vm;
 
@@ -64,6 +65,13 @@ vm = new Vue({
         Vue.prototype.isMobile = () => {
             return this.$vuetify.breakpoint.mobile
         };
+    },
+    watch: {
+        '$route': function(newVal, oldVal) {
+            if (newVal.name == profile_name) {
+                window.location = newVal.fullPath
+            }
+        }
     },
     // https://ru.vuejs.org/v2/guide/render-function.html
     render: h => h(BlogApp)
