@@ -223,6 +223,17 @@ func (db *DB) BlogPosts(ids []int64) ([]*BlogPost, error) {
 	return blogPostsCommon(db, ids)
 }
 
+func (db *DB) GetFirstCommentMessageId(chatId int64, messageId int64) (int64, error) {
+	var id int64
+	row := db.QueryRow(fmt.Sprintf("SELECT id FROM message_chat_%v WHERE id > $1 ORDER BY id ASC LIMIT 1", chatId), messageId)
+	err := row.Scan(&id)
+	if err != nil {
+		return 0, err
+	} else {
+		return id, nil
+	}
+}
+
 func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error

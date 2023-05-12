@@ -174,11 +174,6 @@ func (h *BlogHandler) performSearchAndPaging(searchString string, searchable []*
 	return list, nil
 }
 
-//	func (h *BlogHandler) GetComments(c echo.Context) error {
-//		// auth check
-//		// get messages where blog_post=false for sake to make preview
-//	}
-
 func (h *BlogHandler) tryGetFirstImage(text string) *string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
@@ -211,13 +206,14 @@ func (h *BlogHandler) cutText(text string) *string {
 }
 
 type BlogPostResponse struct {
-	ChatId         int64     `json:"chatId"`
-	Title          string    `json:"title"`
-	OwnerId        *int64    `json:"ownerId"`
-	Owner          *dto.User `json:"owner"`
-	MessageId      *int64    `json:"messageId"`
-	Text           *string   `json:"text"`
-	CreateDateTime time.Time `json:"createDateTime"`
+	ChatId           int64     `json:"chatId"`
+	Title            string    `json:"title"`
+	OwnerId          *int64    `json:"ownerId"`
+	Owner            *dto.User `json:"owner"`
+	MessageId        *int64    `json:"messageId"`
+	CommentMessageId *int64    `json:"commentMessageId"`
+	Text             *string   `json:"text"`
+	CreateDateTime   time.Time `json:"createDateTime"`
 }
 
 func (h *BlogHandler) GetBlogPost(c echo.Context) error {
@@ -262,6 +258,12 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 			user := users[post.OwnerId]
 			response.Owner = user
 		}
+
+		commentId, err := h.db.GetFirstCommentMessageId(blogId, post.MessageId)
+		if err != nil {
+			return err
+		}
+		response.CommentMessageId = &commentId
 	}
 
 	return c.JSON(http.StatusOK, response)

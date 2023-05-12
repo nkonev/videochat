@@ -32,6 +32,7 @@ type EditMessageDto struct {
 
 type CreateMessageDto struct {
 	Text                string                   `json:"text"`
+	BlogPost            bool                     `json:"blogPost"`
 	FileItemUuid        *uuid.UUID               `json:"fileItemUuid"`
 	EmbedMessageRequest *dto.EmbedMessageRequest `json:"embedMessage"`
 }
@@ -513,6 +514,7 @@ func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResul
 		OwnerId:      authPrincipal.UserId,
 		EditDateTime: null.TimeFrom(time.Now()),
 		FileItemUuid: dto.FileItemUuid,
+		BlogPost:     dto.BlogPost,
 	}
 }
 

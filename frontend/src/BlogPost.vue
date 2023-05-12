@@ -31,14 +31,13 @@
             </div>
         </div>
 
-        <template v-if="blogDto.messageId">
+        <template v-if="blogDto.commentMessageId">
             <v-list>
                 <template v-for="(item, index) in items">
                     <MessageItem
                         :key="item.id"
                         :item="item"
                         :chatId="item.chatId"
-                        :my="item.my"
                         :isInBlog="true"
                     ></MessageItem>
                 </template>
@@ -58,6 +57,7 @@
     import {SET_SHOW_SEARCH} from "@/blogStore";
     import {getHumanReadableDate, hasLength, replaceOrAppend} from "@/utils";
     import {chat, messageIdHashPrefix} from "@/routes";
+    import InfiniteLoading from "@/lib/vue-infinite-loading/src/components/InfiniteLoading";
 
     const pageSize = 40;
 
@@ -86,7 +86,7 @@
             getBlog(id) {
                 axios.get('/api/blog/'+id).then(({data}) => {
                     this.blogDto = data;
-                    this.startingFromItemId = data.messageId;
+                    this.startingFromItemId = data.commentMessageId;
                 });
             },
             getDate(date) {
@@ -104,7 +104,7 @@
                         size: pageSize,
                     },
                 }).then(({ data }) => {
-                    const list = data.data;
+                    const list = data;
                     if (list.length) {
                         this.page += 1;
                         replaceOrAppend(this.items, list);
@@ -116,7 +116,8 @@
             },
         },
         components: {
-            MessageItem
+            MessageItem,
+            InfiniteLoading,
         },
         mounted() {
             this.$store.commit(SET_SHOW_SEARCH, false);
