@@ -143,6 +143,7 @@ vm = new Vue({
                       }
                       canResend
                       pinned
+                      blog
                     }
                     chatDeletedEvent {
                       id

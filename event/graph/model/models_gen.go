@@ -37,6 +37,7 @@ type ChatDto struct {
 	ParticipantsCount   int              `json:"participantsCount"`
 	CanResend           bool             `json:"canResend"`
 	Pinned              bool             `json:"pinned"`
+	Blog                bool             `json:"blog"`
 }
 
 type ChatEvent struct {

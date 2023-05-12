@@ -75,6 +75,7 @@ type ChatDto {
     participantsCount:        Int!
     canResend:           Boolean!
     pinned:              Boolean!
+    blog:              Boolean!
 }
 
 type ChatDeletedDto {
