@@ -77,12 +77,6 @@ func getOffset(offset int, isSearch bool) int {
 }
 
 func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
-	// auth check
-	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
-		return errors.New("Error during getting auth context")
-	}
 
 	page := utils.FixPageString(c.QueryParam("page"))
 	size := utils.FixSizeString(c.QueryParam("size"))
