@@ -206,14 +206,13 @@ func (h *BlogHandler) cutText(text string) *string {
 }
 
 type BlogPostResponse struct {
-	ChatId           int64     `json:"chatId"`
-	Title            string    `json:"title"`
-	OwnerId          *int64    `json:"ownerId"`
-	Owner            *dto.User `json:"owner"`
-	MessageId        *int64    `json:"messageId"`
-	CommentMessageId *int64    `json:"commentMessageId"`
-	Text             *string   `json:"text"`
-	CreateDateTime   time.Time `json:"createDateTime"`
+	ChatId         int64     `json:"chatId"`
+	Title          string    `json:"title"`
+	OwnerId        *int64    `json:"ownerId"`
+	Owner          *dto.User `json:"owner"`
+	MessageId      *int64    `json:"messageId"`
+	Text           *string   `json:"text"`
+	CreateDateTime time.Time `json:"createDateTime"`
 }
 
 func (h *BlogHandler) GetBlogPost(c echo.Context) error {
@@ -258,13 +257,60 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 			user := users[post.OwnerId]
 			response.Owner = user
 		}
-
-		commentId, err := h.db.GetFirstCommentMessageId(blogId, post.MessageId)
-		if err != nil {
-			return err
-		}
-		response.CommentMessageId = &commentId
 	}
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func (h *BlogHandler) GetBlogPostMessages(c echo.Context) error {
+	blogId, err := utils.ParseInt64(c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	chatBasic, err := h.db.GetChatBasic(blogId)
+	if err != nil {
+		return err
+	}
+	if chatBasic == nil {
+		return c.NoContent(http.StatusNotFound)
+	}
+	if !chatBasic.IsBlog {
+		GetLogEntry(c.Request().Context()).Infof("This chat %v is not blog", blogId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	startingFromItemId, err := utils.ParseInt64(c.QueryParam("startingFromItemId"))
+	if err != nil {
+		return err
+	}
+	size := utils.FixSizeString(c.QueryParam("size"))
+	reverse := utils.GetBoolean(c.QueryParam("reverse"))
+
+	messages, err := h.db.GetMessages(blogId, size, startingFromItemId, reverse, false, "")
+	if err != nil {
+		return err
+	}
+
+	var ownersSet = map[int64]bool{}
+	var chatsPreSet = map[int64]bool{}
+	for _, message := range messages {
+		populateSets(message, ownersSet, chatsPreSet)
+	}
+	chatsSet, err := h.db.GetChatsBasic(chatsPreSet, NonExistentUser)
+	if err != nil {
+		return err
+	}
+	var owners = getUsersRemotelyOrEmpty(ownersSet, h.restClient, c)
+	messageDtos := make([]*dto.DisplayMessageDto, 0)
+	for _, cc := range messages {
+		messageDtos = append(messageDtos, convertToMessageDto(cc, owners, chatsSet, NonExistentUser))
+	}
+
+	GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
+	return c.JSON(http.StatusOK, messageDtos)
+}
+
+//func (h *BlogHandler) patchStorageUrlToPublic(in string) string {
+//
+//}

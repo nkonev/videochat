@@ -24,6 +24,7 @@ import (
 const maxMessageLen = 1024 * 1024
 const minMessageLen = 1
 const allUsers = "all"
+const NonExistentUser = -65000
 
 type EditMessageDto struct {
 	Id int64 `json:"id"`
@@ -90,7 +91,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	if messages, err := mc.db.GetMessages(chatId, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString); err != nil {
+	if messages, err := mc.db.GetMessages(chatId, size, startingFromItemId, reverse, hasHash, searchString); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 		return err
 	} else {

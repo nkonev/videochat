@@ -85,7 +85,7 @@ func provideScanToMessage(message *Message) []any {
 	}
 }
 
-func (db *DB) GetMessages(chatId int64, userId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
+func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
 	if hasHash {
 		leftLimit := limit / 2
 		rightLimit := limit / 2

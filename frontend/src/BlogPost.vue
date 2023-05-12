@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <template v-if="blogDto.commentMessageId">
+        <template v-if="blogDto.messageId">
             <v-list>
                 <template v-for="(item, index) in items">
                     <MessageItem
@@ -86,7 +86,7 @@
             getBlog(id) {
                 axios.get('/api/blog/'+id).then(({data}) => {
                     this.blogDto = data;
-                    this.startingFromItemId = data.commentMessageId;
+                    this.startingFromItemId = data.messageId;
                 });
             },
             getDate(date) {
@@ -102,7 +102,7 @@
                     console.log("this.startingFromItemId set to", this.startingFromItemId);
                 }
 
-                axios.get(`/api/chat/${this.blogDto.chatId}/message`, {
+                axios.get(`/api/blog/${this.blogDto.chatId}/message`, {
                     params: {
                         startingFromItemId: this.startingFromItemId,
                         page: this.page,
