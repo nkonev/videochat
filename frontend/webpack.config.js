@@ -29,7 +29,7 @@ const getLiveReload = (argv) => {
 }
 
 module.exports = (env, argv) => {
-    const currDate = +new Date();
+    const currDate = isDevelopment(argv) ? "" : +new Date();
     const pluginsArray = [
         // new BundleAnalyzerPlugin({defaultSizes: "parsed"}),
         new HtmlWebpackPlugin({ // Load a custom template (lodash by default)
