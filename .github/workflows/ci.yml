@@ -110,10 +110,11 @@ jobs:
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Start & wait docker-compose environment
         run: |
-          docker-compose up -d postgresql redis rabbitmq
+          docker-compose up -d postgresql redis rabbitmq jaeger
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:6831 -- echo 'jaeger is up'
       - name: Build and test with make
         run: (cd chat; sleep 5 && make check-env download generate test package)
       - name: Build docker image and deploy
@@ -146,8 +147,9 @@ jobs:
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Start & wait docker-compose environment
         run: |
-          docker-compose up -d rabbitmq
+          docker-compose up -d rabbitmq jaeger
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:6831 -- echo 'jaeger is up'
       - name: Build and test with make
         run: (cd event; make check-env download generate test package)
       - name: Build docker image and deploy
@@ -180,9 +182,10 @@ jobs:
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Start & wait docker-compose environment
         run: |
-          docker-compose up -d postgresql rabbitmq
+          docker-compose up -d postgresql rabbitmq jaeger
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:6831 -- echo 'jaeger is up'
       - name: Build and test with make
         run: (cd notification; make check-env download generate test package)
       - name: Build docker image and deploy
@@ -215,9 +218,12 @@ jobs:
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Start & wait docker-compose environment
         run: |
-          docker-compose up -d postgresql minio
+          docker-compose up -d postgresql redis minio rabbitmq jaeger
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:6831 -- echo 'jaeger is up'
       - name: Build and test with make
         run: (cd storage; make check-env download generate test package)
       - name: Build docker image and deploy
@@ -245,6 +251,15 @@ jobs:
           key: ${{ runner.os }}-go-video-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+      - name: Install software
+        run: |
+          mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
+      - name: Start & wait docker-compose environment
+        run: |
+          docker-compose up -d redis rabbitmq jaeger
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:6831 -- echo 'jaeger is up'
       - name: Build and test with make
         run: (cd video; make check-env download generate test package)
       - name: Build docker image and deploy
