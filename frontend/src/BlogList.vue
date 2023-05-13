@@ -16,7 +16,7 @@
                         :src="item.imageUrl"
                     >
                         <v-container class="post-title ma-0 pa-0">
-                            <v-card-title class="text-h5 font-weight-bold">
+                            <v-card-title>
                                 <router-link :to="getBlogPostLink(item)" class="post-title-text">{{ item.title }}</router-link>
                             </v-card-title>
                         </v-container>
@@ -181,6 +181,8 @@
         .post-title-text {
             color white
             text-decoration none
+            word-wrap break-word
+            overflow-wrap break-word
         }
     }
     .myclass {
