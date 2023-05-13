@@ -28,7 +28,7 @@
                         </span>
                         <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.lang.t('$vuetify.unread_messages')"></v-badge>
                         <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0" :title="$vuetify.lang.t('$vuetify.call_in_process')"/>
-                        <v-badge v-if="item.blog" color="black" icon="mdi-postage-stamp" inline  class="mt-0" :title="$vuetify.lang.t('$vuetify.blog')"/>
+                        <v-badge v-if="item.blog" color="grey" icon="mdi-postage-stamp" inline  class="mt-0" :title="$vuetify.lang.t('$vuetify.blog')"/>
                     </v-list-item-title>
                     <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}">
                         {{ printParticipants(item) }}
