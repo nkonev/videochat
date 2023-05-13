@@ -105,12 +105,14 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			if post.ChatId == blog.Id {
 				mbImage := h.tryGetFirstImage(post.Text)
 				if mbImage != nil {
-					tmpVar, err := h.makeUrlPublic(*mbImage, "")
+					tmpVar, err := h.getFileParam(*mbImage)
 					if err != nil {
-						Logger.Warnf("Unagle to change url: %v", err)
+						Logger.Warnf("Unagle to get file key: %v", err)
 						break
 					}
-					blogPost.ImageUrl = &tmpVar
+					tmp2Var := h.getPreviewUrl(tmpVar)
+
+					blogPost.ImageUrl = tmp2Var
 				} else {
 					blogPost.ImageUrl = blog.Avatar.Ptr()
 				}
@@ -152,6 +154,28 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		return c.JSON(http.StatusOK, response)
 	}
 
+}
+
+func (h *BlogHandler) getPreviewUrl(aKey string) *string {
+	var previewUrl *string = nil
+
+	respUrl := url.URL{}
+	respUrl.Path = "/api/storage/public/download/embed/preview"
+	previewMinioKey := ""
+	previewMinioKey = utils.SetImagePreviewExtension(aKey)
+	if previewMinioKey != "" {
+		query := respUrl.Query()
+		query.Set(utils.FileParam, previewMinioKey)
+
+		respUrl.RawQuery = query.Encode()
+
+		tmp := respUrl.String()
+		previewUrl = &tmp
+	} else {
+		Logger.Errorf("Unable to make previewUrl for %v", previewMinioKey)
+	}
+
+	return previewUrl
 }
 
 func (h *BlogHandler) performSearchAndPaging(searchString string, searchable []*BlogPostPreviewDto, size, offset int) ([]*BlogPostPreviewDto, error) {
@@ -378,6 +402,15 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 		return ""
 	}
 	return ret
+}
+
+func (h *BlogHandler) getFileParam(src string) (string, error) {
+	parsed, err := url.Parse(src)
+	if err != nil {
+		return "", err
+	}
+	fileParam := parsed.Query().Get(utils.FileParam)
+	return fileParam, nil
 }
 
 func (h *BlogHandler) makeUrlPublic(src string, additionalSegment string) (string, error) {

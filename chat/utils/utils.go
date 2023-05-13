@@ -6,6 +6,7 @@ import (
 	. "nkonev.name/chat/logger"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
@@ -181,3 +182,17 @@ func Min(a, b int) int {
 
 const FileParam = "file"
 const UrlStoragePublicGetFile = "/storage/public/download"
+
+func SetImagePreviewExtension(key string) string {
+	return SetExtension(key, "jpg")
+}
+
+func SetExtension(fileName string, newExtension string) string {
+	idx := strings.LastIndex(fileName, ".")
+	if idx > 0 {
+		firstPart := fileName[0:idx]
+		return firstPart + "." + newExtension
+	} else {
+		return fileName
+	}
+}
