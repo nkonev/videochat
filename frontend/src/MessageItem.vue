@@ -156,7 +156,6 @@
 
 <style lang="stylus">
   @import "common.styl"
-  $messageBlogBackground = #f036ff
 
   .embedded-message {
       background: $embedMessageColor;

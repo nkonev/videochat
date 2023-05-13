@@ -301,6 +301,7 @@ export default {
 .v-card__title {
     .download-link {
         color white
+        text-decoration none
     }
 }
 .file-info-title {

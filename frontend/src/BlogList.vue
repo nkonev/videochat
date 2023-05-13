@@ -181,8 +181,6 @@
         .post-title-text {
             color white
             text-decoration none
-            word-wrap break-word
-            overflow-wrap break-word
         }
     }
     .myclass {
