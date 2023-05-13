@@ -16,6 +16,10 @@
                         <v-icon>mdi-forum</v-icon>
                         {{ $vuetify.lang.t('$vuetify.public_chats') }}
                     </v-btn>
+                    <v-btn @click="goBlog()" text>
+                        <v-icon>mdi-postage-stamp</v-icon>
+                        {{ $vuetify.lang.t('$vuetify.blogs') }}
+                    </v-btn>
                 </v-card-actions>
             </v-card>
         </v-row>
@@ -27,6 +31,7 @@ import {GET_USER, SET_SEARCH_STRING} from "@/store";
     import {mapGetters} from "vuex";
     import bus, {OPEN_CHAT_EDIT, OPEN_FIND_USER} from "@/bus";
 import {publicallyAvailableForSearchChatsQuery} from "@/utils";
+import {blog} from "@/routes";
 
     export default {
         computed: {
@@ -41,6 +46,9 @@ import {publicallyAvailableForSearchChatsQuery} from "@/utils";
             },
             availableChats() {
                 this.$store.commit(SET_SEARCH_STRING, publicallyAvailableForSearchChatsQuery);
+            },
+            goBlog() {
+                window.location.href = blog
             },
         }
     }

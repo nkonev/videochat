@@ -375,7 +375,7 @@
                 this.$router.push(({ name: chat_list_name}))
             },
             goBlog() {
-                window.location = blog
+                window.location.href = blog
             },
             goProfile() {
                 this.$router.push(({ name: profile_self_name}))

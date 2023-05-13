@@ -69,7 +69,7 @@ vm = new Vue({
     watch: {
         '$route': function(newVal, oldVal) {
             if (newVal.name == profile_name) {
-                window.location = newVal.fullPath
+                window.location.href = newVal.fullPath
             }
         }
     },

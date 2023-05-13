@@ -91,7 +91,7 @@
                 return chat + '/' + this.blogDto.chatId + messageIdHashPrefix + this.blogDto.messageId;
             },
             toChat() {
-                window.location = this.getChatLink();
+                window.location.href = this.getChatLink();
             },
             getBlog(id) {
                 axios.get('/api/blog/'+id).then(({data}) => {
