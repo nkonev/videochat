@@ -24,7 +24,7 @@ import store, {
     UNSET_USER
 } from './store'
 import router from './router.js'
-import {hasLength} from "@/utils";
+import {hasLength, offerToJoinToPublicChatStatus} from "@/utils";
 import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
 
 let vm;
@@ -79,7 +79,7 @@ axios.interceptors.response.use((response) => {
 }, (error) => {
   // https://github.com/axios/axios/issues/932#issuecomment-307390761
   // console.log("Catch error", error, error.request, error.response, error.config);
-  if (axios.isCancel(error) || error.response.status == 417) {
+  if (axios.isCancel(error) || error.response.status == offerToJoinToPublicChatStatus) {
     return Promise.reject(error)
   } else if (error && error.response && error.response.status == 401 ) {
     console.log("Catch 401 Unauthorized, emitting ", LOGGED_OUT);

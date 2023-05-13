@@ -230,7 +230,7 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 			}
 
 			if basic != nil && basic.AvailableToSearch {
-				return c.JSON(http.StatusExpectationFailed, utils.H{"message": "You need to enter to this chat"})
+				return c.JSON(http.StatusPreconditionRequired, utils.H{"message": "You need to enter to this chat"})
 			} else {
 				return c.NoContent(http.StatusNotFound)
 			}

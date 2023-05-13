@@ -203,3 +203,5 @@ export const copyCallLink = (chatId) => {
     const link = getUrlPrefix() + chat + '/' + chatId + video_suffix;
     navigator.clipboard.writeText(link);
 }
+
+export const offerToJoinToPublicChatStatus = 428

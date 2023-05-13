@@ -179,7 +179,7 @@
         VIDEO_POSITION_ON_THE_TOP,
         VIDEO_POSITION_SIDE
     } from "@/localStore";
-    import {copyCallLink} from "@/utils";
+    import {copyCallLink, offerToJoinToPublicChatStatus} from "@/utils";
 
     const KEY_DESKTOP_TOP_WITH_VIDEO_PANELS = 'desktopTopWithVideo2';
     const KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS = 'desktopTopWithoutVideo2'
@@ -458,7 +458,7 @@
                     if (reason.response.status == 404) {
                         this.goToChatList();
                         return Promise.reject();
-                    } else if (reason.response.status == 417) {
+                    } else if (reason.response.status == offerToJoinToPublicChatStatus) {
                         return axios.put(`/api/chat/${this.chatId}/join`).then(()=>{
                             return this.fetchAndSetChat();
                         })
