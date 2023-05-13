@@ -223,13 +223,13 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 		return err
 	} else {
 		if chat == nil {
-			exists, err := ch.db.IsChatExists(chatId)
+			basic, err := ch.db.GetChatBasic(chatId)
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("error during checking chat existense: %s", err)
 				return err
 			}
 
-			if exists {
+			if basic != nil && basic.AvailableToSearch {
 				return c.JSON(http.StatusExpectationFailed, utils.H{"message": "You need to enter to this chat"})
 			} else {
 				return c.NoContent(http.StatusNotFound)
