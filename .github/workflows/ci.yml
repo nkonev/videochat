@@ -37,7 +37,7 @@ jobs:
       - name: Build with Maven
         run: |
           (cd aaa; ./mvnw clean package)
-      - name: Deploy
+      - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
@@ -71,7 +71,7 @@ jobs:
       - name: Build with npm run
         run: |
           (cd frontend; npm install && npm run build)
-      - name: Deploy
+      - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
@@ -114,9 +114,9 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-      - name: Build & test chat
+      - name: Build and test with make
         run: (cd chat; sleep 5 && make check-env download generate test package)
-      - name: Deploy chat
+      - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
@@ -148,9 +148,9 @@ jobs:
         run: |
           docker-compose up -d rabbitmq
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-      - name: Build & test event
+      - name: Build and test with make
         run: (cd event; make check-env download generate test package)
-      - name: Deploy event
+      - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
@@ -183,9 +183,9 @@ jobs:
           docker-compose up -d postgresql rabbitmq
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-      - name: Build & test notification
+      - name: Build and test with make
         run: (cd notification; make check-env download generate test package)
-      - name: Deploy notification
+      - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
@@ -218,9 +218,9 @@ jobs:
           docker-compose up -d postgresql minio
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'
-      - name: Build & test storage
+      - name: Build and test with make
         run: (cd storage; make check-env download generate test package)
-      - name: Deploy storage
+      - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
@@ -245,9 +245,9 @@ jobs:
           key: ${{ runner.os }}-go-video-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      - name: Build & test video
+      - name: Build and test with make
         run: (cd video; make check-env download generate test package)
-      - name: Deploy video
+      - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
