@@ -27,7 +27,7 @@
                 </v-list-item>
 
 
-                <div class="pa-0 ma-0 mt-1 message-item-wrapper my">
+                <div class="pa-0 ma-0 mt-1 message-item-wrapper post-content">
                     <v-container v-html="blogDto.text" class="message-item-text ml-0"></v-container>
                 </div>
             </div>
@@ -156,5 +156,11 @@
 
     .go-to-chat {
         align-self center
+    }
+
+    .post-content {
+        background white
+        border-color $borderColor
+        border-style: dashed;
     }
 </style>
