@@ -248,7 +248,7 @@
                 return this.$refs.tipTapRef.$data.editor.isActive('strike')
             },
             codeValue() {
-                return this.$refs.tipTapRef.$data.editor.isActive('textStyle', { fontFamily: 'monospace' })
+                return this.$refs.tipTapRef.$data.editor.isActive('code')
             },
             strikeClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()
