@@ -7,7 +7,7 @@
                     v-for="(item, index) in items"
                     :key="item.id"
                     class="mb-2 mr-2 myclass"
-                    min-width="400"
+                    :min-width="isMobile() ? 200 : 400"
                     max-width="600"
                 >
                     <v-card-text class="pb-0">
