@@ -26,8 +26,7 @@
                     </v-card>
                     </v-card-text>
 
-                    <v-card-text class="text--primary pb-0">
-                        {{ item.preview }}
+                    <v-card-text class="text--primary pb-0" v-html="item.preview">
                     </v-card-text>
 
                     <v-card-actions v-if="item?.owner != null">
