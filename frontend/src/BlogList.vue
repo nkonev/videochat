@@ -7,14 +7,15 @@
                     v-for="(item, index) in items"
                     :key="item.id"
                     class="mb-2 mr-2 myclass"
-                    min-width="300"
-                    max-width="500"
+                    min-width="400"
+                    max-width="600"
                 >
                     <v-card-text class="pb-0">
                     <v-card>
                     <v-img
                         class="white--text align-end"
-                        height="200px"
+                        gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+                        height="300px"
                         :src="item.imageUrl"
                     >
                         <v-container class="post-title ma-0 pa-0">
