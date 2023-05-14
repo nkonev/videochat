@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>{{blogDto.title}}</h1>
+        <h1 v-html="blogDto.title"></h1>
 
         <div class="pr-1 mr-1 pl-1 mt-0 message-item-root" >
             <div class="message-item-with-buttons-wrapper">

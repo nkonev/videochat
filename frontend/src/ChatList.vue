@@ -23,8 +23,7 @@
                 </v-badge>
                 <v-list-item-content :id="'chat-item-' + item.id" :class="item.avatar ? 'ml-4' : ''">
                     <v-list-item-title>
-                        <span class="chat-name min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)">
-                            {{getChatName(item)}}
+                        <span class="chat-name min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)" v-html="getChatName(item)">
                         </span>
                         <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.lang.t('$vuetify.unread_messages')"></v-badge>
                         <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0" :title="$vuetify.lang.t('$vuetify.call_in_process')"/>

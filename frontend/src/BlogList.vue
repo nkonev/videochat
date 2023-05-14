@@ -19,7 +19,7 @@
                     >
                         <v-container class="post-title ma-0 pa-0">
                             <v-card-title>
-                                <router-link :to="getBlogPostLink(item)" class="post-title-text">{{ item.title }}</router-link>
+                                <router-link :to="getBlogPostLink(item)" class="post-title-text" v-html="item.title"></router-link>
                             </v-card-title>
                         </v-container>
                     </v-img>
