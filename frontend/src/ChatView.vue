@@ -21,8 +21,7 @@
                                 dismissible
                                 prominent
                             >
-                                <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer">
-                                    {{ pinnedPromoted.text }}
+                                <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer" v-html="pinnedPromoted.text">
                                 </router-link>
                             </v-alert>
                         </div>
