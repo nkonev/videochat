@@ -184,6 +184,7 @@
         .post-title-text {
             color white
             text-decoration none
+            word-break: break-word;
         }
     }
     .myclass {
