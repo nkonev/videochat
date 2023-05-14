@@ -15,7 +15,7 @@
                     <v-img
                         class="white--text align-end"
                         gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
-                        height="300px"
+                        :height="isMobile() ? 200 : 300"
                         :src="item.imageUrl"
                     >
                         <v-container class="post-title ma-0 pa-0">
