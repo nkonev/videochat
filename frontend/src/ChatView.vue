@@ -591,7 +591,6 @@
                                   }
                                   pinned
                                   blogPost
-                                  canMakeBlogPost
                                 }
 
                                 subscription{

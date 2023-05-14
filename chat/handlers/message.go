@@ -122,13 +122,13 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	}
 }
 
-func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, *db.BasicChatDtoExtended, error) {
+func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {
 	if message, err := co.GetMessage(chatId, behalfUserId, messageId); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
-		return nil, nil, err
+		return nil, err
 	} else {
 		if message == nil {
-			return nil, nil, nil
+			return nil, nil
 		}
 		var ownersSet = map[int64]bool{}
 		var chatsPreSet = map[int64]bool{}
@@ -136,12 +136,11 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 
 		chatsSet, err := co.GetChatsBasic(chatsPreSet, behalfUserId)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
-		var chat = chatsSet[chatId]
 		var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
-		return convertToMessageDto(message, owners, chatsSet, behalfUserId), chat, nil
+		return convertToMessageDto(message, owners, chatsSet, behalfUserId), nil
 	}
 }
 
@@ -156,7 +155,6 @@ func populateSets(message *db.Message, ownersSet map[int64]bool, chatsPreSet map
 		var embeddedMessageResendChatId = *message.ResponseEmbeddedMessageResendChatId
 		chatsPreSet[embeddedMessageResendChatId] = true
 	}
-	chatsPreSet[message.ChatId] = true
 }
 
 func (mc *MessageHandler) GetMessage(c echo.Context) error {
@@ -176,7 +174,7 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 		return err
 	}
 
-	message, _, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+	message, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
 	if err != nil {
 		return err
 	}
@@ -205,7 +203,6 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 		BlogPost:       dbMessage.BlogPost,
 	}
 
-	chat := chats[dbMessage.ChatId]
 	if dbMessage.ResponseEmbeddedMessageReplyOwnerId != nil {
 		embeddedUser := owners[*dbMessage.ResponseEmbeddedMessageReplyOwnerId]
 		ret.EmbedMessage = &dto.EmbedMessageResponse{
@@ -234,7 +231,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 		ret.Text = ""
 	}
 
-	ret.SetPersonalizedFields(behalfUserId, chat.IsBlog)
+	ret.SetPersonalizedFields(behalfUserId)
 
 	return ret
 }
@@ -306,7 +303,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		message, chat, err := getMessage(c, tx, mc.restClient, chatId, id, userPrincipalDto.UserId)
+		message, err := getMessage(c, tx, mc.restClient, chatId, id, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -322,7 +319,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
 		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
-		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message, chat.IsBlog)
+		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
 		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
 		return c.JSON(http.StatusCreated, message)
 	})
@@ -451,7 +448,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			return err
 		}
 
-		message, chat, err := getMessage(c, tx, mc.restClient, chatId, bindTo.Id, userPrincipalDto.UserId)
+		message, err := getMessage(c, tx, mc.restClient, chatId, bindTo.Id, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -487,7 +484,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 		mc.notificator.NotifyRemoveMention(c, userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
 
-		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message, chat.IsBlog)
+		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message)
 
 		return c.JSON(http.StatusCreated, &utils.H{"id": bindTo.Id})
 	})
@@ -555,7 +552,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 			Id:     messageId,
 			ChatId: chatId,
 		}
-		mc.notificator.NotifyAboutDeleteMessage(c, participantIds, chatId, cd, false)
+		mc.notificator.NotifyAboutDeleteMessage(c, participantIds, chatId, cd)
 
 		var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, nil, chatId)
 		mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
@@ -692,11 +689,11 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		message, chat, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userId)
+		message, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userId)
 		if err != nil {
 			return err
 		}
-		mc.notificator.NotifyAboutEditMessage(c, ids, chatId, message, chat.IsBlog)
+		mc.notificator.NotifyAboutEditMessage(c, ids, chatId, message)
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -754,9 +751,9 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				return err
 			}
 
-			res, chat, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+			res, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
 
-			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chat.IsBlog)
+			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
 
 			count0, err := tx.GetPinnedMessagesCount(chatId)
 			if err != nil {
@@ -764,7 +761,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 			}
 
 			// notify about newly promoted result (promoted can be different)
-			err = mc.sendPromotePinnedMessageEvent(c, res, tx, chatId, participantIds, userPrincipalDto.UserId, true, count0, chat.IsBlog)
+			err = mc.sendPromotePinnedMessageEvent(c, res, tx, chatId, participantIds, userPrincipalDto.UserId, true, count0)
 			if err != nil {
 				return err
 			}
@@ -779,15 +776,15 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				return err
 			}
 
-			res, chat, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
-			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chat.IsBlog)
+			res, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
 
 			count1, err := tx.GetPinnedMessagesCount(chatId)
 			if err != nil {
 				return err
 			}
 
-			err = mc.sendPromotePinnedMessageEvent(c, res, tx, chatId, participantIds, userPrincipalDto.UserId, false, count1, chat.IsBlog)
+			err = mc.sendPromotePinnedMessageEvent(c, res, tx, chatId, participantIds, userPrincipalDto.UserId, false, count1)
 			if err != nil {
 				return err
 			}
@@ -808,9 +805,9 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 						return err
 					}
 
-					res2, chat2, err := getMessage(c, tx, mc.restClient, chatId, promoted.Id, userPrincipalDto.UserId)
+					res2, err := getMessage(c, tx, mc.restClient, chatId, promoted.Id, userPrincipalDto.UserId)
 
-					err = mc.sendPromotePinnedMessageEvent(c, res2, tx, chatId, participantIds, userPrincipalDto.UserId, true, count2, chat2.IsBlog)
+					err = mc.sendPromotePinnedMessageEvent(c, res2, tx, chatId, participantIds, userPrincipalDto.UserId, true, count2)
 					if err != nil {
 						return err
 					}
@@ -874,18 +871,18 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 
 		// send edit for previous message - it lost "blog_post == true"
 		if prevBlogPostMessageId != nil {
-			res0, chat0, err := getMessage(c, tx, mc.restClient, chatId, *prevBlogPostMessageId, userPrincipalDto.UserId)
+			res0, err := getMessage(c, tx, mc.restClient, chatId, *prevBlogPostMessageId, userPrincipalDto.UserId)
 			if err != nil {
 				return err
 			}
-			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res0, chat0.IsBlog)
+			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res0)
 		}
 		// notify about new "blog_post == true"
-		res, chat, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+		res, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
-		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chat.IsBlog)
+		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
 
 		return c.JSON(http.StatusOK, res)
 	})
@@ -1012,7 +1009,7 @@ func patchForView(cleanTagsPolicy *services.StripTagsPolicy, message *dto.Displa
 	message.Text = createMessagePreviewWithoutLogin(cleanTagsPolicy, message.Text)
 }
 
-func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, displayMessage *dto.DisplayMessageDto, tx *db.Tx, chatId int64, participantIds []int64, behalfUserId int64, promote bool, count int64, blog bool) error {
+func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, displayMessage *dto.DisplayMessageDto, tx *db.Tx, chatId int64, participantIds []int64, behalfUserId int64, promote bool, count int64) error {
 	var copiedMsg = &dto.DisplayMessageDto{}
 
 	err := deepcopy.Copy(copiedMsg, displayMessage)
@@ -1027,7 +1024,7 @@ func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, displayM
 	mc.notificator.NotifyAboutPromotePinnedMessage(c, chatId, &dto.PinnedMessageEvent{
 		Message:    *copiedMsg,
 		TotalCount: count,
-	}, promote, participantIds, blog)
+	}, promote, participantIds)
 	return nil
 }
 

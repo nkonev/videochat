@@ -25,6 +25,7 @@
             <MessageItemContextMenu
                 ref="contextMenuRef"
                 :canResend="chatDto.canResend"
+                :isBlog="chatDto.blog"
                 @deleteMessage="this.deleteMessage"
                 @editMessage="this.editMessage"
                 @replyOnMessage="this.replyOnMessage"

@@ -14,9 +14,9 @@ type Events interface {
 	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
 	NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx)
 	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
-	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, blog bool)
-	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, blog bool)
-	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, blog bool)
+	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
+	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
+	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
 	NotifyAboutProfileChanged(user *dto.User)
 	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
 	NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string)
@@ -28,7 +28,7 @@ type Events interface {
 	NotifyAboutChangeParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin)
 	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, chatTitle string)
 	NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
-	NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64, blog bool)
+	NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64)
 }
 
 type eventsImpl struct {
@@ -165,7 +165,7 @@ func (not *eventsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, c
 	}
 }
 
-func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, blog bool, not *eventsImpl, eventType string) {
+func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *eventsImpl, eventType string) {
 
 	for _, participantId := range userIds {
 		if eventType == "message_deleted" {
@@ -188,7 +188,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				continue
 			}
 
-			copied.SetPersonalizedFields(participantId, blog)
+			copied.SetPersonalizedFields(participantId)
 
 			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 				EventType:           eventType,
@@ -203,16 +203,16 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 	}
 }
 
-func (not *eventsImpl) NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, blog bool) {
-	messageNotifyCommon(c, userIds, chatId, message, blog, not, "message_created")
+func (not *eventsImpl) NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+	messageNotifyCommon(c, userIds, chatId, message, not, "message_created")
 }
 
-func (not *eventsImpl) NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, blog bool) {
-	messageNotifyCommon(c, userIds, chatId, message, blog, not, "message_deleted")
+func (not *eventsImpl) NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+	messageNotifyCommon(c, userIds, chatId, message, not, "message_deleted")
 }
 
-func (not *eventsImpl) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, blog bool) {
-	messageNotifyCommon(c, userIds, chatId, message, blog, not, "message_edited")
+func (not *eventsImpl) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+	messageNotifyCommon(c, userIds, chatId, message, not, "message_edited")
 }
 
 func (not *eventsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User) {
@@ -412,7 +412,7 @@ func (not *eventsImpl) NotifyAboutChangeParticipants(c echo.Context, userIds []i
 	}
 }
 
-func (not *eventsImpl) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64, blog bool) {
+func (not *eventsImpl) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64) {
 
 	var eventType = ""
 	if promote {
@@ -429,7 +429,7 @@ func (not *eventsImpl) NotifyAboutPromotePinnedMessage(c echo.Context, chatId in
 			return
 		}
 
-		copiedMsg.SetPersonalizedFields(participantId, blog)
+		copiedMsg.SetPersonalizedFields(participantId)
 
 		var copiedPinnedEvent = &dto.PinnedMessageEvent{}
 		err = deepcopy.Copy(copiedPinnedEvent, msg)

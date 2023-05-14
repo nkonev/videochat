@@ -290,19 +290,18 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 }
 func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayMessageDto {
 	var result = &model.DisplayMessageDto{ // dto.DisplayMessageDto
-		ID:              messageDto.Id,
-		Text:            messageDto.Text,
-		ChatID:          messageDto.ChatId,
-		OwnerID:         messageDto.OwnerId,
-		CreateDateTime:  messageDto.CreateDateTime,
-		EditDateTime:    messageDto.EditDateTime.Ptr(),
-		Owner:           convertUser(messageDto.Owner),
-		CanEdit:         messageDto.CanEdit,
-		CanDelete:       messageDto.CanDelete,
-		FileItemUUID:    messageDto.FileItemUuid,
-		Pinned:          messageDto.Pinned,
-		BlogPost:        messageDto.BlogPost,
-		CanMakeBlogPost: messageDto.CanMakeBlogPost,
+		ID:             messageDto.Id,
+		Text:           messageDto.Text,
+		ChatID:         messageDto.ChatId,
+		OwnerID:        messageDto.OwnerId,
+		CreateDateTime: messageDto.CreateDateTime,
+		EditDateTime:   messageDto.EditDateTime.Ptr(),
+		Owner:          convertUser(messageDto.Owner),
+		CanEdit:        messageDto.CanEdit,
+		CanDelete:      messageDto.CanDelete,
+		FileItemUUID:   messageDto.FileItemUuid,
+		Pinned:         messageDto.Pinned,
+		BlogPost:       messageDto.BlogPost,
 	}
 	embedMessageDto := messageDto.EmbedMessage
 	if embedMessageDto != nil {

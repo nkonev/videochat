@@ -25,9 +25,11 @@
 
 import {chat, messageIdHashPrefix} from "./routes"
 import {getUrlPrefix} from "@/utils";
+import {GET_USER} from "@/store";
+import {mapGetters} from "vuex";
 
 export default {
-    props: ['canResend'],
+    props: ['canResend', 'isBlog'],
     data(){
         return {
             showContextMenu: false,
@@ -73,7 +75,7 @@ export default {
                     ret.push({title: this.$vuetify.lang.t('$vuetify.share'), icon: 'mdi-share', action: () => this.$emit('shareMessage', this.menuableItem) });
                 }
                 ret.push({title: this.$vuetify.lang.t('$vuetify.copy_link_to_message'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
-                if (!this.menuableItem.blogPost && this.menuableItem.canMakeBlogPost) {
+                if (!this.menuableItem.blogPost && this.isBlog && this.menuableItem.owner.id == this.currentUser.id) {
                     ret.push({title: this.$vuetify.lang.t('$vuetify.make_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('makeBlogPost', this.menuableItem)});
                 }
                 if (this.menuableItem.blogPost) {
@@ -95,6 +97,9 @@ export default {
         chatId() {
             return this.$route.params.id
         },
-    }
+        ...mapGetters({
+            currentUser: GET_USER,
+        })
+    },
 }
 </script>

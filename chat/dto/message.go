@@ -26,26 +26,24 @@ type EmbedMessageRequest struct {
 }
 
 type DisplayMessageDto struct {
-	Id              int64                 `json:"id"`
-	Text            string                `json:"text"`
-	ChatId          int64                 `json:"chatId"`
-	OwnerId         int64                 `json:"ownerId"`
-	CreateDateTime  time.Time             `json:"createDateTime"`
-	EditDateTime    null.Time             `json:"editDateTime"`
-	Owner           *User                 `json:"owner"`
-	CanEdit         bool                  `json:"canEdit"`
-	CanDelete       bool                  `json:"canDelete"`
-	FileItemUuid    *uuid.UUID            `json:"fileItemUuid"`
-	EmbedMessage    *EmbedMessageResponse `json:"embedMessage"`
-	Pinned          bool                  `json:"pinned"`
-	BlogPost        bool                  `json:"blogPost"`
-	CanMakeBlogPost bool                  `json:"canMakeBlogPost"`
+	Id             int64                 `json:"id"`
+	Text           string                `json:"text"`
+	ChatId         int64                 `json:"chatId"`
+	OwnerId        int64                 `json:"ownerId"`
+	CreateDateTime time.Time             `json:"createDateTime"`
+	EditDateTime   null.Time             `json:"editDateTime"`
+	Owner          *User                 `json:"owner"`
+	CanEdit        bool                  `json:"canEdit"`
+	CanDelete      bool                  `json:"canDelete"`
+	FileItemUuid   *uuid.UUID            `json:"fileItemUuid"`
+	EmbedMessage   *EmbedMessageResponse `json:"embedMessage"`
+	Pinned         bool                  `json:"pinned"`
+	BlogPost       bool                  `json:"blogPost"`
 }
 
-func (copied *DisplayMessageDto) SetPersonalizedFields(participantId int64, blog bool) {
+func (copied *DisplayMessageDto) SetPersonalizedFields(participantId int64) {
 	copied.CanEdit = ((copied.OwnerId == participantId) && (copied.EmbedMessage == nil || copied.EmbedMessage.EmbedType != EmbedMessageTypeResend))
 	copied.CanDelete = copied.OwnerId == participantId
-	copied.CanMakeBlogPost = copied.OwnerId == participantId && blog
 }
 
 type MessageDeletedDto struct {
