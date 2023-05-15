@@ -8,6 +8,7 @@
 </template>
 
 <script>
+import {Slice, Fragment, Node} from 'prosemirror-model';
 import "prosemirror-view/style/prosemirror.css";
 import "./message.styl";
 import { Editor, EditorContent } from "@tiptap/vue-2";
@@ -161,6 +162,45 @@ export default {
           }),
           Code,
       ],
+      editorProps: {
+          // Preserves newline on text paste
+          // Combined from https://github.com/ueberdosis/tiptap/issues/775#issuecomment-762971612 and https://discuss.prosemirror.net/t/how-to-preserve-hard-breaks-when-pasting-html-into-a-plain-text-schema/4202/5
+          handlePaste(view, event) {
+              const { state } = view
+              const { tr } = state
+
+              // let TipTapImage.js handle pasting of data copied from graphic editor
+              if (event.clipboardData?.files?.length) {
+                  return false
+              }
+
+              const clipboardText = event.clipboardData?.getData('text/plain').trim()
+
+              if (!clipboardText) {
+                  return false
+              }
+
+              const textLines = clipboardText.split(/(?:\r\n|\r|\n)/g)
+
+              const nodes = [];
+
+              textLines.forEach(line => {
+                  let nodeJson = {type: "paragraph"};
+                  if (line.length > 0) {
+                      nodeJson.content = [{type: "text", text: line}]
+                  }
+                  let node = Node.fromJSON(state.doc.type.schema, nodeJson);
+                  nodes.push(node);
+              });
+
+              const fragment = Fragment.fromArray(nodes);
+              const slice = Slice.maxOpen(fragment);
+              view.dispatch(
+                  tr.replaceSelection(slice).scrollIntoView(),
+              )
+              return true
+          }
+      },
       content: empty,
       onUpdate: () => this.onUpdateContent(),
     });
