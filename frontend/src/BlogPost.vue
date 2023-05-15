@@ -34,7 +34,7 @@
         </div>
 
         <template v-if="blogDto.messageId">
-            <v-list>
+            <v-list id="comment-list">
                 <template v-for="(item, index) in items">
                     <MessageItem
                         :key="item.id"
@@ -45,7 +45,7 @@
                 </template>
             </v-list>
 
-            <infinite-loading @infinite="infiniteHandler">
+            <infinite-loading @infinite="infiniteHandler" force-use-infinite-wrapper="#comment-list">
                 <template slot="no-more"><span/></template>
                 <template slot="no-results"><span/></template>
             </infinite-loading>
