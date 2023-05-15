@@ -404,6 +404,7 @@
 
 .richText {
     border-color: $borderColor
+    line-height: $lineHeight;
 }
 
 .dashed-borders {

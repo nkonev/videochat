@@ -166,12 +166,5 @@
         box-shadow:
             0 0 0 1px rgba(0, 0, 0, 0.05),
             0px 10px 20px rgba(0, 0, 0, 0.1)
-
-        .message-item-text {
-            // font-size: .875rem;
-            font-weight: 400;
-            line-height: 1.375rem;
-            letter-spacing: .0071428571em;
-        }
     }
 </style>
