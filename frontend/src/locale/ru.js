@@ -108,7 +108,7 @@ export default {
     btn_update: "Обновить",
     websocket_not_connected: "Websocket не подключен",
     cancel: "Отменить",
-    source_add: "Добавить источник",
+    source_add: "Добавить медиа источник",
     screen_share: "Демонстрация экрана",
     apply: "Применить",
     enter_into_call: "Войти в видеоконференцию",
