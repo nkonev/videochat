@@ -31,6 +31,7 @@
 </template>
 
 <script>
+import 'typeface-roboto'
 import {GET_SEARCH_NAME, GET_SEARCH_STRING, GET_SHOW_SEARCH, SET_SEARCH_STRING} from "@/blogStore";
 import {mapGetters} from 'vuex'
 import bus, {SEARCH_STRING_CHANGED} from "@/blogBus";
