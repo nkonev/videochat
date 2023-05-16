@@ -223,6 +223,7 @@
                 <MessageEditMediaModal/>
                 <MessageResendToModal/>
                 <PinnedMessagesModal/>
+                <PlayerModal/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -313,6 +314,7 @@
     import MessageEditMediaModal from "@/MessageEditMediaModal";
     import MessageResendToModal from "@/MessageResendToModal";
     import PinnedMessagesModal from "@/PinnedMessagesModal";
+    import PlayerModal from "@/PlayerModal";
 
     import queryMixin, {searchQueryParameter} from "@/queryMixin";
     import {copyCallLink, hasLength} from "@/utils";
@@ -359,6 +361,7 @@
             MessageEditMediaModal,
             MessageResendToModal,
             PinnedMessagesModal,
+            PlayerModal,
         },
         methods:{
             toggleLeftNavigation() {

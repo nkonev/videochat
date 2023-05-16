@@ -52,7 +52,7 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 		}
 
 		if strings.HasPrefix(eventName, utils.ObjectCreated) || strings.HasPrefix(eventName, utils.ObjectRemoved) {
-			eventService.HandleEvent(participantIds, key, eventName, ctx)
+			eventService.HandleEvent(participantIds, normalizedKey, workingChatId, eventName, ctx)
 		}
 		if strings.HasPrefix(eventName, utils.ObjectCreated) {
 			previewService.HandleMinioEvent(participantIds, minioEvent, ctx)

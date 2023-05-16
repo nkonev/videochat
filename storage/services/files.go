@@ -217,17 +217,18 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 	}
 
 	info := &dto.FileInfoDto{
-		Id:           objInfo.Key,
-		Filename:     filename,
-		Url:          downloadUrl,
-		Size:         objInfo.Size,
-		CanDelete:    fileOwnerId == behalfUserId,
-		CanEdit:      fileOwnerId == behalfUserId && strings.HasSuffix(objInfo.Key, ".txt"),
-		CanShare:     fileOwnerId == behalfUserId,
-		LastModified: objInfo.LastModified,
-		OwnerId:      fileOwnerId,
-		PublicUrl:    publicUrl,
-		PreviewUrl:   previewUrl,
+		Id:             objInfo.Key,
+		Filename:       filename,
+		Url:            downloadUrl,
+		Size:           objInfo.Size,
+		CanDelete:      fileOwnerId == behalfUserId,
+		CanEdit:        fileOwnerId == behalfUserId && utils.IsPlainText(objInfo.Key),
+		CanShare:       fileOwnerId == behalfUserId,
+		LastModified:   objInfo.LastModified,
+		OwnerId:        fileOwnerId,
+		PublicUrl:      publicUrl,
+		PreviewUrl:     previewUrl,
+		CanPlayAsVideo: utils.IsVideo(objInfo.Key),
 	}
 	return info, nil
 }

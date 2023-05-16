@@ -124,18 +124,19 @@ type ComplexityRoot struct {
 	}
 
 	FileInfoDto struct {
-		CanDelete    func(childComplexity int) int
-		CanEdit      func(childComplexity int) int
-		CanShare     func(childComplexity int) int
-		Filename     func(childComplexity int) int
-		ID           func(childComplexity int) int
-		LastModified func(childComplexity int) int
-		Owner        func(childComplexity int) int
-		OwnerID      func(childComplexity int) int
-		PreviewURL   func(childComplexity int) int
-		PublicURL    func(childComplexity int) int
-		Size         func(childComplexity int) int
-		URL          func(childComplexity int) int
+		CanDelete      func(childComplexity int) int
+		CanEdit        func(childComplexity int) int
+		CanPlayAsVideo func(childComplexity int) int
+		CanShare       func(childComplexity int) int
+		Filename       func(childComplexity int) int
+		ID             func(childComplexity int) int
+		LastModified   func(childComplexity int) int
+		Owner          func(childComplexity int) int
+		OwnerID        func(childComplexity int) int
+		PreviewURL     func(childComplexity int) int
+		PublicURL      func(childComplexity int) int
+		Size           func(childComplexity int) int
+		URL            func(childComplexity int) int
 	}
 
 	GlobalEvent struct {
@@ -676,6 +677,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FileInfoDto.CanEdit(childComplexity), true
+
+	case "FileInfoDto.canPlayAsVideo":
+		if e.complexity.FileInfoDto.CanPlayAsVideo == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.CanPlayAsVideo(childComplexity), true
 
 	case "FileInfoDto.canShare":
 		if e.complexity.FileInfoDto.CanShare == nil {
@@ -1373,6 +1381,7 @@ type FileInfoDto {
     lastModified: Time!
     ownerId: Int64!
     owner:  User
+    canPlayAsVideo:           Boolean!
 }
 
 type WrappedFileInfoDto {
@@ -4571,6 +4580,50 @@ func (ec *executionContext) fieldContext_FileInfoDto_owner(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _FileInfoDto_canPlayAsVideo(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_canPlayAsVideo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPlayAsVideo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_canPlayAsVideo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _GlobalEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GlobalEvent_eventType(ctx, field)
 	if err != nil {
@@ -7561,6 +7614,8 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileInfoDto(ctx cont
 				return ec.fieldContext_FileInfoDto_ownerId(ctx, field)
 			case "owner":
 				return ec.fieldContext_FileInfoDto_owner(ctx, field)
+			case "canPlayAsVideo":
+				return ec.fieldContext_FileInfoDto_canPlayAsVideo(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FileInfoDto", field.Name)
 		},
@@ -9947,6 +10002,13 @@ func (ec *executionContext) _FileInfoDto(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._FileInfoDto_owner(ctx, field, obj)
 
+		case "canPlayAsVideo":
+
+			out.Values[i] = ec._FileInfoDto_canPlayAsVideo(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

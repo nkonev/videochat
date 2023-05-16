@@ -85,18 +85,19 @@ type EmbedMessageResponse struct {
 }
 
 type FileInfoDto struct {
-	ID           string    `json:"id"`
-	Filename     string    `json:"filename"`
-	URL          string    `json:"url"`
-	PublicURL    *string   `json:"publicUrl"`
-	PreviewURL   *string   `json:"previewUrl"`
-	Size         int64     `json:"size"`
-	CanDelete    bool      `json:"canDelete"`
-	CanEdit      bool      `json:"canEdit"`
-	CanShare     bool      `json:"canShare"`
-	LastModified time.Time `json:"lastModified"`
-	OwnerID      int64     `json:"ownerId"`
-	Owner        *User     `json:"owner"`
+	ID             string    `json:"id"`
+	Filename       string    `json:"filename"`
+	URL            string    `json:"url"`
+	PublicURL      *string   `json:"publicUrl"`
+	PreviewURL     *string   `json:"previewUrl"`
+	Size           int64     `json:"size"`
+	CanDelete      bool      `json:"canDelete"`
+	CanEdit        bool      `json:"canEdit"`
+	CanShare       bool      `json:"canShare"`
+	LastModified   time.Time `json:"lastModified"`
+	OwnerID        int64     `json:"ownerId"`
+	Owner          *User     `json:"owner"`
+	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
 }
 
 type GlobalEvent struct {

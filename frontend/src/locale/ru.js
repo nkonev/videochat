@@ -179,5 +179,6 @@ export default {
     go_to_blog_post: "Перейти в блог",
     go_to_chat: "Перейти в чат",
     call_in_process: "Идёт звонок",
-    unread_messages: "Непрочитанных сообщений"
+    unread_messages: "Непрочитанных сообщений",
+    play: "Воспроизведение"
 }

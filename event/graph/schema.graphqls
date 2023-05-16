@@ -118,6 +118,7 @@ type FileInfoDto {
     lastModified: Time!
     ownerId: Int64!
     owner:  User
+    canPlayAsVideo:           Boolean!
 }
 
 type WrappedFileInfoDto {

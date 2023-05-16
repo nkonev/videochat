@@ -649,6 +649,7 @@
                                           login
                                           avatar
                                         }
+                                        canPlayAsVideo
                                       }
                                       count
                                     }

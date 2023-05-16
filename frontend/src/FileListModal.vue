@@ -38,6 +38,7 @@
                                     </v-img>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
+                                        <v-btn icon v-if="item.canPlayAsVideo" @click="fireVideoPlay(item)" :title="$vuetify.lang.t('$vuetify.play')"><v-icon>mdi-play</v-icon></v-btn>
 
                                         <v-btn icon v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.lang.t('$vuetify.edit')"><v-icon>mdi-pencil</v-icon></v-btn>
 
@@ -85,7 +86,7 @@
 import bus, {
     CLOSE_SIMPLE_MODAL, PREVIEW_CREATED, OPEN_FILE_UPLOAD_MODAL,
     OPEN_SIMPLE_MODAL, OPEN_TEXT_EDIT_MODAL,
-    OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, FILE_CREATED, FILE_REMOVED
+    OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, FILE_CREATED, FILE_REMOVED, PLAYER_MODAL
 } from "./bus";
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
@@ -210,6 +211,9 @@ export default {
         },
         fireEdit(dto) {
             bus.$emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});
+        },
+        fireVideoPlay(dto) {
+            bus.$emit(PLAYER_MODAL, dto);
         },
         getDate(item) {
             return getHumanReadableDate(item.lastModified)

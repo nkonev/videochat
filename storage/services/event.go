@@ -33,16 +33,11 @@ type EventService struct {
 	publisher    *producer.RabbitFileUploadedPublisher
 }
 
-func (s *EventService) HandleEvent(participantIds []int64, aKey string, eventName string, ctx context.Context) {
-	GetLogEntry(ctx).Debugf("Got %v %v", aKey, eventName)
-	normalizedKey := utils.StripBucketName(aKey, s.minioConfig.Files)
-	chatId, err := utils.ParseChatId(normalizedKey)
-	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during parsing chatId: %v", err)
-		return
-	}
+func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string, chatId int64, eventName string, ctx context.Context) {
+	GetLogEntry(ctx).Debugf("Got %v %v", normalizedKey, eventName)
 
 	var objectInfo minio.ObjectInfo
+	var err error
 	var tagging *tags.Tags
 	if strings.HasPrefix(eventName, utils.ObjectCreated) {
 		objectInfo, err = s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
