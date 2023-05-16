@@ -1,19 +1,19 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" persistent scrollable max-width="1280">
+        <v-dialog v-model="show" persistent scrollable max-width="800">
             <v-card>
                 <v-card-title>{{ this.$vuetify.lang.t('$vuetify.file_editing', filename) }}</v-card-title>
 
-                <v-card-text>
+                <v-card-text class="pb-0">
                     <v-progress-circular
                         indeterminate
                         color="primary"
                         v-if="loading"
                     ></v-progress-circular>
-                    <v-textarea v-model="editableText" v-else auto-grow autofocus filled dense/>
+                    <v-textarea v-model="editableText" v-else auto-grow autofocus filled dense hide-spin-buttons no-resize hide-details/>
                 </v-card-text>
 
-                <v-card-actions class="pa-4 pt-0">
+                <v-card-actions class="pa-4">
                     <v-btn color="primary" class="mr-4" @click="saveFile()">{{$vuetify.lang.t('$vuetify.ok')}}</v-btn>
                     <v-btn color="error" class="mr-4" @click="closeModal()">{{$vuetify.lang.t('$vuetify.close')}}</v-btn>
                     <v-spacer/>
