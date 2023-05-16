@@ -180,5 +180,6 @@ export default {
     go_to_chat: "Go to chat",
     call_in_process: "Call in process",
     unread_messages: "Unread messages",
-    play: "Play"
+    play: "Play",
+    show: "Show"
 }

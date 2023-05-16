@@ -229,6 +229,7 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		PublicUrl:      publicUrl,
 		PreviewUrl:     previewUrl,
 		CanPlayAsVideo: utils.IsVideo(objInfo.Key),
+		CanShowAsImage: utils.IsImage(objInfo.Key),
 	}
 	return info, nil
 }

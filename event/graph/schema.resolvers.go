@@ -282,6 +282,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				OwnerID:        fileEvent.FileInfoDto.OwnerId,
 				Owner:          convertUser(fileEvent.FileInfoDto.Owner),
 				CanPlayAsVideo: fileEvent.FileInfoDto.CanPlayAsVideo,
+				CanShowAsImage: fileEvent.FileInfoDto.CanShowAsImage,
 			},
 			Count: fileEvent.Count,
 		}

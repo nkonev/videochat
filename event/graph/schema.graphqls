@@ -119,6 +119,7 @@ type FileInfoDto {
     ownerId: Int64!
     owner:  User
     canPlayAsVideo:           Boolean!
+    canShowAsImage:  Boolean!
 }
 
 type WrappedFileInfoDto {

@@ -650,6 +650,7 @@
                                           avatar
                                         }
                                         canPlayAsVideo
+                                        canShowAsImage
                                       }
                                       count
                                     }

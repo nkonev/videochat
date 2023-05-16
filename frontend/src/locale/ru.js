@@ -180,5 +180,6 @@ export default {
     go_to_chat: "Перейти в чат",
     call_in_process: "Идёт звонок",
     unread_messages: "Непрочитанных сообщений",
-    play: "Воспроизведение"
+    play: "Воспроизведение",
+    show: "Показать"
 }

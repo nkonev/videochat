@@ -101,4 +101,5 @@ type FileInfoDto struct {
 	OwnerId        int64     `json:"ownerId"`
 	Owner          *User     `json:"owner"`
 	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
+	CanShowAsImage bool      `json:"canShowAsImage"`
 }
