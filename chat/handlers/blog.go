@@ -297,7 +297,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (h *BlogHandler) GetBlogPostMessages(c echo.Context) error {
+func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	blogId, err := utils.ParseInt64(c.Param("id"))
 	if err != nil {
 		return err
@@ -418,12 +418,8 @@ func (h *BlogHandler) makeUrlPublic(src string, additionalSegment string) (strin
 	if err != nil {
 		return "", err
 	}
-	fileParam := parsed.Query().Get(utils.FileParam)
 
-	patchedPath := "/api" + utils.UrlStoragePublicGetFile + additionalSegment
-
-	parsed.Query().Set(utils.FileParam, fileParam)
-	parsed.Path = patchedPath
+	parsed.Path = "/api" + utils.UrlStoragePublicGetFile + additionalSegment
 
 	newurl := parsed.String()
 	return newurl, nil

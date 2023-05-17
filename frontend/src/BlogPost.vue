@@ -112,7 +112,7 @@
                     console.log("this.startingFromItemId set to", this.startingFromItemId);
                 }
 
-                axios.get(`/api/blog/${this.blogDto.chatId}/message`, {
+                axios.get(`/api/blog/${this.blogDto.chatId}/comment`, {
                     params: {
                         startingFromItemId: this.startingFromItemId,
                         page: this.page,
