@@ -38,7 +38,7 @@
                                     </v-img>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
-                                        <v-btn icon v-if="item.canShowAsImage" @click="fireShowImage(item)" :title="$vuetify.lang.t('$vuetify.show')"><v-icon>mdi-image</v-icon></v-btn>
+                                        <v-btn icon v-if="item.canShowAsImage" @click="fireShowImage(item)" :title="$vuetify.lang.t('$vuetify.view')"><v-icon>mdi-image</v-icon></v-btn>
 
                                         <v-btn icon v-if="item.canPlayAsVideo" @click="fireVideoPlay(item)" :title="$vuetify.lang.t('$vuetify.play')"><v-icon>mdi-play</v-icon></v-btn>
 
@@ -218,28 +218,7 @@ export default {
             bus.$emit(PLAYER_MODAL, dto);
         },
         fireShowImage(dto) {
-            const image_window = window.open("", "_blank");
-            image_window.document.write(`
-                    <!doctype html>
-                    <html lang="en">
-                    <head>
-                    </head>
-                    <body>
-                        <img src="${dto.url}" alt="Example">
-                    </body>
-                    <style>
-                        body {
-                          margin: 0;
-                          padding: 0;
-                        }
-
-                        img {
-                          max-width: 100vh;
-                          height: auto;
-                        }
-                    </style>
-                  </html>
-            `);
+            bus.$emit(PLAYER_MODAL, dto);
         },
         getDate(item) {
             return getHumanReadableDate(item.lastModified)

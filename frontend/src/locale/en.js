@@ -181,5 +181,5 @@ export default {
     call_in_process: "Call in process",
     unread_messages: "Unread messages",
     play: "Play",
-    show: "Show"
+    view: "View"
 }

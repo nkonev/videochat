@@ -181,5 +181,5 @@ export default {
     call_in_process: "Идёт звонок",
     unread_messages: "Непрочитанных сообщений",
     play: "Воспроизведение",
-    show: "Показать"
+    view: "Просмотр"
 }
