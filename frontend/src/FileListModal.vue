@@ -75,7 +75,7 @@
                         :length="filePagesCount"
                     ></v-pagination>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" class="mr-4 my-1" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
+                    <v-btn color="primary" class="mr-2 my-1" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
                     <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
