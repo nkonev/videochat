@@ -93,7 +93,14 @@ import bus, {
 import {mapGetters} from "vuex";
 import {GET_USER} from "./store";
 import axios from "axios";
-import {getHumanReadableDate, replaceInArray, formatSize, hasLength, findIndex, replaceOrAppend} from "./utils";
+import {
+    getHumanReadableDate,
+    replaceInArray,
+    formatSize,
+    hasLength,
+    findIndex,
+    replaceOrPrepend
+} from "./utils";
 import debounce from "lodash/debounce";
 
 const firstPage = 1;
@@ -250,7 +257,7 @@ export default {
         },
         replaceItem(dto) {
             console.log("Replacing item", dto);
-            replaceOrAppend(this.dto.files, [dto]);
+            replaceOrPrepend(this.dto.files, [dto]);
             this.$forceUpdate();
         },
         onFileCreated(dto) {

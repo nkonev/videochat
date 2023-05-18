@@ -48,6 +48,15 @@ export const replaceOrAppend = (array, newArray) => {
     });
 };
 
+export const replaceOrPrepend = (array, newArray) => {
+    newArray.forEach((element, index) => {
+        const replaced = replaceInArray(array, element);
+        if (!replaced) {
+            array.unshift(element);
+        }
+    });
+};
+
 export const moveToFirstPosition = (array, element) => {
     const idx = findIndex(array, element);
     if (idx > 0) {
