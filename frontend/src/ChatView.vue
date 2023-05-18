@@ -96,7 +96,7 @@
                 <v-icon>mdi-record-rec</v-icon>
             </v-btn>
             <v-btn fab v-if="showRecordStopButton" small @click="stopRecord()" :loading="initializingStoppingVideoRecord">
-                <v-icon color="red">mdi-record-rec</v-icon>
+                <v-icon color="red">mdi-stop</v-icon>
             </v-btn>
 
             <v-btn

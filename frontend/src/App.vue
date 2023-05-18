@@ -125,7 +125,7 @@
                     <v-icon>mdi-record-rec</v-icon>
                 </v-btn>
                 <v-btn v-if="showRecordStopButton && !isMobile()" icon @click="stopRecord()" :loading="initializingStoppingVideoRecord" :title="$vuetify.lang.t('$vuetify.stop_record')">
-                    <v-icon color="red">mdi-record-rec</v-icon>
+                    <v-icon color="red">mdi-stop</v-icon>
                 </v-btn>
                 <v-spacer></v-spacer>
                 <img v-if="chatAvatar" class="v-avatar chat-avatar" :src="chatAvatar"/>
