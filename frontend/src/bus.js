@@ -64,3 +64,4 @@ export const SET_LOCAL_MICROPHONE_MUTED = "setLocalMicrophoneMuted";
 export const FILE_CREATED = "fileCreated";
 export const FILE_REMOVED = "fileRemoved";
 export const PLAYER_MODAL = "playerModal";
+export const MEDIA_LINK_SET = "mediaLinkSet";

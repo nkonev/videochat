@@ -60,6 +60,7 @@
                         :length="filePagesCount"
                     ></v-pagination>
                     <v-spacer></v-spacer>
+                    <v-btn color="primary" class="mr-2" @click="fromUrl()"><v-icon color="white">mdi-link-variant</v-icon>{{ $vuetify.lang.t('$vuetify.from_link') }}</v-btn>
                     <v-btn color="primary" class="mr-2" @click="fromDisk()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.choose_file_from_disk') }}</v-btn>
                     <v-btn color="error" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
@@ -71,7 +72,7 @@
 <script>
     import axios from "axios";
 
-    import bus, {OPEN_MESSAGE_EDIT_MEDIA} from "./bus";
+    import bus, {OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA} from "./bus";
     import {media_image, media_video} from "@/utils";
 
     const firstPage = 1;
@@ -151,6 +152,10 @@
                     case media_image:
                         return this.$vuetify.lang.t('$vuetify.message_edit_image')
                 }
+            },
+            fromUrl() {
+                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: "add_media_by_link", mediaType: this.type});
+                this.closeModal();
             },
             fromDisk() {
                 if (this.fromDiskCallback) {

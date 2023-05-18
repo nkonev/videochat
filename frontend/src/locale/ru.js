@@ -181,5 +181,8 @@ export default {
     call_in_process: "Идёт звонок",
     unread_messages: "Непрочитанных сообщений",
     play: "Воспроизведение",
-    view: "Просмотр"
+    view: "Просмотр",
+    from_link: "По ссылке",
+    add_media_video_by_link: "Добавить видео по ссылке",
+    add_media_image_by_link: "Добавить картинку по ссылке"
 }

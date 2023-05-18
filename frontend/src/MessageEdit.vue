@@ -258,7 +258,7 @@
             },
             linkClick() {
                 const previousUrl = this.$refs.tipTapRef.$data.editor.getAttributes('link').href;
-                bus.$emit(OPEN_MESSAGE_EDIT_LINK, previousUrl);
+                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: "add_link_to_text", previousUrl});
             },
             onMessageLinkSet(url) {
                 // empty

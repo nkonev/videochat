@@ -30,7 +30,7 @@ import Code from '@tiptap/extension-code';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {hasLength, media_image, media_video} from "@/utils";
-import bus, {FILE_UPLOAD_MODAL_START_UPLOADING, PREVIEW_CREATED, OPEN_FILE_UPLOAD_MODAL} from "./bus";
+import bus, {FILE_UPLOAD_MODAL_START_UPLOADING, PREVIEW_CREATED, OPEN_FILE_UPLOAD_MODAL, MEDIA_LINK_SET} from "./bus";
 import Video from "@/TipTapVideo";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -101,14 +101,22 @@ export default {
         if (hasLength(this.correlationId) && this.correlationId == dto.correlationId) {
             if (dto.aType == media_video) {
                 this.setVideo(dto.url, dto.previewUrl)
-            } if (dto.aType == media_image) {
+            } else if (dto.aType == media_image) {
                 this.setImage(dto.url)
             }
         }
-    }
+    },
+    onMediaLinkSet(link, mediaType) {
+        if (mediaType == media_video) {
+            this.setVideo(link)
+        } else if (mediaType == media_image) {
+            this.setImage(link)
+        }
+    },
   },
   mounted() {
     bus.$on(PREVIEW_CREATED, this.onPreviewCreated);
+    bus.$on(MEDIA_LINK_SET, this.onMediaLinkSet);
 
     const imagePluginInstance = buildImageHandler(
     (image) => {
@@ -190,6 +198,8 @@ export default {
 
   beforeDestroy() {
     bus.$off(PREVIEW_CREATED, this.onPreviewCreated);
+    bus.$off(MEDIA_LINK_SET, this.onMediaLinkSet);
+
     this.editor.destroy();
     this.fileInput = null;
   },

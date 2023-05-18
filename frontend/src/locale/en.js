@@ -181,5 +181,8 @@ export default {
     call_in_process: "Call in process",
     unread_messages: "Unread messages",
     play: "Play",
-    view: "View"
+    view: "View",
+    from_link: "By link",
+    add_media_video_by_link: "Add video by link",
+    add_media_image_by_link: "Add image by link"
 }
