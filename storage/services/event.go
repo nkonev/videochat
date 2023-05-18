@@ -60,6 +60,20 @@ func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string,
 		return
 	}
 
+	var users map[int64]*dto.User = map[int64]*dto.User{}
+	var fileOwnerId int64
+	if strings.HasPrefix(eventName, utils.ObjectCreated) {
+		_, fileOwnerId, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
+		if err != nil {
+			Logger.Errorf("Error get metadata: %v", err)
+			return
+		}
+
+		var participantIdSet = map[int64]bool{}
+		participantIdSet[fileOwnerId] = true
+		users = GetUsersRemotelyOrEmpty(participantIdSet, s.client, ctx)
+	}
+
 	// iterate over chat participants
 	for _, participantId := range participantIds {
 		var created bool
@@ -71,6 +85,7 @@ func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string,
 				GetLogEntry(ctx).Errorf("Error get file info: %v, skipping", err)
 				continue
 			}
+			fileInfo.Owner = users[fileOwnerId]
 		} else if strings.HasPrefix(eventName, utils.ObjectRemoved) {
 			created = false
 			fileInfo = &dto.FileInfoDto{
