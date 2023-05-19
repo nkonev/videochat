@@ -37,6 +37,7 @@ services:
       - CHAT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - CHAT_JAEGER.HOST=jaeger
       - CHAT_JAEGER.PORT=6831
+      - CHAT_BASEURL=http://api.site.local:8080
       - CHAT_MESSAGE.ALLOWEDMEDIAURLS=http://api.site.local:8080,
     logging:
       driver: "journald"

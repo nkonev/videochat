@@ -42,6 +42,7 @@ canResendFromTetATet: true
 blogPreviewMaxTextSize: 400
 blogSearchSize: 5000
 
+baseUrl: "http://api.site.local:8080"
 message:
   # The list of allowed url prefixes which can be used in insertable image, video, ..., separated by , (comma)
   # Let's consider an example: "http://api.site.local:8080,"
