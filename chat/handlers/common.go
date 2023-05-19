@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/araddon/dateparse"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -153,6 +154,15 @@ func TrimAmdSanitize(policy *services.SanitizerPolicy, input string) string {
 	return Trim(SanitizeMessage(policy, input))
 }
 
+type MediaUrlErr struct {
+	url   string
+	where string
+}
+
+func (s *MediaUrlErr) Error() string {
+	return fmt.Sprintf("Media url is not allowed in %v: %v", s.where, s.url)
+}
+
 func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (string, error) {
 	sanitizedHtml := Trim(SanitizeMessage(policy, input))
 
@@ -174,7 +184,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 			if exists {
 				if !utils.ContainsUrl(wlArr, src) {
 					Logger.Infof("Filtered not allowed url in image src %v", src)
-					retErr = errors.New("Filtered not allowed url in image src")
+					retErr = &MediaUrlErr{src, "image src"}
 				}
 			}
 		}
@@ -187,7 +197,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 			if srcExists {
 				if !utils.ContainsUrl(wlArr, src) {
 					Logger.Infof("Filtered not allowed url in video src %v", src)
-					retErr = errors.New("Filtered not allowed url in video src")
+					retErr = &MediaUrlErr{src, "video src"}
 				}
 			}
 
@@ -195,7 +205,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 			if posterExists {
 				if !utils.ContainsUrl(wlArr, poster) {
 					Logger.Infof("Filtered not allowed url in video poster %v", poster)
-					retErr = errors.New("Filtered not allowed url in video poster")
+					retErr = &MediaUrlErr{src, "video poster"}
 				}
 			}
 		}

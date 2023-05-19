@@ -25,6 +25,7 @@ const maxMessageLen = 1024 * 1024
 const minMessageLen = 1
 const allUsers = "all"
 const NonExistentUser = -65000
+const badMediaUrl = "BAD_MEDIA_URL"
 
 type EditMessageDto struct {
 	Id int64 `json:"id"`
@@ -281,7 +282,12 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		}
 		creatableMessage, err := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
 		if err != nil {
-			return c.String(http.StatusBadRequest, err.Error())
+			var mediaError *MediaUrlErr
+			if errors.As(err, &mediaError) {
+				return c.JSON(http.StatusBadRequest, &utils.H{"message": err.Error(), "businessErrorCode": badMediaUrl})
+			} else {
+				return c.JSON(http.StatusBadRequest, mediaError.Error())
+			}
 		}
 
 		err = mc.validateAndSetEmbedFieldsEmbedMessage(tx, bindTo, creatableMessage)
@@ -431,7 +437,12 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
 		editableMessage, err := convertToEditableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
 		if err != nil {
-			return c.String(http.StatusBadRequest, err.Error())
+			var mediaError *MediaUrlErr
+			if errors.As(err, &mediaError) {
+				return c.JSON(http.StatusBadRequest, &utils.H{"message": err.Error(), "businessErrorCode": badMediaUrl})
+			} else {
+				return c.JSON(http.StatusBadRequest, mediaError.Error())
+			}
 		}
 
 		err = mc.validateAndSetEmbedFieldsEmbedMessage(tx, &bindTo.CreateMessageDto, editableMessage)

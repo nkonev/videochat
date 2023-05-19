@@ -89,8 +89,9 @@ axios.interceptors.response.use((response) => {
   } else if (!error.config.url.includes('/message/read/')) {
     const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
     console.error(consoleErrorMessage);
-    const errorMessage  = "Http error. Check the console";
-    vm.setError(null, errorMessage);
+    const maybeBusinessMessage = error.response?.data?.message;
+    const errorMessage = hasLength(maybeBusinessMessage) ? "Business error" : "Http error. Check the console";
+    vm.setError(maybeBusinessMessage, errorMessage);
     return Promise.reject(error)
   }
 });
