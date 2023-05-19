@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/araddon/dateparse"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -152,18 +153,20 @@ func TrimAmdSanitize(policy *services.SanitizerPolicy, input string) string {
 	return Trim(SanitizeMessage(policy, input))
 }
 
-func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) string {
+func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (string, error) {
 	sanitizedHtml := Trim(SanitizeMessage(policy, input))
+
 	whitelist := viper.GetString("message.allowedMediaUrls")
 	wlArr := strings.Split(whitelist, ",")
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(sanitizedHtml))
 	if err != nil {
-		Logger.Warnf("Unagle to get image: %v", err)
-		return ""
+		Logger.Warnf("Unable to read html: %v", err)
+		return "", errors.New("Unable to read html")
 	}
 
+	var retErr error
 	doc.Find("img").Each(func(i int, s *goquery.Selection) {
 		maybeImage := s.First()
 		if maybeImage != nil {
@@ -171,7 +174,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) stri
 			if exists {
 				if !utils.ContainsUrl(wlArr, src) {
 					Logger.Infof("Filtered not allowed url in image src %v", src)
-					maybeImage.SetAttr("src", "")
+					retErr = errors.New("Filtered not allowed url in image src")
 				}
 			}
 		}
@@ -184,7 +187,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) stri
 			if srcExists {
 				if !utils.ContainsUrl(wlArr, src) {
 					Logger.Infof("Filtered not allowed url in video src %v", src)
-					maybeVideo.SetAttr("src", "")
+					retErr = errors.New("Filtered not allowed url in video src")
 				}
 			}
 
@@ -192,18 +195,12 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) stri
 			if posterExists {
 				if !utils.ContainsUrl(wlArr, poster) {
 					Logger.Infof("Filtered not allowed url in video poster %v", poster)
-					maybeVideo.SetAttr("poster", "")
+					retErr = errors.New("Filtered not allowed url in video poster")
 				}
 			}
 		}
 	})
-
-	ret, err := doc.Html()
-	if err != nil {
-		Logger.Warnf("Unagle to html: %v", err)
-		return ""
-	}
-	return ret
+	return sanitizedHtml, retErr
 }
 
 func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, error) {

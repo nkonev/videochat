@@ -279,9 +279,12 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		} else if !participant {
 			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
 		}
-		creatableMessage := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
+		creatableMessage, err := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
+		if err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
 
-		err := mc.validateAndSetEmbedFieldsEmbedMessage(tx, bindTo, creatableMessage)
+		err = mc.validateAndSetEmbedFieldsEmbedMessage(tx, bindTo, creatableMessage)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during checking embed %v", err)
 			return err
@@ -390,13 +393,17 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 	return nil
 }
 
-func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) *db.Message {
+func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {
+	trimmedAndSanitized, err := TrimAmdSanitizeMessage(policy, dto.Text)
+	if err != nil {
+		return nil, err
+	}
 	return &db.Message{
-		Text:         TrimAmdSanitizeMessage(policy, dto.Text),
+		Text:         trimmedAndSanitized,
 		ChatId:       chatId,
 		OwnerId:      authPrincipal.UserId,
 		FileItemUuid: dto.FileItemUuid,
-	}
+	}, nil
 }
 
 func (mc *MessageHandler) EditMessage(c echo.Context) error {
@@ -422,9 +429,12 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	}
 
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
-		editableMessage := convertToEditableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
+		editableMessage, err := convertToEditableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
+		if err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
 
-		err := mc.validateAndSetEmbedFieldsEmbedMessage(tx, &bindTo.CreateMessageDto, editableMessage)
+		err = mc.validateAndSetEmbedFieldsEmbedMessage(tx, &bindTo.CreateMessageDto, editableMessage)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during checking embed %v", err)
 			return err
@@ -504,16 +514,20 @@ func excludeMyself(mentionedUserIds []int64, principalDto *auth.AuthResult) []in
 	return result
 }
 
-func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) *db.Message {
+func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {
+	trimmedAndSanitized, err := TrimAmdSanitizeMessage(policy, dto.Text)
+	if err != nil {
+		return nil, err
+	}
 	return &db.Message{
 		Id:           dto.Id,
-		Text:         TrimAmdSanitizeMessage(policy, dto.Text),
+		Text:         trimmedAndSanitized,
 		ChatId:       chatId,
 		OwnerId:      authPrincipal.UserId,
 		EditDateTime: null.TimeFrom(time.Now()),
 		FileItemUuid: dto.FileItemUuid,
 		BlogPost:     dto.BlogPost,
-	}
+	}, nil
 }
 
 func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
