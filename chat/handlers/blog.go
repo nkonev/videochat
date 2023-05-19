@@ -223,6 +223,14 @@ func (h *BlogHandler) tryGetFirstImage(text string) *string {
 			return &src
 		}
 	}
+	maybeVideo := doc.Find("video").First()
+	if maybeVideo != nil {
+		src, exists := maybeVideo.Attr("poster")
+		if exists {
+			return &src
+		}
+	}
+
 	return nil
 }
 
