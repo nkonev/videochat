@@ -181,11 +181,9 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 		maybeImage := s.First()
 		if maybeImage != nil {
 			src, exists := maybeImage.Attr("src")
-			if exists {
-				if !utils.ContainsUrl(wlArr, src) {
-					Logger.Infof("Filtered not allowed url in image src %v", src)
-					retErr = &MediaUrlErr{src, "image src"}
-				}
+			if exists && !utils.ContainsUrl(wlArr, src) {
+				Logger.Infof("Filtered not allowed url in image src %v", src)
+				retErr = &MediaUrlErr{src, "image src"}
 			}
 		}
 	})
@@ -194,19 +192,15 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 		maybeVideo := s.First()
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
-			if srcExists {
-				if !utils.ContainsUrl(wlArr, src) {
-					Logger.Infof("Filtered not allowed url in video src %v", src)
-					retErr = &MediaUrlErr{src, "video src"}
-				}
+			if srcExists && !utils.ContainsUrl(wlArr, src) {
+				Logger.Infof("Filtered not allowed url in video src %v", src)
+				retErr = &MediaUrlErr{src, "video src"}
 			}
 
 			poster, posterExists := maybeVideo.Attr("poster")
-			if posterExists {
-				if !utils.ContainsUrl(wlArr, poster) {
-					Logger.Infof("Filtered not allowed url in video poster %v", poster)
-					retErr = &MediaUrlErr{src, "video poster"}
-				}
+			if posterExists && !utils.ContainsUrl(wlArr, poster) {
+				Logger.Infof("Filtered not allowed url in video poster %v", poster)
+				retErr = &MediaUrlErr{src, "video poster"}
 			}
 		}
 	})
