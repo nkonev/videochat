@@ -16,7 +16,7 @@
                     </a>
 
                     <div class="ma-0 pa-0 d-flex top-panel">
-                        <v-list-item-content>
+                        <v-list-item-content class="author-and-date">
                             <v-list-item-title><a @click.prevent="onParticipantClick(blogDto.owner)" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
                             <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
                         </v-list-item-content>
@@ -166,5 +166,9 @@
         box-shadow:
             0 0 0 1px rgba(0, 0, 0, 0.05),
             0px 10px 20px rgba(0, 0, 0, 0.1)
+    }
+
+    .author-and-date {
+        flex: 0 1 auto;
     }
 </style>
