@@ -300,7 +300,12 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		if !hasMessages {
+		chatBasic, err := tx.GetChatBasic(chatId)
+		if err != nil {
+			return err
+		}
+
+		if !hasMessages && chatBasic.IsBlog {
 			creatableMessage.BlogPost = true
 		}
 
