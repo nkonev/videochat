@@ -53,7 +53,7 @@ import static org.springframework.http.HttpHeaders.COOKIE;
 @SpringBootTest(
         classes = {AaaApplication.class, AbstractTestRunner.UtConfig.class},
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
-        properties = {"spring.test.context.cache.maxSize=1",
+        properties = {
                 "spring.config.location=classpath:/config/application.yml,classpath:/config/oauth2-basic.yml,classpath:/config/oauth2-keycloak.yml"
         }
 )
