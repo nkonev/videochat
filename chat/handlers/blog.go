@@ -352,7 +352,7 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {
-		Logger.Warnf("Unagle to get image: %v", err)
+		Logger.Warnf("Unagle to read html: %v", err)
 		return ""
 	}
 
@@ -396,9 +396,9 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 		}
 	})
 
-	ret, err := doc.Html()
+	ret, err := doc.Find("html").Find("body").Html()
 	if err != nil {
-		Logger.Warnf("Unagle to get image: %v", err)
+		Logger.Warnf("Unagle to write html: %v", err)
 		return ""
 	}
 	return ret
