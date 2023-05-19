@@ -216,6 +216,16 @@ func initEmbedMessageRequestStruct(m *Message) (embedMessage, error) {
 	return ret, nil
 }
 
+func (tx *Tx) HasMessages(chatId int64) (bool, error) {
+	var exists bool = false
+	row := tx.QueryRow(fmt.Sprintf(`SELECT exists(SELECT * FROM message_chat_%v LIMIT 1)`, chatId))
+	if err := row.Scan(&exists); err != nil {
+		return false, err
+	} else {
+		return exists, nil
+	}
+}
+
 func (tx *Tx) CreateMessage(m *Message) (id int64, createDatetime time.Time, editDatetime null.Time, err error) {
 	if m == nil {
 		return id, createDatetime, editDatetime, errors.New("message required")
@@ -227,7 +237,7 @@ func (tx *Tx) CreateMessage(m *Message) (id int64, createDatetime time.Time, edi
 	if err != nil {
 		return id, createDatetime, editDatetime, errors.New("error during initializing embed struct")
 	}
-	res := tx.QueryRow(fmt.Sprintf(`INSERT INTO message_chat_%v (text, owner_id, file_item_uuid, embed_message_id, embed_chat_id, embed_owner_id, embed_message_type) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.OwnerId, m.FileItemUuid, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType)
+	res := tx.QueryRow(fmt.Sprintf(`INSERT INTO message_chat_%v (text, owner_id, file_item_uuid, embed_message_id, embed_chat_id, embed_owner_id, embed_message_type, blog_post) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.OwnerId, m.FileItemUuid, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType, m.BlogPost)
 	if err := res.Scan(&id, &createDatetime, &editDatetime); err != nil {
 		Logger.Errorf("Error during getting message id %v", err)
 		return id, createDatetime, editDatetime, err

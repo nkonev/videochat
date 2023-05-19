@@ -296,6 +296,14 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return err
 		}
 
+		hasMessages, err := tx.HasMessages(chatId)
+		if err != nil {
+			return err
+		}
+		if !hasMessages {
+			creatableMessage.BlogPost = true
+		}
+
 		id, _, _, err := tx.CreateMessage(creatableMessage)
 		if err != nil {
 			return err
