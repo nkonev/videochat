@@ -17,7 +17,7 @@
                     <v-icon v-if="canResend" class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
                     <v-icon v-if="!item.pinned" class="mx-1" small :title="$vuetify.lang.t('$vuetify.pin_message')" @click="pinMessage(item)">mdi-pin</v-icon>
                     <v-icon v-if="item.pinned" class="mx-1" small :title="$vuetify.lang.t('$vuetify.remove_from_pinned')" @click="removedFromPinned(item)">mdi-pin-off-outline</v-icon>
-                    <v-icon v-if="item.blogPost" class="mx-1" small :title="$vuetify.lang.t('$vuetify.go_to_blog_post')" @click.prevent="goToBlog(item)">mdi-postage-stamp</v-icon>
+                    <a v-if="item.blogPost" class="mx-1" :href="getBlogLink(item)" :title="$vuetify.lang.t('$vuetify.go_to_blog_post')"><v-icon small>mdi-postage-stamp</v-icon></a>
                     <router-link class="mx-1 hash" :to="getMessageLink(item)" :title="$vuetify.lang.t('$vuetify.link')">#</router-link>
                 </template>
             </v-container>
@@ -48,7 +48,7 @@
         getHumanReadableDate,
     } from "@/utils";
     import "./message.styl";
-    import {chat_name, messageIdHashPrefix} from "./routes"
+    import {blog, chat_name, messageIdHashPrefix} from "./routes"
 
     export default {
         props: ['item', 'chatId', 'my', 'highlight', 'canResend', 'isInBlog'],
@@ -82,8 +82,8 @@
             removedFromPinned(dto) {
                 this.$emit('removedFromPinned', dto)
             },
-            goToBlog(dto) {
-                this.$emit('goToBlog', dto)
+            getBlogLink() {
+                return blog + '/post/' + this.chatId;
             },
 
             getOwner(owner) {

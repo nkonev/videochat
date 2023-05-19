@@ -18,7 +18,6 @@
                         @onFilesClicked="onFilesClicked"
                         @pinMessage="pinMessage"
                         @removedFromPinned="removedFromPinned"
-                        @goToBlog="goToBlog"
                     ></MessageItem>
                 </template>
             </v-list>
