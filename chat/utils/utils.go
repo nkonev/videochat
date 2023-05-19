@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"net/url"
 	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"regexp"
@@ -140,6 +141,26 @@ func GetIndexOf(ids []int64, elem int64) int {
 
 func Contains(ids []int64, elem int64) bool {
 	return GetIndexOf(ids, elem) != -1
+}
+
+func ContainsUrl(elems []string, elem string) bool {
+	parsedUrlToTest, err := url.Parse(elem)
+	if err != nil {
+		Logger.Infof("Unable to parse urlToTest %v", elem)
+		return false
+	}
+	for i := 0; i < len(elems); i++ {
+		parsedAllowedUrl, err := url.Parse(elems[i])
+		if err != nil {
+			Logger.Infof("Unable to parse allowedUrl %v", elems[i])
+			return false
+		}
+
+		if parsedUrlToTest.Host == parsedAllowedUrl.Host && parsedUrlToTest.Scheme == parsedAllowedUrl.Scheme {
+			return true
+		}
+	}
+	return false
 }
 
 func Remove(ids []int64, elem int64) []int64 {

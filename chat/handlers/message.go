@@ -392,7 +392,7 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 
 func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) *db.Message {
 	return &db.Message{
-		Text:         TrimAmdSanitize(policy, dto.Text),
+		Text:         TrimAmdSanitizeMessage(policy, dto.Text),
 		ChatId:       chatId,
 		OwnerId:      authPrincipal.UserId,
 		FileItemUuid: dto.FileItemUuid,
@@ -507,7 +507,7 @@ func excludeMyself(mentionedUserIds []int64, principalDto *auth.AuthResult) []in
 func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) *db.Message {
 	return &db.Message{
 		Id:           dto.Id,
-		Text:         TrimAmdSanitize(policy, dto.Text),
+		Text:         TrimAmdSanitizeMessage(policy, dto.Text),
 		ChatId:       chatId,
 		OwnerId:      authPrincipal.UserId,
 		EditDateTime: null.TimeFrom(time.Now()),

@@ -41,3 +41,7 @@ canResendFromTetATet: true
 
 blogPreviewMaxTextSize: 400
 blogSearchSize: 5000
+
+message:
+  # hosts which can be used in insertable image, video, ... separated by , (comma)
+  allowedMediaHosts: ""

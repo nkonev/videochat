@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/base64"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/araddon/dateparse"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
@@ -149,6 +150,60 @@ func Trim(str string) string {
 
 func TrimAmdSanitize(policy *services.SanitizerPolicy, input string) string {
 	return Trim(SanitizeMessage(policy, input))
+}
+
+func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) string {
+	sanitizedHtml := Trim(SanitizeMessage(policy, input))
+	whitelist := viper.GetString("message.allowedMediaUrls")
+	wlArr := strings.Split(whitelist, ",")
+
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(sanitizedHtml))
+	if err != nil {
+		Logger.Warnf("Unagle to get image: %v", err)
+		return ""
+	}
+
+	doc.Find("img").Each(func(i int, s *goquery.Selection) {
+		maybeImage := s.First()
+		if maybeImage != nil {
+			src, exists := maybeImage.Attr("src")
+			if exists {
+				if !utils.ContainsUrl(wlArr, src) {
+					Logger.Infof("Filtered not allowed url in image src %v", src)
+					maybeImage.SetAttr("src", "")
+				}
+			}
+		}
+	})
+
+	doc.Find("video").Each(func(i int, s *goquery.Selection) {
+		maybeVideo := s.First()
+		if maybeVideo != nil {
+			src, srcExists := maybeVideo.Attr("src")
+			if srcExists {
+				if !utils.ContainsUrl(wlArr, src) {
+					Logger.Infof("Filtered not allowed url in video src %v", src)
+					maybeVideo.SetAttr("src", "")
+				}
+			}
+
+			poster, posterExists := maybeVideo.Attr("poster")
+			if posterExists {
+				if !utils.ContainsUrl(wlArr, poster) {
+					Logger.Infof("Filtered not allowed url in video poster %v", poster)
+					maybeVideo.SetAttr("poster", "")
+				}
+			}
+		}
+	})
+
+	ret, err := doc.Html()
+	if err != nil {
+		Logger.Warnf("Unagle to html: %v", err)
+		return ""
+	}
+	return ret
 }
 
 func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, error) {
