@@ -356,11 +356,13 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 		return ""
 	}
 
+	wlArr := []string{""}
+
 	doc.Find("img").Each(func(i int, s *goquery.Selection) {
 		maybeImage := s.First()
 		if maybeImage != nil {
-			src, exists := maybeImage.Attr("src")
-			if exists {
+			src, srcExists := maybeImage.Attr("src")
+			if srcExists && utils.ContainsUrl(wlArr, src) {
 				newurl, err := h.makeUrlPublic(src, "")
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
@@ -375,7 +377,7 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 		maybeVideo := s.First()
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
-			if srcExists {
+			if srcExists && utils.ContainsUrl(wlArr, src) {
 				newurl, err := h.makeUrlPublic(src, "")
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
@@ -385,7 +387,7 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 			}
 
 			poster, posterExists := maybeVideo.Attr("poster")
-			if posterExists {
+			if posterExists && utils.ContainsUrl(wlArr, src) {
 				newurl, err := h.makeUrlPublic(poster, "/embed/preview")
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
