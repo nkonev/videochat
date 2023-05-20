@@ -196,7 +196,7 @@ export default {
               const withP = html.replace(/<br>\\*/g, "</p><p>");
               const rmDuplicatedP = withP.replace(/<p><\/p>/gi, '');
               return rmDuplicatedP;
-          }
+          },
       },
       content: empty,
       onUpdate: () => this.onUpdateContent(),

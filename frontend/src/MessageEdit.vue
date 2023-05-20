@@ -1,13 +1,13 @@
 <template>
     <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid :style="{height: messageEditHeight}"
-                 @keyup.ctrl.enter="sendMessageToChat"
-                 @keyup.esc="resetInput()"
     >
             <div v-if="showAnswer" class="answer"><v-icon @click="resetAnswer()" :title="$vuetify.lang.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
             <tiptap
                 :key="editorKey"
                 ref="tipTapRef"
                 @input="onInput"
+                @keydown.ctrl.enter.native="sendMessageToChat"
+                @keydown.esc.native="resetInput()"
             />
 
                 <div class="d-flex flex-wrap flex-row dashed-borders">
