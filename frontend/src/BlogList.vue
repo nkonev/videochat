@@ -65,7 +65,7 @@
 
 <script>
     import Vue from 'vue';
-    import {getHumanReadableDate, hasLength, replaceOrAppend} from "@/utils";
+    import {getHumanReadableDate, hasLength, replaceOrAppend, setTitle} from "@/utils";
     import axios from "axios";
     import InfiniteLoading from './lib/vue-infinite-loading/src/components/InfiniteLoading.vue';
     import {GET_SEARCH_STRING, SET_SEARCH_NAME, SET_SHOW_SEARCH} from "@/blogStore";
@@ -164,6 +164,7 @@
 
             this.$store.commit(SET_SEARCH_NAME, 'Search by posts');
             this.$store.commit(SET_SHOW_SEARCH, true);
+            setTitle("Blog");
         },
         created() {
             this.searchStringChangedDebounced = debounce(this.searchStringChangedDebounced, 700, {

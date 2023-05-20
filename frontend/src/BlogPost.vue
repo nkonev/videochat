@@ -57,7 +57,7 @@
     import axios from "axios";
     import MessageItem from "@/MessageItem";
     import {SET_SHOW_SEARCH} from "@/blogStore";
-    import {getHumanReadableDate, hasLength, replaceOrAppend} from "@/utils";
+    import {getHumanReadableDate, hasLength, replaceOrAppend, setTitle} from "@/utils";
     import {chat, messageIdHashPrefix, profile, profile_name} from "@/routes";
     import InfiniteLoading from "@/lib/vue-infinite-loading/src/components/InfiniteLoading";
 
@@ -97,6 +97,7 @@
                 axios.get('/api/blog/'+id).then(({data}) => {
                     this.blogDto = data;
                     this.startingFromItemId = data.messageId;
+                    setTitle(this.blogDto.title);
                 });
             },
             getDate(date) {

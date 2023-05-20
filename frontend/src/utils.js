@@ -77,6 +77,9 @@ export const isSet = (str) => {
     return str != null
 }
 
+export const setTitle = (newTitle) => {
+    document.title = newTitle;
+}
 
 export const setIcon = (newMessages) => {
     var link = document.querySelector("link[rel~='icon']");
