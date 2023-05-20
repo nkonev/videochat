@@ -39,6 +39,8 @@ services:
       - CHAT_JAEGER.PORT=6831
       - CHAT_BASEURL=http://api.site.local:8080
       - CHAT_MESSAGE.ALLOWEDMEDIAURLS=http://api.site.local:8080,
+      - CHAT_MESSAGE.ALLOWEDIFRAMEURLS=https://www.youtube.com/embed
+
     logging:
       driver: "journald"
       options:
