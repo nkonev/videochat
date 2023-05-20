@@ -169,6 +169,9 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 	whitelist := viper.GetString("message.allowedMediaUrls")
 	wlArr := strings.Split(whitelist, ",")
 
+	iframeWhitelist := viper.GetString("message.allowedIframeUrls")
+	iframeWlArr := strings.Split(iframeWhitelist, ",")
+
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(sanitizedHtml))
 	if err != nil {
@@ -204,6 +207,17 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 			}
 		}
 	})
+	doc.Find("iframe").Each(func(i int, s *goquery.Selection) {
+		maybeIframe := s.First()
+		if maybeIframe != nil {
+			src, exists := maybeIframe.Attr("src")
+			if exists && !utils.ContainsUrl(iframeWlArr, src) {
+				Logger.Infof("Filtered not allowed url in iframe src %v", src)
+				retErr = &MediaUrlErr{src, "image src"}
+			}
+		}
+	})
+
 	return sanitizedHtml, retErr
 }
 

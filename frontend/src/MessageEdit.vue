@@ -48,6 +48,10 @@
                                 <v-icon>mdi-video</v-icon>
                             </v-btn>
 
+                            <v-btn icon tile @click="embedClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_embed')">
+                                <v-icon>mdi-youtube</v-icon>
+                            </v-btn>
+
                             <v-btn icon tile @click="textColorClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_text_color')">
                                 <v-icon>mdi-invert-colors</v-icon>
                             </v-btn>
@@ -99,7 +103,7 @@
     import {
         chatEditMessageDtoFactory,
         colorBackground,
-        colorText, getAnswerPreviewFields,
+        colorText, embed, getAnswerPreviewFields,
         media_image, media_video
     } from "@/utils";
     import {
@@ -291,6 +295,9 @@
             },
             videoClick() {
                 bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_video, () => this.$refs.tipTapRef.addVideo(), this.$refs.tipTapRef.setVideo);
+            },
+            embedClick() {
+                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: "add_media_embed", mediaType: embed});
             },
             textColorClick(){
                 bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorText);

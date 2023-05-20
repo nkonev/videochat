@@ -20,8 +20,8 @@
 </template>
 
 <script>
-import bus, {MEDIA_LINK_SET, MESSAGE_EDIT_LINK_SET, OPEN_MESSAGE_EDIT_LINK} from "./bus";
-    import {media_image, media_video} from "@/utils";
+import bus, {EMBED_LINK_SET, MEDIA_LINK_SET, MESSAGE_EDIT_LINK_SET, OPEN_MESSAGE_EDIT_LINK} from "./bus";
+import {embed, media_image, media_video} from "@/utils";
 
     export default {
         data () {
@@ -51,6 +51,8 @@ import bus, {MEDIA_LINK_SET, MESSAGE_EDIT_LINK_SET, OPEN_MESSAGE_EDIT_LINK} from
                     bus.$emit(MESSAGE_EDIT_LINK_SET, this.link);
                 } else if (this.dialogType == 'add_media_by_link') {
                     bus.$emit(MEDIA_LINK_SET, this.link, this.mediaType);
+                } else if (this.dialogType == 'add_media_embed') {
+                    bus.$emit(EMBED_LINK_SET, this.link);
                 } else {
                     console.error("Wrong dialogType", this.dialogType)
                 }
@@ -65,6 +67,8 @@ import bus, {MEDIA_LINK_SET, MESSAGE_EDIT_LINK_SET, OPEN_MESSAGE_EDIT_LINK} from
                     return this.$vuetify.lang.t('$vuetify.add_media_video_by_link')
                 } else if (this.mediaType == media_image) {
                     return this.$vuetify.lang.t('$vuetify.add_media_image_by_link')
+                } else if (this.mediaType == embed) {
+                    return this.$vuetify.lang.t('$vuetify.add_media_embed')
                 } else {
                     return this.$vuetify.lang.t('$vuetify.message_edit_link')
                 }

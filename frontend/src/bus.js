@@ -65,3 +65,4 @@ export const FILE_CREATED = "fileCreated";
 export const FILE_REMOVED = "fileRemoved";
 export const PLAYER_MODAL = "playerModal";
 export const MEDIA_LINK_SET = "mediaLinkSet";
+export const EMBED_LINK_SET = "embedLinkSet";

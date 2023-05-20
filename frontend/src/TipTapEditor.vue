@@ -8,7 +8,6 @@
 </template>
 
 <script>
-import {Slice, Fragment, Node, DOMParser} from 'prosemirror-model';
 import "prosemirror-view/style/prosemirror.css";
 import "./message.styl";
 import { Editor, EditorContent } from "@tiptap/vue-2";
@@ -30,8 +29,15 @@ import Code from '@tiptap/extension-code';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {hasLength, media_image, media_video} from "@/utils";
-import bus, {FILE_UPLOAD_MODAL_START_UPLOADING, PREVIEW_CREATED, OPEN_FILE_UPLOAD_MODAL, MEDIA_LINK_SET} from "./bus";
+import bus, {
+    FILE_UPLOAD_MODAL_START_UPLOADING,
+    PREVIEW_CREATED,
+    OPEN_FILE_UPLOAD_MODAL,
+    MEDIA_LINK_SET,
+    EMBED_LINK_SET
+} from "./bus";
 import Video from "@/TipTapVideo";
+import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
 
 const empty = "";
@@ -97,6 +103,11 @@ export default {
     setVideo(src, previewUrl) {
         this.editor.chain().focus().setVideo({ src: src, poster: previewUrl }).run();
     },
+    setIframe(url) {
+      if (url) {
+          this.editor.chain().focus().setIframe({ src: url }).run()
+      }
+    },
     onPreviewCreated(dto) {
         if (hasLength(this.correlationId) && this.correlationId == dto.correlationId) {
             if (dto.aType == media_video) {
@@ -113,10 +124,14 @@ export default {
             this.setImage(link)
         }
     },
+    onEmbedLinkSet(link) {
+        this.setIframe(link);
+    },
   },
   mounted() {
     bus.$on(PREVIEW_CREATED, this.onPreviewCreated);
     bus.$on(MEDIA_LINK_SET, this.onMediaLinkSet);
+    bus.$on(EMBED_LINK_SET, this.onEmbedLinkSet);
 
     const imagePluginInstance = buildImageHandler(
     (image) => {
@@ -169,6 +184,7 @@ export default {
               suggestion: suggestion(this.chatId),
           }),
           Code,
+          Iframe,
       ],
       editorProps: {
           // Preserves newline on text paste.
@@ -199,6 +215,7 @@ export default {
   beforeDestroy() {
     bus.$off(PREVIEW_CREATED, this.onPreviewCreated);
     bus.$off(MEDIA_LINK_SET, this.onMediaLinkSet);
+    bus.$off(EMBED_LINK_SET, this.onEmbedLinkSet);
 
     this.editor.destroy();
     this.fileInput = null;
@@ -273,4 +290,28 @@ export default {
     height: auto;
 }
 
+</style>
+
+<style lang="stylus">
+
+.iframe-wrapper {
+    position: relative;
+    padding-bottom: (100 / 16) * 9%;
+    height: 0;
+    overflow: hidden;
+    width: 100%;
+    height: auto;
+
+    &.ProseMirror-selectednode {
+        outline: 3px solid #68CEF8;
+    }
+
+    iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+}
 </style>

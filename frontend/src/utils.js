@@ -136,6 +136,8 @@ export const media_image = "image";
 
 export const media_video = "video";
 
+export const embed = "embed";
+
 export const setAnswerPreviewFields = (dto, messageText, ownerLogin) => {
     // used only to show on front, ignored in message create machinery
     dto.embedPreviewText = messageText;
