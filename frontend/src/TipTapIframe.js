@@ -2,8 +2,11 @@ import { Node } from '@tiptap/core'
 
 export default Node.create({
     name: 'iframe',
-    group: 'block',
-    atom: true,
+    group: 'inline',
+    selectable: true, // so we can select the video
+    draggable: true, // so we can drag the video
+    atom: true, // is a single unit
+    inline: true,
 
     addOptions() {
         return {
