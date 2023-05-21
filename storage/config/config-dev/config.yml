@@ -25,7 +25,7 @@ types:
     - ".mkv"
     - ".webm"
     - ".mov"
-  text:
+  plainText:
     - ".txt"
 
 rabbitmq:

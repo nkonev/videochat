@@ -207,9 +207,9 @@ func IsVideo(minioKey string) bool {
 }
 
 func IsPlainText(minioKey string) bool {
-	videoTypes := viper.GetStringSlice("types.text")
-	videoTypes2 := toLower(videoTypes)
-	return StringContains(videoTypes2, GetDotExtensionStr(minioKey))
+	plainTextTypes := viper.GetStringSlice("types.plainText")
+	plainTextTypes2 := toLower(plainTextTypes)
+	return StringContains(plainTextTypes2, GetDotExtensionStr(minioKey))
 }
 
 func toLower(imageTypes []string) []string {
