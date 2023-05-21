@@ -24,6 +24,7 @@ types:
     - ".mp4"
     - ".mkv"
     - ".webm"
+    - ".mov"
   text:
     - ".txt"
 
