@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/guregu/null"
 	"github.com/spf13/viper"
+	"github.com/ztrue/tracerr"
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
@@ -47,9 +48,9 @@ type ChatWithParticipants struct {
 func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	// Validate the input.
 	if u == nil {
-		return 0, nil, errors.New("chat required")
+		return 0, nil, tracerr.Wrap(errors.New("chat required"))
 	} else if u.Title == "" {
-		return 0, nil, errors.New("title required")
+		return 0, nil, tracerr.Wrap(errors.New("title required"))
 	}
 
 	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
@@ -57,8 +58,7 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
-		Logger.Errorf("Error during getting chat id %v", err)
-		return 0, nil, err
+		return 0, nil, tracerr.Wrap(err)
 	}
 
 	return id, &lastUpdateDateTime, nil
@@ -78,8 +78,7 @@ func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int
 			// there were no rows, but otherwise no error occurred
 			return false, 0, nil
 		}
-		Logger.Errorf("Error during getting chat id %v", err)
-		return false, 0, err
+		return false, 0, tracerr.Wrap(err)
 	}
 	return true, chatId, nil
 }
@@ -122,16 +121,14 @@ func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) 
 	var err error
 	rows, err = db.Query(selectChatClause()+` WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
 	if err != nil {
-		Logger.Errorf("Error during get chat rows %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
 			if err := rows.Scan(provideScanToChat(&chat)[:]...); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, &chat)
 			}
@@ -150,16 +147,14 @@ func getBlogPostsByLimitOffsetCommon(co CommonOperations, limit int, offset int)
 				ch.avatar
 			FROM chat ch WHERE ch.blog is TRUE ORDER BY (ch.create_date_time, ch.id) DESC LIMIT $1 OFFSET $2`, limit, offset)
 	if err != nil {
-		Logger.Errorf("Error during get chat rows %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 		list := make([]*Blog, 0)
 		for rows.Next() {
 			chat := Blog{}
 			if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime, &chat.Avatar); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, &chat)
 			}
@@ -199,16 +194,14 @@ func blogPostsCommon(co CommonOperations, ids []int64) ([]*BlogPost, error) {
 	var err error
 	rows, err = co.Query(builder)
 	if err != nil {
-		Logger.Errorf("Error during get chat rows %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 		list := make([]*BlogPost, 0)
 		for rows.Next() {
 			chat := BlogPost{}
 			if err := rows.Scan(&chat.ChatId, &chat.MessageId, &chat.OwnerId, &chat.Text); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, &chat)
 			}
@@ -251,16 +244,14 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 			LIMIT $2 OFFSET $3
 	`, ReservedPublicallyAvailableForSearchChats, additionalUserIdsClause), participantId, limit, offset, searchStringWithPercents, searchString)
 	if err != nil {
-		Logger.Errorf("Error during get chat rows %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
 			if err := rows.Scan(provideScanToChat(&chat)[:]...); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, &chat)
 			}
@@ -429,7 +420,7 @@ func (db *DB) CountChats() (int64, error) {
 	row := db.QueryRow("SELECT count(*) FROM chat")
 	err := row.Scan(&count)
 	if err != nil {
-		return 0, err
+		return 0, tracerr.Wrap(err)
 	} else {
 		return count, nil
 	}
@@ -440,7 +431,7 @@ func (db *DB) CountChatsPerUser(userId int64) (int64, error) {
 	row := db.QueryRow("SELECT count(*) FROM chat_participant WHERE user_id = $1", userId)
 	err := row.Scan(&count)
 	if err != nil {
-		return 0, err
+		return 0, tracerr.Wrap(err)
 	} else {
 		return count, nil
 	}
@@ -448,26 +439,22 @@ func (db *DB) CountChatsPerUser(userId int64) (int64, error) {
 
 func (tx *Tx) DeleteChat(id int64) error {
 	if _, err := tx.Exec(fmt.Sprintf(`DROP TABLE message_chat_%v;`, id)); err != nil {
-		Logger.Errorf("Error during drop message table %v %v", id, err)
-		return err
+		return tracerr.Wrap(err)
 	}
 
 	if _, err := tx.Exec(fmt.Sprintf(`DROP SEQUENCE message_chat_id_%v;`, id)); err != nil {
-		Logger.Errorf("Error during drop in sequence %v %v", id, err)
-		return err
+		return tracerr.Wrap(err)
 	}
 
 	if res, err := tx.Exec("DELETE FROM chat WHERE id = $1", id); err != nil {
-		Logger.Errorf("Error during delete chat %v %v", id, err)
-		return err
+		return tracerr.Wrap(err)
 	} else {
 		affected, err := res.RowsAffected()
 		if err != nil {
-			Logger.Errorf("Error during checking rows affected %v", err)
-			return err
+			return tracerr.Wrap(err)
 		}
 		if affected == 0 {
-			return errors.New("No rows affected")
+			return tracerr.Wrap(errors.New("No rows affected"))
 		}
 		return nil
 	}
@@ -481,19 +468,17 @@ func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String,
 	} else {
 		affected, err := res.RowsAffected()
 		if err != nil {
-			Logger.Errorf("Error during checking rows affected %v", err)
-			return nil, err
+			return nil, tracerr.Wrap(err)
 		}
 		if affected == 0 {
-			return nil, errors.New("No rows affected")
+			return nil, tracerr.Wrap(errors.New("No rows affected"))
 		}
 	}
 
 	var lastUpdateDateTime time.Time
 	res := tx.QueryRow(`SELECT last_update_date_time FROM chat WHERE id = $1`, id)
 	if err := res.Scan(&lastUpdateDateTime); err != nil {
-		Logger.Errorf("Error during getting last update time %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	}
 
 	return &lastUpdateDateTime, nil
@@ -508,8 +493,7 @@ func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, err
 		return nil, nil
 	}
 	if err != nil {
-		Logger.Errorf("Error during get chat row %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		return &chat, nil
 	}
@@ -542,8 +526,7 @@ func getChatBasicCommon(co CommonOperations, chatId int64) (*BasicChatDto, error
 		return nil, nil
 	}
 	if err != nil {
-		Logger.Errorf("Error during get chat row %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		return &chat, nil
 	}
@@ -593,16 +576,14 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 		WHERE c.id IN (%s)`, inClause),
 		behalfParticipantId)
 	if err != nil {
-		Logger.Errorf("Error during get chat rows %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 		list := make([]*BasicChatDtoExtended, 0)
 		for rows.Next() {
 			dto := new(BasicChatDtoExtended)
 			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog, &dto.CreateDateTime); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, dto)
 			}
@@ -639,8 +620,7 @@ type BasicChatDtoExtended struct {
 
 func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
 	if _, err := tx.Exec("UPDATE chat SET last_update_date_time = utc_now() WHERE id = $1", id); err != nil {
-		Logger.Errorf("Error during update chat %v %v", id, err)
-		return err
+		return tracerr.Wrap(err)
 	} else {
 		return nil
 	}
@@ -651,8 +631,7 @@ func (tx *Tx) GetChatLastDatetimeChat(chatId int64) (time.Time, error) {
 	var lastUpdateDateTime time.Time
 	err := row.Scan(&lastUpdateDateTime)
 	if err != nil {
-		Logger.Errorf("Error during get lastUpdateDateTime %v", err)
-		return lastUpdateDateTime, err
+		return lastUpdateDateTime, tracerr.Wrap(err)
 	} else {
 		return lastUpdateDateTime, nil
 	}
@@ -663,8 +642,7 @@ func (db *DB) IsChatExists(chatId int64) (bool, error) {
 	exists := false
 	err := row.Scan(&exists)
 	if err != nil {
-		Logger.Errorf("Error during get chat exists %v", err)
-		return false, err
+		return false, tracerr.Wrap(err)
 	} else {
 		return exists, nil
 	}
@@ -675,12 +653,12 @@ func pinChatCommon(co CommonOperations, chatId int64, userId int64, pin bool) er
 	if pin {
 		_, err := co.Exec("insert into chat_pinned(user_id, chat_id) values ($1, $2) on conflict do nothing", userId, chatId)
 		if err != nil {
-			return err
+			return tracerr.Wrap(err)
 		}
 	} else {
 		_, err := co.Exec("delete from chat_pinned where user_id = $1 and chat_id = $2", userId, chatId)
 		if err != nil {
-			return err
+			return tracerr.Wrap(err)
 		}
 	}
 	return nil
@@ -704,11 +682,10 @@ func (tx *Tx) IsChatPinned(chatId int64, behalfUserId int64) (bool, error) {
 		chatId,
 	)
 	if row.Err() != nil {
-		return false, row.Err()
+		return false, tracerr.Wrap(row.Err())
 	}
 	if err := row.Scan(&res); err != nil {
-		Logger.Errorf("Error during getting pinned %v", err)
-		return false, err
+		return false, tracerr.Wrap(err)
 	}
 	return res, nil
 }
@@ -716,7 +693,7 @@ func (tx *Tx) IsChatPinned(chatId int64, behalfUserId int64) (bool, error) {
 func (tx *Tx) RenameChat(chatId int64, title string) error {
 	_, err := tx.Exec("update chat set title = $1 where id = $2", title, chatId)
 	if err != nil {
-		return err
+		return tracerr.Wrap(err)
 	}
 	return nil
 }
@@ -729,5 +706,5 @@ func (db *DB) DeleteAllParticipants() error {
 	// 4 bob
 	// 5 John Smith
 	_, err := db.Exec("DELETE FROM chat_participant WHERE user_id > 5")
-	return err
+	return tracerr.Wrap(err)
 }

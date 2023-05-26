@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/guregu/null"
+	"github.com/ztrue/tracerr"
 	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"time"
@@ -101,15 +102,13 @@ func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 		var leftMessageId, rightMessageId int64
 		err := leftLimitRes.Scan(&leftMessageId)
 		if err != nil {
-			Logger.Errorf("Error during getting left messageId %v", err)
-			return nil, err
+			return nil, tracerr.Wrap(err)
 		}
 
 		rightLimitRes := db.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT m.id FROM message_chat_%v m WHERE id >= $1 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit)
 		err = rightLimitRes.Scan(&rightMessageId)
 		if err != nil {
-			Logger.Errorf("Error during getting right messageId %v", err)
-			return nil, err
+			return nil, tracerr.Wrap(err)
 		}
 
 		order := "asc"
@@ -126,16 +125,14 @@ func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 			limit, leftMessageId, rightMessageId)
 
 		if err != nil {
-			Logger.Errorf("Error during get chat rows with search %v", err)
-			return nil, err
+			return nil, tracerr.Wrap(err)
 		}
 		defer rows.Close()
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
 			if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
-				Logger.Errorf("Error during scan message rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, &message)
 			}
@@ -160,8 +157,7 @@ func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
 				limit, startingFromItemId, searchStringPercents)
 			if err != nil {
-				Logger.Errorf("Error during get chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			}
 		} else {
 			rows, err = db.Query(fmt.Sprintf(`%v
@@ -171,8 +167,7 @@ func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
 				limit, startingFromItemId)
 			if err != nil {
-				Logger.Errorf("Error during get chat rows with search %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			}
 		}
 
@@ -181,8 +176,7 @@ func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 		for rows.Next() {
 			message := Message{ChatId: chatId}
 			if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
-				Logger.Errorf("Error during scan message rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, &message)
 			}
@@ -210,7 +204,7 @@ func initEmbedMessageRequestStruct(m *Message) (embedMessage, error) {
 			ret.embedMessageOwnerId = m.RequestEmbeddedMessageOwnerId
 			ret.embedMessageType = m.RequestEmbeddedMessageType
 		} else {
-			return ret, errors.New("Unexpected branch in saving in db")
+			return ret, tracerr.Wrap(errors.New("Unexpected branch in saving in db"))
 		}
 	}
 	return ret, nil
@@ -220,7 +214,7 @@ func (tx *Tx) HasMessages(chatId int64) (bool, error) {
 	var exists bool = false
 	row := tx.QueryRow(fmt.Sprintf(`SELECT exists(SELECT * FROM message_chat_%v LIMIT 1)`, chatId))
 	if err := row.Scan(&exists); err != nil {
-		return false, err
+		return false, tracerr.Wrap(err)
 	} else {
 		return exists, nil
 	}
@@ -228,19 +222,18 @@ func (tx *Tx) HasMessages(chatId int64) (bool, error) {
 
 func (tx *Tx) CreateMessage(m *Message) (id int64, createDatetime time.Time, editDatetime null.Time, err error) {
 	if m == nil {
-		return id, createDatetime, editDatetime, errors.New("message required")
+		return id, createDatetime, editDatetime, tracerr.Wrap(errors.New("message required"))
 	} else if m.Text == "" {
-		return id, createDatetime, editDatetime, errors.New("text required")
+		return id, createDatetime, editDatetime, tracerr.Wrap(errors.New("text required"))
 	}
 
 	embed, err := initEmbedMessageRequestStruct(m)
 	if err != nil {
-		return id, createDatetime, editDatetime, errors.New("error during initializing embed struct")
+		return id, createDatetime, editDatetime, tracerr.Wrap(errors.New("error during initializing embed struct"))
 	}
 	res := tx.QueryRow(fmt.Sprintf(`INSERT INTO message_chat_%v (text, owner_id, file_item_uuid, embed_message_id, embed_chat_id, embed_owner_id, embed_message_type, blog_post) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.OwnerId, m.FileItemUuid, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType, m.BlogPost)
 	if err := res.Scan(&id, &createDatetime, &editDatetime); err != nil {
-		Logger.Errorf("Error during getting message id %v", err)
-		return id, createDatetime, editDatetime, err
+		return id, createDatetime, editDatetime, tracerr.Wrap(err)
 	}
 	return id, createDatetime, editDatetime, nil
 }
@@ -250,7 +243,7 @@ func (db *DB) CountMessages() (int64, error) {
 	row := db.QueryRow("SELECT count(*) FROM message")
 	err := row.Scan(&count)
 	if err != nil {
-		return 0, err
+		return 0, tracerr.Wrap(err)
 	} else {
 		return count, nil
 	}
@@ -269,8 +262,7 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
 		return nil, nil
 	}
 	if err != nil {
-		Logger.Errorf("Error during get message row %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		return &message, nil
 	}
@@ -287,12 +279,12 @@ func (tx *Tx) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 func (tx *Tx) SetBlogPost(chatId int64, messageId int64) error {
 	_, err := tx.Exec(fmt.Sprintf("UPDATE message_chat_%v SET blog_post = false", chatId))
 	if err != nil {
-		return err
+		return tracerr.Wrap(err)
 	}
 
 	_, err = tx.Exec(fmt.Sprintf("UPDATE message_chat_%v SET blog_post = true WHERE id = $1", chatId), messageId)
 	if err != nil {
-		return err
+		return tracerr.Wrap(err)
 	}
 	return nil
 }
@@ -314,8 +306,7 @@ func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, e
 		return nil, nil, nil
 	}
 	if err != nil {
-		Logger.Errorf("Error during get message row %v", err)
-		return nil, nil, err
+		return nil, nil, tracerr.Wrap(err)
 	} else {
 		return &result, &owner, nil
 	}
@@ -338,8 +329,7 @@ func (tx *Tx) GetBlogPostMessageId(chatId int64) (*int64, error) {
 		return nil, nil
 	}
 	if err != nil {
-		Logger.Errorf("Error during get message row %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		return &id, nil
 	}
@@ -348,13 +338,11 @@ func (tx *Tx) GetBlogPostMessageId(chatId int64) (*int64, error) {
 func addMessageReadCommon(co CommonOperations, messageId, userId int64, chatId int64) (bool, error) {
 	res, err := co.Exec(`INSERT INTO message_read (last_message_id, user_id, chat_id) VALUES ($1, $2, $3) ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1  WHERE $1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
 	if err != nil {
-		Logger.Errorf("Error during marking as read message id %v", err)
-		return false, err
+		return false, tracerr.Wrap(err)
 	}
 	affected, err := res.RowsAffected()
 	if err != nil {
-		Logger.Errorf("Error getting affected rows during marking as read message id %v", err)
-		return false, err
+		return false, tracerr.Wrap(err)
 	}
 	if affected > 0 {
 		return true, nil
@@ -373,29 +361,27 @@ func (tx *Tx) AddMessageRead(messageId, userId int64, chatId int64) (bool, error
 
 func (tx *Tx) EditMessage(m *Message) error {
 	if m == nil {
-		return errors.New("message required")
+		return tracerr.Wrap(errors.New("message required"))
 	} else if m.Text == "" {
-		return errors.New("text required")
+		return tracerr.Wrap(errors.New("text required"))
 	} else if m.Id == 0 {
-		return errors.New("id required")
+		return tracerr.Wrap(errors.New("id required"))
 	}
 
 	embed, err := initEmbedMessageRequestStruct(m)
 	if err != nil {
-		return errors.New("error during initializing embed struct")
+		return err
 	}
 
 	if res, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2, embed_message_id = $5, embed_chat_id = $6, embed_owner_id = $7, embed_message_type = $8, blog_post = $9 WHERE owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType, m.BlogPost); err != nil {
-		Logger.Errorf("Error during editing message id %v", err)
-		return err
+		return tracerr.Wrap(err)
 	} else {
 		affected, err := res.RowsAffected()
 		if err != nil {
-			Logger.Errorf("Error during checking rows affected %v", err)
-			return err
+			return tracerr.Wrap(err)
 		}
 		if affected == 0 {
-			return errors.New("No rows affected")
+			return tracerr.Wrap(errors.New("No rows affected"))
 		}
 	}
 	return nil
@@ -403,16 +389,14 @@ func (tx *Tx) EditMessage(m *Message) error {
 
 func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error {
 	if res, err := db.Exec(fmt.Sprintf(`DELETE FROM message_chat_%v WHERE id = $1 AND owner_id = $2`, chatId), messageId, ownerId); err != nil {
-		Logger.Errorf("Error during deleting message id %v", err)
-		return err
+		return tracerr.Wrap(err)
 	} else {
 		affected, err := res.RowsAffected()
 		if err != nil {
-			Logger.Errorf("Error during checking rows affected %v", err)
-			return err
+			return tracerr.Wrap(err)
 		}
 		if affected == 0 {
-			return errors.New("No rows affected")
+			return tracerr.Wrap(errors.New("No rows affected"))
 		}
 	}
 	return nil
@@ -423,7 +407,7 @@ func (dbR *DB) SetFileItemUuidToNull(ownerId, chatId int64, uuid string) (int64,
 
 	if res.Err() != nil {
 		Logger.Errorf("Error during nulling file_item_uuid message id %v", res.Err())
-		return 0, false, res.Err()
+		return 0, false, tracerr.Wrap(res.Err())
 	}
 	var messageId int64
 	err := res.Scan(&messageId)
@@ -432,7 +416,7 @@ func (dbR *DB) SetFileItemUuidToNull(ownerId, chatId int64, uuid string) (int64,
 			// there were no rows, but otherwise no error occurred
 			return 0, false, nil
 		}
-		return 0, false, err
+		return 0, false, tracerr.Wrap(err)
 	} else {
 		return messageId, true, nil
 	}
@@ -443,7 +427,7 @@ func getUnreadMessagesCountCommon(co CommonOperations, chatId int64, userId int6
 	row := co.QueryRow("SELECT * FROM UNREAD_MESSAGES($1, $2)", chatId, userId)
 	err := row.Scan(&count)
 	if err != nil {
-		return 0, err
+		return 0, tracerr.Wrap(err)
 	} else {
 		return count, nil
 	}
@@ -479,8 +463,7 @@ func getUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, use
 	var err error
 	rows, err = co.Query(builder)
 	if err != nil {
-		Logger.Errorf("Error during get chat rows %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 		for _, cid := range chatIds {
@@ -490,8 +473,7 @@ func getUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, use
 			var chatId int64
 			var count int64
 			if err := rows.Scan(&chatId, &count); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				res[chatId] = count
 			}
@@ -510,14 +492,14 @@ func (tx *Tx) GetUnreadMessagesCountBatch(chatIds []int64, userId int64) (map[in
 
 func (tx *Tx) HasPinnedMessages(chatId int64) (hasPinnedMessages bool, err error) {
 	row := tx.QueryRow(fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM message_chat_%v WHERE pinned IS TRUE)", chatId))
-	err = row.Scan(&hasPinnedMessages)
+	err = tracerr.Wrap(row.Scan(&hasPinnedMessages))
 	return
 }
 
 func (tx *Tx) PinMessage(chatId, messageId int64, shouldPin bool) error {
 	_, err := tx.Exec(fmt.Sprintf("UPDATE message_chat_%v SET pinned = $1 WHERE id = $2", chatId), shouldPin, messageId)
 	if err != nil {
-		return err
+		return tracerr.Wrap(err)
 	}
 	return nil
 }
@@ -530,8 +512,7 @@ func (tx *Tx) GetPinnedMessages(chatId int64, limit, offset int) ([]*Message, er
 			LIMIT $1 OFFSET $2`, selectMessageClause(chatId)),
 		limit, offset)
 	if err != nil {
-		Logger.Errorf("Error during get chat rows with search %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	}
 
 	defer rows.Close()
@@ -539,8 +520,7 @@ func (tx *Tx) GetPinnedMessages(chatId int64, limit, offset int) ([]*Message, er
 	for rows.Next() {
 		message := Message{ChatId: chatId}
 		if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
-			Logger.Errorf("Error during scan message rows %v", err)
-			return nil, err
+			return nil, tracerr.Wrap(err)
 		} else {
 			list = append(list, &message)
 		}
@@ -551,29 +531,29 @@ func (tx *Tx) GetPinnedMessages(chatId int64, limit, offset int) ([]*Message, er
 func (tx *Tx) GetPinnedMessagesCount(chatId int64) (int64, error) {
 	row := tx.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM message_chat_%v WHERE pinned IS TRUE`, chatId))
 	if row.Err() != nil {
-		return 0, row.Err()
+		return 0, tracerr.Wrap(row.Err())
 	}
 	var res int64
 	err := row.Scan(&res)
 	if err != nil {
-		return 0, err
+		return 0, tracerr.Wrap(err)
 	}
 	return res, nil
 }
 
 func (tx *Tx) UnpromoteMessages(chatId int64) error {
 	_, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET pin_promoted = FALSE`, chatId))
-	return err
+	return tracerr.Wrap(err)
 }
 
 func (tx *Tx) PromoteMessage(chatId, messageId int64) error {
 	_, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET pin_promoted = TRUE WHERE id = $1`, chatId), messageId)
-	return err
+	return tracerr.Wrap(err)
 }
 
 func (tx *Tx) PromotePreviousMessage(chatId int64) error {
 	_, err := tx.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET pin_promoted = TRUE WHERE id IN (SELECT id FROM message_chat_%v WHERE pinned IS TRUE ORDER BY id DESC LIMIT 1)`, chatId, chatId))
-	return err
+	return tracerr.Wrap(err)
 }
 
 func (tx *Tx) GetPinnedPromoted(chatId int64) (*Message, error) {
@@ -585,7 +565,7 @@ func (tx *Tx) GetPinnedPromoted(chatId int64) (*Message, error) {
 	)
 	if row.Err() != nil {
 		Logger.Errorf("Error during get pinned messages %v", row.Err())
-		return nil, row.Err()
+		return nil, tracerr.Wrap(row.Err())
 	}
 
 	message := Message{ChatId: chatId}
@@ -595,8 +575,7 @@ func (tx *Tx) GetPinnedPromoted(chatId int64) (*Message, error) {
 		return nil, nil
 	}
 	if err != nil {
-		Logger.Errorf("Error during get message row %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		return &message, nil
 	}

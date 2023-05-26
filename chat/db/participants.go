@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	. "nkonev.name/chat/logger"
+	"github.com/ztrue/tracerr"
 	"nkonev.name/chat/utils"
 )
 
@@ -17,25 +17,24 @@ type ChatParticipant struct {
 
 func (tx *Tx) AddParticipant(userId int64, chatId int64, admin bool) error {
 	_, err := tx.Exec(`INSERT INTO chat_participant (chat_id, user_id, admin) VALUES ($1, $2, $3)`, chatId, userId, admin)
-	return err
+	return tracerr.Wrap(err)
 }
 
 func (tx *Tx) DeleteParticipant(userId int64, chatId int64) error {
 	_, err := tx.Exec(`DELETE FROM chat_participant WHERE chat_id = $1 AND user_id = $2`, chatId, userId)
-	return err
+	return tracerr.Wrap(err)
 }
 
 func getParticipantIdsCommon(qq CommonOperations, chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
 	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 ORDER BY user_id LIMIT $2 OFFSET $3", chatId, participantsSize, participantsOffset); err != nil {
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 		list := make([]int64, 0)
 		for rows.Next() {
 			var participantId int64
 			if err := rows.Scan(&participantId); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, participantId)
 			}
@@ -68,19 +67,18 @@ func getParticipantIdsBatchCommon(qq CommonOperations, chatIds []int64, particip
 		first = false
 	}
 	if rows, err := qq.Query(fmt.Sprintf("SELECT chat_id, jsonb_agg(user_id) FROM chat_participant WHERE chat_id in (%v) group by chat_id;", builder)); err != nil {
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 		for rows.Next() {
 			var pi = new(ParticipantIds)
 			var arr string
 			if err := rows.Scan(&pi.ChatId, &arr); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				err := json.Unmarshal([]byte(arr), &pi.ParticipantIds)
 				if err != nil {
-					return nil, err
+					return nil, tracerr.Wrap(err)
 				}
 
 				pi.ParticipantIds = pi.ParticipantIds[:utils.Min(len(pi.ParticipantIds), int(participantsSize))]
@@ -108,8 +106,7 @@ func getAllParticipantIdsCommon(qq CommonOperations, chatId int64) ([]int64, err
 		for rows.Next() {
 			var participantId int64
 			if err := rows.Scan(&participantId); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, participantId)
 			}
@@ -131,7 +128,7 @@ func getParticipantsCountCommon(qq CommonOperations, chatId int64) (int, error) 
 	row := qq.QueryRow("SELECT count(*) FROM chat_participant WHERE chat_id = $1", chatId)
 
 	if err := row.Scan(&count); err != nil {
-		return 0, err
+		return 0, tracerr.Wrap(err)
 	} else {
 		return count, nil
 	}
@@ -167,8 +164,7 @@ func getParticipantsCountBatchCommon(qq CommonOperations, chatIds []int64) (map[
 	var err error
 	rows, err = qq.Query(builder)
 	if err != nil {
-		Logger.Errorf("Error during get chat rows %v", err)
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 		for _, cid := range chatIds {
@@ -178,8 +174,7 @@ func getParticipantsCountBatchCommon(qq CommonOperations, chatIds []int64) (map[
 			var chatId int64
 			var count int
 			if err := rows.Scan(&chatId, &count); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				res[chatId] = count
 			}
@@ -200,7 +195,7 @@ func getIsAdminCommon(qq CommonOperations, userId int64, chatId int64) (bool, er
 	var admin bool = false
 	row := qq.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 AND admin = true LIMIT 1)`, userId, chatId)
 	if err := row.Scan(&admin); err != nil {
-		return false, err
+		return false, tracerr.Wrap(err)
 	} else {
 		return admin, nil
 	}
@@ -236,7 +231,7 @@ func getIsAdminBatchCommon(qq CommonOperations, userId int64, chatIds []int64) (
 	}
 
 	if rows, err := qq.Query(fmt.Sprintf(`SELECT chat_id, admin FROM chat_participant WHERE user_id = $1 AND chat_id IN (%v) AND admin = true`, builder), userId); err != nil {
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 
@@ -244,8 +239,7 @@ func getIsAdminBatchCommon(qq CommonOperations, userId int64, chatIds []int64) (
 			var admin bool = false
 			var chatId int64 = 0
 			if err := rows.Scan(&chatId, &admin); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				result[chatId] = admin
 			}
@@ -266,7 +260,7 @@ func isParticipantCommon(qq CommonOperations, userId int64, chatId int64) (bool,
 	var exists bool = false
 	row := qq.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1)`, userId, chatId)
 	if err := row.Scan(&exists); err != nil {
-		return false, err
+		return false, tracerr.Wrap(err)
 	} else {
 		return exists, nil
 	}
@@ -284,7 +278,7 @@ func (tx *Tx) GetFirstParticipant(chatId int64) (int64, error) {
 	var pid int64
 	row := tx.QueryRow(`SELECT user_id FROM chat_participant WHERE chat_id = $1 LIMIT 1`, chatId)
 	if err := row.Scan(&pid); err != nil {
-		return 0, err
+		return 0, tracerr.Wrap(err)
 	} else {
 		return pid, nil
 	}
@@ -299,8 +293,7 @@ func (db *DB) GetCoChattedParticipantIdsCommon(participantId int64) ([]int64, er
 		for rows.Next() {
 			var participantId int64
 			if err := rows.Scan(&participantId); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, participantId)
 			}
@@ -311,8 +304,7 @@ func (db *DB) GetCoChattedParticipantIdsCommon(participantId int64) ([]int64, er
 
 func setAdminCommon(qq CommonOperations, userId int64, chatId int64, newAdmin bool) error {
 	if _, err := qq.Exec("UPDATE chat_participant SET admin = $3 WHERE user_id = $1 AND chat_id = $2", userId, chatId, newAdmin); err != nil {
-		Logger.Errorf("Error during editing participant admin id %v", err)
-		return err
+		return tracerr.Wrap(err)
 	}
 	return nil
 }
@@ -327,15 +319,14 @@ func (db *DB) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
 
 func (db *DB) GetChatsWithMe(userId int64) ([]int64, error) {
 	if rows, err := db.Query("SELECT DISTINCT chat_id FROM chat_participant WHERE user_id = $1", userId); err != nil {
-		return nil, err
+		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
 		list := make([]int64, 0)
 		for rows.Next() {
 			var chatId int64
 			if err := rows.Scan(&chatId); err != nil {
-				Logger.Errorf("Error during scan chat rows %v", err)
-				return nil, err
+				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, chatId)
 			}

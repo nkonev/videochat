@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/viper"
+	"github.com/ztrue/tracerr"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
@@ -95,7 +96,13 @@ func configureOpentelemetryMiddleware(tp *sdktrace.TracerProvider) echo.Middlewa
 func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) {
 	originalHandler := e.DefaultHTTPErrorHandler
 	return func(err error, c echo.Context) {
-		GetLogEntry(c.Request().Context()).Errorf("Unhandled error: %v", err)
+		errUnwrapped, ok := err.(tracerr.Error)
+		if !ok {
+			GetLogEntry(c.Request().Context()).Errorf("Unhandled and unwrappable error: %v", err)
+		} else {
+			GetLogEntry(c.Request().Context()).Errorf("Unhandled error: %v, stack: %v", errUnwrapped.Error(), errUnwrapped.StackTrace())
+			tracerr.PrintSource(err)
+		}
 		originalHandler(err, c)
 	}
 }

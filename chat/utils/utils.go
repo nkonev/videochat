@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/ztrue/tracerr"
 	"net/url"
 	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
@@ -90,7 +91,7 @@ func GetBoolean(s string) bool {
 
 func GetBooleanWithError(s string) (bool, error) {
 	if parseBool, err := strconv.ParseBool(s); err != nil {
-		return false, err
+		return false, tracerr.Wrap(err)
 	} else {
 		return parseBool, nil
 	}
@@ -98,7 +99,7 @@ func GetBooleanWithError(s string) (bool, error) {
 
 func ParseInt64(s string) (int64, error) {
 	if i, err := strconv.ParseInt(s, 10, 64); err != nil {
-		return 0, err
+		return 0, tracerr.Wrap(err)
 	} else {
 		return i, nil
 	}

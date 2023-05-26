@@ -1,6 +1,7 @@
 module nkonev.name/chat
 
 require (
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
@@ -16,6 +17,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.1
+	github.com/ztrue/tracerr v0.4.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.32.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.32.0
 	go.opentelemetry.io/contrib/propagators/jaeger v1.7.0
@@ -28,7 +30,6 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.1.0 // indirect
-	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/chris-ramon/douceur v0.2.0 // indirect
@@ -73,7 +74,6 @@ require (
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
-	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.51.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
