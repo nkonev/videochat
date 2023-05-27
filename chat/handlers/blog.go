@@ -302,8 +302,6 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		}
 	}
 
-	maxAge := viper.GetString("blogFileMaxAge")
-	c.Response().Header().Set("Cache-Control", "max-age="+maxAge)
 	return c.JSON(http.StatusOK, response)
 }
 
@@ -354,8 +352,6 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		messageDtos = append(messageDtos, msg)
 	}
 
-	maxAge := viper.GetString("blogFileMaxAge")
-	c.Response().Header().Set("Cache-Control", "max-age="+maxAge)
 	GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
 	return c.JSON(http.StatusOK, messageDtos)
 }
