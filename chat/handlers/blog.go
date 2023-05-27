@@ -430,6 +430,9 @@ func (h *BlogHandler) makeUrlPublic(src string, additionalSegment string) (strin
 	}
 
 	parsed.Path = "/api" + utils.UrlStoragePublicGetFile + additionalSegment
+	query := parsed.Query()
+	query.Set("time", utils.Int64ToString(time.Now().Unix()))
+	parsed.RawQuery = query.Encode()
 
 	newurl := parsed.String()
 	return newurl, nil
