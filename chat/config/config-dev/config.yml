@@ -41,7 +41,7 @@ canResendFromTetATet: true
 
 blogPreviewMaxTextSize: 400
 blogSearchSize: 5000
-# Seconds
+# Seconds. Should be less or equal to storage's minio.publicDownloadTtl
 blogFileMaxAge: 120
 
 baseUrl: "http://api.site.local:8080"
