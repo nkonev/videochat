@@ -3,13 +3,16 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/getlantern/deepcopy"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"math"
 	"net/http"
+	"net/url"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
@@ -203,6 +206,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 		Pinned:         dbMessage.Pinned,
 		BlogPost:       dbMessage.BlogPost,
 	}
+	ret.Text = patchStorageUrlToPreventCachingVideo(ret.Text)
 
 	if dbMessage.ResponseEmbeddedMessageReplyOwnerId != nil {
 		embeddedUser := owners[*dbMessage.ResponseEmbeddedMessageReplyOwnerId]
@@ -1115,4 +1119,52 @@ func (mc *MessageHandler) wasReplyRemoved(oldMessage *db.Message, messageRendere
 	} else {
 		return nil, nil
 	}
+}
+
+// in order to be able to see video in chrome after minio link's ttl expiration
+func patchStorageUrlToPreventCachingVideo(text string) string {
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
+	if err != nil {
+		Logger.Warnf("Unagle to read html: %v", err)
+		return ""
+	}
+
+	wlArr := []string{"", viper.GetString("baseUrl")}
+
+	doc.Find("video").Each(func(i int, s *goquery.Selection) {
+		maybeVideo := s.First()
+		if maybeVideo != nil {
+			src, srcExists := maybeVideo.Attr("src")
+			if srcExists && utils.ContainsUrl(wlArr, src) {
+				newurl, err := addTimeToUrl(src)
+				if err != nil {
+					Logger.Warnf("Unagle to change url: %v", err)
+					return
+				}
+				maybeVideo.SetAttr("src", newurl)
+			}
+		}
+	})
+
+	ret, err := doc.Find("html").Find("body").Html()
+	if err != nil {
+		Logger.Warnf("Unagle to write html: %v", err)
+		return ""
+	}
+	return ret
+}
+
+func addTimeToUrl(src string) (string, error) {
+	parsed, err := url.Parse(src)
+	if err != nil {
+		return "", err
+	}
+
+	query := parsed.Query()
+	query.Set("time", utils.Int64ToString(time.Now().Unix()))
+	parsed.RawQuery = query.Encode()
+
+	newurl := parsed.String()
+	return newurl, nil
 }
