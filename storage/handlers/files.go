@@ -898,5 +898,8 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 		return err
 	}
 
+	dur := viper.GetDuration("minio.publicDownloadTtl").Seconds()
+	maxAge := fmt.Sprintf("%.0f", dur)
+	c.Response().Header().Set("Cache-Control", "max-age="+maxAge)
 	return c.Redirect(http.StatusTemporaryRedirect, downloadUrl)
 }
