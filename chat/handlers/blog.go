@@ -371,7 +371,7 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 		if maybeImage != nil {
 			src, srcExists := maybeImage.Attr("src")
 			if srcExists && utils.ContainsUrl(wlArr, src) {
-				newurl, err := h.makeUrlPublic(src, "")
+				newurl, err := h.makeUrlPublic(src, "", false)
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
 					return
@@ -386,7 +386,7 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
 			if srcExists && utils.ContainsUrl(wlArr, src) {
-				newurl, err := h.makeUrlPublic(src, "")
+				newurl, err := h.makeUrlPublic(src, "", true)
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
 					return
@@ -396,7 +396,7 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 
 			poster, posterExists := maybeVideo.Attr("poster")
 			if posterExists && utils.ContainsUrl(wlArr, src) {
-				newurl, err := h.makeUrlPublic(poster, "/embed/preview")
+				newurl, err := h.makeUrlPublic(poster, "/embed/preview", false)
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
 					return
@@ -423,16 +423,19 @@ func (h *BlogHandler) getFileParam(src string) (string, error) {
 	return fileParam, nil
 }
 
-func (h *BlogHandler) makeUrlPublic(src string, additionalSegment string) (string, error) {
+func (h *BlogHandler) makeUrlPublic(src string, additionalSegment string, addTime bool) (string, error) {
 	parsed, err := url.Parse(src)
 	if err != nil {
 		return "", err
 	}
 
 	parsed.Path = "/api" + utils.UrlStoragePublicGetFile + additionalSegment
-	query := parsed.Query()
-	query.Set("time", utils.Int64ToString(time.Now().Unix()))
-	parsed.RawQuery = query.Encode()
+
+	if addTime {
+		query := parsed.Query()
+		query.Set("time", utils.Int64ToString(time.Now().Unix()))
+		parsed.RawQuery = query.Encode()
+	}
 
 	newurl := parsed.String()
 	return newurl, nil
