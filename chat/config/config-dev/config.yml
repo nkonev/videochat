@@ -41,6 +41,8 @@ canResendFromTetATet: true
 
 blogPreviewMaxTextSize: 400
 blogSearchSize: 5000
+# Seconds
+blogFileMaxAge: 120
 
 baseUrl: "http://api.site.local:8080"
 message:
