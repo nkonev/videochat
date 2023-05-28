@@ -150,6 +150,7 @@
 
 <style lang="stylus">
     @import "common.styl"
+    @import "message.styl"
 
     .top-panel {
         width 100%
@@ -171,12 +172,6 @@
 
     .author-and-date {
         flex: 0 1 auto;
-    }
-
-    @media screen and (max-width: $mobileWidth) {
-        .iframe-custom-class {
-            width: 240px;
-        }
     }
 
 </style>
