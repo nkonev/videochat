@@ -213,7 +213,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 			src, exists := maybeIframe.Attr("src")
 			if exists && !utils.ContainsUrl(iframeWlArr, src) {
 				Logger.Infof("Filtered not allowed url in iframe src %v", src)
-				retErr = &MediaUrlErr{src, "image src"}
+				retErr = &MediaUrlErr{src, "iframe src"}
 			}
 		}
 	})

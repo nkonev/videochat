@@ -47,6 +47,8 @@ const embedUploadFunction = (chatId, fileObj, correlationId) => {
     bus.$emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 }
 
+const domParser = new DOMParser();
+
 export default {
   components: {
     EditorContent,
@@ -125,6 +127,16 @@ export default {
         }
     },
     onEmbedLinkSet(link) {
+        console.log("onEmbedLinkSet", link);
+        if (link && !link.startsWith("http")) {
+            const htmlDoc = domParser.parseFromString(link, 'text/html');
+            const iframes = htmlDoc.getElementsByTagName('iframe');
+            if (iframes.length == 1) {
+                const iframe = iframes[0];
+                link = iframe.src;
+            }
+        }
+
         this.setIframe(link);
     },
   },
