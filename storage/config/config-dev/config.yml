@@ -20,6 +20,7 @@ types:
     - ".jpg"
     - ".jpeg"
     - ".png"
+    - ".webp"
   video:
     - ".mp4"
     - ".mkv"
