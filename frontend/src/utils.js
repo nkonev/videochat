@@ -219,3 +219,7 @@ export const copyCallLink = (chatId) => {
 }
 
 export const offerToJoinToPublicChatStatus = 428
+
+export const link_dialog_type_add_link_to_text = "add_link_to_text";
+export const link_dialog_type_add_media_by_link = "add_media_by_link";
+export const link_dialog_type_add_media_embed = "add_media_embed";

@@ -73,7 +73,7 @@
     import axios from "axios";
 
     import bus, {OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA} from "./bus";
-    import {media_image, media_video} from "@/utils";
+    import {link_dialog_type_add_media_by_link, media_image, media_video} from "@/utils";
 
     const firstPage = 1;
     const pageSize = 20;
@@ -154,7 +154,7 @@
                 }
             },
             fromUrl() {
-                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: "add_media_by_link", mediaType: this.type});
+                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_by_link, mediaType: this.type});
                 this.closeModal();
             },
             fromDisk() {

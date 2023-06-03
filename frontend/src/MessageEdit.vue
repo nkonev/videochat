@@ -103,7 +103,7 @@
     import {
         chatEditMessageDtoFactory,
         colorBackground,
-        colorText, embed, getAnswerPreviewFields,
+        colorText, embed, getAnswerPreviewFields, link_dialog_type_add_link_to_text, link_dialog_type_add_media_embed,
         media_image, media_video
     } from "@/utils";
     import {
@@ -262,7 +262,7 @@
             },
             linkClick() {
                 const previousUrl = this.$refs.tipTapRef.$data.editor.getAttributes('link').href;
-                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: "add_link_to_text", previousUrl});
+                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_link_to_text, previousUrl});
             },
             onMessageLinkSet(url) {
                 // empty
@@ -297,7 +297,7 @@
                 bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_video, () => this.$refs.tipTapRef.addVideo(), this.$refs.tipTapRef.setVideo);
             },
             embedClick() {
-                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: "add_media_embed", mediaType: embed});
+                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_embed, mediaType: embed});
             },
             textColorClick(){
                 bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorText);
