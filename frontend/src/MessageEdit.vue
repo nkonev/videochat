@@ -1,5 +1,5 @@
 <template>
-    <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid :style="{height: messageEditHeight}"
+    <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid
     >
             <div v-if="showAnswer" class="answer"><v-icon @click="resetAnswer()" :title="$vuetify.lang.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
             <tiptap
@@ -113,7 +113,7 @@
     } from "@/localStore"
 
     export default {
-        props:['chatId', 'fullHeight'],
+        props:['chatId'],
         data() {
             return {
                 editorKey: +new Date(),
@@ -347,9 +347,6 @@
                 currentUser: GET_USER,
                 canBroadcast: GET_CAN_BROADCAST_TEXT_MESSAGE,
             }),
-            messageEditHeight() {
-                return this.fullHeight ? 'calc(100vh - 56px - 48px)' : '100%'
-            },
             userIsSet() {
                 return !!this.currentUser
             }
@@ -407,6 +404,7 @@
 #sendButtonContainer {
     background white
     min-height 25%
+    height 100%
 }
 
 .richText {

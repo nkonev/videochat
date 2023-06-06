@@ -859,7 +859,7 @@
 
     #chatViewContainer {
         position: relative
-        height: calc(100vh - 48px)
+        height $calculatedHeight
         //width: calc(100% - 80px)
     }
     //
