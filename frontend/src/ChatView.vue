@@ -876,9 +876,3 @@
     }
 
 </style>
-
-<style lang="stylus">
-@import "common.styl"
-
-
-</style>
