@@ -85,6 +85,10 @@
 
                 </div>
 
+        <MessageEditLinkModal/>
+        <MessageEditColorModal/>
+        <MessageEditMediaModal/>
+
     </v-container>
 </template>
 
@@ -111,6 +115,10 @@
         removeStoredChatEditMessageDto,
         setStoredChatEditMessageDto
     } from "@/localStore"
+
+    import MessageEditLinkModal from "@/MessageEditLinkModal";
+    import MessageEditColorModal from "@/MessageEditColorModal";
+    import MessageEditMediaModal from "@/MessageEditMediaModal";
 
     export default {
         props:['chatId'],
@@ -393,7 +401,10 @@
             },
         },
         components: {
-            Tiptap
+            Tiptap,
+            MessageEditLinkModal,
+            MessageEditColorModal,
+            MessageEditMediaModal,
         }
     }
 </script>

@@ -216,12 +216,9 @@
                 <FileTextEditModal/>
                 <LanguageModal/>
                 <VideoAddNewSourceModal/>
-                <MessageEditModal v-if="isMobile()"/>
-                <MessageEditLinkModal/>
-                <MessageEditColorModal/>
-                <NotificationsModal/>
-                <MessageEditMediaModal/>
                 <MessageResendToModal/>
+                <NotificationsModal/>
+                <MessageEditModal v-if="isMobile()"/>
                 <PinnedMessagesModal/>
                 <PlayerModal/>
 
@@ -307,17 +304,15 @@
     import FileTextEditModal from "./FileTextEditModal";
     import LanguageModal from "./LanguageModal";
     import VideoAddNewSourceModal from "@/VideoAddNewSourceModal";
-    import MessageEditModal from "@/MessageEditModal";
-    import MessageEditLinkModal from "@/MessageEditLinkModal";
-    import MessageEditColorModal from "@/MessageEditColorModal";
     import NotificationsModal from "@/NotificationsModal";
-    import MessageEditMediaModal from "@/MessageEditMediaModal";
-    import MessageResendToModal from "@/MessageResendToModal";
     import PinnedMessagesModal from "@/PinnedMessagesModal";
     import PlayerModal from "@/PlayerModal";
+    import MessageResendToModal from "@/MessageResendToModal";
 
     import queryMixin, {searchQueryParameter} from "@/queryMixin";
     import {copyCallLink, hasLength} from "@/utils";
+
+    import MessageEditModal from "@/MessageEditModal";
 
     const reactOnAnswerThreshold = 3 * 1000; // ms
     const audio = new Audio("/call.mp3");
@@ -355,13 +350,10 @@
             LanguageModal,
             VideoAddNewSourceModal,
             MessageEditModal,
-            MessageEditLinkModal,
-            MessageEditColorModal,
             NotificationsModal,
-            MessageEditMediaModal,
-            MessageResendToModal,
             PinnedMessagesModal,
             PlayerModal,
+            MessageResendToModal,
         },
         methods:{
             toggleLeftNavigation() {
