@@ -98,7 +98,7 @@
                         :length="participantsPagesCount"
                     ></v-pagination>
                     <v-spacer></v-spacer>
-                    <v-btn v-if="dto.canEdit" color="primary" class="ma-2 ml-4" @click="addParticipants()">
+                    <v-btn v-if="dto.canEdit" color="primary" class="my-1 ml-4 mr-2" @click="addParticipants()">
                         {{ $vuetify.lang.t('$vuetify.add') }}
                     </v-btn>
                     <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>

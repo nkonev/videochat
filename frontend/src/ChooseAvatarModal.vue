@@ -33,10 +33,10 @@
                     </v-row>
                 </v-container>
 
-                <v-card-actions class="pa-4">
-                    <v-btn color="primary" class="mr-4" @click="saveAvatar()" :loading="uploading" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
-                    <v-btn color="error" class="mr-4" @click="closeModal()" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
-                    <v-spacer/>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" class="mr-2 my-1" @click="saveAvatar()" :loading="uploading" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
+                    <v-btn color="error" class="my-1" @click="closeModal()" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

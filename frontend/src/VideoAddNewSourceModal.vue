@@ -27,10 +27,10 @@
                     ></v-select>
                 </v-card-text>
 
-                <v-card-actions class="pa-4">
-                    <v-btn v-if="videoDevice != null || audioDevice != null" color="primary" class="mr-4" @click="addSource()">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
-                    <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
-                    <v-spacer/>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn v-if="videoDevice != null || audioDevice != null" color="primary" class="mr-2 my-1" @click="addSource()">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
+                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
 
             </v-card>

@@ -31,13 +31,13 @@
                     </v-progress-linear>
                 </v-container>
 
-                <v-card-actions class="pa-4">
+                <v-card-actions>
+                    <v-spacer></v-spacer>
                     <template v-if="!limitError && files.length > 0">
-                        <v-btn color="primary" v-if="!uploading" @click="upload()">{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
-                        <v-btn v-else @click="cancel()">{{ $vuetify.lang.t('$vuetify.cancel') }}</v-btn>
+                        <v-btn v-if="!uploading" color="primary" class="mr-2 my-1" @click="upload()">{{ $vuetify.lang.t('$vuetify.upload') }}</v-btn>
+                        <v-btn v-else class="mr-2 my-1" @click="cancel()">{{ $vuetify.lang.t('$vuetify.cancel') }}</v-btn>
                     </template>
-                    <v-btn class="mr-4" @click="hideModal()" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
-                    <v-spacer/>
+                    <v-btn class="my-1" color="error" @click="hideModal()" :disabled="uploading">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

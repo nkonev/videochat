@@ -8,11 +8,11 @@
                     <v-text-field autofocus v-model="link" :placeholder="placeHolder()" @keyup.native.enter="accept()"/>
                 </v-card-text>
 
-                <v-card-actions class="pa-4">
+                <v-card-actions>
                     <v-spacer/>
-                    <v-btn color="primary" class="mr-2" @click="accept()">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
-                    <v-btn v-if="shouldShowClearButton()" class="mr-2" @click="clear()">{{ $vuetify.lang.t('$vuetify.clear') }}</v-btn>
-                    <v-btn color="error" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="primary" class="mr-2 my-1" @click="accept()">{{ $vuetify.lang.t('$vuetify.ok') }}</v-btn>
+                    <v-btn v-if="shouldShowClearButton()" class="mr-2 my-1" @click="clear()">{{ $vuetify.lang.t('$vuetify.clear') }}</v-btn>
+                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

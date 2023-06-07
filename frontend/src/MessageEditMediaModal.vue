@@ -60,9 +60,9 @@
                         :length="filePagesCount"
                     ></v-pagination>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" class="mr-2" @click="fromUrl()" min-width="0" :title="$vuetify.lang.t('$vuetify.from_link')"><v-icon>mdi-link-variant</v-icon></v-btn>
-                    <v-btn color="primary" class="mr-2" @click="fromDisk()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.choose_file_from_disk') }}</v-btn>
-                    <v-btn color="error" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="primary" class="mr-2 my-1" @click="fromUrl()" min-width="0" :title="$vuetify.lang.t('$vuetify.from_link')"><v-icon>mdi-link-variant</v-icon></v-btn>
+                    <v-btn color="primary" class="mr-2 my-1" @click="fromDisk()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.choose_file_from_disk') }}</v-btn>
+                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

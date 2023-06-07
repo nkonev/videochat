@@ -107,9 +107,9 @@
 
                 </v-card-text>
 
-                <v-card-actions class="pa-4">
-                    <v-btn color="error" class="mr-4" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                <v-card-actions>
                     <v-spacer/>
+                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
 
             </v-card>
