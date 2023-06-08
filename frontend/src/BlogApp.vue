@@ -8,12 +8,14 @@
 
             <v-spacer></v-spacer>
 
-            <v-btn v-if="isShowSearch && showSearchButton && isMobile()" icon :title="searchName" @click="onOpenSearch()">
-                <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
-            </v-btn>
-            <v-card v-if="isShowSearch && !showSearchButton || !isMobile()" light :width="isMobile() ? '100%' : ''">
-                <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true"></v-text-field>
-            </v-card>
+            <template v-if="isShowSearch">
+                <v-btn v-if="showSearchButton && isMobile()" icon :title="searchName" @click="onOpenSearch()">
+                    <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
+                </v-btn>
+                <v-card v-if="!showSearchButton || !isMobile()" light :width="isMobile() ? '100%' : ''">
+                    <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true"></v-text-field>
+                </v-card>
+            </template>
         </v-app-bar>
 
         <!-- Sizes your content based upon application components -->
