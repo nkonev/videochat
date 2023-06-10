@@ -636,3 +636,11 @@ curl -Ss --url 'http://localhost:8081/api/blog' -H 'Cookie: VIDEOCHAT_SESSION=YT
 
 # Materialdesignicons
 https://pictogrammers.github.io/@mdi/font/7.0.96/
+
+# Run front-2
+```
+npm run dev -- --host
+```
+
+Then in browser
+http://localhost:8081/front2
