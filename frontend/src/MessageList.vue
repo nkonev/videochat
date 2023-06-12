@@ -56,7 +56,7 @@
         MESSAGE_ADD,
         MESSAGE_DELETED, MESSAGE_EDITED, OPEN_EDIT_MESSAGE, OPEN_RESEND_TO_MODAL,
         OPEN_SIMPLE_MODAL, OPEN_VIEW_FILES_DIALOG,
-        SET_EDIT_MESSAGE
+        SET_EDIT_MESSAGE, USER_PROFILE_CHANGED
     } from "@/bus";
     import queryMixin from "@/queryMixin";
     import {blog, chat_name, videochat_name} from "@/routes";
@@ -400,6 +400,13 @@
                 this.items = [];
                 this.startingFromItemId = null;
             },
+            onUserProfileChanged(user) {
+                this.items.forEach(item => {
+                    if (item.owner.id == user.id) {
+                        item.owner = user;
+                    }
+                });
+            },
         },
         computed: {
             ...mapGetters({currentUser: GET_USER}),
@@ -459,6 +466,7 @@
             bus.$on(MESSAGE_ADD, this.onNewMessage);
             bus.$on(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$on(MESSAGE_EDITED, this.onEditMessage);
+            bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
 
             document.addEventListener("keydown", this.keydownListener);
         },
@@ -470,6 +478,7 @@
             bus.$off(MESSAGE_ADD, this.onNewMessage);
             bus.$off(MESSAGE_DELETED, this.onDeleteMessage);
             bus.$off(MESSAGE_EDITED, this.onEditMessage);
+            bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
 
     }

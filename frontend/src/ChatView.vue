@@ -492,13 +492,6 @@
                     this.$router.push(({name: chat_list_name}))
                 }
             },
-            onUserProfileChanged(user) {
-                this.items.forEach(item => {
-                    if (item.owner.id == user.id) {
-                        item.owner = user;
-                    }
-                });
-            },
             onProfileSet() {
                 this.getInfo().then(() => {
                     this.graphQlSubscribe();
@@ -783,7 +776,6 @@
 
             bus.$on(CHAT_EDITED, this.onChatChange);
             bus.$on(CHAT_DELETED, this.onChatDelete);
-            bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(PROFILE_SET, this.onProfileSet);
             bus.$on(LOGGED_OUT, this.onLoggedOut);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
@@ -808,7 +800,6 @@
 
             bus.$off(CHAT_EDITED, this.onChatChange);
             bus.$off(CHAT_DELETED, this.onChatDelete);
-            bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(PROFILE_SET, this.onProfileSet);
             bus.$off(LOGGED_OUT, this.onLoggedOut);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
