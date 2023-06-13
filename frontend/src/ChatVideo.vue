@@ -12,7 +12,7 @@ import {
     VideoPresets,
     createLocalTracks,
     createLocalScreenTracks,
-} from 'livekit-client';
+} from './lib/livekit-client-js/livekit-client.esm.mjs';
 import UserVideo from "./UserVideo";
 import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
