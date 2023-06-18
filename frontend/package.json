@@ -25,6 +25,7 @@
     "core-js": "^3.26.0",
     "date-fns": "^2.29.3",
     "graphql-ws": "^5.11.2",
+    "livekit-client": "1.11.2",
     "lodash": "^4.17.21",
     "mark.js": "^8.11.1",
     "regenerator-runtime": "^0.13.10",
