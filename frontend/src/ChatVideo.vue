@@ -27,7 +27,9 @@ import store, {
     SET_SHOW_RECORD_STOP_BUTTON,
     GET_CAN_MAKE_RECORD,
     GET_USER,
-    SET_CAN_SHOW_MICROPHONE_BUTTON
+    SET_CAN_SHOW_MICROPHONE_BUTTON,
+    SET_INITIALIZING_STARTING_VIDEO_RECORD,
+    SET_INITIALIZING_STOPPING_VIDEO_RECORD
 } from "@/store";
 import {
     defaultAudioMute,
@@ -468,7 +470,7 @@ export default {
     },
     computed: {
         ...mapGetters({
-            inRecordingProcess: GET_SHOW_RECORD_STOP_BUTTON,
+            showRecordStopButton: GET_SHOW_RECORD_STOP_BUTTON,
             canMakeRecord: GET_CAN_MAKE_RECORD,
             currentUser: GET_USER,
         }),
@@ -481,7 +483,7 @@ export default {
         this.$store.commit(SET_SHOW_CALL_BUTTON, false);
         this.$store.commit(SET_SHOW_HANG_BUTTON, true);
 
-        if (!this.inRecordingProcess && this.canMakeRecord) {
+        if (!this.showRecordStopButton && this.canMakeRecord) {
             this.$store.commit(SET_SHOW_RECORD_START_BUTTON, true);
             this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, false);
         }
@@ -503,6 +505,8 @@ export default {
         this.$store.commit(SET_SHOW_HANG_BUTTON, false);
         this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
         this.$store.commit(SET_SHOW_RECORD_START_BUTTON, false);
+        this.$store.commit(SET_INITIALIZING_STARTING_VIDEO_RECORD, false);
+        this.$store.commit(SET_INITIALIZING_STOPPING_VIDEO_RECORD, false);
     },
     created() {
         bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
