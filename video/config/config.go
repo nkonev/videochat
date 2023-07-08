@@ -83,7 +83,6 @@ type StorageUrlConfig struct {
 
 type HttpServerConfig struct {
 	ApiAddress          string        `mapstructure:"apiAddress"`
-	EgressLayoutAddress string        `mapstructure:"egressLayoutAddress"`
 	ShutdownTimeout     time.Duration `mapstructure:"shutdownTimeout"`
 	BodyLimit           string        `mapstructure:"bodyLimit"`
 }

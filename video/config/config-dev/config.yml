@@ -1,6 +1,5 @@
 server:
   apiAddress: ":1237"
-  egressLayoutAddress: ":1239"
   shutdownTimeout: "10s"
   bodyLimit: "100G"
 
