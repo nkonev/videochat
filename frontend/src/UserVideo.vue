@@ -1,10 +1,10 @@
 <template>
     <div class="video-container-element" :class="videoIsOnTop ? 'video-container-element-position-top' : 'video-container-element-position-side'" @mouseenter="showControls=true" @mouseleave="showControls=false">
         <div class="video-container-element-control" v-show="showControls">
-            <v-btn v-if="isLocal && audioPublication != null" icon @click="doMuteAudio(!audioMute)" :title="audioMute ? $vuetify.lang.t('$vuetify.unmute_audio') : $vuetify.lang.t('$vuetify.mute_audio')"><v-icon large :class="['video-container-element-control-item', muteAudioBlink && audioMute ? 'info-blink' : '']">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
-            <v-btn v-if="isLocal && videoPublication != null" icon @click="doMuteVideo(!videoMute)" :title="videoMute ? $vuetify.lang.t('$vuetify.unmute_video') : $vuetify.lang.t('$vuetify.mute_video')"><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
-            <v-btn icon @click="onEnterFullscreen" :title="$vuetify.lang.t('$vuetify.fullscreen')"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
-            <v-btn v-if="isLocal" icon @click="onClose()" :title="$vuetify.lang.t('$vuetify.close')"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
+            <v-btn large v-if="isLocal && audioPublication != null" icon @click="doMuteAudio(!audioMute)" :title="audioMute ? $vuetify.lang.t('$vuetify.unmute_audio') : $vuetify.lang.t('$vuetify.mute_audio')"><v-icon large :class="['video-container-element-control-item', muteAudioBlink && audioMute ? 'info-blink' : '']">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
+            <v-btn large v-if="isLocal && videoPublication != null" icon @click="doMuteVideo(!videoMute)" :title="videoMute ? $vuetify.lang.t('$vuetify.unmute_video') : $vuetify.lang.t('$vuetify.mute_video')"><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
+            <v-btn large icon @click="onEnterFullscreen" :title="$vuetify.lang.t('$vuetify.fullscreen')"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
+            <v-btn large v-if="isLocal" icon @click="onClose()" :title="$vuetify.lang.t('$vuetify.close')"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
         <span v-if="!isLocal && avatarIsSet" class="video-container-element-hint">{{ $vuetify.lang.t('$vuetify.video_is_not_shown') }}</span>
         <img v-show="avatarIsSet && videoMute" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :src="avatar"/>
