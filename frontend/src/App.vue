@@ -174,6 +174,14 @@
                         <v-btn
                             text
                             v-bind="attrs"
+                            @click="refreshPage()"
+                        >
+                            Refresh
+                        </v-btn>
+
+                        <v-btn
+                            text
+                            v-bind="attrs"
                             @click="closeError()"
                         >
                             Close
@@ -572,7 +580,10 @@
             },
             offMicrophone() {
                 bus.$emit(SET_LOCAL_MICROPHONE_MUTED, true);
-            }
+            },
+            refreshPage() {
+                location.reload();
+            },
         },
         computed: {
             ...mapGetters({
