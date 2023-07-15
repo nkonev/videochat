@@ -6,7 +6,7 @@
                     {{ $vuetify.lang.t('$vuetify.share_to') }}
                 </v-card-title>
                 <v-container class="ma-0 pa-0">
-                    <v-text-field class="ml-4 mr-4 pt-0 mt-0" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.lang.t('$vuetify.search_by_chats')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" autofocus></v-text-field>
+                    <v-text-field class="ml-4 mr-4 pt-0 mt-0" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.lang.t('$vuetify.search_by_chats')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
                 </v-container>
                 <v-card-text class="ma-0 pa-0">
                     <v-list class="pb-0" v-if="!loading">
