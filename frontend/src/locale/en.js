@@ -140,7 +140,7 @@ export default {
     no_notifications: "You don't have notifications",
     search_in_chats: "Search by chats",
     search_in_messages: "Search by messages",
-    video_is_not_shown: "If you don't see the participant's video and camera is ok then try to reload tab",
+    video_is_not_shown: "If you don't see the participant's a) try to reload tab b) use Firefox >= 115",
     link: "Link",
     participants_not_found: "Participants are not found",
     search_by_users: "Search by users",
