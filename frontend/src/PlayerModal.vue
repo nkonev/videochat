@@ -9,8 +9,9 @@
                         <img class="image-custom-class" v-if="dto?.canShowAsImage" :src="dto.url"></img>
                 </v-card-text>
 
-                <v-card-actions class="pa-4">
-                    <v-btn class="mr-4" @click="hideModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                <v-card-actions class="d-flex flex-wrap flex-row">
+                    <v-spacer></v-spacer>
+                    <v-btn color="error" class="my-1" @click="hideModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
