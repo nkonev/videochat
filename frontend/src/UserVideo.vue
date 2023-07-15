@@ -1,5 +1,5 @@
 <template>
-    <div class="video-container-element" :class="videoIsOnTop ? 'video-container-element-position-top' : 'video-container-element-position-side'" @mouseenter="showControls=true" @mouseleave="showControls=false">
+    <div class="video-container-element" :class="videoIsOnTop ? 'video-container-element-position-top' : 'video-container-element-position-side'" @mouseenter="showControls=true" @mouseleave="showControls=false" ref="containerRef">
         <div class="video-container-element-control" v-show="showControls">
             <v-btn large v-if="isLocal && audioPublication != null" icon @click="doMuteAudio(!audioMute)" :title="audioMute ? $vuetify.lang.t('$vuetify.unmute_audio') : $vuetify.lang.t('$vuetify.mute_audio')"><v-icon large :class="['video-container-element-control-item', muteAudioBlink && audioMute ? 'info-blink' : '']">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
             <v-btn large v-if="isLocal && videoPublication != null" icon @click="doMuteVideo(!videoMute)" :title="videoMute ? $vuetify.lang.t('$vuetify.unmute_video') : $vuetify.lang.t('$vuetify.mute_video')"><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
@@ -7,8 +7,8 @@
             <v-btn large v-if="isLocal" icon @click="onClose()" :title="$vuetify.lang.t('$vuetify.close')"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
         <span v-if="!isLocal && avatarIsSet" class="video-container-element-hint">{{ $vuetify.lang.t('$vuetify.video_is_not_shown') }}</span>
-        <img v-show="avatarIsSet && videoMute" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :src="avatar"/>
-        <video v-show="!videoMute || !avatarIsSet" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :id="id" autoPlay playsInline ref="videoRef"/>
+        <img v-show="avatarIsSet && videoMute" @click="showControls=!showControls" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :src="avatar"/>
+        <video v-show="!videoMute || !avatarIsSet" @click="showControls=!showControls" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :id="id" autoPlay playsInline ref="videoRef"/>
         <p @click="showControls=!showControls" v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
@@ -17,6 +17,10 @@
 
 import {hasLength} from "@/utils";
 import refreshLocalMutedInAppBarMixin from "@/refreshLocalMutedInAppBarMixin";
+
+function isFullscreen(){
+    return !!(document.fullscreenElement)
+}
 
 export default {
 	name: 'UserVideo',
@@ -100,15 +104,13 @@ export default {
                 this.refreshLocalMutedInAppBar(b);
             }
         },
-        setStreamMuted(b) {
-            this.$refs.videoRef.muted = b;
-        },
         onEnterFullscreen(e) {
-            const elem = this.$refs.videoRef;
-            if (elem.requestFullscreen) {
+            const elem = this.$refs.containerRef;
+
+            if (isFullscreen()) {
+                document.exitFullscreen();
+            } else {
                 elem.requestFullscreen();
-            } else if (elem.webkitRequestFullscreen) { // Safari
-                elem.webkitRequestFullscreen();
             }
         },
         setSpeaking(speaking) {
