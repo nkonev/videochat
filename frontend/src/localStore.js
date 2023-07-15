@@ -183,3 +183,20 @@ export const getStoredVideoPosition = () => {
 export const setStoredVideoPosition = (v) => {
     localStorage.setItem(KEY_VIDEO_POSITION, JSON.stringify(v));
 }
+
+export const NULL_CODEC = 'null';
+
+export const KEY_CODEC = 'codec2';
+export const getStoredCodec = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_CODEC));
+    if (v === null) {
+        console.log("Resetting codec to default");
+        setStoredCodec(NULL_CODEC);
+        v = JSON.parse(localStorage.getItem(KEY_CODEC));
+    }
+    return v;
+}
+
+export const setStoredCodec = (v) => {
+    localStorage.setItem(KEY_CODEC, JSON.stringify(v));
+}

@@ -28,6 +28,16 @@
                     </v-row>
 
                     <v-select
+                        :disabled="serverPreferredCodec"
+                        :messages="$vuetify.lang.t('$vuetify.codec')"
+                        :items="codecItems"
+                        dense
+                        solo
+                        @change="changeCodec"
+                        v-model="codec"
+                    ></v-select>
+
+                    <v-select
                         :disabled="serverPreferredVideoResolution"
                         :messages="$vuetify.lang.t('$vuetify.video_resolution')"
                         :items="qualityItems"
@@ -138,7 +148,7 @@
         VIDEO_POSITION_AUTO,
         VIDEO_POSITION_ON_THE_TOP,
         VIDEO_POSITION_SIDE,
-        setStoredVideoPosition, getStoredVideoPosition
+        setStoredVideoPosition, getStoredVideoPosition, setStoredCodec
     } from "./localStore";
     import {videochat_name} from "./routes";
     import videoServerSettingsMixin from "@/videoServerSettingsMixin";
@@ -235,12 +245,19 @@
             },
             changeVideoPosition(v) {
                 setStoredVideoPosition(v)
+            },
+            changeCodec(v) {
+                setStoredCodec(v)
             }
         },
         computed: {
             qualityItems() {
                 // ./frontend/node_modules/livekit-client/dist/room/track/options.d.ts
                 return ['h180', 'h360', 'h720', 'h1080', 'h1440', 'h2160']
+            },
+            codecItems() {
+                // ./frontend/node_modules/livekit-client/dist/room/track/options.d.ts
+                return ['null', 'vp8', 'h264', 'vp9', 'av1']
             },
             positionItems() {
                 return [VIDEO_POSITION_AUTO, VIDEO_POSITION_ON_THE_TOP, VIDEO_POSITION_SIDE]

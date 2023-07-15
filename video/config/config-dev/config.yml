@@ -51,6 +51,8 @@ frontend:
   screenSimulcast: false
   roomDynacast: true
   roomAdaptiveStream: true
+  # set null to trigger browser's default, otherwise livekit-js is going to set vp8
+  codec: "null"
 
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"

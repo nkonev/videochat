@@ -100,6 +100,7 @@ type FrontendConfig struct {
 	ScreenSimulcast    *bool  `mapstructure:"screenSimulcast"`
 	RoomDynacast       *bool  `mapstructure:"roomDynacast"`
 	RoomAdaptiveStream *bool  `mapstructure:"roomAdaptiveStream"`
+	Codec 			   *string `mapstructure:"codec"`
 }
 
 type AuthConfig struct {

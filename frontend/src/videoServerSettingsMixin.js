@@ -1,6 +1,6 @@
 import { hasLength, isSet } from "@/utils";
 import {
-    getScreenResolution,
+    getScreenResolution, getStoredCodec,
     getStoredRoomAdaptiveStream,
     getStoredRoomDynacast,
     getStoredScreenSimulcast,
@@ -27,6 +27,9 @@ export default () => {
 
                 serverPreferredRoomAdaptiveStream: false,
                 roomAdaptiveStream: true,
+
+                serverPreferredCodec: false,
+                codec: null
             }
         },
         methods: {
@@ -46,6 +49,9 @@ export default () => {
 
                 this.roomAdaptiveStream = getStoredRoomAdaptiveStream();
                 this.serverPreferredRoomAdaptiveStream = false;
+
+                this.codec = getStoredCodec();
+                this.serverPreferredCodec = false;
 
                 return axios
                     .get(`/api/video/${this.chatId}/config`)
@@ -80,6 +86,12 @@ export default () => {
                             this.serverPreferredRoomAdaptiveStream = true;
                             this.roomAdaptiveStream = respData.roomAdaptiveStream;
                             console.log("Server overrided roomAdaptiveStream to", this.roomAdaptiveStream)
+                        }
+
+                        if (isSet(respData.codec)) {
+                            this.serverPreferredCodec = true;
+                            this.codec = respData.codec;
+                            console.log("Server overrided codec to", this.codec)
                         }
                     })
             }

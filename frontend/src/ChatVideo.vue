@@ -38,7 +38,7 @@ import {
 } from "@/utils";
 import {
     getStoredAudioDevicePresents,
-    getStoredVideoDevicePresents,
+    getStoredVideoDevicePresents, NULL_CODEC,
 } from "@/localStore";
 import bus, {
     ADD_SCREEN_SOURCE,
@@ -450,11 +450,12 @@ export default {
                     const normalizedScreen = !!isScreen;
                     const trackName = "track_" + track.kind + "__screen_" + normalizedScreen + "_" + this.getNewId();
                     const simulcast = !isMobileFirefox && (normalizedScreen ? this.screenSimulcast : this.videoSimulcast);
-                    console.log(`Publishing local ${track.kind} screen=${normalizedScreen} track with name ${trackName} and simulcast ${simulcast}`);
+                    const normalizedCodec = this.codec === NULL_CODEC ? null : this.codec;
+                    console.log(`Publishing local ${track.kind} screen=${normalizedScreen} track with name ${trackName}, simulcast ${simulcast}, codec ${normalizedCodec}`);
                     const publication = await this.room.localParticipant.publishTrack(track, {
                         name: trackName,
                         simulcast: simulcast,
-                        videoCodec: null
+                        videoCodec: normalizedCodec,
                     });
                     if (track.kind == 'audio' && defaultAudioMute) {
                         await publication.mute();

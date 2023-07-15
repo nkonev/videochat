@@ -103,6 +103,7 @@ export default {
     you_called: "You are called into chat #{0} '{1}', press phone to join",
     loading: "Loading...",
     time_at: "at",
+    codec: "Codec",
     requested_codec: "Requested codec",
     websocket_restored: "Websocket connection has been restored, press button to update",
     btn_update: "Update",

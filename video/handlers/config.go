@@ -38,6 +38,7 @@ type FrontendConfigDto struct {
 	ScreenSimulcast    *bool      `json:"screenSimulcast"`
 	RoomDynacast       *bool      `json:"roomDynacast"`
 	RoomAdaptiveStream *bool      `json:"roomAdaptiveStream"`
+	Codec   *string     `json:"codec"`
 }
 
 func (h *ConfigHandler) GetConfig(c echo.Context) error {
@@ -65,6 +66,7 @@ func (h *ConfigHandler) GetConfig(c echo.Context) error {
 	responseSliceFrontendConfig.ScreenSimulcast = frontendConfig.ScreenSimulcast
 	responseSliceFrontendConfig.RoomDynacast = frontendConfig.RoomDynacast
 	responseSliceFrontendConfig.RoomAdaptiveStream = frontendConfig.RoomAdaptiveStream
+	responseSliceFrontendConfig.Codec = frontendConfig.Codec
 
 	return c.JSON(http.StatusOK, responseSliceFrontendConfig)
 }
