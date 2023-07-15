@@ -454,6 +454,7 @@ export default {
                     const publication = await this.room.localParticipant.publishTrack(track, {
                         name: trackName,
                         simulcast: simulcast,
+                        videoCodec: null
                     });
                     if (track.kind == 'audio' && defaultAudioMute) {
                         await publication.mute();
