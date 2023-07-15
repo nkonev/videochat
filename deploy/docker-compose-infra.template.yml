@@ -148,16 +148,14 @@ services:
         tag: chat-livekit
 
   egress:
-    image: livekit/egress:v1.7.6
+    image: livekit/egress:v1.7.5
     networks:
       backend:
     environment:
       - EGRESS_CONFIG_FILE=/etc/egress/config.yaml
     volumes:
       - ./egress/config.yaml:/etc/egress/config.yaml
-      - egress_tmp:/home/egress/tmp
-    cap_add:
-      - SYS_ADMIN
+      - egress_tmp:/tmp/lkegress
     logging:
       driver: "journald"
       options:
