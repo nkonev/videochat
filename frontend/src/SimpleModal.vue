@@ -1,15 +1,15 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="400" persistent>
+        <v-dialog v-model="show" max-width="360" persistent>
             <v-card>
                 <v-card-title>{{title}}</v-card-title>
 
                 <v-card-text>{{text}}</v-card-text>
 
-                <v-card-actions class="pa-4">
-                    <v-btn color="error" class="mr-4" @click="actionFunction()">{{buttonName}}</v-btn>
-                    <v-btn class="mr-4" @click="lightClose()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
-                    <v-spacer/>
+                <v-card-actions class="d-flex flex-wrap flex-row">
+                    <v-spacer></v-spacer>
+                    <v-btn color="error" class="my-1 mr-2" @click="actionFunction()">{{buttonName}}</v-btn>
+                    <v-btn class="my-1" @click="lightClose()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
