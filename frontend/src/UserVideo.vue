@@ -200,7 +200,7 @@ export default {
         position relative
         display flex
         flex-direction column
-        align-items: baseline;
+        align-items: center;
         //width: fit-content
         //block-size: fit-content
         //box-sizing: content-box
@@ -238,6 +238,7 @@ export default {
     }
 
     .video-container-element-control {
+        width 100%
         z-index 3
         position: absolute
     }
