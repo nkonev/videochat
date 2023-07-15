@@ -151,7 +151,7 @@ export default {
     share_to: "Choose chat to share to",
     no_chats: "No chats",
     search_by_chats: "Search by chats",
-    can_resend: "Allow message resending",
+    can_resend: "Allow message resending into other chats",
     in: " in ",
     resend_to_here: "Click to resend here",
     tet_a_tet: "Tet-a-tet dialog",
