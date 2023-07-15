@@ -646,6 +646,12 @@
         overflow-y auto
     }
 
+    // fixes excess scrolling in ChatView.vue on Mobile Android
+    // https://stackoverflow.com/questions/68039544/vuetify-changing-min-height-of-v-application-wrap
+    .v-application--wrap {
+        min-height: unset !important
+    }
+
     .row {
       margin-top: 0px !important;
       margin-bottom: 0px !important;

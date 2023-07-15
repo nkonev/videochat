@@ -1,4 +1,5 @@
 <template>
+    <!-- Used in Mobile Android -->
     <v-dialog v-model="show" fullscreen persistent>
         <v-card>
             <v-toolbar
@@ -15,7 +16,8 @@
                 </v-btn>
                 <v-toolbar-title>{{ isNew ? $vuetify.lang.t('$vuetify.message_creating') : $vuetify.lang.t('$vuetify.message_editing')}}</v-toolbar-title>
             </v-toolbar>
-            <div class="message-edit-dialog">
+            <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
+            <div class="message-edit-dialog" style="height: calc(var(--100vvh, 100vh) - 48px)">
                 <MessageEdit ref="msgEdit" :chatId="chatId"/>
             </div>
         </v-card>
@@ -76,7 +78,5 @@
 
 <style scoped lang="stylus">
 @import "constants.styl"
-.message-edit-dialog {
-    height $calculatedHeight
-}
+
 </style>

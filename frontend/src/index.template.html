@@ -7,12 +7,17 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Videochat</title>
     <%= htmlWebpackPlugin.options.livereload %>
+    <link rel="stylesheet" href="/viewport-fix.css">
     <link rel="stylesheet" href="/main_<%=htmlWebpackPlugin.options.currDate%>.css">
     <link rel="icon" href="/favicon.svg"/>
 </head>
 <body>
   <noscript>You need to enable JavaScript to run this chat app.</noscript>
-  <div id="root">Site will be loaded soon. Press <button onclick="location.reload()" style=" background-color: revert; border: revert; outline: revert;">Refresh</button> if not.</div>
+  <div id="viewport">
+      <div id="root">Site will be loaded soon. Press <button onclick="location.reload()" style=" background-color: revert; border: revert; outline: revert;">Refresh</button> if not.</div>
+  </div>
+  <script src="/viewport-fix.js"></script>
+  <script>new VVP()</script>
   <script type="application/javascript" src="/main_<%=htmlWebpackPlugin.options.currDate%>.js"></script>
 </body>
 </html>
