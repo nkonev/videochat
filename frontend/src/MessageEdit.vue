@@ -57,7 +57,7 @@
                             </v-btn>
 
                             <v-btn icon :large="isMobile()" tile @click="backgroundColorClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_background_color')">
-                                <v-icon :large="isMobile()">mdi-select-color</v-icon>
+                                <v-icon :large="isMobile()">mdi-format-color-fill</v-icon>
                             </v-btn>
 
                             <v-btn icon :large="isMobile()" tile @click="smileyClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_smiley')">
