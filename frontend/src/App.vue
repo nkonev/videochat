@@ -239,6 +239,7 @@
                 <MessageEditModal v-if="isMobile()"/>
                 <PinnedMessagesModal/>
                 <PlayerModal/>
+                <MessageReadUsersModal/>
 
                 <router-view :key="`routerView`+`${$route.params.id}`"/>
             </v-container>
@@ -331,6 +332,7 @@
     import {copyCallLink, hasLength} from "@/utils";
 
     import MessageEditModal from "@/MessageEditModal";
+    import MessageReadUsersModal from "@/MessageReadUsersModal.vue";
 
     const reactOnAnswerThreshold = 3 * 1000; // ms
     const audio = new Audio("/call.mp3");
@@ -372,6 +374,7 @@
             PinnedMessagesModal,
             PlayerModal,
             MessageResendToModal,
+            MessageReadUsersModal,
         },
         methods:{
             toggleLeftNavigation() {

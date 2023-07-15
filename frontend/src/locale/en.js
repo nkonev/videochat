@@ -188,5 +188,6 @@ export default {
     add_media_video_by_link: "Add video by link",
     add_media_image_by_link: "Add image by link",
     message_edit_embed: "Embed content (YouTube, ...)",
-    add_media_embed: "Add embed media"
+    add_media_embed: "Add embed media",
+    users_read: "Users read this message"
 }

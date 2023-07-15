@@ -632,6 +632,86 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 	return c.NoContent(http.StatusAccepted)
 }
 
+func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	messageId, err := GetPathParamAsInt64(c, "messageId")
+	if err != nil {
+		return err
+	}
+
+	page := utils.FixPageString(c.QueryParam("page"))
+	size := utils.FixSizeString(c.QueryParam("size"))
+	offset := utils.GetOffset(page, size)
+
+	Logger.Debugf("Processing GetReadMessageUsers user %v, chatId %v, messageId %v", userPrincipalDto.UserId, chatId, messageId)
+
+	if participant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking participant")
+		return err
+	} else if !participant {
+		GetLogEntry(c.Request().Context()).Infof("User %v is not participant of chat %v, skipping", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	userIds, err := mc.db.GetParticipantsRead(chatId, messageId, size, offset)
+	if err != nil {
+		return err
+	}
+
+	count, err := mc.db.GetParticipantsReadCount(chatId, messageId)
+	if err != nil {
+		return err
+	}
+
+	message, ownerId, err := mc.db.GetMessageBasic(chatId, messageId)
+	if err != nil {
+		return err
+	}
+
+	usersToGet := map[int64]bool{}
+	for _, u := range userIds {
+		usersToGet[u] = true
+	}
+	usersToGet[*ownerId] = true
+
+	users, err := mc.restClient.GetUsers(utils.SetToArray(usersToGet), c.Request().Context())
+	if err != nil {
+		return err
+	}
+
+	usersToReturn := []*dto.User{}
+	var anOwnerLogin string
+
+	for _, us := range users {
+		if utils.Contains(userIds, us.Id) {
+			usersToReturn = append(usersToReturn, us)
+		}
+		if us.Id == userPrincipalDto.UserId {
+			anOwnerLogin = us.Login
+		}
+	}
+
+	preview := createMessagePreview(mc.stripAllTags, *message, anOwnerLogin)
+
+
+	return c.JSON(http.StatusOK, &MessageReadResponse{
+		ParticipantsWrapper: ParticipantsWrapper{
+			Data:  usersToReturn,
+			Count: count,
+		},
+		Text:                preview,
+	})
+}
+
 func (mc *MessageHandler) TypeMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {

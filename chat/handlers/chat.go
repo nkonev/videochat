@@ -27,9 +27,19 @@ type ChatWrapper struct {
 	Count int64          `json:"totalCount"` // total chat number for this user
 }
 
-type ParticipantsWrapper struct {
+type ParticipantsWithAdminWrapper struct {
 	Data  []*dto.UserWithAdmin `json:"participants"`
 	Count int                  `json:"participantsCount"` // for paginating purposes
+}
+
+type ParticipantsWrapper struct {
+	Data  []*dto.User 			`json:"participants"`
+	Count int                   `json:"participantsCount"` // for paginating purposes
+}
+
+type MessageReadResponse struct {
+	ParticipantsWrapper
+	Text string `json:"text"`
 }
 
 type EditChatDto struct {
@@ -933,7 +943,7 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 		totalFoundUserCount = count
 	}
 
-	return c.JSON(http.StatusOK, &ParticipantsWrapper{
+	return c.JSON(http.StatusOK, &ParticipantsWithAdminWrapper{
 		Data:  usersWithAdmin,
 		Count: totalFoundUserCount,
 	})

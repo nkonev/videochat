@@ -34,6 +34,7 @@
                 @removedFromPinned="removedFromPinned"
                 @makeBlogPost="makeBlogPost"
                 @goToBlog="goToBlog"
+                @showReadUsers="showReadUsers"
             />
             <infinite-loading :key="infinityKey" @infinite="infiniteHandler" :identifier="infiniteId" :direction="aDirection" force-use-infinite-wrapper="#messagesScroller" :distance="aDistance" :use-scroll-bar-storage="false">
                 <template slot="no-more"><span/></template>
@@ -54,7 +55,7 @@
     import bus, {
         CLOSE_SIMPLE_MODAL,
         MESSAGE_ADD,
-        MESSAGE_DELETED, MESSAGE_EDITED, OPEN_EDIT_MESSAGE, OPEN_RESEND_TO_MODAL,
+        MESSAGE_DELETED, MESSAGE_EDITED, OPEN_EDIT_MESSAGE, OPEN_MESSAGE_READ_USERS_DIALOG, OPEN_RESEND_TO_MODAL,
         OPEN_SIMPLE_MODAL, OPEN_VIEW_FILES_DIALOG,
         SET_EDIT_MESSAGE, USER_PROFILE_CHANGED
     } from "@/bus";
@@ -385,6 +386,9 @@
             },
             makeBlogPost(dto) {
                 axios.put(`/api/chat/${this.chatId}/message/${dto.id}/blog-post`);
+            },
+            showReadUsers(dto) {
+                bus.$emit(OPEN_MESSAGE_READ_USERS_DIALOG, {chatId: dto.chatId, messageId: dto.id})
             },
             getBlogLink() {
                 return blog + '/post/' + this.chatId;

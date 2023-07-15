@@ -35,6 +35,7 @@ export const OPEN_FILE_UPLOAD_MODAL = "openFileUploadModal";
 export const CLOSE_FILE_UPLOAD_MODAL = "closeFileUploadModal";
 export const FILE_UPLOAD_MODAL_START_UPLOADING = "FileUploadModalStartUpload";
 export const OPEN_VIEW_FILES_DIALOG = "openViewFiles";
+export const OPEN_MESSAGE_READ_USERS_DIALOG = "openMessageReadUsersDialog";
 export const SET_FILE_ITEM_UUID = "setFileItemUuid";
 export const PREVIEW_CREATED = "previewCreated";
 export const OPEN_VIDEO_SETTINGS = "openVideoSettings";

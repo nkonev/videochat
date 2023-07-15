@@ -289,8 +289,8 @@ func (tx *Tx) SetBlogPost(chatId int64, messageId int64) error {
 	return nil
 }
 
-func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, error) {
-	row := tx.QueryRow(fmt.Sprintf(`SELECT 
+func getMessageBasicCommon(co CommonOperations, chatId int64, messageId int64) (*string, *int64, error) {
+	row := co.QueryRow(fmt.Sprintf(`SELECT 
     	m.text,
     	m.owner_id
 	FROM message_chat_%v m 
@@ -310,6 +310,14 @@ func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, e
 	} else {
 		return &result, &owner, nil
 	}
+}
+
+func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, error) {
+	return getMessageBasicCommon(tx, chatId, messageId)
+}
+
+func (db *DB) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, error) {
+	return getMessageBasicCommon(db, chatId, messageId)
 }
 
 func (tx *Tx) GetBlogPostMessageId(chatId int64) (*int64, error) {
@@ -578,5 +586,50 @@ func (tx *Tx) GetPinnedPromoted(chatId int64) (*Message, error) {
 		return nil, tracerr.Wrap(err)
 	} else {
 		return &message, nil
+	}
+}
+
+func (db *DB) GetParticipantsRead(chatId, messageId int64, limit, offset int) ([]int64, error) {
+	rows, err := db.Query(fmt.Sprintf(`
+			select user_id from message_read where chat_id = $1 and last_message_id >= $2
+			ORDER BY user_id asc
+			LIMIT $3 OFFSET $4`,
+	),
+		chatId, messageId,
+		limit, offset)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	}
+
+	defer rows.Close()
+	list := make([]int64, 0)
+	for rows.Next() {
+		var anUserId int64
+		if err := rows.Scan(&anUserId); err != nil {
+			return nil, tracerr.Wrap(err)
+		} else {
+			list = append(list, anUserId)
+		}
+	}
+	return list, nil
+}
+
+func (db *DB) GetParticipantsReadCount(chatId, messageId int64) (int, error) {
+	row := db.QueryRow(fmt.Sprintf(`
+			select count(user_id) from message_read where chat_id = $1 and last_message_id >= $2
+			`,
+		),
+		chatId, messageId)
+	if row.Err() != nil {
+		Logger.Errorf("Error during get count of participants read the message %v", row.Err())
+		return 0, tracerr.Wrap(row.Err())
+	}
+
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, tracerr.Wrap(err)
+	} else {
+		return count, nil
 	}
 }
