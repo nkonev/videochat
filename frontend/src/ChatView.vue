@@ -16,12 +16,12 @@
                             <v-alert
                                 :key="pinnedPromotedKey"
                                 dense
-                                color="red lighten-2"
-                                dark
+                                color="red lighten-4"
                                 dismissible
                                 prominent
+                                style="border-radius: 0;"
                             >
-                                <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: white; cursor: pointer" v-html="pinnedPromoted.text">
+                                <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="text-decoration: none; color: rgba(0, 0, 0, 0.87); cursor: pointer;" v-html="pinnedPromoted.text">
                                 </router-link>
                             </v-alert>
                         </div>
