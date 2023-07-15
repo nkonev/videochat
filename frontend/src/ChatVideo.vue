@@ -34,7 +34,6 @@ import store, {
 import {
     defaultAudioMute,
     getWebsocketUrlPrefix,
-    isMobileFireFox
 } from "@/utils";
 import {
     getStoredAudioDevicePresents,
@@ -444,12 +443,10 @@ export default {
             }
 
             try {
-                const isMobileFirefox = isMobileFireFox();
-                console.debug("isMobileFirefox = ", isMobileFirefox, " in case Mobile Firefox simulcast for video tracks will be disabled");
                 for (const track of tracks) {
                     const normalizedScreen = !!isScreen;
                     const trackName = "track_" + track.kind + "__screen_" + normalizedScreen + "_" + this.getNewId();
-                    const simulcast = !isMobileFirefox && (normalizedScreen ? this.screenSimulcast : this.videoSimulcast);
+                    const simulcast = (normalizedScreen ? this.screenSimulcast : this.videoSimulcast);
                     console.log(`Publishing local ${track.kind} screen=${normalizedScreen} track with name ${trackName} and simulcast ${simulcast}`);
                     const publication = await this.room.localParticipant.publishTrack(track, {
                         name: trackName,
