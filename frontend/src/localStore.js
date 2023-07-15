@@ -1,3 +1,5 @@
+import {hasLength} from "@/utils";
+
 const defaultResolution = 'h720';
 
 export const KEY_VIDEO_RESOLUTION = 'videoResolution2';
@@ -151,7 +153,11 @@ export const getStoredChatEditMessageDto = (chatId, defVal) => {
 }
 
 export const setStoredChatEditMessageDto = (v, chatId) => {
-    localStorage.setItem(KEY_CHAT_EDIT_MESSAGE_DTO + '_' + chatId, JSON.stringify(v));
+    if (hasLength(v.text)) {
+        localStorage.setItem(KEY_CHAT_EDIT_MESSAGE_DTO + '_' + chatId, JSON.stringify(v));
+    } else {
+        removeStoredChatEditMessageDto(chatId)
+    }
 }
 
 export const removeStoredChatEditMessageDto = (chatId) => {
