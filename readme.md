@@ -5,7 +5,7 @@ Your open source self-hosted videoconference platform.
 
 [![Chat image](./.screenshots/14_most_of_features.png)](./screenshots.md)
 
-# Key features:
+# Features:
 * Well-integrated video calls into entire platform UI, no separated video rooms, text chats, etc...
 * No installation on client's machine - only modern browser with video camera or microphone required.
 * File [sharing](./screenshots.md#chat-files).
@@ -28,7 +28,7 @@ Your open source self-hosted videoconference platform.
 * Firewall friendly: only two ports for WebRTC are needed (TURN, WebRTC).
 * Simple setup with docker swarm or docker-compose.
 * No vendor lock on cloud provider.
-* Familiar infrastructure which you know - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, NGINX. No unique exotic solutions.
+* Familiar infrastructure - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, NGINX.
 * Self-contained frontend bundle without any CDN downloads.
 * No need to edit `/etc/hosts` for development.
 
