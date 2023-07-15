@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" :persistent="true">
+        <v-dialog v-model="show" :persistent="true" width="fit-content">
             <v-card>
                 <v-card-title>{{ getTitle() }}</v-card-title>
 
