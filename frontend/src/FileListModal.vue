@@ -44,12 +44,12 @@
 
                                         <v-btn icon v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.lang.t('$vuetify.edit')"><v-icon>mdi-pencil</v-icon></v-btn>
 
-                                        <v-btn icon v-if="item.canShare">
-                                            <v-icon color="primary" @click="shareFile(item, !item.publicUrl)" dark :title="item.publicUrl ? $vuetify.lang.t('$vuetify.unshare_file') : $vuetify.lang.t('$vuetify.share_file')">{{ item.publicUrl ? 'mdi-lock' : 'mdi-export'}}</v-icon>
+                                        <v-btn icon v-if="item.canShare" @click="shareFile(item, !item.publicUrl)">
+                                            <v-icon color="primary" dark :title="item.publicUrl ? $vuetify.lang.t('$vuetify.unshare_file') : $vuetify.lang.t('$vuetify.share_file')">{{ item.publicUrl ? 'mdi-lock' : 'mdi-export'}}</v-icon>
                                         </v-btn>
 
-                                        <v-btn icon v-if="item.canDelete">
-                                            <v-icon color="error" @click="deleteFile(item)" dark :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
+                                        <v-btn icon v-if="item.canDelete" @click="deleteFile(item)">
+                                            <v-icon color="error" dark :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                                         </v-btn>
                                     </v-card-actions>
                                 </v-card>
