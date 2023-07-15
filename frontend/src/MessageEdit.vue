@@ -16,55 +16,55 @@
                             multiple
                             show-arrows
                         >
-                            <v-btn icon tile :input-value="boldValue()" @click="boldClick" width="48px" :color="boldValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_bold')">
-                                <v-icon>mdi-format-bold</v-icon>
+                            <v-btn icon :large="isMobile()" tile :input-value="boldValue()" @click="boldClick" width="48px" :color="boldValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_bold')">
+                                <v-icon :large="isMobile()">mdi-format-bold</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="italicValue()" @click="italicClick" width="48px" :color="italicValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_italic')">
-                                <v-icon>mdi-format-italic</v-icon>
+                            <v-btn icon :large="isMobile()" tile :input-value="italicValue()" @click="italicClick" width="48px" :color="italicValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_italic')">
+                                <v-icon :large="isMobile()">mdi-format-italic</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="underlineValue()" @click="underlineClick" width="48px" :color="underlineValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_underline')">
-                                <v-icon>mdi-format-underline</v-icon>
+                            <v-btn icon :large="isMobile()" tile :input-value="underlineValue()" @click="underlineClick" width="48px" :color="underlineValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_underline')">
+                                <v-icon :large="isMobile()">mdi-format-underline</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="strikeValue()" @click="strikeClick" width="48px" :color="strikeValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_strike')">
-                                <v-icon>mdi-format-strikethrough-variant</v-icon>
+                            <v-btn icon :large="isMobile()" tile :input-value="strikeValue()" @click="strikeClick" width="48px" :color="strikeValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_strike')">
+                                <v-icon :large="isMobile()">mdi-format-strikethrough-variant</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="codeValue()" @click="codeClick" width="48px" :color="codeValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_code')">
-                                <v-icon>mdi-code-braces</v-icon>
+                            <v-btn icon :large="isMobile()" tile :input-value="codeValue()" @click="codeClick" width="48px" :color="codeValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_code')">
+                                <v-icon :large="isMobile()">mdi-code-braces</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" width="48px" :color="linkValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_link')">
-                                <v-icon>mdi-link-variant</v-icon>
+                            <v-btn icon :large="isMobile()" tile :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" width="48px" :color="linkValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_link')">
+                                <v-icon :large="isMobile()">mdi-link-variant</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile @click="imageClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_image')">
-                                <v-icon>mdi-image-outline</v-icon>
+                            <v-btn icon :large="isMobile()" tile @click="imageClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_image')">
+                                <v-icon :large="isMobile()">mdi-image-outline</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile @click="videoClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_video')">
-                                <v-icon>mdi-video</v-icon>
+                            <v-btn icon :large="isMobile()" tile @click="videoClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_video')">
+                                <v-icon :large="isMobile()">mdi-video</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile @click="embedClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_embed')">
-                                <v-icon>mdi-youtube</v-icon>
+                            <v-btn icon :large="isMobile()" tile @click="embedClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_embed')">
+                                <v-icon :large="isMobile()">mdi-youtube</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile @click="textColorClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_text_color')">
-                                <v-icon>mdi-invert-colors</v-icon>
+                            <v-btn icon :large="isMobile()" tile @click="textColorClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_text_color')">
+                                <v-icon :large="isMobile()">mdi-invert-colors</v-icon>
                             </v-btn>
 
-                            <v-btn icon tile @click="backgroundColorClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_background_color')">
-                                <v-icon>mdi-select-color</v-icon>
+                            <v-btn icon :large="isMobile()" tile @click="backgroundColorClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_background_color')">
+                                <v-icon :large="isMobile()">mdi-select-color</v-icon>
                             </v-btn>
 
                         </v-slide-group>
                     </div>
 
                     <div class="custom-toolbar-send">
-                        <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile width="48px" @click="openFileUpload()" :title="$vuetify.lang.t('$vuetify.message_edit_file')"><v-icon color="primary">mdi-file-upload</v-icon></v-btn>
+                        <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile :large="isMobile()" width="48px" @click="openFileUpload()" :title="$vuetify.lang.t('$vuetify.message_edit_file')"><v-icon :large="isMobile()" color="primary">mdi-file-upload</v-icon></v-btn>
                         <template v-if="this.editMessageDto.fileItemUuid">
                             <v-badge
                                 :value="fileCount"
@@ -73,10 +73,10 @@
                                 overlap
                                 left
                             >
-                                <v-btn icon tile width="48px" @click="onFilesClicked()" :title="$vuetify.lang.t('$vuetify.message_edit_attached_files')"><v-icon>mdi-file-document-multiple</v-icon></v-btn>
+                                <v-btn icon tile :large="isMobile()" width="48px" @click="onFilesClicked()" :title="$vuetify.lang.t('$vuetify.message_edit_attached_files')"><v-icon :large="isMobile()">mdi-file-document-multiple</v-icon></v-btn>
                             </v-badge>
                         </template>
-                        <v-btn icon tile width="48px" class="mr-2" @click="resetInput()" :title="$vuetify.lang.t('$vuetify.message_edit_clear')"><v-icon>mdi-delete</v-icon></v-btn>
+                        <v-btn icon tile :large="isMobile()" width="48px" class="mr-2" @click="resetInput()" :title="$vuetify.lang.t('$vuetify.message_edit_clear')"><v-icon :large="isMobile()">mdi-delete</v-icon></v-btn>
                         <v-switch v-if="canBroadcast" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                             :label="$vuetify.lang.t('$vuetify.message_broadcast')"
                         ></v-switch>
