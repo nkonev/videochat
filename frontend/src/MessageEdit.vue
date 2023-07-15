@@ -328,7 +328,7 @@
                 bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorBackground);
             },
             smileyClick() {
-                bus.$emit(OPEN_MESSAGE_EDIT_SMILEY);
+                bus.$emit(OPEN_MESSAGE_EDIT_SMILEY, (text) => this.$refs.tipTapRef.addText(text));
             },
             onColorSet(color, colorMode) {
                 console.debug("Setting color", color, colorMode);

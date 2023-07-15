@@ -5,37 +5,8 @@
                 <v-card-title>{{ $vuetify.lang.t('$vuetify.message_edit_smiley') }}</v-card-title>
 
                 <v-card-text class="py-0 pt-2 px-4 smiley-buttons">
-                    <v-row no-gutters>
-                        <v-btn tile icon large class="display-1">😀</v-btn>
-                        <v-btn tile icon large class="display-1">😂</v-btn>
-                        <v-btn tile icon large class="display-1">🥰</v-btn>
-                        <v-btn tile icon large class="display-1">💋</v-btn>
-                        <v-btn tile icon large class="display-1">❤️</v-btn>
-                        <v-btn tile icon large class="display-1">🤔</v-btn>
-                    </v-row>
-                    <v-row no-gutters>
-                        <v-btn tile icon large class="display-1">😐</v-btn>
-                        <v-btn tile icon large class="display-1">🤒</v-btn>
-                        <v-btn tile icon large class="display-1">🤮</v-btn>
-                        <v-btn tile icon large class="display-1">🥴</v-btn>
-                        <v-btn tile icon large class="display-1">😎</v-btn>
-                        <v-btn tile icon large class="display-1">😨</v-btn>
-                    </v-row>
-                    <v-row no-gutters>
-                        <v-btn tile icon large class="display-1">😡</v-btn>
-                        <v-btn tile icon large class="display-1">👿</v-btn>
-                        <v-btn tile icon large class="display-1">💩</v-btn>
-                        <v-btn tile icon large class="display-1">😇</v-btn>
-                        <v-btn tile icon large class="display-1">🤐</v-btn>
-                        <v-btn tile icon large class="display-1">💣</v-btn>
-                    </v-row>
-                    <v-row no-gutters>
-                        <v-btn tile icon large class="display-1">👍</v-btn>
-                        <v-btn tile icon large class="display-1">👎</v-btn>
-                        <v-btn tile icon large class="display-1">🤟</v-btn>
-                        <v-btn tile icon large class="display-1">🙏</v-btn>
-                        <v-btn tile icon large class="display-1">💪</v-btn>
-                        <v-btn tile icon large class="display-1">👏</v-btn>
+                    <v-row :key="sli" v-for="(smileyLine, sli) in smileys" no-gutters>
+                        <v-btn :key="si" @click="onSmileyClick(smiley)" v-for="(smiley, si) in smileyLine" tile icon large class="display-1">{{smiley}}</v-btn>
                     </v-row>
                 </v-card-text>
 
@@ -55,6 +26,13 @@
         data () {
             return {
                 show: false,
+                smileys: [
+                    ['😀', '😂', '🥰', '💋', '❤️', '🤔'],
+                    ['😐', '🤒', '🤮', '🥴',  '😎', '😨'],
+                    ['😡', '👿', '💩', '😇',  '🤐', '💣'],
+                    ['👍',  '👎', '🤟', '🙏',  '💪', '👏'],
+                ],
+                addSmileyCallback: null,
             }
         },
         watch: {
@@ -65,11 +43,18 @@
             }
         },
         methods: {
-            showModal(colorMode, color) {
+            showModal(addSmileyCallback) {
                 this.$data.show = true;
+                this.addSmileyCallback = addSmileyCallback;
             },
             closeModal() {
                 this.show = false;
+                this.addSmileyCallback = null;
+            },
+            onSmileyClick(smiley) {
+                if (this.addSmileyCallback) {
+                    this.addSmileyCallback(smiley);
+                }
             },
         },
         created() {

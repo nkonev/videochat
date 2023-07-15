@@ -139,6 +139,9 @@ export default {
 
         this.setIframe(link);
     },
+    addText(text) {
+        this.editor.commands.insertContent(text)
+    },
   },
   mounted() {
     bus.$on(PREVIEW_CREATED, this.onPreviewCreated);
