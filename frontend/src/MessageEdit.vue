@@ -60,6 +60,10 @@
                                 <v-icon :large="isMobile()">mdi-select-color</v-icon>
                             </v-btn>
 
+                            <v-btn icon :large="isMobile()" tile @click="smileyClick" width="48px" :title="$vuetify.lang.t('$vuetify.message_edit_smiley')">
+                                <v-icon :large="isMobile()">mdi-emoticon-outline</v-icon>
+                            </v-btn>
+
                         </v-slide-group>
                     </div>
 
@@ -88,6 +92,7 @@
         <MessageEditLinkModal/>
         <MessageEditColorModal/>
         <MessageEditMediaModal/>
+        <MessageEditSmileyModal/>
 
     </v-container>
 </template>
@@ -95,10 +100,18 @@
 <script>
     import axios from "axios";
     import bus, {
-        CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_COLOR_SET, MESSAGE_EDIT_LINK_SET,
-        OPEN_FILE_UPLOAD_MODAL, OPEN_MESSAGE_EDIT_COLOR, OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA,
-        OPEN_VIEW_FILES_DIALOG, PROFILE_SET,
-        SET_EDIT_MESSAGE, SET_FILE_ITEM_UUID,
+        CLOSE_EDIT_MESSAGE,
+        MESSAGE_EDIT_COLOR_SET,
+        MESSAGE_EDIT_LINK_SET,
+        OPEN_FILE_UPLOAD_MODAL,
+        OPEN_MESSAGE_EDIT_COLOR,
+        OPEN_MESSAGE_EDIT_LINK,
+        OPEN_MESSAGE_EDIT_MEDIA,
+        OPEN_MESSAGE_EDIT_SMILEY,
+        OPEN_VIEW_FILES_DIALOG,
+        PROFILE_SET,
+        SET_EDIT_MESSAGE,
+        SET_FILE_ITEM_UUID,
     } from "./bus";
     import debounce from "lodash/debounce";
     import {mapGetters} from "vuex";
@@ -119,6 +132,7 @@
     import MessageEditLinkModal from "@/MessageEditLinkModal";
     import MessageEditColorModal from "@/MessageEditColorModal";
     import MessageEditMediaModal from "@/MessageEditMediaModal";
+    import MessageEditSmileyModal from "@/MessageEditSmileyModal.vue";
 
     export default {
         props:['chatId'],
@@ -313,6 +327,9 @@
             backgroundColorClick() {
                 bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorBackground);
             },
+            smileyClick() {
+                bus.$emit(OPEN_MESSAGE_EDIT_SMILEY);
+            },
             onColorSet(color, colorMode) {
                 console.debug("Setting color", color, colorMode);
                 if (colorMode == colorText) {
@@ -405,6 +422,7 @@
             MessageEditLinkModal,
             MessageEditColorModal,
             MessageEditMediaModal,
+            MessageEditSmileyModal,
         }
     }
 </script>

@@ -129,6 +129,7 @@ export default {
     message_edit_text_color: "Text color",
     message_edit_background_color: "Background color",
     message_edit_video: "Add video",
+    message_edit_smiley: "Smiley",
     start_record: "Start record",
     stop_record: "Stop record",
     notifications: "Notifications",

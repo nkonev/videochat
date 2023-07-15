@@ -129,6 +129,7 @@ export default {
     message_edit_text_color: "Цвет текста",
     message_edit_background_color: "Цвет фона",
     message_edit_video: "Добавить видео",
+    message_edit_smiley: "Смайлик",
     start_record: "Начать запись",
     stop_record: "Остановить запись",
     notifications: "Уведомления",
