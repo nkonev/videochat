@@ -707,7 +707,9 @@
             onChatDialStatusChange(dto) {
                 if (this.chatDto.tetATet) {
                     for (const videoDialChanged of dto.dials) {
-                        this.$store.commit(SET_SHOULD_PHONE_BLINK, videoDialChanged.status);
+                        if (this.currentUser.id != videoDialChanged.userId) {
+                            this.$store.commit(SET_SHOULD_PHONE_BLINK, videoDialChanged.status);
+                        }
                     }
                 }
             },
