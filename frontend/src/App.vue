@@ -207,8 +207,8 @@
                         {{ $vuetify.lang.t('$vuetify.you_called', invitedVideoChatId, invitedVideoChatName) }}
                     </span>
                     <template v-slot:action="{ attrs }">
-                        <v-btn icon v-bind="attrs" @click="onClickInvitation()"><v-icon color="white">mdi-phone</v-icon></v-btn>
-                        <v-btn icon v-bind="attrs" @click="onClickCancelInvitation()"><v-icon color="white">mdi-close-circle</v-icon></v-btn>
+                        <v-btn icon x-large v-bind="attrs" @click="onClickInvitation()"><v-icon color="white">mdi-phone</v-icon></v-btn>
+                        <v-btn icon x-large v-bind="attrs" @click="onClickCancelInvitation()"><v-icon color="white">mdi-close-circle</v-icon></v-btn>
                     </template>
                 </v-snackbar>
 
