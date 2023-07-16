@@ -26,8 +26,12 @@
 
 <script>
     import bus, {CLOSE_EDIT_MESSAGE, OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "@/bus";
+    import heightMixin from "@/heightMixin";
 
     export default {
+        mixins: [
+            heightMixin()
+        ],
         data() {
             return {
                 show: false,
@@ -63,13 +67,6 @@
             },
             isNew() {
                 return !this.messageId;
-            },
-            heightWithoutAppBar() {
-                if (this.isMobile()) {
-                    return 'height: calc(var(--100vvh, 100vh) - 56px)'
-                } else {
-                    return 'height: calc(var(--100vvh, 100vh) - 48px)'
-                }
             },
         },
         created() {

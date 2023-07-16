@@ -178,6 +178,7 @@
         VIDEO_POSITION_SIDE
     } from "@/localStore";
     import {copyCallLink, offerToJoinToPublicChatStatus} from "@/utils";
+    import heightMixin from "@/heightMixin";
 
     const KEY_DESKTOP_TOP_WITH_VIDEO_PANELS = 'desktopTopWithVideo2';
     const KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS = 'desktopTopWithoutVideo2'
@@ -228,7 +229,8 @@
 
     export default {
         mixins: [
-            graphqlSubscriptionMixin('chatEvents')
+            graphqlSubscriptionMixin('chatEvents'),
+            heightMixin()
         ],
         data() {
             return {
@@ -247,13 +249,6 @@
                 return this.$route.params.id
             },
             ...mapGetters({currentUser: GET_USER}),
-            heightWithoutAppBar() {
-                if (this.isMobile()) {
-                    return 'height: calc(var(--100vvh, 100vh) - 56px)'
-                } else {
-                    return 'height: calc(var(--100vvh, 100vh) - 48px)'
-                }
-            },
             videoSize() {
                 const stored = this.readFromStore();
                 return stored.video;
