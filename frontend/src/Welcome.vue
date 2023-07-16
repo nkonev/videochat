@@ -1,28 +1,26 @@
 <template>
-    <v-container fill-height fluid>
-        <v-row align="center" justify="center">
-            <v-card>
-                <v-card-title class="d-flex justify-space-around">{{$vuetify.lang.t('$vuetify.welcome_participant', currentUser.login)}}</v-card-title>
-                <v-card-actions  class="d-flex justify-space-around">
-                    <v-btn color="primary" @click="createChat()" text>
-                        <v-icon>mdi-plus</v-icon>
-                        {{ $vuetify.lang.t('$vuetify.new_chat') }}
-                    </v-btn>
-                    <v-btn @click="findUser()" text>
-                        <v-icon>mdi-magnify</v-icon>
-                        {{ $vuetify.lang.t('$vuetify.find_user') }}
-                    </v-btn>
-                    <v-btn @click="availableChats()" text>
-                        <v-icon>mdi-forum</v-icon>
-                        {{ $vuetify.lang.t('$vuetify.public_chats') }}
-                    </v-btn>
-                    <v-btn @click="goBlog()" text>
-                        <v-icon>mdi-postage-stamp</v-icon>
-                        {{ $vuetify.lang.t('$vuetify.blogs') }}
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-row>
+    <v-container>
+        <v-card>
+            <v-card-title class="d-flex justify-space-around">{{$vuetify.lang.t('$vuetify.welcome_participant', currentUser.login)}}</v-card-title>
+            <v-card-actions class="d-flex justify-space-around flex-wrap flex-row">
+                <v-btn color="primary" @click="createChat()" text>
+                    <v-icon>mdi-plus</v-icon>
+                    {{ $vuetify.lang.t('$vuetify.new_chat') }}
+                </v-btn>
+                <v-btn @click="findUser()" text>
+                    <v-icon>mdi-magnify</v-icon>
+                    {{ $vuetify.lang.t('$vuetify.find_user') }}
+                </v-btn>
+                <v-btn @click="availableChats()" text>
+                    <v-icon>mdi-forum</v-icon>
+                    {{ $vuetify.lang.t('$vuetify.public_chats') }}
+                </v-btn>
+                <v-btn @click="goBlog()" text>
+                    <v-icon>mdi-postage-stamp</v-icon>
+                    {{ $vuetify.lang.t('$vuetify.blogs') }}
+                </v-btn>
+            </v-card-actions>
+        </v-card>
     </v-container>
 </template>
 
