@@ -21,6 +21,7 @@ types:
     - ".jpeg"
     - ".png"
     - ".webp"
+    - ".gif"
   video:
     - ".mp4"
     - ".mkv"
