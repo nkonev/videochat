@@ -38,6 +38,11 @@
                     <v-list-item-content><v-list-item-title id="new-chat-dialog-button">{{ $vuetify.lang.t('$vuetify.new_chat') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
+                <v-list-item @click="editChat()" v-if="shouldDisplayEditChat()">
+                    <v-list-item-icon><v-icon>mdi-lead-pencil</v-icon></v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.edit_chat') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
+
                 <v-list-item @click="displayChatFiles()" v-if="shouldDisplayFiles()">
                     <v-list-item-icon><v-icon>mdi-file-download</v-icon></v-list-item-icon>
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.files') }}</v-list-item-title></v-list-item-content>
@@ -48,14 +53,21 @@
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.pinned_messages') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
+                <v-badge
+                    :content="notificationsCount"
+                    :value="notificationsCount"
+                    color="red"
+                    :offset-y="'1.8em'"
+                >
+                    <v-list-item @click="onNotificationsClicked()">
+                        <v-list-item-icon><v-icon>mdi-bell</v-icon></v-list-item-icon>
+                        <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.notifications') }}</v-list-item-title></v-list-item-content>
+                    </v-list-item>
+                </v-badge>
+
                 <v-list-item @click="findUser()">
                     <v-list-item-icon><v-icon>mdi-magnify</v-icon></v-list-item-icon>
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.find_user') }}</v-list-item-title></v-list-item-content>
-                </v-list-item>
-
-                <v-list-item @click="editChat()" v-if="shouldDisplayEditChat()">
-                    <v-list-item-icon><v-icon>mdi-lead-pencil</v-icon></v-list-item-icon>
-                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.edit_chat') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
                 <v-list-item @click.prevent="goProfile()" v-if="shouldDisplayProfile()" :href="require('./routes').profile">
@@ -91,7 +103,7 @@
         >
             <v-badge
                  :content="notificationsCount"
-                 :value="notificationsCount"
+                 :value="notificationsCount && !drawer"
                  color="red"
                  overlap
                  offset-y="1.8em"
