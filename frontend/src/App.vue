@@ -89,9 +89,19 @@
                 :clipped-left="true"
                 :dense="!isMobile()"
         >
-            <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
+            <v-badge
+                 :content="notificationsCount"
+                 :value="notificationsCount"
+                 color="red"
+                 overlap
+                 offset-y="1.8em"
+            >
+                <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
+            </v-badge>
+
             <template v-if="showSearchButton || !isMobile()">
                 <v-badge v-if="showCallButton || showHangButton"
+                         style="padding-left: 10px"
                     :content="videoChatUsersCount"
                     :value="videoChatUsersCount"
                     color="green"
@@ -144,23 +154,6 @@
                 <v-card light v-if="!showSearchButton || !isMobile()" :width="isMobile() ? '100%' : ''">
                     <v-text-field :autofocus="isMobile()" prepend-icon="mdi-magnify" hide-details single-line @input="clearRouteHash()" v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true"></v-text-field>
                 </v-card>
-            </template>
-            <template v-if="showSearchButton || !isMobile()">
-                <v-badge
-                    :content="notificationsCount"
-                    :value="notificationsCount"
-                    color="red"
-                    overlap
-                    :offset-y="isMobile() ? '' : '1.8em'"
-                >
-                    <v-btn
-                        :small="isMobile()"
-                        icon :title="$vuetify.lang.t('$vuetify.notifications')"
-                        @click="onNotificationsClicked()"
-                    >
-                        <v-icon>mdi-bell</v-icon>
-                    </v-btn>
-                </v-badge>
             </template>
         </v-app-bar>
 
@@ -668,6 +661,14 @@
       margin-bottom: 0px !important;
     }
 
+</style>
+
+<style lang="stylus">
+    #myAppBar {
+        .v-toolbar__content {
+            padding-left: 4px !important
+        }
+    }
 </style>
 
 <style scoped lang="stylus">
