@@ -20,6 +20,7 @@ import (
 	"nkonev.name/storage/utils"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 type FilesHandler struct {
@@ -65,6 +66,16 @@ type UploadResponse struct {
 	Url string `json:"url"`
 }
 
+func nonLetterSplit(c rune) bool {
+	return !unicode.IsLetter(c) && !unicode.IsNumber(c) && c != '.' && c != '-' && c != '+' && c != '_' && c != ' '
+}
+
+// output of this fun eventually goes to sanitizer in chat
+func cleanFilename(input string) string {
+	words := strings.FieldsFunc(input, nonLetterSplit)
+	return strings.Join(words, "")
+}
+
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -107,12 +118,14 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 	}
 	// end check
 
-	filename := services.GenerateFilename(reqDto.FileName, chatFileItemUuid, chatId)
+	filteredFilename := cleanFilename(reqDto.FileName)
+
+	aKey := services.GenerateFilename(filteredFilename, chatFileItemUuid, chatId)
 
 	// check that this file does not exist
-	_, err = h.minio.StatObject(context.Background(), bucketName, filename, minio.StatObjectOptions{})
+	_, err = h.minio.StatObject(context.Background(), bucketName, aKey, minio.StatObjectOptions{})
 	if err == nil {
-		GetLogEntry(c.Request().Context()).Errorf("Already exists: %v", filename)
+		GetLogEntry(c.Request().Context()).Errorf("Already exists: %v", aKey)
 		return c.NoContent(http.StatusConflict)
 	}
 
@@ -130,7 +143,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 
 	services.SerializeMetadataAndStore(&urlVals, userPrincipalDto.UserId, chatId, reqDto.CorrelationId)
 
-	u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, filename, uploadDuration, urlVals)
+	u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, aKey, uploadDuration, urlVals)
 	if err != nil {
 		Logger.Errorf("Error during getting downlad url %v", err)
 		return err
@@ -143,7 +156,14 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 
 	existingCount := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "url": fmt.Sprintf("%v", u), "fileItemUuid": chatFileItemUuid, "existingCount": existingCount})
+
+	return c.JSON(http.StatusOK, &utils.H{
+		"status": "ok",
+		"url": fmt.Sprintf("%v", u),
+		"fileItemUuid": chatFileItemUuid,
+		"existingCount": existingCount,
+		"newFileName": filteredFilename,
+	})
 }
 
 type ReplaceTextFileDto struct {

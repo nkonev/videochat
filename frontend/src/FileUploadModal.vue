@@ -157,13 +157,18 @@ export default {
                 urlResponses.push({
                     url: response.data.url,
                     file: file,
+                    newFileName: response.data.newFileName,
                     existingCount: response.data.existingCount,
                 });
             }
 
             for (const [index, presignedUrlResponse] of urlResponses.entries()) {
                 try {
-                    await axios.put(presignedUrlResponse.url, presignedUrlResponse.file, config)
+                    const formData = new FormData();
+                    formData.append('File', presignedUrlResponse.file, presignedUrlResponse.newFileName);
+                    const renamedFile = formData.get('File');
+
+                    await axios.put(presignedUrlResponse.url, renamedFile, config)
                         .then(response => {
                             if (this.$data.shouldSetFileUuidToMessage) {
                                 bus.$emit(SET_FILE_ITEM_UUID, {
