@@ -222,7 +222,7 @@ export default {
     this.fileInput.onchange = e => {
       this.correlationId = uuidv4();
       if (e.target.files.length) {
-          const files = e.target.files;
+          const files = Array.from(e.target.files);
           embedUploadFunction(this.chatId, files, this.correlationId)
       }
     }
