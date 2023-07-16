@@ -73,7 +73,8 @@ func nonLetterSplit(c rune) bool {
 // output of this fun eventually goes to sanitizer in chat
 func cleanFilename(input string) string {
 	words := strings.FieldsFunc(input, nonLetterSplit)
-	return strings.Join(words, "")
+	tmp := strings.Join(words, "")
+	return strings.TrimSpace(tmp)
 }
 
 func (h *FilesHandler) UploadHandler(c echo.Context) error {
