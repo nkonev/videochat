@@ -5,7 +5,7 @@
             <v-toolbar
                 dark
                 color="indigo"
-                dense
+                :dense="!isMobile()"
             >
                 <v-btn
                     icon
@@ -17,7 +17,7 @@
                 <v-toolbar-title>{{ isNew ? $vuetify.lang.t('$vuetify.message_creating') : $vuetify.lang.t('$vuetify.message_editing')}}</v-toolbar-title>
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
-            <div class="message-edit-dialog" style="height: calc(var(--100vvh, 100vh) - 64px)">
+            <div class="message-edit-dialog" :style="heightWithoutAppBar">
                 <MessageEdit ref="msgEdit" :chatId="chatId"/>
             </div>
         </v-card>
@@ -63,6 +63,13 @@
             },
             isNew() {
                 return !this.messageId;
+            },
+            heightWithoutAppBar() {
+                if (this.isMobile()) {
+                    return 'height: calc(var(--100vvh, 100vh) - 56px)'
+                } else {
+                    return 'height: calc(var(--100vvh, 100vh) - 48px)'
+                }
             },
         },
         created() {

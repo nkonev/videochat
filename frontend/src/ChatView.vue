@@ -1,6 +1,6 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
-        <splitpanes ref="splOuter" class="default-theme" style="height: calc(var(--100vvh, 100vh) - 64px)"
+        <splitpanes ref="splOuter" class="default-theme" :style="heightWithoutAppBar"
                     :dbl-click-splitter="false"
                     @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()" @resize="onPanelResized()">
 
@@ -247,7 +247,13 @@
                 return this.$route.params.id
             },
             ...mapGetters({currentUser: GET_USER}),
-
+            heightWithoutAppBar() {
+                if (this.isMobile()) {
+                    return 'height: calc(var(--100vvh, 100vh) - 56px)'
+                } else {
+                    return 'height: calc(var(--100vvh, 100vh) - 48px)'
+                }
+            },
             videoSize() {
                 const stored = this.readFromStore();
                 return stored.video;
