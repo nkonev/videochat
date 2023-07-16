@@ -87,7 +87,6 @@
                 app
                 id="myAppBar"
                 :clipped-left="true"
-                dense
         >
             <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
             <template v-if="showSearchButton || !isMobile()">
@@ -99,10 +98,10 @@
                     offset-y="1.8em"
                 >
                     <v-btn v-if="showCallButton" icon @click="createCall()" :title="tetATet ? $vuetify.lang.t('$vuetify.call_up') : $vuetify.lang.t('$vuetify.enter_into_call')">
-                        <v-icon color="green">{{tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
+                        <v-icon x-large color="green">{{tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                     </v-btn>
                     <v-btn v-if="showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
-                        <v-icon :class="shouldPhoneBlink ? 'call-blink' : 'red--text'">mdi-phone</v-icon>
+                        <v-icon x-large :class="shouldPhoneBlink ? 'call-blink' : 'red--text'">mdi-phone</v-icon>
                     </v-btn>
                 </v-badge>
 
@@ -207,8 +206,8 @@
                         {{ $vuetify.lang.t('$vuetify.you_called', invitedVideoChatId, invitedVideoChatName) }}
                     </span>
                     <template v-slot:action="{ attrs }">
-                        <v-btn icon x-large v-bind="attrs" @click="onClickInvitation()"><v-icon color="white">mdi-phone</v-icon></v-btn>
-                        <v-btn icon x-large v-bind="attrs" @click="onClickCancelInvitation()"><v-icon color="white">mdi-close-circle</v-icon></v-btn>
+                        <v-btn icon x-large v-bind="attrs" @click="onClickInvitation()"><v-icon x-large color="white">mdi-phone</v-icon></v-btn>
+                        <v-btn icon x-large v-bind="attrs" @click="onClickCancelInvitation()"><v-icon x-large color="white">mdi-close-circle</v-icon></v-btn>
                     </template>
                 </v-snackbar>
 

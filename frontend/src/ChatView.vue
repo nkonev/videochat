@@ -1,6 +1,6 @@
 <template>
     <v-container class="ma-0 pa-0" id="chatViewContainer" fluid>
-        <splitpanes ref="splOuter" class="default-theme" style="height: calc(var(--100vvh, 100vh) - 48px)"
+        <splitpanes ref="splOuter" class="default-theme" style="height: calc(var(--100vvh, 100vh) - 64px)"
                     :dbl-click-splitter="false"
                     @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()" @resize="onPanelResized()">
 
