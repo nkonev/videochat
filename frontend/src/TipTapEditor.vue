@@ -1,6 +1,6 @@
 <template>
   <div class="richText">
-    <input id="file-input" type="file" style="display: none;" accept="image/*,video/*" />
+    <input id="file-input" type="file" style="display: none;" accept="image/*,video/*" multiple="multiple" />
     <div class="richText__content">
       <editor-content :editor="editor" class="editorContent" />
     </div>
@@ -42,8 +42,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 const empty = "";
 
-const embedUploadFunction = (chatId, fileObj, correlationId) => {
-    bus.$emit(OPEN_FILE_UPLOAD_MODAL, null, false, [fileObj], correlationId);
+const embedUploadFunction = (chatId, files, correlationId) => {
+    bus.$emit(OPEN_FILE_UPLOAD_MODAL, null, false, files, correlationId);
     bus.$emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 }
 
@@ -151,7 +151,7 @@ export default {
     const imagePluginInstance = buildImageHandler(
     (image) => {
         this.correlationId = uuidv4();
-        embedUploadFunction(this.chatId, image, this.correlationId);
+        embedUploadFunction(this.chatId, [image], this.correlationId);
     })
         .configure({
             inline: true,
@@ -218,11 +218,12 @@ export default {
     });
 
     this.fileInput = document.getElementById('file-input');
+    // triggered when we upload image or video after this.fileInput.click()
     this.fileInput.onchange = e => {
       this.correlationId = uuidv4();
       if (e.target.files.length) {
-          const file = e.target.files[0];
-          embedUploadFunction(this.chatId, file, this.correlationId)
+          const files = e.target.files;
+          embedUploadFunction(this.chatId, files, this.correlationId)
       }
     }
   },
