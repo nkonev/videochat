@@ -53,17 +53,21 @@
                     <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.pinned_messages') }}</v-list-item-title></v-list-item-content>
                 </v-list-item>
 
-                <v-badge
-                    :content="notificationsCount"
-                    :value="notificationsCount"
-                    color="red"
-                    :offset-y="'1.8em'"
-                >
-                    <v-list-item @click="onNotificationsClicked()">
-                        <v-list-item-icon><v-icon>mdi-bell</v-icon></v-list-item-icon>
-                        <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.notifications') }}</v-list-item-title></v-list-item-content>
-                    </v-list-item>
-                </v-badge>
+                <v-list-item @click="onNotificationsClicked()">
+                        <v-list-item-icon>
+                            <v-badge
+                                :content="notificationsCount"
+                                :value="notificationsCount"
+                                color="red"
+                                overlap
+                                :offset-y="'0.8em'"
+                                :offset-x="'0px'"
+                            >
+                            <v-icon>mdi-bell</v-icon>
+                            </v-badge>
+                        </v-list-item-icon>
+                    <v-list-item-content><v-list-item-title>{{ $vuetify.lang.t('$vuetify.notifications') }}</v-list-item-title></v-list-item-content>
+                </v-list-item>
 
                 <v-list-item @click="findUser()">
                     <v-list-item-icon><v-icon>mdi-magnify</v-icon></v-list-item-icon>
