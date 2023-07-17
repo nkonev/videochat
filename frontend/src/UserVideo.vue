@@ -37,15 +37,10 @@ export default {
             avatar: "",
             videoMute: true,
             userId: null,
-            failureCount: 0,
             showControls: false,
             audioPublication: null,
             videoPublication: null,
             speakingTimer: null,
-            muteAudioHover: false,
-            muteVideoHover: false,
-            fullscreenHover: false,
-            
             muteAudioBlink: true,
         }
     },
@@ -137,15 +132,6 @@ export default {
         setUserId(id) {
             this.userId = id;
         },
-        resetFailureCount() {
-            this.failureCount = 0;
-        },
-        incrementFailureCount() {
-            this.failureCount++;
-        },
-        getFailureCount() {
-            return this.failureCount;
-        },
         doMuteAudio(requestedState) {
             if (requestedState) {
                 this.audioPublication?.mute();
@@ -177,7 +163,7 @@ export default {
             return hasLength(this.avatar);
         },
         errored() {
-            return this.failureCount > 0;
+            return false;
         },
         isLocal() {
             return !!this.localVideoProperties;
