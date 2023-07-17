@@ -324,7 +324,7 @@
             },
             onShowContextMenu(e, menuableItem){
                 const tag = e?.target?.tagName?.toLowerCase();
-                if (tag != "img" && tag != "video") {
+                if (tag != "img" && tag != "video" && tag != "a") {
                     this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
                 }
             },
