@@ -82,7 +82,7 @@ export default {
                     id: videoTagId,
                     localVideoProperties: localVideoProperties,
                     videoIsOnTop: this.videoIsOnTop,
-                    initialShowControls: localVideoProperties != null && this.isMobile()
+                    initialShowControls: localVideoProperties != null
                 },
                 store
             });
