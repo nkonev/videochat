@@ -171,14 +171,9 @@
     import debounce from "lodash/debounce";
     import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
     import 'splitpanes/dist/splitpanes.css';
-    import {
-        getStoredVideoPosition,
-        VIDEO_POSITION_AUTO,
-        VIDEO_POSITION_ON_THE_TOP,
-        VIDEO_POSITION_SIDE
-    } from "@/localStore";
     import {copyCallLink, offerToJoinToPublicChatStatus} from "@/utils";
     import heightMixin from "@/heightMixin";
+    import videoPositionMixin from "@/videoPositionMixin";
 
     const KEY_DESKTOP_TOP_WITH_VIDEO_PANELS = 'desktopTopWithVideo2';
     const KEY_DESKTOP_TOP_WITHOUT_VIDEO_PANELS = 'desktopTopWithoutVideo2'
@@ -230,7 +225,8 @@
     export default {
         mixins: [
             graphqlSubscriptionMixin('chatEvents'),
-            heightMixin()
+            heightMixin(),
+            videoPositionMixin(),
         ],
         data() {
             return {
@@ -424,19 +420,6 @@
 
             isAllowedVideo() {
                 return this.currentUser && this.$router.currentRoute.name == videochat_name && this.chatDto && this.chatDto.participantIds && this.chatDto.participantIds.length
-            },
-
-            videoIsOnTop() {
-                const stored = getStoredVideoPosition();
-                if (stored == VIDEO_POSITION_AUTO) {
-                    return this.isMobile()
-                } else {
-                    return getStoredVideoPosition() == VIDEO_POSITION_ON_THE_TOP;
-                }
-            },
-
-            videoIsAtSide() {
-                return !this.videoIsOnTop();
             },
 
             fetchAndSetChat() {

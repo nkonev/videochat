@@ -333,6 +333,7 @@
 
     import MessageEditModal from "@/MessageEditModal";
     import MessageReadUsersModal from "@/MessageReadUsersModal.vue";
+    import videoPositionMixin from "@/videoPositionMixin";
 
     const reactOnAnswerThreshold = 3 * 1000; // ms
     const audio = new Audio("/call.mp3");
@@ -341,7 +342,10 @@
     let invitedVideoChatAlertTimer;
 
     export default {
-        mixins: [queryMixin()],
+        mixins: [
+            queryMixin(),
+            videoPositionMixin()
+        ],
 
         data () {
             return {
@@ -513,11 +517,15 @@
                 this.showWebsocketRestored = true;
             },
             onVideoOpened() {
-                this.prevDrawer = this.drawer;
-                this.drawer = false;
+                if (this.videoIsAtSide()) {
+                    this.prevDrawer = this.drawer;
+                    this.drawer = false;
+                }
             },
             onVideoClosed() {
-                this.drawer = this.prevDrawer;
+                if (this.videoIsAtSide()) {
+                    this.drawer = this.prevDrawer;
+                }
             },
             displayChatFiles() {
                 bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId});
