@@ -5,7 +5,7 @@
                     @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()" @resize="onPanelResized()">
 
             <pane v-bind:size="editAndMessagesSize">
-                <splitpanes ref="splInner" class="default-theme" horizontal @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()"  @resize="onPanelResized()">
+                <splitpanes ref="splInner" class="default-theme" horizontal @pane-add="onPanelAdd()" @pane-remove="onPanelRemove()"  @resize="onPanelResized()" :dbl-click-splitter="false">
                     <pane v-if="videoIsOnTop() && isAllowedVideo()" id="videoBlock" min-size="15" v-bind:size="videoSize">
                         <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()" />
                     </pane>
