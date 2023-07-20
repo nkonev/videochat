@@ -154,7 +154,7 @@
                     <v-icon color="red">mdi-stop</v-icon>
                 </v-btn>
                 <v-spacer></v-spacer>
-                <img v-if="chatAvatar && !isMobile()" class="v-avatar chat-avatar" :src="chatAvatar"/>
+                <img v-if="chatAvatar && !isMobile()" @click="onChatAvatarCLick()" class="v-avatar chat-avatar" :src="chatAvatar"/>
                 <v-toolbar-title color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked" :style="{'cursor': chatId ? 'pointer' : 'default'}">
                     <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="title"></div>
                     <div v-if="chatUsersCount" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
@@ -308,7 +308,7 @@
         OPEN_PINNED_MESSAGES_MODAL,
         VIDEO_OPENED,
         VIDEO_CLOSED,
-        SET_LOCAL_MICROPHONE_MUTED,
+        SET_LOCAL_MICROPHONE_MUTED, PLAYER_MODAL,
     } from "./bus";
     import ChatEditModal from "./ChatEditModal";
     import {chat_name, profile_self_name, chat_list_name, videochat_name, blog} from "./routes";
@@ -604,6 +604,9 @@
             refreshPage() {
                 location.reload();
             },
+            onChatAvatarCLick() {
+                bus.$emit(PLAYER_MODAL, {"canShowAsImage": true, url: this.chatAvatar})
+            },
         },
         computed: {
             ...mapGetters({
@@ -738,6 +741,7 @@
         max-height: 36px;
         width: auto;
         height: auto;
+        cursor pointer
     }
 
 </style>
