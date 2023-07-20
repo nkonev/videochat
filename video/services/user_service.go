@@ -20,15 +20,28 @@ func NewUserService(livekitRoomClient *lksdk.RoomServiceClient) *UserService {
 	}
 }
 
-func (h *UserService) CountUsers(ctx context.Context, roomName string) (int64, error) {
+func (h *UserService) CountUsers(ctx context.Context, roomName string) (int64, bool, error) {
 	var req *livekit.ListParticipantsRequest = &livekit.ListParticipantsRequest{Room: roomName}
 	participants, err := h.livekitRoomClient.ListParticipants(ctx, req)
 	if err != nil {
-		return 0, err
+		return 0, false, err
+	}
+
+	var hasScreenShares = false
+	for _, p := range participants.Participants {
+		for _, t := range p.Tracks {
+			if t.Source == livekit.TrackSource_SCREEN_SHARE {
+				hasScreenShares = true
+				break
+			}
+		}
+		if hasScreenShares {
+			break
+		}
 	}
 
 	var usersCount = int64(len(participants.Participants))
-	return usersCount, nil
+	return usersCount, hasScreenShares, nil
 }
 
 func (vh *UserService) GetVideoParticipants(chatId int64, ctx context.Context) ([]int64, error) {

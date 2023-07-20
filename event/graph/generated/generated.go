@@ -246,8 +246,9 @@ type ComplexityRoot struct {
 	}
 
 	VideoUserCountChangedDto struct {
-		ChatID     func(childComplexity int) int
-		UsersCount func(childComplexity int) int
+		ChatID          func(childComplexity int) int
+		HasScreenShares func(childComplexity int) int
+		UsersCount      func(childComplexity int) int
 	}
 
 	WrappedFileInfoDto struct {
@@ -1179,6 +1180,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.VideoUserCountChangedDto.ChatID(childComplexity), true
 
+	case "VideoUserCountChangedDto.hasScreenShares":
+		if e.complexity.VideoUserCountChangedDto.HasScreenShares == nil {
+			break
+		}
+
+		return e.complexity.VideoUserCountChangedDto.HasScreenShares(childComplexity), true
+
 	case "VideoUserCountChangedDto.usersCount":
 		if e.complexity.VideoUserCountChangedDto.UsersCount == nil {
 			break
@@ -1413,6 +1421,7 @@ type ChatEvent {
 type VideoUserCountChangedDto {
     usersCount: Int64!
     chatId: Int64!
+    hasScreenShares: Boolean!
 }
 
 type VideoRecordingChangedDto {
@@ -4942,6 +4951,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_videoUserCountChangedEvent(
 				return ec.fieldContext_VideoUserCountChangedDto_usersCount(ctx, field)
 			case "chatId":
 				return ec.fieldContext_VideoUserCountChangedDto_chatId(ctx, field)
+			case "hasScreenShares":
+				return ec.fieldContext_VideoUserCountChangedDto_hasScreenShares(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type VideoUserCountChangedDto", field.Name)
 		},
@@ -7602,6 +7613,50 @@ func (ec *executionContext) fieldContext_VideoUserCountChangedDto_chatId(ctx con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VideoUserCountChangedDto_hasScreenShares(ctx context.Context, field graphql.CollectedField, obj *model.VideoUserCountChangedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VideoUserCountChangedDto_hasScreenShares(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasScreenShares, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VideoUserCountChangedDto_hasScreenShares(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VideoUserCountChangedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10799,6 +10854,13 @@ func (ec *executionContext) _VideoUserCountChangedDto(ctx context.Context, sel a
 		case "chatId":
 
 			out.Values[i] = ec._VideoUserCountChangedDto_chatId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hasScreenShares":
+
+			out.Values[i] = ec._VideoUserCountChangedDto_hasScreenShares(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

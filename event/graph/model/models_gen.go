@@ -197,8 +197,9 @@ type VideoRecordingChangedDto struct {
 }
 
 type VideoUserCountChangedDto struct {
-	UsersCount int64 `json:"usersCount"`
-	ChatID     int64 `json:"chatId"`
+	UsersCount      int64 `json:"usersCount"`
+	ChatID          int64 `json:"chatId"`
+	HasScreenShares bool  `json:"hasScreenShares"`
 }
 
 type WrappedFileInfoDto struct {

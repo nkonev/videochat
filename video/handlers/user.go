@@ -47,7 +47,7 @@ func (h *UserHandler) GetVideoUsers(c echo.Context) error {
 	}
 
 	var roomName = utils.GetRoomNameFromId(chatId)
-	usersCount, err := h.userService.CountUsers(c.Request().Context(), roomName)
+	usersCount, _, err := h.userService.CountUsers(c.Request().Context(), roomName)
 	if err != nil {
 		Logger.Errorf("got error during getting participants from http users request, %v", err)
 		return c.NoContent(http.StatusInternalServerError)

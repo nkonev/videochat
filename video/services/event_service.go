@@ -36,12 +36,12 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 		}
 
 		// Here room.NumParticipants are zeroed, so we need to invoke service
-		usersCount, err := h.userService.CountUsers(context.Background(), room.Name)
+		usersCount, hasScreenShares, err := h.userService.CountUsers(context.Background(), room.Name)
 		if err != nil {
 			Logger.Errorf("got error during counting users in scheduler, %v", err)
 		} else {
 			Logger.Debugf("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
-			err = h.notificationService.NotifyVideoUserCountChanged(chatId, usersCount, ctx)
+			err = h.notificationService.NotifyVideoUserCountChanged(chatId, usersCount, hasScreenShares, ctx)
 			if err != nil {
 				Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", err)
 			}

@@ -153,6 +153,7 @@ vm = new Vue({
                     videoUserCountChangedEvent {
                       usersCount
                       chatId
+                      hasScreenShares
                     }
                     videoRecordingChangedEvent {
                       recordInProgress

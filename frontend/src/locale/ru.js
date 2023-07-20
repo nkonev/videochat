@@ -190,5 +190,6 @@ export default {
     message_edit_embed: "Встраиваемый контент (YouTube, ...)",
     add_media_embed: "Добавить встраиваемый контент",
     users_read: "Пользователи, прочитавшие сообщение",
-    search_by_selected: "Искать по выделенному"
+    search_by_selected: "Искать по выделенному",
+    screen_share_in_process: "Идёт показ экрана"
 }
