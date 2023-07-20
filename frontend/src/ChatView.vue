@@ -114,7 +114,7 @@
 
         <v-tooltip v-if="writingUsers.length || broadcastMessage" :activator="'#chatViewContainer'" bottom v-model="showTooltip" :key="tooltipKey">
             <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} {{ $vuetify.lang.t('$vuetify.user_is_writing') }}</span>
-            <span v-else>{{broadcastMessage}}</span>
+            <span v-else v-html="broadcastMessage"></span>
         </v-tooltip>
     </v-container>
 </template>
