@@ -25,7 +25,7 @@
 
 import {chat, messageIdHashPrefix} from "./routes"
 import {getUrlPrefix} from "@/utils";
-import {GET_USER} from "@/store";
+import {GET_SEARCH_STRING, GET_USER, SET_SEARCH_STRING} from "@/store";
 import {mapGetters} from "vuex";
 
 export default {
@@ -56,6 +56,7 @@ export default {
             const ret = [];
             if (this.menuableItem) {
                 ret.push({title: this.$vuetify.lang.t('$vuetify.copy_selected'), icon: 'mdi-content-copy', action: () => this.copySelected() });
+                ret.push({title: this.$vuetify.lang.t('$vuetify.search_by_selected'), icon: 'mdi-clipboard-search-outline', action: () => this.searchBySelected() });
                 if (this.menuableItem.fileItemUuid) {
                     ret.push({title: this.$vuetify.lang.t('$vuetify.attached_message_files'), icon: 'mdi-file-download', action: () => this.$emit('onFilesClicked', this.menuableItem) });
                 }
@@ -93,6 +94,10 @@ export default {
             const selectedText = window.getSelection().toString();
             navigator.clipboard.writeText(selectedText);
         },
+        searchBySelected() {
+            const selectedText = window.getSelection().toString();
+            this.searchString = selectedText;
+        },
     },
     computed: {
         chatId() {
@@ -100,7 +105,16 @@ export default {
         },
         ...mapGetters({
             currentUser: GET_USER,
-        })
+        }),
+        searchString: {
+            get(){
+                return this.$store.getters[GET_SEARCH_STRING];
+            },
+            set(newVal){
+                this.$store.commit(SET_SEARCH_STRING, newVal);
+                return newVal;
+            }
+        }
     },
 }
 </script>

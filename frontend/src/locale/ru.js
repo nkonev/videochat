@@ -189,5 +189,6 @@ export default {
     add_media_image_by_link: "Добавить картинку по ссылке",
     message_edit_embed: "Встраиваемый контент (YouTube, ...)",
     add_media_embed: "Добавить встраиваемый контент",
-    users_read: "Пользователи, прочитавшие сообщение"
+    users_read: "Пользователи, прочитавшие сообщение",
+    search_by_selected: "Искать по выделенному"
 }
