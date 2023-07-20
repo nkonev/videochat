@@ -360,7 +360,7 @@ export default {
             }
         },
         getOnScreenPosition(publication) {
-            if (publication.trackName.startsWith("track_video__screen_true")) {
+            if (publication.source == 'screen_share') {
                 return second
             }
             return first
