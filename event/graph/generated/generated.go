@@ -1421,7 +1421,7 @@ type ChatEvent {
 type VideoUserCountChangedDto {
     usersCount: Int64!
     chatId: Int64!
-    hasScreenShares: Boolean!
+    hasScreenShares: Boolean
 }
 
 type VideoRecordingChangedDto {
@@ -7639,14 +7639,11 @@ func (ec *executionContext) _VideoUserCountChangedDto_hasScreenShares(ctx contex
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_VideoUserCountChangedDto_hasScreenShares(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10862,9 +10859,6 @@ func (ec *executionContext) _VideoUserCountChangedDto(ctx context.Context, sel a
 
 			out.Values[i] = ec._VideoUserCountChangedDto_hasScreenShares(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

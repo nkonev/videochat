@@ -3,7 +3,7 @@ package dto
 type VideoCallUserCountChangedDto struct {
 	UsersCount int64 `json:"usersCount"`
 	ChatId     int64 `json:"chatId"`
-	HasScreenShares bool `json:"hasScreenShares"`
+	HasScreenShares *bool `json:"hasScreenShares"`
 }
 
 type VideoInviteDto struct {

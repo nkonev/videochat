@@ -376,8 +376,8 @@ func convertToGlobalEvent(e *dto.GlobalEvent) *model.GlobalEvent {
 	videoUserCountEvent := e.VideoCallUserCountEvent
 	if videoUserCountEvent != nil {
 		ret.VideoUserCountChangedEvent = &model.VideoUserCountChangedDto{
-			UsersCount: videoUserCountEvent.UsersCount,
-			ChatID:     videoUserCountEvent.ChatId,
+			UsersCount:      videoUserCountEvent.UsersCount,
+			ChatID:          videoUserCountEvent.ChatId,
 			HasScreenShares: videoUserCountEvent.HasScreenShares,
 		}
 	}

@@ -25,7 +25,7 @@ func NewNotificationService(producer *producer.RabbitUserCountPublisher, restCli
 // sends notification about video users, which is showed
 // as a small handset in ChatList
 // and as a number of video users in badge near call button
-func (h *NotificationService) NotifyVideoUserCountChanged(chatId, usersCount int64, hasScreenShares bool, ctx context.Context) error {
+func (h *NotificationService) NotifyVideoUserCountChanged(chatId, usersCount int64, hasScreenShares *bool, ctx context.Context) error {
 	Logger.Debugf("Notifying video call chat_id=%v", chatId)
 
 	var chatNotifyDto = dto.VideoCallUserCountChangedDto{

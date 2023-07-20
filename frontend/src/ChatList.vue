@@ -340,7 +340,9 @@
                 this.items.forEach(item => {
                     if (item.id == dto.chatId) {
                         item.videoChatUsersCount = dto.usersCount;
-                        item.hasScreenShares = dto.hasScreenShares;
+                        if (dto.hasScreenShares != null) {
+                            item.hasScreenShares = dto.hasScreenShares;
+                        }
                         matched = true;
                     }
                 });

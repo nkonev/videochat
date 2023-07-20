@@ -142,7 +142,7 @@ type ChatEvent {
 type VideoUserCountChangedDto {
     usersCount: Int64!
     chatId: Int64!
-    hasScreenShares: Boolean!
+    hasScreenShares: Boolean
 }
 
 type VideoRecordingChangedDto {
