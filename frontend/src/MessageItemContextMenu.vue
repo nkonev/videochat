@@ -24,7 +24,7 @@
 <script>
 
 import {chat, messageIdHashPrefix} from "./routes"
-import {getUrlPrefix} from "@/utils";
+import {getUrlPrefix, hasLength} from "@/utils";
 import {GET_SEARCH_STRING, GET_USER, SET_SEARCH_STRING} from "@/store";
 import {mapGetters} from "vuex";
 
@@ -55,8 +55,18 @@ export default {
         getContextMenuItems() {
             const ret = [];
             if (this.menuableItem) {
-                ret.push({title: this.$vuetify.lang.t('$vuetify.copy_selected'), icon: 'mdi-content-copy', action: () => this.copySelected() });
-                ret.push({title: this.$vuetify.lang.t('$vuetify.search_by_selected'), icon: 'mdi-clipboard-search-outline', action: () => this.searchBySelected() });
+                if (hasLength(this.getSelection())) {
+                    ret.push({
+                        title: this.$vuetify.lang.t('$vuetify.copy_selected'),
+                        icon: 'mdi-content-copy',
+                        action: () => this.copySelected()
+                    });
+                    ret.push({
+                        title: this.$vuetify.lang.t('$vuetify.search_by_selected'),
+                        icon: 'mdi-clipboard-search-outline',
+                        action: () => this.searchBySelected()
+                    });
+                }
                 if (this.menuableItem.fileItemUuid) {
                     ret.push({title: this.$vuetify.lang.t('$vuetify.attached_message_files'), icon: 'mdi-file-download', action: () => this.$emit('onFilesClicked', this.menuableItem) });
                 }
@@ -90,12 +100,15 @@ export default {
             const link = getUrlPrefix() + chat + '/' + this.chatId + messageIdHashPrefix + item.id;
             navigator.clipboard.writeText(link);
         },
+        getSelection() {
+            return window.getSelection().toString();
+        },
         copySelected() {
-            const selectedText = window.getSelection().toString();
+            const selectedText = this.getSelection();
             navigator.clipboard.writeText(selectedText);
         },
         searchBySelected() {
-            const selectedText = window.getSelection().toString();
+            const selectedText = this.getSelection();
             this.searchString = selectedText;
         },
     },
