@@ -66,7 +66,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="infiniteLoading">
+  <div ref="infiniteLoading" style="min-height: 1px">
     <slot
       v-if="state == 'loading'"
       name="spinner"
