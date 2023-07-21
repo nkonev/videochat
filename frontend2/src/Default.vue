@@ -44,14 +44,15 @@
           </div>
         </div>
 
-        <vue-eternal-loading :load="load"></vue-eternal-loading>
+        <InfiniteLoading @infinite="load"></InfiniteLoading>
       </v-responsive>
     </v-container>
 
 </template>
 
 <script>
-    import { VueEternalLoading } from '@ts-pro/vue-eternal-loading';
+    import InfiniteLoading from "@/lib/infinite-scrolling/components/InfiniteLoading.vue";
+    // import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
 
     const PAGE_SIZE = 5;
 
@@ -70,18 +71,23 @@
             .then(res => res.data);
         },
 
-        load(action) {
+        load($state) {
           this.loadChats(this.page).then((chats) => {
             console.log("Get chats", chats);
             this.chats.push(...chats);
             this.page += 1;
-            const state = action.loaded(chats.length, PAGE_SIZE);
-            console.log("Got state", state);
+            if (chats.length < PAGE_SIZE) {
+              $state.complete();
+            } else {
+              $state.loaded();
+            }
+            // const state = action.loaded(chats.length, PAGE_SIZE);
+            // console.log("Got state", state);
           })
         }
       },
       components: {
-        VueEternalLoading
+        InfiniteLoading
       }
     }
 </script>
