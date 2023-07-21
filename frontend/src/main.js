@@ -24,7 +24,7 @@ import store, {
     UNSET_USER
 } from './store'
 import router from './router.js'
-import {hasLength, offerToJoinToPublicChatStatus} from "@/utils";
+import {hasLength, isMobileBrowser, offerToJoinToPublicChatStatus} from "@/utils";
 import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
 
 let vm;
@@ -232,7 +232,7 @@ vm = new Vue({
   },
   created(){
     Vue.prototype.isMobile = () => {
-      return this.$vuetify.breakpoint.mobile
+      return this.$vuetify.breakpoint.mobile && isMobileBrowser()
     };
     Vue.prototype.getRouteHash = (preserveHash) => {
       const tmp = this.$route.hash;

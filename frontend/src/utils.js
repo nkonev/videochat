@@ -95,8 +95,12 @@ export const setIcon = (newMessages) => {
     }
 }
 
+export const isMobileBrowser = () => {
+    return navigator.userAgent.indexOf('Mobile') !== -1
+}
+
 export const isMobileFireFox = () => {
-    return navigator.userAgent.indexOf('Firefox') !== -1 && navigator.userAgent.indexOf('Mobile') !== -1
+    return navigator.userAgent.indexOf('Firefox') !== -1 && isMobileBrowser()
 }
 
 export const noPagePlaceholder = -1;
