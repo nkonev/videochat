@@ -23,6 +23,7 @@ export const OPEN_CHOOSE_AVATAR = "openChooseAvatar";
 export const USER_PROFILE_CHANGED = "userProfileChanged";
 export const OPEN_PARTICIPANTS_DIALOG = "openInfo";
 export const VIDEO_CALL_USER_COUNT_CHANGED = "videoCallUserCountChanged";
+export const VIDEO_CALL_SCREEN_SHARE_CHANGED = "videoCallScreenShareChanged";
 export const VIDEO_RECORDING_CHANGED = "videoRecordingChanged";
 export const VIDEO_CALL_INVITED = "videoCallInvited";
 export const VIDEO_DIAL_STATUS_CHANGED = "videoDialStatusChanged";

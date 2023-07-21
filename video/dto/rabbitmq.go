@@ -7,6 +7,7 @@ type GlobalEvent struct {
 	VideoChatInvitation       *VideoCallInvitation          `json:"videoCallInvitation"`
 	VideoParticipantDialEvent *VideoDialChanges             `json:"videoParticipantDialEvent"`
 	VideoCallRecordingEvent   *VideoCallRecordingChangedDto `json:"videoCallRecordingEvent"`
+	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
 }
 
 type MissedCallNotification struct {

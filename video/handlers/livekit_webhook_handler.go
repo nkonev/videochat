@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/webhook"
+	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
@@ -15,14 +16,16 @@ type LivekitWebhookHandler struct {
 	notificationService *services.NotificationService
 	userService         *services.UserService
 	egressService       *services.EgressService
+	restClient          *client.RestClient
 }
 
-func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, userService *services.UserService, egressService *services.EgressService) *LivekitWebhookHandler {
+func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, userService *services.UserService, egressService *services.EgressService, restClient *client.RestClient) *LivekitWebhookHandler {
 	return &LivekitWebhookHandler{
 		config:              config,
 		notificationService: notificationService,
 		userService:         userService,
 		egressService:       egressService,
+		restClient:          restClient,
 	}
 }
 
@@ -54,7 +57,13 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 
 			usersCount := int64(event.Room.NumParticipants)
 
-			err = h.notificationService.NotifyVideoUserCountChanged(chatId, usersCount, nil, c.Request().Context())
+			participantIds, err := h.restClient.GetChatParticipantIds(chatId, c.Request().Context())
+			if err != nil {
+				Logger.Error(err, "Failed during getting chat participantIds")
+				return err
+			}
+
+			err = h.notificationService.NotifyVideoUserCountChanged(participantIds, chatId, usersCount, c.Request().Context())
 			if err != nil {
 				Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged event=%v, %v", event, err)
 				return nil

@@ -56,6 +56,7 @@ func main() {
 			producer.NewRabbitDialStatusPublisher,
 			producer.NewRabbitRecordingPublisher,
 			producer.NewRabbitNotificationsPublisher,
+			producer.NewRabbitScreenSharePublisher,
 			services.NewNotificationService,
 			services.NewUserService,
 			services.NewStateChangedEventService,

@@ -11,12 +11,14 @@ import (
 type NotificationService struct {
 	rabbitMqUserCountPublisher *producer.RabbitUserCountPublisher
 	rabbitMqRecordPublisher    *producer.RabbitRecordingPublisher
+	rabbitMqScreenSharePublisher *producer.RabbitScreenSharePublisher
 	restClient                 *client.RestClient
 }
 
-func NewNotificationService(producer *producer.RabbitUserCountPublisher, restClient *client.RestClient, rabbitMqRecordPublisher *producer.RabbitRecordingPublisher) *NotificationService {
+func NewNotificationService(producer *producer.RabbitUserCountPublisher, restClient *client.RestClient, rabbitMqRecordPublisher *producer.RabbitRecordingPublisher, rabbitMqScreenSharePublisher *producer.RabbitScreenSharePublisher) *NotificationService {
 	return &NotificationService{
 		rabbitMqUserCountPublisher: producer,
+		rabbitMqScreenSharePublisher: rabbitMqScreenSharePublisher,
 		rabbitMqRecordPublisher:    rabbitMqRecordPublisher,
 		restClient:                 restClient,
 	}
@@ -25,23 +27,28 @@ func NewNotificationService(producer *producer.RabbitUserCountPublisher, restCli
 // sends notification about video users, which is showed
 // as a small handset in ChatList
 // and as a number of video users in badge near call button
-func (h *NotificationService) NotifyVideoUserCountChanged(chatId, usersCount int64, hasScreenShares *bool, ctx context.Context) error {
+func (h *NotificationService) NotifyVideoUserCountChanged(participantIds []int64, chatId, usersCount int64, ctx context.Context) error {
 	Logger.Debugf("Notifying video call chat_id=%v", chatId)
 
 	var chatNotifyDto = dto.VideoCallUserCountChangedDto{
 		UsersCount: usersCount,
 		ChatId:     chatId,
-		HasScreenShares: hasScreenShares,
-	}
-
-	participantIds, err := h.restClient.GetChatParticipantIds(chatId, ctx)
-	if err != nil {
-		Logger.Error(err, "Failed during getting chat participantIds")
-		return err
 	}
 
 	return h.rabbitMqUserCountPublisher.Publish(participantIds, &chatNotifyDto, ctx)
 }
+
+func (h *NotificationService) NotifyVideoScreenShareChanged(participantIds []int64, chatId int64, hasScreenShares bool, ctx context.Context) error {
+	Logger.Debugf("Notifying video call chat_id=%v", chatId)
+
+	var chatNotifyDto = dto.VideoCallScreenShareChangedDto{
+		HasScreenShares: hasScreenShares,
+		ChatId:     chatId,
+	}
+
+	return h.rabbitMqScreenSharePublisher.Publish(participantIds, &chatNotifyDto, ctx)
+}
+
 
 func (h *NotificationService) NotifyRecordingChanged(chatId int64, recordInProgress bool, ctx context.Context) error {
 	Logger.Debugf("Notifying video call chat_id=%v", chatId)

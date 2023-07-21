@@ -77,7 +77,7 @@
         USER_PROFILE_CHANGED,
         CLOSE_SIMPLE_MODAL,
         REFRESH_ON_WEBSOCKET_RESTORED,
-        VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET,
+        VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET, VIDEO_CALL_SCREEN_SHARE_CHANGED,
     } from "./bus";
     import {chat, chat_name} from "./routes";
     import InfiniteLoading from './lib/vue-infinite-loading/src/components/InfiniteLoading.vue';
@@ -340,9 +340,18 @@
                 this.items.forEach(item => {
                     if (item.id == dto.chatId) {
                         item.videoChatUsersCount = dto.usersCount;
-                        if (dto.hasScreenShares != null) {
-                            item.hasScreenShares = dto.hasScreenShares;
-                        }
+                        matched = true;
+                    }
+                });
+                if (matched) {
+                    this.$forceUpdate();
+                }
+            },
+            onVideoScreenShareChanged(dto) {
+                let matched = false;
+                this.items.forEach(item => {
+                    if (item.id == dto.chatId) {
+                        item.hasScreenShares = dto.hasScreenShares;
                         matched = true;
                     }
                 });
@@ -432,6 +441,7 @@
             bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
+            bus.$on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
 
             this.initQueryAndWatcher();
         },
@@ -449,6 +459,7 @@
             bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
             bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
             bus.$off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
+            bus.$off(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
         },
         mounted() {
             this.markInstance = new Mark("div#chat-list-items .chat-name");

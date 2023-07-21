@@ -14,7 +14,7 @@ import bus, {
     VIDEO_CALL_USER_COUNT_CHANGED,
     VIDEO_DIAL_STATUS_CHANGED,
     PROFILE_SET,
-    VIDEO_RECORDING_CHANGED,
+    VIDEO_RECORDING_CHANGED, VIDEO_CALL_SCREEN_SHARE_CHANGED,
 } from './bus';
 import store, {
     NOTIFICATION_ADD, NOTIFICATION_DELETE,
@@ -153,6 +153,9 @@ vm = new Vue({
                     videoUserCountChangedEvent {
                       usersCount
                       chatId
+                    }
+                    videoCallScreenShareChangedDto {
+                      chatId
                       hasScreenShares
                     }
                     videoRecordingChangedEvent {
@@ -209,6 +212,9 @@ vm = new Vue({
       } else if (getGlobalEventsData(e).eventType === "video_user_count_changed") {
           const d = getGlobalEventsData(e).videoUserCountChangedEvent;
           bus.$emit(VIDEO_CALL_USER_COUNT_CHANGED, d);
+      } else if (getGlobalEventsData(e).eventType === "video_screenshare_changed") {
+          const d = getGlobalEventsData(e).videoCallScreenShareChangedDto;
+          bus.$emit(VIDEO_CALL_SCREEN_SHARE_CHANGED, d);
       } else if (getGlobalEventsData(e).eventType === "video_recording_changed") {
           const d = getGlobalEventsData(e).videoRecordingChangedEvent;
           bus.$emit(VIDEO_RECORDING_CHANGED, d);

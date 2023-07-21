@@ -102,17 +102,18 @@ type FileInfoDto struct {
 }
 
 type GlobalEvent struct {
-	EventType                     string                    `json:"eventType"`
-	ChatEvent                     *ChatDto                  `json:"chatEvent"`
-	ChatDeletedEvent              *ChatDeletedDto           `json:"chatDeletedEvent"`
-	UserEvent                     *User                     `json:"userEvent"`
-	VideoUserCountChangedEvent    *VideoUserCountChangedDto `json:"videoUserCountChangedEvent"`
-	VideoRecordingChangedEvent    *VideoRecordingChangedDto `json:"videoRecordingChangedEvent"`
-	VideoCallInvitation           *VideoCallInvitationDto   `json:"videoCallInvitation"`
-	VideoParticipantDialEvent     *VideoDialChanges         `json:"videoParticipantDialEvent"`
-	UnreadMessagesNotification    *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
-	AllUnreadMessagesNotification *AllUnreadMessages        `json:"allUnreadMessagesNotification"`
-	NotificationEvent             *NotificationDto          `json:"notificationEvent"`
+	EventType                      string                          `json:"eventType"`
+	ChatEvent                      *ChatDto                        `json:"chatEvent"`
+	ChatDeletedEvent               *ChatDeletedDto                 `json:"chatDeletedEvent"`
+	UserEvent                      *User                           `json:"userEvent"`
+	VideoUserCountChangedEvent     *VideoUserCountChangedDto       `json:"videoUserCountChangedEvent"`
+	VideoRecordingChangedEvent     *VideoRecordingChangedDto       `json:"videoRecordingChangedEvent"`
+	VideoCallInvitation            *VideoCallInvitationDto         `json:"videoCallInvitation"`
+	VideoParticipantDialEvent      *VideoDialChanges               `json:"videoParticipantDialEvent"`
+	UnreadMessagesNotification     *ChatUnreadMessageChanged       `json:"unreadMessagesNotification"`
+	AllUnreadMessagesNotification  *AllUnreadMessages              `json:"allUnreadMessagesNotification"`
+	NotificationEvent              *NotificationDto                `json:"notificationEvent"`
+	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
 }
 
 type MessageBroadcastNotification struct {
@@ -181,6 +182,11 @@ type VideoCallInvitationDto struct {
 	ChatName string `json:"chatName"`
 }
 
+type VideoCallScreenShareChangedDto struct {
+	ChatID          int64 `json:"chatId"`
+	HasScreenShares bool  `json:"hasScreenShares"`
+}
+
 type VideoDialChanged struct {
 	UserID int64 `json:"userId"`
 	Status bool  `json:"status"`
@@ -197,9 +203,8 @@ type VideoRecordingChangedDto struct {
 }
 
 type VideoUserCountChangedDto struct {
-	UsersCount      int64 `json:"usersCount"`
-	ChatID          int64 `json:"chatId"`
-	HasScreenShares *bool `json:"hasScreenShares"`
+	UsersCount int64 `json:"usersCount"`
+	ChatID     int64 `json:"chatId"`
 }
 
 type WrappedFileInfoDto struct {

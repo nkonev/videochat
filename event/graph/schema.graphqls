@@ -142,7 +142,11 @@ type ChatEvent {
 type VideoUserCountChangedDto {
     usersCount: Int64!
     chatId: Int64!
-    hasScreenShares: Boolean
+}
+
+type VideoCallScreenShareChangedDto {
+    chatId: Int64!
+    hasScreenShares: Boolean!
 }
 
 type VideoRecordingChangedDto {
@@ -199,6 +203,7 @@ type GlobalEvent {
     unreadMessagesNotification: ChatUnreadMessageChanged
     allUnreadMessagesNotification: AllUnreadMessages
     notificationEvent: NotificationDto
+    videoCallScreenShareChangedDto: VideoCallScreenShareChangedDto
 }
 
 type Query {

@@ -62,6 +62,7 @@ type GlobalEvent struct {
 	AllUnreadMessagesNotification *AllUnreadMessages            `json:"allUnreadMessagesNotification"`
 	VideoCallRecordingEvent       *VideoCallRecordingChangedDto `json:"videoCallRecordingEvent"`
 	UserNotificationEvent         *NotificationDto              `json:"userNotificationEvent"`
+	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
 }
 
 func (GlobalEvent) Name() eventbus.EventName {
