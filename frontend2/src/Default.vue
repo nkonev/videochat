@@ -1,7 +1,7 @@
 <template>
 
     <v-container>
-        <div>
+        <div class="my-scroller">
           <div v-for="chat in chats" :key="chats.id" class="card mb-3">
             <div class="row g-0">
               <div class="col">
@@ -65,9 +65,8 @@
 </script>
 
 <style lang="css">
-    .vue-eternal-loading>div {
-      margin: 10px;
-      text-align: center;
+    .my-scroller {
+
     }
 
 </style>
