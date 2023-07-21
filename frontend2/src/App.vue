@@ -5,6 +5,20 @@
         <v-icon icon="mdi-circle-slice-6" />
         My app bar {{ appStore.count }}
       </v-app-bar-title>
+      <v-btn
+        color="primary"
+        min-width="228"
+        size="x-large"
+        variant="flat"
+        :to="{ name: 'list'}"
+      >
+        <v-icon
+          icon="mdi-speedometer"
+          size="large"
+          start
+        />
+        To list
+      </v-btn>
     </v-app-bar>
 
     <v-main>
