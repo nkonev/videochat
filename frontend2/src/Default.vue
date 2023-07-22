@@ -1,6 +1,6 @@
 <template>
 
-    <v-container>
+    <v-container style="height: calc(100vh - 48px); background: darkgrey">
         <div class="my-scroller">
           <div v-for="chat in chats" :key="chats.id" class="card mb-3">
             <div class="row g-0">
@@ -60,12 +60,20 @@
       },
       components: {
         InfiniteLoading
+      },
+      mounted() {
+        // for(let i=0; i<1000; ++i) {
+        //   this.chats.push({id: 1, avatar: "", name: "adsa" + i});
+        // }
+        console.log("this.chats", this.chats)
       }
     }
 </script>
 
 <style lang="css">
     .my-scroller {
+      height: 100%;
+      overflow-y: scroll !important;
       display: flex;
       flex-direction: column-reverse;
     }
