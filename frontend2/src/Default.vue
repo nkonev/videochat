@@ -1,6 +1,6 @@
 <template>
 
-    <v-container style="height: calc(100vh - 48px); background: darkgrey">
+    <v-container style="height: calc(100vh - 64px); background: darkgrey">
         <div class="my-scroller">
           <div v-for="chat in chats" :key="chats.id" class="card mb-3">
             <div class="row g-0">
