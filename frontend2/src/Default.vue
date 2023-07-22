@@ -15,7 +15,7 @@
             </div>
           </div>
 
-          <InfiniteLoading @infinite="load"></InfiniteLoading>
+          <InfiniteLoading @infinite="load" top></InfiniteLoading>
         </div>
 
     </v-container>
@@ -66,7 +66,8 @@
 
 <style lang="css">
     .my-scroller {
-
+      display: flex;
+      flex-direction: column-reverse;
     }
 
 </style>
