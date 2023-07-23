@@ -54,13 +54,15 @@
           scrollerProbeCurrent: 0,
           scrollerProbePrevious: 0,
           scrollerProbePreviousPrevious: 0,
+
+          preservedScroll: 0
         }
       },
 
       methods: {
         load() {
           const startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
-          fetch( `/api/chat/1/message?startingFromItemId=${startingFromItemId}&size=${PAGE_SIZE}&reverse=${this.isTopDirection()}`)
+          return fetch( `/api/chat/1/message?startingFromItemId=${startingFromItemId}&size=${PAGE_SIZE}&reverse=${this.isTopDirection()}`)
             .then(res => res.json())
             .then((items) => {
             console.log("Get items", items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
@@ -117,6 +119,21 @@
           return this.aDirection === directionTop
         },
 
+        saveScroll() {
+          this.preservedScroll = this.scrollerDiv.scrollHeight;
+          console.log("Saved scroll", this.preservedScroll);
+        },
+        restoreScroll() {
+          this.$nextTick(()=>{
+            setTimeout(()=>{
+              console.log("Before scroll restoring", this.scrollerDiv.scrollHeight, this.preservedScroll, this.scrollerDiv.scrollTop, this.scrollerDiv.clientHeight);
+              const restored = -(this.scrollerDiv.scrollHeight - this.preservedScroll);
+              console.log("Restored scrollTop to difference", restored);
+              //this.scrollerDiv.scrollTop = -400;
+              this.scrollerDiv.scrollTop = restored;
+            }, 100);
+          })
+        },
       },
 
       created() {
@@ -155,7 +172,10 @@
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
             console.log("going to load bottom");
             if (!this.loadedBottom && !this.isTopDirection()) {
-              this.load();
+              this.saveScroll();
+              this.load().then(()=>{
+                this.restoreScroll();
+              })
             }
           }
         };
