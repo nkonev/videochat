@@ -3,14 +3,14 @@
     <v-container style="height: calc(100vh - 64px); background: darkgrey">
         <div class="my-scroller">
           <div class="first-element" style="min-height: 1px; background: #9cffa1"></div>
-          <div v-for="chat in chats" :key="chats.id" class="card mb-3">
+          <div v-for="item in items" :key="items.id" class="card mb-3">
             <div class="row g-0">
               <div class="col">
-                <img :src="chat.avatar" class="rounded-start img-thumbnail m-1" alt="...">
+                <img :src="item.owner.avatar" style="max-width: 64px; max-height: 64px">
               </div>
               <div class="col">
                 <div class="card-body">
-                  <h5 class="card-title">{{ chat.name }}</h5>
+                  <h5 class="card-title">{{ item.text }}</h5>
                 </div>
               </div>
             </div>
@@ -37,8 +37,8 @@
     export default {
       data() {
         return {
-          page: 0,
-          chats: [],
+          startingFromItemId: 287,
+          items: [],
 
 
           loadedTop: false,
@@ -47,23 +47,20 @@
       },
 
       methods: {
-        loadChats(page) {
-          return fetch( `/api/chat?page=${page}&size=${PAGE_SIZE}`)
-            .then(res => res.json())
-            .then(res => res.data);
+        loadChats(startingFromItemId) {
+          return fetch( `/api/chat/1/message?startingFromItemId=${startingFromItemId}&size=${PAGE_SIZE}&reverse=true`)
+            .then(res => res.json());
         },
 
         load() {
-          this.loadChats(this.page).then((chats) => {
-            console.log("Get chats", chats, "page", this.page);
-            this.chats.push(...chats);
-            if (chats.length < PAGE_SIZE) {
+          this.loadChats(this.startingFromItemId).then((items) => {
+            console.log("Get items", items, "page", this.startingFromItemId);
+            this.items.push(...items);
+            if (items.length < PAGE_SIZE) {
               this.loadedTop = true;
             } else {
-              this.page += 1;
+              this.startingFromItemId -= PAGE_SIZE;
             }
-            // const state = action.loaded(chats.length, PAGE_SIZE);
-            // console.log("Got state", state);
           })
         }
       },
@@ -99,8 +96,6 @@
         const observer = new IntersectionObserver(observerCallback, options);
         observer.observe(document.querySelector(".first-element"));
         observer.observe(document.querySelector(".last-element"));
-
-        console.log("this.chats", this.chats)
       }
     }
 </script>
