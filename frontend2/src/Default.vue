@@ -38,7 +38,8 @@
     export default {
       data() {
         return {
-          startingFromItemId: 287,
+          startingFromItemIdTop: 287,
+          startingFromItemIdBottom: 287,
           items: [],
 
 
@@ -58,25 +59,44 @@
 
       methods: {
         loadChats(startingFromItemId) {
-          return fetch( `/api/chat/1/message?startingFromItemId=${startingFromItemId}&size=${PAGE_SIZE}&reverse=true`)
+          return fetch( `/api/chat/1/message?startingFromItemId=${startingFromItemId}&size=${PAGE_SIZE}&reverse=${this.isTopDirection()}`)
             .then(res => res.json());
         },
 
         load() {
-          this.loadChats(this.startingFromItemId).then((items) => {
-            console.log("Get items", items, "page", this.startingFromItemId);
-            this.items.push(...items);
-            if (items.length < PAGE_SIZE) {
-              this.loadedTop = true;
+          const startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
+          this.loadChats(startingFromItemId).then((items) => {
+            console.log("Get items", items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
+
+            if (this.isTopDirection()) {
+              this.items = this.items.concat(items);
             } else {
-              this.startingFromItemId -= PAGE_SIZE;
+              this.items = items.reverse().concat(this.items);
+            }
+            this.reduceListIfNeed();
+
+            if (items.length < PAGE_SIZE) {
+              if (this.isTopDirection()) {
+                this.loadedTop = true;
+              } else {
+                this.loadedBottom = true;
+              }
+            } else {
+              if (this.isTopDirection()) {
+                // TODO also use them in reduceListIfNeed
+                this.startingFromItemIdTop -= PAGE_SIZE;
+              } else {
+                this.startingFromItemIdBottom += PAGE_SIZE;
+              }
             }
           })
         },
 
 
 
-
+        reduceListIfNeed() {
+          // TODO
+        },
         onScroll(e) {
           this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
           this.scrollerProbePrevious = this.scrollerProbeCurrent;
@@ -131,14 +151,14 @@
 
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
             console.log("going to load top");
-            if (!this.loadedTop) {
+            if (!this.loadedTop && this.isTopDirection()) {
               this.load();
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
             console.log("going to load bottom");
-            if (!this.loadedBottom) {
-
+            if (!this.loadedBottom && !this.isTopDirection()) {
+              this.load();
             }
           }
         };
