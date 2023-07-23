@@ -44,6 +44,7 @@
           items: [],
 
 
+          isFirstLoad: true,
 
           scrollerDiv: null,
 
@@ -61,7 +62,7 @@
       },
 
       methods: {
-        load() {
+        async load() {
           const startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
           return fetch( `/api/chat/1/message?startingFromItemId=${startingFromItemId}&size=${PAGE_SIZE}&reverse=${this.isTopDirection()}`)
             .then(res => res.json())
@@ -89,6 +90,8 @@
                 this.startingFromItemIdBottom += PAGE_SIZE;
               }
             }
+          }).then(()=>{
+            return this.$nextTick()
           })
         },
 
@@ -124,11 +127,20 @@
           this.preservedScroll = this.scrollerDiv.scrollHeight;
           console.log("Saved scroll", this.preservedScroll);
         },
-        restoreScroll() {
+        getScrollValueToRestore() {
           console.log("Before scroll restoring", this.scrollerDiv.scrollHeight, this.preservedScroll, this.scrollerDiv.scrollTop, this.scrollerDiv.clientHeight);
           const restored = -(this.scrollerDiv.scrollHeight - this.preservedScroll);
+          return restored;
+        },
+        restoreScroll() {
+          const restored = this.getScrollValueToRestore();
           console.log("Restored scrollTop to difference", restored);
           this.scrollerDiv.scrollTop = restored;
+        },
+        scrollDown() {
+          this.$nextTick(() => {
+            this.scrollerDiv.scrollTop = 0;
+          });
         },
       },
 
@@ -137,6 +149,7 @@
       },
 
       mounted() {
+        history.scrollRestoration = 'manual';
 
         this.scrollerDiv = document.querySelector(".my-scroller");
 
@@ -146,7 +159,7 @@
           rootMargin: "0px",
           threshold: 0.0,
         };
-        const observerCallback0 = (entries, observer) => {
+        const observerCallback0 = async (entries, observer) => {
           const mappedEntries = entries.map((entry) => {
             return {
               entry,
@@ -162,7 +175,11 @@
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
             console.log("going to load top");
             if (!this.loadedTop && this.isTopDirection()) {
-              this.load();
+              await this.load();
+              if (this.isFirstLoad) {
+                this.scrollDown();
+                this.isFirstLoad = false;
+              }
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
@@ -170,19 +187,15 @@
             if (!this.loadedBottom && !this.isTopDirection()) {
               // this.scrollerDiv.style.overflowY = "hidden";
               this.saveScroll();
-              this.load().then(()=>{
-                this.$nextTick(()=>{
-                  setTimeout(()=>{
-                    this.restoreScroll();
-                  }, 100)
-                })
-                // setTimeout(()=>{
-                //   this.restoreScroll();
-                //   // this.scrollerDiv.style.overflowY = "scroll";
-                // }, 10)
-              })
+              await this.load();
+              setTimeout(()=>{
+                this.restoreScroll();
+              }, 1);
+
+              // this.scrollerDiv.style.overflowY = "scroll";
             }
           }
+          return Promise.resolve();
         };
 
         const observerCallback = observerCallback0; // = debounce(observerCallback0, 400, {leading:false, trailing:true});
