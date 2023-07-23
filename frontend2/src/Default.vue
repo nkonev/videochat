@@ -27,12 +27,12 @@
     // import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
 
 
-    const css_str= (el) => {
+    const cssStr= (el) => {
       return el.tagName.toLowerCase() + (el.id ? '#' + el.id : "") + '.' + (Array.from(el.classList)).join('.')
     };
 
 
-    const PAGE_SIZE = 5;
+    const PAGE_SIZE = 10;
 
     export default {
       data() {
@@ -51,7 +51,7 @@
 
         load($state) {
           this.loadChats(this.page).then((chats) => {
-            console.log("Get chats", chats);
+            console.log("Get chats", chats, "page", this.page);
             this.chats.push(...chats);
             this.page += 1;
             if (chats.length < PAGE_SIZE) {
@@ -69,13 +69,22 @@
         //   this.chats.push({id: 1, avatar: "", name: "adsa" + i});
         // }
 
+        const stateCallback = {
+          complete() {
+            console.log("Complete");
+          },
+          loaded() {
+            console.log("Loaded");
+          }
+        };
+
         // https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
         let options = {
           root: document.querySelector(".my-scroller"),
           rootMargin: "0px",
-          threshold: 1.0,
+          threshold: 0.0,
         };
-        let callback = (entries, observer) => {
+        const observerCallback = (entries, observer) => {
           entries.forEach((entry) => {
             // Each entry describes an intersection change for one observed
             // target element:
@@ -86,10 +95,14 @@
             //   entry.rootBounds
             //   entry.target
             //   entry.time
-            console.log("Entry: intersecting=", entry.isIntersecting, css_str(entry.target));
+            const elName = cssStr(entry.target);
+            console.log("Entry: intersecting=", entry.isIntersecting, elName);
+            if (entry.isIntersecting && elName.includes(".last-element")) {
+              this.load(stateCallback);
+            }
           });
         };
-        let observer = new IntersectionObserver(callback, options);
+        let observer = new IntersectionObserver(observerCallback, options);
 
         let target1 = document.querySelector(".first-element");
         observer.observe(target1);
@@ -97,14 +110,6 @@
         let target2 = document.querySelector(".last-element");
         observer.observe(target2);
 
-        this.load({
-          complete() {
-            console.log("Complete");
-          },
-          loaded() {
-            console.log("Loaded");
-          }
-        });
         console.log("this.chats", this.chats)
       }
     }
