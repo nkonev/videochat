@@ -124,15 +124,12 @@
           console.log("Saved scroll", this.preservedScroll);
         },
         restoreScroll() {
-          this.$nextTick(()=>{
-            setTimeout(()=>{
-              console.log("Before scroll restoring", this.scrollerDiv.scrollHeight, this.preservedScroll, this.scrollerDiv.scrollTop, this.scrollerDiv.clientHeight);
-              const restored = -(this.scrollerDiv.scrollHeight - this.preservedScroll);
-              console.log("Restored scrollTop to difference", restored);
-              //this.scrollerDiv.scrollTop = -400;
-              this.scrollerDiv.scrollTop = restored;
-            }, 100);
-          })
+          setTimeout(()=>{
+            console.log("Before scroll restoring", this.scrollerDiv.scrollHeight, this.preservedScroll, this.scrollerDiv.scrollTop, this.scrollerDiv.clientHeight);
+            const restored = -(this.scrollerDiv.scrollHeight - this.preservedScroll);
+            console.log("Restored scrollTop to difference", restored);
+            this.scrollerDiv.scrollTop = restored;
+          }, 100);
         },
       },
 
