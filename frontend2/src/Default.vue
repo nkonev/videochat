@@ -149,7 +149,6 @@
       },
 
       mounted() {
-        history.scrollRestoration = 'manual';
 
         this.scrollerDiv = document.querySelector(".my-scroller");
 
