@@ -1,7 +1,7 @@
 <template>
 
     <v-container style="height: calc(100vh - 64px); background: darkgrey">
-        <div class="my-scroller">
+        <div class="my-scroller" @scroll.passive="onScroll">
           <div class="first-element" style="min-height: 1px; background: #9cffa1"></div>
           <div v-for="item in items" :key="items.id" class="card mb-3">
             <div class="row g-0">
@@ -24,15 +24,16 @@
 </template>
 
 <script>
-    // import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
+    import throttle from "lodash/throttle";
 
-
-    const cssStr= (el) => {
+    const cssStr = (el) => {
       return el.tagName.toLowerCase() + (el.id ? '#' + el.id : "") + '.' + (Array.from(el.classList)).join('.')
     };
 
+    const directionTop = 'top';
+    const directionBottom = 'bottom';
 
-    const PAGE_SIZE = 10;
+    const PAGE_SIZE = 40;
 
     export default {
       data() {
@@ -41,8 +42,17 @@
           items: [],
 
 
+
+          scrollerDiv: null,
+
           loadedTop: false,
           loadedBottom: false,
+
+          aDirection: directionTop,
+
+          scrollerProbeCurrent: 0,
+          scrollerProbePrevious: 0,
+          scrollerProbePreviousPrevious: 0,
         }
       },
 
@@ -62,12 +72,47 @@
               this.startingFromItemId -= PAGE_SIZE;
             }
           })
-        }
+        },
+
+
+
+
+        onScroll(e) {
+          this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
+          this.scrollerProbePrevious = this.scrollerProbeCurrent;
+          this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
+          console.debug("onScroll prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
+
+          this.trySwitchDirection();
+        },
+        trySwitchDirection() {
+          if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
+            this.aDirection = directionBottom;
+            console.debug("Infinity scrolling direction has been changed to bottom");
+          } else if (this.scrollerProbeCurrent != 0 && this.scrollerProbePreviousPrevious > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
+            this.aDirection = directionTop;
+            console.debug("Infinity scrolling direction has been changed to top");
+          } else {
+            console.debug("Infinity scrolling direction has been remained untouched");
+          }
+        },
+        isTopDirection() {
+          return this.aDirection === directionTop
+        },
+
       },
+
+      created() {
+        this.onScroll = throttle(this.onScroll, 400, {leading:true, trailing:true});
+      },
+
       mounted() {
+
+        this.scrollerDiv = document.querySelector(".my-scroller");
+
         // https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-        let options = {
-          root: document.querySelector(".my-scroller"),
+        const options = {
+          root: this.scrollerDiv,
           rootMargin: "0px",
           threshold: 0.0,
         };
@@ -84,12 +129,17 @@
           const firstElementEntries = mappedEntries.filter(en => en.elementName.includes(".first-element"));
           const firstElementEntry = firstElementEntries.length ? firstElementEntries[firstElementEntries.length-1] : null;
 
-          if (lastElementEntry && lastElementEntry.entry.isIntersecting && !this.loadedTop) {
-            console.log("load top");
-            this.load();
+          if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
+            console.log("going to load top");
+            if (!this.loadedTop) {
+              this.load();
+            }
           }
-          if (firstElementEntry && firstElementEntry.entry.isIntersecting && !this.loadedBottom) {
-            console.log("load bottom");
+          if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
+            console.log("going to load bottom");
+            if (!this.loadedBottom) {
+
+            }
           }
         };
 
