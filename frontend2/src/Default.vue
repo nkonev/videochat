@@ -39,7 +39,7 @@
       data() {
         return {
           startingFromItemIdTop: 287,
-          startingFromItemIdBottom: 287,
+          startingFromItemIdBottom: 287 + PAGE_SIZE,
           items: [],
 
 
@@ -113,7 +113,7 @@
             this.aDirection = directionTop;
             console.debug("Infinity scrolling direction has been changed to top");
           } else {
-            console.debug("Infinity scrolling direction has been remained untouched");
+            console.debug("Infinity scrolling direction has been remained untouched", this.aDirection);
           }
         },
         isTopDirection() {
