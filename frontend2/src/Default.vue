@@ -39,6 +39,9 @@
         return {
           page: 0,
           chats: [],
+
+
+          loadedTop: false,
         }
       },
 
@@ -49,15 +52,14 @@
             .then(res => res.data);
         },
 
-        load($state) {
+        load() {
           this.loadChats(this.page).then((chats) => {
             console.log("Get chats", chats, "page", this.page);
             this.chats.push(...chats);
-            this.page += 1;
             if (chats.length < PAGE_SIZE) {
-              $state.complete();
+              this.loadedTop = true;
             } else {
-              $state.loaded();
+              this.page += 1;
             }
             // const state = action.loaded(chats.length, PAGE_SIZE);
             // console.log("Got state", state);
@@ -65,19 +67,6 @@
         }
       },
       mounted() {
-        // for(let i=0; i<1000; ++i) {
-        //   this.chats.push({id: 1, avatar: "", name: "adsa" + i});
-        // }
-
-        const stateCallback = {
-          complete() {
-            console.log("Complete");
-          },
-          loaded() {
-            console.log("Loaded");
-          }
-        };
-
         // https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
         let options = {
           root: document.querySelector(".my-scroller"),
@@ -86,19 +75,10 @@
         };
         const observerCallback = (entries, observer) => {
           entries.forEach((entry) => {
-            // Each entry describes an intersection change for one observed
-            // target element:
-            //   entry.boundingClientRect
-            //   entry.intersectionRatio
-            //   entry.intersectionRect
-            //   entry.isIntersecting
-            //   entry.rootBounds
-            //   entry.target
-            //   entry.time
             const elName = cssStr(entry.target);
             console.log("Entry: intersecting=", entry.isIntersecting, elName);
-            if (entry.isIntersecting && elName.includes(".last-element")) {
-              this.load(stateCallback);
+            if (entry.isIntersecting && elName.includes(".last-element") && !this.loadedTop) {
+              this.load();
             }
           });
         };
