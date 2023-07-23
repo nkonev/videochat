@@ -42,6 +42,7 @@
 
 
           loadedTop: false,
+          loadedBottom: false,
         }
       },
 
@@ -74,14 +75,27 @@
           threshold: 0.0,
         };
         const observerCallback = (entries, observer) => {
-          entries.forEach((entry) => {
-            const elName = cssStr(entry.target);
-            console.log("Entry: intersecting=", entry.isIntersecting, elName);
-            if (entry.isIntersecting && elName.includes(".last-element") && !this.loadedTop) {
-              this.load();
+          const mappedEntries = entries.map((entry) => {
+            return {
+              entry,
+              elementName: cssStr(entry.target)
             }
           });
+          const lastElementEntries = mappedEntries.filter(en => en.elementName.includes(".last-element"));
+          const lastElementEntry = lastElementEntries.length ? lastElementEntries[lastElementEntries.length-1] : null;
+
+          const firstElementEntries = mappedEntries.filter(en => en.elementName.includes(".first-element"));
+          const firstElementEntry = firstElementEntries.length ? firstElementEntries[firstElementEntries.length-1] : null;
+
+          if (lastElementEntry && lastElementEntry.entry.isIntersecting && !this.loadedTop) {
+            console.log("load top");
+            this.load();
+          }
+          if (firstElementEntry && firstElementEntry.entry.isIntersecting && !this.loadedBottom) {
+            console.log("load bottom");
+          }
         };
+
         const observer = new IntersectionObserver(observerCallback, options);
         observer.observe(document.querySelector(".first-element"));
         observer.observe(document.querySelector(".last-element"));
