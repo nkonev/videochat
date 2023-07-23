@@ -82,13 +82,9 @@
             }
           });
         };
-        let observer = new IntersectionObserver(observerCallback, options);
-
-        let target1 = document.querySelector(".first-element");
-        observer.observe(target1);
-
-        let target2 = document.querySelector(".last-element");
-        observer.observe(target2);
+        const observer = new IntersectionObserver(observerCallback, options);
+        observer.observe(document.querySelector(".first-element"));
+        observer.observe(document.querySelector(".last-element"));
 
         console.log("this.chats", this.chats)
       }
