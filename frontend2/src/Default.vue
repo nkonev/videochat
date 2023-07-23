@@ -85,9 +85,9 @@
             } else {
               if (this.isTopDirection()) {
                 // TODO also use them in reduceListIfNeed
-                this.startingFromItemIdTop -= PAGE_SIZE;
+                this.startingFromItemIdTop = Math.min(...this.items.map(it => it.id));
               } else {
-                this.startingFromItemIdBottom += PAGE_SIZE;
+                this.startingFromItemIdBottom = Math.max(...this.items.map(it => it.id));
               }
             }
           }).then(()=>{
