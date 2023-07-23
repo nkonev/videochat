@@ -39,7 +39,7 @@
       data() {
         return {
           startingFromItemIdTop: 287,
-          startingFromItemIdBottom: 287 + PAGE_SIZE,
+          startingFromItemIdBottom: 287 - 1,
           items: [],
 
 
@@ -58,14 +58,11 @@
       },
 
       methods: {
-        loadChats(startingFromItemId) {
-          return fetch( `/api/chat/1/message?startingFromItemId=${startingFromItemId}&size=${PAGE_SIZE}&reverse=${this.isTopDirection()}`)
-            .then(res => res.json());
-        },
-
         load() {
           const startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
-          this.loadChats(startingFromItemId).then((items) => {
+          fetch( `/api/chat/1/message?startingFromItemId=${startingFromItemId}&size=${PAGE_SIZE}&reverse=${this.isTopDirection()}`)
+            .then(res => res.json())
+            .then((items) => {
             console.log("Get items", items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
             if (this.isTopDirection()) {
