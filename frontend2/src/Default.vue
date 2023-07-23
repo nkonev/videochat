@@ -195,10 +195,9 @@
               // this.scrollerDiv.style.overflowY = "scroll";
             }
           }
-          return Promise.resolve();
         };
 
-        const observerCallback = observerCallback0; // = debounce(observerCallback0, 400, {leading:false, trailing:true});
+        const observerCallback = debounce(observerCallback0, 700, {leading:false, trailing:true});
 
         const observer = new IntersectionObserver(observerCallback, options);
         observer.observe(document.querySelector(".first-element"));
