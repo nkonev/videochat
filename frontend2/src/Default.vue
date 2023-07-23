@@ -25,6 +25,7 @@
 
 <script>
     import throttle from "lodash/throttle";
+    import debounce from "lodash/debounce";
 
     const cssStr = (el) => {
       return el.tagName.toLowerCase() + (el.id ? '#' + el.id : "") + '.' + (Array.from(el.classList)).join('.')
@@ -124,12 +125,10 @@
           console.log("Saved scroll", this.preservedScroll);
         },
         restoreScroll() {
-          setTimeout(()=>{
-            console.log("Before scroll restoring", this.scrollerDiv.scrollHeight, this.preservedScroll, this.scrollerDiv.scrollTop, this.scrollerDiv.clientHeight);
-            const restored = -(this.scrollerDiv.scrollHeight - this.preservedScroll);
-            console.log("Restored scrollTop to difference", restored);
-            this.scrollerDiv.scrollTop = restored;
-          }, 100);
+          console.log("Before scroll restoring", this.scrollerDiv.scrollHeight, this.preservedScroll, this.scrollerDiv.scrollTop, this.scrollerDiv.clientHeight);
+          const restored = -(this.scrollerDiv.scrollHeight - this.preservedScroll);
+          console.log("Restored scrollTop to difference", restored);
+          this.scrollerDiv.scrollTop = restored;
         },
       },
 
@@ -147,7 +146,7 @@
           rootMargin: "0px",
           threshold: 0.0,
         };
-        const observerCallback = (entries, observer) => {
+        const observerCallback0 = (entries, observer) => {
           const mappedEntries = entries.map((entry) => {
             return {
               entry,
@@ -169,13 +168,24 @@
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
             console.log("going to load bottom");
             if (!this.loadedBottom && !this.isTopDirection()) {
+              // this.scrollerDiv.style.overflowY = "hidden";
               this.saveScroll();
               this.load().then(()=>{
-                this.restoreScroll();
+                this.$nextTick(()=>{
+                  setTimeout(()=>{
+                    this.restoreScroll();
+                  }, 100)
+                })
+                // setTimeout(()=>{
+                //   this.restoreScroll();
+                //   // this.scrollerDiv.style.overflowY = "scroll";
+                // }, 10)
               })
             }
           }
         };
+
+        const observerCallback = observerCallback0; // = debounce(observerCallback0, 400, {leading:false, trailing:true});
 
         const observer = new IntersectionObserver(observerCallback, options);
         observer.observe(document.querySelector(".first-element"));
