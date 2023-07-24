@@ -3,7 +3,7 @@
     <v-container style="height: calc(100vh - 64px); background: darkgrey">
         <div class="my-scroller" @scroll.passive="onScroll">
           <div class="first-element" style="min-height: 1px; background: #9cffa1"></div>
-          <div v-for="item in items" :key="items.id" class="card mb-3">
+          <div v-for="item in items" :key="item.id" class="card mb-3" :id="'item-'+item.id">
             <div class="row g-0">
               <div class="col">
                 <img :src="item.owner.avatar" style="max-width: 64px; max-height: 64px">
@@ -124,18 +124,13 @@
         },
 
         saveScroll() {
-          this.preservedScroll = this.scrollerDiv.scrollHeight;
+          this.preservedScroll = Math.max(...this.items.map(it => it.id));
           console.log("Saved scroll", this.preservedScroll);
         },
-        getScrollValueToRestore() {
-          console.log("Before scroll restoring", this.scrollerDiv.scrollHeight, this.preservedScroll, this.scrollerDiv.scrollTop, this.scrollerDiv.clientHeight);
-          const restored = -(this.scrollerDiv.scrollHeight - this.preservedScroll);
-          return restored;
-        },
         restoreScroll() {
-          const restored = this.getScrollValueToRestore();
+          const restored = this.preservedScroll;
           console.log("Restored scrollTop to difference", restored);
-          this.scrollerDiv.scrollTop = restored;
+          document.querySelector("#item-"+restored).scrollIntoView({behavior: 'instant', block: "center"});
         },
         scrollDown() {
           this.$nextTick(() => {
@@ -187,9 +182,7 @@
               // this.scrollerDiv.style.overflowY = "hidden";
               this.saveScroll();
               await this.load();
-              setTimeout(()=>{
-                this.restoreScroll();
-              }, 1);
+              this.restoreScroll();
 
               // this.scrollerDiv.style.overflowY = "scroll";
             }
