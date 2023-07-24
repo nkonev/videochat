@@ -165,10 +165,10 @@
               elementName: cssStr(entry.target)
             }
           });
-          const lastElementEntries = mappedEntries.filter(en => en.elementName.includes(".last-element"));
+          const lastElementEntries = mappedEntries.filter(en => en.entry.intersectionRatio > 0 && en.elementName.includes(".last-element"));
           const lastElementEntry = lastElementEntries.length ? lastElementEntries[lastElementEntries.length-1] : null;
 
-          const firstElementEntries = mappedEntries.filter(en => en.elementName.includes(".first-element"));
+          const firstElementEntries = mappedEntries.filter(en => en.entry.intersectionRatio > 0 && en.elementName.includes(".first-element"));
           const firstElementEntry = firstElementEntries.length ? firstElementEntries[firstElementEntries.length-1] : null;
 
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
