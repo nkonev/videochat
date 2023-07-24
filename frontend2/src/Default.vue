@@ -181,12 +181,9 @@
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
             console.log("going to load bottom");
             if (!this.loadedBottom && !this.isTopDirection()) {
-              // this.scrollerDiv.style.overflowY = "hidden";
               this.saveScroll();
               await this.load();
               this.restoreScroll();
-
-              // this.scrollerDiv.style.overflowY = "scroll";
             }
           }
         };
