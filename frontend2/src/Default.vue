@@ -132,7 +132,7 @@
         restoreScroll() {
           const restored = this.preservedScroll;
           console.log("Restored scrollTop to element id", restored);
-          document.querySelector("#"+this.getItemId(restored)).scrollIntoView({behavior: 'instant', block: "center"});
+          document.querySelector("#"+this.getItemId(restored)).scrollIntoView({behavior: 'instant', block: "end"});
         },
         scrollDown() {
           this.$nextTick(() => {
