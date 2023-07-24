@@ -196,7 +196,7 @@
           }
         };
 
-        const observerCallback = debounce(observerCallback0, 700, {leading:false, trailing:true});
+        const observerCallback = debounce(observerCallback0, 100, {leading:false, trailing:true});
 
         const observer = new IntersectionObserver(observerCallback, options);
         observer.observe(document.querySelector(".first-element"));
