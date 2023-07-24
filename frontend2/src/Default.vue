@@ -3,7 +3,7 @@
     <v-container style="height: calc(100vh - 64px); background: darkgrey">
         <div class="my-scroller" @scroll.passive="onScroll">
           <div class="first-element" style="min-height: 1px; background: #9cffa1"></div>
-          <div v-for="item in items" :key="item.id" class="card mb-3" :id="'item-'+item.id">
+          <div v-for="item in items" :key="item.id" class="card mb-3" :id="getItemId(item.id)">
             <div class="row g-0">
               <div class="col">
                 <img :src="item.owner.avatar" style="max-width: 64px; max-height: 64px">
@@ -95,7 +95,9 @@
           })
         },
 
-
+        getItemId(id) {
+          return 'item-' + id
+        },
 
         reduceListIfNeed() {
           // TODO
@@ -129,8 +131,8 @@
         },
         restoreScroll() {
           const restored = this.preservedScroll;
-          console.log("Restored scrollTop to difference", restored);
-          document.querySelector("#item-"+restored).scrollIntoView({behavior: 'instant', block: "center"});
+          console.log("Restored scrollTop to element id", restored);
+          document.querySelector("#"+this.getItemId(restored)).scrollIntoView({behavior: 'instant', block: "center"});
         },
         scrollDown() {
           this.$nextTick(() => {
