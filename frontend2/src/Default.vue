@@ -152,14 +152,14 @@
           return this.aDirection === directionTop
         },
 
-        saveScroll() {
-          this.preservedScroll = this.getMaximumItemId();
+        saveScroll(bottom) {
+          this.preservedScroll = bottom ? this.getMaximumItemId() : this.getMinimumItemId();
           console.log("Saved scroll", this.preservedScroll);
         },
-        restoreScroll() {
+        restoreScroll(bottom) {
           const restored = this.preservedScroll;
           console.log("Restored scrollTop to element id", restored);
-          document.querySelector("#"+this.getItemId(restored)).scrollIntoView({behavior: 'instant', block: "end"});
+          document.querySelector("#"+this.getItemId(restored)).scrollIntoView({behavior: 'instant', block: bottom ? "end" : "start"});
         },
         scrollDown() {
           this.$nextTick(() => {
@@ -198,22 +198,27 @@
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
             console.log("going to load top");
             if (!this.loadedTop && this.isTopDirection()) {
+              if (!this.isFirstLoad) {
+                this.saveScroll(false);
+              }
               await this.load();
               if (this.isFirstLoad) {
                 this.scrollDown();
                 this.isFirstLoad = false;
+              } else {
+                await this.reduceListIfNeed();
+                this.restoreScroll(false);
               }
-              await this.reduceListIfNeed();
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
             console.log("going to load bottom");
             if (!this.loadedBottom && !this.isTopDirection()) {
-              this.saveScroll();
+              this.saveScroll(true);
               await this.load();
-              this.restoreScroll();
+              await this.reduceListIfNeed();
+              this.restoreScroll(true);
             }
-            await this.reduceListIfNeed();
           }
         };
 
