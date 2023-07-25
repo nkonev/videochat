@@ -155,7 +155,7 @@
       },
 
       created() {
-        this.onScroll = throttle(this.onScroll, 400, {leading:true, trailing:true});
+        this.onScroll = throttle(this.onScroll, 300, {leading:true, trailing:true});
       },
 
       mounted() {
