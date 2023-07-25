@@ -24,7 +24,6 @@
 </template>
 
 <script>
-    import throttle from "lodash/throttle";
     import debounce from "lodash/debounce";
 
     const directionTop = 'top';
@@ -140,12 +139,12 @@
         trySwitchDirection() {
           if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
             this.aDirection = directionBottom;
-            console.debug("Infinity scrolling direction has been changed to bottom");
+            // console.debug("Infinity scrolling direction has been changed to bottom");
           } else if (this.scrollerProbeCurrent != 0 && this.scrollerProbePreviousPrevious > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
             this.aDirection = directionTop;
-            console.debug("Infinity scrolling direction has been changed to top");
+            // console.debug("Infinity scrolling direction has been changed to top");
           } else {
-            console.debug("Infinity scrolling direction has been remained untouched", this.aDirection);
+            // console.debug("Infinity scrolling direction has been remained untouched", this.aDirection);
           }
         },
         isTopDirection() {
@@ -169,7 +168,6 @@
       },
 
       created() {
-        // this.onScroll = throttle(this.onScroll, 100, {leading:true, trailing:true});
       },
 
       mounted() {
