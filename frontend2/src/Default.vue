@@ -133,7 +133,7 @@
           this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
           this.scrollerProbePrevious = this.scrollerProbeCurrent;
           this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
-          console.debug("onScroll prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
+          // console.debug("onScroll prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
           this.trySwitchDirection();
         },
@@ -169,7 +169,7 @@
       },
 
       created() {
-        this.onScroll = throttle(this.onScroll, 300, {leading:true, trailing:true});
+        // this.onScroll = throttle(this.onScroll, 100, {leading:true, trailing:true});
       },
 
       mounted() {
