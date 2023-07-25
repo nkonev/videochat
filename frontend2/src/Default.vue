@@ -27,10 +27,6 @@
     import throttle from "lodash/throttle";
     import debounce from "lodash/debounce";
 
-    const cssStr = (el) => {
-      return el.tagName.toLowerCase() + (el.id ? '#' + el.id : "") + '.' + (Array.from(el.classList)).join('.')
-    };
-
     const directionTop = 'top';
     const directionBottom = 'bottom';
 
@@ -85,9 +81,9 @@
             } else {
               if (this.isTopDirection()) {
                 // TODO also use them in reduceListIfNeed
-                this.startingFromItemIdTop = Math.min(...this.items.map(it => it.id));
+                this.startingFromItemIdTop = this.getMinimumItemId();
               } else {
-                this.startingFromItemIdBottom = Math.max(...this.items.map(it => it.id));
+                this.startingFromItemIdBottom = this.getMaximumItemId();
               }
             }
           }).then(()=>{
@@ -95,8 +91,25 @@
           })
         },
 
+        getMaximumItemId() {
+          return Math.max(...this.items.map(it => it.id))
+        },
+        getMinimumItemId() {
+          return Math.min(...this.items.map(it => it.id))
+        },
+
+        bottomElementSelector() {
+          return ".first-element"
+        },
+        topElementSelector() {
+          return ".last-element"
+        },
         getItemId(id) {
           return 'item-' + id
+        },
+
+        cssStr(el) {
+          return el.tagName.toLowerCase() + (el.id ? '#' + el.id : "") + '.' + (Array.from(el.classList)).join('.')
         },
 
         reduceListIfNeed() {
@@ -126,7 +139,7 @@
         },
 
         saveScroll() {
-          this.preservedScroll = Math.max(...this.items.map(it => it.id));
+          this.preservedScroll = this.getMaximumItemId();
           console.log("Saved scroll", this.preservedScroll);
         },
         restoreScroll() {
@@ -159,13 +172,13 @@
           const mappedEntries = entries.map((entry) => {
             return {
               entry,
-              elementName: cssStr(entry.target)
+              elementName: this.cssStr(entry.target)
             }
           });
-          const lastElementEntries = mappedEntries.filter(en => en.entry.intersectionRatio > 0 && en.elementName.includes(".last-element"));
+          const lastElementEntries = mappedEntries.filter(en => en.entry.intersectionRatio > 0 && en.elementName.includes(this.topElementSelector()));
           const lastElementEntry = lastElementEntries.length ? lastElementEntries[lastElementEntries.length-1] : null;
 
-          const firstElementEntries = mappedEntries.filter(en => en.entry.intersectionRatio > 0 && en.elementName.includes(".first-element"));
+          const firstElementEntries = mappedEntries.filter(en => en.entry.intersectionRatio > 0 && en.elementName.includes(this.bottomElementSelector()));
           const firstElementEntry = firstElementEntries.length ? firstElementEntries[firstElementEntries.length-1] : null;
 
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
@@ -191,8 +204,8 @@
         const observerCallback = debounce(observerCallback0, 500, {leading:false, trailing:true});
 
         const observer = new IntersectionObserver(observerCallback, options);
-        observer.observe(document.querySelector(".first-element"));
-        observer.observe(document.querySelector(".last-element"));
+        observer.observe(document.querySelector(this.bottomElementSelector()));
+        observer.observe(document.querySelector(this.topElementSelector()));
       }
     }
 </script>
