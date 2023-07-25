@@ -30,6 +30,9 @@
     const directionTop = 'top';
     const directionBottom = 'bottom';
 
+    const maxItemsLength = 200;
+    const reduceToLength = 100;
+
     const PAGE_SIZE = 40;
 
     export default {
@@ -70,7 +73,6 @@
             } else {
               this.items = items.reverse().concat(this.items);
             }
-            this.reduceListIfNeed();
 
             if (items.length < PAGE_SIZE) {
               if (this.isTopDirection()) {
@@ -80,7 +82,6 @@
               }
             } else {
               if (this.isTopDirection()) {
-                // TODO also use them in reduceListIfNeed
                 this.startingFromItemIdTop = this.getMinimumItemId();
               } else {
                 this.startingFromItemIdBottom = this.getMaximumItemId();
@@ -112,8 +113,19 @@
           return el.tagName.toLowerCase() + (el.id ? '#' + el.id : "") + '.' + (Array.from(el.classList)).join('.')
         },
 
-        reduceListIfNeed() {
-          // TODO
+        async reduceListIfNeed() {
+          if (this.items.length > maxItemsLength) {
+            return this.$nextTick(() => {
+              console.log("Reducing to", maxItemsLength);
+              if (this.isTopDirection()) {
+                this.items = this.items.slice(-reduceToLength);
+                this.startingFromItemIdBottom = this.getMaximumItemId();
+              } else {
+                this.items = this.items.slice(0, reduceToLength);
+                this.startingFromItemIdTop = this.getMinimumItemId();
+              }
+            });
+          }
         },
         onScroll(e) {
           this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
@@ -189,6 +201,7 @@
                 this.scrollDown();
                 this.isFirstLoad = false;
               }
+              await this.reduceListIfNeed();
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
@@ -198,6 +211,7 @@
               await this.load();
               this.restoreScroll();
             }
+            await this.reduceListIfNeed();
           }
         };
 
