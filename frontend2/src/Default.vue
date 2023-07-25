@@ -120,9 +120,11 @@
               if (this.isTopDirection()) {
                 this.items = this.items.slice(-reduceToLength);
                 this.startingFromItemIdBottom = this.getMaximumItemId();
+                this.loadedBottom = false;
               } else {
                 this.items = this.items.slice(0, reduceToLength);
                 this.startingFromItemIdTop = this.getMinimumItemId();
+                this.loadedTop = false;
               }
             });
           }
