@@ -120,12 +120,12 @@
     }
 </script>
 
-<style lang="css">
+<style lang="stylus">
     .my-scroller {
-      height: 100%;
-      overflow-y: scroll !important;
-      display: flex;
-      flex-direction: column-reverse;
+      height 100%
+      overflow-y scroll !important
+      display flex
+      flex-direction column-reverse
     }
 
 </style>
