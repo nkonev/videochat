@@ -25,6 +25,7 @@
 
 <script>
     import debounce from "lodash/debounce";
+    import axios from "axios";
 
     const directionTop = 'top';
     const directionBottom = 'bottom';
@@ -37,8 +38,8 @@
     export default {
       data() {
         return {
-          startingFromItemIdTop: 287,
-          startingFromItemIdBottom: 287 - 1,
+          startingFromItemIdTop: null,
+          startingFromItemIdBottom: null,
           items: [],
 
 
@@ -59,12 +60,24 @@
         }
       },
 
+      computed: {
+        chatId() {
+          return this.$route.params.id
+        }
+      },
+
       methods: {
         async load() {
           const startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
-          return fetch( `/api/chat/1/message?startingFromItemId=${startingFromItemId}&size=${PAGE_SIZE}&reverse=${this.isTopDirection()}`)
-            .then(res => res.json())
-            .then((items) => {
+          return axios.get(`/api/chat/${this.chatId}/message`, {
+              params: {
+                startingFromItemId: startingFromItemId,
+                size: PAGE_SIZE,
+                reverse: this.isTopDirection(),
+              },
+            })
+          .then((res) => {
+            const items = res.data;
             console.log("Get items", items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
             if (this.isTopDirection()) {
@@ -82,8 +95,14 @@
             } else {
               if (this.isTopDirection()) {
                 this.startingFromItemIdTop = this.getMinimumItemId();
+                if (!this.startingFromItemIdBottom) {
+                  this.startingFromItemIdBottom = this.getMaximumItemId();
+                }
               } else {
                 this.startingFromItemIdBottom = this.getMaximumItemId();
+                if (!this.startingFromItemIdTop) {
+                  this.startingFromItemIdTop = this.getMinimumItemId();
+                }
               }
             }
           }).then(()=>{
@@ -203,6 +222,7 @@
               if (this.isFirstLoad) {
                 this.scrollDown();
                 this.isFirstLoad = false;
+                this.loadedBottom = true;
               } else {
                 await this.reduceListIfNeed();
                 this.restoreScroll(false);

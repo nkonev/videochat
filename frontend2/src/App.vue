@@ -5,6 +5,7 @@
         <v-icon icon="mdi-circle-slice-6" />
         My app bar {{ appStore.count }}
       </v-app-bar-title>
+
       <v-btn
         color="primary"
         min-width="228"
@@ -17,7 +18,7 @@
           size="large"
           start
         />
-        To list
+        To chat list
       </v-btn>
     </v-app-bar>
 
