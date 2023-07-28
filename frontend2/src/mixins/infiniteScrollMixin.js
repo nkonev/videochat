@@ -114,7 +114,7 @@ export default () => {
           const firstElementEntry = firstElementEntries.length ? firstElementEntries[firstElementEntries.length-1] : null;
 
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
-            console.log("attempting to load top");
+            console.debug("attempting to load top");
             if (!this.loadedTop && this.isTopDirection()) {
               console.log("going to load top");
               if (!this.isFirstLoad) {
@@ -131,7 +131,7 @@ export default () => {
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
-            console.log("attempting to load bottom");
+            console.debug("attempting to load bottom");
             if (!this.loadedBottom && !this.isTopDirection()) {
               console.log("going to load bottom");
               if (!this.isFirstLoad) {
