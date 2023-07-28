@@ -1,7 +1,7 @@
 <template xmlns="http://www.w3.org/1999/html">
 
   <v-container style="height: calc(100vh - 64px); background: lightblue">
-    <div class="my-scroller" @scroll.passive="onScroll">
+    <div class="my-chat-scroller" @scroll.passive="onScroll">
       <div class="first-element" style="min-height: 1px; background: #9cffa1"></div>
       <div v-for="item in items" :key="item.id" class="card mb-3" :id="getItemId(item.id)">
         <div class="row g-0">
@@ -10,7 +10,7 @@
           </div>
           <div class="col">
             <div class="card-body">
-              <h5 class="card-title">{{ item.name }}</h5>
+              <h5 class="card-title" @click="goToChat(item.id)">{{ item.name }}</h5>
             </div>
           </div>
           <hr/>
@@ -26,7 +26,7 @@
 
 <script>
 import axios from "axios";
-import infiniteScrollMixin from "@/mixins/infiniteScrollMixin";
+import infiniteScrollMixin, {directionBottom} from "@/mixins/infiniteScrollMixin";
 
 const PAGE_SIZE = 40;
 
@@ -41,8 +41,16 @@ export default {
   },
 
   methods: {
+    saveScroll(bottom) {
+        this.preservedScroll = bottom ? this.items[this.items.length-1].id : this.items[0].id;
+        console.log("Saved scroll", this.preservedScroll);
+    },
+    initialDirection() {
+      return directionBottom
+    },
     onFirstLoad() {
       this.loadedTop = true;
+      this.scrollUp();
     },
     async load() {
       return axios.get(`/api/chat`, {
@@ -56,12 +64,9 @@ export default {
           console.log("Get items", items, "page", this.page);
 
           if (this.isTopDirection()) {
-            this.items = this.items.concat(items);
-
-
+              this.items = items.reverse().concat(this.items);
           } else {
-            this.items = items.reverse().concat(this.items);
-
+              this.items = this.items.concat(items);
           }
 
           if (items.length < PAGE_SIZE) {
@@ -88,11 +93,18 @@ export default {
       return 'item-' + id
     },
 
-    scrollDown() {
+    scrollUp() {
       this.$nextTick(() => {
         this.scrollerDiv.scrollTop = 0;
       });
     },
+    scrollerSelector() {
+        return ".my-chat-scroller"
+    },
+
+    goToChat(id) {
+        this.$router.push(({ name: 'view', params: { id: id}}));
+    }
   },
 
   created() {
@@ -109,7 +121,7 @@ export default {
 </script>
 
 <style lang="stylus">
-.my-scroller {
+.my-chat-scroller {
   height 100%
   overflow-y scroll !important
   display flex

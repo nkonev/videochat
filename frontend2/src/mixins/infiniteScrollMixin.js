@@ -1,12 +1,13 @@
 import debounce from "lodash/debounce";
 
-const directionTop = 'top';
-const directionBottom = 'bottom';
+export const directionTop = 'top';
+export const directionBottom = 'bottom';
 
 const maxItemsLength = 200;
 const reduceToLength = 100;
 
-// expects bottomElementSelector(), topElementSelector(), getItemId(id), scrollDown(), load(), onFirstLoad()
+// expects bottomElementSelector(), topElementSelector(), getItemId(id),
+// load(), onFirstLoad(), initialDirection(), saveScroll(), scrollerSelector()
 // onScroll() should be called from template
 export default () => {
   let observer;
@@ -23,7 +24,7 @@ export default () => {
         loadedTop: false,
         loadedBottom: false,
 
-        aDirection: directionTop,
+        aDirection: this.initialDirection(),
 
         scrollerProbeCurrent: 0,
         scrollerProbePrevious: 0,
@@ -84,18 +85,14 @@ export default () => {
         return this.aDirection === directionTop
       },
 
-      saveScroll(bottom) {
-        this.preservedScroll = bottom ? this.getMaximumItemId() : this.getMinimumItemId();
-        console.log("Saved scroll", this.preservedScroll);
-      },
       restoreScroll(bottom) {
         const restored = this.preservedScroll;
-        console.log("Restored scrollTop to element id", restored);
+        console.log("Restored scroll to element id", restored);
         document.querySelector("#"+this.getItemId(restored)).scrollIntoView({behavior: 'instant', block: bottom ? "end" : "start"});
       },
 
       initScroller() {
-        this.scrollerDiv = document.querySelector(".my-scroller");
+        this.scrollerDiv = document.querySelector(this.scrollerSelector());
 
         // https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
         const options = {
@@ -117,10 +114,11 @@ export default () => {
           const firstElementEntry = firstElementEntries.length ? firstElementEntries[firstElementEntries.length-1] : null;
 
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
-            console.log("going to load top");
+            console.log("attempting to load top");
             if (!this.loadedTop && this.isTopDirection()) {
+              console.log("going to load top");
               if (!this.isFirstLoad) {
-                this.saveScroll(false);
+                this.saveScroll(!this.initialDirection());
               }
               await this.load();
               if (this.isFirstLoad) {
@@ -128,17 +126,25 @@ export default () => {
                 this.isFirstLoad = false;
               } else {
                 await this.reduceListIfNeed();
-                this.restoreScroll(false);
+                this.restoreScroll(!this.initialDirection());
               }
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
-            console.log("going to load bottom");
+            console.log("attempting to load bottom");
             if (!this.loadedBottom && !this.isTopDirection()) {
-              this.saveScroll(true);
+              console.log("going to load bottom");
+              if (!this.isFirstLoad) {
+                this.saveScroll(this.initialDirection());
+              }
               await this.load();
-              await this.reduceListIfNeed();
-              this.restoreScroll(true);
+              if (this.isFirstLoad) {
+                this.onFirstLoad();
+                this.isFirstLoad = false;
+              } else {
+                await this.reduceListIfNeed();
+                this.restoreScroll(this.initialDirection());
+              }
             }
           }
         };

@@ -1,7 +1,7 @@
 <template>
 
     <v-container style="height: calc(100vh - 64px); background: darkgrey">
-        <div class="my-scroller" @scroll.passive="onScroll">
+        <div class="my-messages-scroller" @scroll.passive="onScroll">
           <div class="first-element" style="min-height: 1px; background: #9cffa1"></div>
           <div v-for="item in items" :key="item.id" class="card mb-3" :id="getItemId(item.id)">
             <div class="row g-0">
@@ -25,7 +25,7 @@
 
 <script>
     import axios from "axios";
-    import infiniteScrollMixin from "@/mixins/infiniteScrollMixin";
+    import infiniteScrollMixin, {directionTop} from "@/mixins/infiniteScrollMixin";
 
     const PAGE_SIZE = 40;
 
@@ -47,6 +47,13 @@
       },
 
       methods: {
+        saveScroll(bottom) {
+            this.preservedScroll = bottom ? this.getMaximumItemId() : this.getMinimumItemId();
+            console.log("Saved scroll", this.preservedScroll);
+        },
+        initialDirection() {
+          return directionTop
+        },
         onFirstLoad() {
           this.scrollDown();
           this.loadedBottom = true;
@@ -109,6 +116,9 @@
             this.scrollerDiv.scrollTop = 0;
           });
         },
+        scrollerSelector() {
+          return ".my-messages-scroller"
+        }
       },
 
       created() {
@@ -125,7 +135,7 @@
 </script>
 
 <style lang="stylus">
-    .my-scroller {
+    .my-messages-scroller {
       height 100%
       overflow-y scroll !important
       display flex
