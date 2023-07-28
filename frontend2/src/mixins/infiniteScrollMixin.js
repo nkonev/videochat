@@ -6,7 +6,8 @@ const directionBottom = 'bottom';
 const maxItemsLength = 200;
 const reduceToLength = 100;
 
-// expects bottomElementSelector(), topElementSelector(), getItemId(id), scrollDown(), load()
+// expects bottomElementSelector(), topElementSelector(), getItemId(id), scrollDown(), load(), onFirstLoad()
+// onScroll() should be called from template
 export default () => {
   let observer;
   return {
@@ -123,9 +124,8 @@ export default () => {
               }
               await this.load();
               if (this.isFirstLoad) {
-                this.scrollDown();
+                this.onFirstLoad();
                 this.isFirstLoad = false;
-                this.loadedBottom = true;
               } else {
                 await this.reduceListIfNeed();
                 this.restoreScroll(false);

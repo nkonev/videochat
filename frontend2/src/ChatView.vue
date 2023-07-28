@@ -47,6 +47,10 @@
       },
 
       methods: {
+        onFirstLoad() {
+          this.scrollDown();
+          this.loadedBottom = true;
+        },
         async load() {
           const startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
           return axios.get(`/api/chat/${this.chatId}/message`, {
