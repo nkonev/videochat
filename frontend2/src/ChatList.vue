@@ -18,9 +18,6 @@
     </v-card-item>
 
     <v-card-actions>
-      <v-btn variant="outlined" @click="onClick()">
-        Button
-      </v-btn>
       <v-btn variant="outlined" @click="onClick2()">
         Decrement
       </v-btn>
@@ -33,13 +30,8 @@
 </template>
 
 <script setup>
-import router from "@/router/index";
 import {useAppStore} from "@/store/app";
 const appStore = useAppStore();
-
-const onClick = () => {
-  router.push(({ name: 'root'}))
-}
 
 function onClick2() {
   appStore.count--
