@@ -43,7 +43,6 @@ export default () => {
       async reduceListIfNeed() {
         if (this.items.length > maxItemsLength) {
           return this.$nextTick(() => {
-            console.log("Reducing to", maxItemsLength);
             if (this.isTopDirection()) {
                 this.reduceBottom();
                 this.loadedBottom = false;
@@ -51,6 +50,7 @@ export default () => {
                 this.reduceTop();
                 this.loadedTop = false;
             }
+            console.log("Reduced to", maxItemsLength, this.loadedBottom, this.loadedTop);
           });
         }
       },
@@ -106,7 +106,7 @@ export default () => {
           const firstElementEntry = firstElementEntries.length ? firstElementEntries[firstElementEntries.length-1] : null;
 
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
-            console.debug("attempting to load top");
+            console.debug("attempting to load top", !this.loadedTop, this.isTopDirection());
             if (!this.loadedTop && this.isTopDirection()) {
               console.log("going to load top");
               if (!this.isFirstLoad) {
@@ -123,7 +123,7 @@ export default () => {
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
-            console.debug("attempting to load bottom");
+            console.debug("attempting to load bottom", !this.loadedBottom, !this.isTopDirection());
             if (!this.loadedBottom && !this.isTopDirection()) {
               console.log("going to load bottom");
               if (!this.isFirstLoad) {

@@ -84,7 +84,11 @@ export default {
               this.loadedBottom = true;
             }
           } else {
-            this.page += 1;
+            if (this.isTopDirection()) {
+                this.page -= 1;
+            } else {
+                this.page += 1;
+            }
           }
         }).then(()=>{
           return this.$nextTick()
