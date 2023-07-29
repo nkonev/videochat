@@ -3,11 +3,12 @@ import debounce from "lodash/debounce";
 export const directionTop = 'top';
 export const directionBottom = 'bottom';
 
-const maxItemsLength = 200;
-const reduceToLength = 100;
+export const maxItemsLength = 200;
+export const reduceToLength = 100;
 
 // expects bottomElementSelector(), topElementSelector(), getItemId(id),
-// load(), onFirstLoad(), initialDirection(), saveScroll(), scrollerSelector()
+// load(), onFirstLoad(), initialDirection(), saveScroll(), scrollerSelector(),
+// reduceTop(), reduceBottom()
 // onScroll() should be called from template
 export default () => {
   let observer;
@@ -35,13 +36,6 @@ export default () => {
       }
     },
     methods: {
-      getMaximumItemId() {
-        return Math.max(...this.items.map(it => it.id))
-      },
-      getMinimumItemId() {
-        return Math.min(...this.items.map(it => it.id))
-      },
-
       cssStr(el) {
         return el.tagName.toLowerCase() + (el.id ? '#' + el.id : "") + '.' + (Array.from(el.classList)).join('.')
       },
@@ -51,13 +45,11 @@ export default () => {
           return this.$nextTick(() => {
             console.log("Reducing to", maxItemsLength);
             if (this.isTopDirection()) {
-              this.items = this.items.slice(-reduceToLength);
-              this.startingFromItemIdBottom = this.getMaximumItemId();
-              this.loadedBottom = false;
+                this.reduceBottom();
+                this.loadedBottom = false;
             } else {
-              this.items = this.items.slice(0, reduceToLength);
-              this.startingFromItemIdTop = this.getMinimumItemId();
-              this.loadedTop = false;
+                this.reduceTop();
+                this.loadedTop = false;
             }
           });
         }

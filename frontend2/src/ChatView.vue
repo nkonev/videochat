@@ -25,7 +25,7 @@
 
 <script>
     import axios from "axios";
-    import infiniteScrollMixin, {directionTop} from "@/mixins/infiniteScrollMixin";
+    import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
 
     const PAGE_SIZE = 40;
 
@@ -47,6 +47,20 @@
       },
 
       methods: {
+        getMaximumItemId() {
+          return Math.max(...this.items.map(it => it.id))
+        },
+        getMinimumItemId() {
+          return Math.min(...this.items.map(it => it.id))
+        },
+        reduceBottom() {
+          this.items = this.items.slice(-reduceToLength);
+          this.startingFromItemIdBottom = this.getMaximumItemId();
+        },
+        reduceTop() {
+          this.items = this.items.slice(0, reduceToLength);
+          this.startingFromItemIdTop = this.getMinimumItemId();
+        },
         saveScroll(bottom) {
             this.preservedScroll = bottom ? this.getMaximumItemId() : this.getMinimumItemId();
             console.log("Saved scroll", this.preservedScroll);
