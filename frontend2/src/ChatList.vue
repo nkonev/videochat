@@ -60,6 +60,18 @@ export default {
       this.loadedTop = true;
       this.scrollUp();
     },
+    onChangeDirection() {
+      if (this.isTopDirection()) {
+          this.decrementPage();
+      } else {
+          this.page += 1;
+      }
+    },
+    decrementPage() {
+      if (this.page > 0) {
+          this.page -= 1;
+      }
+    },
     async load() {
       return axios.get(`/api/chat`, {
         params: {
@@ -72,7 +84,7 @@ export default {
           console.log("Get items", items, "page", this.page);
 
           if (this.isTopDirection()) {
-              this.items = items.reverse().concat(this.items);
+              this.items = items.concat(this.items);
           } else {
               this.items = this.items.concat(items);
           }
@@ -85,7 +97,7 @@ export default {
             }
           } else {
             if (this.isTopDirection()) {
-                this.page -= 1;
+                this.decrementPage();
             } else {
                 this.page += 1;
             }

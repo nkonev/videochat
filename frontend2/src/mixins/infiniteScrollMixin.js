@@ -66,9 +66,15 @@ export default () => {
         if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
           this.aDirection = directionBottom;
           // console.debug("Infinity scrolling direction has been changed to bottom");
+          if (this.onChangeDirection) {
+            this.onChangeDirection();
+          }
         } else if (this.scrollerProbeCurrent != 0 && this.scrollerProbePreviousPrevious > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
           this.aDirection = directionTop;
           // console.debug("Infinity scrolling direction has been changed to top");
+          if (this.onChangeDirection) {
+            this.onChangeDirection();
+          }
         } else {
           // console.debug("Infinity scrolling direction has been remained untouched", this.aDirection);
         }
