@@ -168,6 +168,35 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	return c.JSON(http.StatusOK, ChatWrapper{Data: chatDtos, Count: userChatCount})
 }
 
+func (ch *ChatHandler) GetChatPage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	itemId, err := utils.ParseInt64(c.QueryParam("id"))
+	if err != nil {
+		return err
+	}
+
+	previous, err := utils.GetBooleanWithError(c.QueryParam("previous"))
+	if err != nil {
+		return err
+	}
+
+	size := utils.FixSizeString(c.QueryParam("size"))
+
+	count, err := ch.db.GetChatCount(itemId, userPrincipalDto.UserId, previous)
+	if err != nil {
+		return err
+	}
+
+	var page = count / size
+
+	return c.JSON(http.StatusOK, &utils.H{"page": page})
+}
+
 func getChat(
 	dbR db.CommonOperations,
 	restClient *client.RestClient,

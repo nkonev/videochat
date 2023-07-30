@@ -116,6 +116,38 @@ func provideScanToChat(chat *Chat) []any {
 	}
 }
 
+
+func (db *DB) GetChatCount(itemId, userId int64, previous bool) (int, error) {
+
+	var sqlQ = `
+		SELECT 
+			ROW_NUMBER () OVER (ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC),
+			ch.id,
+			ch.title
+		FROM 
+			chat ch 
+			LEFT JOIN chat_pinned cp 
+				on (ch.id = cp.chat_id and cp.user_id = 1) 
+		WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = 1 )
+	`
+
+	var theQuery string
+	if (previous) {
+		theQuery = fmt.Sprintf(sqlQ, "<")
+	} else {
+		theQuery = fmt.Sprintf(sqlQ, ">")
+	}
+
+	var count int
+	row := db.QueryRow(theQuery, userId, itemId)
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, tracerr.Wrap(err)
+	} else {
+		return count, nil
+	}
+}
+
 func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error

@@ -56,8 +56,14 @@ export default {
     reduceTop() {
         this.items = this.items.slice(-reduceToLength);
     },
+    findBottomElementId() {
+        return this.items[this.items.length-1].id
+    },
+    findTopElementId() {
+        return this.items[0].id
+    },
     saveScroll(bottom) {
-        this.preservedScroll = bottom ? this.items[this.items.length-1].id : this.items[0].id;
+        this.preservedScroll = bottom ? this.findBottomElementId() : this.findTopElementId();
         console.log("Saved scroll", this.preservedScroll);
     },
     initialDirection() {
@@ -67,11 +73,17 @@ export default {
       this.loadedTop = true;
       this.scrollUp();
     },
-    onChangeDirection() {
-      if (this.isTopDirection()) {
-          this.decrementPage();
+    async onChangeDirection() {
+      if (this.isTopDirection()) { // became
+          const id = this.findTopElementId();
+          this.page = await axios
+              .get(`/api/chat/page`, {params: {id: id, previous: true, size: PAGE_SIZE,}})
+              .then(({data}) => data.page)
       } else {
-          this.page += 1;
+          const id = this.findBottomElementId();
+          this.page = await axios
+              .get(`/api/chat/page`, {params: {id: id, previous: false, size: PAGE_SIZE,}})
+              .then(({data}) => data.page)
       }
     },
     decrementPage() {
