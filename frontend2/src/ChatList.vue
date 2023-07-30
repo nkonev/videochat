@@ -28,6 +28,8 @@
 import axios from "axios";
 import infiniteScrollMixin, {directionBottom, reduceToLength} from "@/mixins/infiniteScrollMixin";
 import {chat_name} from "@/routes";
+import {useChatStore} from "@/store/chatStore";
+import {mapStores} from "pinia";
 
 const PAGE_SIZE = 40;
 
@@ -39,6 +41,12 @@ export default {
     return {
       page: 0,
     }
+  },
+  computed: {
+    ...mapStores(useChatStore),
+    userIsSet() {
+      return !!this.chatStore.currentUser
+    },
   },
 
   methods: {
@@ -72,6 +80,10 @@ export default {
       }
     },
     async load() {
+      if (!this.userIsSet) {
+        return Promise.resolve()
+      }
+
       return axios.get(`/api/chat`, {
         params: {
           page: this.page,
