@@ -27,6 +27,7 @@
 <script>
 import axios from "axios";
 import infiniteScrollMixin, {directionBottom, reduceToLength} from "@/mixins/infiniteScrollMixin";
+import {chat_name} from "@/routes";
 
 const PAGE_SIZE = 40;
 
@@ -43,11 +44,9 @@ export default {
   methods: {
     reduceBottom() {
         this.items = this.items.slice(0, reduceToLength);
-        // this.page;
     },
     reduceTop() {
         this.items = this.items.slice(-reduceToLength);
-        // this.page;
     },
     saveScroll(bottom) {
         this.preservedScroll = bottom ? this.items[this.items.length-1].id : this.items[0].id;
@@ -127,7 +126,7 @@ export default {
     },
 
     goToChat(id) {
-        this.$router.push(({ name: 'view', params: { id: id}}));
+        this.$router.push(({ name: chat_name, params: { id: id}}));
     }
   },
 
