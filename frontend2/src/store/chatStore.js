@@ -1,8 +1,10 @@
 // Utilities
-import { defineStore } from 'pinia'
+import {defineStore, setMapStoreSuffix} from 'pinia'
 import axios from "axios";
 
-export const useChatStore = defineStore('chat', {
+setMapStoreSuffix('');
+
+export const useChatStore = defineStore('chatStore', {
   state: () => {
     return {
         currentUser: null,
