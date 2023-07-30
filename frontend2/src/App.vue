@@ -1,23 +1,5 @@
 <template>
   <v-app>
-      <v-navigation-drawer
-          v-model="drawer"
-      >
-          <v-list>
-              <v-list-item v-if="chatStore.currentUser" @click.prevent="onProfileClicked()" link :href="getRouteProfile()"
-                           :prepend-avatar="chatStore.currentUser.avatar"
-                           :title="chatStore.currentUser.login"
-                           :subtitle="chatStore.currentUser.shortInfo"
-              ></v-list-item>
-          </v-list>
-
-          <v-divider></v-divider>
-
-          <v-list density="compact" nav>
-              <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
-          </v-list>
-      </v-navigation-drawer>
-
 
       <v-app-bar
           color='indigo'
@@ -57,7 +39,25 @@
 
       </v-app-bar>
 
-    <v-main>
+      <v-navigation-drawer
+          v-model="drawer"
+      >
+          <v-list>
+              <v-list-item v-if="chatStore.currentUser" @click.prevent="onProfileClicked()" link :href="getRouteProfile()"
+                           :prepend-avatar="chatStore.currentUser.avatar"
+                           :title="chatStore.currentUser.login"
+                           :subtitle="chatStore.currentUser.shortInfo"
+              ></v-list-item>
+          </v-list>
+
+          <v-divider></v-divider>
+
+          <v-list density="compact" nav>
+              <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
+          </v-list>
+      </v-navigation-drawer>
+
+      <v-main>
       <v-container fluid class="ma-0 pa-0" style="height: 100%">
 
           <LoginModal/>
