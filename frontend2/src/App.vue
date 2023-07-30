@@ -97,7 +97,7 @@ export default {
         // https://pinia.vuejs.org/cookbook/options-api.html#usage-without-setup
         ...mapStores(useChatStore),
         currentUserAvatar() {
-            return this.currentUser.avatar;
+            return this.chatStore.currentUser.avatar;
         },
         // it differs from original
         chatId() {
@@ -106,7 +106,7 @@ export default {
     },
     methods: {
         showCurrentUserSubtitle(){
-            return hasLength(this.currentUser?.shortInfo)
+            return hasLength(this.chatStore.currentUser?.shortInfo)
         },
         goHome() {
             this.$router.push(({ name: chat_list_name}))
