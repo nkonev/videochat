@@ -1,9 +1,6 @@
 <template>
   <v-app>
       <v-navigation-drawer
-          left
-          app
-          :clipped="true"
           v-model="drawer"
       >
           <v-list>
@@ -24,10 +21,7 @@
 
       <v-app-bar
           color='indigo'
-          dark
-          app
           id="myAppBar"
-          :clipped-left="true"
           :density="getDensity()"
       >
           <v-badge
