@@ -17,7 +17,7 @@
           <v-divider></v-divider>
 
           <v-list density="compact" nav>
-              <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-forum" :title="$vuetify.lang.t('$vuetify.chats')"></v-list-item>
+              <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
           </v-list>
       </v-navigation-drawer>
 
@@ -49,10 +49,10 @@
                        overlap
                        offset-y="1.8em"
               >
-                  <v-btn v-if="chatStore.showCallButton" icon @click="createCall()" :title="chatStore.tetATet ? $vuetify.lang.t('$vuetify.call_up') : $vuetify.lang.t('$vuetify.enter_into_call')">
+                  <v-btn v-if="chatStore.showCallButton" icon @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
                       <v-icon :x-large="isMobile()" color="green">{{tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                   </v-btn>
-                  <v-btn v-if="chatStore.showHangButton" icon @click="stopCall()" :title="$vuetify.lang.t('$vuetify.leave_call')">
+                  <v-btn v-if="chatStore.showHangButton" icon @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
                       <v-icon :x-large="isMobile()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'red--text'">mdi-phone</v-icon>
                   </v-btn>
               </v-badge>
@@ -83,11 +83,12 @@ import bus, {LOGGED_OUT} from "@/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
+import vuetify from "@/plugins/vuetify";
 
 export default {
     data() {
         return {
-            drawer: !this.$vuetify.display.mobile,
+            drawer: !vuetify.display.mobile,
             lastAnswered: 0,
             showSearchButton: true,
         }
