@@ -5,6 +5,4 @@ const pinia = createPinia();
 
 setActivePinia(pinia);
 
-setMapStoreSuffix('');
-
 export default pinia;

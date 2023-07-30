@@ -7,7 +7,7 @@
           v-model="drawer"
       >
           <v-list>
-              <v-list-item v-if="chatStore.currentUser" @click.prevent="onProfileClicked()" link :href="require('./routes').profile"
+              <v-list-item v-if="chatStore.currentUser" @click.prevent="onProfileClicked()" link :href="getRouteProfile()"
                            :prepend-avatar="chatStore.currentUser.avatar"
                            :title="chatStore.currentUser.login"
                            :subtitle="chatStore.currentUser.shortInfo"
@@ -17,7 +17,7 @@
           <v-divider></v-divider>
 
           <v-list density="compact" nav>
-              <v-list-item @click.prevent="goHome()" :href="require('./routes').root" prepend-icon="mdi-forum" :title="$vuetify.lang.t('$vuetify.chats')"></v-list-item>
+              <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-forum" :title="$vuetify.lang.t('$vuetify.chats')"></v-list-item>
           </v-list>
       </v-navigation-drawer>
 
@@ -77,18 +77,17 @@
 <script>
 import '@fontsource/roboto';
 import { hasLength } from "@/utils";
-import {chat_list_name, chat_name, profile_self_name, videochat_name} from "@/routes";
+import {chat_list_name, chat_name, profile, profile_self_name, root, videochat_name} from "@/routes";
 import axios from "axios";
 import bus, {LOGGED_OUT} from "@/bus";
 import LoginModal from "@/LoginModal.vue";
-import vuetify from "@/plugins/vuetify";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
 
 export default {
     data() {
         return {
-            drawer: !vuetify.display.mobile,
+            drawer: !this.$vuetify.display.mobile,
             lastAnswered: 0,
             showSearchButton: true,
         }
@@ -146,6 +145,12 @@ export default {
                 this.goProfile();
             }
         },
+        getRouteRoot() {
+            return root
+        },
+        getRouteProfile() {
+            return profile
+        }
     },
     components: {
         LoginModal

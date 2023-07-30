@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia'
 import axios from "axios";
 
-export const useChatStore = defineStore('chatStore', {
+export const useChatStore = defineStore('chat', {
   state: () => {
     return {
         currentUser: null,
