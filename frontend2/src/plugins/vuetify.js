@@ -10,6 +10,9 @@ import 'vuetify/styles'
 
 // Composables
 import { createVuetify } from 'vuetify'
+import {getStoredLanguage} from "@/localStore";
+import en from "@/locale/en";
+import ru from "@/locale/ru";
 
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
@@ -23,4 +26,8 @@ export default createVuetify({
       },
     },
   },
+  locale: {
+    locale: getStoredLanguage(),
+    messages: { en, ru },
+  }
 })

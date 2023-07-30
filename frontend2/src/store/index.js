@@ -1,4 +1,6 @@
 // Utilities
-import { createPinia } from 'pinia'
+import {createPinia, setMapStoreSuffix} from 'pinia'
 
-export default createPinia()
+setMapStoreSuffix('')
+
+export const pinia = createPinia()
