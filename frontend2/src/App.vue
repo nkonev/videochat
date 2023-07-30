@@ -152,5 +152,10 @@ export default {
     components: {
         LoginModal
     },
+    created() {
+        this.chatStore.fetchAvailableOauth2Providers().then(() => {
+            this.chatStore.fetchUserProfile();
+        })
+    }
 }
 </script>
