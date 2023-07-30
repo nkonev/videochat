@@ -194,11 +194,6 @@ func (ch *ChatHandler) GetChatPage(c echo.Context) error {
 		}
 		// position is in [1, count]
 
-		//count, err := tx.GetChatCount(userPrincipalDto.UserId)
-		//if err != nil {
-		//	return err
-		//}
-
 		var page = 0
 
 		if previous {

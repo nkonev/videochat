@@ -140,27 +140,6 @@ func (tx *Tx) GetChatPosition(itemId, userId int64) (int, error) {
 		return position, nil
 	}
 }
-func (tx *Tx) GetChatCount(userId int64) (int, error) {
-
-	var theQuery = `
-		SELECT 
-			count(*)
-		FROM 
-			chat ch 
-			LEFT JOIN chat_pinned cp 
-				on (ch.id = cp.chat_id and cp.user_id = $1) 
-		WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 )
-	`
-
-	var count int
-	row := tx.QueryRow(theQuery, userId)
-	err := row.Scan(&count)
-	if err != nil {
-		return 0, tracerr.Wrap(err)
-	} else {
-		return count, nil
-	}
-}
 
 func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) ([]*Chat, error) {
 	var rows *sql.Rows

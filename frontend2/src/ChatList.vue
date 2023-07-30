@@ -39,7 +39,8 @@ export default {
   ],
   data() {
     return {
-      page: 0,
+        pageTop: 0,
+        pageBottom: 0,
     }
   },
   computed: {
@@ -76,19 +77,14 @@ export default {
     async onChangeDirection() {
       if (this.isTopDirection()) { // became
           const id = this.findTopElementId();
-          this.page = await axios
+          this.pageTop = await axios
               .get(`/api/chat/page`, {params: {id: id, previous: true, size: PAGE_SIZE,}})
               .then(({data}) => data.page)
       } else {
           const id = this.findBottomElementId();
-          this.page = await axios
+          this.pageBottom = await axios
               .get(`/api/chat/page`, {params: {id: id, previous: false, size: PAGE_SIZE,}})
               .then(({data}) => data.page)
-      }
-    },
-    decrementPage() {
-      if (this.page > 0) {
-          this.page -= 1;
       }
     },
     async load() {
@@ -96,15 +92,16 @@ export default {
         return Promise.resolve()
       }
 
+      const page = this.isTopDirection() ? this.pageTop : this.pageBottom;
       return axios.get(`/api/chat`, {
         params: {
-          page: this.page,
+          page: page,
           size: PAGE_SIZE,
         },
       })
         .then((res) => {
           const items = res.data.data;
-          console.log("Get items", items, "page", this.page);
+          console.log("Get items", items, "page", page);
 
           if (this.isTopDirection()) {
               this.items = items.concat(this.items);
@@ -120,9 +117,13 @@ export default {
             }
           } else {
             if (this.isTopDirection()) {
-                this.decrementPage();
+                this.pageTop -= 1;
+                if (this.pageTop == -1) {
+                    this.loadedTop = true;
+                    this.pageTop = 0;
+                }
             } else {
-                this.page += 1;
+                this.pageBottom += 1;
             }
           }
         }).then(()=>{
