@@ -76,14 +76,14 @@
 
 <script>
 import '@fontsource/roboto';
-import {useChatStore} from "@/store/chatStore";
-import { mapStores } from 'pinia'
 import { hasLength } from "@/utils";
 import {chat_list_name, chat_name, profile_self_name, videochat_name} from "@/routes";
 import axios from "axios";
 import bus, {LOGGED_OUT} from "@/bus";
 import LoginModal from "@/LoginModal.vue";
 import vuetify from "@/plugins/vuetify";
+import {useChatStore} from "@/store/chatStore";
+import { mapStores } from 'pinia'
 
 export default {
     data() {
@@ -97,7 +97,7 @@ export default {
         // https://pinia.vuejs.org/cookbook/options-api.html#usage-without-setup
         ...mapStores(useChatStore),
         currentUserAvatar() {
-            return this.chatStore.currentUser.avatar;
+            return this.chatStore.currentUser?.avatar;
         },
         // it differs from original
         chatId() {
