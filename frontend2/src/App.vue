@@ -28,7 +28,7 @@
           app
           id="myAppBar"
           :clipped-left="true"
-          :dense="!isMobile()"
+          :density="getDensity()"
       >
           <v-badge
               :content="chatStore.notificationsCount"
@@ -83,12 +83,11 @@ import bus, {LOGGED_OUT} from "@/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
-import vuetify from "@/plugins/vuetify";
 
 export default {
     data() {
         return {
-            drawer: !vuetify.display.mobile,
+            drawer: !this.isMobile(),
             lastAnswered: 0,
             showSearchButton: true,
         }
@@ -105,6 +104,9 @@ export default {
         },
     },
     methods: {
+        getDensity() {
+            return this.isMobile() ? "comfortable" : "compact";
+        },
         showCurrentUserSubtitle(){
             return hasLength(this.chatStore.currentUser?.shortInfo)
         },
