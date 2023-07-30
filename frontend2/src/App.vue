@@ -79,7 +79,7 @@ import '@fontsource/roboto';
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
 import { hasLength } from "@/utils";
-import { chat_list_name, chat_name, videochat_name } from "@/routes";
+import {chat_list_name, chat_name, profile_self_name, videochat_name} from "@/routes";
 import axios from "axios";
 import bus, {LOGGED_OUT} from "@/bus";
 import LoginModal from "@/LoginModal.vue";
@@ -137,6 +137,14 @@ export default {
         },
         updateLastAnsweredTimestamp() {
             this.lastAnswered = +new Date();
+        },
+        goProfile() {
+            this.$router.push(({ name: profile_self_name}))
+        },
+        onProfileClicked() {
+            if (!this.isMobile()) {
+                this.goProfile();
+            }
         },
     },
     components: {
