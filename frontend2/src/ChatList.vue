@@ -78,12 +78,12 @@ export default {
       if (this.isTopDirection()) { // became
           const id = this.findTopElementId();
           this.pageTop = await axios
-              .get(`/api/chat/page`, {params: {id: id, previous: true, size: PAGE_SIZE,}})
+              .get(`/api/chat/get-page`, {params: {id: id, previous: true, size: PAGE_SIZE,}})
               .then(({data}) => data.page)
       } else {
           const id = this.findBottomElementId();
           this.pageBottom = await axios
-              .get(`/api/chat/page`, {params: {id: id, previous: false, size: PAGE_SIZE,}})
+              .get(`/api/chat/get-page`, {params: {id: id, previous: false, size: PAGE_SIZE,}})
               .then(({data}) => data.page)
       }
     },

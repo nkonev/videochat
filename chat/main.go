@@ -154,7 +154,7 @@ func configureEcho(
 	e.DELETE("/internal/delete-all-participants", ch.RemoveAllParticipants)
 	e.GET("/internal/does-participant-belong-to-chat", ch.DoesParticipantBelongToChat)
 	e.GET("/chat/:id/suggest-participants", ch.SearchForUsersToMention)
-	e.GET("/chat/page", ch.GetChatPage)
+	e.GET("/chat/get-page", ch.GetChatPage)
 	e.PUT("/chat/tet-a-tet/:participantId", ch.TetATet)
 	e.PUT("/chat/public/preview-without-html", ch.CreatePreview)
 	e.GET("/internal/access", ch.CheckAccess)
