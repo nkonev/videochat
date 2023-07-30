@@ -17,7 +17,7 @@ import router from "@/router";
 import axios from "axios";
 import bus, {LOGGED_OUT} from "@/bus";
 import {useChatStore} from "@/store/chatStore";
-import {pinia} from "@/store/index"
+import pinia from "@/store/index";
 
 const chatStore = useChatStore();
 

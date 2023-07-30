@@ -84,8 +84,6 @@ import axios from "axios";
 import bus, {LOGGED_OUT} from "@/bus";
 import LoginModal from "@/LoginModal.vue";
 
-const chatStore = useChatStore();
-
 export default {
     data() {
         return {
@@ -96,7 +94,7 @@ export default {
     },
     computed: {
         // https://pinia.vuejs.org/cookbook/options-api.html#usage-without-setup
-        ...mapStores(chatStore),
+        ...mapStores(useChatStore),
         currentUserAvatar() {
             return this.currentUser.avatar;
         },
@@ -118,7 +116,7 @@ export default {
         logout(){
             console.log("Logout");
             axios.post(`/api/logout`).then(({ data }) => {
-                chatStore.unsetUser();
+                this.chatStore.unsetUser();
                 bus.emit(LOGGED_OUT, null);
             });
         },

@@ -76,7 +76,6 @@
     import axios from "axios";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
-    const chatStore = useChatStore();
 
     export default {
         data() {
@@ -113,7 +112,7 @@
             bus.off(LOGGED_OUT, this.showLoginModal);
         },
         computed: {
-            ...mapStores(chatStore),
+            ...mapStores(useChatStore),
         },
         methods: {
             showLoginModal() {
@@ -172,7 +171,7 @@
                             // store.dispatch(replayPreviousUrl());
                             console.log("You successfully logged in");
                             this.hideLoginModal();
-                            chatStore.fetchUserProfile();
+                            this.chatStore.fetchUserProfile();
                             bus.emit(LOGGED_IN, null);
                         })
                         .catch((error) => {

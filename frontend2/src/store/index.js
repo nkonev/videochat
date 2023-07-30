@@ -1,6 +1,10 @@
 // Utilities
-import {createPinia, setMapStoreSuffix} from 'pinia'
+import {createPinia, setActivePinia, setMapStoreSuffix} from 'pinia';
 
-setMapStoreSuffix('')
+const pinia = createPinia();
 
-export const pinia = createPinia()
+setActivePinia(pinia);
+
+setMapStoreSuffix('');
+
+export default pinia;
