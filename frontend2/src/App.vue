@@ -83,11 +83,12 @@ import { chat_list_name, chat_name, videochat_name } from "@/routes";
 import axios from "axios";
 import bus, {LOGGED_OUT} from "@/bus";
 import LoginModal from "@/LoginModal.vue";
+import vuetify from "@/plugins/vuetify";
 
 export default {
     data() {
         return {
-            drawer: !this.$vuetify.display.mobile,
+            drawer: !vuetify.display.mobile,
             lastAnswered: 0,
             showSearchButton: true,
         }

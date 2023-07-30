@@ -47,7 +47,7 @@ const app = createApp(App)
 registerPlugins(app)
 
 app.config.globalProperties.isMobile = () => {
-    return this.$vuetify.display.mobile && isMobileBrowser()
+    return vuetify.display.mobile && isMobileBrowser()
 }
 app.config.globalProperties.setError = (e, txt, details) => {
     if (details) {
