@@ -6,7 +6,7 @@
     <v-row justify="center">
         <v-dialog persistent v-model="show" max-width="440">
             <v-card>
-                <v-card-title :class="isMobile() ? 'pa-4 pb-2 headline' : 'headline'">{{ $vuetify.lang.t('$vuetify.login_title') }}</v-card-title>
+                <v-card-title :class="isMobile() ? 'pa-4 pb-2 headline' : 'headline'">{{ $vuetify.locale.t('$vuetify.login_title') }}</v-card-title>
 
                 <v-card-text :class="isMobile() ? 'pa-4 pt-0' : ''">
                     <v-form
@@ -19,7 +19,7 @@
                                 id="login-text"
                                 v-model="username"
                                 :rules="usernameRules"
-                                :label="$vuetify.lang.t('$vuetify.login')"
+                                :label="$vuetify.locale.t('$vuetify.login')"
                                 required
                                 :disabled="disable"
                                 @input="hideAlert()"
@@ -31,7 +31,7 @@
                                 :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
                                 @click:append="showInputablePassword = !showInputablePassword"
                                 :rules="passwordRules"
-                                :label="$vuetify.lang.t('$vuetify.password')"
+                                :label="$vuetify.locale.t('$vuetify.password')"
                                 required
                                 :type="showInputablePassword ? 'text' : 'password'"
                                 :disabled="disable"
@@ -57,12 +57,20 @@
                                 min-width="80px"
                                 :loading="loadingLogin"
                         >
-                            {{ $vuetify.lang.t('$vuetify.login_action') }}
+                            {{ $vuetify.locale.t('$vuetify.login_action') }}
                         </v-btn>
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('vkontakte')" class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('facebook')" class="mr-2 mb-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('google')" class="mr-2 mb-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google' }" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('keycloak')" class="mr-2 mb-2 c-btn-keycloak" :disabled="disable" :loading="loadingKeycloak" min-width="80px" @click="loginKeycloak()"><font-awesome-icon :icon="{ prefix: 'fa', iconName: 'key' }" :size="'2x'"></font-awesome-icon></v-btn>
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('vkontakte')" class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()">
+                            <font-awesome-icon :icon="[ 'fab', 'vk']" :size="'2x'"></font-awesome-icon>
+                        </v-btn>
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('facebook')" class="mr-2 mb-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()">
+                            <font-awesome-icon :icon="[ 'fab', 'facebook' ]" :size="'2x'"></font-awesome-icon>
+                        </v-btn>
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('google')" class="mr-2 mb-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()">
+                            <font-awesome-icon :icon="[ 'fab', 'google' ]" :size="'2x'"></font-awesome-icon>
+                        </v-btn>
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('keycloak')" class="mr-2 mb-2 c-btn-keycloak" :disabled="disable" :loading="loadingKeycloak" min-width="80px" @click="loginKeycloak()">
+                            <font-awesome-icon :icon="['fa', 'key' ]" :size="'2x'"></font-awesome-icon>
+                        </v-btn>
                     </v-form>
                 </v-card-text>
 

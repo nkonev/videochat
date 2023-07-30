@@ -18,6 +18,7 @@ import axios from "axios";
 import bus, {LOGGED_OUT} from "@/bus";
 import {useChatStore} from "@/store/chatStore";
 import pinia from "@/store/index";
+import FontAwesomeIcon from "@/plugins/faIcons";
 
 const chatStore = useChatStore();
 
@@ -45,6 +46,8 @@ export function registerPlugins (app) {
 const app = createApp(App)
 
 registerPlugins(app)
+
+app.component("font-awesome-icon", FontAwesomeIcon)
 
 app.config.globalProperties.isMobile = () => {
     return vuetify.display.mobile && isMobileBrowser()

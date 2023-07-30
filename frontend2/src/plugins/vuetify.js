@@ -9,7 +9,7 @@ import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 
 // Composables
-import { createVuetify } from 'vuetify'
+import { createVuetify } from 'vuetify';
 import {getStoredLanguage} from "@/localStore";
 import en from "@/locale/en";
 import ru from "@/locale/ru";
