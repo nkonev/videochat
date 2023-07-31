@@ -101,7 +101,7 @@ axios.interceptors.response.use((response) => {
         console.error(consoleErrorMessage);
         const maybeBusinessMessage = error.response?.data?.message;
         const errorMessage = hasLength(maybeBusinessMessage) ? "Business error" : "Http error. Check the console";
-        app.setError(maybeBusinessMessage, errorMessage);
+        app.config.globalProperties.setError(maybeBusinessMessage, errorMessage);
         return Promise.reject(error)
     }
 });

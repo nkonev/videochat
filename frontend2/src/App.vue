@@ -58,12 +58,34 @@
       </v-navigation-drawer>
 
       <v-main>
-      <v-container fluid class="ma-0 pa-0" style="height: 100%">
+        <v-container fluid class="ma-0 pa-0" style="height: 100%">
+
+          <v-snackbar v-model="chatStore.showAlert" :color="chatStore.errorColor" timeout="-1" :multi-line="true" :transition="false">
+            {{ chatStore.lastError }}
+
+            <template v-slot:actions>
+              <v-btn
+                text
+                @click="refreshPage()"
+              >
+                Refresh
+              </v-btn>
+
+              <v-btn
+                text
+                @click="closeError()"
+              >
+                Close
+              </v-btn>
+            </template>
+          </v-snackbar>
+
+
 
           <LoginModal/>
 
-          <router-view />
-      </v-container>
+            <router-view />
+        </v-container>
     </v-main>
   </v-app>
 </template>
@@ -98,6 +120,10 @@ export default {
         },
     },
     methods: {
+        refreshPage() {
+          location.reload();
+        },
+
         getDensity() {
             return this.isMobile() ? "comfortable" : "compact";
         },
