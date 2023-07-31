@@ -41,6 +41,7 @@
 
       <v-navigation-drawer
           v-model="drawer"
+          width="400"
       >
           <v-list>
               <v-list-item v-if="chatStore.currentUser" @click.prevent="onProfileClicked()" link :href="getRouteProfile()"
@@ -94,6 +95,7 @@
           v-for="n in 5"
           :key="n"
           :title="`Item ${ n }`"
+          prepend-icon="mdi-forum"
           link
         >
         </v-list-item>
