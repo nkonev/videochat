@@ -89,7 +89,7 @@
         </v-container>
     </v-main>
 
-    <v-navigation-drawer location="right">
+    <v-navigation-drawer location="right" v-model="drawer">
       <v-list>
         <v-list-item
           v-for="n in 5"
