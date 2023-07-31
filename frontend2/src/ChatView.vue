@@ -1,6 +1,6 @@
 <template>
 
-    <v-container :style="heightWithoutAppBar">
+    <v-container :style="heightWithoutAppBar" fluid>
         <div class="my-messages-scroller" @scroll.passive="onScroll">
           <div class="first-element" style="min-height: 1px; background: #9cffa1"></div>
           <div v-for="item in items" :key="item.id" class="card mb-3" :id="getItemId(item.id)">
