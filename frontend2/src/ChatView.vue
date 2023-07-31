@@ -1,6 +1,6 @@
 <template>
 
-    <v-container style="height: calc(100dvh - 64px); background: darkgrey">
+    <v-container :style="heightWithoutAppBar">
         <div class="my-messages-scroller" @scroll.passive="onScroll">
           <div class="first-element" style="min-height: 1px; background: #9cffa1"></div>
           <div v-for="item in items" :key="item.id" class="card mb-3" :id="getItemId(item.id)">
@@ -26,12 +26,14 @@
 <script>
     import axios from "axios";
     import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
+    import heightMixin from "@/mixins/heightMixin";
 
     const PAGE_SIZE = 40;
 
     export default {
       mixins: [
-        infiniteScrollMixin()
+        infiniteScrollMixin(),
+        heightMixin(),
       ],
       data() {
         return {
