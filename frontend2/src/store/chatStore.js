@@ -9,6 +9,7 @@ export const useChatStore = defineStore('chat', {
         notificationsCount: 0,
         showCallButton: false,
         showHangButton: false,
+        isShowSearch: true,
         videoChatUsersCount: 0,
         shouldPhoneBlink: false,
         tetATet: false,

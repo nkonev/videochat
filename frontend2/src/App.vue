@@ -37,6 +37,10 @@
           </template>
           <v-spacer></v-spacer>
 
+          <v-card variant="plain" min-width="400px" flat v-if="chatStore.isShowSearch">
+              <v-text-field density="compact" variant="solo" :autofocus="isMobile()" prepend-inner-icon="mdi-magnify" hide-details single-line @input="clearRouteHash()" v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+          </v-card>
+
       </v-app-bar>
 
       <v-navigation-drawer
@@ -120,6 +124,8 @@ export default {
             drawer: !this.isMobile(),
             lastAnswered: 0,
             showSearchButton: true,
+
+            searchString: "",
         }
     },
     computed: {
@@ -134,6 +140,13 @@ export default {
         },
     },
     methods: {
+        clearRouteHash() {
+
+        },
+        resetInput() {
+          this.searchString = ""
+        },
+
         refreshPage() {
           location.reload();
         },
