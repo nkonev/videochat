@@ -176,19 +176,14 @@ export default {
     }
   },
 
-  created() {
-    bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
-  },
-  destroyed() {
-    bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
-  },
-
   mounted() {
-    this.initScroller()
+    this.initScroller();
+    bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
   },
 
   beforeUnmount() {
-    this.destroyScroller()
+    this.destroyScroller();
+    bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
   }
 }
 </script>
