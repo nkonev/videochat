@@ -89,6 +89,14 @@ export default () => {
         document.querySelector("#"+this.getItemId(restored)).scrollIntoView({behavior: 'instant', block: bottom ? "end" : "start"});
       },
 
+      resetInfiniteScrollVars() {
+          this.items = [];
+          this.isFirstLoad = true;
+          this.loadedTop = false;
+          this.loadedBottom = false;
+          this.aDirection = this.initialDirection();
+      },
+
       async loadTop() {
           console.log("going to load top");
           if (!this.isFirstLoad) {

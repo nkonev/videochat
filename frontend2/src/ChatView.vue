@@ -27,6 +27,9 @@
     import axios from "axios";
     import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
     import heightMixin from "@/mixins/heightMixin";
+    import searchString from "@/mixins/searchString";
+    import bus, {SEARCH_STRING_CHANGED} from "@/bus";
+    import {hasLength} from "@/utils";
 
     const PAGE_SIZE = 40;
 
@@ -34,6 +37,7 @@
       mixins: [
         infiniteScrollMixin(),
         heightMixin(),
+        searchString(),
       ],
       data() {
         return {
@@ -75,12 +79,17 @@
           this.loadedBottom = true;
         },
         async load() {
+          if (!hasLength(this.chatId)) {
+              return Promise.resolve()
+          }
+
           const startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
           return axios.get(`/api/chat/${this.chatId}/message`, {
               params: {
                 startingFromItemId: startingFromItemId,
                 size: PAGE_SIZE,
                 reverse: this.isTopDirection(),
+                searchString: this.searchString,
               },
             })
           .then((res) => {
@@ -134,18 +143,29 @@
         },
         scrollerSelector() {
           return ".my-messages-scroller"
-        }
-      },
+        },
 
-      created() {
+        reset() {
+          this.resetInfiniteScrollVars();
+
+          this.startingFromItemIdTop = null;
+          this.startingFromItemIdBottom = null;
+        },
+        onSearchStringChanged() {
+          this.reset();
+          this.loadTop();
+        }
+
       },
 
       mounted() {
-        this.initScroller()
+        this.initScroller();
+        bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
       },
 
       beforeUnmount() {
-        this.destroyScroller()
+        this.destroyScroller();
+        bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
       }
     }
 </script>

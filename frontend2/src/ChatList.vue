@@ -156,11 +156,7 @@ export default {
         return ".my-chat-scroller"
     },
     reset() {
-      this.items = [];
-      this.isFirstLoad = true;
-      this.loadedTop = false;
-      this.loadedBottom = false;
-      this.aDirection = this.initialDirection();
+      this.resetInfiniteScrollVars();
 
       this.pageTop = 0;
       this.pageBottom = 0;
