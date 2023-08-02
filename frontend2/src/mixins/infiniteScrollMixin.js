@@ -89,6 +89,36 @@ export default () => {
         document.querySelector("#"+this.getItemId(restored)).scrollIntoView({behavior: 'instant', block: bottom ? "end" : "start"});
       },
 
+      async loadTop() {
+          console.log("going to load top");
+          if (!this.isFirstLoad) {
+              this.saveScroll(!this.initialDirection());
+          }
+          await this.load();
+          if (this.isFirstLoad) {
+              this.onFirstLoad();
+              this.isFirstLoad = false;
+          } else {
+              await this.reduceListIfNeed();
+              this.restoreScroll(!this.initialDirection());
+          }
+      },
+
+      async loadBottom() {
+          console.log("going to load bottom");
+          if (!this.isFirstLoad) {
+              this.saveScroll(this.initialDirection());
+          }
+          await this.load();
+          if (this.isFirstLoad) {
+              this.onFirstLoad();
+              this.isFirstLoad = false;
+          } else {
+              await this.reduceListIfNeed();
+              this.restoreScroll(this.initialDirection());
+          }
+      },
+
       initScroller() {
         this.scrollerDiv = document.querySelector(this.scrollerSelector());
 
@@ -114,35 +144,13 @@ export default () => {
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
             console.debug("attempting to load top", !this.loadedTop, this.isTopDirection());
             if (!this.loadedTop && this.isTopDirection()) {
-              console.log("going to load top");
-              if (!this.isFirstLoad) {
-                this.saveScroll(!this.initialDirection());
-              }
-              await this.load();
-              if (this.isFirstLoad) {
-                this.onFirstLoad();
-                this.isFirstLoad = false;
-              } else {
-                await this.reduceListIfNeed();
-                this.restoreScroll(!this.initialDirection());
-              }
+              await this.loadTop();
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
             console.debug("attempting to load bottom", !this.loadedBottom, !this.isTopDirection());
             if (!this.loadedBottom && !this.isTopDirection()) {
-              console.log("going to load bottom");
-              if (!this.isFirstLoad) {
-                this.saveScroll(this.initialDirection());
-              }
-              await this.load();
-              if (this.isFirstLoad) {
-                this.onFirstLoad();
-                this.isFirstLoad = false;
-              } else {
-                await this.reduceListIfNeed();
-                this.restoreScroll(this.initialDirection());
-              }
+              await this.loadBottom();
             }
           }
         };

@@ -31,6 +31,8 @@ import {chat_name} from "@/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
+import bus, {SEARCH_STRING_CHANGED} from "@/bus";
+import searchString from "@/mixins/searchString";
 
 const PAGE_SIZE = 40;
 
@@ -38,6 +40,7 @@ export default {
   mixins: [
     infiniteScrollMixin(),
     heightMixin(),
+    searchString(),
   ],
   data() {
     return {
@@ -99,6 +102,7 @@ export default {
         params: {
           page: page,
           size: PAGE_SIZE,
+          searchString: this.searchString,
         },
       })
         .then((res) => {
@@ -151,13 +155,32 @@ export default {
     scrollerSelector() {
         return ".my-chat-scroller"
     },
+    reset() {
+      this.items = [];
+      this.isFirstLoad = true;
+      this.loadedTop = false;
+      this.loadedBottom = false;
+      this.aDirection = this.initialDirection();
+
+      this.pageTop = 0;
+      this.pageBottom = 0;
+    },
 
     goToChat(id) {
         this.$router.push(({ name: chat_name, params: { id: id}}));
+    },
+
+    onSearchStringChanged() {
+      this.reset();
+      this.loadBottom();
     }
   },
 
   created() {
+    bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
+  },
+  destroyed() {
+    bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
   },
 
   mounted() {

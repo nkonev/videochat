@@ -113,19 +113,21 @@ import '@fontsource/roboto';
 import { hasLength } from "@/utils";
 import {chat_list_name, chat_name, profile, profile_self_name, root, videochat_name} from "@/routes";
 import axios from "axios";
-import bus, {LOGGED_OUT} from "@/bus";
+import bus, {LOGGED_OUT, SEARCH_STRING_CHANGED} from "@/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
+import searchString from "@/mixins/searchString";
 
 export default {
+    mixins: [
+      searchString()
+    ],
     data() {
         return {
             drawer: !this.isMobile(),
             lastAnswered: 0,
             showSearchButton: true,
-
-            searchString: "",
         }
     },
     computed: {
@@ -144,7 +146,7 @@ export default {
 
         },
         resetInput() {
-          this.searchString = ""
+          this.searchString = null
         },
 
         refreshPage() {
@@ -209,6 +211,14 @@ export default {
         this.chatStore.fetchAvailableOauth2Providers().then(() => {
             this.chatStore.fetchUserProfile();
         })
+    },
+    watch: {
+      '$route.query.q': {
+        handler: function (newValue, oldValue) {
+          console.debug("Route q", oldValue, "->", newValue);
+          bus.emit(SEARCH_STRING_CHANGED, {oldValue: oldValue, newValue: newValue});
+        },
+      },
     }
 }
 </script>
