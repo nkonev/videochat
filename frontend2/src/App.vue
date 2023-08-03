@@ -59,6 +59,7 @@
 
           <v-list density="compact" nav>
               <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
+              <v-list-item @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
           </v-list>
       </v-navigation-drawer>
 
@@ -173,7 +174,7 @@ export default {
         },
         logout(){
             console.log("Logout");
-            axios.post(`/api/logout`).then(({ data }) => {
+            axios.post(`/api/logout`).then(() => {
                 this.chatStore.unsetUser();
                 bus.emit(LOGGED_OUT, null);
             });
@@ -218,6 +219,10 @@ export default {
         },
         resetVariables() {
             this.chatStore.unsetNotifications();
+        },
+
+        shouldDisplayLogout() {
+            return this.chatStore.currentUser != null;
         },
     },
     components: {

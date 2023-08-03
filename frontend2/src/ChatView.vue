@@ -28,7 +28,7 @@
     import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
     import heightMixin from "@/mixins/heightMixin";
     import searchString from "@/mixins/searchString";
-    import bus, {PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
+    import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
     import {hasLength} from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -165,7 +165,9 @@
         onProfileSet() {
           this.reloadItems();
         },
-
+        onLoggedOut() {
+          this.reset();
+        },
         canDrawMessages() {
           return !!this.chatStore.currentUser && hasLength(this.chatId)
         },
@@ -178,12 +180,14 @@
         this.initScroller();
         bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
         bus.on(PROFILE_SET, this.onProfileSet);
+        bus.on(LOGGED_OUT, this.onLoggedOut);
       },
 
       beforeUnmount() {
         this.destroyScroller();
         bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
         bus.off(PROFILE_SET, this.onProfileSet);
+        bus.off(LOGGED_OUT, this.onLoggedOut);
       }
     }
 </script>
