@@ -30,6 +30,7 @@
     import searchString from "@/mixins/searchString";
     import bus, {SEARCH_STRING_CHANGED} from "@/bus";
     import {hasLength} from "@/utils";
+    import debounce from "lodash/debounce";
 
     const PAGE_SIZE = 40;
 
@@ -156,6 +157,9 @@
           this.loadTop();
         }
 
+      },
+      created() {
+        this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
       },
 
       mounted() {

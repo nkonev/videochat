@@ -33,6 +33,7 @@ import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {SEARCH_STRING_CHANGED} from "@/bus";
 import searchString from "@/mixins/searchString";
+import debounce from "lodash/debounce";
 
 const PAGE_SIZE = 40;
 
@@ -170,6 +171,9 @@ export default {
       this.reset();
       this.loadBottom();
     }
+  },
+  created() {
+    this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
   },
 
   mounted() {
