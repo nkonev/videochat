@@ -43,7 +43,7 @@
                             </a>
 
                             <v-list-item-content>
-                                <v-list-item-title><a @click.prevent="onParticipantClick(item)" :href="getProfileLink(item)">{{ item?.owner?.login }}</a></v-list-item-title>
+                                <v-list-item-title><a @click.prevent="onParticipantClick(item.owner)" :href="getProfileLink(item.owner)">{{ item?.owner?.login }}</a></v-list-item-title>
                                 <v-list-item-subtitle>
                                     {{ getDate(item) }}
                                 </v-list-item-subtitle>
