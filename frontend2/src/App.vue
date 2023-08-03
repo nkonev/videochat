@@ -7,11 +7,11 @@
           :density="getDensity()"
       >
           <v-badge
-              :content="chatStore.notificationsCount"
-              :value="chatStore.notificationsCount && !drawer"
+              :content="notificationsCount"
+              :model-value="showNotificationBadge"
               color="red"
               overlap
-              offset-y="1.8em"
+              offset-y="10"
           >
               <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
           </v-badge>
@@ -113,7 +113,7 @@ import '@fontsource/roboto';
 import { hasLength } from "@/utils";
 import {chat_list_name, chat_name, profile, profile_self_name, root, videochat_name} from "@/router/routes";
 import axios from "axios";
-import bus, {LOGGED_OUT, SEARCH_STRING_CHANGED} from "@/bus/bus";
+import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
@@ -139,6 +139,12 @@ export default {
         // it differs from original
         chatId() {
             return this.$route.params.id
+        },
+        notificationsCount() {
+            return this.chatStore.notifications.length
+        },
+        showNotificationBadge() {
+            return this.notificationsCount != 0 && !this.drawer
         },
     },
     methods: {
@@ -202,16 +208,35 @@ export default {
         },
         getRouteProfile() {
             return profile
-        }
+        },
+
+        onProfileSet(){
+            this.chatStore.fetchNotifications();
+        },
+        onLoggedOut() {
+            this.resetVariables();
+        },
+        resetVariables() {
+            this.chatStore.unsetNotifications();
+        },
     },
     components: {
         LoginModal
     },
     created() {
+        bus.on(PROFILE_SET, this.onProfileSet);
+        bus.on(LOGGED_OUT, this.onLoggedOut);
+
         this.chatStore.fetchAvailableOauth2Providers().then(() => {
             this.chatStore.fetchUserProfile();
         })
     },
+
+    beforeUnmount() {
+        bus.off(PROFILE_SET, this.onProfileSet);
+        bus.off(LOGGED_OUT, this.onLoggedOut);
+    },
+
     watch: {
       '$route.query.q': {
         handler: function (newValue, oldValue) {
@@ -219,6 +244,13 @@ export default {
           bus.emit(SEARCH_STRING_CHANGED, {oldValue: oldValue, newValue: newValue});
         },
       },
+      'chatStore.currentUser': function(newUserValue, oldUserValue) {
+        console.debug("User new", newUserValue, "old" , oldUserValue);
+        if (newUserValue && !oldUserValue) {
+            bus.emit(PROFILE_SET);
+        }
+      }
+
     }
 }
 </script>

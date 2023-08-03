@@ -1,12 +1,14 @@
 // Utilities
 import { defineStore } from 'pinia'
 import axios from "axios";
+import {setIcon} from "@/utils";
 
 export const useChatStore = defineStore('chat', {
   state: () => {
     return {
         currentUser: null,
-        notificationsCount: 0,
+        notifications: [],
+        notificationsSettings: {},
         showCallButton: false,
         showHangButton: false,
         isShowSearch: true,
@@ -34,8 +36,22 @@ export const useChatStore = defineStore('chat', {
               console.debug("fetched oauth2 providers =", data);
               this.availableOAuth2Providers = data;
           });
-      },
-
+    },
+    fetchNotifications() {
+      axios.get(`/api/notification/notification`).then(( {data} ) => {
+        console.debug("fetched notifications =", data);
+        this.notifications = data;
+        setIcon(data != null && data.length > 0);
+      });
+      axios.get(`/api/notification/settings`).then(( {data} ) => {
+        console.debug("fetched notifications settings =", data);
+        this.notificationsSettings = data;
+      });
+    },
+    unsetNotifications() {
+      this.notifications = [];
+      setIcon(false);
+    }
   },
 
 })
