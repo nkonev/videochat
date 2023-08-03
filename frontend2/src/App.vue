@@ -111,9 +111,9 @@
 <script>
 import '@fontsource/roboto';
 import { hasLength } from "@/utils";
-import {chat_list_name, chat_name, profile, profile_self_name, root, videochat_name} from "@/routes";
+import {chat_list_name, chat_name, profile, profile_self_name, root, videochat_name} from "@/router/routes";
 import axios from "axios";
-import bus, {LOGGED_OUT, SEARCH_STRING_CHANGED} from "@/bus";
+import bus, {LOGGED_OUT, SEARCH_STRING_CHANGED} from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'

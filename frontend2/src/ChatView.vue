@@ -28,7 +28,7 @@
     import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
     import heightMixin from "@/mixins/heightMixin";
     import searchString from "@/mixins/searchString";
-    import bus, {SEARCH_STRING_CHANGED} from "@/bus";
+    import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
     import {hasLength} from "@/utils";
     import debounce from "lodash/debounce";
 

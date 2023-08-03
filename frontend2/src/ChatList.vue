@@ -27,11 +27,11 @@
 <script>
 import axios from "axios";
 import infiniteScrollMixin, {directionBottom, reduceToLength} from "@/mixins/infiniteScrollMixin";
-import {chat_name} from "@/routes";
+import {chat_name} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
-import bus, {SEARCH_STRING_CHANGED} from "@/bus";
+import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
 import searchString from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 

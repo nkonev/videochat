@@ -1,6 +1,6 @@
 // Composables
 import { createRouter, createWebHistory } from 'vue-router'
-import {chat_list_name, chat_name} from "@/routes";
+import {chat_list_name, chat_name} from "@/router/routes";
 
 const routes = [
   {

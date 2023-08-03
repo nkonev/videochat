@@ -15,7 +15,7 @@ import {hasLength, isMobileBrowser, offerToJoinToPublicChatStatus} from "@/utils
 import vuetify from "@/plugins/vuetify";
 import router from "@/router";
 import axios from "axios";
-import bus, {LOGGED_OUT} from "@/bus";
+import bus, {LOGGED_OUT} from "@/bus/bus";
 import {useChatStore} from "@/store/chatStore";
 import pinia from "@/store/index";
 import FontAwesomeIcon from "@/plugins/faIcons";

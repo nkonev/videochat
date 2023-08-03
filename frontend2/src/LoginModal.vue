@@ -80,7 +80,7 @@
 </template>
 
 <script>
-    import bus, {LOGGED_IN, LOGGED_OUT} from "./bus";
+    import bus, {LOGGED_IN, LOGGED_OUT} from "./bus/bus";
     import axios from "axios";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";

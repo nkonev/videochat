@@ -10,7 +10,7 @@ import 'vuetify/styles'
 
 // Composables
 import { createVuetify } from 'vuetify';
-import {getStoredLanguage} from "@/localStore";
+import {getStoredLanguage} from "@/store/localStore";
 import en from "@/locale/en";
 import ru from "@/locale/ru";
 
