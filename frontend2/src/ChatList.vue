@@ -31,7 +31,7 @@ import {chat_name} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
-import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
+import bus, {PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
 import searchString from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 
@@ -51,9 +51,6 @@ export default {
   },
   computed: {
     ...mapStores(useChatStore),
-    userIsSet() {
-      return !!this.chatStore.currentUser
-    },
   },
 
   methods: {
@@ -94,7 +91,7 @@ export default {
       }
     },
     async load() {
-      if (!this.userIsSet) {
+      if (!this.canDrawChats()) {
         return Promise.resolve()
       }
 
@@ -166,11 +163,20 @@ export default {
     goToChat(id) {
         this.$router.push(({ name: chat_name, params: { id: id}}));
     },
-
-    onSearchStringChanged() {
+    reloadItems() {
       this.reset();
       this.loadBottom();
-    }
+    },
+    onSearchStringChanged() {
+      this.reloadItems();
+    },
+    onProfileSet() {
+      this.reloadItems();
+    },
+
+    canDrawChats() {
+      return !!this.chatStore.currentUser
+    },
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
@@ -179,11 +185,13 @@ export default {
   mounted() {
     this.initScroller();
     bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
+    bus.on(PROFILE_SET, this.onProfileSet);
   },
 
   beforeUnmount() {
     this.destroyScroller();
     bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
+    bus.off(PROFILE_SET, this.onProfileSet);
   }
 }
 </script>

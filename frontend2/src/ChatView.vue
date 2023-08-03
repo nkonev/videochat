@@ -28,9 +28,11 @@
     import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
     import heightMixin from "@/mixins/heightMixin";
     import searchString from "@/mixins/searchString";
-    import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
+    import bus, {PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
     import {hasLength} from "@/utils";
     import debounce from "lodash/debounce";
+    import {mapStores} from "pinia";
+    import {useChatStore} from "@/store/chatStore";
 
     const PAGE_SIZE = 40;
 
@@ -48,9 +50,10 @@
       },
 
       computed: {
+        ...mapStores(useChatStore),
         chatId() {
           return this.$route.params.id
-        }
+        },
       },
 
       methods: {
@@ -80,7 +83,7 @@
           this.loadedBottom = true;
         },
         async load() {
-          if (!hasLength(this.chatId)) {
+          if (!this.canDrawMessages()) {
               return Promise.resolve()
           }
 
@@ -152,11 +155,20 @@
           this.startingFromItemIdTop = null;
           this.startingFromItemIdBottom = null;
         },
-        onSearchStringChanged() {
+        reloadItems() {
           this.reset();
           this.loadTop();
-        }
+        },
+        onSearchStringChanged() {
+          this.reloadItems();
+        },
+        onProfileSet() {
+          this.reloadItems();
+        },
 
+        canDrawMessages() {
+          return !!this.chatStore.currentUser && hasLength(this.chatId)
+        },
       },
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
@@ -165,11 +177,13 @@
       mounted() {
         this.initScroller();
         bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
+        bus.on(PROFILE_SET, this.onProfileSet);
       },
 
       beforeUnmount() {
         this.destroyScroller();
         bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
+        bus.off(PROFILE_SET, this.onProfileSet);
       }
     }
 </script>
