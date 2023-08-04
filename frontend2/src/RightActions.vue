@@ -11,25 +11,24 @@
 
     <v-list density="compact" nav>
       <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
+      <v-list-item @click.prevent="onNotificationsClicked()">
+        <template v-slot:prepend>
+            <v-badge
+                :content="notificationsCount"
+                :model-value="showNotificationBadge"
+                color="red"
+                offset-y="-2"
+                offset-x="-6"
+                class="notifications-badge"
+            >
+                <v-icon class="notification-icon">mdi-bell</v-icon>
+            </v-badge>
+        </template>
+        <template v-slot:title>
+            {{ $vuetify.locale.t('$vuetify.notifications') }}
+        </template>
+      </v-list-item>
       <v-list-item @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
-
-        <v-list-item @click.prevent="onNotificationsClicked()">
-            <template v-slot:prepend>
-                <v-badge
-                    :content="notificationsCount"
-                    :model-value="showNotificationBadge"
-                    color="red"
-                    offset-y="-2"
-                    offset-x="-6"
-                    class="notifications-badge"
-                >
-                    <v-icon>mdi-bell</v-icon>
-                </v-badge>
-            </template>
-            <template v-slot:title>
-                {{ $vuetify.locale.t('$vuetify.notifications') }}
-            </template>
-        </v-list-item>
     </v-list>
 
 </template>
@@ -91,5 +90,9 @@ export default {
 
 .notifications-badge {
     margin-inline-end: settings.$list-item-icon-margin-end;
+
+    .notification-icon {
+        opacity: settings.$list-item-icon-opacity;
+    }
 }
 </style>
