@@ -39,7 +39,7 @@
           <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em">
               <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line @input="clearRouteHash()" v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput">
                   <template v-slot:append-inner>
-                      <v-btn icon density="compact" @click.prevent="switchSearchType()"><v-icon>{{ searchIcon }}</v-icon></v-btn>
+                      <v-btn icon density="compact" @click.prevent="switchSearchType()"><v-icon class="search-icon">{{ searchIcon }}</v-icon></v-btn>
                   </template>
               </v-text-field>
           </v-card>
@@ -227,3 +227,11 @@ export default {
     }
 }
 </script>
+
+<style lang="scss">
+@use './styles/settings';
+
+.search-icon {
+  opacity: settings.$list-item-icon-opacity;
+}
+</style>
