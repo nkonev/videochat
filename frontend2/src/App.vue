@@ -39,7 +39,7 @@
           <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em">
               <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line @input="clearRouteHash()" v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput">
                   <template v-slot:append-inner>
-                      <v-btn icon density="compact"><v-icon>mdi-magnify</v-icon></v-btn>
+                      <v-btn icon density="compact" @click.prevent="switchSearchType()"><v-icon>{{ searchIcon }}</v-icon></v-btn>
                   </template>
               </v-text-field>
           </v-card>
@@ -99,7 +99,7 @@ import { chat_name, videochat_name} from "@/router/routes";
 import axios from "axios";
 import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
-import {useChatStore} from "@/store/chatStore";
+import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES, useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
 import searchString from "@/mixins/searchString";
 import RightPanelActions from "@/RightPanelActions.vue";
@@ -131,6 +131,13 @@ export default {
         showNotificationBadge() {
             return this.notificationsCount != 0 && !this.chatStore.drawer
         },
+        searchIcon() {
+          if (this.chatStore.searchType == SEARCH_MODE_CHATS) {
+            return 'mdi-forum'
+          } else if (this.chatStore.searchType == SEARCH_MODE_MESSAGES) {
+            return 'mdi-message-text-outline'
+          }
+        }
     },
     methods: {
         clearRouteHash() {
@@ -180,6 +187,9 @@ export default {
         resetVariables() {
             this.chatStore.unsetNotifications();
         },
+        switchSearchType() {
+          this.chatStore.switchSearchType()
+        }
     },
     components: {
         LeftPanelChats,

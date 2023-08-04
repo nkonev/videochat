@@ -32,7 +32,7 @@
     import {hasLength} from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
-    import {useChatStore} from "@/store/chatStore";
+    import {SEARCH_MODE_MESSAGES, useChatStore} from "@/store/chatStore";
 
     const PAGE_SIZE = 40;
 
@@ -181,6 +181,8 @@
         bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
+
+        this.chatStore.searchType = SEARCH_MODE_MESSAGES;
       },
 
       beforeUnmount() {

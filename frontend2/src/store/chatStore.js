@@ -3,6 +3,9 @@ import { defineStore } from 'pinia'
 import axios from "axios";
 import {isMobileBrowser, setIcon} from "@/utils";
 
+export const SEARCH_MODE_CHATS = "SEARCH_MODE_CHATS"
+export const SEARCH_MODE_MESSAGES = "SEARCH_MODE_MESSAGES"
+
 export const useChatStore = defineStore('chat', {
   state: () => {
     return {
@@ -19,7 +22,8 @@ export const useChatStore = defineStore('chat', {
         showAlert: false,
         lastError: "",
         errorColor: "",
-        showDrawer: isMobileBrowser()
+        showDrawer: isMobileBrowser(),
+        searchType: SEARCH_MODE_CHATS,
     }
   },
   actions: {
@@ -52,6 +56,13 @@ export const useChatStore = defineStore('chat', {
     unsetNotifications() {
       this.notifications = [];
       setIcon(false);
+    },
+    switchSearchType() {
+      if (this.searchType == SEARCH_MODE_CHATS) {
+        this.searchType = SEARCH_MODE_MESSAGES
+      } else if (this.searchType == SEARCH_MODE_MESSAGES) {
+        this.searchType = SEARCH_MODE_CHATS
+      }
     }
   },
 
