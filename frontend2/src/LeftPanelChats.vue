@@ -3,7 +3,7 @@
     <v-list-item
       v-for="n in 5"
       :key="n"
-      :title="`Item ${ n }`"
+      :title="`Chat ${ n }`"
       prepend-icon="mdi-forum"
       link
     >

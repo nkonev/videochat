@@ -47,7 +47,7 @@
           v-model="chatStore.drawer"
           width="400"
       >
-          <LeftChats/>
+          <LeftPanelChats/>
       </v-navigation-drawer>
 
       <v-main>
@@ -82,7 +82,7 @@
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
-        <RightActions/>
+        <RightPanelActions/>
     </v-navigation-drawer>
   </v-app>
 </template>
@@ -97,8 +97,8 @@ import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
 import searchString from "@/mixins/searchString";
-import RightActions from "@/RightActions.vue";
-import LeftChats from "@/LeftChats.vue";
+import RightPanelActions from "@/RightPanelActions.vue";
+import LeftPanelChats from "@/LeftPanelChats.vue";
 
 export default {
     mixins: [
@@ -177,8 +177,8 @@ export default {
         },
     },
     components: {
-        LeftChats,
-        RightActions,
+        LeftPanelChats,
+        RightPanelActions,
         LoginModal,
     },
     created() {
