@@ -105,11 +105,6 @@ import {searchStringFacade, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mix
 import RightPanelActions from "@/RightPanelActions.vue";
 import LeftPanelChats from "@/LeftPanelChats.vue";
 
-function searchStringListener (newValue, oldValue) {
-    console.debug("Route q", oldValue, "->", newValue);
-    bus.emit(SEARCH_STRING_CHANGED, {oldValue: oldValue, newValue: newValue});
-}
-
 export default {
     mixins: [
         searchStringFacade()
@@ -216,19 +211,12 @@ export default {
     },
 
     watch: {
-      ['$route.query.'+SEARCH_MODE_CHATS]: {
-          handler: searchStringListener,
-      },
-      ['$route.query.'+SEARCH_MODE_MESSAGES]: {
-          handler: searchStringListener,
-       },
       'chatStore.currentUser': function(newUserValue, oldUserValue) {
         console.debug("User new", newUserValue, "old" , oldUserValue);
         if (newUserValue && !oldUserValue) {
             bus.emit(PROFILE_SET);
         }
-      }
-
+      },
     }
 }
 </script>

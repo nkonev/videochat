@@ -1,4 +1,5 @@
 import {deepCopy, hasLength} from "@/utils";
+import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
 
 export const SEARCH_MODE_CHATS = "qc"
 export const SEARCH_MODE_MESSAGES = "qm"
@@ -6,6 +7,11 @@ export const SEARCH_MODE_MESSAGES = "qm"
 export const goToPreserving = (route, router, to) => {
     const prev = deepCopy(route.query);
     router.push({ ...to, query: prev })
+}
+
+function searchStringListener (newValue, oldValue) {
+    console.debug("Route q", oldValue, "->", newValue);
+    bus.emit(SEARCH_STRING_CHANGED, {oldValue: oldValue, newValue: newValue});
 }
 
 export const searchStringFacade = () => {
@@ -30,6 +36,14 @@ export const searchStringFacade = () => {
                 }
 
             }
+        },
+        watch: {
+            ['$route.query.'+SEARCH_MODE_CHATS]: {
+                handler: searchStringListener,
+            },
+            ['$route.query.'+SEARCH_MODE_MESSAGES]: {
+                handler: searchStringListener,
+            },
         }
     }
 }
