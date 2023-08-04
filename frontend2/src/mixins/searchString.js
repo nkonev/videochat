@@ -9,11 +9,6 @@ export const goToPreserving = (route, router, to) => {
     router.push({ ...to, query: prev })
 }
 
-function searchStringListener (newValue, oldValue) {
-    console.debug("Route q", oldValue, "->", newValue);
-    bus.emit(SEARCH_STRING_CHANGED, {oldValue: oldValue, newValue: newValue});
-}
-
 export const searchStringFacade = () => {
     return {
         computed: {
@@ -39,10 +34,18 @@ export const searchStringFacade = () => {
         },
         watch: {
             ['$route.query.'+SEARCH_MODE_CHATS]: {
-                handler: searchStringListener,
+                handler: function (newValue, oldValue) {
+                    console.debug("Route q", oldValue, "->", newValue);
+                    bus.emit(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, {oldValue: oldValue, newValue: newValue});
+                }
+                ,
             },
             ['$route.query.'+SEARCH_MODE_MESSAGES]: {
-                handler: searchStringListener,
+                handler: function (newValue, oldValue) {
+                    console.debug("Route q", oldValue, "->", newValue);
+                    bus.emit(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, {oldValue: oldValue, newValue: newValue});
+                }
+                ,
             },
         }
     }

@@ -187,7 +187,7 @@ export default {
 
   mounted() {
     this.initScroller();
-    bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
+    bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
 
@@ -196,7 +196,7 @@ export default {
 
   beforeUnmount() {
     this.destroyScroller();
-    bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
+    bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
   }
