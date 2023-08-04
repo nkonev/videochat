@@ -37,7 +37,11 @@
           </template>
 
           <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em">
-              <v-text-field density="compact" variant="solo" :autofocus="isMobile()" append-inner-icon="mdi-magnify" hide-details single-line @input="clearRouteHash()" v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+              <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line @input="clearRouteHash()" v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput">
+                  <template v-slot:append-inner>
+                      <v-btn icon density="compact"><v-icon>mdi-magnify</v-icon></v-btn>
+                  </template>
+              </v-text-field>
           </v-card>
 
           <v-spacer></v-spacer>
