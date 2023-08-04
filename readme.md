@@ -8,6 +8,7 @@ Your open source self-hosted videoconference platform.
 # Features:
 * Well-integrated video calls into entire platform UI, no separated video rooms, text chats, etc...
 * No installation on client's machine - only modern browser with video camera or microphone required.
+* Tested in Firefox and Chrome.
 * File [sharing](./screenshots.md#chat-files).
 * Screen [sharing](./screenshots.md#screen-sharing).
 * Multiple cameras support.
