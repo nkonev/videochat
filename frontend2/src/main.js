@@ -50,7 +50,7 @@ registerPlugins(app)
 app.component("font-awesome-icon", FontAwesomeIcon)
 
 app.config.globalProperties.isMobile = () => {
-    return vuetify.display.mobile && isMobileBrowser()
+    return isMobileBrowser()
 }
 app.config.globalProperties.setError = (e, txt, details) => {
     if (details) {

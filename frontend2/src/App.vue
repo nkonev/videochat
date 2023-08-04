@@ -44,23 +44,10 @@
       </v-app-bar>
 
       <v-navigation-drawer
-          v-model="drawer"
+          v-model="chatStore.drawer"
           width="400"
       >
-          <v-list>
-              <v-list-item v-if="chatStore.currentUser" @click.prevent="onProfileClicked()" link :href="getRouteProfile()"
-                           :prepend-avatar="chatStore.currentUser.avatar"
-                           :title="chatStore.currentUser.login"
-                           :subtitle="chatStore.currentUser.shortInfo"
-              ></v-list-item>
-          </v-list>
-
-          <v-divider></v-divider>
-
-          <v-list density="compact" nav>
-              <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
-              <v-list-item @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
-          </v-list>
+          <LeftChats/>
       </v-navigation-drawer>
 
       <v-main>
@@ -94,17 +81,8 @@
         </v-container>
     </v-main>
 
-    <v-navigation-drawer location="right" v-model="drawer">
-      <v-list>
-        <v-list-item
-          v-for="n in 5"
-          :key="n"
-          :title="`Item ${ n }`"
-          prepend-icon="mdi-forum"
-          link
-        >
-        </v-list-item>
-      </v-list>
+    <v-navigation-drawer location="right" v-model="chatStore.drawer">
+        <RightActions/>
     </v-navigation-drawer>
   </v-app>
 </template>
@@ -112,13 +90,15 @@
 <script>
 import '@fontsource/roboto';
 import { hasLength } from "@/utils";
-import {chat_list_name, chat_name, profile, profile_self_name, root, videochat_name} from "@/router/routes";
+import { chat_name, videochat_name} from "@/router/routes";
 import axios from "axios";
 import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
 import searchString from "@/mixins/searchString";
+import RightActions from "@/RightActions.vue";
+import LeftChats from "@/LeftChats.vue";
 
 export default {
     mixins: [
@@ -126,7 +106,6 @@ export default {
     ],
     data() {
         return {
-            drawer: !this.isMobile(),
             lastAnswered: 0,
             showSearchButton: true,
         }
@@ -145,7 +124,7 @@ export default {
             return this.chatStore.notifications.length
         },
         showNotificationBadge() {
-            return this.notificationsCount != 0 && !this.drawer
+            return this.notificationsCount != 0 && !this.chatStore.drawer
         },
     },
     methods: {
@@ -166,18 +145,8 @@ export default {
         showCurrentUserSubtitle(){
             return hasLength(this.chatStore.currentUser?.shortInfo)
         },
-        goHome() {
-            this.$router.push(({ name: chat_list_name}))
-        },
         toggleLeftNavigation() {
-            this.$data.drawer = !this.$data.drawer;
-        },
-        logout(){
-            console.log("Logout");
-            axios.post(`/api/logout`).then(() => {
-                this.chatStore.unsetUser();
-                bus.emit(LOGGED_OUT, null);
-            });
+            this.chatStore.drawer = !this.chatStore.drawer;
         },
         createCall() {
             console.debug("createCall");
@@ -196,20 +165,6 @@ export default {
         updateLastAnsweredTimestamp() {
             this.lastAnswered = +new Date();
         },
-        goProfile() {
-            this.$router.push(({ name: profile_self_name}))
-        },
-        onProfileClicked() {
-            if (!this.isMobile()) {
-                this.goProfile();
-            }
-        },
-        getRouteRoot() {
-            return root
-        },
-        getRouteProfile() {
-            return profile
-        },
 
         onProfileSet(){
             this.chatStore.fetchNotifications();
@@ -220,13 +175,11 @@ export default {
         resetVariables() {
             this.chatStore.unsetNotifications();
         },
-
-        shouldDisplayLogout() {
-            return this.chatStore.currentUser != null;
-        },
     },
     components: {
-        LoginModal
+        LeftChats,
+        RightActions,
+        LoginModal,
     },
     created() {
         bus.on(PROFILE_SET, this.onProfileSet);

@@ -1,7 +1,7 @@
 // Utilities
 import { defineStore } from 'pinia'
 import axios from "axios";
-import {setIcon} from "@/utils";
+import {isMobileBrowser, setIcon} from "@/utils";
 
 export const useChatStore = defineStore('chat', {
   state: () => {
@@ -19,6 +19,7 @@ export const useChatStore = defineStore('chat', {
         showAlert: false,
         lastError: "",
         errorColor: "",
+        showDrawer: isMobileBrowser()
     }
   },
   actions: {
