@@ -10,48 +10,6 @@
 
 # Development
 
-## Firewalld help
-[Solve no route to host whe invoke host from container by add firewalld rich rule](https://forums.docker.com/t/no-route-to-host-network-request-from-container-to-host-ip-port-published-from-other-container/39063/6)
-[Firewalld examples](https://www.rootusers.com/how-to-use-firewalld-rich-rules-and-zones-for-filtering-and-nat/)
-```bash
-firewall-cmd --permanent --zone=public --list-rich-rules
-firewall-cmd --get-default-zone
-```
-
-# Add firewall exception on dev
-```bash
-firewall-cmd --zone=public --add-port=8081/tcp
-```
-
-# Open firewall on macOS
-```
-https://www.macworld.co.uk/how-to/how-open-specific-ports-in-os-x-1010-firewall-3616405/
-```
-
-# Add firewall exception on prod (not working, not need)
-[link](https://www.digitalocean.com/community/tutorials/how-to-configure-the-linux-firewall-for-docker-swarm-on-centos-7)
-```
-firewall-cmd --zone=public --add-port=3478/tcp  --permanent
-firewall-cmd --zone=public --add-port=3478/udp  --permanent
-firewall-cmd --zone=public --add-port=40000-40020/udp  --permanent
-firewall-cmd --zone=public --add-port=40000-40020/tcp  --permanent
-firewall-cmd --zone=public --add-port=57001-57021/tcp  --permanent
-firewall-cmd --zone=public --add-port=57001-57021/udp  --permanent
-
-firewall-cmd --reload
-
-systemctl restart docker
-
-firewall-cmd --list-all-zones
-```
-
-# Temporarily allow firewalld ports for usage in local network (not necessary in Fedora)
-```
-firewall-cmd --zone=public --add-port=8081/tcp
-firewall-cmd --zone=public --add-port=3478/tcp
-firewall-cmd --zone=public --add-port=3478/udp
-firewall-cmd --zone=public --add-port=5000-5100/udp
-```
 
 [node check updates](https://www.npmjs.com/package/npm-check-updates)
 
@@ -132,12 +90,12 @@ $ /usr/bin/node /home/nkonev/go_1_11/videochat/frontend/node_modules/fibers/buil
 [In plain Russian](http://forasoft.github.io/webrtc-in-plain-russian/)
 
 
-# Firefox enable video on non-localhost
-https://lists.mozilla.org/pipermail/dev-platform/2019-February/023590.html
-about:config
-media.devices.insecure.enabled
-
 # Access to video camera (WebRTC) from local network without https from Mobile:
+
+Let's suppose you decided to test videochat in your LAN. You don't have a certificate, you use plain http.
+
+The following steps are going to help you to enable WebRTC for non-https setup (disable browser's protection mechanisms).
+
 ## Firefox
 1. Install Firefox Beta (`about:config`it is working only in Beta releases and disabled in regular)
 2. Open `about:config`
@@ -174,6 +132,11 @@ Correct output
 2: Average round trip delay 11.500000 ms; min = 11 ms, max = 13 ms
 2: Average jitter 0.800000 ms; min = 0 ms, max = 2 ms
 ```
+
+# Firefox enable video on non-localhost
+https://lists.mozilla.org/pipermail/dev-platform/2019-February/023590.html
+about:config
+media.devices.insecure.enabled
 
 
 # Alternatives (SFU servers)
@@ -269,7 +232,7 @@ You can match media stream id, media track id in console (F12) and in `about:web
 Peer connection does not have id. [1](https://github.com/w3c/webrtc-pc/issues/1775), [2](https://github.com/pion/webrtc/issues/1250)
 
 
-## Known issues
+## Known issues (Outdated, non-actual)
 
 ### Codecs
 When Call started in th next sequence
@@ -338,6 +301,49 @@ for x in range(35200, 35401):
         published: %d
         protocol: udp
         mode: host""" % (x, x))
+```
+
+## Firewalld help
+[Solve no route to host whe invoke host from container by add firewalld rich rule](https://forums.docker.com/t/no-route-to-host-network-request-from-container-to-host-ip-port-published-from-other-container/39063/6)
+[Firewalld examples](https://www.rootusers.com/how-to-use-firewalld-rich-rules-and-zones-for-filtering-and-nat/)
+```bash
+firewall-cmd --permanent --zone=public --list-rich-rules
+firewall-cmd --get-default-zone
+```
+
+# Add firewall exception on dev
+```bash
+firewall-cmd --zone=public --add-port=8081/tcp
+```
+
+# Open firewall on macOS
+```
+https://www.macworld.co.uk/how-to/how-open-specific-ports-in-os-x-1010-firewall-3616405/
+```
+
+# Add firewall exception on prod (not working, not need)
+[link](https://www.digitalocean.com/community/tutorials/how-to-configure-the-linux-firewall-for-docker-swarm-on-centos-7)
+```
+firewall-cmd --zone=public --add-port=3478/tcp  --permanent
+firewall-cmd --zone=public --add-port=3478/udp  --permanent
+firewall-cmd --zone=public --add-port=40000-40020/udp  --permanent
+firewall-cmd --zone=public --add-port=40000-40020/tcp  --permanent
+firewall-cmd --zone=public --add-port=57001-57021/tcp  --permanent
+firewall-cmd --zone=public --add-port=57001-57021/udp  --permanent
+
+firewall-cmd --reload
+
+systemctl restart docker
+
+firewall-cmd --list-all-zones
+```
+
+# Temporarily allow firewalld ports for usage in local network (not necessary in Fedora)
+```
+firewall-cmd --zone=public --add-port=8081/tcp
+firewall-cmd --zone=public --add-port=3478/tcp
+firewall-cmd --zone=public --add-port=3478/udp
+firewall-cmd --zone=public --add-port=5000-5100/udp
 ```
 
 
