@@ -27,7 +27,7 @@
     import axios from "axios";
     import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
     import heightMixin from "@/mixins/heightMixin";
-    import searchString, {SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
+    import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
     import {hasLength} from "@/utils";
     import debounce from "lodash/debounce";

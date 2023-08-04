@@ -32,7 +32,7 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
-import searchString, {goToPreserving, SEARCH_MODE_CHATS} from "@/mixins/searchString";
+import {searchString, goToPreserving, SEARCH_MODE_CHATS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 
 const PAGE_SIZE = 40;

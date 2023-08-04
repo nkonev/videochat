@@ -94,14 +94,14 @@
 
 <script>
 import '@fontsource/roboto';
-import {deepCopy, hasLength} from "@/utils";
+import { hasLength} from "@/utils";
 import { chat_name, videochat_name} from "@/router/routes";
 import axios from "axios";
 import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
-import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
+import {searchStringFacade, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import RightPanelActions from "@/RightPanelActions.vue";
 import LeftPanelChats from "@/LeftPanelChats.vue";
 
@@ -111,6 +111,9 @@ function searchStringListener (newValue, oldValue) {
 }
 
 export default {
+    mixins: [
+        searchStringFacade()
+    ],
     data() {
         return {
             lastAnswered: 0,
@@ -140,25 +143,6 @@ export default {
             return 'mdi-message-text-outline'
           }
         },
-        searchStringFacade: {
-            get() {
-                return this.$route.query[this.chatStore.searchType];
-            },
-            set(newVal) {
-                const prev = deepCopy(this.$route.query);
-
-                let newQuery;
-                if (hasLength(newVal)) {
-                    prev[this.chatStore.searchType] = newVal;
-                } else {
-                    delete prev[this.chatStore.searchType]
-                }
-                newQuery = prev;
-
-                this.$router.push({ query: newQuery })
-            }
-
-        }
     },
     methods: {
         clearRouteHash() {

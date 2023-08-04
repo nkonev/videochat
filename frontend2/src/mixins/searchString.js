@@ -8,7 +8,33 @@ export const goToPreserving = (route, router, to) => {
     router.push({ ...to, query: prev })
 }
 
-export default (name) => {
+export const searchStringFacade = () => {
+    return {
+        computed: {
+            searchStringFacade: {
+                get() {
+                    return this.$route.query[this.chatStore.searchType];
+                },
+                set(newVal) {
+                    const prev = deepCopy(this.$route.query);
+
+                    let newQuery;
+                    if (hasLength(newVal)) {
+                        prev[this.chatStore.searchType] = newVal;
+                    } else {
+                        delete prev[this.chatStore.searchType]
+                    }
+                    newQuery = prev;
+
+                    this.$router.push({query: newQuery})
+                }
+
+            }
+        }
+    }
+}
+
+export const searchString = (name) => {
   return {
     computed: {
       searchString: {
