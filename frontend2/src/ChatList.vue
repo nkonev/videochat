@@ -27,12 +27,12 @@
 <script>
 import axios from "axios";
 import infiniteScrollMixin, {directionBottom, reduceToLength} from "@/mixins/infiniteScrollMixin";
-import {chat_name} from "@/router/routes";
-import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES, useChatStore} from "@/store/chatStore";
+import {chat_list_name, chat_name} from "@/router/routes";
+import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
-import searchString from "@/mixins/searchString";
+import searchString, {goToPreserving, SEARCH_MODE_CHATS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 
 const PAGE_SIZE = 40;
@@ -41,7 +41,7 @@ export default {
   mixins: [
     infiniteScrollMixin(),
     heightMixin(),
-    searchString(),
+    searchString(SEARCH_MODE_CHATS),
   ],
   data() {
     return {
@@ -161,7 +161,7 @@ export default {
     },
 
     goToChat(id) {
-        this.$router.push(({ name: chat_name, params: { id: id}}));
+        goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: id}})
     },
     reloadItems() {
       this.reset();

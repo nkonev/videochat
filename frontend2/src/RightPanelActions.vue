@@ -66,7 +66,7 @@ export default {
       return profile
     },
     goHome() {
-      this.$router.push(({ name: chat_list_name}))
+      this.$router.push({ name: chat_list_name})
     },
     logout(){
       console.log("Logout");

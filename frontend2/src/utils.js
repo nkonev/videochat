@@ -25,3 +25,7 @@ export const setIcon = (newMessages) => {
     link.href = '/front2/favicon2.svg';
   }
 }
+
+export const deepCopy = (aVal) => {
+    return JSON.parse(JSON.stringify(aVal))
+}

@@ -2,9 +2,7 @@
 import { defineStore } from 'pinia'
 import axios from "axios";
 import {isMobileBrowser, setIcon} from "@/utils";
-
-export const SEARCH_MODE_CHATS = "SEARCH_MODE_CHATS"
-export const SEARCH_MODE_MESSAGES = "SEARCH_MODE_MESSAGES"
+import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 
 export const useChatStore = defineStore('chat', {
   state: () => {

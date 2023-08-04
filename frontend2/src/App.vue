@@ -37,7 +37,7 @@
           </template>
 
           <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em">
-              <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line @input="clearRouteHash()" v-model="searchString" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput">
+              <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line @input="clearRouteHash()" v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput">
                   <template v-slot:append-inner>
                       <v-btn icon density="compact" @click.prevent="switchSearchType()"><v-icon class="search-icon">{{ searchIcon }}</v-icon></v-btn>
                   </template>
@@ -94,21 +94,23 @@
 
 <script>
 import '@fontsource/roboto';
-import { hasLength } from "@/utils";
+import {deepCopy, hasLength} from "@/utils";
 import { chat_name, videochat_name} from "@/router/routes";
 import axios from "axios";
 import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
-import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES, useChatStore} from "@/store/chatStore";
+import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
-import searchString from "@/mixins/searchString";
+import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import RightPanelActions from "@/RightPanelActions.vue";
 import LeftPanelChats from "@/LeftPanelChats.vue";
 
+function searchStringListener (newValue, oldValue) {
+    console.debug("Route q", oldValue, "->", newValue);
+    bus.emit(SEARCH_STRING_CHANGED, {oldValue: oldValue, newValue: newValue});
+}
+
 export default {
-    mixins: [
-      searchString()
-    ],
     data() {
         return {
             lastAnswered: 0,
@@ -137,6 +139,25 @@ export default {
           } else if (this.chatStore.searchType == SEARCH_MODE_MESSAGES) {
             return 'mdi-message-text-outline'
           }
+        },
+        searchStringFacade: {
+            get() {
+                return this.$route.query[this.chatStore.searchType];
+            },
+            set(newVal) {
+                const prev = deepCopy(this.$route.query);
+
+                let newQuery;
+                if (hasLength(newVal)) {
+                    prev[this.chatStore.searchType] = newVal;
+                } else {
+                    delete prev[this.chatStore.searchType]
+                }
+                newQuery = prev;
+
+                this.$router.push({ query: newQuery })
+            }
+
         }
     },
     methods: {
@@ -144,7 +165,7 @@ export default {
 
         },
         resetInput() {
-          this.searchString = null
+          this.searchStringFacade = null
         },
 
         refreshPage() {
@@ -211,12 +232,12 @@ export default {
     },
 
     watch: {
-      '$route.query.q': {
-        handler: function (newValue, oldValue) {
-          console.debug("Route q", oldValue, "->", newValue);
-          bus.emit(SEARCH_STRING_CHANGED, {oldValue: oldValue, newValue: newValue});
-        },
+      ['$route.query.'+SEARCH_MODE_CHATS]: {
+          handler: searchStringListener,
       },
+      ['$route.query.'+SEARCH_MODE_MESSAGES]: {
+          handler: searchStringListener,
+       },
       'chatStore.currentUser': function(newUserValue, oldUserValue) {
         console.debug("User new", newUserValue, "old" , oldUserValue);
         if (newUserValue && !oldUserValue) {
