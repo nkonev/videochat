@@ -36,9 +36,10 @@
 <script>
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
-import {chat_list_name, profile, profile_self_name, root} from "@/router/routes";
+import {chat_list_name, chat_name, profile, profile_self_name, root} from "@/router/routes";
 import axios from "axios";
 import bus, {LOGGED_OUT, OPEN_NOTIFICATIONS_DIALOG} from "@/bus/bus";
+import {goToPreserving} from "@/mixins/searchString";
 
 export default {
   computed: {
@@ -66,7 +67,7 @@ export default {
       return profile
     },
     goHome() {
-      this.$router.push({ name: chat_list_name})
+      goToPreserving(this.$route, this.$router, { name: chat_list_name});
     },
     logout(){
       console.log("Logout");
