@@ -20,8 +20,8 @@ export const setIcon = (newMessages) => {
     document.getElementsByTagName('head')[0].appendChild(link);
   }
   if (newMessages) {
-    link.href = '/favicon_new.svg';
+    link.href = '/front2/favicon_new2.svg';
   } else {
-    link.href = '/favicon.svg';
+    link.href = '/front2/favicon2.svg';
   }
 }
