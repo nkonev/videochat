@@ -177,6 +177,13 @@
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
       },
 
+      watch: {
+          chatId(newVal, oldVal) {
+              console.debug("Chat id has been changed", oldVal, "->", newVal);
+              this.reloadItems();
+          }
+      },
+
       mounted() {
         this.initScroller();
         bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
