@@ -4,7 +4,7 @@
             <ChatList/>
         </pane>
         <pane>
-            <div> right </div>
+            <MessageList/>
         </pane>
     </splitpanes>
 </template>
@@ -13,9 +13,10 @@
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import ChatList from "@/ChatList.vue";
+import MessageList from "@/MessageList.vue";
 
 export default {
-    components: { Splitpanes, Pane, ChatList },
+    components: { Splitpanes, Pane, ChatList, MessageList },
 }
 </script>
 
