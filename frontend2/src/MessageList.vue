@@ -2,7 +2,7 @@
 
     <v-container :style="heightWithoutAppBar" fluid class="pa-0 ma-0">
         <div class="my-messages-scroller" @scroll.passive="onScroll">
-          <div class="first-element" style="min-height: 1px; background: #9cffa1"></div>
+          <div class="message-first-element" style="min-height: 1px; background: #9cffa1"></div>
           <div v-for="item in items" :key="item.id" class="card mb-3" :id="getItemId(item.id)">
             <div class="row g-0">
               <div class="col">
@@ -15,7 +15,7 @@
               </div>
             </div>
           </div>
-          <div class="last-element" style="min-height: 1px; background: #c62828"></div>
+          <div class="message-last-element" style="min-height: 1px; background: #c62828"></div>
 
         </div>
 
@@ -131,13 +131,13 @@
         },
 
         bottomElementSelector() {
-          return ".first-element"
+          return ".message-first-element"
         },
         topElementSelector() {
-          return ".last-element"
+          return ".message-last-element"
         },
         getItemId(id) {
-          return 'item-' + id
+          return 'message-item-' + id
         },
 
         scrollDown() {

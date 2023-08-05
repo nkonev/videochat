@@ -50,7 +50,7 @@ export default (name) => {
                 this.reduceTop();
                 this.loadedTop = false;
             }
-            console.log("Reduced to", maxItemsLength, this.loadedBottom, this.loadedTop);
+            console.log("Reduced to", maxItemsLength, this.loadedBottom, this.loadedTop, "in", name);
           });
         }
       },
@@ -85,7 +85,7 @@ export default (name) => {
 
       restoreScroll(bottom) {
         const restored = this.preservedScroll;
-        console.log("Restored scroll to element id", restored);
+        console.log("Restored scroll to element id", restored, "in", name);
         document.querySelector("#"+this.getItemId(restored))?.scrollIntoView({behavior: 'instant', block: bottom ? "end" : "start"});
       },
 
@@ -98,7 +98,7 @@ export default (name) => {
       },
 
       async loadTop() {
-          console.log("going to load top");
+          console.log("going to load top in", name);
           if (!this.isFirstLoad) {
               this.saveScroll(!this.initialDirection());
           }
@@ -113,7 +113,7 @@ export default (name) => {
       },
 
       async loadBottom() {
-          console.log("going to load bottom");
+          console.log("going to load bottom in", name);
           if (!this.isFirstLoad) {
               this.saveScroll(this.initialDirection());
           }
@@ -152,13 +152,13 @@ export default (name) => {
           console.log("Invoking callback in", name, mappedEntries);
 
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
-            console.debug("attempting to load top", !this.loadedTop, this.isTopDirection());
+            console.debug("attempting to load top", !this.loadedTop, this.isTopDirection(), "in", name);
             if (!this.loadedTop && this.isTopDirection()) {
               await this.loadTop();
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
-            console.debug("attempting to load bottom", !this.loadedBottom, !this.isTopDirection());
+            console.debug("attempting to load bottom", !this.loadedBottom, !this.isTopDirection(), "in", name);
             if (!this.loadedBottom && !this.isTopDirection()) {
               await this.loadBottom();
             }
