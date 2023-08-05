@@ -6,7 +6,7 @@ const routes = [
   {
     name: chat_name,
     path: '/front2/chat/:id',
-    component: () => import('@/ChatView.vue'),
+    component: () => import('@/MessageList.vue'),
   },
   {
     name: chat_list_name,
