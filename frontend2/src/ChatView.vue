@@ -1,6 +1,6 @@
 <template>
-    <splitpanes class="default-theme">
-        <pane>
+    <splitpanes class="default-theme" :dbl-click-splitter="false">
+        <pane size="30">
             <ChatList/>
         </pane>
         <pane>
