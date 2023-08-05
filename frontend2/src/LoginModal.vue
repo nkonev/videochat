@@ -8,7 +8,7 @@
             <v-card>
                 <v-card-title :class="isMobile() ? 'pa-4 pb-2 headline' : 'headline'">{{ $vuetify.locale.t('$vuetify.login_title') }}</v-card-title>
 
-                <v-card-text :class="isMobile() ? 'pa-4 pt-0' : ''">
+                <v-card-text :class="isMobile() ? 'pa-4 pt-0' : 'pt-0'">
                     <v-form
                         ref="form"
                         v-model="valid"
@@ -23,6 +23,7 @@
                                 required
                                 :disabled="disable"
                                 @input="hideAlert()"
+                                variant="underlined"
                         ></v-text-field>
 
                         <v-text-field
@@ -36,12 +37,14 @@
                                 :type="showInputablePassword ? 'text' : 'password'"
                                 :disabled="disable"
                                 @input="hideAlert()"
+                                variant="underlined"
                         ></v-text-field>
 
                         <v-alert
                                 dismissible
                                 v-model="showAlert"
                                 type="error"
+                                class="mb-4"
                         >
                             <v-row align="center">
                                 <v-col class="grow">{{loginError}}</v-col>
