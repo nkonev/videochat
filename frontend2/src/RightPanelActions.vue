@@ -28,7 +28,7 @@
             {{ $vuetify.locale.t('$vuetify.notifications') }}
         </template>
       </v-list-item>
-      <v-list-item @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
+      <v-list-item :disabled="loading" @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
     </v-list>
 
 </template>
@@ -42,6 +42,11 @@ import bus, {LOGGED_OUT, OPEN_NOTIFICATIONS_DIALOG} from "@/bus/bus";
 import {goToPreserving} from "@/mixins/searchString";
 
 export default {
+  data() {
+      return {
+          loading: false
+      }
+  },
   computed: {
     ...mapStores(useChatStore),
       notificationsCount() {
@@ -70,10 +75,12 @@ export default {
       goToPreserving(this.$route, this.$router, { name: chat_list_name});
     },
     logout(){
-      console.log("Logout");
+      this.loading = true;
       axios.post(`/api/logout`).then(() => {
         this.chatStore.unsetUser();
         bus.emit(LOGGED_OUT, null);
+      }).finally(()=>{
+          this.loading = false;
       });
     },
     shouldDisplayLogout() {
