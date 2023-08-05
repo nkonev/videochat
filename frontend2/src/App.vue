@@ -73,6 +73,7 @@
 
           <router-view />
         </v-container>
+        <LoginModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
