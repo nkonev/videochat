@@ -1,23 +1,28 @@
 // Composables
-import { createRouter, createWebHistory } from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 import {chat_list_name, chat_name} from "@/router/routes";
 
 const routes = [
-  {
-    name: chat_name,
-    path: '/front2/chat/:id',
-    component: () => import('@/MessageList.vue'),
-  },
-  {
-    name: chat_list_name,
-    path: '/front2',
-    component: () => import('@/ChatList.vue'),
-  },
+    {
+        name: chat_name,
+        path: '/front2/chat/:id',
+        component: () => import('@/MessageList.vue'),
+    },
+    {
+        name: chat_list_name,
+        path: '/front2',
+        component: () => import('@/ChatList.vue'),
+    },
+    {
+        name: 'cv',
+        path: '/front2/cv',
+        component: () => import('@/ChatView.vue'),
+    },
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes,
+    history: createWebHistory(process.env.BASE_URL),
+    routes,
 })
 
 export default router

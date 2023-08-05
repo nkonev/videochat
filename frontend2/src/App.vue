@@ -48,13 +48,6 @@
 
       </v-app-bar>
 
-      <v-navigation-drawer
-          v-model="chatStore.drawer"
-          width="400"
-      >
-          <LeftPanelChats/>
-      </v-navigation-drawer>
-
       <v-main>
         <v-container fluid class="ma-0 pa-0" style="height: 100%">
 
@@ -103,7 +96,6 @@ import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
 import {searchStringFacade, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import RightPanelActions from "@/RightPanelActions.vue";
-import LeftPanelChats from "@/LeftPanelChats.vue";
 
 export default {
     mixins: [
@@ -192,7 +184,6 @@ export default {
         }
     },
     components: {
-        LeftPanelChats,
         RightPanelActions,
         LoginModal,
     },
