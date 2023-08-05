@@ -136,6 +136,13 @@
         topElementSelector() {
           return ".message-last-element"
         },
+        bottomElementSelectorExtended() {
+          return ".my-messages-scroller .message-first-element"
+        },
+        topElementSelectorExtended() {
+          return ".my-messages-scroller .message-last-element"
+        },
+
         getItemId(id) {
           return 'message-item-' + id
         },

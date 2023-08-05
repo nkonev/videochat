@@ -141,6 +141,13 @@ export default {
     topElementSelector() {
       return ".chat-first-element"
     },
+    bottomElementSelectorExtended() {
+      return ".my-chat-scroller .chat-last-element"
+    },
+    topElementSelectorExtended() {
+      return ".my-chat-scroller .chat-first-element"
+    },
+
     getItemId(id) {
       return 'chat-item-' + id
     },

@@ -168,8 +168,8 @@ export default (name) => {
         const observerCallback = debounce(observerCallback0, 100, {leading:false, trailing:true});
 
         observer = new IntersectionObserver(observerCallback, options);
-        observer.observe(document.querySelector(this.bottomElementSelector()));
-        observer.observe(document.querySelector(this.topElementSelector()));
+        observer.observe(document.querySelector(this.bottomElementSelectorExtended()));
+        observer.observe(document.querySelector(this.topElementSelectorExtended()));
       },
       destroyScroller() {
         observer.disconnect()
