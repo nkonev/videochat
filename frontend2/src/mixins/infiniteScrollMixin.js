@@ -83,10 +83,10 @@ export default (name) => {
         return this.aDirection === directionTop
       },
 
-      restoreScroll(bottom) {
+      restoreScroll(top) {
         const restored = this.preservedScroll;
         console.log("Restored scroll to element id", restored, "in", name);
-        document.querySelector("#"+this.getItemId(restored))?.scrollIntoView({behavior: 'instant', block: bottom ? "end" : "start"});
+        document.querySelector("#"+this.getItemId(restored))?.scrollIntoView({behavior: 'instant', block: top ? "start": "end"});
       },
 
       resetInfiniteScrollVars() {
@@ -108,7 +108,7 @@ export default (name) => {
               this.isFirstLoad = false;
           } else {
               await this.reduceListIfNeed();
-              this.restoreScroll(!this.initialDirection());
+              this.restoreScroll(this.initialDirection());
           }
       },
 
@@ -123,7 +123,7 @@ export default (name) => {
               this.isFirstLoad = false;
           } else {
               await this.reduceListIfNeed();
-              this.restoreScroll(this.initialDirection());
+              this.restoreScroll(!this.initialDirection());
           }
       },
 
