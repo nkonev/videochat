@@ -86,7 +86,7 @@ export default (name) => {
       restoreScroll(top) {
         const restored = this.preservedScroll;
         console.log("Restored scroll to element id", restored, "in", name);
-        document.querySelector("#"+this.getItemId(restored))?.scrollIntoView({behavior: 'instant', block: top ? "start": "end"});
+        document.querySelector(this.scrollerSelector() + " " + "#"+this.getItemId(restored))?.scrollIntoView({behavior: 'instant', block: top ? "start": "end"});
       },
 
       resetInfiniteScrollVars() {
@@ -168,8 +168,8 @@ export default (name) => {
         const observerCallback = debounce(observerCallback0, 100, {leading:false, trailing:true});
 
         observer = new IntersectionObserver(observerCallback, options);
-        observer.observe(document.querySelector(this.bottomElementSelectorExtended()));
-        observer.observe(document.querySelector(this.topElementSelectorExtended()));
+        observer.observe(document.querySelector(this.scrollerSelector() + " " + this.bottomElementSelector()));
+        observer.observe(document.querySelector(this.scrollerSelector() + " " + this.topElementSelector()));
       },
       destroyScroller() {
         observer.disconnect()
