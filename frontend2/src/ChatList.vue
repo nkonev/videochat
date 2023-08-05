@@ -1,6 +1,6 @@
 <template xmlns="http://www.w3.org/1999/html">
 
-  <v-container :style="heightWithoutAppBar" fluid>
+  <v-container :style="heightWithoutAppBar" fluid class="pa-0 ma-0">
     <div class="my-chat-scroller" @scroll.passive="onScroll">
       <div class="first-element" style="min-height: 1px; background: #9cffa1"></div>
       <div v-for="item in items" :key="item.id" class="card mb-3" :id="getItemId(item.id)">

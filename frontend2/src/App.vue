@@ -49,7 +49,7 @@
       </v-app-bar>
 
       <v-main>
-        <v-container fluid class="ma-0 pa-0" style="height: 100%">
+        <v-container fluid class="ma-0 pa-0" style="height: 100%; width: 100%">
 
           <v-snackbar v-model="chatStore.showAlert" :color="chatStore.errorColor" timeout="-1" :multi-line="true" :transition="false">
             {{ chatStore.lastError }}
@@ -71,11 +71,7 @@
             </template>
           </v-snackbar>
 
-
-
-          <LoginModal/>
-
-            <router-view />
+          <router-view />
         </v-container>
     </v-main>
 
