@@ -10,7 +10,7 @@ export const reduceToLength = 100;
 // load(), onFirstLoad(), initialDirection(), saveScroll(), scrollerSelector(),
 // reduceTop(), reduceBottom()
 // onScroll() should be called from template
-export default () => {
+export default (name) => {
   let observer;
   return {
     data() {
@@ -148,6 +148,8 @@ export default () => {
 
           const firstElementEntries = mappedEntries.filter(en => en.entry.intersectionRatio > 0 && en.elementName.includes(this.bottomElementSelector()));
           const firstElementEntry = firstElementEntries.length ? firstElementEntries[firstElementEntries.length-1] : null;
+
+          console.log("Invoking callback in", name, mappedEntries);
 
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
             console.debug("attempting to load top", !this.loadedTop, this.isTopDirection());

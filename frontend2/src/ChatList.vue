@@ -39,7 +39,7 @@ const PAGE_SIZE = 40;
 
 export default {
   mixins: [
-    infiniteScrollMixin(),
+    infiniteScrollMixin('ChatList'),
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
   ],

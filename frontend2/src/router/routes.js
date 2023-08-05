@@ -4,6 +4,7 @@ export const blog = '/blog';
 export const profile = '/profile';
 export const video_suffix = '/video';
 
+export const root_name = 'root';
 export const chat_list_name = 'chat_list';
 export const chat_view_name = 'chat_view';
 export const chat_name = 'chat';
