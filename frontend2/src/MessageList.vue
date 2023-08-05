@@ -79,8 +79,8 @@
           return directionTop
         },
         onFirstLoad() {
-          this.scrollDown();
-          this.loadedBottom = true;
+            this.loadedBottom = true;
+            this.scrollDown();
         },
         async load() {
           if (!this.canDrawMessages()) {
