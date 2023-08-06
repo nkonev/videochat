@@ -141,6 +141,10 @@
                     <v-icon>mdi-content-copy</v-icon>
                 </v-btn>
 
+                <v-btn v-if="showGoToBlogButton && !isMobile()" icon :href="goToBlogLink()" :title="$vuetify.lang.t('$vuetify.go_to_blog_post')">
+                    <v-icon>mdi-postage-stamp</v-icon>
+                </v-btn>
+
                 <v-btn v-if="showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.lang.t('$vuetify.screen_share')">
                     <v-icon>mdi-monitor-screenshot</v-icon>
                 </v-btn>
@@ -282,11 +286,11 @@
         GET_SHOW_MICROPHONE_ON_BUTTON,
         GET_SHOW_MICROPHONE_OFF_BUTTON,
         GET_CAN_SHOW_MICROPHONE_BUTTON,
-        SET_TITLE,
         SET_INITIALIZING_STARTING_VIDEO_RECORD,
         SET_INITIALIZING_STOPPING_VIDEO_RECORD,
         GET_INITIALIZING_STARTING_VIDEO_RECORD,
-        GET_INITIALIZING_STOPPING_VIDEO_RECORD
+        GET_INITIALIZING_STOPPING_VIDEO_RECORD,
+        GET_SHOW_GO_TO_BLOG_BUTTON
     } from "./store";
     import bus, {
         LOGGED_OUT,
@@ -329,7 +333,7 @@
     import MessageResendToModal from "@/MessageResendToModal";
 
     import queryMixin, {searchQueryParameter} from "@/queryMixin";
-    import {copyCallLink, hasLength} from "@/utils";
+    import {copyCallLink, getBlogLink, hasLength} from "@/utils";
 
     import MessageEditModal from "@/MessageEditModal";
     import MessageReadUsersModal from "@/MessageReadUsersModal.vue";
@@ -485,6 +489,9 @@
             copyCallLink() {
                 copyCallLink(this.chatId)
             },
+            goToBlogLink() {
+                return getBlogLink(this.chatId)
+            },
             isVideoRoute() {
                 return this.$route.name == videochat_name
             },
@@ -613,6 +620,7 @@
                 currentUser: GET_USER,
                 showCallButton: GET_SHOW_CALL_BUTTON,
                 showHangButton: GET_SHOW_HANG_BUTTON,
+                showGoToBlogButton: GET_SHOW_GO_TO_BLOG_BUTTON,
                 showRecordStartButton: GET_SHOW_RECORD_START_BUTTON,
                 showRecordStopButton: GET_SHOW_RECORD_STOP_BUTTON,
                 videoChatUsersCount: GET_VIDEO_CHAT_USERS_COUNT,

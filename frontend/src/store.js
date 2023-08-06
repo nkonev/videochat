@@ -35,6 +35,10 @@ export const GET_SHOW_CALL_BUTTON = 'getShowCallButton';
 export const SET_SHOW_CALL_BUTTON = 'setShowCallButton';
 export const GET_SHOW_HANG_BUTTON = 'getShowHangButton';
 export const SET_SHOW_HANG_BUTTON = 'setShowHangButton';
+
+export const GET_SHOW_GO_TO_BLOG_BUTTON = "getShowGoToBlogButton";
+export const SET_SHOW_GO_TO_BLOG_BUTTON = "setShowGoToBlogButton";
+
 export const GET_SHOW_RECORD_START_BUTTON = 'getShowRecordStartButton';
 export const SET_SHOW_RECORD_START_BUTTON = 'setShowRecordStartButton';
 export const GET_SHOW_RECORD_STOP_BUTTON = 'getShowRecordStopButton';
@@ -89,6 +93,7 @@ const store = new Vuex.Store({
         videoChatUsersCount: 0,
         showCallButton: false,
         showHangButton: false,
+        showGoToBlogButton: null,
         showRecordStartButton: false,
         showRecordStopButton: false,
         canMakeRecord: false,
@@ -127,6 +132,9 @@ const store = new Vuex.Store({
         },
         [SET_SHOW_HANG_BUTTON](state, payload) {
             state.showHangButton = payload;
+        },
+        [SET_SHOW_GO_TO_BLOG_BUTTON](state, payload) {
+            state.showGoToBlogButton = payload;
         },
         [SET_SHOW_RECORD_START_BUTTON](state, payload) {
             state.showRecordStartButton = payload;
@@ -221,6 +229,9 @@ const store = new Vuex.Store({
         },
         [GET_SHOW_HANG_BUTTON](state) {
             return state.showHangButton;
+        },
+        [GET_SHOW_GO_TO_BLOG_BUTTON](state) {
+            return state.showGoToBlogButton;
         },
         [GET_SHOW_RECORD_START_BUTTON](state) {
             return state.showRecordStartButton;

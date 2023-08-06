@@ -1,5 +1,5 @@
 import { format, parseISO, differenceInDays } from 'date-fns';
-import {chat, messageIdHashPrefix, video_suffix} from "@/routes";
+import {blog, chat, video_suffix} from "@/routes";
 
 export const defaultAudioMute = true;
 
@@ -227,3 +227,7 @@ export const offerToJoinToPublicChatStatus = 428
 export const link_dialog_type_add_link_to_text = "add_link_to_text";
 export const link_dialog_type_add_media_by_link = "add_media_by_link";
 export const link_dialog_type_add_media_embed = "add_media_embed";
+
+export const getBlogLink = (chatId) => {
+    return blog + '/post/' + chatId;
+}
