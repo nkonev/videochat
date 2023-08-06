@@ -195,12 +195,6 @@
   .message-owner-avatar {
     align-items: center;
     border-radius: 50%;
-    display: inline-flex;
-    justify-content: center;
-    line-height: normal;
-    position: relative;
-    text-align: center;
-    vertical-align: middle;
     overflow: hidden;
 
     height: 40px;
@@ -209,10 +203,8 @@
 
     img {
       border-radius: inherit;
-      display: inline-flex;
       height: inherit;
       width: inherit;
-      border-style: none;
     }
   }
 </style>
