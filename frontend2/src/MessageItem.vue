@@ -1,4 +1,5 @@
 <template>
+  <div class="message-item-container">
     <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="'message-' + item.id">
         <router-link :to="getOwnerLink(item)" class="user-link">
             <div v-if="item.owner && item.owner.avatar" class="message-owner-avatar pr-0 mr-3">
@@ -36,6 +37,7 @@
             </div>
         </div>
     </div>
+  </div>
 </template>
 
 <script>

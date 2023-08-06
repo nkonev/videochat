@@ -3,14 +3,12 @@
     <v-container :style="heightWithoutAppBar" fluid class="pa-0 ma-0">
         <div class="my-messages-scroller" @scroll.passive="onScroll">
           <div class="message-first-element" style="min-height: 1px; background: #9cffa1"></div>
-          <div class="sc-cont">
-            <MessageItem v-for="item in items"
-                :key="item.id"
-                :item="item"
-                :chatId="chatId"
-                :my="item.owner.id === chatStore.currentUser.id"
-            ></MessageItem>
-          </div>
+          <MessageItem v-for="item in items"
+            :key="item.id"
+            :item="item"
+            :chatId="chatId"
+            :my="item.owner.id === chatStore.currentUser.id"
+          ></MessageItem>
           <div class="message-last-element" style="min-height: 1px; background: #c62828"></div>
         </div>
 
@@ -208,12 +206,6 @@
       overflow-y scroll !important
       display flex
       flex-direction column-reverse
-
-      .sc-cont {
-        display: block;
-        padding: 8px 0;
-        position: static;
-      }
     }
 
 </style>
