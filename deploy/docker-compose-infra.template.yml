@@ -166,6 +166,11 @@ services:
     hostname: jaeger
     networks:
       backend:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.40'
+          memory: '450M'
     logging:
       driver: "journald"
       options:
