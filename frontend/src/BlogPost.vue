@@ -148,7 +148,7 @@
     }
 </script>
 
-<style lang="stylus">
+<style lang="stylus" scoped>
     @import "common.styl"
     @import "message.styl"
 
