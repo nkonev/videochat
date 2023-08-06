@@ -1,8 +1,8 @@
-export const root = '/';
-export const chat = '/chat';
-export const blog = '/blog';
-export const profile = '/profile';
-export const video_suffix = '/video';
+export const root = '/front2/';
+export const chat = '/front2/chat';
+export const blog = '/front2/blog';
+export const profile = '/front2/profile';
+export const video_suffix = '/front2/video';
 
 export const root_name = 'root';
 export const chat_list_name = 'chat_list';

@@ -1,3 +1,6 @@
+import { format, parseISO, differenceInDays } from 'date-fns';
+import {blog} from "@/router/routes";
+
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
 }
@@ -28,4 +31,20 @@ export const setIcon = (newMessages) => {
 
 export const deepCopy = (aVal) => {
     return JSON.parse(JSON.stringify(aVal))
+}
+
+export const embed_message_reply = "reply";
+export const embed_message_resend = "resend";
+
+export const getBlogLink = (chatId) => {
+    return blog + '/post/' + chatId;
+}
+
+export const getHumanReadableDate = (timestamp) => {
+    const parsedDate = parseISO(timestamp);
+    let formatString = 'HH:mm:ss';
+    if (differenceInDays(new Date(), parsedDate) >= 1) {
+        formatString = formatString + ', d MMM yyyy';
+    }
+    return `${format(parsedDate, formatString)}`
 }

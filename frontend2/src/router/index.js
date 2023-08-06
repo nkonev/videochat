@@ -1,6 +1,6 @@
 // Composables
 import {createRouter, createWebHistory} from 'vue-router'
-import {chat_list_name, chat_name, chat_view_name, root_name} from "@/router/routes";
+import {chat_list_name, chat_name, chat_view_name, profile_name, root_name} from "@/router/routes";
 
 const routes = [
     {
@@ -17,6 +17,11 @@ const routes = [
         name: chat_view_name,
         path: '/front2/chat/:id',
         component: () => import('@/ChatView.vue'),
+    },
+    {
+        name: profile_name,
+        path: '/front2/profile/:id',
+        component: () => import('@/UserProfile.vue'),
     },
 ]
 

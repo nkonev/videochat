@@ -1,0 +1,3 @@
+<template>
+    User profile
+</template>

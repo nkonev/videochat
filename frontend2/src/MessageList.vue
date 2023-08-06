@@ -3,20 +3,15 @@
     <v-container :style="heightWithoutAppBar" fluid class="pa-0 ma-0">
         <div class="my-messages-scroller" @scroll.passive="onScroll">
           <div class="message-first-element" style="min-height: 1px; background: #9cffa1"></div>
-          <div v-for="item in items" :key="item.id" class="card mb-3" :id="getItemId(item.id)">
-            <div class="row g-0">
-              <div class="col">
-                <img :src="item.owner.avatar" style="max-width: 64px; max-height: 64px">
-              </div>
-              <div class="col">
-                <div class="card-body">
-                  <h5 class="card-title">{{ item.text }}</h5>
-                </div>
-              </div>
-            </div>
+          <div class="sc-cont">
+            <MessageItem v-for="item in items"
+                :key="item.id"
+                :item="item"
+                :chatId="chatId"
+                :my="item.owner.id === chatStore.currentUser.id"
+            ></MessageItem>
           </div>
           <div class="message-last-element" style="min-height: 1px; background: #c62828"></div>
-
         </div>
 
     </v-container>
@@ -33,6 +28,7 @@
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
+    import MessageItem from "@/MessageItem.vue";
 
     const PAGE_SIZE = 40;
 
@@ -54,6 +50,10 @@
         chatId() {
           return this.$route.params.id
         },
+      },
+
+      components: {
+          MessageItem
       },
 
       methods: {
@@ -208,6 +208,12 @@
       overflow-y scroll !important
       display flex
       flex-direction column-reverse
+
+      .sc-cont {
+        display: block;
+        padding: 8px 0;
+        position: static;
+      }
     }
 
 </style>
