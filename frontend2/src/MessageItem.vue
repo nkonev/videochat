@@ -1,11 +1,10 @@
 <template>
-  <div class="message-item-container">
     <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="'message-' + item.id">
+      <div v-if="item.owner && item.owner.avatar" class="message-owner-avatar pr-0 mr-3">
         <router-link :to="getOwnerLink(item)" class="user-link">
-            <div v-if="item.owner && item.owner.avatar" class="message-owner-avatar pr-0 mr-3">
-                <img :src="item.owner.avatar">
-            </div>
+          <img :src="item.owner.avatar">
         </router-link>
+      </div>
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
                 <router-link :to="getOwnerLink(item)">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
@@ -37,7 +36,6 @@
             </div>
         </div>
     </div>
-  </div>
 </template>
 
 <script>

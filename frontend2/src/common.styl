@@ -8,18 +8,10 @@
   display: inherit
 }
 
-.message-item-container {
-  display: block;
-  padding: 8px 0;
-  position: static;
-}
-
 .message-item-root {
   // align-items: center;
   display: flex;
-  flex: 1 1 100%;
   letter-spacing: normal;
-  min-height: 48px;
   outline: none;
   padding: 0 16px;
   padding-right: 16px;
@@ -29,6 +21,7 @@
 }
 
 .message-item-with-buttons-wrapper {
+  flex-direction row
   flex 1 1
 }
 .message-item-wrapper {
@@ -52,6 +45,7 @@
 }
 
 .message-item-text {
+  padding: 12px;
   line-height: $lineHeight;
   -ms-word-break: break-all;
   /* This is the dangerous one in WebKit, as it breaks things wherever */

@@ -206,6 +206,7 @@
       overflow-y scroll !important
       display flex
       flex-direction column-reverse
+      background white
     }
 
 </style>
