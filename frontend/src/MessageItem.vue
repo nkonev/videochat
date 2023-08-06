@@ -44,11 +44,11 @@
     import debounce from "lodash/debounce";
     import {
         embed_message_reply,
-        embed_message_resend,
+        embed_message_resend, getBlogLink,
         getHumanReadableDate,
     } from "@/utils";
     import "./message.styl";
-    import {blog, chat_name, messageIdHashPrefix} from "./routes"
+    import {chat_name, messageIdHashPrefix} from "./routes"
 
     export default {
         props: ['item', 'chatId', 'my', 'highlight', 'canResend', 'isInBlog'],
@@ -83,7 +83,7 @@
                 this.$emit('removedFromPinned', dto)
             },
             getBlogLink() {
-                return blog + '/post/' + this.chatId;
+                return getBlogLink(this.chatId)
             },
 
             getOwner(owner) {

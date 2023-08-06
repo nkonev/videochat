@@ -159,7 +159,7 @@
         SET_CHAT_USERS_COUNT, SET_INITIALIZING_STARTING_VIDEO_RECORD, SET_INITIALIZING_STOPPING_VIDEO_RECORD,
         SET_SEARCH_NAME, SET_SHOULD_PHONE_BLINK,
         SET_SHOW_CALL_BUTTON,
-        SET_SHOW_CHAT_EDIT_BUTTON,
+        SET_SHOW_CHAT_EDIT_BUTTON, SET_SHOW_GO_TO_BLOG_BUTTON,
         SET_SHOW_HANG_BUTTON,
         SET_SHOW_RECORD_START_BUTTON,
         SET_SHOW_RECORD_STOP_BUTTON,
@@ -432,6 +432,9 @@
                     this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, data.canEdit);
                     this.$store.commit(SET_CAN_BROADCAST_TEXT_MESSAGE, data.canBroadcast);
                     this.$store.commit(SET_TET_A_TET, data.tetATet);
+                    if (data.blog) {
+                        this.$store.commit(SET_SHOW_GO_TO_BLOG_BUTTON, this.chatId);
+                    }
                     this.chatDto = data;
                 })
             },
@@ -801,6 +804,7 @@
             this.chatDto = chatDtoFactory();
 
             this.$store.commit(SET_AVATAR, null);
+            this.$store.commit(SET_SHOW_GO_TO_BLOG_BUTTON, null);
 
         },
         destroyed() {
