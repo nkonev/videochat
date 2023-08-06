@@ -9,14 +9,14 @@
             <v-container class="ma-0 pa-0 d-flex list-item-head">
                 <router-link :to="getOwnerLink(item)">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                 <template v-if="!isMobile() && !isInBlog">
-                    <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item)" small :title="$vuetify.locale.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
-                    <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
-                    <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.locale.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
-                    <v-icon class="mx-1" small :title="$vuetify.locale.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
-                    <v-icon v-if="canResend" class="mx-1" small :title="$vuetify.locale.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
-                    <v-icon v-if="!item.pinned" class="mx-1" small :title="$vuetify.locale.t('$vuetify.pin_message')" @click="pinMessage(item)">mdi-pin</v-icon>
-                    <v-icon v-if="item.pinned" class="mx-1" small :title="$vuetify.locale.t('$vuetify.remove_from_pinned')" @click="removedFromPinned(item)">mdi-pin-off-outline</v-icon>
-                    <a v-if="item.blogPost" class="mx-1" :href="getBlogLink(item)" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')"><v-icon small>mdi-postage-stamp</v-icon></a>
+                    <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item)" size="small" :title="$vuetify.locale.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
+                    <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
+                    <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
+                    <v-icon class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
+                    <v-icon v-if="canResend" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
+                    <v-icon v-if="!item.pinned" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.pin_message')" @click="pinMessage(item)">mdi-pin</v-icon>
+                    <v-icon v-if="item.pinned" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.remove_from_pinned')" @click="removedFromPinned(item)">mdi-pin-off-outline</v-icon>
+                    <a v-if="item.blogPost" class="mx-1" :href="getBlogLink(item)" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')"><v-icon size="small">mdi-postage-stamp</v-icon></a>
                     <router-link class="mx-1 hash" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')">#</router-link>
                 </template>
             </v-container>
