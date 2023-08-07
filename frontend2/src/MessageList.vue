@@ -1,7 +1,7 @@
 <template>
 
     <v-container :style="heightWithoutAppBar" fluid class="pa-0 ma-0">
-        <div class="my-messages-scroller" @scroll.passive="onScroll" v-if="showTheList">
+        <div class="my-messages-scroller" @scroll.passive="onScroll">
           <div class="message-first-element" style="min-height: 1px; background: #9cffa1"></div>
           <MessageItem v-for="item in items"
             :id="getItemId(item.id)"
@@ -39,7 +39,6 @@
       ],
       data() {
         return {
-          showTheList: true,
           startingFromItemIdTop: null,
           startingFromItemIdBottom: null,
         }
@@ -180,12 +179,9 @@
       watch: {
           chatId(newVal, oldVal) {
             console.debug("Chat id has been changed", oldVal, "->", newVal);
-            this.showTheList = false;
             this.reset();
             this.destroyScroller();
             this.$nextTick(()=>{
-              this.showTheList = true;
-            }).then(()=>{
               this.initScroller();
             })
           }
