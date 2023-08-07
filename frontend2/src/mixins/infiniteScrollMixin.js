@@ -100,7 +100,7 @@ export default (name) => {
       async loadTop() {
           console.log("going to load top in", name);
           if (!this.isFirstLoad) {
-              this.saveScroll(!this.initialDirection());
+              this.saveScroll(this.initialDirection());
           }
           await this.load();
           if (this.isFirstLoad) {
@@ -115,7 +115,7 @@ export default (name) => {
       async loadBottom() {
           console.log("going to load bottom in", name);
           if (!this.isFirstLoad) {
-              this.saveScroll(this.initialDirection());
+              this.saveScroll(!this.initialDirection());
           }
           await this.load();
           if (this.isFirstLoad) {

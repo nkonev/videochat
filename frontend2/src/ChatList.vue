@@ -66,8 +66,8 @@ export default {
     findTopElementId() {
         return this.items[0].id
     },
-    saveScroll(bottom) {
-        this.preservedScroll = bottom ? this.findBottomElementId() : this.findTopElementId();
+    saveScroll(top) {
+        this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
         console.log("Saved scroll", this.preservedScroll);
     },
     initialDirection() {
