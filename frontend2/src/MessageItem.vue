@@ -1,6 +1,6 @@
 <template>
     <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="id">
-      <div v-if="item.owner && item.owner.avatar" class="message-owner-avatar pr-0 mr-3">
+      <div v-if="item.owner && item.owner.avatar" class="message-owner-avatar mt-2 pr-0 mr-3">
         <router-link :to="getOwnerLink(item)" class="user-link">
           <img :src="item.owner.avatar">
         </router-link>
