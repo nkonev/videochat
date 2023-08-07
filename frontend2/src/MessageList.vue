@@ -97,7 +97,7 @@
             })
           .then((res) => {
             const items = res.data;
-            console.log("Get items", items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
+            console.log("Get items in MessageList", items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
             if (this.isTopDirection()) {
               this.items = this.items.concat(items);

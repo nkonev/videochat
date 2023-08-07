@@ -105,7 +105,7 @@ export default {
       })
         .then((res) => {
           const items = res.data.data;
-          console.log("Get items", items, "page", page);
+          console.log("Get items in ChatList", items, "page", page);
 
           if (this.isTopDirection()) {
               this.items = items.concat(this.items);
