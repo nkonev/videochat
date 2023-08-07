@@ -28,6 +28,7 @@
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
+    import {messageIdPrefix} from "@/router/routes";
 
     const PAGE_SIZE = 40;
 
@@ -137,7 +138,7 @@
         },
 
         getItemId(id) {
-          return 'message-item-' + id
+          return messageIdPrefix + id
         },
 
         scrollDown() {
