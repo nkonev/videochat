@@ -11,12 +11,11 @@ export const reduceToLength = 100;
 // reduceTop(), reduceBottom()
 // onScroll() should be called from template
 export default (name) => {
-  let observer;
   return {
     data() {
       return {
         items: [],
-
+        observer: null,
 
         isFirstLoad: true,
 
@@ -135,8 +134,8 @@ export default (name) => {
         // https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
         const options = {
           root: this.scrollerDiv,
-          rootMargin: "0px",
-          threshold: 0.0,
+          rootMargin: "1px",
+          threshold: 0.5,
         };
         const observerCallback0 = async (entries, observer) => {
           const mappedEntries = entries.map((entry) => {
@@ -169,12 +168,14 @@ export default (name) => {
 
         const observerCallback = debounce(observerCallback0, 100, {leading:false, trailing:true});
 
-        observer = new IntersectionObserver(observerCallback, options);
-        observer.observe(document.querySelector(this.scrollerSelector() + " " + this.bottomElementSelector()));
-        observer.observe(document.querySelector(this.scrollerSelector() + " " + this.topElementSelector()));
+        this.observer = new IntersectionObserver(observerCallback, options);
+        this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.bottomElementSelector()));
+        this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.topElementSelector()));
       },
       destroyScroller() {
-        observer.disconnect()
+        this.observer?.disconnect();
+        this.observer = null;
+        this.scrollerDiv = null;
       }
     }
   }
