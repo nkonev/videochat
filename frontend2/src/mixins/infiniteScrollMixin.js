@@ -85,8 +85,10 @@ export default (name) => {
 
       restoreScroll(top) {
         const restored = this.preservedScroll;
-        console.log("Restored scroll to element id", restored, "in", name);
-        document.querySelector(this.scrollerSelector() + " " + "#"+this.getItemId(restored))?.scrollIntoView({behavior: 'instant', block: top ? "start": "end"});
+        const q = this.scrollerSelector() + " " + "#"+this.getItemId(restored);
+        const el = document.querySelector(q);
+        console.debug("Restored scroll to element id", restored, "in", name, "selector", q, "element", el);
+        el?.scrollIntoView({behavior: 'instant', block: top ? "start": "end"});
       },
 
       resetInfiniteScrollVars() {

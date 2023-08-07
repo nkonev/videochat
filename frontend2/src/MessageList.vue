@@ -4,6 +4,7 @@
         <div class="my-messages-scroller" @scroll.passive="onScroll">
           <div class="message-first-element" style="min-height: 1px; background: #9cffa1"></div>
           <MessageItem v-for="item in items"
+            :id="getItemId(item.id)"
             :key="item.id"
             :item="item"
             :chatId="chatId"
