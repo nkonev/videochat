@@ -69,8 +69,8 @@
           this.items = this.items.slice(0, reduceToLength);
           this.startingFromItemIdTop = this.getMinimumItemId();
         },
-        saveScroll(bottom) {
-            this.preservedScroll = bottom ? this.getMaximumItemId() : this.getMinimumItemId();
+        saveScroll(top) {
+            this.preservedScroll = top ? this.getMinimumItemId() : this.getMaximumItemId();
             console.log("Saved scroll", this.preservedScroll);
         },
         initialDirection() {
