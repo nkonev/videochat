@@ -37,9 +37,11 @@ import debounce from "lodash/debounce";
 
 const PAGE_SIZE = 40;
 
+const scrollerName = 'ChatList';
+
 export default {
   mixins: [
-    infiniteScrollMixin('ChatList'),
+    infiniteScrollMixin(scrollerName),
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
   ],
@@ -105,7 +107,7 @@ export default {
       })
         .then((res) => {
           const items = res.data.data;
-          console.log("Get items in ChatList", items, "page", page);
+          console.log("Get items in ", scrollerName, items, "page", page);
 
           if (this.isTopDirection()) {
               this.items = items.concat(this.items);

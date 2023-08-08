@@ -32,9 +32,11 @@
 
     const PAGE_SIZE = 40;
 
+    const scrollerName = 'MessageList';
+
     export default {
       mixins: [
-        infiniteScrollMixin('MessageList'),
+        infiniteScrollMixin(scrollerName),
         heightMixin(),
         searchString(SEARCH_MODE_MESSAGES),
       ],
@@ -98,7 +100,7 @@
             })
           .then((res) => {
             const items = res.data;
-            console.log("Get items in MessageList", items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
+            console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
             if (this.isTopDirection()) {
               this.items = this.items.concat(items);
