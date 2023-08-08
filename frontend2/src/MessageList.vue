@@ -179,12 +179,20 @@
 
       watch: {
           chatId(newVal, oldVal) {
-            console.debug("Chat id has been changed", oldVal, "->", newVal);
+            //console.debug("Chat id has been changed", oldVal, "->", newVal);
             this.reset();
             this.destroyScroller();
             this.$nextTick(()=>{
               this.initScroller();
             })
+          },
+          '$route.hash': {
+            handler: function (newValue, oldValue) {
+              if (hasLength(newValue)) {
+                const el = document.querySelector(newValue)
+                el?.scrollIntoView({behavior: 'instant', block: "center"});
+              }
+            }
           }
       },
 
