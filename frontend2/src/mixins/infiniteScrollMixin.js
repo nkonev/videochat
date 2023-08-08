@@ -133,9 +133,9 @@ export default (name) => {
 
         // https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
         const options = {
-          root: this.scrollerDiv,
-          rootMargin: "1px",
-          threshold: 0.5,
+            root: this.scrollerDiv,
+            rootMargin: "0px",
+            threshold: 0.0,
         };
         const observerCallback0 = async (entries, observer) => {
           const mappedEntries = entries.map((entry) => {
