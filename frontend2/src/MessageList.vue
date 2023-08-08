@@ -9,6 +9,7 @@
             :item="item"
             :chatId="chatId"
             :my="item.owner.id === chatStore.currentUser.id"
+            :highlight="item.id == highlightMessageId"
           ></MessageItem>
           <div class="message-last-element" style="min-height: 1px; background: #c62828"></div>
         </div>
@@ -51,6 +52,9 @@
         ...mapStores(useChatStore),
         chatId() {
           return this.$route.params.id
+        },
+        highlightMessageId() {
+            return this.getMessageId(this.$route.hash);
         },
       },
 

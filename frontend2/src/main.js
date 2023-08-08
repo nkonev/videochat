@@ -52,6 +52,15 @@ app.component("font-awesome-icon", FontAwesomeIcon)
 app.config.globalProperties.isMobile = () => {
     return isMobileBrowser()
 }
+
+app.config.globalProperties.getMessageId = (hash) => {
+    if (!hash) {
+        return null;
+    }
+    const str = hash.replace(/\D/g, '');
+    return hasLength(str) ? str : null;
+};
+
 app.config.globalProperties.setError = (e, txt, details) => {
     if (details) {
         console.error(txt, e, details);
