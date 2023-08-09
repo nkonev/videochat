@@ -233,11 +233,7 @@
           chatId(newVal, oldVal) {
             //console.debug("Chat id has been changed", oldVal, "->", newVal);
             if (hasLength(newVal)) {
-              this.reset();
-              this.uninstallScroller();
-              this.$nextTick(() => {
-                this.installScroller();
-              })
+              this.reloadItems();
             }
           },
           '$route.hash': {
