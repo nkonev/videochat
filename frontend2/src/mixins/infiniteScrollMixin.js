@@ -166,7 +166,7 @@ export default (name) => {
           }
         };
 
-        const observerCallback = debounce(observerCallback0, 700, {leading:false, trailing:true}); // 700 is for eliminating double loads in Firefox
+        const observerCallback = debounce(observerCallback0, 500, {leading:false, trailing:true}); // 500 is for eliminating double loads in Firefox case a) regular loaf, case b) load some whe hash is on some element above, but on the first page
 
         this.observer = new IntersectionObserver(observerCallback, options);
         this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.bottomElementSelector()));

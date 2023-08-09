@@ -62,7 +62,7 @@ app.config.globalProperties.getMessageId = (hash) => {
 };
 
 app.config.globalProperties.clearRouteHash = () => {
-  console.log("Cleaning hash");
+  // console.log("Cleaning hash");
   router.push({ hash: null })
 }
 
