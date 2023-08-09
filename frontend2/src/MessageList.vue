@@ -81,6 +81,13 @@
             this.preservedScroll = top ? this.getMinimumItemId() : this.getMaximumItemId();
             console.log("Saved scroll", this.preservedScroll);
         },
+        restoreScroll(top) {
+          if (this.highlightMessageId) { // for rare cases (~ 1/15) when we just have invoked loadTop() twice
+            this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
+          } else {
+            this.restoreScrollCommon(top);
+          }
+        },
         initialDirection() {
           return directionTop
         },
