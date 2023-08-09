@@ -54,12 +54,14 @@ export default (name) => {
         }
       },
       onScroll(e) {
-        this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
-        this.scrollerProbePrevious = this.scrollerProbeCurrent;
-        this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
-        // console.debug("onScroll in", name, " prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
+        if (this.scrollerDiv) {
+          this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
+          this.scrollerProbePrevious = this.scrollerProbeCurrent;
+          this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
+          // console.debug("onScroll in", name, " prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
-        this.trySwitchDirection();
+          this.trySwitchDirection();
+        }
       },
       trySwitchDirection() {
         if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
@@ -166,7 +168,7 @@ export default (name) => {
           }
         };
 
-        const observerCallback = debounce(observerCallback0, 500, {leading:false, trailing:true}); // 500 is for eliminating double loads in Firefox case a) regular loaf, case b) load some whe hash is on some element above, but on the first page
+        const observerCallback = debounce(observerCallback0, 200, {leading:false, trailing:true}); // 500 is for eliminating double loads in Firefox case a) regular loaf, case b) load some whe hash is on some element above, but on the first page
 
         this.observer = new IntersectionObserver(observerCallback, options);
         this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.bottomElementSelector()));

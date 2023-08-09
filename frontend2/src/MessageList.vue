@@ -214,7 +214,12 @@
               this.reset();
               this.destroyScroller();
               this.$nextTick(() => {
-                this.initScroller();
+                if (this.timeout) {
+                  clearTimeout(this.timeout);
+                }
+                this.timeout = setTimeout(()=>{
+                  this.initScroller();
+                }, 1000);
               })
             }
           },
@@ -228,13 +233,17 @@
           }
       },
 
-      mounted() {
-        this.initScroller();
+      async mounted() {
         bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
+
+        await this.loadBottom();
+        this.timeout = setTimeout(()=>{
+          this.initScroller();
+        }, 1000);
       },
 
       beforeUnmount() {
