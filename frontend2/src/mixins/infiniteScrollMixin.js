@@ -7,7 +7,7 @@ export const maxItemsLength = 200;
 export const reduceToLength = 100;
 
 // expects bottomElementSelector(), topElementSelector(), getItemId(id),
-// load(), onFirstLoad(), initialDirection(), saveScroll(), restoreScroll(), scrollerSelector(),
+// load(), onFirstLoad(), initialDirection(), saveScroll(), scrollerSelector(),
 // reduceTop(), reduceBottom()
 // onScroll() should be called from template
 export default (name) => {
@@ -82,7 +82,7 @@ export default (name) => {
         return this.aDirection === directionTop
       },
 
-      restoreScrollCommon(top) {
+      restoreScroll(top) {
         const restored = this.preservedScroll;
         const q = this.scrollerSelector() + " " + "#"+this.getItemId(restored);
         const el = document.querySelector(q);

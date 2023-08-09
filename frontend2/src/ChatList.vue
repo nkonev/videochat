@@ -72,9 +72,6 @@ export default {
         this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
         console.log("Saved scroll", this.preservedScroll);
     },
-    restoreScroll(top) {
-      this.restoreScrollCommon(top);
-    },
     initialDirection() {
       return directionBottom
     },
@@ -150,6 +147,7 @@ export default {
     getItemId(id) {
       return 'chat-item-' + id
     },
+
     scrollUp() {
       this.$nextTick(() => {
         this.scrollerDiv.scrollTop = 0;
