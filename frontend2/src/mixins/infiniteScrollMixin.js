@@ -166,7 +166,7 @@ export default (name) => {
           }
         };
 
-        const observerCallback = debounce(observerCallback0, 700, {leading:false, trailing:true}); // 200 is for eliminating double loads in Firefox
+        const observerCallback = debounce(observerCallback0, 700, {leading:true, trailing:true}); // 200 is for eliminating double loads in Firefox
 
         this.observer = new IntersectionObserver(observerCallback, options);
         this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.bottomElementSelector()));
