@@ -198,7 +198,7 @@ export default {
 
     this.chatStore.searchType = SEARCH_MODE_CHATS;
 
-    await this.loadTop();
+    await this.loadBottom();
     this.timeout = setTimeout(()=>{
       this.initScroller();
       console.log("Scroller", scrollerName, "has been installed");
