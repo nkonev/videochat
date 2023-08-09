@@ -201,6 +201,7 @@ export default {
     await this.loadTop();
     this.timeout = setTimeout(()=>{
       this.initScroller();
+      console.log("Scroller", scrollerName, "has been installed");
     }, 1000)
   },
 
@@ -209,6 +210,8 @@ export default {
         clearTimeout(this.timeout);
     }
     this.destroyScroller();
+    console.log("Scroller", scrollerName, "has been uninstalled");
+
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);

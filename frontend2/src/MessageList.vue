@@ -166,7 +166,9 @@
         },
         scrollDown() {
           this.$nextTick(() => {
-            this.scrollerDiv.scrollTop = 0;
+              if (this.scrollerDiv) {
+                this.scrollerDiv.scrollTop = 0;
+              }
           });
         },
         scrollerSelector() {
@@ -200,7 +202,20 @@
             const el = document.querySelector(newValue)
             el?.scrollIntoView({behavior: 'instant', block: "start"});
           })
-        }
+        },
+        installScroller() {
+          this.timeout = setTimeout(()=>{
+            this.initScroller();
+            console.log("Scroller", scrollerName, "has been installed");
+          }, 1000);
+        },
+        uninstallScroller() {
+          if (this.timeout) {
+            clearTimeout(this.timeout);
+          }
+          this.destroyScroller();
+          console.log("Scroller", scrollerName, "has been uninstalled");
+        },
       },
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
@@ -212,14 +227,9 @@
             //console.debug("Chat id has been changed", oldVal, "->", newVal);
             if (hasLength(newVal)) {
               this.reset();
-              this.destroyScroller();
+              this.uninstallScroller();
               this.$nextTick(() => {
-                if (this.timeout) {
-                  clearTimeout(this.timeout);
-                }
-                this.timeout = setTimeout(()=>{
-                  this.initScroller();
-                }, 1000);
+                this.installScroller();
               })
             }
           },
@@ -241,13 +251,11 @@
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
 
         await this.loadBottom();
-        this.timeout = setTimeout(()=>{
-          this.initScroller();
-        }, 1000);
+        this.installScroller();
       },
 
       beforeUnmount() {
-        this.destroyScroller();
+        this.uninstallScroller();
         bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
