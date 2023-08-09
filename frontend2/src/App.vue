@@ -129,9 +129,6 @@ export default {
         },
     },
     methods: {
-        clearRouteHash() {
-
-        },
         resetInput() {
           this.searchStringFacade = null
         },

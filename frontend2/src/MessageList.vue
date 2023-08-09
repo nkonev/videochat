@@ -45,6 +45,8 @@
         return {
           startingFromItemIdTop: null,
           startingFromItemIdBottom: null,
+
+          hasInitialHash: false,
         }
       },
 
@@ -100,10 +102,11 @@
           const startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
           return axios.get(`/api/chat/${this.chatId}/message`, {
               params: {
-                startingFromItemId: startingFromItemId,
+                startingFromItemId: this.hasInitialHash ? this.highlightMessageId : startingFromItemId,
                 size: PAGE_SIZE,
                 reverse: this.isTopDirection(),
                 searchString: this.searchString,
+                hasHash: this.hasInitialHash
               },
             })
           .then((res) => {
@@ -116,7 +119,7 @@
               this.items = items.reverse().concat(this.items);
             }
 
-            if (items.length < PAGE_SIZE) {
+            if (!this.hasInitialHash && items.length < PAGE_SIZE) {
               if (this.isTopDirection()) {
                 this.loadedTop = true;
               } else {
@@ -134,6 +137,11 @@
                   this.startingFromItemIdTop = this.getMinimumItemId();
                 }
               }
+            }
+
+            this.hasInitialHash = false;
+            if (this.items.length > (2.5 * PAGE_SIZE)) {
+              this.clearRouteHash()
             }
           }).then(()=>{
             return this.$nextTick()
@@ -191,6 +199,7 @@
       },
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
+        this.hasInitialHash = hasLength(this.highlightMessageId);
       },
 
       watch: {
