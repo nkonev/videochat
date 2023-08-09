@@ -210,8 +210,10 @@
         },
         installScroller() {
           this.timeout = setTimeout(()=>{
-            this.initScroller();
-            console.log("Scroller", scrollerName, "has been installed");
+            this.$nextTick(()=>{
+              this.initScroller();
+              console.log("Scroller", scrollerName, "has been installed");
+            })
           }, 1500);
         },
         uninstallScroller() {

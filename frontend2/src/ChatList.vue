@@ -200,9 +200,11 @@ export default {
 
     await this.loadBottom();
     this.timeout = setTimeout(()=>{
-      this.initScroller();
-      console.log("Scroller", scrollerName, "has been installed");
-    }, 1000)
+      this.$nextTick(()=>{
+        this.initScroller();
+        console.log("Scroller", scrollerName, "has been installed");
+      })
+    }, 1500)
   },
 
   beforeUnmount() {
