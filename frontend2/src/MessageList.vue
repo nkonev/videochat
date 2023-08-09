@@ -87,10 +87,10 @@
           return directionTop
         },
         onFirstLoad() {
-            this.loadedBottom = true;
             if (this.highlightMessageId) {
               this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
             } else {
+              this.loadedBottom = true;
               this.scrollDown();
             }
         },
@@ -140,7 +140,7 @@
             }
 
             this.hasInitialHash = false;
-            if (this.items.length > PAGE_SIZE) {
+            if (!this.isFirstLoad) {
               this.clearRouteHash()
             }
           }).then(()=>{
