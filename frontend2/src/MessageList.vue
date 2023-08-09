@@ -29,7 +29,7 @@
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
-    import {messageIdPrefix} from "@/router/routes";
+    import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
 
     const PAGE_SIZE = 40;
 
@@ -86,7 +86,11 @@
         },
         onFirstLoad() {
             this.loadedBottom = true;
-            this.scrollDown();
+            if (this.highlightMessageId) {
+              this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
+            } else {
+              this.scrollDown();
+            }
         },
         async load() {
           if (!this.canDrawMessages()) {
@@ -178,6 +182,12 @@
         canDrawMessages() {
           return !!this.chatStore.currentUser && hasLength(this.chatId)
         },
+        scrollTo(newValue) {
+          this.$nextTick(()=>{
+            const el = document.querySelector(newValue)
+            el?.scrollIntoView({behavior: 'instant', block: "center"});
+          })
+        }
       },
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
@@ -195,8 +205,8 @@
           '$route.hash': {
             handler: function (newValue, oldValue) {
               if (hasLength(newValue)) {
-                const el = document.querySelector(newValue)
-                el?.scrollIntoView({behavior: 'instant', block: "center"});
+                console.log("Changed route hash, going to scroll")
+                this.scrollTo(newValue);
               }
             }
           }
