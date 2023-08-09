@@ -185,7 +185,7 @@
         scrollTo(newValue) {
           this.$nextTick(()=>{
             const el = document.querySelector(newValue)
-            el?.scrollIntoView({behavior: 'instant', block: "center"});
+            el?.scrollIntoView({behavior: 'instant', block: "start"});
           })
         }
       },
