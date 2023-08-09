@@ -30,6 +30,7 @@
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
+    import router from "@/router";
 
     const PAGE_SIZE = 40;
 
@@ -141,7 +142,7 @@
 
             this.hasInitialHash = false;
             if (!this.isFirstLoad) {
-              this.clearRouteHash()
+              this.clearRouteHash(this.$route)
             }
           }).then(()=>{
             return this.$nextTick()
@@ -159,6 +160,10 @@
           return messageIdPrefix + id
         },
 
+        clearRouteHash(route) {
+          console.log("Cleaning hash");
+          this.$router.push({ hash: null, query: route.query })
+        },
         scrollDown() {
           this.$nextTick(() => {
             this.scrollerDiv.scrollTop = 0;
