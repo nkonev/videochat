@@ -57,7 +57,7 @@ export default (name) => {
         this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
         this.scrollerProbePrevious = this.scrollerProbeCurrent;
         this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
-        // console.debug("onScroll prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
+        // console.debug("onScroll in", name, " prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
         this.trySwitchDirection();
       },
