@@ -12,5 +12,5 @@ export const videochat_name = 'videochat';
 export const profile_self_name = 'profileSelf';
 export const profile_name = 'profileUser';
 
-export const messageIdPrefix = "message-item-"
+export const messageIdPrefix = "message-"
 export const messageIdHashPrefix = '#' + messageIdPrefix;
