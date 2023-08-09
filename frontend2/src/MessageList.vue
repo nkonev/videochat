@@ -140,7 +140,7 @@
             }
 
             this.hasInitialHash = false;
-            if (this.items.length > (2.5 * PAGE_SIZE)) {
+            if (this.items.length > PAGE_SIZE) {
               this.clearRouteHash()
             }
           }).then(()=>{
