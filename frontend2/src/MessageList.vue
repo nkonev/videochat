@@ -196,11 +196,13 @@
       watch: {
           chatId(newVal, oldVal) {
             //console.debug("Chat id has been changed", oldVal, "->", newVal);
-            this.reset();
-            this.destroyScroller();
-            this.$nextTick(()=>{
-              this.initScroller();
-            })
+            if (hasLength(newVal)) {
+              this.reset();
+              this.destroyScroller();
+              this.$nextTick(() => {
+                this.initScroller();
+              })
+            }
           },
           '$route.hash': {
             handler: function (newValue, oldValue) {
