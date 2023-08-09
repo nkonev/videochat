@@ -37,7 +37,7 @@
           </template>
 
           <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em">
-              <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line @input="clearRouteHash()" v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" :label="searchName()">
+              <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" :label="searchName()">
                   <template v-slot:append-inner>
                       <v-btn icon density="compact" @click.prevent="switchSearchType()"><v-icon class="search-icon">{{ searchIcon }}</v-icon></v-btn>
                   </template>
