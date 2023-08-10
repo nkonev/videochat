@@ -100,7 +100,8 @@
                     params: {
                         id: this.chatId
                     },
-                    hash: messageIdHashPrefix + item.id
+                    hash: messageIdHashPrefix + item.id,
+                    query: this.$route.query
                 }
             },
             getEmbedLinkTo(item) {
