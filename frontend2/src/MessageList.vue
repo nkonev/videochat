@@ -181,15 +181,6 @@
           this.startingFromItemIdTop = null;
           this.startingFromItemIdBottom = null;
         },
-        async reloadItems() {
-          this.reset();
-          this.uninstallScroller();
-          await this.loadTop();
-          await this.$nextTick(() => {
-            this.installScroller();
-          })
-
-        },
         onSearchStringChanged() {
           this.reloadItems();
         },
@@ -207,21 +198,6 @@
             const el = document.querySelector(newValue)
             el?.scrollIntoView({behavior: 'instant', block: "start"});
           })
-        },
-        installScroller() {
-          this.timeout = setTimeout(()=>{
-            this.$nextTick(()=>{
-              this.initScroller();
-              console.log("Scroller", scrollerName, "has been installed");
-            })
-          }, 1500);
-        },
-        uninstallScroller() {
-          if (this.timeout) {
-            clearTimeout(this.timeout);
-          }
-          this.destroyScroller();
-          console.log("Scroller", scrollerName, "has been uninstalled");
         },
       },
       created() {
@@ -253,7 +229,7 @@
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
 
-        await this.loadTop();
+        await this.loadInDirection();
         this.installScroller();
       },
 

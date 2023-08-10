@@ -31,7 +31,7 @@ export default (name) => {
         scrollerProbePreviousPrevious: 0,
 
         preservedScroll: 0,
-
+        timeout: null,
       }
     },
     methods: {
@@ -181,7 +181,39 @@ export default (name) => {
         this.observer?.disconnect();
         this.observer = null;
         this.scrollerDiv = null;
-      }
+      },
+
+      installScroller() {
+        this.timeout = setTimeout(()=>{
+          this.$nextTick(()=>{
+            this.initScroller();
+            console.log("Scroller", name, "has been installed");
+          })
+        }, 1500);
+      },
+      uninstallScroller() {
+        if (this.timeout) {
+          clearTimeout(this.timeout);
+          this.timeout = null;
+        }
+        this.destroyScroller();
+        console.log("Scroller", name, "has been uninstalled");
+      },
+      async loadInDirection() {
+        if (this.isTopDirection()) {
+          await this.loadTop();
+        } else {
+          await this.loadBottom();
+        }
+      },
+      async reloadItems() {
+        this.reset();
+        this.uninstallScroller();
+        await this.loadInDirection();
+        await this.$nextTick(() => {
+          this.installScroller();
+        })
+      },
     }
   }
 }

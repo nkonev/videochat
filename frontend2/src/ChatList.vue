@@ -49,7 +49,6 @@ export default {
     return {
         pageTop: 0,
         pageBottom: 0,
-        timeout: null,
     }
   },
   computed: {
@@ -169,10 +168,6 @@ export default {
     goToChat(id) {
         goToPreserving(this.$route, this.$router, { name: chat_view_name, params: { id: id}})
     },
-    reloadItems() {
-      this.reset();
-      this.loadBottom();
-    },
     onSearchStringChanged() {
       this.reloadItems();
     },
@@ -198,20 +193,12 @@ export default {
 
     this.chatStore.searchType = SEARCH_MODE_CHATS;
 
-    await this.loadBottom();
-    this.timeout = setTimeout(()=>{
-      this.$nextTick(()=>{
-        this.initScroller();
-        console.log("Scroller", scrollerName, "has been installed");
-      })
-    }, 1500)
+    await this.loadInDirection();
+    this.installScroller();
   },
 
   beforeUnmount() {
-    if (this.timeout) {
-        clearTimeout(this.timeout);
-    }
-    this.destroyScroller();
+    this.uninstallScroller();
     console.log("Scroller", scrollerName, "has been uninstalled");
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
