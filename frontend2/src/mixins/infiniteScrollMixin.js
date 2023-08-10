@@ -166,7 +166,7 @@ export default (name) => {
           }
         };
 
-        const observerCallback = debounce(observerCallback0, 200, {leading:false, trailing:true}); // 500 is for eliminating double loads in Firefox case a) regular loaf, case b) load some whe hash is on some element above, but on the first page
+        const observerCallback = debounce(observerCallback0, 200, {leading:false, trailing:true});
 
         this.observer = new IntersectionObserver(observerCallback, options);
         this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.bottomElementSelector()));
@@ -184,7 +184,11 @@ export default (name) => {
             this.initScroller();
             console.log("Scroller", name, "has been installed");
           })
-        }, 1500);
+        }, 1500); // must be > than debounce millis in observer (it seems this strange behavior can be explained by optimizations in Firefox)
+        // tests in Firefox
+        // a) refresh page 30 times
+        // b) refresh page 30 times when the hash is present (#message-523)
+        // c) input search string - search by messages
       },
       uninstallScroller() {
         if (this.timeout) {
