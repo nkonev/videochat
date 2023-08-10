@@ -106,7 +106,7 @@ export default (name) => {
       async loadTop() {
           console.log("going to load top in", name);
           if (!this.isFirstLoad) {
-              this.saveScroll(this.initialDirection());
+              this.saveScroll(true);
           }
           await this.load();
           if (this.isFirstLoad) {
@@ -114,14 +114,14 @@ export default (name) => {
               this.isFirstLoad = false;
           } else {
               await this.reduceListIfNeed();
-              this.restoreScroll(this.initialDirection());
+              this.restoreScroll(true);
           }
       },
 
       async loadBottom() {
           console.log("going to load bottom in", name);
           if (!this.isFirstLoad) {
-              this.saveScroll(!this.initialDirection());
+              this.saveScroll(false);
           }
           await this.load();
           if (this.isFirstLoad) {
@@ -129,7 +129,7 @@ export default (name) => {
               this.isFirstLoad = false;
           } else {
               await this.reduceListIfNeed();
-              this.restoreScroll(!this.initialDirection());
+              this.restoreScroll(false);
           }
       },
 
