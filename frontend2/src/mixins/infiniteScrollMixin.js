@@ -103,34 +103,26 @@ export default (name) => {
           this.scrollerProbeCurrent = 0;
       },
 
+      async initialLoad() {
+        await this.load();
+        await this.onFirstLoad();
+        this.isFirstLoad = false;
+      },
+
       async loadTop() {
           console.log("going to load top in", name);
-          if (!this.isFirstLoad) {
-              this.saveScroll(true);
-          }
+          this.saveScroll(true);
           await this.load();
-          if (this.isFirstLoad) {
-              this.onFirstLoad();
-              this.isFirstLoad = false;
-          } else {
-              await this.reduceListIfNeed();
-              this.restoreScroll(true);
-          }
+          await this.reduceListIfNeed();
+          this.restoreScroll(true);
       },
 
       async loadBottom() {
           console.log("going to load bottom in", name);
-          if (!this.isFirstLoad) {
-              this.saveScroll(false);
-          }
+          this.saveScroll(false);
           await this.load();
-          if (this.isFirstLoad) {
-              this.onFirstLoad();
-              this.isFirstLoad = false;
-          } else {
-              await this.reduceListIfNeed();
-              this.restoreScroll(false);
-          }
+          await this.reduceListIfNeed();
+          this.restoreScroll(false);
       },
 
       initScroller() {
@@ -199,17 +191,10 @@ export default (name) => {
         this.destroyScroller();
         console.log("Scroller", name, "has been uninstalled");
       },
-      async loadInDirection() {
-        if (this.isTopDirection()) {
-          await this.loadTop();
-        } else {
-          await this.loadBottom();
-        }
-      },
       async reloadItems() {
         this.reset();
         this.uninstallScroller();
-        await this.loadInDirection();
+        await this.initialLoad();
         await this.$nextTick(() => {
           this.installScroller();
         })

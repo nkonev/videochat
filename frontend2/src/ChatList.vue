@@ -75,9 +75,9 @@ export default {
     initialDirection() {
       return directionBottom
     },
-    onFirstLoad() {
+    async onFirstLoad() {
       this.loadedTop = true;
-      this.scrollUp();
+      await this.scrollUp();
     },
     async onChangeDirection() {
       if (this.isTopDirection()) { // became
@@ -148,8 +148,8 @@ export default {
       return 'chat-item-' + id
     },
 
-    scrollUp() {
-      this.$nextTick(() => {
+    async scrollUp() {
+      return await this.$nextTick(() => {
         if (this.scrollerDiv) {
           this.scrollerDiv.scrollTop = 0;
         }
@@ -193,7 +193,7 @@ export default {
 
     this.chatStore.searchType = SEARCH_MODE_CHATS;
 
-    await this.loadInDirection();
+    await this.initialLoad();
     this.installScroller();
   },
 

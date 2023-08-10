@@ -87,12 +87,12 @@
         initialDirection() {
           return directionTop
         },
-        onFirstLoad() {
+        async onFirstLoad() {
             if (this.highlightMessageId) {
-              this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
+              await this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
             } else {
               this.loadedBottom = true;
-              this.scrollDown();
+              await this.scrollDown();
             }
         },
         async load() {
@@ -164,8 +164,8 @@
           console.log("Cleaning hash");
           this.$router.push({ hash: null, query: route.query })
         },
-        scrollDown() {
-          this.$nextTick(() => {
+        async scrollDown() {
+          return await this.$nextTick(() => {
               if (this.scrollerDiv) {
                 this.scrollerDiv.scrollTop = 0;
               }
@@ -193,8 +193,8 @@
         canDrawMessages() {
           return !!this.chatStore.currentUser && hasLength(this.chatId)
         },
-        scrollTo(newValue) {
-          this.$nextTick(()=>{
+        async scrollTo(newValue) {
+          return await this.$nextTick(()=>{
             const el = document.querySelector(newValue)
             el?.scrollIntoView({behavior: 'instant', block: "start"});
           })
@@ -206,17 +206,17 @@
       },
 
       watch: {
-          chatId(newVal, oldVal) {
+          async chatId(newVal, oldVal) {
             //console.debug("Chat id has been changed", oldVal, "->", newVal);
             if (hasLength(newVal)) {
-              this.reloadItems();
+              await this.reloadItems();
             }
           },
           '$route.hash': {
-            handler: function (newValue, oldValue) {
+            handler: async function (newValue, oldValue) {
               if (hasLength(newValue)) {
                 console.log("Changed route hash, going to scroll")
-                this.scrollTo(newValue);
+                await this.scrollTo(newValue);
               }
             }
           }
@@ -229,7 +229,7 @@
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
 
-        await this.loadInDirection();
+        await this.initialLoad();
         this.installScroller();
       },
 
