@@ -98,6 +98,9 @@ export default (name) => {
           this.loadedTop = false;
           this.loadedBottom = false;
           this.aDirection = this.initialDirection();
+          this.scrollerProbePreviousPrevious = 0;
+          this.scrollerProbePrevious = 0;
+          this.scrollerProbeCurrent = 0;
       },
 
       async loadTop() {
