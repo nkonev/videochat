@@ -54,14 +54,12 @@ export default (name) => {
         }
       },
       onScroll(e) {
-        if (this.scrollerDiv) {
-          this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
-          this.scrollerProbePrevious = this.scrollerProbeCurrent;
-          this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
-          // console.debug("onScroll in", name, " prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
+        this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
+        this.scrollerProbePrevious = this.scrollerProbeCurrent;
+        this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
+        // console.debug("onScroll in", name, " prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
-          this.trySwitchDirection();
-        }
+        this.trySwitchDirection();
       },
       trySwitchDirection() {
         if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
@@ -104,6 +102,9 @@ export default (name) => {
       },
 
       async initialLoad() {
+        if (this.scrollerDiv == null) {
+          this.scrollerDiv = document.querySelector(this.scrollerSelector());
+        }
         await this.load();
         await this.onFirstLoad();
         this.isFirstLoad = false;
@@ -126,7 +127,9 @@ export default (name) => {
       },
 
       initScroller() {
-        this.scrollerDiv = document.querySelector(this.scrollerSelector());
+        if (this.scrollerDiv == null) {
+          throw "You have to invoke initialLoad() first"
+        }
 
         // https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
         const options = {

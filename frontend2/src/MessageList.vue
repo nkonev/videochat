@@ -92,7 +92,6 @@
               await this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
             } else {
               this.loadedBottom = true;
-              await this.scrollDown();
             }
         },
         async load() {
@@ -166,9 +165,7 @@
         },
         async scrollDown() {
           return await this.$nextTick(() => {
-              if (this.scrollerDiv) {
-                this.scrollerDiv.scrollTop = 0;
-              }
+            this.scrollerDiv.scrollTop = 0;
           });
         },
         scrollerSelector() {

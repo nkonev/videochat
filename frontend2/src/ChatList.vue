@@ -77,7 +77,6 @@ export default {
     },
     async onFirstLoad() {
       this.loadedTop = true;
-      await this.scrollUp();
     },
     async onChangeDirection() {
       if (this.isTopDirection()) { // became
@@ -148,13 +147,6 @@ export default {
       return 'chat-item-' + id
     },
 
-    async scrollUp() {
-      return await this.$nextTick(() => {
-        if (this.scrollerDiv) {
-          this.scrollerDiv.scrollTop = 0;
-        }
-      });
-    },
     scrollerSelector() {
         return ".my-chat-scroller"
     },
