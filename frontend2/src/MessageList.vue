@@ -100,13 +100,13 @@
         async onFirstLoad() {
             if (this.highlightMessageId) {
               await this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
-            } if (this.loadedMessageId) {
+            } else if (this.loadedMessageId) {
               await this.scrollTo(messageIdHashPrefix + this.loadedMessageId);
-              removeTopMessagePosition(this.chatId)
             } else {
               await this.scrollDown(); // we need it to prevent browser's scrolling
               this.loadedBottom = true;
             }
+            removeTopMessagePosition(this.chatId);
         },
         async load() {
           if (!this.canDrawMessages()) {
