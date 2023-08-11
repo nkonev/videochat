@@ -48,6 +48,8 @@
         return {
           startingFromItemIdTop: null,
           startingFromItemIdBottom: null,
+
+          hasInitialHash: false,
         }
       },
 
@@ -112,7 +114,7 @@
           }
 
           let startingFromItemId;
-          if (this.highlightMessageId) {
+          if (this.hasInitialHash) {
             startingFromItemId = this.highlightMessageId
           } else if (this.loadedMessageId) {
             startingFromItemId = this.loadedMessageId
@@ -121,8 +123,8 @@
           }
 
           let hasHash;
-          if (this.highlightMessageId) {
-            hasHash = !!this.highlightMessageId
+          if (this.hasInitialHash) {
+            hasHash = this.hasInitialHash
           } else if (this.loadedMessageId) {
             hasHash = !!this.loadedMessageId
           } else {
@@ -168,6 +170,7 @@
               }
             }
 
+            this.hasInitialHash = false;
             if (!this.isFirstLoad) {
               this.clearRouteHash()
             }
@@ -275,6 +278,7 @@
       },
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
+        this.hasInitialHash = hasLength(this.highlightMessageId);
       },
 
       watch: {
