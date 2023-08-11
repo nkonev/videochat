@@ -272,7 +272,9 @@
             return false
           }
         },
-
+        beforeUnload() {
+          this.saveLastVisibleElement(this.chatId);
+        }
       },
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
@@ -299,6 +301,8 @@
       },
 
       async mounted() {
+        addEventListener("beforeunload", this.beforeUnload);
+
         bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
@@ -311,6 +315,8 @@
       },
 
       beforeUnmount() {
+        removeEventListener("beforeunload", this.beforeUnload);
+
         this.uninstallScroller();
         bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
         bus.off(PROFILE_SET, this.onProfileSet);
