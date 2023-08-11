@@ -191,5 +191,6 @@ export default {
     add_media_embed: "Добавить встраиваемый контент",
     users_read: "Пользователи, прочитавшие сообщение",
     search_by_selected: "Искать по выделенному",
-    screen_share_in_process: "Идёт показ экрана"
+    screen_share_in_process: "Идёт показ экрана",
+    scroll_down: "Перемотать вниз",
 }

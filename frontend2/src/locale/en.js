@@ -191,5 +191,6 @@ export default {
     add_media_embed: "Add embed media",
     users_read: "Users read this message",
     search_by_selected: "Search by selected",
-    screen_share_in_process: "Screen share in progress"
+    screen_share_in_process: "Screen share in progress",
+    scroll_down: "Scroll down",
 }

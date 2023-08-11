@@ -23,16 +23,16 @@
     import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
     import heightMixin from "@/mixins/heightMixin";
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
-    import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
+    import bus, {LOGGED_OUT, PROFILE_SET, SCROLL_DOWN, SEARCH_STRING_CHANGED} from "@/bus/bus";
     import {hasLength} from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
-    import router from "@/router";
 
     const PAGE_SIZE = 40;
+    const SCROLLING_THRESHHOLD = 200; // px
 
     const scrollerName = 'MessageList';
 
@@ -141,7 +141,7 @@
 
             this.hasInitialHash = false;
             if (!this.isFirstLoad) {
-              this.clearRouteHash(this.$route)
+              this.clearRouteHash()
             }
           }).then(()=>{
             return this.$nextTick()
@@ -159,9 +159,9 @@
           return messageIdPrefix + id
         },
 
-        clearRouteHash(route) {
+        clearRouteHash() {
           console.log("Cleaning hash");
-          this.$router.push({ hash: null, query: route.query })
+          this.$router.push({ hash: null, query: this.$route.query })
         },
         async scrollDown() {
           return await this.$nextTick(() => {
@@ -196,6 +196,29 @@
             el?.scrollIntoView({behavior: 'instant', block: "start"});
           })
         },
+
+        async onScrollDownButton() {
+          // condition is a dummy heuristic (because right now doe to outdated vue-infinite-loading we cannot scroll down several times. nevertheless I think it's a pretty good heuristic so I think it worth to remain it here after updating to vue 3 and another modern infinity scroller)
+          if (this.items.length <= PAGE_SIZE * 2 && !this.highlightMessageId) {
+            await this.scrollDown();
+            this.clearRouteHash();
+          } else {
+            this.clearRouteHash();
+            await this.reloadItems();
+          }
+        },
+
+        onScrollCallback() {
+          this.chatStore.showScrollDown = !this.isScrolledToBottom();
+        },
+        isScrolledToBottom() {
+          if (this.scrollerDiv) {
+            return Math.abs(this.scrollerDiv.scrollTop) < SCROLLING_THRESHHOLD
+          } else {
+            return false
+          }
+        },
+
       },
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
@@ -223,6 +246,7 @@
         bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
+        bus.on(SCROLL_DOWN, this.onScrollDownButton);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
 
@@ -235,6 +259,9 @@
         bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
+        bus.off(SCROLL_DOWN, this.onScrollDownButton);
+
+        this.chatStore.showScrollDown = false;
       }
     }
 </script>

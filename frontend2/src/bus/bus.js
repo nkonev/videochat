@@ -12,3 +12,6 @@ export const LOGGED_IN = "loggedIn";
 export const SEARCH_STRING_CHANGED = "searchStringChanged";
 
 export const OPEN_NOTIFICATIONS_DIALOG = "openNotifications";
+
+
+export const SCROLL_DOWN = "scrollDown";

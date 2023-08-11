@@ -44,6 +44,11 @@
               </v-text-field>
           </v-card>
 
+          <v-btn v-if="chatStore.showScrollDown" icon @click="scrollDown()" :title="$vuetify.locale.t('$vuetify.scroll_down')">
+            <v-icon :x-large="isMobile()">mdi-arrow-down-thick</v-icon>
+          </v-btn>
+
+
           <v-spacer></v-spacer>
 
       </v-app-bar>
@@ -87,7 +92,7 @@ import '@fontsource/roboto';
 import { hasLength} from "@/utils";
 import { chat_name, videochat_name} from "@/router/routes";
 import axios from "axios";
-import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
+import bus, {LOGGED_OUT, PROFILE_SET, SCROLL_DOWN} from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
@@ -175,6 +180,9 @@ export default {
         },
         switchSearchType() {
           this.chatStore.switchSearchType()
+        },
+        scrollDown () {
+          bus.emit(SCROLL_DOWN)
         },
         searchName() {
             if (this.chatStore.searchType == SEARCH_MODE_CHATS) {

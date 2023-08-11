@@ -22,6 +22,7 @@ export const useChatStore = defineStore('chat', {
         errorColor: "",
         showDrawer: isMobileBrowser(),
         searchType: SEARCH_MODE_CHATS,
+        showScrollDown: false,
     }
   },
   actions: {

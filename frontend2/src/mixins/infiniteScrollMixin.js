@@ -54,6 +54,10 @@ export default (name) => {
         }
       },
       onScroll(e) {
+        if (this.onScrollCallback) {
+          this.onScrollCallback();
+        }
+
         this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
         this.scrollerProbePrevious = this.scrollerProbeCurrent;
         this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
