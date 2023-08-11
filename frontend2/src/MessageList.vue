@@ -104,6 +104,7 @@
               await this.scrollTo(messageIdHashPrefix + this.loadedMessageId);
               removeTopMessagePosition(this.chatId)
             } else {
+              await this.scrollDown(); // we need it to prevent browser's scrolling
               this.loadedBottom = true;
             }
         },

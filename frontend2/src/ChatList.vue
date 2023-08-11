@@ -77,6 +77,7 @@ export default {
     },
     async onFirstLoad() {
       this.loadedTop = true;
+      await this.scrollUp(); // we need it to prevent browser's scrolling
     },
     async onChangeDirection() {
       if (this.isTopDirection()) { // became
@@ -145,6 +146,13 @@ export default {
 
     getItemId(id) {
       return 'chat-item-' + id
+    },
+    async scrollUp() {
+      return await this.$nextTick(() => {
+        if (this.scrollerDiv) {
+          this.scrollerDiv.scrollTop = 0;
+        }
+      });
     },
 
     scrollerSelector() {
