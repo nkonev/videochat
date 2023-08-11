@@ -48,3 +48,13 @@ export const getHumanReadableDate = (timestamp) => {
     }
     return `${format(parsedDate, formatString)}`
 }
+
+export const elementIsVisibleInViewport = (element) => {
+  const rect = element.getBoundingClientRect();
+  return (
+    Math.abs(rect.top) >= 0 &&
+    Math.abs(rect.left) >= 0 &&
+    Math.abs(rect.bottom) <= (window.innerHeight || document.documentElement.clientHeight) &&
+    Math.abs(rect.right) <= (window.innerWidth || document.documentElement.clientWidth)
+  );
+}

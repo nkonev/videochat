@@ -30,6 +30,8 @@
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
+    import {elementIsVisibleInViewport} from "@/utils";
+    import {setTopMessagePosition} from "@/store/localStore";
 
     const PAGE_SIZE = 40;
     const SCROLLING_THRESHHOLD = 200; // px
@@ -208,6 +210,29 @@
           }
         },
 
+        saveLastVisibleElement(chatId) {
+          if (!this.isScrolledToBottom()) {
+            const elems = [...document.querySelectorAll(this.scrollerSelector() + " .message-item-root")].map((item) => {
+              const visible = elementIsVisibleInViewport(item);
+              return {item, visible}
+            });
+
+            const visible = elems.filter((el) => el.visible);
+            // console.log("visible", visible, "elems", elems);
+            if (visible.length == 0) {
+              console.warn("Unable to get top visible")
+              return
+            }
+            const topVisible = visible[visible.length - 1].item
+
+            console.log("Found topVisible", topVisible, "in chat", chatId);
+
+            setTopMessagePosition(chatId, this.getMessageId(topVisible.id))
+          } else {
+            console.log("Skipped saved topVisible because we are already scrolled to the bottom ")
+          }
+        },
+
         onScrollCallback() {
           this.chatStore.showScrollDown = !this.isScrolledToBottom();
         },
@@ -228,6 +253,8 @@
       watch: {
           async chatId(newVal, oldVal) {
             //console.debug("Chat id has been changed", oldVal, "->", newVal);
+            this.saveLastVisibleElement(oldVal);
+
             if (hasLength(newVal)) {
               await this.reloadItems();
             }
