@@ -296,6 +296,7 @@
             this.saveLastVisibleElement(oldVal);
 
             if (hasLength(newVal)) {
+              this.hasLoadedHash = hasLength(this.loadedMessageId); // reinit boolean flag
               await this.reloadItems();
             }
           },
