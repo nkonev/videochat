@@ -184,11 +184,11 @@
           this.startingFromItemIdTop = null;
           this.startingFromItemIdBottom = null;
         },
-        onSearchStringChanged() {
-          this.reloadItems();
+        async onSearchStringChanged() {
+          await this.reloadItems();
         },
-        onProfileSet() {
-          this.reloadItems();
+        async onProfileSet() {
+          await this.reloadItems();
         },
         onLoggedOut() {
           this.reset();
@@ -249,15 +249,19 @@
       },
 
       async mounted() {
+        // we trigger actions on load if profile was set
+        // else we rely on PROFILE_SET
+        // should be before bus.on(PROFILE_SET, this.onProfileSet);
+        if (this.canDrawMessages()) {
+          await this.onProfileSet();
+        }
+
         bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
         bus.on(SCROLL_DOWN, this.onScrollDownButton);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
-
-        await this.initialLoad();
-        this.installScroller();
       },
 
       beforeUnmount() {
