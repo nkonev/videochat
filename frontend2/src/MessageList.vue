@@ -49,7 +49,7 @@
           startingFromItemIdBottom: null,
 
           hasInitialHash: false,
-          loadedHash: null,
+          loadedHash: null, // uses the separated var due to subsequent calls in Firefox may return different either null or the real value
         }
       },
 
