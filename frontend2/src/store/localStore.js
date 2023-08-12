@@ -200,3 +200,16 @@ export const getStoredCodec = () => {
 export const setStoredCodec = (v) => {
     localStorage.setItem(KEY_CODEC, JSON.stringify(v));
 }
+
+const KEY_TOP_MESSAGE = "topMessage"
+export const setTopMessagePosition = (chatId, messageId) => {
+  localStorage.setItem(KEY_TOP_MESSAGE + "_" + chatId, JSON.stringify(messageId));
+}
+
+export const getTopMessagePosition = (chatId) => {
+  return JSON.parse(localStorage.getItem(KEY_TOP_MESSAGE + "_" + chatId));
+}
+
+export const removeTopMessagePosition = (chatId) => {
+  localStorage.removeItem(KEY_TOP_MESSAGE + "_" + chatId);
+}
