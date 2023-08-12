@@ -194,11 +194,14 @@ export default (name) => {
         // b) refresh page 30 times when the hash is present (#message-523)
         // c) input search string - search by messages
       },
-      uninstallScroller() {
+      clearTimeout() {
         if (this.timeout) {
           clearTimeout(this.timeout);
           this.timeout = null;
         }
+      },
+      uninstallScroller() {
+        this.clearTimeout();
         this.destroyScroller();
         console.log("Scroller", name, "has been uninstalled");
       },
