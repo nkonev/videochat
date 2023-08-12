@@ -160,11 +160,11 @@ export default {
     goToChat(id) {
         goToPreserving(this.$route, this.$router, { name: chat_view_name, params: { id: id}})
     },
-    onSearchStringChanged() {
-      this.reloadItems();
+    async onSearchStringChanged() {
+      await this.reloadItems();
     },
-    onProfileSet() {
-      this.reloadItems();
+    async onProfileSet() {
+      await this.reloadItems();
     },
     onLoggedOut() {
       this.reset();
@@ -179,14 +179,15 @@ export default {
   },
 
   async mounted() {
+    if (this.canDrawChats()) {
+      await this.onProfileSet();
+    }
+
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
 
     this.chatStore.searchType = SEARCH_MODE_CHATS;
-
-    await this.initialLoad();
-    this.installScroller();
   },
 
   beforeUnmount() {
