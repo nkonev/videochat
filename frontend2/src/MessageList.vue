@@ -114,12 +114,7 @@
           }
 
           let startingFromItemId;
-          if (this.hasInitialHash) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
-            // how to check:
-            // 1. click on hash
-            // 2. reload page
-            // 3. press "arrow down" (Scroll down)
-            // 4. It is going to invoke this load method which will use cashed and reset hasInitialHash = false
+          if (this.hasInitialHash) {
             startingFromItemId = this.highlightMessageId
           } else if (this.loadedMessageId) {
             startingFromItemId = this.loadedMessageId
