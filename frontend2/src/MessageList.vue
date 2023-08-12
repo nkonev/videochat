@@ -49,7 +49,7 @@
           startingFromItemIdBottom: null,
 
           hasInitialHash: false,
-          loadedHash: null,
+          hasLoadedHash: false,
         }
       },
 
@@ -61,6 +61,14 @@
         highlightMessageId() {
             return this.getMessageId(this.$route.hash);
         },
+        loadedMessageId() {
+          const value = getTopMessagePosition(this.chatId)
+          if (hasLength(value)) {
+            return value
+          } else {
+            return null
+          }
+        }
       },
 
       components: {
@@ -92,13 +100,12 @@
         async onFirstLoad() {
             if (this.highlightMessageId) {
               await this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
-            } else if (this.loadedHash) {
-              await this.scrollTo(messageIdHashPrefix + this.loadedHash);
+            } else if (getTopMessagePosition(this.chatId)) {
+              await this.scrollTo(messageIdHashPrefix + getTopMessagePosition(this.chatId));
             } else {
               await this.scrollDown(); // we need it to prevent browser's scrolling
               this.loadedBottom = true;
             }
-            this.loadedHash = null;
             removeTopMessagePosition(this.chatId);
         },
         async load() {
@@ -114,8 +121,8 @@
             // 3. press "arrow down" (Scroll down)
             // 4. It is going to invoke this load method which will use cashed and reset hasInitialHash = false
             startingFromItemId = this.highlightMessageId
-          } else if (this.loadedHash) {
-            startingFromItemId = this.loadedHash
+          } else if (this.hasLoadedHash) {
+            startingFromItemId = this.loadedMessageId
           } else {
             startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
           }
@@ -123,8 +130,8 @@
           let hasHash;
           if (this.hasInitialHash) {
             hasHash = this.hasInitialHash
-          } else if (this.loadedHash) {
-            hasHash = !!this.loadedHash
+          } else if (this.hasLoadedHash) {
+            hasHash = this.hasLoadedHash
           } else {
             hasHash = false
           }
@@ -169,6 +176,7 @@
             }
 
             this.hasInitialHash = false;
+            this.hasLoadedHash = false;
             if (!this.isFirstLoad) {
               this.clearRouteHash()
             }
@@ -271,7 +279,7 @@
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
         this.hasInitialHash = hasLength(this.highlightMessageId);
-        this.loadedHash = getTopMessagePosition(this.chatId);
+        this.hasLoadedHash = hasLength(this.loadedMessageId);
       },
 
       watch: {
@@ -280,7 +288,7 @@
             this.saveLastVisibleElement(oldVal);
 
             if (hasLength(newVal)) {
-              this.loadedHash = getTopMessagePosition(this.chatId); // reinit boolean flag (prepare for upcoming loading)
+              this.hasLoadedHash = hasLength(this.loadedMessageId); // reinit boolean flag (prepare for upcoming loading)
               await this.reloadItems();
             }
           },
