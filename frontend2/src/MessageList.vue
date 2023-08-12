@@ -100,8 +100,8 @@
         async onFirstLoad() {
             if (this.highlightMessageId) {
               await this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
-            } else if (this.loadedMessageId) {
-              await this.scrollTo(messageIdHashPrefix + this.loadedMessageId);
+            } else if (getTopMessagePosition(this.chatId)) {
+              await this.scrollTo(messageIdHashPrefix + getTopMessagePosition(this.chatId));
             } else {
               await this.scrollDown(); // we need it to prevent browser's scrolling
               this.loadedBottom = true;
@@ -235,14 +235,8 @@
         },
 
         async onScrollDownButton() {
-          // condition is a dummy heuristic (because right now doe to outdated vue-infinite-loading we cannot scroll down several times. nevertheless I think it's a pretty good heuristic so I think it worth to remain it here after updating to vue 3 and another modern infinity scroller)
-          if (this.items.length <= PAGE_SIZE * 2 && !this.highlightMessageId && !this.loadedMessageId) {
-            await this.scrollDown();
-            this.clearRouteHash();
-          } else {
-            this.clearRouteHash();
-            await this.reloadItems();
-          }
+          this.clearRouteHash();
+          return await this.reloadItems();
         },
 
         saveLastVisibleElement(chatId) {
