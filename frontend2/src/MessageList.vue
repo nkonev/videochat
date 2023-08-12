@@ -197,7 +197,7 @@
         },
 
         clearRouteHash() {
-          console.log("Cleaning hash");
+          // console.log("Cleaning hash");
           this.$router.push({ hash: null, query: this.$route.query })
         },
         async scrollDown() {
