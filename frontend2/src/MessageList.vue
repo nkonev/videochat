@@ -31,7 +31,7 @@
     import MessageItem from "@/MessageItem.vue";
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
     import {elementIsVisibleInViewport} from "@/utils";
-    import {getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition} from "@/store/localStore";
+    import {setTopMessagePosition} from "@/store/localStore";
 
     const PAGE_SIZE = 40;
     const SCROLLING_THRESHHOLD = 200; // px
@@ -61,14 +61,6 @@
         highlightMessageId() {
             return this.getMessageId(this.$route.hash);
         },
-        loadedMessageId() {
-          const value = getTopMessagePosition(this.chatId)
-          if (hasLength(value)) {
-            return value
-          } else {
-            return null
-          }
-        }
       },
 
       components: {
@@ -100,9 +92,6 @@
         async onFirstLoad() {
             if (this.highlightMessageId) {
               await this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
-            } if (this.loadedMessageId) {
-              await this.scrollTo(messageIdHashPrefix + this.loadedMessageId);
-              removeTopMessagePosition(this.chatId)
             } else {
               this.loadedBottom = true;
             }
@@ -112,31 +101,14 @@
               return Promise.resolve()
           }
 
-          let startingFromItemId;
-          if (this.hasInitialHash) {
-            startingFromItemId = this.highlightMessageId
-          } else if (this.loadedMessageId) {
-            startingFromItemId = this.loadedMessageId
-          } else {
-            startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
-          }
-
-          let hasHash;
-          if (this.hasInitialHash) {
-            hasHash = this.hasInitialHash
-          } else if (this.loadedMessageId) {
-            hasHash = !!this.loadedMessageId
-          } else {
-            hasHash = false
-          }
-
+          const startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
           return axios.get(`/api/chat/${this.chatId}/message`, {
               params: {
-                startingFromItemId: startingFromItemId,
+                startingFromItemId: this.hasInitialHash ? this.highlightMessageId : startingFromItemId,
                 size: PAGE_SIZE,
                 reverse: this.isTopDirection(),
                 searchString: this.searchString,
-                hasHash: hasHash
+                hasHash: this.hasInitialHash
               },
             })
           .then((res) => {
@@ -149,7 +121,7 @@
               this.items = items.reverse().concat(this.items);
             }
 
-            if (!hasHash && items.length < PAGE_SIZE) {
+            if (!this.hasInitialHash && items.length < PAGE_SIZE) {
               if (this.isTopDirection()) {
                 this.loadedTop = true;
               } else {
@@ -229,7 +201,7 @@
 
         async onScrollDownButton() {
           // condition is a dummy heuristic (because right now doe to outdated vue-infinite-loading we cannot scroll down several times. nevertheless I think it's a pretty good heuristic so I think it worth to remain it here after updating to vue 3 and another modern infinity scroller)
-          if (this.items.length <= PAGE_SIZE * 2 && !this.highlightMessageId && !this.loadedMessageId) {
+          if (this.items.length <= PAGE_SIZE * 2 && !this.highlightMessageId) {
             await this.scrollDown();
             this.clearRouteHash();
           } else {
