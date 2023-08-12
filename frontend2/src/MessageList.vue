@@ -180,6 +180,7 @@
 
         reset() {
           this.resetInfiniteScrollVars();
+          this.chatStore.showScrollDown = false;
 
           this.startingFromItemIdTop = null;
           this.startingFromItemIdBottom = null;
@@ -270,8 +271,6 @@
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(SCROLL_DOWN, this.onScrollDownButton);
-
-        this.chatStore.showScrollDown = false;
       }
     }
 </script>
