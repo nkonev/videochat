@@ -180,7 +180,6 @@ export default (name) => {
         this.observer?.disconnect();
         this.observer = null;
         this.scrollerDiv = null;
-        this.preservedScroll = null;
       },
 
       installScroller() {
