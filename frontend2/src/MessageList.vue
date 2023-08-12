@@ -317,6 +317,8 @@
       beforeUnmount() {
         removeEventListener("beforeunload", this.beforeUnload);
 
+        this.reset();
+
         this.uninstallScroller();
         bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
         bus.off(PROFILE_SET, this.onProfileSet);

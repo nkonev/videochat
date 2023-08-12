@@ -193,6 +193,7 @@ export default {
   },
 
   beforeUnmount() {
+    this.reset();
     this.uninstallScroller();
     console.log("Scroller", scrollerName, "has been uninstalled");
 
