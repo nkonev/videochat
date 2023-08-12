@@ -50,7 +50,6 @@
           startingFromItemIdBottom: null,
 
           hasInitialHash: false,
-          hasLoadedHash: false,
         }
       },
 
@@ -122,7 +121,7 @@
             // 3. press "arrow down" (Scroll down)
             // 4. It is going to invoke this load method which will use cashed and reset hasInitialHash = false
             startingFromItemId = this.highlightMessageId
-          } else if (this.hasLoadedHash) {
+          } else if (this.loadedMessageId) {
             startingFromItemId = this.loadedMessageId
           } else {
             startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
@@ -131,8 +130,8 @@
           let hasHash;
           if (this.hasInitialHash) {
             hasHash = this.hasInitialHash
-          } else if (this.hasLoadedHash) {
-            hasHash = this.hasLoadedHash
+          } else if (this.loadedMessageId) {
+            hasHash = !!this.loadedMessageId
           } else {
             hasHash = false
           }
@@ -177,7 +176,6 @@
             }
 
             this.hasInitialHash = false;
-            this.hasLoadedHash = false;
             if (!this.isFirstLoad) {
               this.clearRouteHash()
             }
@@ -287,7 +285,6 @@
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
         this.hasInitialHash = hasLength(this.highlightMessageId);
-        this.hasLoadedHash = hasLength(this.loadedMessageId);
       },
 
       watch: {
