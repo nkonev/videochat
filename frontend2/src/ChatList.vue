@@ -27,7 +27,7 @@
 <script>
 import axios from "axios";
 import infiniteScrollMixin, {directionBottom, reduceToLength} from "@/mixins/infiniteScrollMixin";
-import {chat_name, chat_view_name} from "@/router/routes";
+import {chat_list_name, chat_name, chat_view_name} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
@@ -187,7 +187,7 @@ export default {
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
 
-    if (this.$route.name == chat_name) {
+    if (this.$route.name == chat_list_name) {
       this.chatStore.searchType = SEARCH_MODE_CHATS;
     }
   },
