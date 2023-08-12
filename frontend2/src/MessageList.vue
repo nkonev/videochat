@@ -30,7 +30,6 @@
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
-    import {elementIsVisibleInViewport} from "@/utils";
     import {getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition} from "@/store/localStore";
 
     const PAGE_SIZE = 40;
@@ -249,7 +248,7 @@
         saveLastVisibleElement(chatId) {
           if (!this.isScrolledToBottom()) {
             const elems = [...document.querySelectorAll(this.scrollerSelector() + " .message-item-root")].map((item) => {
-              const visible = elementIsVisibleInViewport(item);
+              const visible = item.getBoundingClientRect().top > 0
               return {item, visible}
             });
 
