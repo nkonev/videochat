@@ -102,6 +102,12 @@
           const startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
           return axios.get(`/api/chat/${this.chatId}/message`, {
               params: {
+                // hasInitialHash - we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
+                // how to check:
+                // 1. click on hash
+                // 2. reload page
+                // 3. press "arrow down" (Scroll down)
+                // 4. It is going to invoke this load method which will use cashed and reset hasInitialHash = false
                 startingFromItemId: this.hasInitialHash ? this.highlightMessageId : startingFromItemId,
                 size: PAGE_SIZE,
                 reverse: this.isTopDirection(),
@@ -160,7 +166,7 @@
         },
 
         clearRouteHash() {
-          console.log("Cleaning hash");
+          // console.log("Cleaning hash");
           this.$router.push({ hash: null, query: this.$route.query })
         },
         async scrollDown() {

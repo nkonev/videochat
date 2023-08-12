@@ -103,6 +103,7 @@ export default (name) => {
           this.scrollerProbePreviousPrevious = 0;
           this.scrollerProbePrevious = 0;
           this.scrollerProbeCurrent = 0;
+          this.preservedScroll = null;
       },
 
       async initialLoad() {
