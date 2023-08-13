@@ -309,7 +309,7 @@
       },
 
       async mounted() {
-        this.markInstance = new Mark("div.my-messages-scroller .message-item-text");
+        this.markInstance = new Mark(this.scrollerSelector() + " .message-item-text");
 
         // we trigger actions on load if profile was set
         // else we rely on PROFILE_SET
