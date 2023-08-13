@@ -31,6 +31,7 @@
     import MessageItem from "@/MessageItem.vue";
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
     import {getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition} from "@/store/localStore";
+    import Mark from "mark.js";
 
     const PAGE_SIZE = 40;
     const SCROLLING_THRESHHOLD = 200; // px
@@ -50,6 +51,8 @@
 
           hasInitialHash: false,
           loadedHash: null,
+
+          markInstance: null,
         }
       },
 
@@ -172,6 +175,7 @@
             if (!this.isFirstLoad) {
               this.clearRouteHash()
             }
+            this.performMarking();
           }).then(()=>{
             return this.$nextTick()
           })
@@ -269,7 +273,15 @@
         },
         beforeUnload() {
           this.saveLastVisibleElement(this.chatId);
-        }
+        },
+        performMarking() {
+          this.$nextTick(() => {
+            if (hasLength(this.searchString)) {
+              this.markInstance.unmark();
+              this.markInstance.mark(this.searchString);
+            }
+          })
+        },
 
       },
       created() {
@@ -297,6 +309,8 @@
       },
 
       async mounted() {
+        this.markInstance = new Mark("div.my-messages-scroller .message-item-text");
+
         // we trigger actions on load if profile was set
         // else we rely on PROFILE_SET
         // should be before bus.on(PROFILE_SET, this.onProfileSet);
@@ -315,6 +329,8 @@
       },
 
       beforeUnmount() {
+        this.markInstance.unmark();
+        this.markInstance = null;
         removeEventListener("beforeunload", this.beforeUnload);
 
         this.reset();
