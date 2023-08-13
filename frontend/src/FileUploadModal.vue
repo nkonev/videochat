@@ -141,8 +141,7 @@ export default {
             const config = {
                 // headers: { 'content-type': 'multipart/form-data' },
                 onUploadProgress: this.onProgressFunction,
-                cancelToken: this.cancelSource.token,
-                timeout: 3600000
+                cancelToken: this.cancelSource.token
             }
             console.log("Sending file to storage");
 
