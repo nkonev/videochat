@@ -48,3 +48,30 @@ export const getHumanReadableDate = (timestamp) => {
     }
     return `${format(parsedDate, formatString)}`
 }
+
+export const media_image = "image";
+
+export const media_video = "video";
+
+export const embed = "embed";
+
+
+export const link_dialog_type_add_link_to_text = "add_link_to_text";
+export const link_dialog_type_add_media_by_link = "add_media_by_link";
+export const link_dialog_type_add_media_embed = "add_media_embed";
+
+export const chatEditMessageDtoFactory = () => {
+  return {
+    id: null,
+    text: "",
+    fileItemUuid: null,
+  }
+};
+
+
+export const colorText = 'colorText';
+export const colorBackground = 'colorBackground';
+
+export const getAnswerPreviewFields = (dto) => {
+  return dto;
+}
