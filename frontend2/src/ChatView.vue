@@ -1,8 +1,9 @@
 <template>
     <splitpanes class="default-theme" :dbl-click-splitter="false">
-        <pane size="30">
-            <ChatList/>
-        </pane>
+      <pane size="30">
+        <ChatList/>
+      </pane>
+      <pane>
         <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
             <pane>
                 <MessageList/>
@@ -11,6 +12,7 @@
             <MessageEdit/>
           </pane>
         </splitpanes>
+      </pane>
     </splitpanes>
 </template>
 
