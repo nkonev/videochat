@@ -157,7 +157,7 @@
                     (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto))
                         .then(response => {
                             this.resetInput();
-                            k(CLOSE_EDIT_MESSAGE);
+                            bus.emit(CLOSE_EDIT_MESSAGE);
                         }).finally(() => {
                             this.sending = false;
                         })

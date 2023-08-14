@@ -9,7 +9,7 @@
                 <MessageList/>
             </pane>
           <pane>
-            <MessageEdit/>
+            <MessageEdit :chatId="this.chatId"/>
           </pane>
         </splitpanes>
       </pane>
@@ -31,6 +31,11 @@ export default {
       MessageList,
       MessageEdit,
     },
+    computed: {
+      chatId() {
+        return this.$route.params.id
+      },
+    }
 }
 </script>
 
