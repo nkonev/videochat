@@ -29,7 +29,7 @@
 </template>
 
 <script>
-    import bus, {MESSAGE_EDIT_COLOR_SET, OPEN_MESSAGE_EDIT_COLOR} from "./bus";
+    import bus, {MESSAGE_EDIT_COLOR_SET, OPEN_MESSAGE_EDIT_COLOR} from "./bus/bus";
     import {colorBackground, colorText} from "@/utils";
 
     export default {
@@ -75,10 +75,10 @@
             }
         },
         created() {
-            bus.$on(OPEN_MESSAGE_EDIT_COLOR, this.showModal);
+            bus.on(OPEN_MESSAGE_EDIT_COLOR, this.showModal);
         },
         destroyed() {
-            bus.$off(OPEN_MESSAGE_EDIT_COLOR, this.showModal);
+            bus.off(OPEN_MESSAGE_EDIT_COLOR, this.showModal);
         },
     }
 </script>

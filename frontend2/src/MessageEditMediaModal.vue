@@ -72,7 +72,7 @@
 <script>
     import axios from "axios";
 
-    import bus, {OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA} from "./bus";
+    import bus, {OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA} from "./bus/bus";
     import {link_dialog_type_add_media_by_link, media_image, media_video} from "@/utils";
 
     const firstPage = 1;
@@ -187,10 +187,10 @@
             },
         },
         created() {
-            bus.$on(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
+            bus.on(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
         },
         destroyed() {
-            bus.$off(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
+            bus.off(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
         },
     }
 </script>

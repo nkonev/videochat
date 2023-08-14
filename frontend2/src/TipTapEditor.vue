@@ -35,7 +35,7 @@ import bus, {
     OPEN_FILE_UPLOAD_MODAL,
     MEDIA_LINK_SET,
     EMBED_LINK_SET
-} from "./bus";
+} from "./bus/bus";
 import Video from "@/TipTapVideo";
 import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
@@ -144,9 +144,9 @@ export default {
     },
   },
   mounted() {
-    bus.$on(PREVIEW_CREATED, this.onPreviewCreated);
-    bus.$on(MEDIA_LINK_SET, this.onMediaLinkSet);
-    bus.$on(EMBED_LINK_SET, this.onEmbedLinkSet);
+    bus.on(PREVIEW_CREATED, this.onPreviewCreated);
+    bus.on(MEDIA_LINK_SET, this.onMediaLinkSet);
+    bus.on(EMBED_LINK_SET, this.onEmbedLinkSet);
 
     const imagePluginInstance = buildImageHandler(
     (image) => {
@@ -229,9 +229,9 @@ export default {
   },
 
   beforeDestroy() {
-    bus.$off(PREVIEW_CREATED, this.onPreviewCreated);
-    bus.$off(MEDIA_LINK_SET, this.onMediaLinkSet);
-    bus.$off(EMBED_LINK_SET, this.onEmbedLinkSet);
+    bus.off(PREVIEW_CREATED, this.onPreviewCreated);
+    bus.off(MEDIA_LINK_SET, this.onMediaLinkSet);
+    bus.off(EMBED_LINK_SET, this.onEmbedLinkSet);
 
     this.editor.destroy();
     this.fileInput = null;

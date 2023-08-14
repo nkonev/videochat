@@ -20,7 +20,7 @@
 </template>
 
 <script>
-    import bus, {OPEN_MESSAGE_EDIT_SMILEY} from "./bus";
+    import bus, {OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
 
     export default {
         data () {
@@ -58,10 +58,10 @@
             },
         },
         created() {
-            bus.$on(OPEN_MESSAGE_EDIT_SMILEY, this.showModal);
+            bus.on(OPEN_MESSAGE_EDIT_SMILEY, this.showModal);
         },
         destroyed() {
-            bus.$off(OPEN_MESSAGE_EDIT_SMILEY, this.showModal);
+            bus.off(OPEN_MESSAGE_EDIT_SMILEY, this.showModal);
         },
     }
 </script>

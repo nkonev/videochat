@@ -28,3 +28,7 @@ export const OPEN_VIEW_FILES_DIALOG = "openViewFiles";
 export const SET_EDIT_MESSAGE = "setEditMessageDto";
 export const CLOSE_EDIT_MESSAGE = "closeEditMessage";
 export const SET_FILE_ITEM_UUID = "setFileItemUuid";
+export const MEDIA_LINK_SET = "mediaLinkSet";
+export const EMBED_LINK_SET = "embedLinkSet";
+export const PREVIEW_CREATED = "previewCreated";
+export const FILE_UPLOAD_MODAL_START_UPLOADING = "FileUploadModalStartUpload";

@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import bus, {EMBED_LINK_SET, MEDIA_LINK_SET, MESSAGE_EDIT_LINK_SET, OPEN_MESSAGE_EDIT_LINK} from "./bus";
+import bus, {EMBED_LINK_SET, MEDIA_LINK_SET, MESSAGE_EDIT_LINK_SET, OPEN_MESSAGE_EDIT_LINK} from "./bus/bus";
 import {
     embed,
     link_dialog_type_add_link_to_text,
@@ -99,10 +99,10 @@ import {
             }
         },
         created() {
-            bus.$on(OPEN_MESSAGE_EDIT_LINK, this.showModal);
+            bus.on(OPEN_MESSAGE_EDIT_LINK, this.showModal);
         },
         destroyed() {
-            bus.$off(OPEN_MESSAGE_EDIT_LINK, this.showModal);
+            bus.off(OPEN_MESSAGE_EDIT_LINK, this.showModal);
         },
     }
 </script>

@@ -25,7 +25,7 @@
 </template>
 
 <script>
-    import bus, {CLOSE_EDIT_MESSAGE, OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "@/bus";
+    import bus, {CLOSE_EDIT_MESSAGE, OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "./bus/bus";
     import heightMixin from "@/heightMixin";
 
     export default {
@@ -70,12 +70,12 @@
             },
         },
         created() {
-            bus.$on(OPEN_EDIT_MESSAGE, this.showModal);
-            bus.$on(CLOSE_EDIT_MESSAGE, this.closeModal);
+            bus.on(OPEN_EDIT_MESSAGE, this.showModal);
+            bus.on(CLOSE_EDIT_MESSAGE, this.closeModal);
         },
         destroyed() {
-            bus.$off(OPEN_EDIT_MESSAGE, this.showModal);
-            bus.$off(CLOSE_EDIT_MESSAGE, this.closeModal);
+            bus.off(OPEN_EDIT_MESSAGE, this.showModal);
+            bus.off(CLOSE_EDIT_MESSAGE, this.closeModal);
         }
     }
 </script>

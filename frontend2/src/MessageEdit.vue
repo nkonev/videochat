@@ -125,7 +125,7 @@
         getStoredChatEditMessageDto,
         removeStoredChatEditMessageDto,
         setStoredChatEditMessageDto
-    } from "@/localStore"
+    } from "@/store/localStore"
 
     import MessageEditLinkModal from "@/MessageEditLinkModal";
     import MessageEditColorModal from "@/MessageEditColorModal";
@@ -380,19 +380,19 @@
             }
         },
         mounted() {
-            bus.$on(SET_EDIT_MESSAGE, this.onSetMessage);
-            bus.$on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
-            bus.$on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
-            bus.$on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
-            bus.$on(PROFILE_SET, this.onProfileSet);
+            bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
+            bus.on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
+            bus.on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
+            bus.on(PROFILE_SET, this.onProfileSet);
             this.loadFromStore();
         },
         beforeDestroy() {
-            bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
-            bus.$off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
-            bus.$off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
-            bus.$off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
-            bus.$off(PROFILE_SET, this.onProfileSet);
+            bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
+            bus.off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
+            bus.off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
+            bus.off(PROFILE_SET, this.onProfileSet);
         },
         created(){
             this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});
