@@ -1,5 +1,5 @@
 <template>
-    <v-container class="ma-0 pa-0" style="height: 100%">
+    <v-container class="ma-0 pa-0" style="height: 100%" fluid>
       <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid>
               <div v-if="showAnswer" class="answer"><v-icon @click="resetAnswer()" :title="$vuetify.locale.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
               <tiptap
