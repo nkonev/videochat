@@ -84,7 +84,7 @@
                           <v-switch v-if="chatStore.canBroadcast" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
                               :label="$vuetify.locale.t('$vuetify.message_broadcast')"
                           ></v-switch>
-                          <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 send" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"><v-icon color="white">mdi-send</v-icon></v-btn>
+                          <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 send" density="comfortable" icon="mdi-send" width="64" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
                       </div>
 
                   </div>
