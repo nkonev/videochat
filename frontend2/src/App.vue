@@ -78,6 +78,8 @@
 
           <router-view />
         </v-container>
+
+        <!-- We store modals outside of container in order they not po play in height -->
         <LoginModal/>
     </v-main>
 
