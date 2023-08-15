@@ -1,7 +1,5 @@
 <template>
-
-    <v-container :style="heightWithoutAppBar" fluid class="pa-0 ma-0">
-        <div class="my-messages-scroller" @scroll.passive="onScroll">
+        <div class="ma-0 pa-0 my-messages-scroller" @scroll.passive="onScroll">
           <div class="message-first-element" style="min-height: 1px; background: #9cffa1"></div>
           <MessageItem v-for="item in items"
             :id="getItemId(item.id)"
@@ -14,14 +12,11 @@
           <div class="message-last-element" style="min-height: 1px; background: #c62828"></div>
         </div>
 
-    </v-container>
-
 </template>
 
 <script>
     import axios from "axios";
     import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
-    import heightMixin from "@/mixins/heightMixin";
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {LOGGED_OUT, PROFILE_SET, SCROLL_DOWN, SEARCH_STRING_CHANGED} from "@/bus/bus";
     import {hasLength} from "@/utils";
@@ -41,7 +36,6 @@
     export default {
       mixins: [
         infiniteScrollMixin(scrollerName),
-        heightMixin(),
         searchString(SEARCH_MODE_MESSAGES),
       ],
       data() {

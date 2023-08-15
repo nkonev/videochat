@@ -1,6 +1,6 @@
 <template>
-    <splitpanes class="default-theme" :dbl-click-splitter="false">
-      <pane size="30">
+    <splitpanes class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar">
+      <pane size="20">
         <ChatList/>
       </pane>
       <pane>
@@ -8,7 +8,7 @@
             <pane>
                 <MessageList/>
             </pane>
-          <pane>
+          <pane size="25">
             <MessageEdit :chatId="this.chatId"/>
           </pane>
         </splitpanes>
@@ -22,8 +22,12 @@ import 'splitpanes/dist/splitpanes.css'
 import ChatList from "@/ChatList.vue";
 import MessageList from "@/MessageList.vue";
 import MessageEdit from "@/MessageEdit.vue";
+import heightMixin from "@/mixins/heightMixin";
 
 export default {
+    mixins: [
+      heightMixin(),
+    ],
     components: {
       Splitpanes,
       Pane,
