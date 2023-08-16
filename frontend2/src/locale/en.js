@@ -193,4 +193,5 @@ export default {
     search_by_selected: "Search by selected",
     screen_share_in_process: "Screen share in progress",
     scroll_down: "Scroll down",
+    settings: "Settings"
 }

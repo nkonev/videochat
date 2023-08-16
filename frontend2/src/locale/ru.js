@@ -193,4 +193,5 @@ export default {
     search_by_selected: "Искать по выделенному",
     screen_share_in_process: "Идёт показ экрана",
     scroll_down: "Перемотать вниз",
+    settings: "Настройки"
 }

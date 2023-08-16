@@ -81,6 +81,7 @@
 
         <!-- We store modals outside of container in order they not po play in height -->
         <LoginModal/>
+        <SettingsModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -100,6 +101,7 @@ import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
 import {searchStringFacade, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import RightPanelActions from "@/RightPanelActions.vue";
+import SettingsModal from "@/SettingsModal.vue";
 
 export default {
     mixins: [
@@ -197,6 +199,7 @@ export default {
     components: {
         RightPanelActions,
         LoginModal,
+        SettingsModal,
     },
     created() {
         bus.on(PROFILE_SET, this.onProfileSet);

@@ -32,3 +32,5 @@ export const MEDIA_LINK_SET = "mediaLinkSet";
 export const EMBED_LINK_SET = "embedLinkSet";
 export const PREVIEW_CREATED = "previewCreated";
 export const FILE_UPLOAD_MODAL_START_UPLOADING = "FileUploadModalStartUpload";
+
+export const OPEN_SETTINGS = "openSettings";

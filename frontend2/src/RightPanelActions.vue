@@ -28,6 +28,7 @@
             {{ $vuetify.locale.t('$vuetify.notifications') }}
         </template>
       </v-list-item>
+      <v-list-item @click.prevent="openSettings()" prepend-icon="mdi-cog" :title="$vuetify.locale.t('$vuetify.settings')"></v-list-item>
       <v-list-item :disabled="loading" @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
     </v-list>
 
@@ -38,7 +39,7 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {chat_list_name, chat_name, profile, profile_self_name, root} from "@/router/routes";
 import axios from "axios";
-import bus, {LOGGED_OUT, OPEN_NOTIFICATIONS_DIALOG} from "@/bus/bus";
+import bus, {LOGGED_OUT, OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS} from "@/bus/bus";
 import {goToPreserving} from "@/mixins/searchString";
 
 export default {
@@ -73,6 +74,9 @@ export default {
     },
     goHome() {
       goToPreserving(this.$route, this.$router, { name: chat_list_name});
+    },
+    openSettings() {
+      bus.emit(OPEN_SETTINGS)
     },
     logout(){
       this.loading = true;
