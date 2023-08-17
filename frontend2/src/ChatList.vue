@@ -2,7 +2,7 @@
 
   <v-container :style="heightWithoutAppBar" fluid class="ma-0 px-0 pt-0 pb-2">
     <div class="my-chat-scroller" @scroll.passive="onScroll">
-      <div class="chat-first-element" style="min-height: 1px; background: #9cffa1"></div>
+      <div class="chat-first-element" style="min-height: 1px; background: white"></div>
       <div v-for="item in items" :key="item.id" class="card mb-3" :id="getItemId(item.id)">
         <div class="row g-0">
           <div class="col">
@@ -16,7 +16,7 @@
           <hr/>
         </div>
       </div>
-      <div class="chat-last-element" style="min-height: 1px; background: #c62828"></div>
+      <div class="chat-last-element" style="min-height: 1px; background: white"></div>
 
     </div>
 

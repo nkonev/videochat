@@ -1,6 +1,6 @@
 <template>
         <div class="ma-0 px-0 pt-0 pb-2 my-messages-scroller" @scroll.passive="onScroll">
-          <div class="message-first-element" style="min-height: 1px; background: #9cffa1"></div>
+          <div class="message-first-element" style="min-height: 1px; background: white"></div>
           <MessageItem v-for="item in items"
             :id="getItemId(item.id)"
             :key="item.id"
@@ -9,7 +9,7 @@
             :my="item.owner.id === chatStore.currentUser.id"
             :highlight="item.id == highlightMessageId"
           ></MessageItem>
-          <div class="message-last-element" style="min-height: 1px; background: #c62828"></div>
+          <div class="message-last-element" style="min-height: 1px; background: white"></div>
         </div>
 
 </template>
