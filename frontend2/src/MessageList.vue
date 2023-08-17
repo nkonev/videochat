@@ -1,5 +1,5 @@
 <template>
-        <div class="ma-0 pa-0 my-messages-scroller" @scroll.passive="onScroll">
+        <div class="ma-0 px-0 pt-0 pb-2 my-messages-scroller" @scroll.passive="onScroll">
           <div class="message-first-element" style="min-height: 1px; background: #9cffa1"></div>
           <MessageItem v-for="item in items"
             :id="getItemId(item.id)"
