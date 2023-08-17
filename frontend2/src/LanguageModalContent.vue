@@ -1,6 +1,5 @@
 <template>
-  <v-card-text class="pb-0">
-
+  <v-card-text class="pb-0 d-flex justify-center">
     <v-btn-toggle
       v-model="language"
       @update:modelValue="changeLanguage"
@@ -14,7 +13,6 @@
       </v-btn>
 
     </v-btn-toggle>
-
   </v-card-text>
 
 </template>

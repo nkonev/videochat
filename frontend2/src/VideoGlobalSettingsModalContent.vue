@@ -6,6 +6,7 @@
                         >
                             <v-checkbox
                                 density="comfortable"
+                                color="primary"
                                 hide-details
                                 v-model="audioPresents"
                                 @update:modelValue="changeAudioPresents"
@@ -17,6 +18,7 @@
                         >
                             <v-checkbox
                                 density="comfortable"
+                                color="primary"
                                 hide-details
                                 v-model="videoPresents"
                                 @update:modelValue="changeVideoPresents"
@@ -30,6 +32,7 @@
                         :messages="$vuetify.locale.t('$vuetify.codec')"
                         :items="codecItems"
                         density="comfortable"
+                        color="primary"
                         @update:modelValue="changeCodec"
                         v-model="codec"
                         variant="underlined"
@@ -40,6 +43,7 @@
                         :messages="$vuetify.locale.t('$vuetify.video_resolution')"
                         :items="qualityItems"
                         density="comfortable"
+                        color="primary"
                         @update:modelValue="changeVideoResolution"
                         v-model="videoResolution"
                         variant="underlined"
@@ -50,6 +54,7 @@
                         :messages="$vuetify.locale.t('$vuetify.screen_resolution')"
                         :items="qualityItems"
                         density="comfortable"
+                        color="primary"
                         @update:modelValue="changeScreenResolution"
                         v-model="screenResolution"
                         variant="underlined"
@@ -59,6 +64,7 @@
                         :messages="$vuetify.locale.t('$vuetify.video_position')"
                         :items="positionItems"
                         density="comfortable"
+                        color="primary"
                         @update:modelValue="changeVideoPosition"
                         v-model="videoPosition"
                         variant="underlined"
@@ -69,6 +75,7 @@
                         >
                             <v-checkbox
                                 density="comfortable"
+                                color="primary"
                                 hide-details
                                 :disabled="serverPreferredVideoSimulcast"
                                 v-model="videoSimulcast"
@@ -81,6 +88,7 @@
                         >
                             <v-checkbox
                                 density="comfortable"
+                                color="primary"
                                 hide-details
                                 :disabled="serverPreferredScreenSimulcast"
                                 v-model="screenSimulcast"
@@ -95,6 +103,7 @@
                         >
                             <v-checkbox
                                 density="comfortable"
+                                color="primary"
                                 hide-details
                                 :disabled="serverPreferredRoomDynacast"
                                 v-model="roomDynacast"
@@ -107,6 +116,7 @@
                         >
                             <v-checkbox
                                 density="comfortable"
+                                color="primary"
                                 hide-details
                                 :disabled="serverPreferredRoomAdaptiveStream"
                                 v-model="roomAdaptiveStream"
