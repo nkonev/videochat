@@ -27,7 +27,7 @@
 <script>
 import axios from "axios";
 import infiniteScrollMixin, {directionBottom, reduceToLength} from "@/mixins/infiniteScrollMixin";
-import {chat_list_name, chat_name, chat_view_name} from "@/router/routes";
+import {chat_list_name, chat_name} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
@@ -158,7 +158,7 @@ export default {
     },
 
     goToChat(id) {
-        goToPreserving(this.$route, this.$router, { name: chat_view_name, params: { id: id}})
+        goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: id}})
     },
     async onSearchStringChanged() {
       await this.reloadItems();

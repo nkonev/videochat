@@ -6,8 +6,7 @@ export const video_suffix = '/front2/video';
 
 export const root_name = 'root';
 export const chat_list_name = 'chat_list';
-export const chat_view_name = 'chat_view';
-export const chat_name = 'chat';
+export const chat_name = 'chat_view';
 export const videochat_name = 'videochat';
 export const profile_self_name = 'profileSelf';
 export const profile_name = 'profileUser';
