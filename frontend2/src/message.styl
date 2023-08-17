@@ -1,50 +1,51 @@
 @import "constants.styl"
 
-.image-custom-class {
-  max-width: 100% !important
-  height: 360px !important // we should use the fixed height, otherwise during first load on Firefox page won't be scrolled exactly down
-}
+.message-item-wrapper {
 
-.mention {
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 0.4rem;
-  padding: 0.1rem 0.3rem;
-  box-decoration-break: clone;
-}
-
-.video-custom-class {
-  max-width: 100% !important
-  height: 360px !important
-}
-
-.iframe-custom-class {
-  position: relative;
-  overflow: hidden;
-  height: 480px;
-  width: 640px;
-  &.ProseMirror-selectednode {
-    outline: 3px solid #68CEF8;
-  }
-  background black
-  border-width 0
-}
-
-@media screen and (max-width: $mobileWidth) {
   .image-custom-class {
-    max-height: 300px !important
+    max-width: 100% !important
+    height: 360px !important // we should use the fixed height, otherwise during first load on Firefox page won't be scrolled exactly down
+  }
+
+  .mention {
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0.4rem;
+    padding: 0.1rem 0.3rem;
+    box-decoration-break: clone;
   }
 
   .video-custom-class {
-    max-height: 300px !important
+    max-width: 100% !important
+    height: 360px !important
   }
 
   .iframe-custom-class {
-    max-height: 300px !important
-    max-width: calc(100vw - 120px) !important
+    position: relative;
+    overflow: hidden;
+    height: 480px;
+    width: 640px;
+    &.ProseMirror-selectednode {
+      outline: 3px solid #68CEF8;
+    }
+    background black
+    border-width 0
   }
-}
 
-.message-item-wrapper {
+  @media screen and (max-width: $mobileWidth) {
+    .image-custom-class {
+      max-height: 300px !important
+    }
+
+    .video-custom-class {
+      max-height: 300px !important
+    }
+
+    .iframe-custom-class {
+      max-height: 300px !important
+      max-width: calc(100vw - 120px) !important
+    }
+  }
+
   code {
     border-radius: 3px;
     font-size: 85%;
