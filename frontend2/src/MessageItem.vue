@@ -160,6 +160,13 @@
 <style lang="stylus">
   @import "common.styl"
 
+  .list-item-head {
+    text-decoration none
+    a {
+      text-decoration none
+    }
+  }
+
   .embedded-message {
       background: $embedMessageColor;
       border-radius 0 10px 10px 0
@@ -172,9 +179,6 @@
         padding: revert
       }
 
-      .list-item-head {
-        text-decoration none
-      }
   }
 
   .user-link {
