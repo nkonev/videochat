@@ -17,17 +17,23 @@
             <v-tab value="a_video_settings">
               {{ $vuetify.locale.t('$vuetify.video_settings') }}
             </v-tab>
+            <v-tab value="the_notifications">
+              {{ $vuetify.locale.t('$vuetify.notifications') }}
+            </v-tab>
           </v-tabs>
         </v-sheet>
 
       <v-card-text class="ma-0 pa-0">
         <v-window v-model="tab">
-          <v-window-item value="choose_language">
-            <LanguageModalContent/>
-          </v-window-item>
-          <v-window-item value="a_video_settings">
-            <VideoGlobalSettingsModalContent/>
-          </v-window-item>
+            <v-window-item value="choose_language">
+                <LanguageModalContent/>
+            </v-window-item>
+            <v-window-item value="a_video_settings">
+                <VideoGlobalSettingsModalContent/>
+            </v-window-item>
+            <v-window-item value="the_notifications">
+                <NotificationSettingsModalContent/>
+            </v-window-item>
         </v-window>
       </v-card-text>
 
@@ -43,6 +49,7 @@
 import bus, { OPEN_SETTINGS} from "@/bus/bus";
 import LanguageModalContent from "@/LanguageModalContent.vue";
 import VideoGlobalSettingsModalContent from "@/VideoGlobalSettingsModalContent.vue";
+import NotificationSettingsModalContent from "@/NotificationSettingsModalContent.vue";
 
 export default {
   data () {
@@ -54,6 +61,7 @@ export default {
   components: {
       LanguageModalContent,
       VideoGlobalSettingsModalContent,
+      NotificationSettingsModalContent,
   },
   methods: {
     showLoginModal() {
