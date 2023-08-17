@@ -167,6 +167,14 @@
       margin: 0.5em 0.5em 0.5em 0.5em;
       padding: 0.3em 0.5em 0.5em 0.5em;
       quotes: "\201C""\201D""\2018""\2019";
+
+      .message-item-text {
+        padding: revert
+      }
+
+      .list-item-head {
+        text-decoration none
+      }
   }
 
   .user-link {
