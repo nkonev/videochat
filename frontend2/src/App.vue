@@ -91,7 +91,7 @@
 </template>
 
 <script>
-import '@fontsource/roboto';
+import 'typeface-roboto'; // More modern versions turn out into almost non-bold font
 import { hasLength} from "@/utils";
 import { chat_name, videochat_name} from "@/router/routes";
 import axios from "axios";
