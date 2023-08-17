@@ -14,6 +14,7 @@ export default {
     edit_chat: "Edit chat",
     profile: "Profile",
     video_settings: "Video settings",
+    video: "Video",
     language: "Language",
     logout: "Logout",
     type_to_find_user: "Type to search",

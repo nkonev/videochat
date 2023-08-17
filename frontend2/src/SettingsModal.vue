@@ -15,7 +15,7 @@
               {{ $vuetify.locale.t('$vuetify.language') }}
             </v-tab>
             <v-tab value="a_video_settings">
-              {{ $vuetify.locale.t('$vuetify.video_settings') }}
+              {{ $vuetify.locale.t('$vuetify.video') }}
             </v-tab>
             <v-tab value="the_notifications">
               {{ $vuetify.locale.t('$vuetify.notifications') }}
