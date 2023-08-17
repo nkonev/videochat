@@ -7,7 +7,7 @@
       </div>
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
-                <router-link :to="getOwnerLink(item)">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
+                <router-link :to="getOwnerLink(item)" class="text-blue-darken-2">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                 <template v-if="!isMobile() && !isInBlog">
                     <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item)" size="small" :title="$vuetify.locale.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
                     <v-icon class="mx-1" v-if="item.canDelete" color="red" @click="deleteMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
@@ -17,7 +17,7 @@
                     <v-icon v-if="!item.pinned" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.pin_message')" @click="pinMessage(item)">mdi-pin</v-icon>
                     <v-icon v-if="item.pinned" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.remove_from_pinned')" @click="removedFromPinned(item)">mdi-pin-off-outline</v-icon>
                     <a v-if="item.blogPost" class="mx-1" :href="getBlogLink(item)" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')"><v-icon size="small">mdi-postage-stamp</v-icon></a>
-                    <router-link class="mx-1 hash" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')">#</router-link>
+                    <router-link class="mx-1 hash text-blue-darken-2" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')">#</router-link>
                 </template>
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
