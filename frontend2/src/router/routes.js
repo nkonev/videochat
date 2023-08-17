@@ -1,5 +1,5 @@
-export const root = '/front2/';
-export const chat = '/front2/chat';
+export const root = '/front2';
+export const chats = '/front2/chats';
 export const blog = '/front2/blog';
 export const profile = '/front2/profile';
 export const video_suffix = '/front2/video';

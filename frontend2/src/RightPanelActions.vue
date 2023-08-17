@@ -10,7 +10,8 @@
     <v-divider></v-divider>
 
     <v-list density="compact" nav>
-      <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
+        <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-home" :title="$vuetify.locale.t('$vuetify.start')"></v-list-item>
+        <v-list-item @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
       <v-list-item @click.prevent="onNotificationsClicked()">
         <template v-slot:prepend>
             <v-badge
@@ -37,7 +38,7 @@
 <script>
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
-import {chat_list_name, chat_name, profile, profile_self_name, root} from "@/router/routes";
+import {chat_list_name, chat_name, chats, profile, profile_self_name, root, root_name} from "@/router/routes";
 import axios from "axios";
 import bus, {LOGGED_OUT, OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS} from "@/bus/bus";
 import {goToPreserving} from "@/mixins/searchString";
@@ -69,11 +70,17 @@ export default {
     getRouteRoot() {
       return root
     },
+    goHome() {
+      this.$router.push({name: root_name} )
+    },
+    getRouteChats() {
+      return chats
+    },
+    goChats() {
+      goToPreserving(this.$route, this.$router, { name: chat_list_name});
+    },
     getRouteProfile() {
       return profile
-    },
-    goHome() {
-      goToPreserving(this.$route, this.$router, { name: chat_list_name});
     },
     openSettings() {
       bus.emit(OPEN_SETTINGS)
