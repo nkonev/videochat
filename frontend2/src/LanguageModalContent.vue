@@ -1,5 +1,5 @@
 <template>
-  <v-card-text class="px-4 py-0">
+  <v-card-text class="pb-0">
 
     <v-btn-toggle
       v-model="language"

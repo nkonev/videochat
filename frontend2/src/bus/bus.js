@@ -34,3 +34,6 @@ export const PREVIEW_CREATED = "previewCreated";
 export const FILE_UPLOAD_MODAL_START_UPLOADING = "FileUploadModalStartUpload";
 
 export const OPEN_SETTINGS = "openSettings";
+
+export const REQUEST_CHANGE_VIDEO_PARAMETERS = "requestChangeVideoParameters";
+export const VIDEO_PARAMETERS_CHANGED = "videoParametersChanged";

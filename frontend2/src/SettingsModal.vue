@@ -20,13 +20,13 @@
           </v-tabs>
         </v-sheet>
 
-      <v-card-text>
+      <v-card-text class="ma-0 pa-0">
         <v-window v-model="tab">
           <v-window-item value="choose_language">
-            <LanguageModal/>
+            <LanguageModalContent/>
           </v-window-item>
           <v-window-item value="a_video_settings">
-            Video settings will be here
+            <VideoGlobalSettingsModalContent/>
           </v-window-item>
         </v-window>
       </v-card-text>
@@ -41,7 +41,8 @@
 
 <script>
 import bus, { OPEN_SETTINGS} from "@/bus/bus";
-import LanguageModal from "@/LanguageModal.vue";
+import LanguageModalContent from "@/LanguageModalContent.vue";
+import VideoGlobalSettingsModalContent from "@/VideoGlobalSettingsModalContent.vue";
 
 export default {
   data () {
@@ -51,7 +52,8 @@ export default {
     }
   },
   components: {
-    LanguageModal
+      LanguageModalContent,
+      VideoGlobalSettingsModalContent,
   },
   methods: {
     showLoginModal() {

@@ -13,6 +13,10 @@ export const hasLength = (str) => {
     }
 }
 
+export const isSet = (str) => {
+    return str != null
+}
+
 export const offerToJoinToPublicChatStatus = 428
 
 export const setIcon = (newMessages) => {
