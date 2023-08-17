@@ -160,15 +160,6 @@
 <style lang="stylus">
   @import "common.styl"
 
-  .embedded-message {
-      background: $embedMessageColor;
-      border-radius 0 10px 10px 0
-      border-left: 4px solid #ccc;
-      margin: 0.5em 0.5em 0.5em 0.5em;
-      padding: 0.3em 0.5em 0.5em 0.5em;
-      quotes: "\201C""\201D""\2018""\2019";
-  }
-
   .user-link {
     height 100%
   }
