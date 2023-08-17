@@ -46,7 +46,7 @@
         embed_message_resend, getBlogLink,
         getHumanReadableDate,
     } from "@/utils";
-    import "./message.styl";
+    import "./messageBody.styl";
     import {chat_name, messageIdHashPrefix, profile_name} from "@/router/routes"
 
     export default {
