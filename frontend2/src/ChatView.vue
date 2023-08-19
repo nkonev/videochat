@@ -26,7 +26,7 @@ import heightMixin from "@/mixins/heightMixin";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {offerToJoinToPublicChatStatus} from "@/utils";
+import {hasLength, offerToJoinToPublicChatStatus} from "@/utils";
 import bus, {PROFILE_SET, VIDEO_CALL_USER_COUNT_CHANGED} from "@/bus/bus";
 import {chat_list_name} from "@/router/routes";
 
@@ -124,6 +124,14 @@ export default {
     },
     goToChatList() {
       this.$router.push(({name: chat_list_name}))
+    },
+  },
+  watch: {
+    async chatId(newVal, oldVal) {
+      console.debug("Chat id has been changed", oldVal, "->", newVal);
+      if (hasLength(newVal)) {
+        await this.onProfileSet();
+      }
     },
   },
   async mounted() {
