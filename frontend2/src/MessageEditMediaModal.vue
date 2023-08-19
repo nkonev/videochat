@@ -28,18 +28,19 @@
                                             >
                                                 <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
 
-                                                <v-overlay
-                                                    :model-value="isHovering"
-                                                    :transition="false"
-                                                    contained
-                                                    class="align-center justify-center text-white cursor-pointer my-overlay my-height"
-                                                >
-                                                    <div>
-                                                        {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
-                                                    </div>
-                                                </v-overlay>
-
                                             </v-img>
+
+                                            <v-overlay
+                                                :model-value="isHovering"
+                                                :transition="false"
+                                                contained
+                                                class="align-center justify-center text-white cursor-pointer my-overlay my-height"
+                                            >
+                                                <div>
+                                                    {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
+                                                </div>
+                                            </v-overlay>
+
                                     </v-card>
                                 </v-hover>
                             </v-col>
@@ -210,6 +211,6 @@
       height 200px
   }
   .my-overlay {
-      position static
+      position absolute
   }
 </style>
