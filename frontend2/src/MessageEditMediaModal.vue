@@ -23,7 +23,8 @@
                                             <v-img
                                                 :src="mediaFile.previewUrl"
                                                 gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
-                                                class="align-end my-height"
+                                                class="align-end"
+                                                height="200px"
                                                 cover
                                             >
                                                 <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
@@ -34,7 +35,7 @@
                                                 :model-value="isHovering"
                                                 :transition="false"
                                                 contained
-                                                class="align-center justify-center cursor-pointer my-overlay"
+                                                class="align-center justify-center cursor-pointer"
                                             >
                                                 <div class="text-white">
                                                     {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
@@ -206,11 +207,5 @@
   }
   .cursor-pointer {
     cursor pointer
-  }
-  .my-height {
-      height 200px
-  }
-  .my-overlay {
-      position absolute
   }
 </style>
