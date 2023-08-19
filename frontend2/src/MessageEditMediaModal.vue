@@ -27,7 +27,7 @@
                                                 height="200px"
                                                 cover
                                             >
-                                                <v-card-title v-text="mediaFile.filename" class="align-self-end text-white breaks"></v-card-title>
+                                                <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
 
                                             </v-img>
                                             <v-overlay
