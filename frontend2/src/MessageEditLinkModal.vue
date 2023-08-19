@@ -1,18 +1,16 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640">
-            <v-card>
-                <v-card-title>{{ title() }}</v-card-title>
-
-                <v-card-text class="px-4 py-0">
-                    <v-text-field autofocus hide-details variant="underlined" v-model="link" :placeholder="placeHolder()" @keyup.native.enter="accept()"/>
+        <v-dialog v-model="show" max-width="480">
+          <v-card :title="title()">
+                <v-card-text class="py-0 mb-2">
+                    <v-text-field density="comfortable" autofocus hide-details variant="underlined" v-model="link" :placeholder="placeHolder()" @keyup.native.enter="accept()"/>
                 </v-card-text>
 
                 <v-card-actions>
                     <v-spacer/>
-                    <v-btn color="primary" class="mr-2 my-1" @click="accept()" variant="flat">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
-                    <v-btn v-if="shouldShowClearButton()" class="mr-2 my-1" variant="outlined" @click="clear()">{{ $vuetify.locale.t('$vuetify.clear') }}</v-btn>
-                    <v-btn color="red" class="my-1" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="primary" @click="accept()" variant="flat">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
+                    <v-btn v-if="shouldShowClearButton()" variant="outlined" @click="clear()">{{ $vuetify.locale.t('$vuetify.clear') }}</v-btn>
+                    <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
