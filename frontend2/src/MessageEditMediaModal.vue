@@ -25,15 +25,15 @@
                                                 :src="mediaFile.previewUrl"
                                                 gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
                                                 height="200px"
+                                                class="align-end"
                                                 cover
                                             >
                                                 <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
-
                                             </v-img>
                                             <v-overlay
                                                 :model-value="isHovering"
                                                 contained
-                                                class="align-end justify-center text-white cursor-pointer position-static"
+                                                class="align-end justify-center text-white cursor-pointer position-static fill-height"
                                             >
                                                 <div >
                                                     {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
