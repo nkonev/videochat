@@ -28,17 +28,18 @@
                                                 class="align-end"
                                                 cover
                                             >
+                                                <v-overlay
+                                                    :model-value="isHovering"
+                                                    contained
+                                                    class="align-center justify-center text-white cursor-pointer position-static"
+                                                >
+                                                    <div>
+                                                        {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
+                                                    </div>
+                                                </v-overlay>
+
                                                 <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
                                             </v-img>
-                                            <v-overlay
-                                                :model-value="isHovering"
-                                                contained
-                                                class="align-end justify-center text-white cursor-pointer position-static fill-height"
-                                            >
-                                                <div >
-                                                    {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
-                                                </div>
-                                            </v-overlay>
 
                                         </v-card>
                                 </v-hover>
