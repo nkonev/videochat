@@ -12,7 +12,7 @@
                     >
                         <template
                           v-if="dto.count > 0"
-                          v-for="mediaFile in dto.files"
+                          v-for="(mediaFile, i) in dto.files"
                           :key="mediaFile.id"
                         >
                             <v-col :cols="6">
@@ -20,6 +20,7 @@
                                         <v-card
                                           :class="{ 'on-hover': isHovering }"
                                           v-bind="props"
+                                          :id="'choice-card-'+i"
                                         >
                                             <v-img
                                                 :src="mediaFile.previewUrl"
@@ -31,7 +32,8 @@
 
                                                 <v-overlay
                                                   :model-value="isHovering"
-                                                  contained
+                                                  :absolute="true"
+                                                  :attach="'#choice-card-'+i"
                                                   class="align-center justify-center text-white cursor-pointer"
                                                 >
                                                   {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
