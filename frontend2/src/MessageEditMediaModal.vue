@@ -29,9 +29,8 @@
                                                 <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
 
                                                 <v-overlay
-                                                    :close-delay="0"
-                                                    :open-delay="0"
                                                     :model-value="isHovering"
+                                                    :transition="false"
                                                     contained
                                                     class="align-center justify-center text-white cursor-pointer my-overlay my-height"
                                                 >
