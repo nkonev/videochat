@@ -27,8 +27,9 @@
                                                 gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
                                                 height="200px"
                                                 cover
+                                                class="align-end"
                                             >
-                                                <v-card-title v-text="mediaFile.filename" class="text-h6 text-white d-flex flex-column breaks"></v-card-title>
+                                                <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
 
                                                 <v-overlay
                                                   :model-value="isHovering"
