@@ -17,11 +17,11 @@
                                         <v-card>
                                             <v-img
                                                 :src="mediaFile.previewUrl"
-                                                class="white--text align-end"
+                                                class="align-end"
                                                 gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
                                                 height="200px"
                                             >
-                                                <v-card-title v-text="mediaFile.filename"></v-card-title>
+                                                <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
                                             </v-img>
 
                                             <v-fade-transition>
@@ -60,9 +60,9 @@
                         :length="filePagesCount"
                     ></v-pagination>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" class="mr-2 my-1" @click="fromUrl()" min-width="0" :title="$vuetify.locale.t('$vuetify.from_link')"><v-icon>mdi-link-variant</v-icon></v-btn>
-                    <v-btn color="primary" class="mr-2 my-1" @click="fromDisk()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.choose_file_from_disk') }}</v-btn>
-                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="primary" class="mr-2 my-1" variant="flat" @click="fromUrl()" min-width="0" :title="$vuetify.locale.t('$vuetify.from_link')"><v-icon>mdi-link-variant</v-icon></v-btn>
+                    <v-btn color="primary" class="mr-2 my-1" variant="flat" @click="fromDisk()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.choose_file_from_disk') }}</v-btn>
+                    <v-btn color="red" class="my-1" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -194,3 +194,9 @@
         },
     }
 </script>
+
+<style lang="stylus">
+  .breaks {
+    white-space: break-spaces;
+  }
+</style>
