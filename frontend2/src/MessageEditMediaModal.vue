@@ -20,26 +20,25 @@
                                         <v-card
                                           :class="{ 'on-hover': isHovering }"
                                           v-bind="props"
-                                          :id="'choice-card-'+i"
                                         >
                                             <v-img
                                                 :src="mediaFile.previewUrl"
                                                 gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
                                                 height="200px"
                                                 cover
-                                                class="align-end"
                                             >
-                                                <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
+                                                <v-card-title v-text="mediaFile.filename" class="align-self-end text-white breaks"></v-card-title>
 
-                                                <v-overlay
-                                                  :model-value="isHovering"
-                                                  :absolute="true"
-                                                  :attach="'#choice-card-'+i"
-                                                  class="align-center justify-center text-white cursor-pointer"
-                                                >
-                                                  {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
-                                                </v-overlay>
                                             </v-img>
+                                            <v-overlay
+                                                :model-value="isHovering"
+                                                contained
+                                                class="align-end justify-center text-white cursor-pointer position-static"
+                                            >
+                                                <div >
+                                                    {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
+                                                </div>
+                                            </v-overlay>
 
                                         </v-card>
                                 </v-hover>
