@@ -159,6 +159,7 @@
 
 <style lang="stylus">
   @import "common.styl"
+  @import "messageWrapper.styl"
 
   .list-item-head {
     text-decoration none
