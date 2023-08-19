@@ -3,39 +3,40 @@
         <v-dialog v-model="show" max-width="640" scrollable>
           <v-card :title="title()">
                 <v-card-text>
-                    <v-row dense v-if="!loading">
-                        <template v-if="dto.count > 0">
-                            <v-col
-                                v-for="mediaFile in dto.files"
-                                :key="mediaFile.id"
-                                :cols="6"
-                            >
+                    <v-row
+                      dense
+                      v-if="!loading"
+                      class="fill-height"
+                      align="center"
+                      justify="center"
+                    >
+                        <template
+                          v-if="dto.count > 0"
+                          v-for="mediaFile in dto.files"
+                          :key="mediaFile.id"
+                        >
+                            <v-col :cols="6">
                                 <v-hover v-slot="{ isHovering, props }">
                                         <v-card
-                                          v-bind="props"
+                                          :elevation="isHovering ? 12 : 2"
                                           :class="{ 'on-hover': isHovering }"
+                                          v-bind="props"
                                         >
                                             <v-img
                                                 :src="mediaFile.previewUrl"
-                                                class="align-end"
                                                 gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
                                                 height="200px"
+                                                cover
                                             >
-                                                <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
+                                                <v-card-title v-text="mediaFile.filename" class="text-h6 text-white d-flex flex-column breaks"></v-card-title>
 
                                                 <v-overlay
                                                   :model-value="isHovering"
-                                                  absolute
                                                   contained
-                                                  @click="accept(mediaFile)"
-                                                  style="cursor: pointer"
-                                                  class="centrify-text"
+                                                  class="align-center justify-center text-white cursor-pointer"
                                                 >
-                                                  <div v-bind="props" class="text-white centrified-text">
-                                                    {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
-                                                  </div>
+                                                  {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
                                                 </v-overlay>
-
                                             </v-img>
 
                                         </v-card>
@@ -201,10 +202,7 @@
   .breaks {
     white-space: break-spaces;
   }
-  .centrify-text {
-    justify-content center
-  }
-  .centrified-text {
-    height 100%
+  .cursor-pointer {
+    cursor pointer
   }
 </style>
