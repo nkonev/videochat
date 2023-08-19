@@ -8,6 +8,7 @@
             :chatId="chatId"
             :my="item.owner.id === chatStore.currentUser.id"
             :highlight="item.id == highlightMessageId"
+            :canResend="chatDto.canResend"
             @deleteMessage="deleteMessage"
           ></MessageItem>
           <div class="message-last-element" style="min-height: 1px; background: white"></div>
@@ -46,6 +47,7 @@
         infiniteScrollMixin(scrollerName),
         searchString(SEARCH_MODE_MESSAGES),
       ],
+      props: ['chatDto'],
       data() {
         return {
           startingFromItemIdTop: null,

@@ -18,15 +18,14 @@
 
           <template v-if="showSearchButton || !isMobile()">
               <v-badge v-if="chatStore.showCallButton || chatStore.showHangButton"
-                       style="padding-left: 10px"
                        :content="chatStore.videoChatUsersCount"
-                       :value="chatStore.videoChatUsersCount"
+                       :model-value="!!chatStore.videoChatUsersCount"
                        color="green"
                        overlap
                        offset-y="1.8em"
               >
                   <v-btn v-if="chatStore.showCallButton" icon @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
-                      <v-icon :x-large="isMobile()" color="green">{{tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
+                      <v-icon :x-large="isMobile()" color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                   </v-btn>
                   <v-btn v-if="chatStore.showHangButton" icon @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
                       <v-icon :x-large="isMobile()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'red--text'">mdi-phone</v-icon>
@@ -36,20 +35,20 @@
 
           </template>
 
-          <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em">
-              <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" :label="searchName()">
-                  <template v-slot:append-inner>
-                      <v-btn icon density="compact" @click.prevent="switchSearchType()"><v-icon class="search-icon">{{ searchIcon }}</v-icon></v-btn>
-                  </template>
-              </v-text-field>
-          </v-card>
-
           <v-btn v-if="chatStore.showScrollDown" icon @click="scrollDown()" :title="$vuetify.locale.t('$vuetify.scroll_down')">
             <v-icon :x-large="isMobile()">mdi-arrow-down-thick</v-icon>
           </v-btn>
 
 
           <v-spacer></v-spacer>
+
+          <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em; margin-right: 2px">
+            <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" :label="searchName()">
+              <template v-slot:append-inner>
+                <v-btn icon density="compact" @click.prevent="switchSearchType()"><v-icon class="search-icon">{{ searchIcon }}</v-icon></v-btn>
+              </template>
+            </v-text-field>
+          </v-card>
 
       </v-app-bar>
 
