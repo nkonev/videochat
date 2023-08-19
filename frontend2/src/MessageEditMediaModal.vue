@@ -34,9 +34,9 @@
                                                 :model-value="isHovering"
                                                 :transition="false"
                                                 contained
-                                                class="align-center justify-center text-white cursor-pointer my-overlay my-height"
+                                                class="align-center justify-center cursor-pointer my-overlay my-height"
                                             >
-                                                <div>
+                                                <div class="text-white">
                                                     {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
                                                 </div>
                                             </v-overlay>
