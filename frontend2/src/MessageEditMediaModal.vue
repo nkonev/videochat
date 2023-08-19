@@ -10,9 +10,11 @@
                                 :key="mediaFile.id"
                                 :cols="6"
                             >
-                                <v-hover>
-                                    <template v-slot:default="{ hover }">
-                                        <v-card>
+                                <v-hover v-slot="{ isHovering, props }">
+                                        <v-card
+                                          v-bind="props"
+                                          :class="{ 'on-hover': isHovering }"
+                                        >
                                             <v-img
                                                 :src="mediaFile.previewUrl"
                                                 class="align-end"
@@ -20,21 +22,23 @@
                                                 height="200px"
                                             >
                                                 <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
+
+                                                <v-overlay
+                                                  :model-value="isHovering"
+                                                  absolute
+                                                  contained
+                                                  @click="accept(mediaFile)"
+                                                  style="cursor: pointer"
+                                                  class="centrify-text"
+                                                >
+                                                  <div v-bind="props" class="text-white centrified-text">
+                                                    {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
+                                                  </div>
+                                                </v-overlay>
+
                                             </v-img>
 
-                                            <v-fade-transition>
-                                                <v-overlay
-                                                    v-if="hover"
-                                                    absolute
-                                                    @click="accept(mediaFile)"
-                                                    style="cursor: pointer"
-                                                >
-                                                    {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
-                                                </v-overlay>
-                                            </v-fade-transition>
-
                                         </v-card>
-                                    </template>
                                 </v-hover>
                             </v-col>
                         </template>
@@ -196,5 +200,11 @@
 <style lang="stylus">
   .breaks {
     white-space: break-spaces;
+  }
+  .centrify-text {
+    justify-content center
+  }
+  .centrified-text {
+    height 100%
   }
 </style>
