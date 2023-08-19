@@ -8,7 +8,7 @@
                       v-if="!loading"
                       class="fill-height"
                       align="center"
-                      justify="center"
+                      justify="start"
                     >
                         <template
                           v-if="dto.count > 0"
