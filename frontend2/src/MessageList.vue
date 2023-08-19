@@ -8,6 +8,7 @@
             :chatId="chatId"
             :my="item.owner.id === chatStore.currentUser.id"
             :highlight="item.id == highlightMessageId"
+            @deleteMessage="deleteMessage"
           ></MessageItem>
           <div class="message-last-element" style="min-height: 1px; background: white"></div>
         </div>
@@ -18,7 +19,14 @@
     import axios from "axios";
     import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
-    import bus, {LOGGED_OUT, PROFILE_SET, SCROLL_DOWN, SEARCH_STRING_CHANGED} from "@/bus/bus";
+    import bus, {
+      CLOSE_SIMPLE_MODAL,
+      LOGGED_OUT,
+      OPEN_SIMPLE_MODAL,
+      PROFILE_SET,
+      SCROLL_DOWN,
+      SEARCH_STRING_CHANGED
+    } from "@/bus/bus";
     import {hasLength} from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -275,6 +283,24 @@
               this.markInstance.mark(this.searchString);
             }
           })
+        },
+
+        deleteMessage(dto){
+          bus.emit(OPEN_SIMPLE_MODAL, {
+            buttonName: this.$vuetify.locale.t('$vuetify.delete_btn'),
+            title: this.$vuetify.locale.t('$vuetify.delete_message_title', dto.id),
+            text:  this.$vuetify.locale.t('$vuetify.delete_message_text'),
+            actionFunction: (that)=> {
+              that.loading = true;
+              axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
+                .then(() => {
+                  bus.emit(CLOSE_SIMPLE_MODAL);
+                })
+                .finally(()=>{
+                  that.loading = false;
+                })
+            }
+          });
         },
 
       },

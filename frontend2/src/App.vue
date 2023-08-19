@@ -82,6 +82,7 @@
         <!-- We store modals outside of container in order they not po play in height -->
         <LoginModal/>
         <SettingsModal/>
+        <SimpleModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -91,7 +92,7 @@
 </template>
 
 <script>
-import 'typeface-roboto'; // More modern versions turn out into almost non-bold font
+import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
 import { hasLength} from "@/utils";
 import { chat_name, videochat_name} from "@/router/routes";
 import axios from "axios";
@@ -102,6 +103,7 @@ import { mapStores } from 'pinia'
 import {searchStringFacade, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import RightPanelActions from "@/RightPanelActions.vue";
 import SettingsModal from "@/SettingsModal.vue";
+import SimpleModal from "@/SimpleModal.vue";
 
 export default {
     mixins: [
@@ -200,6 +202,7 @@ export default {
         RightPanelActions,
         LoginModal,
         SettingsModal,
+        SimpleModal,
     },
     created() {
         bus.on(PROFILE_SET, this.onProfileSet);
