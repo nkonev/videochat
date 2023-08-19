@@ -17,31 +17,29 @@
                         >
                             <v-col :cols="6">
                                 <v-hover v-slot="{ isHovering, props }">
-                                        <v-card
-                                          :class="{ 'on-hover': isHovering }"
-                                          v-bind="props"
-                                        >
+
+                                    <v-card v-bind="props">
+
                                             <v-img
                                                 :src="mediaFile.previewUrl"
                                                 gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
-                                                height="200px"
-                                                class="align-end"
+                                                class="align-end my-height"
                                                 cover
                                             >
+                                                <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
+
                                                 <v-overlay
                                                     :model-value="isHovering"
                                                     contained
-                                                    class="align-center justify-center text-white cursor-pointer position-static"
+                                                    class="align-center justify-center text-white cursor-pointer my-overlay my-height"
                                                 >
                                                     <div>
                                                         {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
                                                     </div>
                                                 </v-overlay>
 
-                                                <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
                                             </v-img>
-
-                                        </v-card>
+                                    </v-card>
                                 </v-hover>
                             </v-col>
                         </template>
@@ -206,5 +204,11 @@
   }
   .cursor-pointer {
     cursor pointer
+  }
+  .my-height {
+      height 200px
+  }
+  .my-overlay {
+      position static
   }
 </style>
