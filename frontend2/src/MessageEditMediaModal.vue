@@ -31,6 +31,7 @@
 
                                             </v-img>
 
+                                            <!-- Even transition="false" doesn't actually disable the transition, it fixes breakage of the markup -->
                                             <v-overlay
                                                 :model-value="isHovering"
                                                 :transition="false"
