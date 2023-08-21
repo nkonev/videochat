@@ -31,7 +31,7 @@
 
                                             </v-img>
 
-                                            <!-- Even transition="false" doesn't actually disable the transition, it fixes breakage of the markup -->
+                                            <!-- Even transition="false" doesn't actually disable the transition, it fixes breakage of the markup of hover -->
                                             <v-overlay
                                                 :model-value="isHovering"
                                                 :transition="false"
