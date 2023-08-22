@@ -20,20 +20,10 @@ import {useChatStore} from "@/store/chatStore";
 import pinia from "@/store/index";
 import FontAwesomeIcon from "@/plugins/faIcons";
 
+axios.defaults.xsrfCookieName = "VIDEOCHAT_XSRF_TOKEN";
+axios.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
+
 const chatStore = useChatStore();
-
-function getCookieValue(name) {
-    const value = "; " + document.cookie;
-    const parts = value.split("; " + name + "=");
-    if (parts.length === 2) return parts.pop().split(";").shift();
-}
-
-axios.interceptors.request.use(request => {
-    const cookieValue = getCookieValue('VIDEOCHAT_XSRF_TOKEN');
-    console.debug("Injecting xsrf token to header", cookieValue);
-    request.headers['X-XSRF-TOKEN'] = cookieValue;
-    return request
-})
 
 export function registerPlugins (app) {
     app
