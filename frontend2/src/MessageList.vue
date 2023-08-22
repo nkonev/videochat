@@ -54,7 +54,7 @@
           startingFromItemIdBottom: null,
 
           hasInitialHash: false,
-          loadedHash: null,
+          loadedHash: null, // keeps loaded from localstore the most top visible message - preserves scroll between page reload or switching between chats
 
           markInstance: null,
         }

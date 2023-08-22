@@ -117,8 +117,8 @@ export default (name) => {
 
       async loadTop() {
           console.log("going to load top in", name);
-          this.saveScroll(true);
-          await this.load();
+          this.saveScroll(true); // saves scroll between new portion load
+          await this.load(); // restores scroll after new portion load
           await this.reduceListIfNeed();
           this.restoreScroll(true);
       },
