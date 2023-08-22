@@ -63,14 +63,14 @@ export default {
         this.items = this.items.slice(-reduceToLength);
     },
     findBottomElementId() {
-        return this.items[this.items.length-1].id
+        return this.items[this.items.length-1]?.id
     },
     findTopElementId() {
-        return this.items[0].id
+        return this.items[0]?.id
     },
     saveScroll(top) {
         this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
-        console.log("Saved scroll", this.preservedScroll);
+        console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
     },
     initialDirection() {
       return directionBottom

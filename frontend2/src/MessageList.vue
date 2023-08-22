@@ -76,10 +76,10 @@
 
       methods: {
         getMaximumItemId() {
-          return Math.max(...this.items.map(it => it.id))
+          return this.items.length ? Math.max(...this.items.map(it => it.id)) : null
         },
         getMinimumItemId() {
-          return Math.min(...this.items.map(it => it.id))
+          return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
         },
         reduceBottom() {
           this.items = this.items.slice(-reduceToLength);
@@ -91,7 +91,7 @@
         },
         saveScroll(top) {
             this.preservedScroll = top ? this.getMinimumItemId() : this.getMaximumItemId();
-            console.log("Saved scroll", this.preservedScroll);
+            console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
         },
         initialDirection() {
           return directionTop

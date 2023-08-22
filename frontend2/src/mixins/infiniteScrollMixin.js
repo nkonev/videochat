@@ -201,10 +201,10 @@ export default (name) => {
           this.timeout = null;
         }
         this.destroyScroller();
+        this.reset();
         console.log("Scroller", name, "has been uninstalled");
       },
       async reloadItems() {
-        this.reset();
         this.uninstallScroller();
         await this.initialLoad();
         await this.$nextTick(() => {
