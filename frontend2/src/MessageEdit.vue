@@ -337,7 +337,7 @@
             smileyClick() {
                 bus.emit(OPEN_MESSAGE_EDIT_SMILEY, (text) => this.$refs.tipTapRef.addText(text));
             },
-            onColorSet(color, colorMode) {
+            onColorSet({color, colorMode}) {
                 console.debug("Setting color", color, colorMode);
                 if (colorMode == colorText) {
                     if (color) {
