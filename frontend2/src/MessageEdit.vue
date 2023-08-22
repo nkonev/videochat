@@ -341,13 +341,13 @@
                 console.debug("Setting color", color, colorMode);
                 if (colorMode == colorText) {
                     if (color) {
-                        this.$refs.tipTapRef.$data.editor.chain().focus().setColor(color.hex).run()
+                        this.$refs.tipTapRef.$data.editor.chain().focus().setColor(color).run()
                     } else {
                         this.$refs.tipTapRef.$data.editor.chain().focus().unsetColor().run()
                     }
                 } else if (colorMode == colorBackground) {
                     if (color) {
-                        this.$refs.tipTapRef.$data.editor.chain().focus().setHighlight({ color: color.hex }).run()
+                        this.$refs.tipTapRef.$data.editor.chain().focus().setHighlight({ color: color }).run()
                     } else {
                         this.$refs.tipTapRef.$data.editor.chain().focus().unsetHighlight().run()
                     }
