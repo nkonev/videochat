@@ -1,18 +1,16 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" width="fit-content">
-            <v-card>
-                <v-card-title>{{ $vuetify.locale.t('$vuetify.message_edit_smiley') }}</v-card-title>
-
+            <v-card :title="$vuetify.locale.t('$vuetify.message_edit_smiley')">
                 <v-card-text class="py-0 pt-2 px-4 smiley-buttons">
                     <v-row :key="sli" v-for="(smileyLine, sli) in smileys" no-gutters>
-                        <v-btn :key="si" @click="onSmileyClick(smiley)" v-for="(smiley, si) in smileyLine" tile icon large class="display-1">{{smiley}}</v-btn>
+                        <span :key="si" @click="onSmileyClick(smiley)" v-for="(smiley, si) in smileyLine" class="smiley">{{smiley}}</span>
                     </v-row>
                 </v-card-text>
 
                 <v-card-actions>
                     <v-spacer/>
-                    <v-btn class="my-1" color="error" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -71,5 +69,23 @@
         button {
             color: rgba(0, 0, 0, 1) !important
         }
+    }
+    .smiley {
+      margin-left 4px
+      margin-right 4px
+
+      margin-top 4px
+      margin-bottom 2px
+
+      cursor: pointer
+
+      font-size: 2.125rem !important;
+      font-weight: 400;
+      line-height: 2.5rem;
+      letter-spacing: 0.0073529412em !important;
+    }
+
+    .smiley:hover {
+      background #0d47a1
     }
 </style>
