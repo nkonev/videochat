@@ -64,7 +64,7 @@
     }
 </script>
 
-<style lang="stylus">
+<style lang="stylus" scoped>
     .smiley-buttons {
         button {
             color: rgba(0, 0, 0, 1) !important
