@@ -24,12 +24,9 @@ export default (chatId) => {
             return {
                 onStart: props => {
                     component = new VueRenderer(MentionList, {
-                        // using vue 2:
-                        parent: this,
-                        propsData: props,
                         // using vue 3:
-                        // props,
-                        // editor: props.editor,
+                        props,
+                        editor: props.editor,
                     })
 
                     if (!props.clientRect) {
