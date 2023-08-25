@@ -114,6 +114,10 @@ import SimpleModal from "@/SimpleModal.vue";
 import {createGraphQlClient, destroyGraphqlClient} from "@/graphql/graphql";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 
+const getGlobalEventsData = (message) => {
+  return message.data?.globalEvents
+};
+
 export default {
     mixins: [
         searchStringFacade(),
