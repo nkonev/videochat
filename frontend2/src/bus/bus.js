@@ -47,6 +47,8 @@ export const VIDEO_RECORDING_CHANGED = "videoRecordingChanged";
 export const VIDEO_CALL_INVITED = "videoCallInvited";
 export const VIDEO_DIAL_STATUS_CHANGED = "videoDialStatusChanged";
 export const UNREAD_MESSAGES_CHANGED = "unreadMessagesChanged";
+export const PLAYER_MODAL = "playerModal";
+export const OPEN_PARTICIPANTS_DIALOG = "openInfo";
 
 
 export const WEBSOCKET_RESTORED = "wsRestored";

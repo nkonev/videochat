@@ -39,7 +39,13 @@
             <v-icon :x-large="isMobile()">mdi-arrow-down-thick</v-icon>
           </v-btn>
 
-
+          <v-spacer></v-spacer>
+          <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="v-avatar chat-avatar" :src="chatStore.avatar"/>
+          <v-toolbar-title color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': chatId ? 'pointer' : 'default'}">
+            <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="chatStore.title"></div>
+            <div v-if="!!chatStore.chatUsersCount" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
+              {{ chatStore.chatUsersCount }} {{ $vuetify.locale.t('$vuetify.participants') }}</div>
+          </v-toolbar-title>
           <v-spacer></v-spacer>
 
           <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em; margin-right: 2px">
@@ -99,7 +105,7 @@ import bus, {
   CHAT_ADD,
   CHAT_DELETED,
   CHAT_EDITED,
-  LOGGED_OUT,
+  LOGGED_OUT, OPEN_PARTICIPANTS_DIALOG, PLAYER_MODAL,
   PROFILE_SET,
   SCROLL_DOWN, UNREAD_MESSAGES_CHANGED, VIDEO_CALL_INVITED, VIDEO_CALL_SCREEN_SHARE_CHANGED,
   VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED, VIDEO_RECORDING_CHANGED,
@@ -340,6 +346,14 @@ export default {
             this.chatStore.notificationDelete(d);
           }
         },
+        onChatAvatarClick() {
+          bus.emit(PLAYER_MODAL, {"canShowAsImage": true, url: this.chatAvatar})
+        },
+        onInfoClicked() {
+          if (this.chatId) {
+            bus.emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
+          }
+        },
 
     },
     components: {
@@ -384,4 +398,39 @@ export default {
 .search-icon {
   opacity: settings.$list-item-icon-opacity;
 }
+
+.app-title {
+  &-text {
+    font-size: .875rem;
+    font-weight: 500;
+    letter-spacing: .0892857143em;
+    text-indent: .0892857143em;
+  }
+
+  &-subtext {
+    font-size: .7rem;
+    letter-spacing: initial;
+    text-transform: initial;
+    opacity: 50%
+  }
+
+  &-hoverable {
+    color: white
+  }
+
+  &-hoverable:hover {
+    background-color: #4e5fbb;
+    border-radius: 4px;
+  }
+}
+
+.chat-avatar {
+  display: block;
+  max-width: 36px;
+  max-height: 36px;
+  width: auto;
+  height: auto;
+  cursor: pointer
+}
+
 </style>
