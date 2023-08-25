@@ -21,6 +21,7 @@ export const createGraphQlClient = () => {
 
 export const destroyGraphqlClient = () => {
   bus.off(LOGGED_OUT);
+  graphQlClient.terminate();
   graphQlClient = null;
 }
 

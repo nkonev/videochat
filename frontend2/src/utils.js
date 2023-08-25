@@ -87,3 +87,11 @@ export const getUrlPrefix = () => {
 export const getWebsocketUrlPrefix = () => {
   return ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host
 }
+
+export const findIndex = (array, element) => {
+  return array.findIndex(value => value.id === element.id);
+};
+
+export const findIndexNonStrictly = (array, element) => {
+  return array.findIndex(value => value.id == element.id);
+};

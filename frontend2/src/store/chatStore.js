@@ -1,7 +1,7 @@
 // Utilities
 import { defineStore } from 'pinia'
 import axios from "axios";
-import {isMobileBrowser, setIcon} from "@/utils";
+import {findIndex, isMobileBrowser, setIcon} from "@/utils";
 import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 
 export const useChatStore = defineStore('chat', {
@@ -64,6 +64,16 @@ export const useChatStore = defineStore('chat', {
     unsetNotifications() {
       this.notifications = [];
       setIcon(false);
+    },
+    notificationAdd(payload) {
+      const newArr = [payload, ...this.notifications];
+      this.notifications = newArr;
+    },
+    notificationDelete(payload) {
+      const newArr = this.notifications;
+      const idxToRemove = findIndex(newArr, payload);
+      newArr.splice(idxToRemove, 1);
+      this.notifications = newArr;
     },
     switchSearchType() {
       if (this.searchType == SEARCH_MODE_CHATS) {

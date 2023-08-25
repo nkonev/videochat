@@ -95,7 +95,15 @@ import 'typeface-roboto'; // More modern versions turn out into almost non-bold 
 import { hasLength} from "@/utils";
 import { chat_name, videochat_name} from "@/router/routes";
 import axios from "axios";
-import bus, {CHAT_ADD, CHAT_DELETED, CHAT_EDITED, LOGGED_OUT, PROFILE_SET, SCROLL_DOWN} from "@/bus/bus";
+import bus, {
+  CHAT_ADD,
+  CHAT_DELETED,
+  CHAT_EDITED,
+  LOGGED_OUT,
+  PROFILE_SET,
+  SCROLL_DOWN, UNREAD_MESSAGES_CHANGED, VIDEO_CALL_INVITED, VIDEO_CALL_SCREEN_SHARE_CHANGED,
+  VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED, VIDEO_RECORDING_CHANGED,
+} from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
@@ -103,7 +111,7 @@ import {searchStringFacade, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mix
 import RightPanelActions from "@/RightPanelActions.vue";
 import SettingsModal from "@/SettingsModal.vue";
 import SimpleModal from "@/SimpleModal.vue";
-import {createGraphQlClient, destroyGraphqlClient, graphQlClient} from "@/graphql/graphql";
+import {createGraphQlClient, destroyGraphqlClient} from "@/graphql/graphql";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 
 export default {
@@ -179,9 +187,11 @@ export default {
 
         onProfileSet(){
             this.chatStore.fetchNotifications();
+            this.graphQlSubscribe();
         },
         onLoggedOut() {
             this.resetVariables();
+            this.graphQlUnsubscribe();
         },
         resetVariables() {
             this.chatStore.unsetNotifications();
@@ -299,7 +309,7 @@ export default {
             bus.emit(CHAT_DELETED, d);
           } else if (getGlobalEventsData(e).eventType === 'user_profile_changed') {
             const d = getGlobalEventsData(e).userEvent;
-            bus.emit(USER_PROFILE_CHANGED, d); // todo here
+            bus.emit(USER_PROFILE_CHANGED, d);
           } else if (getGlobalEventsData(e).eventType === "video_user_count_changed") {
             const d = getGlobalEventsData(e).videoUserCountChangedEvent;
             bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, d);
@@ -317,13 +327,13 @@ export default {
             bus.emit(VIDEO_DIAL_STATUS_CHANGED, d);
           } else if (getGlobalEventsData(e).eventType === 'chat_unread_messages_changed') {
             const d = getGlobalEventsData(e).unreadMessagesNotification;
-            bus.emit(UNREAD_MESSAGES_CHANGED, d);
+            bus.emit(UNREAD_MESSAGES_CHANGED, d);//
           } else if (getGlobalEventsData(e).eventType === 'notification_add') {
             const d = getGlobalEventsData(e).notificationEvent;
-            store.dispatch(NOTIFICATION_ADD, d);
+            this.chatStore.notificationAdd(d);
           } else if (getGlobalEventsData(e).eventType === 'notification_delete') {
             const d = getGlobalEventsData(e).notificationEvent;
-            store.dispatch(NOTIFICATION_DELETE, d);
+            this.chatStore.notificationDelete(d);
           }
         },
 
@@ -347,7 +357,6 @@ export default {
 
     beforeUnmount() {
         this.graphQlUnsubscribe();
-        graphQlClient.terminate();
         destroyGraphqlClient();
 
         bus.off(PROFILE_SET, this.onProfileSet);

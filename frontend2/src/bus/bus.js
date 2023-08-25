@@ -41,6 +41,13 @@ export const VIDEO_PARAMETERS_CHANGED = "videoParametersChanged";
 export const OPEN_SIMPLE_MODAL = "openSimpleModal";
 export const CLOSE_SIMPLE_MODAL = "closeSimpleModal";
 export const VIDEO_CALL_USER_COUNT_CHANGED = "videoCallUserCountChanged";
+export const VIDEO_CALL_SCREEN_SHARE_CHANGED = "videoCallScreenShareChanged";
+
+export const VIDEO_RECORDING_CHANGED = "videoRecordingChanged";
+export const VIDEO_CALL_INVITED = "videoCallInvited";
+export const VIDEO_DIAL_STATUS_CHANGED = "videoDialStatusChanged";
+export const UNREAD_MESSAGES_CHANGED = "unreadMessagesChanged";
+
 
 export const WEBSOCKET_RESTORED = "wsRestored";
 
