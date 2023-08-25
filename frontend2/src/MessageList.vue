@@ -369,6 +369,7 @@
 <style lang="stylus">
     .my-messages-scroller {
       height 100%
+      width: 100%
       overflow-y scroll !important
       display flex
       flex-direction column-reverse

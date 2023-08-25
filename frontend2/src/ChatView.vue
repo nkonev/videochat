@@ -18,7 +18,8 @@
 
 <script>
 import { Splitpanes, Pane } from 'splitpanes'
-import 'splitpanes/dist/splitpanes.css'
+// import 'splitpanes/dist/splitpanes.css'
+//import '@/splitpanes-mobile.scss'
 import ChatList from "@/ChatList.vue";
 import MessageList from "@/MessageList.vue";
 import MessageEdit from "@/MessageEdit.vue";
@@ -29,6 +30,9 @@ import axios from "axios";
 import {hasLength, offerToJoinToPublicChatStatus} from "@/utils";
 import bus, {PROFILE_SET, VIDEO_CALL_USER_COUNT_CHANGED} from "@/bus/bus";
 import {chat_list_name} from "@/router/routes";
+
+const webSplitpanesCss = () => import('splitpanes/dist/splitpanes.css');
+const mobileSplitpanesCss = () => import("@/splitpanes-mobile.scss");
 
 const chatDtoFactory = () => {
   return {
@@ -134,8 +138,14 @@ export default {
       }
     },
   },
+  created() {
+    if (this.isMobile()) {
+      mobileSplitpanesCss()
+    } else {
+      webSplitpanesCss()
+    }
+  },
   async mounted() {
-
     this.chatStore.title = `Chat #${this.chatId}`;
     this.chatStore.chatUsersCount = 0;
     this.chatStore.isShowSearch = true;
