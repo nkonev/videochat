@@ -79,3 +79,11 @@ export const colorBackground = 'colorBackground';
 export const getAnswerPreviewFields = (dto) => {
   return dto;
 }
+
+export const getUrlPrefix = () => {
+  return window.location.protocol + "//" + window.location.host
+}
+
+export const getWebsocketUrlPrefix = () => {
+  return ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host
+}

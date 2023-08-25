@@ -32,7 +32,6 @@ export function registerPlugins (app) {
         .use(pinia)
 }
 
-
 const app = createApp(App)
 
 registerPlugins(app)
