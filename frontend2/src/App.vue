@@ -41,11 +41,11 @@
 
           <v-spacer></v-spacer>
           <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="v-avatar chat-avatar" :src="chatStore.avatar"/>
-          <v-toolbar-title color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': chatId ? 'pointer' : 'default'}">
+          <div color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': chatId ? 'pointer' : 'default'}">
             <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="chatStore.title"></div>
             <div v-if="!!chatStore.chatUsersCount" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
               {{ chatStore.chatUsersCount }} {{ $vuetify.locale.t('$vuetify.participants') }}</div>
-          </v-toolbar-title>
+          </div>
           <v-spacer></v-spacer>
 
           <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em; margin-right: 2px">
@@ -400,6 +400,7 @@ export default {
 }
 
 .app-title {
+
   &-text {
     font-size: .875rem;
     font-weight: 500;
