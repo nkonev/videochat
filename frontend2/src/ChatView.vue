@@ -17,9 +17,7 @@
 </template>
 
 <script>
-import { Splitpanes, Pane } from 'splitpanes'
-// import 'splitpanes/dist/splitpanes.css'
-//import '@/splitpanes-mobile.scss'
+import { Splitpanes, Pane } from 'splitpanes';
 import ChatList from "@/ChatList.vue";
 import MessageList from "@/MessageList.vue";
 import MessageEdit from "@/MessageEdit.vue";
