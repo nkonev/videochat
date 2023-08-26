@@ -96,7 +96,7 @@
                   </div>
       </v-container>
 
-      <!-- We store modals outside of container in order they not po play in height (as it is done in App.vue) -->
+      <!-- We store modals outside of container in order they not to contribute into the height (as it is done in App.vue) -->
       <MessageEditLinkModal/>
       <MessageEditColorModal/>
       <MessageEditMediaModal/>

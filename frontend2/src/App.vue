@@ -84,7 +84,7 @@
           <router-view />
         </v-container>
 
-        <!-- We store modals outside of container in order they not po play in height -->
+        <!-- We store modals outside of container in order they not to contribute into the height -->
         <LoginModal/>
         <SettingsModal/>
         <SimpleModal/>
