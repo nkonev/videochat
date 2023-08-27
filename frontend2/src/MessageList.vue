@@ -369,8 +369,6 @@
             console.debug("Chat id has been changed", oldVal, "->", newVal);
             this.saveLastVisibleElement(oldVal);
             if (hasLength(newVal)) {
-              // this.loadedHash = getTopMessagePosition(newVal);
-              // await this.reloadItems();
               await this.onProfileSet();
             }
           },
