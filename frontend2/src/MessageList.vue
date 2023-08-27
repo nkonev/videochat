@@ -22,13 +22,13 @@
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {
       CLOSE_SIMPLE_MODAL,
-      LOGGED_OUT,
+      LOGGED_OUT, MESSAGE_ADD, MESSAGE_DELETED, MESSAGE_EDITED,
       OPEN_SIMPLE_MODAL,
       PROFILE_SET,
       SCROLL_DOWN,
       SEARCH_STRING_CHANGED
     } from "@/bus/bus";
-    import {hasLength} from "@/utils";
+    import {findIndex, hasLength, replaceInArray} from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
@@ -75,6 +75,45 @@
       },
 
       methods: {
+        addItem(dto) {
+          console.log("Adding item", dto);
+          this.items.unshift(dto);
+          this.reduceListIfNeed();
+        },
+        changeItem(dto) {
+          console.log("Replacing item", dto);
+          replaceInArray(this.items, dto);
+        },
+        removeItem(dto) {
+          console.log("Removing item", dto);
+          const idxToRemove = findIndex(this.items, dto);
+          this.items.splice(idxToRemove, 1);
+        },
+
+        onNewMessage(dto) {
+          if (dto.chatId == this.chatId) {
+            this.addItem(dto);
+            this.performMarking();
+          } else {
+            console.log("Skipping", dto)
+          }
+        },
+        onDeleteMessage(dto) {
+          if (dto.chatId == this.chatId) {
+            this.removeItem(dto);
+          } else {
+            console.log("Skipping", dto)
+          }
+        },
+        onEditMessage(dto) {
+          if (dto.chatId == this.chatId) {
+            this.changeItem(dto);
+            this.performMarking();
+          } else {
+            console.log("Skipping", dto)
+          }
+        },
+
         getMaximumItemId() {
           return this.items.length ? Math.max(...this.items.map(it => it.id)) : null
         },
@@ -348,6 +387,9 @@
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
         bus.on(SCROLL_DOWN, this.onScrollDownButton);
+        bus.on(MESSAGE_ADD, this.onNewMessage);
+        bus.on(MESSAGE_DELETED, this.onDeleteMessage);
+        bus.on(MESSAGE_EDITED, this.onEditMessage);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
       },
@@ -360,6 +402,9 @@
         this.reset();
 
         this.uninstallScroller();
+        bus.off(MESSAGE_ADD, this.onNewMessage);
+        bus.off(MESSAGE_DELETED, this.onDeleteMessage);
+        bus.off(MESSAGE_EDITED, this.onEditMessage);
         bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);

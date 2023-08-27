@@ -56,3 +56,16 @@ export const WEBSOCKET_RESTORED = "wsRestored";
 export const CHAT_ADD = "chatAdd";
 export const CHAT_EDITED = "chatEdited";
 export const CHAT_DELETED = "chatDeleted";
+
+export const MESSAGE_ADD = "messageAdd";
+export const MESSAGE_DELETED = "messageDeleted";
+export const MESSAGE_EDITED = "messageEdited";
+export const USER_TYPING = "userTyping";
+export const MESSAGE_BROADCAST = "messageBroadcast";
+export const PARTICIPANT_ADDED = "participantAdded";
+export const PARTICIPANT_DELETED = "participantDeleted";
+export const PARTICIPANT_EDITED = "participantEdited";
+export const PINNED_MESSAGE_PROMOTED = "pinnedMessagePromoted";
+export const PINNED_MESSAGE_UNPROMOTED = "pinnedMessageUnpromoted";
+export const FILE_CREATED = "fileCreated";
+export const FILE_REMOVED = "fileRemoved";
