@@ -23,6 +23,22 @@ import FontAwesomeIcon from "@/plugins/faIcons";
 axios.defaults.xsrfCookieName = "VIDEOCHAT_XSRF_TOKEN";
 axios.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
 
+const webSplitpanesCss = () => import('splitpanes/dist/splitpanes.css');
+const mobileSplitpanesCss = () => import("@/splitpanes-mobile.scss");
+
+// it's placed here, before app creation
+// otherwise, if we put it into ChatView.created()
+// it is going to break MessageList.scrollTo()
+// to check -
+// 1. scroll to certain message
+// 2. reload the page
+// 3. top message should be the same after page reloading
+if (isMobileBrowser()) {
+  mobileSplitpanesCss()
+} else {
+  webSplitpanesCss()
+}
+
 const chatStore = useChatStore();
 
 export function registerPlugins (app) {

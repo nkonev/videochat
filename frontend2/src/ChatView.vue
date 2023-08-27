@@ -29,9 +29,6 @@ import {hasLength, offerToJoinToPublicChatStatus} from "@/utils";
 import bus, {PROFILE_SET, VIDEO_CALL_USER_COUNT_CHANGED} from "@/bus/bus";
 import {chat_list_name} from "@/router/routes";
 
-const webSplitpanesCss = () => import('splitpanes/dist/splitpanes.css');
-const mobileSplitpanesCss = () => import("@/splitpanes-mobile.scss");
-
 const chatDtoFactory = () => {
   return {
     participantIds:[],
@@ -137,11 +134,7 @@ export default {
     },
   },
   created() {
-    if (this.isMobile()) {
-      mobileSplitpanesCss()
-    } else {
-      webSplitpanesCss()
-    }
+
   },
   async mounted() {
     this.chatStore.title = `Chat #${this.chatId}`;
