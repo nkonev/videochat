@@ -114,6 +114,7 @@
               return Promise.resolve()
           }
 
+          this.chatStore.incrementProgressCount();
           let startingFromItemId;
           if (this.hasInitialHash) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
             // how to check:
@@ -180,8 +181,9 @@
               this.clearRouteHash()
             }
             this.performMarking();
-          }).then(()=>{
-            return this.$nextTick()
+          }).finally(()=>{
+              this.chatStore.decrementProgressCount();
+              return this.$nextTick();
           })
         },
 

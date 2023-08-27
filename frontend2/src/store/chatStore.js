@@ -32,6 +32,7 @@ export const useChatStore = defineStore('chat', {
         canMakeRecord: false,
         showRecordStartButton: false,
         showRecordStopButton: false,
+        progressCount: 0,
     }
   },
   actions: {
@@ -81,7 +82,18 @@ export const useChatStore = defineStore('chat', {
       } else if (this.searchType == SEARCH_MODE_MESSAGES) {
         this.searchType = SEARCH_MODE_CHATS
       }
-    }
+    },
+    incrementProgressCount() {
+      this.progressCount++
+    },
+    decrementProgressCount() {
+      if (this.progressCount > 0) {
+        this.progressCount--
+      } else {
+        const err = new Error();
+        console.warn("Attempt to decrement progressCount lower than 0", err.stack)
+      }
+    },
   },
 
 })

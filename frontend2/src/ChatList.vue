@@ -96,6 +96,7 @@ export default {
         return Promise.resolve()
       }
 
+      this.chatStore.incrementProgressCount();
       const page = this.isTopDirection() ? this.pageTop : this.pageBottom;
       return axios.get(`/api/chat`, {
         params: {
@@ -131,8 +132,9 @@ export default {
                 this.pageBottom += 1;
             }
           }
-        }).then(()=>{
-          return this.$nextTick()
+        }).finally(()=>{
+          this.chatStore.decrementProgressCount();
+          return this.$nextTick();
         })
     },
 

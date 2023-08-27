@@ -6,6 +6,13 @@
           id="myAppBar"
           :density="getDensity()"
       >
+          <v-progress-linear
+            v-if="showProgress"
+            indeterminate
+            color="white"
+            absolute
+          ></v-progress-linear>
+
           <v-badge
               :content="notificationsCount"
               :model-value="showNotificationBadge"
@@ -138,6 +145,9 @@ export default {
     computed: {
         // https://pinia.vuejs.org/cookbook/options-api.html#usage-without-setup
         ...mapStores(useChatStore),
+        showProgress() {
+            return this.chatStore.progressCount > 0
+        },
         currentUserAvatar() {
             return this.chatStore.currentUser?.avatar;
         },
