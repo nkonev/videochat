@@ -26,6 +26,7 @@ export const CLOSE_FILE_UPLOAD_MODAL = "closeFileUploadModal";
 export const OPEN_MESSAGE_EDIT_MEDIA = "openMessageEditMedia";
 export const OPEN_VIEW_FILES_DIALOG = "openViewFiles";
 export const SET_EDIT_MESSAGE = "setEditMessageDto";
+export const OPEN_EDIT_MESSAGE = "openEditMessage";
 export const CLOSE_EDIT_MESSAGE = "closeEditMessage";
 export const SET_FILE_ITEM_UUID = "setFileItemUuid";
 export const MEDIA_LINK_SET = "mediaLinkSet";

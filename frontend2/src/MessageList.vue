@@ -10,6 +10,7 @@
             :highlight="item.id == highlightMessageId"
             :canResend="chatDto.canResend"
             @deleteMessage="deleteMessage"
+            @editMessage="editMessage"
           ></MessageItem>
           <div class="message-last-element" style="min-height: 1px; background: white"></div>
         </div>
@@ -22,13 +23,13 @@
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {
       CLOSE_SIMPLE_MODAL,
-      LOGGED_OUT, MESSAGE_ADD, MESSAGE_DELETED, MESSAGE_EDITED,
+      LOGGED_OUT, MESSAGE_ADD, MESSAGE_DELETED, MESSAGE_EDITED, OPEN_EDIT_MESSAGE,
       OPEN_SIMPLE_MODAL,
       PROFILE_SET,
       SCROLL_DOWN,
-      SEARCH_STRING_CHANGED
+      SEARCH_STRING_CHANGED, SET_EDIT_MESSAGE
     } from "@/bus/bus";
-    import {findIndex, hasLength, replaceInArray} from "@/utils";
+    import {findIndex, hasLength, replaceInArray, setAnswerPreviewFields} from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
@@ -36,6 +37,7 @@
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
     import {getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition} from "@/store/localStore";
     import Mark from "mark.js";
+    import cloneDeep from "lodash/cloneDeep";
 
     const PAGE_SIZE = 40;
     const SCROLLING_THRESHHOLD = 200; // px
@@ -344,6 +346,17 @@
                 })
             }
           });
+        },
+        editMessage(dto){
+          const editMessageDto = cloneDeep(dto);
+          if (dto.embedMessage?.id) {
+            setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner.login);
+          }
+          if (!this.isMobile()) {
+            bus.emit(SET_EDIT_MESSAGE, editMessageDto);
+          } else {
+            bus.emit(OPEN_EDIT_MESSAGE, editMessageDto);
+          }
         },
 
       },

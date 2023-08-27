@@ -131,3 +131,9 @@ export const moveToFirstPosition = (array, element) => {
     array.unshift(element);
   }
 }
+
+export const setAnswerPreviewFields = (dto, messageText, ownerLogin) => {
+  // used only to show on front, ignored in message create machinery
+  dto.embedPreviewText = messageText;
+  dto.embedPreviewOwner = ownerLogin;
+}
