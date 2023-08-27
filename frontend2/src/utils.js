@@ -137,3 +137,17 @@ export const setAnswerPreviewFields = (dto, messageText, ownerLogin) => {
   dto.embedPreviewText = messageText;
   dto.embedPreviewOwner = ownerLogin;
 }
+
+export const formatSize = (size) => {
+    const operableSize = Math.abs(size);
+    if (operableSize > 1024 * 1024 * 1024 * 1024) {
+        return (size / 1024 / 1024 / 1024 / 1024).toFixed(2) + ' TB'
+    } else if (operableSize > 1024 * 1024 * 1024) {
+        return (size / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+    } else if (operableSize > 1024 * 1024) {
+        return (size / 1024 / 1024).toFixed(2) + ' MB'
+    } else if (operableSize > 1024) {
+        return (size / 1024).toFixed(2) + ' KB'
+    }
+    return size.toString() + ' B'
+};

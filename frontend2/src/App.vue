@@ -95,6 +95,7 @@
         <LoginModal/>
         <SettingsModal/>
         <SimpleModal/>
+        <FileUploadModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -126,6 +127,7 @@ import SettingsModal from "@/SettingsModal.vue";
 import SimpleModal from "@/SimpleModal.vue";
 import {createGraphQlClient, destroyGraphqlClient} from "@/graphql/graphql";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
+import FileUploadModal from "@/FileUploadModal.vue";
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -371,6 +373,7 @@ export default {
         LoginModal,
         SettingsModal,
         SimpleModal,
+        FileUploadModal,
     },
     created() {
         createGraphQlClient();
