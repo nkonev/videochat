@@ -340,10 +340,24 @@
                 return this.$refs.tipTapRef.$data.editor.view.state.selection.empty;
             },
             imageClick() {
-                bus.emit(OPEN_MESSAGE_EDIT_MEDIA, media_image, () => this.$refs.tipTapRef.addImage(), this.$refs.tipTapRef.setImage);
+                bus.emit(
+                  OPEN_MESSAGE_EDIT_MEDIA,
+                  {
+                    type: media_image,
+                    fromDiskCallback: () => this.$refs.tipTapRef.addImage(),
+                    setExistingMediaCallback: this.$refs.tipTapRef.setImage
+                  }
+                );
             },
             videoClick() {
-                bus.emit(OPEN_MESSAGE_EDIT_MEDIA, media_video, () => this.$refs.tipTapRef.addVideo(), this.$refs.tipTapRef.setVideo);
+                bus.emit(
+                  OPEN_MESSAGE_EDIT_MEDIA,
+                  {
+                    type: media_video,
+                    fromDiskCallback: () => this.$refs.tipTapRef.addVideo(),
+                    setExistingMediaCallback: this.$refs.tipTapRef.setVideo
+                  },
+                );
             },
             embedClick() {
                 bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_embed, mediaType: embed});

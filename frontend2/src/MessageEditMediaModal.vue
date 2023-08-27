@@ -18,7 +18,7 @@
                             <v-col :cols="6">
                                 <v-hover v-slot="{ isHovering, props }">
 
-                                    <v-card v-bind="props">
+                                    <v-card v-bind="props" @click="accept(mediaFile)">
 
                                             <v-img
                                                 :src="mediaFile.previewUrl"
@@ -127,7 +127,7 @@
             },
         },
         methods: {
-            showModal(type, fromDiskCallback, setExistingMediaCallback) {
+            showModal({type, fromDiskCallback, setExistingMediaCallback}) {
                 this.$data.show = true;
                 this.type = type;
                 this.fromDiskCallback = fromDiskCallback;
