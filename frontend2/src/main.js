@@ -24,7 +24,7 @@ axios.defaults.xsrfCookieName = "VIDEOCHAT_XSRF_TOKEN";
 axios.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
 
 const webSplitpanesCss = () => import('splitpanes/dist/splitpanes.css');
-const mobileSplitpanesCss = () => import("@/splitpanes-mobile.scss");
+const mobileSplitpanesCss = () => import("@/splitpanesMobile.scss");
 
 // it's placed here, before app creation
 // otherwise, if we put it into ChatView.created()

@@ -211,5 +211,5 @@
 </script>
 
 <style lang="stylus" scoped>
-    @import "OAuth2.styl"
+    @import "oAuth2.styl"
 </style>
