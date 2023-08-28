@@ -10,10 +10,11 @@
                         counter
                         multiple
                         show-size
-                        small-chips
-                        truncate-length="15"
+                        chips
+                        single-line
                         @update:modelValue="updateChosenFiles"
                         :error-messages="limitError ? [limitError] : []"
+                        variant="underlined"
                     ></v-file-input>
 
                     <v-progress-linear
@@ -23,7 +24,6 @@
                         color="success"
                         buffer-value="0"
                         stream
-                        light
                         height="25"
                     >
                       <strong>{{ formattedProgress }}</strong>
@@ -33,10 +33,10 @@
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <template v-if="!limitError && files.length > 0">
-                        <v-btn v-if="!uploading" color="primary" class="mr-2 my-1" @click="upload()">{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
-                        <v-btn v-else class="mr-2 my-1" @click="cancel()">{{ $vuetify.locale.t('$vuetify.cancel') }}</v-btn>
+                        <v-btn v-if="!uploading" color="primary" variant="flat" @click="upload()">{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
+                        <v-btn v-else @click="cancel()" variant="outlined">{{ $vuetify.locale.t('$vuetify.cancel') }}</v-btn>
                     </template>
-                    <v-btn class="my-1" color="error" @click="hideModal()" :disabled="uploading">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <v-btn @click="hideModal()" :disabled="uploading" color="red" variant="flat">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
