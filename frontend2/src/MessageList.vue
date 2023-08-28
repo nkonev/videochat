@@ -55,6 +55,7 @@
           startingFromItemIdTop: null,
           startingFromItemIdBottom: null,
 
+          // those two doesn't play in reset() in order to survive after reload()
           hasInitialHash: false, // do we have hash in address line (message id)
           loadedHash: null, // keeps loaded message id from localstore the most top visible message - preserves scroll between page reload or switching between chats
 
