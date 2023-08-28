@@ -28,7 +28,6 @@ export default (name) => {
 
         scrollerProbeCurrent: 0,
         scrollerProbePrevious: 0,
-        scrollerProbePreviousPrevious: 0,
 
         preservedScroll: 0,
         timeout: null,
@@ -58,21 +57,20 @@ export default (name) => {
           this.onScrollCallback();
         }
 
-        this.scrollerProbePreviousPrevious = this.scrollerProbePrevious;
         this.scrollerProbePrevious = this.scrollerProbeCurrent;
         this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
-        // console.debug("onScroll in", name, " prevPrev=", this.scrollerProbePreviousPrevious , " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
+        // console.debug("onScroll in", name, " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
         this.trySwitchDirection();
       },
       trySwitchDirection() {
-        if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbePreviousPrevious && this.isTopDirection()) {
+        if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.isTopDirection()) {
           this.aDirection = directionBottom;
           // console.debug("Infinity scrolling direction has been changed to bottom");
           if (this.onChangeDirection) {
             this.onChangeDirection();
           }
-        } else if (this.scrollerProbeCurrent != 0 && this.scrollerProbePreviousPrevious > this.scrollerProbePrevious && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
+        } else if (this.scrollerProbeCurrent != 0 && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
           this.aDirection = directionTop;
           // console.debug("Infinity scrolling direction has been changed to top");
           if (this.onChangeDirection) {
@@ -100,7 +98,6 @@ export default (name) => {
           this.loadedTop = false;
           this.loadedBottom = false;
           this.aDirection = this.initialDirection();
-          this.scrollerProbePreviousPrevious = 0;
           this.scrollerProbePrevious = 0;
           this.scrollerProbeCurrent = 0;
           this.preservedScroll = null;
