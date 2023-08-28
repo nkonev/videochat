@@ -6,7 +6,7 @@
                 <v-container>
                     <v-file-input
                         :disabled="uploading"
-                        :value="files"
+                        :model-value="files"
                         counter
                         multiple
                         show-size
@@ -165,7 +165,7 @@ export default {
                     await axios.put(presignedUrlResponse.url, renamedFile, config)
                         .then(response => {
                             if (this.$data.shouldSetFileUuidToMessage) {
-                                bus.$emit(SET_FILE_ITEM_UUID, {
+                                bus.emit(SET_FILE_ITEM_UUID, {
                                     fileItemUuid: this.fileItemUuid,
                                     count: (presignedUrlResponse.existingCount + index + 1)
                                 });
@@ -207,7 +207,7 @@ export default {
             return this.$route.params.id
         },
         formattedProgress() {
-            return formatSize(progressLoaded) + " / " + formatSize(progressTotal)
+            return formatSize(this.progressLoaded) + " / " + formatSize(this.progressTotal)
         },
     },
     created() {
