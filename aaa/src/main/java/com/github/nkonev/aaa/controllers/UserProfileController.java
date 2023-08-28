@@ -301,8 +301,12 @@ public class UserProfileController {
     public record UserOnlineResponse (long userId, boolean online) {}
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(Constants.Urls.API+Constants.Urls.USER+"/online")
+    @GetMapping(Constants.Urls.API+Constants.Urls.USER+Constants.Urls.ONLINE)
     public List<UserOnlineResponse> getOnlineForUsers(@RequestParam(value = "userId") List<Long> userIds){
+        return aaaUserDetailsService.getUsersOnline(userIds);
+    }
+    @GetMapping(Constants.Urls.INTERNAL_API + Constants.Urls.USER+Constants.Urls.ONLINE)
+    public List<UserOnlineResponse> getOnlineForUsersInternal(@RequestParam(value = "userId") List<Long> userIds){
         return aaaUserDetailsService.getUsersOnline(userIds);
     }
 

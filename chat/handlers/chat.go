@@ -1020,6 +1020,10 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 		Id:    -2, // -1 is reserved for 'deleted' in ./aaa/src/main/resources/db/migration/V1__init.sql
 		Login: allUsers,
 	})
+	users = append(users, &dto.User{
+		Id:    -3, // -1 is reserved for 'deleted' in ./aaa/src/main/resources/db/migration/V1__init.sql
+		Login: hereUsers,
+	})
 
 	return c.JSON(http.StatusOK, users)
 }

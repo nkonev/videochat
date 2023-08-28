@@ -26,6 +26,7 @@ aaa:
   url:
     base: "http://localhost:8060"
     getUsers: "/internal/user/list"
+    getOnlines: "/internal/user/online"
     searchUsers: "/internal/user/search"
 
 rabbitmq:

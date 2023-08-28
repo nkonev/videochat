@@ -38,7 +38,6 @@ func NewRestClient() *RestClient {
 	return &RestClient{client, trcr}
 }
 
-// https://developers.google.com/protocol-buffers/docs/gotutorial
 func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, error) {
 	contentType := "application/json;charset=UTF-8"
 	url0 := viper.GetString("aaa.url.base")
@@ -90,6 +89,64 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	}
 
 	users := &[]*dto.User{}
+	if err := json.Unmarshal(bodyBytes, users); err != nil {
+		GetLogEntry(c).Errorln("Failed to parse users:", err)
+		return nil, err
+	}
+	return *users, nil
+}
+
+func (rc RestClient) GetOnlines(userIds []int64, c context.Context) ([]*dto.UserOnline, error) {
+	contentType := "application/json;charset=UTF-8"
+	url0 := viper.GetString("aaa.url.base")
+	url1 := viper.GetString("aaa.url.getOnlines")
+	fullUrl := url0 + url1
+
+	var userIdsString []string
+	for _, userIdInt := range userIds {
+		userIdsString = append(userIdsString, utils.Int64ToString(userIdInt))
+	}
+
+	join := strings.Join(userIdsString, ",")
+
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
+		return nil, err
+	}
+	request := &http.Request{
+		Method: "GET",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+
+	ctx, span := rc.tracer.Start(c, "users.Onlines")
+	defer span.End()
+	request = request.WithContext(ctx)
+	resp, err := rc.Do(request)
+	if err != nil {
+		GetLogEntry(c).Warningln("Failed to request get users response:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
+		return nil, errors.New("Users response responded non-200 code")
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
+		return nil, err
+	}
+
+	users := &[]*dto.UserOnline{}
 	if err := json.Unmarshal(bodyBytes, users); err != nil {
 		GetLogEntry(c).Errorln("Failed to parse users:", err)
 		return nil, err

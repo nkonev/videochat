@@ -40,14 +40,45 @@ func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c
 	return ownersObjects, nil
 }
 
+func getUserOnlinesRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) (map[int64]*dto.UserOnline, error) {
+	var userIds = utils.SetToArray(userIdSet)
+	length := len(userIds)
+	Logger.Infof("Requested user length is %v", length)
+	if length == 0 {
+		return map[int64]*dto.UserOnline{}, nil
+	}
+	users, err := restClient.GetOnlines(userIds, c.Request().Context())
+	if err != nil {
+		return nil, err
+	}
+	var ownersObjects = map[int64]*dto.UserOnline{}
+	for _, u := range users {
+		ownersObjects[u.Id] = u
+	}
+	return ownersObjects, nil
+}
+
 func getUsersRemotelyOrEmptyFromSlice(userIds []int64, restClient *client.RestClient, c echo.Context) map[int64]*dto.User {
 	return getUsersRemotelyOrEmpty(utils.ArrayToSet(userIds), restClient, c)
+}
+
+func getUserOnlinesRemotelyOrEmptyFromSlice(userIds []int64, restClient *client.RestClient, c echo.Context) map[int64]*dto.UserOnline {
+	return getUserOnlinesRemotelyOrEmpty(utils.ArrayToSet(userIds), restClient, c)
 }
 
 func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) map[int64]*dto.User {
 	if remoteUsers, err := getUsersRemotely(userIdSet, restClient, c); err != nil {
 		GetLogEntry(c.Request().Context()).Warn("Error during getting users from aaa")
 		return map[int64]*dto.User{}
+	} else {
+		return remoteUsers
+	}
+}
+
+func getUserOnlinesRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) map[int64]*dto.UserOnline {
+	if remoteUsers, err := getUserOnlinesRemotely(userIdSet, restClient, c); err != nil {
+		GetLogEntry(c.Request().Context()).Warn("Error during getting users from aaa")
+		return map[int64]*dto.UserOnline{}
 	} else {
 		return remoteUsers
 	}

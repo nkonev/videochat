@@ -27,6 +27,8 @@ import (
 const maxMessageLen = 1024 * 1024
 const minMessageLen = 1
 const allUsers = "all"
+const hereUsers = "here"
+
 const NonExistentUser = -65000
 const badMediaUrl = "BAD_MEDIA_URL"
 
@@ -340,7 +342,8 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		}
 
 		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
-		var addedMentions, strippedText = mc.findMentions(message.Text, users)
+		var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
+		var addedMentions, strippedText = mc.findMentions(message.Text, true, users, userOnlines)
 		var reply, userToSendTo = mc.wasReplyAdded(nil, message, chatId)
 		var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
 		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
@@ -474,12 +477,13 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		}
 
 		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
+		var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 
 		oldMessage, err := tx.GetMessage(chatId, userPrincipalDto.UserId, editableMessage.Id)
 		if err != nil {
 			return err
 		}
-		var oldMentions, _ = mc.findMentions(oldMessage.Text, users)
+		var oldMentions, _ = mc.findMentions(oldMessage.Text, false, users, userOnlines)
 
 		err = tx.EditMessage(editableMessage)
 		if err != nil {
@@ -491,7 +495,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			return err
 		}
 
-		var newMentions, strippedText = mc.findMentions(message.Text, users)
+		var newMentions, strippedText = mc.findMentions(message.Text, true, users, userOnlines)
 
 		var userIdsToNotifyAboutMentionCreated []int64
 		var userIdsToNotifyAboutMentionDeleted []int64
@@ -583,11 +587,12 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 		return err
 	}
 	var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
+	var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 
 	if err := mc.db.DeleteMessage(messageId, userPrincipalDto.UserId, chatId); err != nil {
 		return err
 	} else {
-		var oldMentions, _ = mc.findMentions(oldMessage.Text, users)
+		var oldMentions, _ = mc.findMentions(oldMessage.Text, false, users, userOnlines)
 		mc.notificator.NotifyRemoveMention(c, oldMentions, chatId, messageId)
 
 		cd := &dto.DisplayMessageDto{
@@ -1150,21 +1155,28 @@ func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, displayM
 	return nil
 }
 
-func (mc *MessageHandler) findMentions(messageText string, users map[int64]*dto.User) ([]int64, string) {
-	var result = []int64{}
+func (mc *MessageHandler) findMentions(messageText string, isFindingNewMentions bool, users map[int64]*dto.User, userOnlines map[int64]*dto.UserOnline) ([]int64, string) {
+	var aMap = map[int64]bool{}
 	withoutSourceTags := mc.stripSourceContent.Sanitize(messageText)
 	for _, user := range users {
-		if strings.Contains(withoutSourceTags, "@"+allUsers) {
-			result = append(result, user.Id)
+		if strings.Contains(withoutSourceTags, "@"+allUsers) && isFindingNewMentions {
+			aMap[user.Id] = true
 		} else if strings.Contains(withoutSourceTags, "@"+user.Login) {
-			result = append(result, user.Id)
+			aMap[user.Id] = true
 		}
 	}
+	for _, user := range userOnlines {
+		if strings.Contains(withoutSourceTags, "@"+hereUsers) && isFindingNewMentions {
+			aMap[user.Id] = true
+		}
+	}
+
 	withoutAnyHtml := mc.stripAllTags.Sanitize(withoutSourceTags)
 	if withoutAnyHtml != "" {
 		withoutAnyHtml = createMessagePreviewWithoutLogin(mc.stripAllTags, withoutAnyHtml)
 	}
-	return result, withoutAnyHtml
+
+	return utils.SetToArray(aMap), withoutAnyHtml
 }
 
 func (mc *MessageHandler) wasReplyAdded(oldMessage *db.Message, messageRendered *dto.DisplayMessageDto, chatId int64) (*dto.ReplyDto, *int64) {

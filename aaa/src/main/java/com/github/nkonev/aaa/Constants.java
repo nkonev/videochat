@@ -24,6 +24,8 @@ public class Constants {
         public static final String RESEND_CONFIRMATION_EMAIL = "/resend-confirmation-email";
         public static final String PASSWORD_RESET = "/password-reset"; // html for handle link from email
         public static final String USER = "/user";
+
+        public static final String ONLINE = "/online";
         public static final String LIST = "/list";
 
         public static final String SEARCH = "/search";
