@@ -1017,11 +1017,11 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 		return err
 	}
 	users = append(users, &dto.User{
-		Id:    -2, // -1 is reserved for 'deleted' in ./aaa/src/main/resources/db/migration/V1__init.sql
+		Id:    AllUsers, // -1 is reserved for 'deleted' in ./aaa/src/main/resources/db/migration/V1__init.sql
 		Login: allUsers,
 	})
 	users = append(users, &dto.User{
-		Id:    -3, // -1 is reserved for 'deleted' in ./aaa/src/main/resources/db/migration/V1__init.sql
+		Id:    HereUsers, // -1 is reserved for 'deleted' in ./aaa/src/main/resources/db/migration/V1__init.sql
 		Login: hereUsers,
 	})
 

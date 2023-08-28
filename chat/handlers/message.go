@@ -30,6 +30,9 @@ const allUsers = "all"
 const hereUsers = "here"
 
 const NonExistentUser = -65000
+const DeletedUser = -1
+const AllUsers = -2
+const HereUsers = -3
 const badMediaUrl = "BAD_MEDIA_URL"
 
 type EditMessageDto struct {
