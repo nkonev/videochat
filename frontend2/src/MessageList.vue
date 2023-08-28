@@ -29,7 +29,14 @@
       SCROLL_DOWN,
       SEARCH_STRING_CHANGED, SET_EDIT_MESSAGE
     } from "@/bus/bus";
-    import {findIndex, hasLength, replaceInArray, setAnswerPreviewFields} from "@/utils";
+    import {
+      findIndex,
+      hasLength,
+      replaceInArray,
+      replaceOrAppend,
+      replaceOrPrepend,
+      setAnswerPreviewFields
+    } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
@@ -82,23 +89,29 @@
           console.log("Adding item", dto);
           this.items.unshift(dto);
           this.reduceListIfNeed();
+          this.updateTopAndBottomIds();
         },
         changeItem(dto) {
           console.log("Replacing item", dto);
           replaceInArray(this.items, dto);
+          this.updateTopAndBottomIds();
         },
         removeItem(dto) {
           console.log("Removing item", dto);
           const idxToRemove = findIndex(this.items, dto);
           this.items.splice(idxToRemove, 1);
+          this.updateTopAndBottomIds();
         },
 
         onNewMessage(dto) {
-          if (dto.chatId == this.chatId) {
+          const chatIdsAreEqual = dto.chatId == this.chatId;
+          const isScrolledToBottom = this.isScrolledToBottom();
+          const emptySearchString = !hasLength(this.searchString);
+          if (chatIdsAreEqual && isScrolledToBottom && emptySearchString) {
             this.addItem(dto);
             this.performMarking();
           } else {
-            console.log("Skipping", dto)
+            console.log("Skipping", dto, chatIdsAreEqual, isScrolledToBottom, emptySearchString)
           }
         },
         onDeleteMessage(dto) {
@@ -194,30 +207,21 @@
             console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
             if (this.isTopDirection()) {
-              this.items = this.items.concat(items);
+              replaceOrAppend(this.items, items);
             } else {
-              this.items = items.reverse().concat(this.items);
+              replaceOrPrepend(this.items, items);
             }
 
             if (!this.hasInitialHash && items.length < PAGE_SIZE) {
               if (this.isTopDirection()) {
+                console.log("Setting this.loadedTop");
                 this.loadedTop = true;
               } else {
+                console.log("Setting this.loadedBottom");
                 this.loadedBottom = true;
               }
-            } else {
-              if (this.isTopDirection()) {
-                this.startingFromItemIdTop = this.getMinimumItemId();
-                if (!this.startingFromItemIdBottom) {
-                  this.startingFromItemIdBottom = this.getMaximumItemId();
-                }
-              } else {
-                this.startingFromItemIdBottom = this.getMaximumItemId();
-                if (!this.startingFromItemIdTop) {
-                  this.startingFromItemIdTop = this.getMinimumItemId();
-                }
-              }
             }
+            this.updateTopAndBottomIds();
 
             if (!this.isFirstLoad) {
               this.clearRouteHash()
@@ -228,7 +232,10 @@
               return this.$nextTick();
           })
         },
-
+        updateTopAndBottomIds() {
+          this.startingFromItemIdTop = this.getMinimumItemId();
+          this.startingFromItemIdBottom = this.getMaximumItemId();
+        },
         bottomElementSelector() {
           return ".message-first-element"
         },
@@ -288,6 +295,11 @@
 
         onScrollCallback() {
           this.chatStore.showScrollDown = !this.isScrolledToBottom();
+          if (this.chatStore.showScrollDown) {
+            // during scrolling we disable adding new elements, so some messages can appear on server, so
+            // we set loadedBottom to false in order to force infiniteScrollMixin to fetch new messages during scrollBottom()
+            this.loadedBottom = false;
+          }
         },
         isScrolledToBottom() {
           if (this.scrollerDiv) {
