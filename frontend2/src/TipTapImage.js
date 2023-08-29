@@ -1,5 +1,6 @@
 import {Image} from '@tiptap/extension-image';
 import {Plugin, PluginKey} from 'prosemirror-state';
+import {hasLength} from "@/utils";
 
 export const buildImageHandler = (uploadFunction) => {
     return Image.extend({
@@ -51,12 +52,15 @@ export const buildImageHandler = (uploadFunction) => {
 
                                 images.forEach(async (image) => {
 
-                                    const node = schema.nodes.image.create({
-                                        src: await uploadFunction(image),
-                                    });
-                                    const transaction = view.state.tr.insert(coordinates.pos, node);
-                                    view.dispatch(transaction);
+                                    const anUrl = await uploadFunction(image);
 
+                                    if (hasLength(anUrl)) {
+                                        const node = schema.nodes.image.create({
+                                          src: anUrl,
+                                        });
+                                        const transaction = view.state.tr.insert(coordinates.pos, node);
+                                        view.dispatch(transaction);
+                                    }
                                 });
 
                                 return true;
