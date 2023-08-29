@@ -488,6 +488,9 @@ npx playwright test --headed --project=chromium --debug
 npx playwright test --headed --project=chromium test/login.spec.mjs
 
 npx playwright test --headed --project=chromium -g "login vkontakte and"
+
+# https://habr.com/en/companies/otus/articles/757630/
+npx playwright test --ui --project=chromium
 ```
 
 # Droid cam
