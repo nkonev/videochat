@@ -33,6 +33,7 @@ export const useChatStore = defineStore('chat', {
         showRecordStartButton: false,
         showRecordStopButton: false,
         progressCount: 0,
+        fileUploadingQueue: []
     }
   },
   actions: {
@@ -94,6 +95,9 @@ export const useChatStore = defineStore('chat', {
         console.warn("Attempt to decrement progressCount lower than 0", err.stack)
       }
     },
+    appendToFileUploadingQueue(aFile) {
+        this.fileUploadingQueue.push(aFile)
+    }
   },
 
 })
