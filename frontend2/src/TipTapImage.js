@@ -8,7 +8,7 @@ export const buildImageHandler = (uploadFunction) => {
                 new Plugin({
                     key: new PluginKey('imageHandler'),
                     props: {
-                        handlePaste: (view, event) => {
+                        handlePaste: async (view, event) => {
                             const items = (event.clipboardData || event.originalEvent.clipboardData).items;
                             for (const item of items) {
                                 if (item.type.indexOf("image") === 0) {
@@ -16,7 +16,7 @@ export const buildImageHandler = (uploadFunction) => {
 
                                     const image = item.getAsFile();
 
-                                    uploadFunction(image);
+                                    await uploadFunction(image);
                                 }
                             }
                         },
