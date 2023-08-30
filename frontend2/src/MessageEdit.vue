@@ -266,7 +266,7 @@
               }
             },
             openFileUpload() {
-                bus.emit(OPEN_FILE_UPLOAD_MODAL, {fileItemUuid: this.editMessageDto.fileItemUuid, shouldSetFileUuidToMessage: true});
+                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.editMessageDto.fileItemUuid, shouldSetFileUuidToMessage: true});
             },
             onFilesClicked() {
                 bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true});

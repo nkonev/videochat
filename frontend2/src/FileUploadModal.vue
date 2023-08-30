@@ -1,11 +1,12 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="400" :persistent="uploading || inputFiles.length > 0">
+        <v-dialog v-model="show" max-width="480" :persistent="isLoadingPresignedLinks || fileInputQueueHasElements" scrollable>
             <v-card :title="$vuetify.locale.t('$vuetify.upload_files')">
 
-                <v-container>
+                <v-card-text>
                     <v-file-input
-                        :disabled="uploading"
+                        v-if="showFileInput"
+                        :disabled="fileUploadingQueueHasElements"
                         :model-value="inputFiles"
                         counter
                         multiple
@@ -17,30 +18,29 @@
                         variant="underlined"
                     ></v-file-input>
 
-                    <v-divider/>
-
                     <template v-for="item in chatStore.fileUploadingQueue">
                         <v-progress-linear
                             class="mt-2"
-                            v-if="uploading"
+                            v-if="fileUploadingQueueHasElements"
                             v-model="item.progress"
                             color="success"
                             buffer-value="0"
                             stream
                             height="25"
                         >
-                          <span class="inprogress-filename">{{ formattedFilename(item) }}</span><v-spacer/><span class="inprogress-bytes">{{ formattedProgress(item) }}</span>
+                            <span class="inprogress-filename">{{ formattedFilename(item) }}</span><v-spacer/>
+                            <span class="inprogress-bytes">{{ formattedProgress(item) }}</span>
+                            <v-btn @click="cancel(item)" variant="outlined">{{ $vuetify.locale.t('$vuetify.cancel') }}</v-btn>
                         </v-progress-linear>
                     </template>
-                </v-container>
+                </v-card-text>
 
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <template v-if="!limitError && inputFiles.length > 0">
-                        <v-btn v-if="!uploading" color="primary" variant="flat" @click="upload()">{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
-                        <v-btn v-else @click="cancel()" variant="outlined">{{ $vuetify.locale.t('$vuetify.cancel') }}</v-btn>
+                    <template v-if="!limitError && fileInputQueueHasElements">
+                        <v-btn color="primary" variant="flat" @click="upload()">{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
                     </template>
-                    <v-btn @click="hideModal()" :disabled="uploading" color="red" variant="flat">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <v-btn @click="hideModal()" :disabled="fileUploadingQueueHasElements" color="red" variant="flat">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -67,17 +67,19 @@ export default {
             show: false,
             inputFiles: [],
             fileItemUuid: null, // null at first upload, non-nul when user adds files,
-            cancelSource: null,
             limitError: null,
+            showFileInput: false,
+            isLoadingPresignedLinks: false,
             shouldSetFileUuidToMessage: false,
             filesWerePredefined: false,
             correlationId: null,
         }
     },
     methods: {
-        showModal({fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId}) {
+        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId}) {
             this.$data.show = true;
             this.$data.fileItemUuid = fileItemUuid;
+            this.$data.showFileInput = showFileInput;
             this.$data.shouldSetFileUuidToMessage = shouldSetFileUuidToMessage;
             if (predefinedFiles) {
                 this.$data.inputFiles = predefinedFiles;
@@ -89,8 +91,9 @@ export default {
         hideModal() {
             this.$data.show = false;
             this.inputFiles = [];
-            this.cancelSource = null; // todo per file
             this.limitError = null;
+            this.showFileInput = false;
+            this.$data.isLoadingPresignedLinks = false;
             this.$data.fileItemUuid = null;
             this.$data.shouldSetFileUuidToMessage = false;
             this.$data.filesWerePredefined = false;
@@ -118,6 +121,8 @@ export default {
             });
         },
         async upload() {
+            this.$data.isLoadingPresignedLinks = true;
+
             let totalSize = 0;
             for (const file of this.inputFiles) {
                 totalSize += file.size;
@@ -129,13 +134,18 @@ export default {
                 return Promise.resolve();
             }
 
-            for (const file of this.inputFiles) {
-                this.chatStore.appendToFileUploadingQueue({file: file, progress: 50, progressLoaded: 0, progressTotal: 0})
+            while (this.fileInputQueueHasElements) {
+                const file = this.inputFiles.shift();
+                this.chatStore.appendToFileUploadingQueue({
+                    file: file,
+                    progress: 50,
+                    progressLoaded: 0,
+                    progressTotal: 0,
+                    cancelSource: CancelToken.source(),
+                })
             }
-
-
-
-
+            this.showFileInput = false;
+            this.$data.isLoadingPresignedLinks = false;
 
 
 
@@ -192,8 +202,8 @@ export default {
             // this.hideModal();
             return Promise.resolve();
         },
-        cancel() {
-            this.cancelSource.cancel()
+        cancel(item) {
+            item.cancelSource.cancel()
         },
         updateChosenFiles(files) {
             console.log("updateChosenFiles", files);
@@ -219,8 +229,11 @@ export default {
         chatId() {
             return this.$route.params.id
         },
-        uploading() {
+        fileUploadingQueueHasElements() {
             return !!this.chatStore.fileUploadingQueue.length
+        },
+        fileInputQueueHasElements() {
+            return !!this.inputFiles.length
         }
     },
     created() {
