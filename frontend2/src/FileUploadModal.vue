@@ -19,19 +19,26 @@
                     ></v-file-input>
 
                     <template v-for="item in chatStore.fileUploadingQueue">
-                        <v-progress-linear
-                            class="mt-2"
-                            v-if="fileUploadingQueueHasElements"
-                            v-model="item.progress"
-                            color="success"
-                            buffer-value="0"
-                            stream
-                            height="25"
-                        >
-                            <span class="inprogress-filename">{{ formattedFilename(item) }}</span><v-spacer/>
-                            <span class="inprogress-bytes">{{ formattedProgress(item) }}</span>
-                            <v-btn @click="cancel(item)" variant="outlined">{{ $vuetify.locale.t('$vuetify.cancel') }}</v-btn>
-                        </v-progress-linear>
+                        <v-row no-gutters class="d-flex flex-row my-1" >
+                            <v-col class="flex-grow-1 flex-shrink-0">
+                                <v-progress-linear
+                                    v-if="fileUploadingQueueHasElements"
+                                    v-model="item.progress"
+                                    color="success"
+                                    buffer-value="0"
+                                    stream
+                                    height="25"
+                                >
+                                    <span class="inprogress-filename">{{ formattedFilename(item) }}</span><v-spacer/>
+                                    <span class="inprogress-bytes">{{ formattedProgress(item) }}</span>
+                                </v-progress-linear>
+                            </v-col>
+                            <v-col class="flex-grow-0 flex-shrink-0">
+                                <v-btn @click="cancel(item)" class="ml-2" size="false" variant="plain" :title="$vuetify.locale.t('$vuetify.cancel')">
+                                    <v-icon color="red">mdi-cancel</v-icon>
+                                </v-btn>
+                            </v-col>
+                        </v-row>
                     </template>
                 </v-card-text>
 
