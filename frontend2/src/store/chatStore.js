@@ -97,6 +97,11 @@ export const useChatStore = defineStore('chat', {
     },
     appendToFileUploadingQueue(aFile) {
         this.fileUploadingQueue.push(aFile)
+    },
+    removeFromFileUploadingQueue(id) {
+        this.fileUploadingQueue = this.fileUploadingQueue.filter((item) => {
+            return item.id != id;
+        });
     }
   },
 

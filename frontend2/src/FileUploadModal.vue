@@ -66,6 +66,7 @@ import throttle from "lodash/throttle";
 import { formatSize } from "./utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
+import {v4 as uuidv4} from "uuid";
 const CancelToken = axios.CancelToken;
 
 export default {
@@ -152,6 +153,7 @@ export default {
                 })
 
                 this.chatStore.appendToFileUploadingQueue({
+                    id: uuidv4(),
                     url: response.data.url,
                     file: file,
                     fileItemUuid: response.data.fileItemUuid,
@@ -172,7 +174,8 @@ export default {
             // TODO part below is run somewhere else (setTimeout(), webWorker, ...)
             console.log("Sending files to storage", this.chatStore.fileUploadingQueue);
 
-            for (const fileToUpload of this.chatStore.fileUploadingQueue) {
+            const fileUploadingQueueCopy = [...this.chatStore.fileUploadingQueue];
+            for (const fileToUpload of fileUploadingQueueCopy) {
                 try {
                     const formData = new FormData();
                     const partName = "File";
@@ -187,11 +190,14 @@ export default {
                     await axios.put(fileToUpload.url, renamedFile, config)
                         .then(response => {
                             if (this.$data.shouldSetFileUuidToMessage) {
+                                const calc = this.calculateFileUploadsBelongsToThisChat();
+                                const count = fileToUpload.existingCount + calc;
                                 bus.emit(SET_FILE_ITEM_UUID, {
                                     fileItemUuid: fileToUpload.fileItemUuid,
-                                    count: (fileToUpload.existingCount + this.calculateFileUploadsBelongsToThisChat())
+                                    count: count,
                                 });
                             }
+                            this.chatStore.removeFromFileUploadingQueue(fileToUpload.id);
                             return response;
                         })
                 } catch(thrown) {
