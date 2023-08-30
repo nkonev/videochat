@@ -171,7 +171,6 @@ export default {
             this.$data.isLoadingPresignedLinks = false;
 
 
-            // TODO part below is run somewhere else (setTimeout(), webWorker, ...)
             console.log("Sending files to storage", this.chatStore.fileUploadingQueue);
 
             const fileUploadingQueueCopy = [...this.chatStore.fileUploadingQueue];
@@ -197,16 +196,16 @@ export default {
                                     chatId: fileToUpload.chatId,
                                 });
                             }
-                            this.chatStore.removeFromFileUploadingQueue(fileToUpload.id);
                             return response;
                         })
                 } catch(thrown) {
                     if (axios.isCancel(thrown)) {
                         console.log('Request canceled', thrown.message);
-                        break
                     } else {
-                        return Promise.reject(thrown);
+                        console.warn('Request failed', thrown);
                     }
+                } finally {
+                    this.chatStore.removeFromFileUploadingQueue(fileToUpload.id);
                 }
             }
             this.hideModal();
