@@ -164,6 +164,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 		"fileItemUuid": chatFileItemUuid,
 		"existingCount": existingCount,
 		"newFileName": filteredFilename,
+		"chatId": chatId,
 	})
 }
 

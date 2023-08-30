@@ -161,6 +161,7 @@ export default {
                     progressLoaded: 0,
                     progressTotal: 0,
                     cancelSource: CancelToken.source(),
+                    chatId: response.data.chatId,
                 })
             }
             this.$data.fileItemUuid = null;
@@ -168,26 +169,27 @@ export default {
             this.$data.isLoadingPresignedLinks = false;
 
 
-            // part below is run somwhere else (setTimeout(), webWorker, ...)
-            console.log("Sending files to storage");
+            // TODO part below is run somewhere else (setTimeout(), webWorker, ...)
+            console.log("Sending files to storage", this.chatStore.fileUploadingQueue);
 
-            for (const [index, presignedUrlResponse] of this.chatStore.fileUploadingQueue.entries()) {
+            for (const fileToUpload of this.chatStore.fileUploadingQueue) {
                 try {
                     const formData = new FormData();
-                    formData.append('File', presignedUrlResponse.file, presignedUrlResponse.newFileName);
-                    const renamedFile = formData.get('File');
+                    const partName = "File";
+                    formData.append(partName, fileToUpload.file, fileToUpload.newFileName);
+                    const renamedFile = formData.get(partName);
 
                     const config = {
                         // headers: { 'content-type': 'multipart/form-data' },
-                        onUploadProgress: this.onProgressFunction(item),
-                        cancelToken: this.cancelSource.token
+                        onUploadProgress: this.onProgressFunction(fileToUpload),
+                        cancelToken: fileToUpload.cancelSource.token
                     }
-                    await axios.put(presignedUrlResponse.url, renamedFile, config)
+                    await axios.put(fileToUpload.url, renamedFile, config)
                         .then(response => {
                             if (this.$data.shouldSetFileUuidToMessage) {
                                 bus.emit(SET_FILE_ITEM_UUID, {
-                                    fileItemUuid: presignedUrlResponse.fileItemUuid,
-                                    count: (presignedUrlResponse.existingCount + index + 1)
+                                    fileItemUuid: fileToUpload.fileItemUuid,
+                                    count: (fileToUpload.existingCount + this.calculateFileUploadsBelongsToThisChat())
                                 });
                             }
                             return response;
@@ -203,6 +205,15 @@ export default {
             }
             this.hideModal();
             return Promise.resolve();
+        },
+        calculateFileUploadsBelongsToThisChat() {
+            let numberPerChatId = 0;
+            for (const aFile of this.chatStore.fileUploadingQueue) {
+                if (aFile.chatId == this.chatId) {
+                    numberPerChatId++
+                }
+            }
+            return numberPerChatId
         },
         cancel(item) {
             item.cancelSource.cancel()
