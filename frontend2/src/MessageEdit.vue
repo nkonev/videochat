@@ -107,7 +107,7 @@
 <script>
     import axios from "axios";
     import bus, {
-        CLOSE_EDIT_MESSAGE,
+        CLOSE_EDIT_MESSAGE, INCREMENT_FILE_ITEM_FILE_COUNT,
         MESSAGE_EDIT_COLOR_SET,
         MESSAGE_EDIT_LINK_SET,
         OPEN_FILE_UPLOAD_MODAL,
@@ -117,7 +117,7 @@
         OPEN_MESSAGE_EDIT_SMILEY,
         OPEN_VIEW_FILES_DIALOG,
         PROFILE_SET,
-        SET_EDIT_MESSAGE,
+        SET_EDIT_MESSAGE, SET_FILE_ITEM_FILE_COUNT,
         SET_FILE_ITEM_UUID,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
@@ -187,7 +187,7 @@
                 if (this.editMessageDto.fileItemUuid) {
                     axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
                         .then((response) => {
-                            this.onFileItemUuid({fileItemUuid: this.editMessageDto.fileItemUuid, count: response.data.count})
+                            this.fileCount = response.data.count;
                         });
                 }
             },
@@ -271,13 +271,21 @@
             onFilesClicked() {
                 bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true});
             },
-            onFileItemUuid({fileItemUuid, count}) {
+            onIncrementFileItemFileCount({chatId}) {
+                if (this.chatId == chatId) {
+                    this.fileCount++
+                }
+            },
+            onFileItemUuid({fileItemUuid}) {
                 this.editMessageDto.fileItemUuid = fileItemUuid;
+                this.saveToStore();
+            },
+            // TODO this logic should be in the deletion of files from FileList
+            onSetFileItemFileCount({count}) {
                 this.fileCount = count;
                 if (this.fileCount === 0) {
                     this.editMessageDto.fileItemUuid = null;
                 }
-                this.saveToStore();
             },
             boldValue() {
                 return this.$refs.tipTapRef.$data.editor.isActive('bold')
@@ -417,6 +425,8 @@
         mounted() {
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            bus.on(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
+            bus.on(SET_FILE_ITEM_FILE_COUNT, this.onSetFileItemFileCount);
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
@@ -425,6 +435,8 @@
         beforeDestroy() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            bus.off(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
+            bus.off(SET_FILE_ITEM_FILE_COUNT, this.onSetFileItemFileCount);
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
             bus.off(PROFILE_SET, this.onProfileSet);

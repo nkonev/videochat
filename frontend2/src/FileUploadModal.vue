@@ -59,7 +59,7 @@ import bus, {
     OPEN_FILE_UPLOAD_MODAL,
     CLOSE_FILE_UPLOAD_MODAL,
     SET_FILE_ITEM_UUID,
-    FILE_UPLOAD_MODAL_START_UPLOADING
+    FILE_UPLOAD_MODAL_START_UPLOADING, INCREMENT_FILE_ITEM_FILE_COUNT
 } from "./bus/bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
@@ -190,11 +190,11 @@ export default {
                     await axios.put(fileToUpload.url, renamedFile, config)
                         .then(response => {
                             if (this.$data.shouldSetFileUuidToMessage) {
-                                const calc = this.calculateFileUploadsBelongsToThisChat();
-                                const count = fileToUpload.existingCount + calc;
                                 bus.emit(SET_FILE_ITEM_UUID, {
                                     fileItemUuid: fileToUpload.fileItemUuid,
-                                    count: count,
+                                });
+                                bus.emit(INCREMENT_FILE_ITEM_FILE_COUNT, {
+                                    chatId: fileToUpload.chatId,
                                 });
                             }
                             this.chatStore.removeFromFileUploadingQueue(fileToUpload.id);
@@ -211,15 +211,6 @@ export default {
             }
             this.hideModal();
             return Promise.resolve();
-        },
-        calculateFileUploadsBelongsToThisChat() {
-            let numberPerChatId = 0;
-            for (const aFile of this.chatStore.fileUploadingQueue) {
-                if (aFile.chatId == this.chatId) {
-                    numberPerChatId++
-                }
-            }
-            return numberPerChatId
         },
         cancel(item) {
             item.cancelSource.cancel()
