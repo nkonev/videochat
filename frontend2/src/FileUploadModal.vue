@@ -143,70 +143,65 @@ export default {
 
             while (this.fileInputQueueHasElements) {
                 const file = this.inputFiles.shift();
+
+                const response = await axios.put(`/api/storage/${this.chatId}/url`, {
+                    fileItemUuid: this.fileItemUuid, // nullable
+                    fileSize: file.size,
+                    fileName: file.name,
+                    correlationId: this.correlationId, // nullable
+                })
+
                 this.chatStore.appendToFileUploadingQueue({
+                    url: response.data.url,
                     file: file,
-                    progress: 50,
+                    fileItemUuid: response.data.fileItemUuid,
+                    newFileName: response.data.newFileName,
+                    existingCount: response.data.existingCount,
+                    progress: 0,
                     progressLoaded: 0,
                     progressTotal: 0,
                     cancelSource: CancelToken.source(),
                 })
             }
+            this.$data.fileItemUuid = null;
             this.showFileInput = false;
             this.$data.isLoadingPresignedLinks = false;
 
 
+            // part below is run somwhere else (setTimeout(), webWorker, ...)
+            console.log("Sending files to storage");
 
-            // this.cancelSource = CancelToken.source();
-            // const config = {
-            //     // headers: { 'content-type': 'multipart/form-data' },
-            //     onUploadProgress: this.onProgressFunction(item),
-            //     cancelToken: this.cancelSource.token
-            // }
-            // console.log("Sending file to storage");
-            //
-            // const urlResponses = [];
-            // for (const file of this.inputFiles) {
-            //     const response = await axios.put(`/api/storage/${this.chatId}/url`, {
-            //         fileItemUuid: this.fileItemUuid, // nullable
-            //         fileSize: file.size,
-            //         fileName: file.name,
-            //         correlationId: this.correlationId, // nullable
-            //     })
-            //     this.fileItemUuid = response.data.fileItemUuid;
-            //     urlResponses.push({
-            //         url: response.data.url,
-            //         file: file,
-            //         newFileName: response.data.newFileName,
-            //         existingCount: response.data.existingCount,
-            //     });
-            // }
-            //
-            // for (const [index, presignedUrlResponse] of urlResponses.entries()) {
-            //     try {
-            //         const formData = new FormData();
-            //         formData.append('File', presignedUrlResponse.file, presignedUrlResponse.newFileName);
-            //         const renamedFile = formData.get('File');
-            //
-            //         await axios.put(presignedUrlResponse.url, renamedFile, config)
-            //             .then(response => {
-            //                 if (this.$data.shouldSetFileUuidToMessage) {
-            //                     bus.emit(SET_FILE_ITEM_UUID, {
-            //                         fileItemUuid: this.fileItemUuid,
-            //                         count: (presignedUrlResponse.existingCount + index + 1)
-            //                     });
-            //                 }
-            //                 return response;
-            //             })
-            //     } catch(thrown) {
-            //         if (axios.isCancel(thrown)) {
-            //             console.log('Request canceled', thrown.message);
-            //             break
-            //         } else {
-            //             return Promise.reject(thrown);
-            //         }
-            //     }
-            // }
-            // this.hideModal();
+            for (const [index, presignedUrlResponse] of this.chatStore.fileUploadingQueue.entries()) {
+                try {
+                    const formData = new FormData();
+                    formData.append('File', presignedUrlResponse.file, presignedUrlResponse.newFileName);
+                    const renamedFile = formData.get('File');
+
+                    const config = {
+                        // headers: { 'content-type': 'multipart/form-data' },
+                        onUploadProgress: this.onProgressFunction(item),
+                        cancelToken: this.cancelSource.token
+                    }
+                    await axios.put(presignedUrlResponse.url, renamedFile, config)
+                        .then(response => {
+                            if (this.$data.shouldSetFileUuidToMessage) {
+                                bus.emit(SET_FILE_ITEM_UUID, {
+                                    fileItemUuid: presignedUrlResponse.fileItemUuid,
+                                    count: (presignedUrlResponse.existingCount + index + 1)
+                                });
+                            }
+                            return response;
+                        })
+                } catch(thrown) {
+                    if (axios.isCancel(thrown)) {
+                        console.log('Request canceled', thrown.message);
+                        break
+                    } else {
+                        return Promise.reject(thrown);
+                    }
+                }
+            }
+            this.hideModal();
             return Promise.resolve();
         },
         cancel(item) {
