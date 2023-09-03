@@ -76,6 +76,7 @@ export default {
     upload: "Загрузить",
     upload_files: "Загрузка файлов",
     attached_chat_files: "Файлы чата",
+    show_upload_files: "Показать загружаемые файлы",
     attached_message_files: "Файлы сообщения",
     no_files: "Нет файлов",
     share_file: "Поделиться ссылкой",

@@ -45,6 +45,9 @@
           <v-btn v-if="chatStore.showScrollDown" icon @click="scrollDown()" :title="$vuetify.locale.t('$vuetify.scroll_down')">
             <v-icon :x-large="isMobile()">mdi-arrow-down-thick</v-icon>
           </v-btn>
+          <v-btn v-if="shouldShowFileUpload" icon @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">
+            <v-icon :x-large="isMobile()">mdi-cloud-upload</v-icon>
+          </v-btn>
 
           <v-spacer></v-spacer>
           <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="v-avatar chat-avatar" :src="chatStore.avatar"/>
@@ -113,7 +116,7 @@ import bus, {
   CHAT_ADD,
   CHAT_DELETED,
   CHAT_EDITED,
-  LOGGED_OUT, OPEN_PARTICIPANTS_DIALOG, PLAYER_MODAL,
+  LOGGED_OUT, OPEN_FILE_UPLOAD_MODAL, OPEN_PARTICIPANTS_DIALOG, PLAYER_MODAL,
   PROFILE_SET,
   SCROLL_DOWN, UNREAD_MESSAGES_CHANGED, VIDEO_CALL_INVITED, VIDEO_CALL_SCREEN_SHARE_CHANGED,
   VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED, VIDEO_RECORDING_CHANGED,
@@ -169,6 +172,9 @@ export default {
           } else if (this.chatStore.searchType == SEARCH_MODE_MESSAGES) {
             return 'mdi-message-text-outline'
           }
+        },
+        shouldShowFileUpload() {
+            return !!this.chatStore.fileUploadingQueue.length
         },
     },
     methods: {
@@ -366,7 +372,9 @@ export default {
             bus.emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
           }
         },
-
+        onShowFileUploadClicked() {
+            bus.emit(OPEN_FILE_UPLOAD_MODAL, { });
+        }
     },
     components: {
         RightPanelActions,

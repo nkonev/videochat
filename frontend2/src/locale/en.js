@@ -75,6 +75,7 @@ export default {
     choose_file_from_disk: "From disk",
     upload: "Upload",
     upload_files: "Upload files",
+    show_upload_files: "Show upload files",
     attached_chat_files: "Attached chat files",
     attached_message_files: "Attached message files",
     no_files: "No files",
