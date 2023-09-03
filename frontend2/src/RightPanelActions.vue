@@ -108,7 +108,6 @@ export default {
 @use './styles/settings';
 
 .notifications-badge {
-    margin-inline-end: settings.$list-item-icon-margin-end;
 
     .notification-icon {
         opacity: settings.$list-item-icon-opacity;
