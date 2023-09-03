@@ -29,12 +29,12 @@
                                     stream
                                     height="25"
                                 >
-                                    <span class="inprogress-filename">{{ formattedFilename(item) }}</span><v-spacer/>
-                                    <span class="inprogress-bytes">{{ formattedProgress(item) }}</span>
+                                    <span class="inprogress-filename text-truncate">{{ formattedFilename(item) }}</span><v-spacer/>
+                                    <span class="inprogress-bytes v-col-auto">{{ formattedProgress(item) }}</span>
                                 </v-progress-linear>
                             </v-col>
                             <v-col class="flex-grow-0 flex-shrink-0">
-                                <v-btn @click="cancel(item)" class="ml-2" size="false" variant="plain" :title="$vuetify.locale.t('$vuetify.cancel')">
+                                <v-btn @click="cancel(item)" class="ml-2 upload-cancel-btn" size="false" variant="plain" :title="$vuetify.locale.t('$vuetify.cancel')">
                                     <v-icon color="red">mdi-cancel</v-icon>
                                 </v-btn>
                             </v-col>
