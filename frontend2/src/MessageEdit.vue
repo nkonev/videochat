@@ -276,9 +276,11 @@
                     this.fileCount++
                 }
             },
-            onFileItemUuid({fileItemUuid}) {
+            onFileItemUuid({fileItemUuid, chatId}) {
+              if (chatId == this.chatId) {
                 this.editMessageDto.fileItemUuid = fileItemUuid;
                 this.saveToStore();
+              }
             },
             // TODO this logic should be in the deletion of files from FileList
             onSetFileItemFileCount({count}) {

@@ -47,7 +47,7 @@
                     <template v-if="!limitError && fileInputQueueHasElements">
                         <v-btn color="primary" variant="flat" @click="upload()">{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
                     </template>
-                    <v-btn @click="hideModal()" :disabled="fileUploadingQueueHasElements" color="red" variant="flat">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <v-btn @click="hideModal()" color="red" variant="flat">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -79,7 +79,6 @@ export default {
             showFileInput: false,
             isLoadingPresignedLinks: false,
             shouldSetFileUuidToMessage: false,
-            filesWerePredefined: false,
             correlationId: null,
         }
     },
@@ -91,7 +90,6 @@ export default {
             this.$data.shouldSetFileUuidToMessage = shouldSetFileUuidToMessage;
             if (predefinedFiles) {
                 this.$data.inputFiles = predefinedFiles;
-                this.$data.filesWerePredefined = true;
             }
             this.correlationId = correlationId;
             console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId);
@@ -104,7 +102,6 @@ export default {
             this.$data.isLoadingPresignedLinks = false;
             this.$data.fileItemUuid = null;
             this.$data.shouldSetFileUuidToMessage = false;
-            this.$data.filesWerePredefined = false;
             this.correlationId = null;
         },
         onProgressFunction(progressReceiver) {
@@ -164,6 +161,7 @@ export default {
                     progressTotal: 0,
                     cancelSource: CancelToken.source(),
                     chatId: response.data.chatId,
+                    shouldSetFileUuidToMessage: this.$data.shouldSetFileUuidToMessage
                 })
             }
             this.$data.fileItemUuid = null;
@@ -188,9 +186,10 @@ export default {
                     }
                     await axios.put(fileToUpload.url, renamedFile, config)
                         .then(response => {
-                            if (this.$data.shouldSetFileUuidToMessage) {
+                            if (fileToUpload.shouldSetFileUuidToMessage) {
                                 bus.emit(SET_FILE_ITEM_UUID, {
                                     fileItemUuid: fileToUpload.fileItemUuid,
+                                    chatId: fileToUpload.chatId,
                                 });
                                 bus.emit(INCREMENT_FILE_ITEM_FILE_COUNT, {
                                     chatId: fileToUpload.chatId,
