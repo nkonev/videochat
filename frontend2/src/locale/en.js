@@ -196,5 +196,6 @@ export default {
     screen_share_in_process: "Screen share in progress",
     scroll_down: "Scroll down",
     settings: "Settings",
-    start: "Start"
+    start: "Start",
+    welcome: "Welcome"
 }

@@ -19,6 +19,10 @@ export const isSet = (str) => {
 
 export const offerToJoinToPublicChatStatus = 428
 
+export const setTitle = (newTitle) => {
+  document.title = newTitle;
+}
+
 export const setIcon = (newMessages) => {
   var link = document.querySelector("link[rel~='icon']");
   if (!link) {

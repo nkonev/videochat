@@ -25,7 +25,7 @@ import heightMixin from "@/mixins/heightMixin";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {hasLength, offerToJoinToPublicChatStatus} from "@/utils";
+import {hasLength, offerToJoinToPublicChatStatus, setTitle} from "@/utils";
 import bus, {
   FILE_CREATED, FILE_REMOVED,
   MESSAGE_ADD,
@@ -89,6 +89,7 @@ export default {
       return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
         console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
         this.chatStore.title = data.name;
+        setTitle(data.name);
         this.chatStore.avatar = data.avatar;
         this.chatStore.chatUsersCount = data.participantsCount;
         this.chatStore.showChatEditButton = data.canEdit;
@@ -321,6 +322,7 @@ export default {
 
     bus.off(PROFILE_SET, this.onProfileSet);
     this.chatStore.title = null;
+    setTitle(null);
     this.chatStore.avatar = null;
     this.chatStore.showGoToBlogButton = null;
     this.chatStore.showCallButton = false;

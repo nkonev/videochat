@@ -196,5 +196,6 @@ export default {
     screen_share_in_process: "Идёт показ экрана",
     scroll_down: "Перемотать вниз",
     settings: "Настройки",
-    start: "Начало"
+    start: "Начало",
+    welcome: "Добро пожаловать"
 }

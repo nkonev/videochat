@@ -34,6 +34,7 @@ import heightMixin from "@/mixins/heightMixin";
 import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
 import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
+import {setTitle} from "@/utils";
 
 const PAGE_SIZE = 40;
 
@@ -185,6 +186,9 @@ export default {
       await this.onProfileSet();
     }
 
+    this.chatStore.title = this.$vuetify.locale.t('$vuetify.chats');
+    setTitle(this.$vuetify.locale.t('$vuetify.chats'));
+
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
@@ -202,6 +206,9 @@ export default {
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
+
+    setTitle(null);
+    this.chatStore.title = null;
   }
 }
 </script>
