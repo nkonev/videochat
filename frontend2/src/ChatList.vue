@@ -182,12 +182,12 @@ export default {
   },
 
   async mounted() {
+    this.chatStore.title = this.$vuetify.locale.t('$vuetify.chats');
+    setTitle(this.$vuetify.locale.t('$vuetify.chats'));
+
     if (this.canDrawChats()) {
       await this.onProfileSet();
     }
-
-    this.chatStore.title = this.$vuetify.locale.t('$vuetify.chats');
-    setTitle(this.$vuetify.locale.t('$vuetify.chats'));
 
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
     bus.on(PROFILE_SET, this.onProfileSet);
