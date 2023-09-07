@@ -50,6 +50,7 @@ http:
     frontend-2-router:
       rule: "PathPrefix(`/front2`)"
       service: frontend-2-service
+#      service: frontend-service
       middlewares:
         - "retry-middleware"
     aaa-router:
