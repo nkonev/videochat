@@ -46,6 +46,10 @@ minio:
   accessKeyId: AKIAIOSFODNN7EXAMPLE
   secretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   location: "europe-east"
+  multipart:
+    # https://www.altostra.com/blog/multipart-uploads-with-s3-presigned-url
+    # 100MB
+    chunkSize: 100000000
   bucket:
     userAvatar: "user-avatar"
     chatAvatar: "chat-avatar"

@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	awsS3 "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/minio/minio-go/v7"
@@ -30,6 +34,7 @@ import (
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
+	"strings"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -43,6 +48,7 @@ func main() {
 		fx.Provide(
 			configureTracer,
 			configureInternalMinio,
+			configureAwsS3,
 			configureMinioEntities,
 			configureEcho,
 			redis.RedisV8,
@@ -144,7 +150,9 @@ func configureEcho(
 	e.POST("/storage/chat/:chatId/avatar", cha.PutAvatar)
 	e.GET(fmt.Sprintf("%v/:filename", cha.GetUrlPath()), cha.Download)
 	e.POST("/internal/s3", fh.S3Handler)
-	e.PUT("/storage/:chatId/url", fh.UploadHandler)
+	e.PUT("/storage/:chatId/url", fh.UploadHandler) // TODO remove
+	e.PUT("/storage/:chatId/upload/init", fh.InitMultipartUpload)
+	e.PUT("/storage/:chatId/upload/finish", fh.FinishMultipartUpload)
 	e.PUT("/storage/:chatId/replace/file", fh.ReplaceHandler)
 	e.GET("/storage/:chatId", fh.ListHandler)
 	e.DELETE("/storage/:chatId/file", fh.DeleteHandler)
@@ -172,17 +180,41 @@ func configureInternalMinio() (*s3.InternalMinioClient, error) {
 	endpoint := viper.GetString("minio.internalEndpoint")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
+	nonSecured := !strings.HasPrefix(endpoint, "https")
 
 	// Initialize minio client object.
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: false,
+		Secure: !nonSecured,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	return &s3.InternalMinioClient{minioClient}, nil
+}
+
+// https://github.com/aws/aws-sdk-go
+func configureAwsS3() *awsS3.S3 {
+	endpoint := viper.GetString("minio.internalEndpoint")
+	accessKeyID := viper.GetString("minio.accessKeyId")
+	secretAccessKey := viper.GetString("minio.secretAccessKey")
+	location := viper.GetString("minio.location")
+	creds := awsCredentials.NewStaticCredentials(accessKeyID, secretAccessKey, "")
+
+	nonSecured := !strings.HasPrefix(endpoint, "https")
+
+	forcePath := true
+	cfg := aws.Config{
+		Endpoint:                          &endpoint,
+		Credentials: 					   creds,
+		S3ForcePathStyle:                  &forcePath,
+		Region: 						   &location,
+		DisableSSL: &nonSecured,
+	}
+	sess := session.Must(session.NewSession(&cfg))
+	svc := awsS3.New(sess)
+	return svc
 }
 
 func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {

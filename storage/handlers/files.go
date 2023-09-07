@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	awsS3 "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
@@ -25,6 +26,7 @@ import (
 
 type FilesHandler struct {
 	minio        *s3.InternalMinioClient
+	awsS3        *awsS3.S3
 	restClient   *client.RestClient
 	minioConfig  *utils.MinioConfig
 	filesService *services.FilesService
@@ -38,12 +40,14 @@ const NotFoundImage = "/api/storage/assets/not_found.png"
 
 func NewFilesHandler(
 	minio *s3.InternalMinioClient,
+	awsS3 *awsS3.S3,
 	restClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
 	filesService *services.FilesService,
 ) *FilesHandler {
 	return &FilesHandler{
 		minio:        minio,
+		awsS3: 		  awsS3,
 		restClient:   restClient,
 		minioConfig:  minioConfig,
 		filesService: filesService,
@@ -75,6 +79,197 @@ func cleanFilename(input string) string {
 	words := strings.FieldsFunc(input, nonLetterSplit)
 	tmp := strings.Join(words, "")
 	return strings.TrimSpace(tmp)
+}
+
+type PresignedUrl struct {
+	Url        string `json:"url"`
+	PartNumber int    `json:"partNumber"`
+}
+
+type FinishMultipartRequest struct {
+	Key string `json:"key"`
+	Parts []MultipartFinishingPart `json:"parts"`
+	UploadId string `json:"uploadId"`
+}
+
+type MultipartFinishingPart struct {
+	Etag        string `json:"etag"`
+	PartNumber int64 `json:"partNumber"`
+}
+
+func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := utils.ParseInt64(c.Param("chatId"))
+	if err != nil {
+		return err
+	}
+	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	reqDto := new(UploadRequest)
+	err = c.Bind(reqDto)
+	if err != nil {
+		return err
+	}
+
+	bucketName := h.minioConfig.Files
+
+	chatFileItemUuid := uuid.New().String()
+
+	fileItemUuidString := reqDto.FileItemUuid
+	if fileItemUuidString != nil && *fileItemUuidString != "" {
+		chatFileItemUuid = *fileItemUuidString
+	}
+
+	// check this fileItem belongs to user
+	filenameChatPrefix := fmt.Sprintf("chat/%v/%v/", chatId, chatFileItemUuid)
+	belongs, err := h.checkFileItemBelongsToUser(filenameChatPrefix, c, chatId, bucketName, userPrincipalDto)
+	if err != nil {
+		return err
+	}
+	if !belongs {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	filteredFilename := cleanFilename(reqDto.FileName)
+
+	aKey := services.GenerateFilename(filteredFilename, chatFileItemUuid, chatId)
+
+	// check that this file does not exist
+	_, err = h.minio.StatObject(context.Background(), bucketName, aKey, minio.StatObjectOptions{})
+	if err == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Already exists: %v", aKey)
+		return c.NoContent(http.StatusConflict)
+	}
+
+	// check enough size taking on account free disk space probe (see LimitsHandler)
+	ok, consumption, available, err := checkUserLimit(h.minio, bucketName, userPrincipalDto, reqDto.FileSize)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
+	}
+
+	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId)
+
+	converted := convertMetadata(&metadata)
+	mpu := awsS3.CreateMultipartUploadInput{
+		Bucket: &bucketName,
+		Key: &aKey,
+		Metadata: converted,
+	}
+	upload, err := h.awsS3.CreateMultipartUpload(&mpu)
+	if err != nil {
+		return err
+	}
+
+	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
+
+	chunkSize := viper.GetInt64("minio.multipart.chunkSize")
+	chunksNum := int(reqDto.FileSize / chunkSize)
+	if reqDto.FileSize % chunkSize != 0 {
+		chunksNum++
+	}
+
+	presignedUrls := []PresignedUrl{}
+	for i := 1; i <= chunksNum; i++ {
+		var urlVals = url.Values{}
+		urlVals.Set("partNumber", utils.IntToString(i))
+		urlVals.Set("uploadId", *upload.UploadId)
+
+		u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, aKey, uploadDuration, urlVals)
+		if err != nil {
+			Logger.Errorf("Error during getting downlad url %v", err)
+			return err
+		}
+
+		err = services.ChangeMinioUrl(u)
+		if err != nil {
+			return err
+		}
+
+		presignedUrls = append(presignedUrls, PresignedUrl{u.String(), i})
+	}
+	existingCount := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
+
+	return c.JSON(http.StatusOK, &utils.H{
+		"status": "ready",
+		"uploadId": upload.UploadId,
+		"presignedUrls": presignedUrls,
+		"chunkSize": chunkSize,
+		"fileItemUuid": chatFileItemUuid,
+		"existingCount": existingCount,
+		"newFileName": filteredFilename,
+		"key": aKey,
+		"chatId": chatId,
+	})
+}
+
+func convertMetadata(urlValues *map[string]string) map[string]*string {
+	res := map[string]*string{}
+	for k, v := range *urlValues {
+		k := k
+		v := v
+		res[k] = &v
+	}
+	return res
+}
+
+func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := utils.ParseInt64(c.Param("chatId"))
+	if err != nil {
+		return err
+	}
+	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	bucketName := h.minioConfig.Files
+
+	reqDto := new(FinishMultipartRequest)
+	err = c.Bind(reqDto)
+	if err != nil {
+		return err
+	}
+
+	arr := []*awsS3.CompletedPart{}
+
+	for _, part := range reqDto.Parts {
+		part := part
+		arr = append(arr, &awsS3.CompletedPart{
+			ETag: &part.Etag,
+			PartNumber: &part.PartNumber,
+		})
+	}
+
+	input := awsS3.CompleteMultipartUploadInput{
+		Key: &reqDto.Key,
+		Bucket: &bucketName,
+		UploadId: &reqDto.UploadId,
+		MultipartUpload: &awsS3.CompletedMultipartUpload{
+			Parts: arr,
+		},
+	}
+	_, err = h.awsS3.CompleteMultipartUpload(&input)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *FilesHandler) UploadHandler(c echo.Context) error {

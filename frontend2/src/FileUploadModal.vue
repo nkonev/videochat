@@ -104,11 +104,12 @@ export default {
             this.$data.shouldSetFileUuidToMessage = false;
             this.correlationId = null;
         },
-        onProgressFunction(progressReceiver) {
+        onProgressFunction(add, total, progressReceiver) {
             const progressFunction = (event) => {
-                progressReceiver.progress = Math.round((100 * event.loaded) / event.total);
-                progressReceiver.progressLoaded = (event.loaded);
-                progressReceiver.progressTotal = (event.total);
+                const loaded = add + event.loaded;
+                progressReceiver.progress = Math.round((100 * loaded) / total);
+                progressReceiver.progressLoaded = loaded;
+                progressReceiver.progressTotal = total;
             }
             return throttle(progressFunction, 100)
         },
@@ -142,26 +143,34 @@ export default {
             while (this.fileInputQueueHasElements) {
                 const file = this.inputFiles.shift();
 
-                const response = await axios.put(`/api/storage/${this.chatId}/url`, {
+                // This 3-step algorithm is made to bypass 2GB file issue in Firefox
+                // (it seems there is a timeout inside, because on local machine it works fine)
+
+                // [1/3] init s3's multipart upload
+                const response = await axios.put(`/api/storage/${this.chatId}/upload/init`, {
                     fileItemUuid: this.fileItemUuid, // nullable
                     fileSize: file.size,
                     fileName: file.name,
                     correlationId: this.correlationId, // nullable
                 })
+                console.log("For", file.name, "got init response: ", response.data)
 
                 this.chatStore.appendToFileUploadingQueue({
                     id: uuidv4(),
-                    url: response.data.url,
+                    presignedUrls: response.data.presignedUrls,
                     file: file,
                     fileItemUuid: response.data.fileItemUuid,
                     newFileName: response.data.newFileName,
+                    key: response.data.key,
+                    uploadId: response.data.uploadId,
                     existingCount: response.data.existingCount,
                     progress: 0,
                     progressLoaded: 0,
                     progressTotal: 0,
                     cancelSource: CancelToken.source(),
                     chatId: response.data.chatId,
-                    shouldSetFileUuidToMessage: this.$data.shouldSetFileUuidToMessage
+                    shouldSetFileUuidToMessage: this.$data.shouldSetFileUuidToMessage,
+                    chunkSize: response.data.chunkSize,
                 })
             }
             this.$data.fileItemUuid = null;
@@ -180,23 +189,44 @@ export default {
                     const renamedFile = formData.get(partName);
 
                     const config = {
-                        // headers: { 'content-type': 'multipart/form-data' },
-                        onUploadProgress: this.onProgressFunction(fileToUpload),
                         cancelToken: fileToUpload.cancelSource.token
                     }
-                    await axios.put(fileToUpload.url, renamedFile, config)
-                        .then(response => {
-                            if (fileToUpload.shouldSetFileUuidToMessage) {
-                                bus.emit(SET_FILE_ITEM_UUID, {
-                                    fileItemUuid: fileToUpload.fileItemUuid,
-                                    chatId: fileToUpload.chatId,
-                                });
-                                bus.emit(INCREMENT_FILE_ITEM_FILE_COUNT, {
-                                    chatId: fileToUpload.chatId,
-                                });
-                            }
-                            return response;
-                        })
+
+                    const chunkSize = fileToUpload.chunkSize;
+                    const uploadResults = [];
+                    // [2/3] upload parts by s3's presigned links
+                    for (const presignedUrlObj of fileToUpload.presignedUrls) {
+                      const partNumber = presignedUrlObj.partNumber; // starts from 1
+                      const start = (partNumber - 1) * chunkSize;
+                      const end = partNumber * chunkSize;
+                      console.log("Will send part", presignedUrlObj, start, end, chunkSize);
+                      const blob = renamedFile.slice(start, end);
+
+                      const childConfig = {
+                        ...config,
+                        onUploadProgress: this.onProgressFunction(start, fileToUpload.file.size, fileToUpload),
+                      };
+
+                      const res = await axios.put(presignedUrlObj.url, blob, childConfig);
+                      uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
+                    }
+
+                    // [3/3] concatenate parts
+                    await axios.put(`/api/storage/${fileToUpload.chatId}/upload/finish`, {
+                      key: fileToUpload.key,
+                      parts: uploadResults,
+                      uploadId: fileToUpload.uploadId
+                    });
+
+                    if (fileToUpload.shouldSetFileUuidToMessage) {
+                      bus.emit(SET_FILE_ITEM_UUID, {
+                        fileItemUuid: fileToUpload.fileItemUuid,
+                        chatId: fileToUpload.chatId,
+                      });
+                      bus.emit(INCREMENT_FILE_ITEM_FILE_COUNT, {
+                        chatId: fileToUpload.chatId,
+                      });
+                    }
                 } catch(thrown) {
                     if (axios.isCancel(thrown)) {
                         console.log('Request canceled', thrown.message);
