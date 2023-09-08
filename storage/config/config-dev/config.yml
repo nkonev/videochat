@@ -51,6 +51,7 @@ minio:
     # https://www.altostra.com/blog/multipart-uploads-with-s3-presigned-url
     # 100MB
     chunkSize: 100000000
+    expire: 24h
   bucket:
     userAvatar: "user-avatar"
     chatAvatar: "chat-avatar"

@@ -21,6 +21,7 @@ import (
 	"nkonev.name/storage/utils"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -160,8 +161,11 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId)
 
+	expire := viper.GetDuration("minio.multipart.expire")
+	expTime := time.Now().Add(expire)
 	converted := convertMetadata(&metadata)
 	mpu := awsS3.CreateMultipartUploadInput{
+		Expires: &expTime,
 		Bucket: &bucketName,
 		Key: &aKey,
 		Metadata: converted,
