@@ -213,7 +213,7 @@ func configureAwsS3() *awsS3.S3 {
 		Credentials: 					   creds,
 		S3ForcePathStyle:                  &forcePath,
 		Region: 						   &location,
-		DisableSSL: &nonSecured,
+		DisableSSL: 					   &nonSecured,
 	}
 	sess := session.Must(session.NewSession(&cfg))
 	svc := awsS3.New(sess)
