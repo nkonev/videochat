@@ -183,6 +183,7 @@ export default {
             const fileUploadingQueueCopy = [...this.chatStore.fileUploadingQueue];
             for (const fileToUpload of fileUploadingQueueCopy) {
                 try {
+                    // renaming a file
                     const formData = new FormData();
                     const partName = "File";
                     formData.append(partName, fileToUpload.file, fileToUpload.newFileName);
