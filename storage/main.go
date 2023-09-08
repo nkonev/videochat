@@ -34,7 +34,6 @@ import (
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
-	"strings"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -180,12 +179,14 @@ func configureInternalMinio() (*s3.InternalMinioClient, error) {
 	endpoint := viper.GetString("minio.internalEndpoint")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
-	nonSecured := !strings.HasPrefix(endpoint, "https")
+	location := viper.GetString("minio.location")
+	secured := viper.GetBool("minio.secured")
 
 	// Initialize minio client object.
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: !nonSecured,
+		Secure: secured,
+		Region: location,
 	})
 	if err != nil {
 		return nil, err
@@ -200,9 +201,11 @@ func configureAwsS3() *awsS3.S3 {
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 	location := viper.GetString("minio.location")
+	secured := viper.GetBool("minio.secured")
+
 	creds := awsCredentials.NewStaticCredentials(accessKeyID, secretAccessKey, "")
 
-	nonSecured := !strings.HasPrefix(endpoint, "https")
+	nonSecured := !secured
 
 	forcePath := true
 	cfg := aws.Config{
