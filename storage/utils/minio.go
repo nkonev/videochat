@@ -64,6 +64,8 @@ type MinioConfig struct {
 	UserAvatar, ChatAvatar, Files, FilesPreview string
 }
 
+const Tagging = "Tagging"
+
 const ObjectCreated = "s3:ObjectCreated"
 const ObjectRemoved = "s3:ObjectRemoved"
 

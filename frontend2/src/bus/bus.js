@@ -13,6 +13,7 @@ export const SEARCH_STRING_CHANGED = "searchStringChanged";
 
 export const OPEN_NOTIFICATIONS_DIALOG = "openNotifications";
 
+export const OPEN_TEXT_EDIT_MODAL = "openTextEditModal";
 
 export const SCROLL_DOWN = "scrollDown";
 

@@ -11,6 +11,7 @@
             :canResend="chatDto.canResend"
             @deleteMessage="deleteMessage"
             @editMessage="editMessage"
+            @onFilesClicked="onFilesClicked"
           ></MessageItem>
           <div class="message-last-element" style="min-height: 1px; background: white"></div>
         </div>
@@ -24,7 +25,7 @@
     import bus, {
       CLOSE_SIMPLE_MODAL,
       LOGGED_OUT, MESSAGE_ADD, MESSAGE_DELETED, MESSAGE_EDITED, OPEN_EDIT_MESSAGE,
-      OPEN_SIMPLE_MODAL,
+      OPEN_SIMPLE_MODAL, OPEN_VIEW_FILES_DIALOG,
       PROFILE_SET,
       SCROLL_DOWN,
       SEARCH_STRING_CHANGED, SET_EDIT_MESSAGE
@@ -370,6 +371,9 @@
           } else {
             bus.emit(OPEN_EDIT_MESSAGE, editMessageDto);
           }
+        },
+        onFilesClicked(item) {
+          bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});
         },
 
       },

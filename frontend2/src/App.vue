@@ -99,6 +99,7 @@
         <SettingsModal/>
         <SimpleModal/>
         <FileUploadModal/>
+        <FileListModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -128,6 +129,7 @@ import {searchStringFacade, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mix
 import RightPanelActions from "@/RightPanelActions.vue";
 import SettingsModal from "@/SettingsModal.vue";
 import SimpleModal from "@/SimpleModal.vue";
+import FileListModal from "@/FileListModal.vue";
 import {createGraphQlClient, destroyGraphqlClient} from "@/graphql/graphql";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import FileUploadModal from "@/FileUploadModal.vue";
@@ -382,6 +384,7 @@ export default {
         SettingsModal,
         SimpleModal,
         FileUploadModal,
+        FileListModal,
     },
     created() {
         createGraphQlClient();

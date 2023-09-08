@@ -51,10 +51,10 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 			return err
 		}
 
-		if strings.HasPrefix(eventName, utils.ObjectCreated) || strings.HasPrefix(eventName, utils.ObjectRemoved) {
+		if (strings.HasPrefix(eventName, utils.ObjectCreated) && !strings.HasSuffix(eventName, utils.Tagging)) || strings.HasPrefix(eventName, utils.ObjectRemoved) {
 			eventService.HandleEvent(participantIds, normalizedKey, workingChatId, eventName, ctx)
 		}
-		if strings.HasPrefix(eventName, utils.ObjectCreated) {
+		if (strings.HasPrefix(eventName, utils.ObjectCreated) && !strings.HasSuffix(eventName, utils.Tagging)) {
 			previewService.HandleMinioEvent(participantIds, minioEvent, ctx)
 		}
 		return nil
