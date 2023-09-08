@@ -262,7 +262,7 @@ export default {
         },
         onFileCreated(dto) {
             console.log("onFileCreated", dto);
-            if (!this.show) {
+            if (!this.show || hasLength(this.fileItemUuid)) {
                 return
             }
             this.dto.count = dto.count;
