@@ -408,7 +408,9 @@
                     this.editMessageDto.id = null;
                 }
                 this.loadEmbedPreviewIfNeed(this.editMessageDto);
-                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+                this.$nextTick(()=>{
+                    this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+                });
                 this.loadFilesCount();
             },
             saveToStore() {
