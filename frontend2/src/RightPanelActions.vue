@@ -12,7 +12,7 @@
     <v-list density="compact" nav>
       <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-home" :title="$vuetify.locale.t('$vuetify.start')"></v-list-item>
       <v-list-item @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
-      <v-list-item @click.prevent="openFiles()" prepend-icon="mdi-file-download" :title="$vuetify.locale.t('$vuetify.files')"></v-list-item>
+      <v-list-item v-if="canShowFiles()" @click.prevent="openFiles()" prepend-icon="mdi-file-download" :title="$vuetify.locale.t('$vuetify.files')"></v-list-item>
       <v-list-item @click.prevent="onNotificationsClicked()">
         <template v-slot:prepend>
             <v-badge
@@ -43,6 +43,7 @@ import {chat_list_name, chat_name, chats, profile, profile_self_name, root, root
 import axios from "axios";
 import bus, {LOGGED_OUT, OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS, OPEN_VIEW_FILES_DIALOG} from "@/bus/bus";
 import {goToPreserving} from "@/mixins/searchString";
+import {hasLength} from "@/utils";
 
 export default {
   data() {
@@ -57,6 +58,9 @@ export default {
       },
       showNotificationBadge() {
           return this.notificationsCount != 0
+      },
+      chatId() {
+        return this.$route.params.id
       },
   },
   methods: {
@@ -79,6 +83,9 @@ export default {
     },
     goChats() {
       goToPreserving(this.$route, this.$router, { name: chat_list_name});
+    },
+    canShowFiles() {
+      return hasLength(this.chatId);
     },
     getRouteProfile() {
       return profile
