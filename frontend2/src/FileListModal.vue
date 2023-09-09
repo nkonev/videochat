@@ -7,7 +7,7 @@
                     <v-text-field class="ml-4" variant="outlined" density="compact" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.locale.t('$vuetify.search_by_files')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
                 </v-card-title>
 
-                <v-card-text>
+                <v-card-text class="py-2">
                     <v-row v-if="!loading">
                         <template v-if="dto.count > 0">
                             <v-col
