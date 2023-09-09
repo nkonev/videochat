@@ -69,14 +69,20 @@
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
-                    <v-pagination
-                        v-if="shouldShowPagination"
-                        v-model="filePage"
-                        :length="filePagesCount"
-                    ></v-pagination>
-                    <v-spacer></v-spacer>
-                    <v-btn variant="flat" color="primary" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
-                    <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                  <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
+                    <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                      <v-pagination
+                        density="comfortable"
+                          v-if="shouldShowPagination"
+                          v-model="filePage"
+                          :length="filePagesCount"
+                      ></v-pagination>
+                    </v-col>
+                    <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                      <v-btn variant="flat" color="primary" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
+                      <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    </v-col>
+                  </v-row>
                 </v-card-actions>
             </v-card>
         </v-dialog>
