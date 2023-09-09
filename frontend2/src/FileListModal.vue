@@ -111,7 +111,6 @@ export default {
         return {
             show: false,
             dto: dtoFactory(),
-            chatId: null,
             fileItemUuid: null,
             loading: false,
             messageEditing: false,
@@ -127,13 +126,15 @@ export default {
         },
         shouldShowPagination() {
             return this.dto != null && this.dto.files && this.dto.count > pageSize
-        }
+        },
+        chatId() {
+            return this.$route.params.id
+        },
     },
 
     methods: {
-        showModal({chatId, fileItemUuid, messageEditing}) {
-            console.log("Opening files modal, chatId=", chatId, ", fileItemUuid=", fileItemUuid);
-            this.chatId = chatId;
+        showModal({fileItemUuid, messageEditing}) {
+            console.log("Opening files modal, fileItemUuid=", fileItemUuid);
             this.fileItemUuid = fileItemUuid;
             this.show = true;
             this.messageEditing = messageEditing;
@@ -164,7 +165,6 @@ export default {
         },
         closeModal() {
             this.show = false;
-            this.chatId = null;
             this.fileItemUuid = null;
             this.messageEditing = false;
             this.filePage = firstPage;

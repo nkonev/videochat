@@ -10,8 +10,9 @@
     <v-divider></v-divider>
 
     <v-list density="compact" nav>
-        <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-home" :title="$vuetify.locale.t('$vuetify.start')"></v-list-item>
-        <v-list-item @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
+      <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-home" :title="$vuetify.locale.t('$vuetify.start')"></v-list-item>
+      <v-list-item @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
+      <v-list-item @click.prevent="openFiles()" prepend-icon="mdi-file-download" :title="$vuetify.locale.t('$vuetify.files')"></v-list-item>
       <v-list-item @click.prevent="onNotificationsClicked()">
         <template v-slot:prepend>
             <v-badge
@@ -40,7 +41,7 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {chat_list_name, chat_name, chats, profile, profile_self_name, root, root_name} from "@/router/routes";
 import axios from "axios";
-import bus, {LOGGED_OUT, OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS} from "@/bus/bus";
+import bus, {LOGGED_OUT, OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS, OPEN_VIEW_FILES_DIALOG} from "@/bus/bus";
 import {goToPreserving} from "@/mixins/searchString";
 
 export default {
@@ -99,6 +100,9 @@ export default {
     },
     onNotificationsClicked() {
       bus.emit(OPEN_NOTIFICATIONS_DIALOG);
+    },
+    openFiles() {
+      bus.emit(OPEN_VIEW_FILES_DIALOG, { });
     },
   }
 }
