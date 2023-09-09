@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="800" scrollable :persistent="hasSearchString()">
+        <v-dialog v-model="show" max-width="800" min-height="400" scrollable :persistent="hasSearchString()">
             <v-card>
                 <v-card-title class="d-flex align-center ml-2">
                     {{ fileItemUuid ? $vuetify.locale.t('$vuetify.attached_message_files') : $vuetify.locale.t('$vuetify.attached_chat_files') }}
