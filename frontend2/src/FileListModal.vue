@@ -4,7 +4,7 @@
             <v-card>
                 <v-card-title>
                     {{ fileItemUuid ? $vuetify.locale.t('$vuetify.attached_message_files') : $vuetify.locale.t('$vuetify.attached_chat_files') }}
-                    <v-text-field class="ml-4 pt-0 mt-0" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.locale.t('$vuetify.search_by_files')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+                    <v-text-field variant="underlined" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.locale.t('$vuetify.search_by_files')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
                 </v-card-title>
 
                 <v-card-text>
@@ -75,8 +75,8 @@
                         :length="filePagesCount"
                     ></v-pagination>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" class="mr-2 my-1" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
-                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <v-btn variant="flat" color="primary" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
+                    <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

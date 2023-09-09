@@ -12,10 +12,10 @@
 
                 <v-card-text>{{text}}</v-card-text>
 
-                <v-card-actions class="d-flex flex-wrap flex-row pt-0">
+                <v-card-actions class="d-flex flex-wrap flex-row">
                     <v-spacer></v-spacer>
-                    <v-btn color="red" class="my-1 mr-2" variant="flat" @click="actionFunction(this)">{{buttonName}}</v-btn>
-                    <v-btn class="my-1" variant="outlined" @click="lightClose()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="red" variant="flat" @click="actionFunction(this)">{{buttonName}}</v-btn>
+                    <v-btn variant="outlined" @click="lightClose()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
