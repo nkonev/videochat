@@ -2,9 +2,9 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="800" scrollable :persistent="hasSearchString()">
             <v-card>
-                <v-card-title>
+                <v-card-title class="d-flex align-center ml-2">
                     {{ fileItemUuid ? $vuetify.locale.t('$vuetify.attached_message_files') : $vuetify.locale.t('$vuetify.attached_chat_files') }}
-                    <v-text-field variant="underlined" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.locale.t('$vuetify.search_by_files')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+                    <v-text-field class="ml-4" variant="outlined" density="compact" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.locale.t('$vuetify.search_by_files')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
                 </v-card-title>
 
                 <v-card-text>
@@ -23,14 +23,14 @@
                                         height="200px"
                                     >
                                         <v-container class="file-info-title ma-0 pa-0">
-                                        <v-card-title>
-                                            <a :href="item.url" download class="download-link">{{item.filename}}</a>
+                                        <v-card-title class="pb-1">
+                                            <a :href="item.url" download class="breaks download-link text-white">{{item.filename}}</a>
                                         </v-card-title>
-                                        <v-card-subtitle>
+                                        <v-card-subtitle class="text-white pb-2 no-opacity">
                                             {{ formattedSize(item.size) }}
                                             <span v-if="item.owner"> {{ $vuetify.locale.t('$vuetify.files_by') }} {{item.owner.login}}</span>
                                             <span> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                                            <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank">
+                                            <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank" class="text-blue-accent-1">
                                                 {{ $vuetify.locale.t('$vuetify.files_public_url') }}
                                             </a>
                                         </v-card-subtitle>
@@ -38,18 +38,18 @@
                                     </v-img>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
-                                        <v-btn icon v-if="item.canShowAsImage" @click="fireShowImage(item)" :title="$vuetify.locale.t('$vuetify.view')"><v-icon>mdi-image</v-icon></v-btn>
+                                        <v-btn size="medium" v-if="item.canShowAsImage" @click="fireShowImage(item)" :title="$vuetify.locale.t('$vuetify.view')"><v-icon size="large">mdi-image</v-icon></v-btn>
 
-                                        <v-btn icon v-if="item.canPlayAsVideo" @click="fireVideoPlay(item)" :title="$vuetify.locale.t('$vuetify.play')"><v-icon>mdi-play</v-icon></v-btn>
+                                        <v-btn size="medium" v-if="item.canPlayAsVideo" @click="fireVideoPlay(item)" :title="$vuetify.locale.t('$vuetify.play')"><v-icon size="large">mdi-play</v-icon></v-btn>
 
-                                        <v-btn icon v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.locale.t('$vuetify.edit')"><v-icon>mdi-pencil</v-icon></v-btn>
+                                        <v-btn size="medium" v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.locale.t('$vuetify.edit')"><v-icon size="large">mdi-pencil</v-icon></v-btn>
 
-                                        <v-btn icon v-if="item.canShare" @click="shareFile(item, !item.publicUrl)">
-                                            <v-icon color="primary" dark :title="item.publicUrl ? $vuetify.locale.t('$vuetify.unshare_file') : $vuetify.locale.t('$vuetify.share_file')">{{ item.publicUrl ? 'mdi-lock' : 'mdi-export'}}</v-icon>
+                                        <v-btn size="medium" v-if="item.canShare" @click="shareFile(item, !item.publicUrl)">
+                                            <v-icon color="primary" size="large" dark :title="item.publicUrl ? $vuetify.locale.t('$vuetify.unshare_file') : $vuetify.locale.t('$vuetify.share_file')">{{ item.publicUrl ? 'mdi-lock' : 'mdi-export'}}</v-icon>
                                         </v-btn>
 
-                                        <v-btn icon v-if="item.canDelete" @click="deleteFile(item)">
-                                            <v-icon color="error" dark :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
+                                        <v-btn size="medium" v-if="item.canDelete" @click="deleteFile(item)">
+                                            <v-icon color="red" size="large" dark :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                                         </v-btn>
                                     </v-card-actions>
                                 </v-card>
@@ -318,12 +318,15 @@ export default {
 }
 </script>
 
-<style lang="stylus">
-.v-card__title {
-    .download-link {
-        color white
-        text-decoration none
-    }
+<style lang="stylus" scoped>
+.no-opacity {
+  opacity 1
+}
+.breaks {
+  white-space: break-spaces;
+}
+.download-link {
+    text-decoration none
 }
 .file-info-title {
     background rgba(0, 0, 0, 0.5);

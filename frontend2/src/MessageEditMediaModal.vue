@@ -202,7 +202,7 @@
     }
 </script>
 
-<style lang="stylus">
+<style lang="stylus" scoped>
   .breaks {
     white-space: break-spaces;
   }
