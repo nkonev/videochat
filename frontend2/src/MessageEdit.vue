@@ -68,7 +68,7 @@
                       </div>
 
                       <div class="custom-toolbar-send">
-                          <v-btn v-if="!this.editMessageDto.fileItemUuid" icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" @click="openFileUpload()" :title="$vuetify.locale.t('$vuetify.message_edit_file')">
+                          <v-btn v-if="!this.editMessageDto.fileItemUuid" icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" @click="openFileUploadForAddingFiles()" :title="$vuetify.locale.t('$vuetify.message_edit_file')">
                             <v-icon :size="getIconSize()" color="primary">mdi-file-upload</v-icon>
                           </v-btn>
                           <template v-if="this.editMessageDto.fileItemUuid">
@@ -265,8 +265,8 @@
                 return undefined
               }
             },
-            openFileUpload() {
-                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.editMessageDto.fileItemUuid, shouldSetFileUuidToMessage: true});
+            openFileUploadForAddingFiles() {
+                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.editMessageDto.fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.editMessageDto.id});
             },
             onFilesClicked() {
                 bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true});
@@ -403,7 +403,7 @@
             },
             loadFromStore() {
                 this.editMessageDto = getStoredChatEditMessageDto(this.chatId, chatEditMessageDtoFactory());
-                if (this.editMessageDto.ownerId && this.editMessageDto.ownerId != this.currentUser?.id) {
+                if (this.editMessageDto.ownerId && this.editMessageDto.ownerId != this.chatStore.currentUser?.id) {
                     console.log("Removing owner from saved message")
                     this.editMessageDto.ownerId = null;
                     this.editMessageDto.id = null;

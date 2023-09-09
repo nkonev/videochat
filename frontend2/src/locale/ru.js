@@ -197,5 +197,7 @@ export default {
     scroll_down: "Перемотать вниз",
     settings: "Настройки",
     start: "Начало",
-    welcome: "Добро пожаловать"
+    welcome: "Добро пожаловать",
+    attach_files_to_message: "Прицепить файлы к сообщению",
+    detach_files_from_message: "Отцепить файлы от сообщения"
 }

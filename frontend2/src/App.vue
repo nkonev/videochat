@@ -100,6 +100,7 @@
         <SimpleModal/>
         <FileUploadModal/>
         <FileListModal/>
+        <MessageAttachFiles/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -133,6 +134,7 @@ import FileListModal from "@/FileListModal.vue";
 import {createGraphQlClient, destroyGraphqlClient} from "@/graphql/graphql";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import FileUploadModal from "@/FileUploadModal.vue";
+import MessageAttachFiles from "@/MessageAttachFiles.vue";
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -385,6 +387,7 @@ export default {
         SimpleModal,
         FileUploadModal,
         FileListModal,
+        MessageAttachFiles,
     },
     created() {
         createGraphQlClient();

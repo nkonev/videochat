@@ -44,6 +44,7 @@
 
                 <v-card-actions>
                     <v-spacer></v-spacer>
+                    <v-btn variant="flat" min-width="0" v-if="messageIdToAttachFiles" @click="onAttachFilesToMessage()" :title="$vuetify.locale.t('$vuetify.attach_files_to_message')"><v-icon size="large">mdi-attachment-plus</v-icon></v-btn>
                     <template v-if="!limitError && fileInputQueueHasElements">
                         <v-btn color="primary" variant="flat" @click="upload()">{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
                     </template>
@@ -56,10 +57,10 @@
 
 <script>
 import bus, {
-    OPEN_FILE_UPLOAD_MODAL,
-    CLOSE_FILE_UPLOAD_MODAL,
-    SET_FILE_ITEM_UUID,
-    FILE_UPLOAD_MODAL_START_UPLOADING, INCREMENT_FILE_ITEM_FILE_COUNT
+  OPEN_FILE_UPLOAD_MODAL,
+  CLOSE_FILE_UPLOAD_MODAL,
+  SET_FILE_ITEM_UUID,
+  FILE_UPLOAD_MODAL_START_UPLOADING, INCREMENT_FILE_ITEM_FILE_COUNT, ATTACH_FILES_TO_MESSAGE_MODAL
 } from "./bus/bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
@@ -80,10 +81,11 @@ export default {
             isLoadingPresignedLinks: false,
             shouldSetFileUuidToMessage: false,
             correlationId: null,
+            messageIdToAttachFiles: null,
         }
     },
     methods: {
-        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId}) {
+        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles}) {
             this.$data.show = true;
             this.$data.fileItemUuid = fileItemUuid;
             this.$data.showFileInput = showFileInput;
@@ -91,6 +93,7 @@ export default {
             if (predefinedFiles) {
                 this.$data.inputFiles = predefinedFiles;
             }
+            this.messageIdToAttachFiles = messageIdToAttachFiles;
             this.correlationId = correlationId;
             console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId);
         },
@@ -103,6 +106,11 @@ export default {
             this.$data.fileItemUuid = null;
             this.$data.shouldSetFileUuidToMessage = false;
             this.correlationId = null;
+            this.messageIdToAttachFiles = null;
+        },
+        onAttachFilesToMessage() {
+            this.hideModal();
+            bus.emit(ATTACH_FILES_TO_MESSAGE_MODAL, {messageId: this.messageIdToAttachFiles})
         },
         onProgressFunction(add, total, progressReceiver) {
             const progressFunction = (event) => {

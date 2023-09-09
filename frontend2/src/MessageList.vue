@@ -373,7 +373,7 @@
           }
         },
         onFilesClicked(item) {
-          bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid});
+          bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid, messageIdToDetachFiles: item.id});
         },
 
       },

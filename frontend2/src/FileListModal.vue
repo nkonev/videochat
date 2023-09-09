@@ -83,6 +83,7 @@
                       ></v-pagination>
                     </v-col>
                     <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                      <v-btn variant="flat" min-width="0" v-if="messageIdToDetachFiles" @click="onDetachFilesFromMessage()" :title="$vuetify.locale.t('$vuetify.detach_files_from_message')"><v-icon size="large">mdi-attachment-minus</v-icon></v-btn>
                       <v-btn variant="flat" color="primary" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
                       <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                     </v-col>
@@ -120,6 +121,7 @@ export default {
     data () {
         return {
             show: false,
+            messageIdToDetachFiles: null,
             dto: dtoFactory(),
             fileItemUuid: null,
             loading: false,
@@ -143,10 +145,11 @@ export default {
     },
 
     methods: {
-        showModal({fileItemUuid, messageEditing}) {
+        showModal({fileItemUuid, messageEditing, messageIdToDetachFiles}) {
             console.log("Opening files modal, fileItemUuid=", fileItemUuid);
             this.fileItemUuid = fileItemUuid;
             this.show = true;
+            this.messageIdToDetachFiles = messageIdToDetachFiles;
             this.messageEditing = messageEditing;
             this.updateFiles();
         },
@@ -175,6 +178,7 @@ export default {
         },
         closeModal() {
             this.show = false;
+            this.messageIdToDetachFiles = null;
             this.fileItemUuid = null;
             this.messageEditing = false;
             this.filePage = firstPage;
@@ -186,6 +190,9 @@ export default {
         },
         openUploadModal() {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.fileItemUuid, shouldSetFileUuidToMessage: this.messageEditing});
+        },
+        onDetachFilesFromMessage () {
+
         },
         deleteFile(dto) {
             bus.emit(OPEN_SIMPLE_MODAL, {

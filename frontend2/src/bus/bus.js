@@ -73,3 +73,5 @@ export const PINNED_MESSAGE_PROMOTED = "pinnedMessagePromoted";
 export const PINNED_MESSAGE_UNPROMOTED = "pinnedMessageUnpromoted";
 export const FILE_CREATED = "fileCreated";
 export const FILE_REMOVED = "fileRemoved";
+
+export const ATTACH_FILES_TO_MESSAGE_MODAL = "attachFilesToMessage";

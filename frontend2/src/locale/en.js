@@ -197,5 +197,7 @@ export default {
     scroll_down: "Scroll down",
     settings: "Settings",
     start: "Start",
-    welcome: "Welcome"
+    welcome: "Welcome",
+    attach_files_to_message: "Attach files to message",
+    detach_files_from_message: "Detach files from message"
 }
