@@ -86,9 +86,9 @@
 <script>
 
 import bus, {
-    CLOSE_SIMPLE_MODAL, PREVIEW_CREATED, OPEN_FILE_UPLOAD_MODAL,
-    OPEN_SIMPLE_MODAL, OPEN_TEXT_EDIT_MODAL,
-    OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, FILE_CREATED, FILE_REMOVED, PLAYER_MODAL
+  CLOSE_SIMPLE_MODAL, PREVIEW_CREATED, OPEN_FILE_UPLOAD_MODAL,
+  OPEN_SIMPLE_MODAL, OPEN_TEXT_EDIT_MODAL,
+  OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, FILE_CREATED, FILE_REMOVED, PLAYER_MODAL, SET_FILE_ITEM_FILE_COUNT
 } from "./bus/bus";
 import axios from "axios";
 import {
@@ -194,7 +194,8 @@ export default {
                     })
                     .then((response) => {
                         if (this.$data.messageEditing) {
-                            bus.emit(SET_FILE_ITEM_UUID, {fileItemUuid: this.fileItemUuid, count: response.data.count});
+                            bus.emit(SET_FILE_ITEM_UUID, {fileItemUuid: this.fileItemUuid, chatId: this.chatId});
+                            bus.emit(SET_FILE_ITEM_FILE_COUNT, {count: response.data.count, chatId: this.chatId});
                         }
 
                         if (response.data.count == 0) {

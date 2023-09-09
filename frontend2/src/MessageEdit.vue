@@ -282,12 +282,13 @@
                 this.saveToStore();
               }
             },
-            // TODO this logic should be in the deletion of files from FileList
-            onSetFileItemFileCount({count}) {
+            onSetFileItemFileCount({count, chatId}) {
+              if (chatId == this.chatId) {
                 this.fileCount = count;
                 if (this.fileCount === 0) {
-                    this.editMessageDto.fileItemUuid = null;
+                  this.editMessageDto.fileItemUuid = null;
                 }
+              }
             },
             boldValue() {
                 return this.$refs.tipTapRef.$data.editor.isActive('bold')
