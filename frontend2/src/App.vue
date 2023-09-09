@@ -460,5 +460,8 @@ export default {
   height: auto;
   cursor: pointer
 }
+.v-pagination__list {
+  justify-content: start;
+}
 
 </style>

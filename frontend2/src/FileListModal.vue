@@ -72,7 +72,7 @@
                   <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
                     <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
                       <v-pagination
-                        density="comfortable"
+                          density="comfortable"
                           v-if="shouldShowPagination"
                           v-model="filePage"
                           :length="filePagesCount"
