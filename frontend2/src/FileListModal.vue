@@ -262,17 +262,23 @@ export default {
         },
         onFileCreated(dto) {
             console.log("onFileCreated", dto);
-            if (!this.show || hasLength(this.fileItemUuid)) {
+            if (!this.show) {
                 return
             }
-            this.dto.count = dto.count;
-            this.replaceItem(dto.fileInfoDto);
+            if (!hasLength(this.fileItemUuid) || dto.fileItemUuid == this.fileItemUuid) {
+                if (!hasLength(this.fileItemUuid)) {
+                    this.dto.count = dto.count;
+                }
+                this.replaceItem(dto.fileInfoDto);
+            }
         },
         onFileRemoved(dto) {
             if (!this.show) {
                 return
             }
-            this.dto.count = dto.count;
+            if (!hasLength(this.fileItemUuid)) {
+                this.dto.count = dto.count;
+            }
             this.removeItem(dto.fileInfoDto);
         },
         formattedSize(size) {

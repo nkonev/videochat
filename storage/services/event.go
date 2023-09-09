@@ -36,8 +36,13 @@ type EventService struct {
 func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string, chatId int64, eventName string, ctx context.Context) {
 	GetLogEntry(ctx).Debugf("Got %v %v", normalizedKey, eventName)
 
+	fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during getting fileItemUuid %v", err)
+		return
+	}
+
 	var objectInfo minio.ObjectInfo
-	var err error
 	var tagging *tags.Tags
 	if strings.HasPrefix(eventName, utils.ObjectCreated) {
 		objectInfo, err = s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
@@ -96,6 +101,7 @@ func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string,
 		s.publisher.PublishFileEvent(participantId, chatId, &dto.WrappedFileInfoDto{
 			FileInfoDto: fileInfo,
 			Count:       int64(count),
+			FileItemUuid: fileItemUuid,
 		}, created, ctx)
 	}
 }

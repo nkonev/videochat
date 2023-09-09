@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -24,6 +25,7 @@ type FileInfoDto struct {
 type WrappedFileInfoDto struct {
 	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
 	Count       int64        `json:"count"`
+	FileItemUuid uuid.UUID   `json:"fileItemUuid"`
 }
 
 type MinioEvent struct {

@@ -285,6 +285,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				CanShowAsImage: fileEvent.FileInfoDto.CanShowAsImage,
 			},
 			Count: fileEvent.Count,
+			FileItemUUID: &fileEvent.FileItemUuid,
 		}
 	}
 

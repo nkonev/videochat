@@ -243,6 +243,7 @@ export default {
                                         canShowAsImage
                                       }
                                       count
+                                      fileItemUuid
                                     }
                                   }
                                 }

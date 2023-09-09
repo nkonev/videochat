@@ -125,6 +125,7 @@ type FileInfoDto {
 type WrappedFileInfoDto {
     fileInfoDto: FileInfoDto
     count: Int64!
+    fileItemUuid: UUID!
 }
 
 type ChatEvent {

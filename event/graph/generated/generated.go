@@ -257,8 +257,9 @@ type ComplexityRoot struct {
 	}
 
 	WrappedFileInfoDto struct {
-		Count       func(childComplexity int) int
-		FileInfoDto func(childComplexity int) int
+		Count        func(childComplexity int) int
+		FileInfoDto  func(childComplexity int) int
+		FileItemUUID func(childComplexity int) int
 	}
 }
 
@@ -1227,6 +1228,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WrappedFileInfoDto.FileInfoDto(childComplexity), true
 
+	case "WrappedFileInfoDto.fileItemUuid":
+		if e.complexity.WrappedFileInfoDto.FileItemUUID == nil {
+			break
+		}
+
+		return e.complexity.WrappedFileInfoDto.FileItemUUID(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -1423,6 +1431,7 @@ type FileInfoDto {
 type WrappedFileInfoDto {
     fileInfoDto: FileInfoDto
     count: Int64!
+    fileItemUuid: UUID!
 }
 
 type ChatEvent {
@@ -3059,6 +3068,8 @@ func (ec *executionContext) fieldContext_ChatEvent_fileEvent(ctx context.Context
 				return ec.fieldContext_WrappedFileInfoDto_fileInfoDto(ctx, field)
 			case "count":
 				return ec.fieldContext_WrappedFileInfoDto_count(ctx, field)
+			case "fileItemUuid":
+				return ec.fieldContext_WrappedFileInfoDto_fileItemUuid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type WrappedFileInfoDto", field.Name)
 		},
@@ -7892,6 +7903,50 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_count(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _WrappedFileInfoDto_fileItemUuid(ctx context.Context, field graphql.CollectedField, obj *model.WrappedFileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WrappedFileInfoDto_fileItemUuid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileItemUUID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*uuid.UUID)
+	fc.Result = res
+	return ec.marshalNUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileItemUuid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WrappedFileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext___Directive_name(ctx, field)
 	if err != nil {
@@ -11044,6 +11099,13 @@ func (ec *executionContext) _WrappedFileInfoDto(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "fileItemUuid":
+
+			out.Values[i] = ec._WrappedFileInfoDto_fileItemUuid(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11510,6 +11572,27 @@ func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v in
 
 func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
 	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, v interface{}) (*uuid.UUID, error) {
+	res, err := graph_types.UnmarshalUUID(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, sel ast.SelectionSet, v *uuid.UUID) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := graph_types.MarshalUUID(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

@@ -208,6 +208,7 @@ type VideoUserCountChangedDto struct {
 }
 
 type WrappedFileInfoDto struct {
-	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
-	Count       int64        `json:"count"`
+	FileInfoDto  *FileInfoDto `json:"fileInfoDto"`
+	Count        int64        `json:"count"`
+	FileItemUUID *uuid.UUID   `json:"fileItemUuid"`
 }

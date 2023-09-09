@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	. "nkonev.name/storage/logger"
@@ -87,7 +88,17 @@ func ParseChatId(minioKey string) (int64, error) {
 		str := split[1]
 		return ParseInt64(str)
 	}
-	return 0, errors.New("Unable to parse file id")
+	return 0, errors.New("Unable to parse chat id")
+}
+
+func ParseFileItemUuid(minioKey string) (uuid.UUID, error) {
+	// "chat/116/ad36c70a-c9ae-4846-9c25-6d5f5ac94873/561ae246-7eff-45a6-a480-2b2be254c768.jpg"
+	split := strings.Split(minioKey, "/")
+	if len(split) >= 3 {
+		str := split[2]
+		return uuid.Parse(str)
+	}
+	return uuid.UUID{}, errors.New("Unable to parse file id")
 }
 
 func StripBucketName(minioKey string, bucketName string) string {

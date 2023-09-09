@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"github.com/google/uuid"
 	"github.com/montag451/go-eventbus"
 	"time"
 )
@@ -17,6 +18,7 @@ type PinnedMessageEvent struct {
 type WrappedFileInfoDto struct {
 	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
 	Count       int64        `json:"count"`
+	FileItemUuid uuid.UUID   `json:"fileItemUuid"`
 }
 
 type ChatEvent struct {
