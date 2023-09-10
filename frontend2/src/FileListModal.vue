@@ -192,7 +192,12 @@ export default {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.fileItemUuid, shouldSetFileUuidToMessage: this.messageEditing});
         },
         onDetachFilesFromMessage () {
-
+          axios.put(`/api/chat/`+this.chatId+'/message/file-item-uuid', {
+            messageId: this.messageIdToDetachFiles,
+            fileItemUuid: null
+          }).then(()=>{
+            this.closeModal();
+          })
         },
         deleteFile(dto) {
             bus.emit(OPEN_SIMPLE_MODAL, {
