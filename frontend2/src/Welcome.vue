@@ -1,5 +1,5 @@
 <template>
-  <v-container fill-height fluid :style="heightWithoutAppBar">
+  <v-container fill-height fluid :style="heightWithoutAppBar" v-if="chatStore.currentUser">
     <v-row align="center" justify="center" style="height: 100%">
       <v-card>
         <v-card-title class="d-flex justify-space-around">{{$vuetify.locale.t('$vuetify.welcome_participant', chatStore.currentUser?.login)}}</v-card-title>
