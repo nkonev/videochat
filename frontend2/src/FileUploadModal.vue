@@ -109,8 +109,8 @@ export default {
             this.messageIdToAttachFiles = null;
         },
         onAttachFilesToMessage() {
-            this.hideModal();
-            bus.emit(ATTACH_FILES_TO_MESSAGE_MODAL, {messageId: this.messageIdToAttachFiles})
+          bus.emit(ATTACH_FILES_TO_MESSAGE_MODAL, {messageId: this.messageIdToAttachFiles})
+          this.hideModal();
         },
         onProgressFunction(add, total, progressReceiver) {
             const progressFunction = (event) => {

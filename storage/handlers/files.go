@@ -518,6 +518,38 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
 }
 
+func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatId, err := utils.ParseInt64(c.Param("chatId"))
+	if err != nil {
+		return err
+	}
+	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	filesPage := utils.FixPageString(c.QueryParam("page"))
+	filesSize := utils.FixSizeString(c.QueryParam("size"))
+	filesOffset := utils.GetOffset(filesPage, filesSize)
+
+	bucketName := h.minioConfig.Files
+
+	filenameChatPrefix := fmt.Sprintf("chat/%v/", chatId)
+
+	list, count, err := h.filesService.GetListFilesItemUuids( bucketName, filenameChatPrefix, c.Request().Context(), filesSize, filesOffset)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
+}
+
 type DeleteObjectDto struct {
 	Id string `json:"id"` // file id
 }

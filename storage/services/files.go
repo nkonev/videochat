@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
@@ -105,6 +106,71 @@ func (h *FilesService) GetListFilesInFileItem(
 				fileDto.Owner = user
 			}
 		}
+	}
+
+	return list, count, nil
+}
+
+type SimpleFileItem struct {
+	Id             string    `json:"id"`
+	Filename       string    `json:"filename"`
+}
+
+type GroupedByFileItemUuid struct {
+	FileItemUuid uuid.UUID `json:"fileItemUuid"`
+	Files []SimpleFileItem `json:"files"`
+}
+
+func (h *FilesService) GetListFilesItemUuids(
+	bucket, filenameChatPrefix string,
+	c context.Context,
+	size, offset int,
+) ([]*GroupedByFileItemUuid, int, error) {
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
+		WithMetadata: true,
+		Prefix:       filenameChatPrefix,
+		Recursive:    true,
+	})
+
+	var intermediateList []minio.ObjectInfo = make([]minio.ObjectInfo, 0)
+	for objInfo := range objects {
+		GetLogEntry(c).Debugf("Object '%v'", objInfo.Key)
+		intermediateList = append(intermediateList, objInfo)
+	}
+
+	tmpMap := make(map[uuid.UUID][]SimpleFileItem)
+	for _, m := range intermediateList {
+		itemUuid, err := utils.ParseFileItemUuid(m.Key)
+		if err != nil {
+			GetLogEntry(c).Errorf("Unable for %v to get fileItemUuid '%v'", m.Key, err)
+		} else {
+			if _, ok := tmpMap[itemUuid]; !ok {
+				tmpMap[itemUuid] = []SimpleFileItem{}
+			}
+
+			tmpMap[itemUuid] = append(tmpMap[itemUuid], SimpleFileItem{
+				m.Key,
+				ReadFilename(m.Key),
+			})
+		}
+	}
+
+	count := len(tmpMap)
+
+	var list []*GroupedByFileItemUuid = make([]*GroupedByFileItemUuid, 0)
+	var counter = 0
+	var respCounter = 0
+
+	for fileitemUuid, aList := range tmpMap {
+
+		if counter >= offset {
+			list = append(list, &GroupedByFileItemUuid{fileitemUuid, aList})
+			respCounter++
+			if respCounter >= size {
+				break
+			}
+		}
+		counter++
 	}
 
 	return list, count, nil

@@ -539,6 +539,59 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	return errOuter
 }
 
+type SetFileItemUuid struct {
+	FileItemUuid *string `json:"fileItemUuid"`
+	MessageId int64 	`json:"messageId"`
+}
+
+func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	isParticipant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
+	}
+	if !isParticipant {
+		msg := "user " + c.QueryParam("userId") + " is not belongs to chat " + c.QueryParam("chatId")
+		GetLogEntry(c.Request().Context()).Warnf(msg)
+		return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
+	}
+
+	bindTo := new(SetFileItemUuid)
+	err = c.Bind(bindTo)
+	if err != nil {
+		return err
+	}
+
+	err = mc.db.SetFileItemUuidTo(userPrincipalDto.UserId, chatId, bindTo.MessageId, bindTo.FileItemUuid)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Unable to set FileItemUuid to full for fileItemUuid=%v, chatId=%v", bindTo.FileItemUuid, chatId)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	// notifying
+	ids, err := mc.db.GetAllParticipantIds(chatId)
+	if err != nil {
+		return err
+	}
+	message, err := getMessage(c, mc.db, mc.restClient, chatId, bindTo.MessageId, userPrincipalDto.UserId)
+	if err != nil {
+		return err
+	}
+	mc.notificator.NotifyAboutEditMessage(c, ids, chatId, message)
+
+	return c.NoContent(http.StatusOK)
+}
+
 func excludeMyself(mentionedUserIds []int64, principalDto *auth.AuthResult) []int64 {
 	var result = []int64{}
 	for _, userId := range mentionedUserIds {

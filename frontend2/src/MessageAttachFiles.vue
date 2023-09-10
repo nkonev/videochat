@@ -2,19 +2,14 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="480" scrollable>
             <v-card :title="$vuetify.locale.t('$vuetify.attach_files_to_message')">
-                <v-card-text>
+                <v-card-text class="px-0">
                     <v-list class="pb-0" v-if="!loading">
-                        <template v-if="chats.length > 0">
-                            <template v-for="(item, index) in chats">
+                        <template v-if="items.length > 0">
+                            <template v-for="(item, index) in items">
                                 <v-hover v-slot:default="{ hover }">
-                                    <v-list-item link @click="resendMessageTo(item.id)">
-                                        <v-list-item-avatar v-if="item.avatar">
-                                            <img :src="item.avatar"/>
-                                        </v-list-item-avatar>
-                                        <v-list-item-content class="py-2">
-                                            <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
-                                            <v-list-item-subtitle :class="!hover ? 'white-colored' : ''">{{ hover ? $vuetify.locale.t('$vuetify.resend_to_here') : '-' }}</v-list-item-subtitle>
-                                        </v-list-item-content>
+                                    <v-list-item link @click="setFileItemUuidToMessage(item)">
+                                      <v-list-item-title>{{ getItemTitle(item)}}</v-list-item-title>
+                                      <v-list-item-subtitle>{{ getItemSubTitle(item)}}</v-list-item-subtitle>
                                     </v-list-item>
                                 </v-hover>
                             </template>
@@ -33,6 +28,7 @@
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn
+                        variant="elevated"
                         color="red"
                         @click="closeModal()"
                     >
@@ -58,7 +54,7 @@ export default {
         return {
             show: false,
             searchString: null,
-            chats: [ ], // max 20 items and search
+            items: [ ], // max 20 items and search
             loading: false,
             messageId: null,
         }
@@ -66,15 +62,13 @@ export default {
 
     methods: {
         showModal({messageId}) {
-            console.log('qqq>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-
             this.show = true;
             this.messageId = messageId;
             this.loadData();
         },
         closeModal() {
             this.show = false;
-            this.chats = [];
+            this.items = [];
             this.loading = false;
             this.searchString = null;
             this.messageId = null;
@@ -84,39 +78,27 @@ export default {
                 return
             }
             this.loading = true;
-            axios.get('/api/chat', {
-                params: {
-                    searchString: this.searchString,
-                },
-            }).then(({data}) => {
-                this.chats = data.data;
+            axios.get('/api/storage/'+this.chatId+'/file-item-uuid').then(({data}) => {
+                this.items = data.files;
                 this.loading = false;
             })
         },
-        getNotificationTitle(item) {
-            return item.name
+        getItemTitle(item) {
+            return item.fileItemUuid
         },
-        hasSearchString() {
-            return hasLength(this.searchString)
+        getItemSubTitle(item) {
+          return item.files.reduce((accumulator, currentValue, currentIndex) => {
+            return accumulator + (currentIndex > 0 ? ", " : "") + currentValue.filename
+          }, "")
         },
-        resetInput() {
-            this.searchString = null;
-        },
-        doSearch(){
-            this.loadData();
-        },
-        resendMessageTo(chatId) {
-            const messageDto = {
-                text: this.messageDto.text, // yes, we copy text as is, along with embedded images and video
-                embedMessage: {
-                    id: this.messageDto.id,
-                    chatId: parseInt(this.chatId),
-                    embedType: "resend"
-                }
-            };
-            axios.post(`/api/chat/`+chatId+'/message', messageDto).then(()=> {
-                this.closeModal()
-            })
+        setFileItemUuidToMessage(item) {
+          console.log("Setting fileItemUuid to message", item)
+          axios.put(`/api/chat/`+this.chatId+'/message/file-item-uuid', {
+            messageId: this.messageId,
+            fileItemUuid: item.fileItemUuid
+          }).then(()=> {
+            this.closeModal()
+          })
         },
     },
     computed: {
@@ -133,7 +115,6 @@ export default {
         },
     },
     created() {
-        this.doSearch = debounce(this.doSearch, 700);
         bus.on(ATTACH_FILES_TO_MESSAGE_MODAL, this.showModal);
     },
     destroyed() {

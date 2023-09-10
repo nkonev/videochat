@@ -430,6 +430,16 @@ func (dbR *DB) SetFileItemUuidToNull(ownerId, chatId int64, uuid string) (int64,
 	}
 }
 
+func (dbR *DB) SetFileItemUuidTo(ownerId, chatId, messageId int64, uuid *string) (error) {
+	_, err := dbR.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = $1 WHERE id = $2 AND owner_id = $3`, chatId), uuid, messageId, ownerId)
+
+	if err != nil {
+		Logger.Errorf("Error during nulling file_item_uuid message id %v", err)
+		return tracerr.Wrap(err)
+	}
+	return nil
+}
+
 func getUnreadMessagesCountCommon(co CommonOperations, chatId int64, userId int64) (int64, error) {
 	var count int64
 	row := co.QueryRow("SELECT * FROM UNREAD_MESSAGES($1, $2)", chatId, userId)

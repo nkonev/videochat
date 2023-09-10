@@ -157,7 +157,8 @@ func configureEcho(
 	e.DELETE("/storage/:chatId/file", fh.DeleteHandler)
 	e.PUT("/storage/publish/file", fh.SetPublic)
 	e.GET("/storage/:chatId/file/count/:fileItemUuid", fh.CountHandler)
-	e.GET("/storage/:chatId/file", fh.LimitsHandler)
+	e.GET("/storage/:chatId/file-item-uuid", fh.ListFileItemUuids)
+	e.GET("/storage/:chatId/file", fh.LimitsHandler) // TODO remove
 	e.GET("/storage/:chatId/embed/candidates", fh.ListCandidatesForEmbed)
 	e.GET("/storage/embed/preview", fh.PreviewDownloadHandler)
 	e.GET(utils.UrlStoragePublicPreviewFile, fh.PublicPreviewDownloadHandler)
