@@ -83,7 +83,7 @@
                       ></v-pagination>
                     </v-col>
                     <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
-                      <v-btn variant="outlined" min-width="0" v-if="messageIdToDetachFiles && chatStore.currentUser?.id == messageOwnerToDetach" @click="onDetachFilesFromMessage()" :title="$vuetify.locale.t('$vuetify.detach_files_from_message')"><v-icon size="large">mdi-attachment-minus</v-icon></v-btn>
+                      <v-btn variant="outlined" min-width="0" v-if="messageIdToDetachFiles" @click="onDetachFilesFromMessage()" :title="$vuetify.locale.t('$vuetify.detach_files_from_message')"><v-icon size="large">mdi-attachment-minus</v-icon></v-btn>
                       <v-btn variant="flat" color="primary" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
                       <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                     </v-col>
@@ -130,7 +130,6 @@ export default {
             messageEditing: false,
             filePage: firstPage,
             searchString: null,
-            messageOwnerToDetach: null,
         }
     },
     computed: {
@@ -149,13 +148,12 @@ export default {
     },
 
     methods: {
-        showModal({fileItemUuid, messageEditing, messageIdToDetachFiles, messageOwnerToDetach}) {
+        showModal({fileItemUuid, messageEditing, messageIdToDetachFiles}) {
             console.log("Opening files modal, fileItemUuid=", fileItemUuid);
             this.fileItemUuid = fileItemUuid;
             this.show = true;
             this.messageIdToDetachFiles = messageIdToDetachFiles;
             this.messageEditing = messageEditing;
-            this.messageOwnerToDetach = messageOwnerToDetach;
             this.updateFiles();
         },
         translatePage() {
@@ -188,7 +186,6 @@ export default {
             this.messageEditing = false;
             this.filePage = firstPage;
             this.searchString = null;
-            this.messageOwnerToDetach = null;
             this.dto = dtoFactory();
         },
         doSearch(){

@@ -373,7 +373,11 @@
           }
         },
         onFilesClicked(item) {
-          bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid : item.fileItemUuid, messageIdToDetachFiles: item.id, messageOwnerToDetach: item?.owner.id});
+          const obj = {chatId: this.chatId, fileItemUuid : item.fileItemUuid};
+          if (this.chatStore.currentUser?.id == item?.owner?.id) {
+            obj.messageIdToDetachFiles = item.id;
+          }
+          bus.emit(OPEN_VIEW_FILES_DIALOG, obj);
         },
 
       },
