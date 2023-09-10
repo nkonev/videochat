@@ -70,7 +70,7 @@
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
 
-                  <!-- Pagination is trembling on the second page without this wrapper -->
+                  <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
                   <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
                     <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
                       <v-pagination
