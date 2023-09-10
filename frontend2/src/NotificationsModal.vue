@@ -103,6 +103,7 @@ export default {
           }).then(({data}) => {
             this.dto = data;
             this.loading = false;
+            this.chatStore.notificationsCount = data.totalCount;
             setIcon(data != null && data.totalCount > 0);
           })
         },
