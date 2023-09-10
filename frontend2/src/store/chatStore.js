@@ -8,7 +8,6 @@ export const useChatStore = defineStore('chat', {
   state: () => {
     return {
         currentUser: null,
-        notifications: [],
         notificationsCount: 0,
         notificationsSettings: {},
         showCallButton: false,
@@ -53,12 +52,11 @@ export const useChatStore = defineStore('chat', {
               this.availableOAuth2Providers = data;
           });
     },
-    fetchNotifications() {
-      axios.get(`/api/notification/notification`).then(( {data} ) => {
+    fetchNotificationsCount() {
+      axios.get(`/api/notification/count`).then(( {data} ) => {
         console.debug("fetched notifications =", data);
         this.notificationsCount = data.totalCount;
-        this.notifications = data.data;
-        setIcon(data != null && data.length > 0);
+        setIcon(data.totalCount > 0);
       });
       axios.get(`/api/notification/settings`).then(( {data} ) => {
         console.debug("fetched notifications settings =", data);
@@ -67,20 +65,7 @@ export const useChatStore = defineStore('chat', {
     },
     unsetNotifications() {
       this.notificationsCount = 0;
-      this.notifications = [];
       setIcon(false);
-    },
-    notificationAdd(payload) {
-      const newArr = [payload, ...this.notifications];
-      this.notifications = newArr;
-      this.notificationsCount++;
-    },
-    notificationDelete(payload) {
-      const newArr = this.notifications;
-      const idxToRemove = findIndex(newArr, payload);
-      newArr.splice(idxToRemove, 1);
-      this.notifications = newArr;
-      this.notificationsCount--;
     },
     switchSearchType() {
       if (this.searchType == SEARCH_MODE_CHATS) {

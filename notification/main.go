@@ -128,6 +128,7 @@ func configureEcho(
 	e.Use(middleware.BodyLimit(bodyLimit))
 
 	e.GET("/notification/notification", ch.GetNotifications)
+	e.GET("/notification/count", ch.GetNotificationsCount)
 	e.GET("/notification/settings", ch.GetNotificationSettings)
 	e.PUT("/notification/settings", ch.PutNotificationSettings)
 	e.PUT("/notification/read/:notificationId", ch.ReadNotification)

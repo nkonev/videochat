@@ -55,6 +55,10 @@ export const PLAYER_MODAL = "playerModal";
 export const OPEN_PARTICIPANTS_DIALOG = "openInfo";
 
 
+export const NOTIFICATION_ADD = "notificationAdd";
+export const NOTIFICATION_DELETE = "notificationDelete";
+
+
 export const WEBSOCKET_RESTORED = "wsRestored";
 
 export const CHAT_ADD = "chatAdd";

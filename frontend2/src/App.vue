@@ -101,6 +101,7 @@
         <FileUploadModal/>
         <FileListModal/>
         <FileItemAttachToMessage/>
+        <NotificationsModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -111,14 +112,14 @@
 
 <script>
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
-import { hasLength} from "@/utils";
+import {hasLength} from "@/utils";
 import { chat_name, videochat_name} from "@/router/routes";
 import axios from "axios";
 import bus, {
   CHAT_ADD,
   CHAT_DELETED,
   CHAT_EDITED,
-  LOGGED_OUT, OPEN_FILE_UPLOAD_MODAL, OPEN_PARTICIPANTS_DIALOG, PLAYER_MODAL,
+  LOGGED_OUT, NOTIFICATION_ADD, NOTIFICATION_DELETE, OPEN_FILE_UPLOAD_MODAL, OPEN_PARTICIPANTS_DIALOG, PLAYER_MODAL,
   PROFILE_SET,
   SCROLL_DOWN, UNREAD_MESSAGES_CHANGED, VIDEO_CALL_INVITED, VIDEO_CALL_SCREEN_SHARE_CHANGED,
   VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED, VIDEO_RECORDING_CHANGED,
@@ -135,6 +136,7 @@ import {createGraphQlClient, destroyGraphqlClient} from "@/graphql/graphql";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import FileUploadModal from "@/FileUploadModal.vue";
 import FileItemAttachToMessage from "@/FileItemAttachToMessage.vue";
+import NotificationsModal from "@/NotificationsModal.vue";
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -218,7 +220,7 @@ export default {
         },
 
         onProfileSet(){
-            this.chatStore.fetchNotifications();
+            this.chatStore.fetchNotificationsCount();
             this.graphQlSubscribe();
         },
         onLoggedOut() {
@@ -359,13 +361,13 @@ export default {
             bus.emit(VIDEO_DIAL_STATUS_CHANGED, d);
           } else if (getGlobalEventsData(e).eventType === 'chat_unread_messages_changed') {
             const d = getGlobalEventsData(e).unreadMessagesNotification;
-            bus.emit(UNREAD_MESSAGES_CHANGED, d);//
+            bus.emit(UNREAD_MESSAGES_CHANGED, d);
           } else if (getGlobalEventsData(e).eventType === 'notification_add') {
             const d = getGlobalEventsData(e).notificationEvent;
-            this.chatStore.notificationAdd(d);
+            bus.emit(NOTIFICATION_ADD, d);
           } else if (getGlobalEventsData(e).eventType === 'notification_delete') {
             const d = getGlobalEventsData(e).notificationEvent;
-            this.chatStore.notificationDelete(d);
+            bus.emit(NOTIFICATION_DELETE, d);
           }
         },
         onChatAvatarClick() {
@@ -388,6 +390,7 @@ export default {
         FileUploadModal,
         FileListModal,
         FileItemAttachToMessage,
+        NotificationsModal,
     },
     created() {
         createGraphQlClient();

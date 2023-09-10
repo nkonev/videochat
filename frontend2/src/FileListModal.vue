@@ -135,7 +135,7 @@ export default {
     computed: {
         filePagesCount() {
             const count = Math.ceil(this.dto.count / pageSize);
-            console.debug("Calc pages count", count);
+            // console.debug("Calc pages count", count);
             return count;
         },
         shouldShowPagination() {

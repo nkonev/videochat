@@ -30,6 +30,10 @@ type NotificationsWrapper struct {
 	Count int64          		  `json:"totalCount"` // total notification number for this user
 }
 
+type NotificationsCount struct {
+	Count int64          		  `json:"totalCount"` // total notification number for this user
+}
+
 func (mc *NotificationHandler) GetNotifications(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -54,6 +58,22 @@ func (mc *NotificationHandler) GetNotifications(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, NotificationsWrapper{Data: notifications, Count: notificationsCount})
 	}
+}
+
+func (mc *NotificationHandler) GetNotificationsCount(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	notificationsCount, err := mc.db.GetNotificationCount(userPrincipalDto.UserId)
+	if err != nil {
+		return errors.New("Error during getting user chat count")
+	}
+
+	return c.JSON(http.StatusOK, NotificationsCount{	Count: notificationsCount})
+
 }
 
 func (mc *NotificationHandler) ReadNotification(c echo.Context) error {

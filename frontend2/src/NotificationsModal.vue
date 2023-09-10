@@ -1,0 +1,245 @@
+<template>
+    <v-row justify="center">
+        <v-dialog v-model="show" max-width="720" scrollable>
+            <v-card :title="$vuetify.locale.t('$vuetify.notifications')">
+                <v-card-text class="ma-0 pa-0">
+                    <v-list class="pb-0 notification-list">
+                        <template v-if="dto.data.length > 0">
+                            <template v-for="(item, index) in dto.data">
+                                <v-list-item link @click.prevent="onNotificationClick(item)" :href="getLink(item)" >
+                                  <template v-slot:prepend>
+                                    <v-icon size="x-large">
+                                      {{ getNotificationIcon(item.notificationType) }}
+                                    </v-icon>
+                                  </template>
+                                  <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
+                                  <v-list-item-subtitle>{{ getNotificationSubtitle(item) }}</v-list-item-subtitle>
+                                  <v-list-item-subtitle>
+                                    {{ getNotificationDate(item)}}
+                                  </v-list-item-subtitle>
+                                </v-list-item>
+                            </template>
+                        </template>
+                        <template v-else>
+                            <v-card-text>{{ $vuetify.locale.t('$vuetify.no_notifications') }}</v-card-text>
+                        </template>
+
+                    </v-list>
+                </v-card-text>
+
+                <v-card-actions class="d-flex flex-wrap flex-row">
+
+                  <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
+                  <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
+                    <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                      <v-pagination
+                        variant="elevated"
+                        active-color="primary"
+                        density="comfortable"
+                        v-if="shouldShowPagination"
+                        v-model="notificationPage"
+                        :length="notificationPagesCount"
+                      ></v-pagination>
+                    </v-col>
+                    <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                      <v-btn
+                        variant="elevated"
+                        color="red"
+                        @click="closeModal()"
+                      >
+                        {{ $vuetify.locale.t('$vuetify.close') }}
+                      </v-btn>
+                    </v-col>
+                  </v-row>
+                </v-card-actions>
+
+            </v-card>
+        </v-dialog>
+    </v-row>
+</template>
+
+<script>
+
+import bus, {
+  NOTIFICATION_ADD, NOTIFICATION_DELETE,
+  OPEN_NOTIFICATIONS_DIALOG,
+} from "./bus/bus";
+import {findIndex, getHumanReadableDate, hasLength, setIcon} from "./utils";
+import axios from "axios";
+import {chat, chat_name, messageIdHashPrefix} from "@/router/routes";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore";
+
+const firstPage = 1;
+const pageSize = 20;
+
+const dtoFactory = () => {return {data: [], totalCount: 0} };
+
+export default {
+    data () {
+        return {
+            show: false,
+            dto: dtoFactory(),
+            notificationPage: firstPage,
+            loading: false,
+        }
+    },
+
+    methods: {
+        showModal() {
+            this.show = true;
+            this.loadData();
+        },
+        loadData() {
+          if (!this.show) {
+            return
+          }
+          this.loading = true;
+          axios.get(`/api/notification/notification`, {
+            params: {
+              page: this.translatePage(),
+              size: pageSize,
+            },
+          }).then(({data}) => {
+            this.dto = data;
+            this.loading = false;
+            setIcon(data != null && data.totalCount > 0);
+          })
+        },
+        translatePage() {
+          return this.notificationPage - 1;
+        },
+
+        notificationAdd(payload) {
+          if (this.show) {
+            const newArr = [payload, ...this.dto.data];
+            this.dto.data = newArr;
+            this.dto.totalCount++;
+          }
+          this.chatStore.notificationsCount++;
+        },
+        notificationDelete(payload) {
+          if (this.show) {
+            const arr = this.dto.data;
+            const idxToRemove = findIndex(arr, payload);
+            arr.splice(idxToRemove, 1);
+            this.dto.data = arr;
+            this.dto.totalCount--;
+          }
+          this.chatStore.notificationsCount--;
+        },
+
+        closeModal() {
+            this.show = false;
+            this.notificationPage = firstPage;
+            this.dto = dtoFactory();
+            this.loading = false;
+        },
+        getNotificationIcon(type) {
+            switch (type) {
+                case "missed_call":
+                    return "mdi-phone-missed"
+                case "mention":
+                    return "mdi-at"
+                case "reply":
+                    return "mdi-reply-outline"
+            }
+        },
+        getNotificationSubtitle(item) {
+            switch (item.notificationType) {
+                case "missed_call":
+                    return this.$vuetify.locale.t('$vuetify.notification_missed_call', item.byLogin)
+                case "mention":
+                    let builder1 = this.$vuetify.locale.t('$vuetify.notification_mention', item.byLogin)
+                    if (hasLength(item.chatTitle)) {
+                        builder1 += (this.$vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'");
+                    }
+                    return builder1
+                case "reply":
+                    let builder2 = this.$vuetify.locale.t('$vuetify.notification_reply', item.byLogin)
+                    if (hasLength(item.chatTitle)) {
+                        builder2 += (this.$vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'")
+                    }
+                    return builder2
+            }
+        },
+        getNotificationTitle(item) {
+            return item.description
+        },
+        getNotificationDate(item) {
+            return getHumanReadableDate(item.createDateTime)
+        },
+        getLink(item) {
+            let url = chat + "/" + item.chatId;
+            if (item.messageId) {
+                url += messageIdHashPrefix + item.messageId;
+            }
+            return url;
+        },
+        onNotificationClick(item) {
+            if (this.chatId != item.chatId) {
+                const routeDto = {name: chat_name, params: {id: item.chatId}};
+                if (item.messageId) {
+                    routeDto.hash = messageIdHashPrefix + item.messageId;
+                }
+                this.$router.push(routeDto)
+                    .catch(() => { })
+                    .then(() => {
+                        this.closeModal();
+                        axios.put('/api/notification/read/' + item.id);
+                    })
+            } else {
+                this.closeModal();
+                axios.put('/api/notification/read/' + item.id);
+            }
+        },
+    },
+    computed: {
+        ...mapStores(useChatStore),
+        chatId() {
+            return this.$route.params.id
+        },
+        shouldShowPagination() {
+          return this.dto != null && this.dto.data && this.dto.totalCount > pageSize
+        },
+        notificationPagesCount() {
+          const count = Math.ceil(this.dto.totalCount / pageSize);
+          // console.debug("Calc pages count", count);
+          return count;
+        },
+    },
+    watch: {
+        show(newValue) {
+            if (!newValue) {
+                this.closeModal();
+            }
+        },
+        notificationPage(newValue) {
+          if (this.show) {
+            console.debug("SettingNewPage", newValue);
+            this.dto = dtoFactory();
+            this.loadData();
+          }
+        },
+    },
+    created() {
+        bus.on(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
+        bus.on(NOTIFICATION_ADD, this.notificationAdd);
+        bus.on(NOTIFICATION_DELETE, this.notificationDelete);
+    },
+    destroyed() {
+        bus.off(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
+        bus.off(NOTIFICATION_ADD, this.notificationAdd);
+        bus.off(NOTIFICATION_DELETE, this.notificationDelete);
+    },
+}
+</script>
+
+<style lang="stylus">
+.notification-list {
+  .v-list-item__prepend {
+    margin-right: 1em;
+    width: 32px;
+  }
+}
+</style>
