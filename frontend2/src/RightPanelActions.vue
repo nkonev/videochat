@@ -54,7 +54,7 @@ export default {
   computed: {
     ...mapStores(useChatStore),
       notificationsCount() {
-          return this.chatStore.notifications.length
+          return this.chatStore.notificationsCount
       },
       showNotificationBadge() {
           return this.notificationsCount != 0

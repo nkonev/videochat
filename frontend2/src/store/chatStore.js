@@ -9,6 +9,7 @@ export const useChatStore = defineStore('chat', {
     return {
         currentUser: null,
         notifications: [],
+        notificationsCount: 0,
         notificationsSettings: {},
         showCallButton: false,
         showHangButton: false,
@@ -55,7 +56,8 @@ export const useChatStore = defineStore('chat', {
     fetchNotifications() {
       axios.get(`/api/notification/notification`).then(( {data} ) => {
         console.debug("fetched notifications =", data);
-        this.notifications = data;
+        this.notificationsCount = data.totalCount;
+        this.notifications = data.data;
         setIcon(data != null && data.length > 0);
       });
       axios.get(`/api/notification/settings`).then(( {data} ) => {
@@ -64,18 +66,21 @@ export const useChatStore = defineStore('chat', {
       });
     },
     unsetNotifications() {
+      this.notificationsCount = 0;
       this.notifications = [];
       setIcon(false);
     },
     notificationAdd(payload) {
       const newArr = [payload, ...this.notifications];
       this.notifications = newArr;
+      this.notificationsCount++;
     },
     notificationDelete(payload) {
       const newArr = this.notifications;
       const idxToRemove = findIndex(newArr, payload);
       newArr.splice(idxToRemove, 1);
       this.notifications = newArr;
+      this.notificationsCount--;
     },
     switchSearchType() {
       if (this.searchType == SEARCH_MODE_CHATS) {

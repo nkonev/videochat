@@ -324,8 +324,8 @@ const store = new Vuex.Store({
         },
         [FETCH_NOTIFICATIONS](context) {
             axios.get(`/api/notification/notification`).then(( {data} ) => {
-                console.debug("fetched notifications =", data);
-                context.commit(SET_NOTIFICATIONS, data);
+                console.debug("fetched notifications =", data.data);
+                context.commit(SET_NOTIFICATIONS, data.data);
             });
             axios.get(`/api/notification/settings`).then(( {data} ) => {
                 console.debug("fetched notifications settings =", data);

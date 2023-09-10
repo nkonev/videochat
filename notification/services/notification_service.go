@@ -177,8 +177,10 @@ func (srv *NotificationService) removeExcessNotificationsIfNeed(userId int64) er
 		return err
 	}
 
-	maxNotifications := viper.GetInt("maxNotifications")
+	maxNotifications := viper.GetInt("maxNotificationsPerUser")
 	if count >= int64(maxNotifications) {
+		Logger.Infof("Notifications %v are exceeded maxNotificationsPerUser %v, going to delete the oldest", count, maxNotifications)
+
 		toDelete := count - int64(maxNotifications) + 1
 		notificationsIdsToDelete, err := srv.dbs.GetExcessUserNotificationIds(userId, toDelete)
 		if err != nil {

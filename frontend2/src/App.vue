@@ -165,7 +165,7 @@ export default {
             return this.$route.params.id
         },
         notificationsCount() {
-            return this.chatStore.notifications.length
+            return this.chatStore.notificationsCount
         },
         showNotificationBadge() {
             return this.notificationsCount != 0 && !this.chatStore.drawer

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"github.com/spf13/viper"
 	"github.com/ztrue/tracerr"
 	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
@@ -58,9 +57,9 @@ func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, noti
 	return id, createDatetime, nil
 }
 
-func (db *DB) GetNotifications(userId int64) ([]dto.NotificationDto, error) {
-	maxNotifications := viper.GetInt("maxNotifications")
-	rows, err := db.Query("select id, notification_type, description, chat_id, message_id, create_date_time, by_user_id, by_login, chat_title from notification where user_id = $1 order by id desc limit $2", userId, maxNotifications)
+func (db *DB) GetNotifications(userId int64, size, offset int) ([]dto.NotificationDto, error) {
+
+	rows, err := db.Query("select id, notification_type, description, chat_id, message_id, create_date_time, by_user_id, by_login, chat_title from notification where user_id = $1 order by id desc limit $2 offset $3", userId, size, offset)
 	if err != nil {
 		return nil, tracerr.Wrap(err)
 	}

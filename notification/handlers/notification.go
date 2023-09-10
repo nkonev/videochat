@@ -25,6 +25,11 @@ func NewMessageHandler(dbR *db.DB, rabbitEventsPublisher *producer.RabbitEventPu
 	}
 }
 
+type NotificationsWrapper struct {
+	Data  []dto.NotificationDto  `json:"data"`
+	Count int64          		  `json:"totalCount"` // total notification number for this user
+}
+
 func (mc *NotificationHandler) GetNotifications(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -32,11 +37,22 @@ func (mc *NotificationHandler) GetNotifications(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	if notifications, err := mc.db.GetNotifications(userPrincipalDto.UserId); err != nil {
+	page := utils.FixPageString(c.QueryParam("page"))
+	size := utils.FixSizeString(c.QueryParam("size"))
+	offset := utils.GetOffset(page, size)
+
+	if notifications, err := mc.db.GetNotifications(userPrincipalDto.UserId, size, offset); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error get notification from db %v", err)
 		return err
 	} else {
-		return c.JSON(http.StatusOK, notifications)
+
+		notificationsCount, err := mc.db.GetNotificationCount(userPrincipalDto.UserId)
+		if err != nil {
+			return errors.New("Error during getting user chat count")
+		}
+
+
+		return c.JSON(http.StatusOK, NotificationsWrapper{Data: notifications, Count: notificationsCount})
 	}
 }
 
