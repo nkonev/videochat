@@ -198,6 +198,6 @@ export default {
     settings: "Settings",
     start: "Start",
     welcome: "Welcome",
-    attach_files_to_message: "Attach files to message",
+    attach_files_to_message: "Attach existing files to message",
     detach_files_from_message: "Detach files from message"
 }

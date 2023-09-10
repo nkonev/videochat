@@ -4,8 +4,8 @@
             <v-card :title="$vuetify.locale.t('$vuetify.attach_files_to_message')">
                 <v-card-text class="px-0">
                     <v-list class="pb-0" v-if="!loading">
-                        <template v-if="items.length > 0">
-                            <template v-for="(item, index) in items">
+                        <template v-if="dto.files.length > 0">
+                            <template v-for="(item, index) in dto.files">
                                 <v-hover v-slot:default="{ hover }">
                                     <v-list-item link @click="setFileItemUuidToMessage(item)">
                                       <v-list-item-title>{{ getItemTitle(item)}}</v-list-item-title>
@@ -25,16 +25,33 @@
                         color="primary"
                     ></v-progress-circular>
                 </v-card-text>
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn
+
+                <v-card-actions class="d-flex flex-wrap flex-row">
+
+                  <!-- Pagination is trembling on the second page without this wrapper -->
+                  <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
+                    <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                      <v-pagination
+                        variant="elevated"
+                        active-color="primary"
+                        density="comfortable"
+                        v-if="shouldShowPagination"
+                        v-model="filePage"
+                        :length="filePagesCount"
+                      ></v-pagination>
+                    </v-col>
+                    <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                      <v-btn
                         variant="elevated"
                         color="red"
                         @click="closeModal()"
-                    >
+                      >
                         {{ $vuetify.locale.t('$vuetify.close') }}
-                    </v-btn>
+                      </v-btn>
+                    </v-col>
+                  </v-row>
                 </v-card-actions>
+
             </v-card>
         </v-dialog>
     </v-row>
@@ -45,18 +62,21 @@
 import bus, {
   ATTACH_FILES_TO_MESSAGE_MODAL, SET_FILE_ITEM_FILE_COUNT, SET_FILE_ITEM_UUID,
 } from "./bus/bus";
-import {hasLength} from "./utils";
 import axios from "axios";
-import debounce from "lodash/debounce";
+
+const firstPage = 1;
+const pageSize = 20;
+const dtoFactory = () => {return {files: [], count: 0} };
 
 export default {
     data () {
         return {
             show: false,
             searchString: null,
-            items: [ ], // max 20 items and search
+            dto: dtoFactory(),
             loading: false,
             messageId: null,
+            filePage: firstPage,
         }
     },
 
@@ -68,20 +88,29 @@ export default {
         },
         closeModal() {
             this.show = false;
-            this.items = [];
+            this.dto = dtoFactory();
             this.loading = false;
             this.searchString = null;
             this.messageId = null;
+            this.filePage = firstPage;
         },
         loadData() {
             if (!this.show) {
                 return
             }
             this.loading = true;
-            axios.get('/api/storage/'+this.chatId+'/file-item-uuid').then(({data}) => {
-                this.items = data.files;
+            axios.get('/api/storage/'+this.chatId+'/file-item-uuid', {
+              params: {
+                page: this.translatePage(),
+                size: pageSize,
+              },
+            }).then(({data}) => {
+                this.dto = data;
                 this.loading = false;
             })
+        },
+        translatePage() {
+            return this.filePage - 1;
         },
         getItemTitle(item) {
             return item.fileItemUuid
@@ -107,6 +136,14 @@ export default {
         chatId() {
             return this.$route.params.id
         },
+        filePagesCount() {
+            const count = Math.ceil(this.dto.count / pageSize);
+            console.debug("Calc pages count", count);
+            return count;
+        },
+        shouldShowPagination() {
+            return this.dto != null && this.dto.files && this.dto.count > pageSize
+        },
     },
 
     watch: {
@@ -114,6 +151,13 @@ export default {
             if (!newValue) {
                 this.closeModal();
             }
+        },
+        filePage(newValue) {
+          if (this.show) {
+            console.debug("SettingNewPage", newValue);
+            this.dto = dtoFactory();
+            this.loadData();
+          }
         },
     },
     created() {

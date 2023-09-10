@@ -26,7 +26,7 @@
                                         <v-card-title class="pb-1">
                                             <a :href="item.url" download class="breaks download-link text-white">{{item.filename}}</a>
                                         </v-card-title>
-                                        <v-card-subtitle class="text-white pb-2 no-opacity">
+                                        <v-card-subtitle class="text-white pb-2 no-opacity text-wrap">
                                             {{ formattedSize(item.size) }}
                                             <span v-if="item.owner"> {{ $vuetify.locale.t('$vuetify.files_by') }} {{item.owner.login}}</span>
                                             <span> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
@@ -83,7 +83,7 @@
                       ></v-pagination>
                     </v-col>
                     <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
-                      <v-btn variant="flat" min-width="0" v-if="messageIdToDetachFiles" @click="onDetachFilesFromMessage()" :title="$vuetify.locale.t('$vuetify.detach_files_from_message')"><v-icon size="large">mdi-attachment-minus</v-icon></v-btn>
+                      <v-btn variant="outlined" min-width="0" v-if="messageIdToDetachFiles" @click="onDetachFilesFromMessage()" :title="$vuetify.locale.t('$vuetify.detach_files_from_message')"><v-icon size="large">mdi-attachment-minus</v-icon></v-btn>
                       <v-btn variant="flat" color="primary" @click="openUploadModal()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
                       <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                     </v-col>

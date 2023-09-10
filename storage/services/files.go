@@ -16,6 +16,7 @@ import (
 	"nkonev.name/storage/utils"
 	"sort"
 	"strings"
+	"time"
 )
 
 type FilesService struct {
@@ -114,6 +115,7 @@ func (h *FilesService) GetListFilesInFileItem(
 type SimpleFileItem struct {
 	Id             string    `json:"id"`
 	Filename       string    `json:"filename"`
+	LastModified   time.Time `json:"time"`
 }
 
 type GroupedByFileItemUuid struct {
@@ -132,14 +134,8 @@ func (h *FilesService) GetListFilesItemUuids(
 		Recursive:    true,
 	})
 
-	var intermediateList []minio.ObjectInfo = make([]minio.ObjectInfo, 0)
-	for objInfo := range objects {
-		GetLogEntry(c).Debugf("Object '%v'", objInfo.Key)
-		intermediateList = append(intermediateList, objInfo)
-	}
-
 	tmpMap := make(map[uuid.UUID][]SimpleFileItem)
-	for _, m := range intermediateList {
+	for m := range objects {
 		itemUuid, err := utils.ParseFileItemUuid(m.Key)
 		if err != nil {
 			GetLogEntry(c).Errorf("Unable for %v to get fileItemUuid '%v'", m.Key, err)
@@ -151,20 +147,35 @@ func (h *FilesService) GetListFilesItemUuids(
 			tmpMap[itemUuid] = append(tmpMap[itemUuid], SimpleFileItem{
 				m.Key,
 				ReadFilename(m.Key),
+				m.LastModified,
 			})
 		}
 	}
 
-	count := len(tmpMap)
+	tmlList := make([]*GroupedByFileItemUuid, 0)
+	for k, v := range tmpMap {
+		tmlList = append(tmlList, &GroupedByFileItemUuid{k, v})
+	}
+	sort.SliceStable(tmlList, func(i, j int) bool {
+		first := tmlList[i]
+		second := tmlList[j]
+		if len(first.Files) > 0 && len(second.Files) > 0 {
+			return first.Files[0].LastModified.Unix() > second.Files[0].LastModified.Unix()
+		} else {
+			return false
+		}
+	})
+
+	count := len(tmlList)
 
 	var list []*GroupedByFileItemUuid = make([]*GroupedByFileItemUuid, 0)
 	var counter = 0
 	var respCounter = 0
 
-	for fileitemUuid, aList := range tmpMap {
+	for _, item := range tmlList {
 
 		if counter >= offset {
-			list = append(list, &GroupedByFileItemUuid{fileitemUuid, aList})
+			list = append(list, item)
 			respCounter++
 			if respCounter >= size {
 				break
