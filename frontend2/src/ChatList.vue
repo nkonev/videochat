@@ -164,7 +164,9 @@ export default {
         goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: id}})
     },
     async onSearchStringChanged() {
-      await this.reloadItems();
+      if (this.isReady()) {
+        await this.reloadItems();
+      }
     },
     async onProfileSet() {
       await this.reloadItems();

@@ -35,14 +35,14 @@ export const searchStringFacade = () => {
         watch: {
             ['$route.query.'+SEARCH_MODE_CHATS]: {
                 handler: function (newValue, oldValue) {
-                    console.debug("Route q", oldValue, "->", newValue);
+                    console.debug("Route changed from q", SEARCH_MODE_CHATS, oldValue, "->", newValue);
                     bus.emit(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, {oldValue: oldValue, newValue: newValue});
                 }
                 ,
             },
             ['$route.query.'+SEARCH_MODE_MESSAGES]: {
                 handler: function (newValue, oldValue) {
-                    console.debug("Route q", oldValue, "->", newValue);
+                    console.debug("Route changed from q", SEARCH_MODE_MESSAGES, oldValue, "->", newValue);
                     bus.emit(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, {oldValue: oldValue, newValue: newValue});
                 }
                 ,

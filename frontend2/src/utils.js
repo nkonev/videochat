@@ -155,3 +155,5 @@ export const formatSize = (size) => {
     }
     return size.toString() + ' B'
 };
+
+export const publicallyAvailableForSearchChatsQuery = "__AVAILABLE_FOR_SEARCH";

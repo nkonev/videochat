@@ -264,10 +264,10 @@ func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset
 
 	rows, err = db.Query(selectChatClause()+fmt.Sprintf(`
 		WHERE 
-		    ( ( ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) OR ( ch.available_to_search IS TRUE ) ) AND ( $5 = '%s' or ch.title ILIKE $4 %s ) ) 
+		    ( ( ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( ch.title ILIKE $4 %s ) ) OR ( ch.available_to_search IS TRUE AND $5 = '%s' )  ) 
 			ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC 
 			LIMIT $2 OFFSET $3
-	`, ReservedPublicallyAvailableForSearchChats, additionalUserIdsClause), participantId, limit, offset, searchStringWithPercents, searchString)
+	`, additionalUserIdsClause, ReservedPublicallyAvailableForSearchChats), participantId, limit, offset, searchStringWithPercents, searchString)
 	if err != nil {
 		return nil, tracerr.Wrap(err)
 	} else {

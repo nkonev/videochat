@@ -127,9 +127,11 @@ export default (name) => {
           await this.reduceListIfNeed();
           this.restoreScroll(false);
       },
-
+      isReady() {
+          return this.scrollerDiv != null
+      },
       initScroller() {
-        if (this.scrollerDiv == null) {
+        if (!this.isReady()) {
           throw "You have to invoke initialLoad() first"
         }
 
