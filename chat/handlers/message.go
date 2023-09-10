@@ -561,7 +561,7 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 		return err
 	}
 	if !isParticipant {
-		msg := "user " + c.QueryParam("userId") + " is not belongs to chat " + c.QueryParam("chatId")
+		msg := "user " + utils.Int64ToString(userPrincipalDto.UserId) + " is not belongs to chat " + utils.Int64ToString(chatId)
 		GetLogEntry(c.Request().Context()).Warnf(msg)
 		return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
 	}
@@ -570,6 +570,16 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 	err = c.Bind(bindTo)
 	if err != nil {
 		return err
+	}
+
+	_, ownerId, err := mc.db.GetMessageBasic(chatId, bindTo.MessageId)
+	if err != nil {
+		return err
+	}
+	if ownerId == nil || *ownerId != userPrincipalDto.UserId {
+		msg := "user " + utils.Int64ToString(userPrincipalDto.UserId) + " is not owner of message " + utils.Int64ToString(bindTo.MessageId)
+		GetLogEntry(c.Request().Context()).Warnf(msg)
+		return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
 	}
 
 	err = mc.db.SetFileItemUuidTo(userPrincipalDto.UserId, chatId, bindTo.MessageId, bindTo.FileItemUuid)
