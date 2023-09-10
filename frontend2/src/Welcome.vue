@@ -1,22 +1,22 @@
 <template>
   <v-container fill-height fluid :style="heightWithoutAppBar">
-    <v-row align="center" justify="center">
+    <v-row align="center" justify="center" style="height: 100%">
       <v-card>
         <v-card-title class="d-flex justify-space-around">{{$vuetify.locale.t('$vuetify.welcome_participant', chatStore.currentUser?.login)}}</v-card-title>
-        <v-card-actions class="d-flex justify-space-around flex-wrap flex-row">
-          <v-btn color="primary" @click="createChat()" text class="my-2">
+        <v-card-actions class="d-flex justify-space-around flex-wrap flex-row pb-0">
+          <v-btn color="primary" @click="createChat()" text>
             <v-icon>mdi-plus</v-icon>
             {{ $vuetify.locale.t('$vuetify.new_chat') }}
           </v-btn>
-          <v-btn @click="findUser()" text class="my-2">
+          <v-btn @click="findUser()" text>
             <v-icon>mdi-magnify</v-icon>
             {{ $vuetify.locale.t('$vuetify.find_user') }}
           </v-btn>
-          <v-btn @click="availableChats()" text class="my-2">
+          <v-btn @click="availableChats()" text>
             <v-icon>mdi-forum</v-icon>
             {{ $vuetify.locale.t('$vuetify.public_chats') }}
           </v-btn>
-          <v-btn @click="goBlog()" text class="my-2">
+          <v-btn @click="goBlog()" text>
             <v-icon>mdi-postage-stamp</v-icon>
             {{ $vuetify.locale.t('$vuetify.blogs') }}
           </v-btn>
