@@ -15,7 +15,7 @@
                             </template>
                         </template>
                         <template v-else>
-                            <v-card-text>{{ $vuetify.locale.t('$vuetify.no_chats') }}</v-card-text>
+                            <v-card-text>{{ $vuetify.locale.t('$vuetify.no_files') }}</v-card-text>
                         </template>
                     </v-list>
                     <v-progress-circular
