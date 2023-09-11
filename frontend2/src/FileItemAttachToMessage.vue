@@ -60,7 +60,7 @@
 <script>
 
 import bus, {
-  ATTACH_FILES_TO_MESSAGE_MODAL, SET_FILE_ITEM_FILE_COUNT, SET_FILE_ITEM_UUID,
+  ATTACH_FILES_TO_MESSAGE_MODAL, LOAD_FILES_COUNT, SET_FILE_ITEM_FILE_COUNT, SET_FILE_ITEM_UUID,
 } from "./bus/bus";
 import axios from "axios";
 
@@ -127,7 +127,7 @@ export default {
             fileItemUuid: item.fileItemUuid
           }).then(()=> {
             bus.emit(SET_FILE_ITEM_UUID, {fileItemUuid: item.fileItemUuid, chatId: this.chatId});
-            bus.emit(SET_FILE_ITEM_FILE_COUNT, {count: item.files.length, chatId: this.chatId});
+            bus.emit(LOAD_FILES_COUNT);
             this.closeModal()
           })
         },

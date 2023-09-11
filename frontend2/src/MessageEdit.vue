@@ -107,18 +107,18 @@
 <script>
     import axios from "axios";
     import bus, {
-        CLOSE_EDIT_MESSAGE, INCREMENT_FILE_ITEM_FILE_COUNT,
-        MESSAGE_EDIT_COLOR_SET,
-        MESSAGE_EDIT_LINK_SET,
-        OPEN_FILE_UPLOAD_MODAL,
-        OPEN_MESSAGE_EDIT_COLOR,
-        OPEN_MESSAGE_EDIT_LINK,
-        OPEN_MESSAGE_EDIT_MEDIA,
-        OPEN_MESSAGE_EDIT_SMILEY,
-        OPEN_VIEW_FILES_DIALOG,
-        PROFILE_SET,
-        SET_EDIT_MESSAGE, SET_FILE_ITEM_FILE_COUNT,
-        SET_FILE_ITEM_UUID,
+      CLOSE_EDIT_MESSAGE, INCREMENT_FILE_ITEM_FILE_COUNT, LOAD_FILES_COUNT,
+      MESSAGE_EDIT_COLOR_SET,
+      MESSAGE_EDIT_LINK_SET,
+      OPEN_FILE_UPLOAD_MODAL,
+      OPEN_MESSAGE_EDIT_COLOR,
+      OPEN_MESSAGE_EDIT_LINK,
+      OPEN_MESSAGE_EDIT_MEDIA,
+      OPEN_MESSAGE_EDIT_SMILEY,
+      OPEN_VIEW_FILES_DIALOG,
+      PROFILE_SET,
+      SET_EDIT_MESSAGE, SET_FILE_ITEM_FILE_COUNT,
+      SET_FILE_ITEM_UUID,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -435,6 +435,7 @@
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
+            bus.on(LOAD_FILES_COUNT, this.loadFilesCount);
             this.loadFromStore();
         },
         beforeDestroy() {
@@ -445,6 +446,7 @@
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
             bus.off(PROFILE_SET, this.onProfileSet);
+            bus.off(LOAD_FILES_COUNT, this.loadFilesCount);
         },
         created(){
             this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});
