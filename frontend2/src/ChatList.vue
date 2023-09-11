@@ -164,6 +164,11 @@ export default {
         goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: id}})
     },
     async onSearchStringChanged() {
+      // Fixes excess delayed (because of debounce) reloading of items when
+      // 1. we've chosen __AVAILABLE_FOR_SEARCH
+      // 2. then go to the Welcome
+      // 3. without this change there will be excess delayed invocation
+      // 4. but we've already destroyed this component, so it will be an error in the log
       if (this.isReady()) {
         await this.reloadItems();
       }
