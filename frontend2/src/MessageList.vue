@@ -6,7 +6,7 @@
             :key="item.id"
             :item="item"
             :chatId="chatId"
-            :my="item.owner.id === chatStore.currentUser.id"
+            :my="meIsOwnerOfMessage(item)"
             :highlight="item.id == highlightMessageId"
             :canResend="chatDto.canResend"
             @deleteMessage="deleteMessage"
@@ -374,10 +374,13 @@
         },
         onFilesClicked(item) {
           const obj = {chatId: this.chatId, fileItemUuid : item.fileItemUuid};
-          if (this.chatStore.currentUser?.id == item?.owner?.id) {
+          if (this.meIsOwnerOfMessage(item)) {
             obj.messageIdToDetachFiles = item.id;
           }
           bus.emit(OPEN_VIEW_FILES_DIALOG, obj);
+        },
+        meIsOwnerOfMessage(item) {
+          return item.owner?.id === this.chatStore.currentUser?.id;
         },
 
       },
