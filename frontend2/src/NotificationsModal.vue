@@ -3,7 +3,7 @@
         <v-dialog v-model="show" max-width="720" scrollable>
             <v-card :title="$vuetify.locale.t('$vuetify.notifications')">
                 <v-card-text class="ma-0 pa-0">
-                    <v-list class="pb-0 notification-list">
+                    <v-list class="pb-0 notification-list" v-if="!loading">
                         <template v-if="dto.data.length > 0">
                             <template v-for="(item, index) in dto.data">
                                 <v-list-item link @click.prevent="onNotificationClick(item)" :href="getLink(item)" >
@@ -25,6 +25,14 @@
                         </template>
 
                     </v-list>
+
+                    <v-progress-circular
+                      class="my-4 mx-4 py-4"
+                      v-else
+                      indeterminate
+                      color="primary"
+                    ></v-progress-circular>
+
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
