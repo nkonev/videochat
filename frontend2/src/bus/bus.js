@@ -83,3 +83,5 @@ export const OPEN_CHAT_EDIT = "openChatEdit";
 export const OPEN_FIND_USER = "openFindUser";
 
 export const LOAD_FILES_COUNT = "loadFilesCount";
+
+export const OPEN_MESSAGE_READ_USERS_DIALOG = "openMessageReadUsersDialog";

@@ -102,6 +102,7 @@
         <FileListModal/>
         <FileItemAttachToMessage/>
         <NotificationsModal/>
+        <MessageReadUsersModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -137,6 +138,7 @@ import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import FileUploadModal from "@/FileUploadModal.vue";
 import FileItemAttachToMessage from "@/FileItemAttachToMessage.vue";
 import NotificationsModal from "@/NotificationsModal.vue";
+import MessageReadUsersModal from "@/MessageReadUsersModal.vue"
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -391,6 +393,7 @@ export default {
         FileListModal,
         FileItemAttachToMessage,
         NotificationsModal,
+        MessageReadUsersModal,
     },
     created() {
         createGraphQlClient();
