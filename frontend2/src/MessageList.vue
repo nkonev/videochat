@@ -9,11 +9,20 @@
             :my="meIsOwnerOfMessage(item)"
             :highlight="item.id == highlightMessageId"
             :canResend="chatDto.canResend"
+            @contextmenu="onShowContextMenu($event, item)"
             @deleteMessage="deleteMessage"
             @editMessage="editMessage"
             @onFilesClicked="onFilesClicked"
           ></MessageItem>
           <div class="message-last-element" style="min-height: 1px; background: white"></div>
+          <MessageItemContextMenu
+            ref="contextMenuRef"
+            :canResend="chatDto.canResend"
+            :isBlog="chatDto.blog"
+            @deleteMessage="this.deleteMessage"
+            @editMessage="this.editMessage"
+            @showReadUsers="this.showReadUsers"
+          />
         </div>
 
 </template>
@@ -24,7 +33,7 @@
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {
       CLOSE_SIMPLE_MODAL,
-      LOGGED_OUT, MESSAGE_ADD, MESSAGE_DELETED, MESSAGE_EDITED, OPEN_EDIT_MESSAGE,
+      LOGGED_OUT, MESSAGE_ADD, MESSAGE_DELETED, MESSAGE_EDITED, OPEN_EDIT_MESSAGE, OPEN_MESSAGE_READ_USERS_DIALOG,
       OPEN_SIMPLE_MODAL, OPEN_VIEW_FILES_DIALOG,
       PROFILE_SET,
       SCROLL_DOWN,
@@ -42,6 +51,7 @@
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
+    import MessageItemContextMenu from "@/MessageItemContextMenu.vue";
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
     import {getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition} from "@/store/localStore";
     import Mark from "mark.js";
@@ -82,6 +92,7 @@
       },
 
       components: {
+          MessageItemContextMenu,
           MessageItem
       },
 
@@ -381,6 +392,16 @@
         },
         meIsOwnerOfMessage(item) {
           return item.owner?.id === this.chatStore.currentUser?.id;
+        },
+        showReadUsers(dto) {
+          bus.emit(OPEN_MESSAGE_READ_USERS_DIALOG, {chatId: dto.chatId, messageId: dto.id})
+        },
+        onShowContextMenu(e, menuableItem){
+          const tag = e?.target?.tagName?.toLowerCase();
+          if (tag != "img" && tag != "video" && tag != "a") {
+            const el = document.querySelector(messageIdHashPrefix + menuableItem.id + " .message-item-wrapper");
+            this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem, el);
+          }
         },
 
       },
