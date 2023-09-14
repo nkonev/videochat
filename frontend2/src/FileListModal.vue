@@ -30,7 +30,7 @@
                                             {{ formattedSize(item.size) }}
                                             <span v-if="item.owner"> {{ $vuetify.locale.t('$vuetify.files_by') }} {{item.owner.login}}</span>
                                             <span> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                                            <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank" class="text-blue-accent-1">
+                                            <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank" class="colored-link">
                                                 {{ $vuetify.locale.t('$vuetify.files_public_url') }}
                                             </a>
                                         </v-card-subtitle>
@@ -345,6 +345,7 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
+@import "constants.styl"
 .no-opacity {
   opacity 1
 }
@@ -356,6 +357,9 @@ export default {
 }
 .file-info-title {
     background rgba(0, 0, 0, 0.5);
+}
+.colored-link {
+  color: $linkColor;
 }
 
 </style>
