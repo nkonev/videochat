@@ -1,12 +1,15 @@
 <template>
     <v-menu
-        v-model="showContextMenu"
+        :model-value="showContextMenu"
         :transition="false"
         :activator="el"
         :open-on-click="false"
         :open-on-focus="false"
         :open-on-hover="false"
         :open-delay="0"
+        :close-delay="0"
+        :close-on-back="false"
+        :close-on-content-click="false"
     >
         <v-list>
             <v-list-item
