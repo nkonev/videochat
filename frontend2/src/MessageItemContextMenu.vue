@@ -3,6 +3,7 @@
         :model-value="showContextMenu"
         :transition="false"
         :activator="el"
+        location="right"
         :open-on-click="false"
         :open-on-focus="false"
         :open-on-hover="false"
