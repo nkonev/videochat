@@ -21,6 +21,7 @@
             :isBlog="chatDto.blog"
             @deleteMessage="this.deleteMessage"
             @editMessage="this.editMessage"
+            @onFilesClicked="onFilesClicked"
             @showReadUsers="this.showReadUsers"
           />
         </div>
