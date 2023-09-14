@@ -9,7 +9,6 @@
         :open-delay="0"
         :close-delay="0"
         :close-on-back="false"
-        @close="onCloseContextMenu()"
     >
         <v-list class="my-m-list">
             <v-list-item
@@ -50,9 +49,7 @@ export default {
             contextMenuY: 0,
         }
     },
-    updated () {
-      //this.setPosition()
-    },
+
     methods:{
         setPosition() {
           const element = document.querySelector(".message-item-context-menu .v-overlay__content");
@@ -60,6 +57,12 @@ export default {
             element.style.position = "absolute";
             element.style.top = this.contextMenuY + "px";
             element.style.left = this.contextMenuX + "px";
+
+            const bottom = Number(getComputedStyle(element).bottom.replace("px", ''));
+            if (bottom < 0) {
+              const newTop = this.contextMenuY + bottom;
+              element.style.top = newTop + "px";
+            }
           }
         },
         onShowContextMenu(e, menuableItem) {
