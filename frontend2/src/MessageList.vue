@@ -1,5 +1,5 @@
 <template>
-        <div class="ma-0 px-0 pt-0 pb-2 my-messages-scroller" @scroll.passive="onScroll">
+        <div class="ma-0 px-0 pt-0 pb-2 my-messages-scroller" @scroll.passive="onScroll" @click="onCloseContextMenu()">
           <div class="message-first-element" style="min-height: 1px; background: white"></div>
           <MessageItem v-for="item in items"
             :id="getItemId(item.id)"
@@ -9,7 +9,7 @@
             :my="meIsOwnerOfMessage(item)"
             :highlight="item.id == highlightMessageId"
             :canResend="chatDto.canResend"
-            @customcontextmenu="onShowContextMenu($event, item)"
+            @customcontextmenu.stop="onShowContextMenu($event, item)"
             @deleteMessage="deleteMessage"
             @editMessage="editMessage"
             @onFilesClicked="onFilesClicked"
@@ -404,7 +404,9 @@
             this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem, el);
           }
         },
-
+        onCloseContextMenu() {
+          this.$refs.contextMenuRef.onCloseContextMenu()
+        }
       },
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
