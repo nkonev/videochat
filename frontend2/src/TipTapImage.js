@@ -53,6 +53,8 @@ export const buildImageHandler = (uploadFunction) => {
 
                                 return true;
                             },
+                            // we place handler here (but not in props)
+                            // in order to pass text if no image was found
                             async paste(view, event) {
                                   let imageSet = false;
                                   const items = (event.clipboardData || event.originalEvent.clipboardData).items;
