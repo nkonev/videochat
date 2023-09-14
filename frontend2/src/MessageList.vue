@@ -40,6 +40,7 @@
       SEARCH_STRING_CHANGED, SET_EDIT_MESSAGE
     } from "@/bus/bus";
     import {
+      deepCopy,
       findIndex,
       hasLength,
       replaceInArray,
@@ -55,7 +56,6 @@
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
     import {getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition} from "@/store/localStore";
     import Mark from "mark.js";
-    import cloneDeep from "lodash/cloneDeep";
 
     const PAGE_SIZE = 40;
     const SCROLLING_THRESHHOLD = 200; // px
@@ -373,7 +373,7 @@
           });
         },
         editMessage(dto){
-          const editMessageDto = cloneDeep(dto);
+          const editMessageDto = deepCopy(dto);
           if (dto.embedMessage?.id) {
             setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner.login);
           }

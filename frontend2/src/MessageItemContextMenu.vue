@@ -28,7 +28,7 @@
 <script>
 
 import {chat, messageIdHashPrefix} from "./router/routes"
-import {getUrlPrefix, hasLength} from "@/utils";
+import {deepCopy, getUrlPrefix, hasLength} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {SEARCH_MODE_MESSAGES, searchString} from "@/mixins/searchString";
@@ -56,7 +56,9 @@ export default {
             })
         },
         onCloseContextMenu(){
-            this.showContextMenu = false
+            this.showContextMenu = false;
+            this.menuableItem = null;
+            this.el = null;
         },
         getContextMenuItems() {
             const ret = [];
