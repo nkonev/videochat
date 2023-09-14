@@ -30,7 +30,7 @@
 <script>
 
 import {chat, messageIdHashPrefix} from "./router/routes"
-import {deepCopy, getUrlPrefix, hasLength} from "@/utils";
+import {getUrlPrefix, hasLength} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {SEARCH_MODE_MESSAGES, searchString} from "@/mixins/searchString";
@@ -45,6 +45,7 @@ export default {
             showContextMenu: false,
             menuableItem: null,
             el: null,
+            selection: null,
         }
     },
     methods:{
@@ -53,6 +54,7 @@ export default {
             this.showContextMenu = false;
             this.el = el;
             this.menuableItem = menuableItem;
+            this.selection = this.getSelection();
             this.$nextTick(() => {
                 this.showContextMenu = true;
             })
@@ -61,20 +63,21 @@ export default {
             this.showContextMenu = false;
             this.menuableItem = null;
             this.el = null;
+            this.selection = null;
         },
         getContextMenuItems() {
             const ret = [];
             if (this.menuableItem) {
-                if (hasLength(this.getSelection())) {
+                if (hasLength(this.selection)) {
                     ret.push({
                         title: this.$vuetify.locale.t('$vuetify.copy_selected'),
                         icon: 'mdi-content-copy',
-                        action: () => this.copySelected()
+                        action: this.copySelected
                     });
                     ret.push({
                         title: this.$vuetify.locale.t('$vuetify.search_by_selected'),
                         icon: 'mdi-clipboard-search-outline',
-                        action: () => this.searchBySelected()
+                        action: this.searchBySelected
                     });
                 }
                 if (this.menuableItem.fileItemUuid) {
@@ -114,11 +117,11 @@ export default {
             return window.getSelection().toString();
         },
         copySelected() {
-            const selectedText = this.getSelection();
+            const selectedText = this.selection;
             navigator.clipboard.writeText(selectedText);
         },
         searchBySelected() {
-            const selectedText = this.getSelection();
+            const selectedText = this.selection;
             this.searchString = selectedText;
         },
     },
