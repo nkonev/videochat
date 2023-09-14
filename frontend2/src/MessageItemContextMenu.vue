@@ -9,7 +9,6 @@
         :open-delay="0"
         :close-delay="0"
         :close-on-back="false"
-        :close-on-content-click="false"
     >
         <v-list>
             <v-list-item
