@@ -60,7 +60,7 @@ export default {
 
             const bottom = Number(getComputedStyle(element).bottom.replace("px", ''));
             if (bottom < 0) {
-              const newTop = this.contextMenuY + bottom;
+              const newTop = this.contextMenuY + bottom - 8;
               element.style.top = newTop + "px";
             }
           }
