@@ -3,6 +3,10 @@
         v-model="showContextMenu"
         :transition="false"
         :activator="el"
+        :open-on-click="false"
+        :open-on-focus="false"
+        :open-on-hover="false"
+        :open-delay="0"
     >
         <v-list>
             <v-list-item
@@ -53,7 +57,6 @@ export default {
         },
         onCloseContextMenu(){
             this.showContextMenu = false
-            this.el = null;
         },
         getContextMenuItems() {
             const ret = [];

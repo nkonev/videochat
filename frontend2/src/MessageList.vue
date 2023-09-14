@@ -9,7 +9,7 @@
             :my="meIsOwnerOfMessage(item)"
             :highlight="item.id == highlightMessageId"
             :canResend="chatDto.canResend"
-            @contextmenu="onShowContextMenu($event, item)"
+            @customcontextmenu="onShowContextMenu($event, item)"
             @deleteMessage="deleteMessage"
             @editMessage="editMessage"
             @onFilesClicked="onFilesClicked"

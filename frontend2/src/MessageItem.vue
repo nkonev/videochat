@@ -20,7 +20,7 @@
                     <router-link class="mx-1 hash text-blue-darken-2" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')">#</router-link>
                 </template>
             </v-container>
-            <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick($event, item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
+            <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick($event, item)" @mousemove="onMessageMouseMove(item)">
                 <div v-if="item.embedMessage" class="embedded-message">
                     <template v-if="canRenderLinkToSource(item)">
                         <router-link class="list-item-head" :to="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</router-link>
@@ -56,12 +56,16 @@
                 return { name: profile_name, params: { id: item.owner.id }}
             },
             onMessageClick(event, dto) {
-                if (!this.isInBlog) {
-                    axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`)
-                }
+                this.onShowContextMenu(event, dto);
+                this.sendRead(dto);
             },
             onMessageMouseMove(item) {
-                this.onMessageClick(null, item);
+                this.sendRead(item);
+            },
+            sendRead(dto) {
+              if (!this.isInBlog) {
+                axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`)
+              }
             },
             deleteMessage(dto){
                 this.$emit('deleteMessage', dto)
@@ -148,7 +152,7 @@
                 return item.embedMessage == null || item.embedMessage.embedType == embed_message_reply
             },
             onShowContextMenu(event, item) {
-                this.$emit('contextmenu', event, item)
+                this.$emit('customcontextmenu', event, item)
             },
         },
         created() {
