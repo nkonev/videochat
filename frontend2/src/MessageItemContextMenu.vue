@@ -1,17 +1,17 @@
 <template>
     <v-menu
+        class="message-item-context-menu"
         :model-value="showContextMenu"
         :transition="false"
-        :activator="el"
-        location="right"
         :open-on-click="false"
         :open-on-focus="false"
         :open-on-hover="false"
         :open-delay="0"
         :close-delay="0"
         :close-on-back="false"
+        @close="onCloseContextMenu()"
     >
-        <v-list>
+        <v-list class="my-m-list">
             <v-list-item
                 v-for="(item, index) in getContextMenuItems()"
                 :key="index"
@@ -45,25 +45,41 @@ export default {
         return {
             showContextMenu: false,
             menuableItem: null,
-            el: null,
             selection: null,
+            contextMenuX: 0,
+            contextMenuY: 0,
         }
     },
+    updated () {
+      //this.setPosition()
+    },
     methods:{
-        onShowContextMenu(e, menuableItem, el) {
-            e.preventDefault();
+        setPosition() {
+          const element = document.querySelector(".message-item-context-menu .v-overlay__content");
+          if (element) {
+            element.style.position = "absolute";
+            element.style.top = this.contextMenuY + "px";
+            element.style.left = this.contextMenuX + "px";
+          }
+        },
+        onShowContextMenu(e, menuableItem) {
             this.showContextMenu = false;
-            this.el = el;
+            e.preventDefault();
+            this.contextMenuX = e.clientX;
+            this.contextMenuY = e.clientY;
+
             this.menuableItem = menuableItem;
             this.selection = this.getSelection();
-            this.$nextTick(() => {
-                this.showContextMenu = true;
+
+            this.$nextTick(()=>{
+              this.showContextMenu = true;
+            }).then(()=>{
+              this.setPosition()
             })
         },
         onCloseContextMenu(){
             this.showContextMenu = false;
             this.menuableItem = null;
-            this.el = null;
             this.selection = null;
         },
         getContextMenuItems() {
