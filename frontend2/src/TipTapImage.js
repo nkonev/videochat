@@ -9,18 +9,6 @@ export const buildImageHandler = (uploadFunction) => {
                 new Plugin({
                     key: new PluginKey('imageHandler'),
                     props: {
-                        handlePaste: async (view, event) => {
-                            const items = (event.clipboardData || event.originalEvent.clipboardData).items;
-                            for (const item of items) {
-                                if (item.type.indexOf("image") === 0) {
-                                    event.preventDefault();
-
-                                    const image = item.getAsFile();
-
-                                    await uploadFunction(image);
-                                }
-                            }
-                        },
 
                         handleDOMEvents: {
                             drop: (view, event) => {
@@ -65,6 +53,23 @@ export const buildImageHandler = (uploadFunction) => {
 
                                 return true;
                             },
+                            async paste(view, event) {
+                                  let imageSet = false;
+                                  const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                                  for (const item of items) {
+                                      if (item.type.indexOf("image") === 0) {
+                                          event.preventDefault();
+
+                                          const image = item.getAsFile();
+
+                                          await uploadFunction(image);
+                                          imageSet = true;
+                                      }
+                                  }
+                                  if (imageSet) {
+                                      return true
+                                  }
+                            }
                         },
                     }
                 }),
