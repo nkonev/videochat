@@ -6,7 +6,20 @@
       <pane>
         <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
             <pane>
-                <MessageList :chatDto="chatDto"/>
+              <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted">
+                <v-alert
+                  closable
+                  border="end"
+                  border-color="red"
+                  elevation="2"
+                  density="compact"
+                >
+                  <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="white-space: nowrap; text-overflow: ellipsis; text-decoration: none; color: rgba(0, 0, 0, 0.87); cursor: pointer;" v-html="pinnedPromoted.text">
+                  </router-link>
+                </v-alert>
+              </div>
+
+              <MessageList :chatDto="chatDto"/>
             </pane>
           <pane size="25">
             <MessageEdit :chatId="this.chatId"/>
@@ -42,7 +55,7 @@ import bus, {
   USER_TYPING,
   VIDEO_CALL_USER_COUNT_CHANGED
 } from "@/bus/bus";
-import {chat_list_name} from "@/router/routes";
+import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 
 const chatDtoFactory = () => {
@@ -65,6 +78,7 @@ export default {
     return {
       chatDto: chatDtoFactory(),
       pinnedPromoted: null,
+      pinnedPromotedKey: +new Date(),
     }
   },
   components: {
@@ -109,6 +123,7 @@ export default {
       });
     },
     getInfo() {
+      this.pinnedPromoted = null;
       return this.fetchAndSetChat().catch(reason => {
         if (reason.response.status == 404) {
           this.goToChatList();
@@ -291,6 +306,22 @@ export default {
         bus.emit(FILE_REMOVED, d);
       }
     },
+    isVideoRoute() {
+      return this.$route.name == videochat_name
+    },
+    getPinnedRouteObject(item) {
+      const routeName = this.isVideoRoute() ? videochat_name : chat_name;
+      return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+    },
+    onPinnedMessagePromoted(item) {
+      this.pinnedPromoted = item.message;
+      this.pinnedPromotedKey++;
+    },
+    onPinnedMessageUnpromoted(item) {
+      if (this.pinnedPromoted && this.pinnedPromoted.id == item.message.id) {
+        this.pinnedPromoted = null;
+      }
+    },
   },
   watch: {
     async chatId(newVal, oldVal) {
@@ -317,11 +348,16 @@ export default {
     this.chatStore.showHangButton = false;
 
     bus.on(PROFILE_SET, this.onProfileSet);
+    bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
+    bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
   },
   beforeUnmount() {
     this.graphQlUnsubscribe();
 
     bus.off(PROFILE_SET, this.onProfileSet);
+    bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
+    bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+
     this.chatStore.title = null;
     setTitle(null);
     this.chatStore.avatar = null;
@@ -343,6 +379,10 @@ export default {
 </script>
 
 
-<style>
+<style scoped lang="stylus">
+.pinned-promoted {
+  position: absolute
+  z-index: 4;
+}
 
 </style>
