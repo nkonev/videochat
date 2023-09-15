@@ -283,10 +283,16 @@
         async onSearchStringChanged() {
           await this.reloadItems();
         },
-        async onProfileSet() {
+        setHash() {
           this.hasInitialHash = hasLength(this.highlightMessageId);
           this.loadedHash = getTopMessagePosition(this.chatId);
+        },
+        async setHashAndReloadItems() {
+          this.setHash();
           await this.reloadItems();
+        },
+        async onProfileSet() {
+          await this.setHashAndReloadItems();
         },
         onLoggedOut() {
           this.reset();
@@ -296,9 +302,17 @@
         },
         async scrollTo(newValue) {
           return await this.$nextTick(()=>{
-            const el = document.querySelector(newValue)
+            const el = document.querySelector(newValue);
             el?.scrollIntoView({behavior: 'instant', block: "start"});
+            return el
           })
+        },
+        async scrollToOrLoad(newValue) {
+          const res = await this.scrollTo(newValue);
+          if (!res) {
+            console.log("Didn't scrolled, resetting");
+            await this.setHashAndReloadItems();
+          }
         },
 
         async onScrollDownButton() {
@@ -419,8 +433,8 @@
           '$route.hash': {
             handler: async function (newValue, oldValue) {
               if (hasLength(newValue)) {
-                console.log("Changed route hash, going to scroll")
-                await this.scrollTo(newValue);
+                console.log("Changed route hash, going to scroll", newValue)
+                await this.scrollToOrLoad(newValue);
               }
             }
           }
