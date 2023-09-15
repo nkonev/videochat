@@ -6,12 +6,11 @@
                     <v-container class="px-6 pt-0" v-html="participantsDto.text"></v-container>
                     <v-list v-if="participantsDto.participants && participantsDto.participants.length > 0">
                         <template v-for="(item, index) in participantsDto.participants">
-                            <v-list-item class="pl-2 ml-1 pr-0 mr-3 mb-1 mt-1" :prepend-avatar="item.avatar" @click.prevent="onParticipantClick(item)" :href="getLink(item)">
-                              <v-list-item-title :class="!isMobile() ? 'mr-2' : ''">
+                            <v-list-item :prepend-avatar="item.avatar" @click.prevent="onParticipantClick(item)" :href="getLink(item)">
+                              <v-list-item-title>
                                 {{item.login + (item.id == chatStore.currentUser.id ? $vuetify.locale.t('$vuetify.you_brackets') : '' )}}
                               </v-list-item-title>
                             </v-list-item>
-                            <v-divider></v-divider>
                         </template>
                     </v-list>
                     <template v-else-if="!loading">
@@ -27,13 +26,29 @@
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
-                    <v-pagination
+
+                <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
+                  <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
+                    <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                      <v-pagination
+                        variant="elevated"
+                        active-color="primary"
+                        density="comfortable"
                         v-if="shouldShowPagination"
                         v-model="participantsPage"
                         :length="participantsPagesCount"
-                    ></v-pagination>
-                    <v-spacer></v-spacer>
-                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                      ></v-pagination>
+                    </v-col>
+                    <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                      <v-btn
+                        variant="elevated"
+                        color="red"
+                        @click="closeModal()"
+                      >
+                        {{ $vuetify.locale.t('$vuetify.close') }}
+                      </v-btn>
+                    </v-col>
+                  </v-row>
                 </v-card-actions>
 
             </v-card>
@@ -125,7 +140,7 @@ export default {
         },
         participantsPagesCount() {
             const count = Math.ceil(this.participantsDto.participantsCount / pageSize);
-            console.debug("Calc pages count", count);
+            // console.debug("Calc pages count", count);
             return count;
         },
         shouldShowPagination() {
@@ -149,8 +164,3 @@ export default {
 }
 </script>
 
-<style lang="stylus">
-.white-colored {
-    color white !important
-}
-</style>
