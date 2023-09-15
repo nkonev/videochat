@@ -13,6 +13,8 @@
             @deleteMessage="deleteMessage"
             @editMessage="editMessage"
             @onFilesClicked="onFilesClicked"
+            @pinMessage="pinMessage"
+            @removedFromPinned="removedFromPinned"
           ></MessageItem>
           <div class="message-last-element" style="min-height: 1px; background: white"></div>
           <MessageItemContextMenu
@@ -23,6 +25,8 @@
             @editMessage="this.editMessage"
             @onFilesClicked="onFilesClicked"
             @showReadUsers="this.showReadUsers"
+            @pinMessage="this.pinMessage"
+            @removedFromPinned="removedFromPinned"
           />
         </div>
 
@@ -410,6 +414,20 @@
         },
         showReadUsers(dto) {
           bus.emit(OPEN_MESSAGE_READ_USERS_DIALOG, {chatId: dto.chatId, messageId: dto.id})
+        },
+        pinMessage(dto) {
+          axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {
+            params: {
+              pin: true
+            },
+          });
+        },
+        removedFromPinned(dto) {
+          axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {
+            params: {
+              pin: false
+            },
+          });
         },
         onShowContextMenu(e, menuableItem){
           const tag = e?.target?.tagName?.toLowerCase();
