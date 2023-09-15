@@ -382,8 +382,7 @@ export default {
 .pinned-promoted {
   position: fixed
   z-index: 4;
-  left 220px
-  right 268px
+  margin-right: 268px;
 }
 .pinned-text {
   white-space: nowrap;
