@@ -391,3 +391,11 @@ export default {
   cursor: pointer;
 }
 </style>
+
+<style lang="stylus">
+.pinned-promoted {
+  .v-alert__content{
+    text-overflow: ellipsis;
+  }
+}
+</style>
