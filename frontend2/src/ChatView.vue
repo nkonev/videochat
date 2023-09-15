@@ -5,16 +5,15 @@
       </pane>
       <pane>
         <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
-            <pane>
+            <pane style="width: 100%">
               <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted">
                 <v-alert
                   closable
-                  border="end"
-                  border-color="red"
+                  color="red-lighten-4"
                   elevation="2"
                   density="compact"
                 >
-                  <router-link :to="getPinnedRouteObject(pinnedPromoted)" style="white-space: nowrap; text-overflow: ellipsis; text-decoration: none; color: rgba(0, 0, 0, 0.87); cursor: pointer;" v-html="pinnedPromoted.text">
+                  <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text">
                   </router-link>
                 </v-alert>
               </div>
@@ -381,8 +380,15 @@ export default {
 
 <style scoped lang="stylus">
 .pinned-promoted {
-  position: absolute
+  position: fixed
   z-index: 4;
+  left 220px
+  right 268px
 }
-
+.pinned-text {
+  white-space: nowrap;
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.87);
+  cursor: pointer;
+}
 </style>
