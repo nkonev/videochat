@@ -6,8 +6,11 @@
                     <v-container class="px-6 pt-0" v-html="participantsDto.text"></v-container>
                     <v-list v-if="participantsDto.participants && participantsDto.participants.length > 0">
                         <template v-for="(item, index) in participantsDto.participants">
-                            <v-list-item :prepend-avatar="item.avatar" @click.prevent="onParticipantClick(item)" :href="getLink(item)">
-                              <v-list-item-title>
+                            <v-list-item @click.prevent="onParticipantClick(item)" :href="getLink(item)">
+                                <template v-slot:prepend v-if="hasLength(item.avatar)">
+                                    <v-avatar :image="item.avatar"></v-avatar>
+                                </template>
+                                <v-list-item-title>
                                 {{item.login + (item.id == chatStore.currentUser.id ? $vuetify.locale.t('$vuetify.you_brackets') : '' )}}
                               </v-list-item-title>
                             </v-list-item>
@@ -35,7 +38,7 @@
                         active-color="primary"
                         density="comfortable"
                         v-if="shouldShowPagination"
-                        v-model="participantsPage"
+                        v-model="page"
                         :length="participantsPagesCount"
                       ></v-pagination>
                     </v-col>
@@ -65,6 +68,7 @@ import axios from "axios";
 import {profile, profile_name} from "@/router/routes";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
+import {hasLength} from "@/utils";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -82,13 +86,14 @@ export default {
         return {
             show: false,
             participantsDto: participantsDtoFactory(),
-            participantsPage: firstPage,
+            page: firstPage,
             loading: false,
             messageDto: null,
         }
     },
 
     methods: {
+        hasLength,
         showModal(messageDto) {
             this.show = true;
             this.messageDto = messageDto;
@@ -120,7 +125,7 @@ export default {
 
         },
         translatePage() {
-            return this.participantsPage - 1;
+            return this.page - 1;
         },
         onParticipantClick(user) {
             const routeDto = { name: profile_name, params: { id: user.id }};
@@ -152,6 +157,13 @@ export default {
         show(newValue) {
             if (!newValue) {
                 this.closeModal();
+            }
+        },
+        page(newValue) {
+            if (this.show) {
+                console.debug("SettingNewPage", newValue);
+                this.participantsDto = participantsDtoFactory();
+                this.loadData();
             }
         },
     },
