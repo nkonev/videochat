@@ -13,6 +13,7 @@
       <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-home" :title="$vuetify.locale.t('$vuetify.start')"></v-list-item>
       <v-list-item @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
       <v-list-item v-if="canShowFiles()" @click.prevent="openFiles()" prepend-icon="mdi-file-download" :title="$vuetify.locale.t('$vuetify.files')"></v-list-item>
+      <v-list-item @click="openPinnedMessages()" v-if="shouldPinnedMessages()" prepend-icon="mdi-pin" :title="$vuetify.locale.t('$vuetify.pinned_messages')"></v-list-item>
       <v-list-item @click.prevent="onNotificationsClicked()">
         <template v-slot:prepend>
             <v-badge
@@ -41,7 +42,13 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {chat_list_name, chat_name, chats, profile, profile_self_name, root, root_name} from "@/router/routes";
 import axios from "axios";
-import bus, {LOGGED_OUT, OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS, OPEN_VIEW_FILES_DIALOG} from "@/bus/bus";
+import bus, {
+    LOGGED_OUT,
+    OPEN_NOTIFICATIONS_DIALOG,
+    OPEN_PINNED_MESSAGES_MODAL,
+    OPEN_SETTINGS,
+    OPEN_VIEW_FILES_DIALOG
+} from "@/bus/bus";
 import {goToPreserving} from "@/mixins/searchString";
 import {hasLength} from "@/utils";
 
@@ -111,6 +118,13 @@ export default {
     openFiles() {
       bus.emit(OPEN_VIEW_FILES_DIALOG, { });
     },
+    openPinnedMessages() {
+      bus.emit(OPEN_PINNED_MESSAGES_MODAL);
+    },
+    shouldPinnedMessages() {
+      return hasLength(this.chatId);
+    },
+
   }
 }
 </script>

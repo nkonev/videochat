@@ -87,3 +87,5 @@ export const LOAD_FILES_COUNT = "loadFilesCount";
 export const OPEN_MESSAGE_READ_USERS_DIALOG = "openMessageReadUsersDialog";
 
 export const FOCUS = "focus";
+
+export const OPEN_PINNED_MESSAGES_MODAL = "openPinnedMessagesModal";

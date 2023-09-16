@@ -385,16 +385,11 @@ export default {
 
 
 <style scoped lang="stylus">
+@import "pinned.styl"
 .pinned-promoted {
   position: fixed
   z-index: 4;
   margin-right: 268px;
-}
-.pinned-text {
-  white-space: nowrap;
-  text-decoration: none;
-  color: rgba(0, 0, 0, 0.87);
-  cursor: pointer;
 }
 </style>
 

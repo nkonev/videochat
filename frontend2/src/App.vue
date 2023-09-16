@@ -103,6 +103,7 @@
         <FileItemAttachToMessage/>
         <NotificationsModal/>
         <MessageReadUsersModal/>
+        <PinnedMessagesModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -139,6 +140,7 @@ import FileUploadModal from "@/FileUploadModal.vue";
 import FileItemAttachToMessage from "@/FileItemAttachToMessage.vue";
 import NotificationsModal from "@/NotificationsModal.vue";
 import MessageReadUsersModal from "@/MessageReadUsersModal.vue"
+import PinnedMessagesModal from "@/PinnedMessagesModal.vue";
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -399,6 +401,7 @@ export default {
         FileItemAttachToMessage,
         NotificationsModal,
         MessageReadUsersModal,
+        PinnedMessagesModal,
     },
     created() {
         createGraphQlClient();
