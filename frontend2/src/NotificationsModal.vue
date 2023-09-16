@@ -45,8 +45,8 @@
                         active-color="primary"
                         density="comfortable"
                         v-if="shouldShowPagination"
-                        v-model="notificationPage"
-                        :length="notificationPagesCount"
+                        v-model="page"
+                        :length="pagesCount"
                       ></v-pagination>
                     </v-col>
                     <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
@@ -88,7 +88,7 @@ export default {
         return {
             show: false,
             dto: dtoFactory(),
-            notificationPage: firstPage,
+            page: firstPage,
             loading: false,
         }
     },
@@ -116,7 +116,7 @@ export default {
           })
         },
         translatePage() {
-          return this.notificationPage - 1;
+          return this.page - 1;
         },
 
         notificationAdd(payload) {
@@ -140,7 +140,7 @@ export default {
 
         closeModal() {
             this.show = false;
-            this.notificationPage = firstPage;
+            this.page = firstPage;
             this.dto = dtoFactory();
             this.loading = false;
         },
@@ -211,7 +211,7 @@ export default {
         shouldShowPagination() {
           return this.dto != null && this.dto.data && this.dto.totalCount > pageSize
         },
-        notificationPagesCount() {
+        pagesCount() {
           const count = Math.ceil(this.dto.totalCount / pageSize);
           // console.debug("Calc pages count", count);
           return count;
@@ -223,7 +223,7 @@ export default {
                 this.closeModal();
             }
         },
-        notificationPage(newValue) {
+        page(newValue) {
           if (this.show) {
             console.debug("SettingNewPage", newValue);
             this.dto = dtoFactory();

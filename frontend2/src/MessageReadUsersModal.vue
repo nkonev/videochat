@@ -39,7 +39,7 @@
                         density="comfortable"
                         v-if="shouldShowPagination"
                         v-model="page"
-                        :length="participantsPagesCount"
+                        :length="pagesCount"
                       ></v-pagination>
                     </v-col>
                     <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
@@ -143,7 +143,7 @@ export default {
         chatId() {
             return this.$route.params.id
         },
-        participantsPagesCount() {
+        pagesCount() {
             const count = Math.ceil(this.participantsDto.participantsCount / pageSize);
             // console.debug("Calc pages count", count);
             return count;
