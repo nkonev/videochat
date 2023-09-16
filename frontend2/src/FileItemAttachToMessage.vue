@@ -152,7 +152,7 @@ export default {
                 this.closeModal();
             }
         },
-        filePage(newValue) {
+        page(newValue) {
           if (this.show) {
             console.debug("SettingNewPage", newValue);
             this.dto = dtoFactory();

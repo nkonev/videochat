@@ -78,8 +78,8 @@
                           active-color="primary"
                           density="comfortable"
                           v-if="shouldShowPagination"
-                          v-model="filePage"
-                          :length="filePagesCount"
+                          v-model="page"
+                          :length="pagesCount"
                       ></v-pagination>
                     </v-col>
                     <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
@@ -128,12 +128,12 @@ export default {
             fileItemUuid: null,
             loading: false,
             messageEditing: false,
-            filePage: firstPage,
+            page: firstPage,
             searchString: null,
         }
     },
     computed: {
-        filePagesCount() {
+        pagesCount() {
             const count = Math.ceil(this.dto.count / pageSize);
             // console.debug("Calc pages count", count);
             return count;
@@ -157,7 +157,7 @@ export default {
             this.updateFiles();
         },
         translatePage() {
-            return this.filePage - 1;
+            return this.page - 1;
         },
         updateFiles() {
             if (!this.show) {
@@ -184,7 +184,7 @@ export default {
             this.messageIdToDetachFiles = null;
             this.fileItemUuid = null;
             this.messageEditing = false;
-            this.filePage = firstPage;
+            this.page = firstPage;
             this.searchString = null;
             this.dto = dtoFactory();
         },
@@ -224,8 +224,8 @@ export default {
                         }
 
                         if (response.data.count == 0) {
-                            if (this.filePage > firstPage) {
-                                this.filePage--;
+                            if (this.page > firstPage) {
+                                this.page--;
                             }
                         }
                         bus.emit(CLOSE_SIMPLE_MODAL);
@@ -312,7 +312,7 @@ export default {
         },
     },
     watch: {
-        filePage(newValue) {
+        page(newValue) {
             if (this.show) {
                 console.debug("SettingNewPage", newValue);
                 this.dto = dtoFactory();
