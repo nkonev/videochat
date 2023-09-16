@@ -36,8 +36,8 @@
                         active-color="primary"
                         density="comfortable"
                         v-if="shouldShowPagination"
-                        v-model="filePage"
-                        :length="filePagesCount"
+                        v-model="page"
+                        :length="pagesCount"
                       ></v-pagination>
                     </v-col>
                     <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
@@ -76,7 +76,7 @@ export default {
             dto: dtoFactory(),
             loading: false,
             messageId: null,
-            filePage: firstPage,
+            page: firstPage,
         }
     },
 
@@ -92,7 +92,7 @@ export default {
             this.loading = false;
             this.searchString = null;
             this.messageId = null;
-            this.filePage = firstPage;
+            this.page = firstPage;
         },
         loadData() {
             if (!this.show) {
@@ -110,7 +110,7 @@ export default {
             })
         },
         translatePage() {
-            return this.filePage - 1;
+            return this.page - 1;
         },
         getItemTitle(item) {
             return item.fileItemUuid
@@ -136,7 +136,7 @@ export default {
         chatId() {
             return this.$route.params.id
         },
-        filePagesCount() {
+        pagesCount() {
             const count = Math.ceil(this.dto.count / pageSize);
             // console.debug("Calc pages count", count);
             return count;
