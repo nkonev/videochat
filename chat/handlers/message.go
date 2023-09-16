@@ -92,43 +92,45 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 		return err
 	}
 
-	isParticipant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId)
-	if err != nil {
-		return err
-	}
-	if !isParticipant {
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
-	if messages, err := mc.db.GetMessages(chatId, size, startingFromItemId, reverse, hasHash, searchString); err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
-		return err
-	} else {
-		if hasHash {
-			_, err = mc.db.AddMessageRead(startingFromItemId, userPrincipalDto.UserId, chatId)
-			if err != nil {
-				return err
-			}
-		}
-
-		var ownersSet = map[int64]bool{}
-		var chatsPreSet = map[int64]bool{}
-		for _, message := range messages {
-			populateSets(message, ownersSet, chatsPreSet)
-		}
-		chatsSet, err := mc.db.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
+	return db.Transact(mc.db, func(tx *db.Tx) error {
+		isParticipant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId)
 		if err != nil {
 			return err
 		}
-		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
-		messageDtos := make([]*dto.DisplayMessageDto, 0)
-		for _, c := range messages {
-			messageDtos = append(messageDtos, convertToMessageDto(c, owners, chatsSet, userPrincipalDto.UserId))
+		if !isParticipant {
+			return c.NoContent(http.StatusUnauthorized)
 		}
 
-		GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
-		return c.JSON(http.StatusOK, messageDtos)
-	}
+		if messages, err := tx.GetMessages(chatId, size, startingFromItemId, reverse, hasHash, searchString); err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
+			return err
+		} else {
+			if hasHash {
+				_, err = tx.AddMessageRead(startingFromItemId, userPrincipalDto.UserId, chatId)
+				if err != nil {
+					return err
+				}
+			}
+
+			var ownersSet = map[int64]bool{}
+			var chatsPreSet = map[int64]bool{}
+			for _, message := range messages {
+				populateSets(message, ownersSet, chatsPreSet)
+			}
+			chatsSet, err := tx.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
+			if err != nil {
+				return err
+			}
+			var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
+			messageDtos := make([]*dto.DisplayMessageDto, 0)
+			for _, c := range messages {
+				messageDtos = append(messageDtos, convertToMessageDto(c, owners, chatsSet, userPrincipalDto.UserId))
+			}
+
+			GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
+			return c.JSON(http.StatusOK, messageDtos)
+		}
+	})
 }
 
 func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {

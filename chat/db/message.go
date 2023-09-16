@@ -86,7 +86,7 @@ func provideScanToMessage(message *Message) []any {
 	}
 }
 
-func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
+func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
 	if hasHash {
 		leftLimit := limit / 2
 		rightLimit := limit / 2
@@ -98,14 +98,14 @@ func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 			rightLimit = 1
 		}
 
-		leftLimitRes := db.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit)
+		leftLimitRes := co.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit)
 		var leftMessageId, rightMessageId int64
 		err := leftLimitRes.Scan(&leftMessageId)
 		if err != nil {
 			return nil, tracerr.Wrap(err)
 		}
 
-		rightLimitRes := db.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT m.id FROM message_chat_%v m WHERE id >= $1 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit)
+		rightLimitRes := co.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT m.id FROM message_chat_%v m WHERE id >= $1 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit)
 		err = rightLimitRes.Scan(&rightMessageId)
 		if err != nil {
 			return nil, tracerr.Wrap(err)
@@ -116,7 +116,7 @@ func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 			order = "desc"
 		}
 
-		rows, err := db.Query(fmt.Sprintf(`%v
+		rows, err := co.Query(fmt.Sprintf(`%v
 		WHERE 
 			    m.id >= $2 
 			AND m.id <= $3 
@@ -149,7 +149,7 @@ func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 		var rows *sql.Rows
 		if searchString != "" {
 			searchStringPercents := "%" + searchString + "%"
-			rows, err = db.Query(fmt.Sprintf(`%v
+			rows, err = co.Query(fmt.Sprintf(`%v
 			WHERE 
 		    	    %s 
 				AND strip_tags(m.text) ILIKE $3 
@@ -160,7 +160,7 @@ func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 				return nil, tracerr.Wrap(err)
 			}
 		} else {
-			rows, err = db.Query(fmt.Sprintf(`%v
+			rows, err = co.Query(fmt.Sprintf(`%v
 			WHERE 
 				  %s 
 			ORDER BY m.id %s 
@@ -183,6 +183,14 @@ func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 		}
 		return list, nil
 	}
+}
+
+func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
+	return getMessagesCommon(db, chatId, limit, startingFromItemId, reverse, hasHash, searchString)
+}
+
+func (tx *Tx) GetMessages(chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
+	return getMessagesCommon(tx, chatId, limit, startingFromItemId, reverse, hasHash, searchString)
 }
 
 type embedMessage struct {
