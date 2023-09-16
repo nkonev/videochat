@@ -48,7 +48,7 @@ export default {
     min_characters: "Минимум {0} символов",
     invalid_email: "Некорректный email",
     participants: "участника(ов)",
-    message_edit_placeholder: "Нажмите Ctrl + Enter для отправки сообщения, Esc для очистки. Также можно перетащить картинку на эту надпись.",
+    message_edit_placeholder: "Нажмите Ctrl + Enter для отправки сообщения, Esc для очистки. Также можно перетащить файл картинки на эту надпись. Также можно вставить скопированное изображение из редактора.",
     message_editing: "Редактирование сообщения",
     message_creating: "Новое сообщение",
     message_broadcast: "Показать всем",

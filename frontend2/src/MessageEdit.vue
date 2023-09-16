@@ -291,28 +291,28 @@
               }
             },
             boldValue() {
-                return this.$refs.tipTapRef.$data.editor.isActive('bold')
+                return this.$refs.tipTapRef?.$data?.editor?.isActive('bold')
             },
             boldClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleBold().run()
             },
             italicValue() {
-                return this.$refs.tipTapRef.$data.editor.isActive('italic')
+                return this.$refs.tipTapRef?.$data?.editor?.isActive('italic')
             },
             italicClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleItalic().run()
             },
             underlineValue() {
-                return this.$refs.tipTapRef.$data.editor.isActive('underline')
+                return this.$refs.tipTapRef?.$data?.editor?.isActive('underline')
             },
             underlineClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleUnderline().run()
             },
             strikeValue() {
-                return this.$refs.tipTapRef.$data.editor.isActive('strike')
+                return this.$refs.tipTapRef?.$data?.editor?.isActive('strike')
             },
             codeValue() {
-                return this.$refs.tipTapRef.$data.editor.isActive('code')
+                return this.$refs.tipTapRef?.$data?.editor?.isActive('code')
             },
             strikeClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()
@@ -345,10 +345,10 @@
                     .run()
             },
             linkValue() {
-                return this.$refs.tipTapRef.$data.editor.isActive('link')
+                return this.$refs.tipTapRef?.$data?.editor?.isActive('link')
             },
             linkButtonDisabled() {
-                return this.$refs.tipTapRef.$data.editor.view.state.selection.empty;
+                return this.$refs.tipTapRef?.$data?.editor?.view.state.selection.empty;
             },
             imageClick() {
                 bus.emit(
@@ -462,7 +462,7 @@
                     }
                 }
             },
-            '$vuetify.lang.current': {
+            '$vuetify.locale.current': {
                 handler: function (newValue, oldValue) {
                     this.editorKey++;
 
