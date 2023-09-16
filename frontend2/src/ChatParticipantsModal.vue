@@ -274,6 +274,8 @@
             },
             closeModal() {
                 console.debug("Closing ChatParticipantsModal");
+                this.graphQlUnsubscribe();
+
                 this.loading = false;
                 this.show = false;
                 this.chatId = null;
@@ -281,7 +283,6 @@
                 this.participantsDto = participantsDtoFactory();
                 this.userSearchString = null;
                 this.page = firstPage;
-                this.graphQlUnsubscribe();
             },
             addParticipants() {
                 bus.emit(OPEN_CHAT_EDIT, this.chatId);
