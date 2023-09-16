@@ -281,6 +281,7 @@
                 this.participantsDto = participantsDtoFactory();
                 this.userSearchString = null;
                 this.page = firstPage;
+                this.graphQlUnsubscribe();
             },
             addParticipants() {
                 bus.emit(OPEN_CHAT_EDIT, this.chatId);
@@ -477,7 +478,7 @@
             bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
         },
         beforeDestroy() {
-            this.graphQlUnsubscribe();
+
         },
         destroyed() {
             bus.off(OPEN_PARTICIPANTS_DIALOG, this.showModal);
