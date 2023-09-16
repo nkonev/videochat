@@ -389,7 +389,7 @@ export default {
 .pinned-promoted {
   position: fixed
   z-index: 4;
-  margin-right: 268px;
+  margin-right: 284px;
 }
 </style>
 
