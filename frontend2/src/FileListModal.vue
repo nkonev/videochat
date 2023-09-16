@@ -358,8 +358,5 @@ export default {
 .file-info-title {
     background rgba(0, 0, 0, 0.5);
 }
-.colored-link {
-  color: $linkColor;
-}
 
 </style>

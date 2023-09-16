@@ -6,7 +6,11 @@
                     <v-list class="pb-0" v-if="!loading">
                         <template v-if="dto.totalCount > 0">
                             <template v-for="(item, index) in dto.data">
-                                <v-list-item :prepend-avatar="item.owner.avatar">
+                                <v-list-item class="list-item-prepend-spacer-16">
+                                    <template v-slot:prepend v-if="hasLength(item.owner.avatar)">
+                                        <v-avatar :image="item.owner.avatar"></v-avatar>
+                                    </template>
+
                                     <v-list-item-subtitle style="opacity: 1">
                                         <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                                     </v-list-item-subtitle>
@@ -78,7 +82,7 @@ import bus, {
     OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
 } from "./bus/bus";
 import axios from "axios";
-import {getHumanReadableDate, formatSize, findIndex, replaceOrAppend} from "./utils";
+import {getHumanReadableDate, formatSize, findIndex, replaceOrAppend, hasLength} from "./utils";
 import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 
 const firstPage = 1;
@@ -110,6 +114,7 @@ export default {
     },
 
     methods: {
+        hasLength,
         showModal() {
             this.show = true;
             this.getPinnedMessages();
@@ -235,11 +240,6 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-@import "constants.styl"
 @import "pinned.styl"
 
-.colored-link {
-    color: $linkColor;
-    text-decoration none
-}
 </style>

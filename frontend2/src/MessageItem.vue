@@ -167,10 +167,6 @@
   @import "common.styl"
   @import "messageWrapper.styl"
 
-  .colored-link {
-    color: $linkColor;
-  }
-
   .list-item-head {
     text-decoration none
     a {

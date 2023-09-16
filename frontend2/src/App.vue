@@ -104,6 +104,7 @@
         <NotificationsModal/>
         <MessageReadUsersModal/>
         <PinnedMessagesModal/>
+        <ChatParticipantsModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -141,6 +142,7 @@ import FileItemAttachToMessage from "@/FileItemAttachToMessage.vue";
 import NotificationsModal from "@/NotificationsModal.vue";
 import MessageReadUsersModal from "@/MessageReadUsersModal.vue"
 import PinnedMessagesModal from "@/PinnedMessagesModal.vue";
+import ChatParticipantsModal from "@/ChatParticipantsModal.vue";
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -402,6 +404,7 @@ export default {
         NotificationsModal,
         MessageReadUsersModal,
         PinnedMessagesModal,
+        ChatParticipantsModal,
     },
     created() {
         createGraphQlClient();
@@ -486,6 +489,24 @@ export default {
   .v-pagination__list {
     justify-content: start;
   }
+}
+
+</style>
+
+<style lang="stylus">
+@import "constants.styl"
+
+.colored-link {
+    color: $linkColor;
+    text-decoration none
+}
+
+.list-item-prepend-spacer-16 {
+    .v-list-item__prepend {
+        .v-list-item__spacer {
+            width: 16px
+        }
+    }
 }
 
 </style>
