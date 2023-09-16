@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" scrollable>
+        <v-dialog v-model="show" max-width="800" scrollable>
           <v-card :title="title()">
                 <v-card-text>
                     <v-row
@@ -61,17 +61,28 @@
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
-                    <v-pagination
-                        v-if="shouldShowPagination"
-                        v-model="page"
-                        :length="pagesCount"
-                    ></v-pagination>
-                    <v-spacer></v-spacer>
-                    <v-btn variant="outlined" @click="fromUrl()" min-width="0" :title="$vuetify.locale.t('$vuetify.from_link')"><v-icon size="large">mdi-link-variant</v-icon></v-btn>
-                    <v-btn color="primary" variant="flat" @click="fromDisk()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.choose_file_from_disk') }}</v-btn>
-                    <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+
+                  <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
+                  <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
+                      <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                          <v-pagination
+                              variant="elevated"
+                              active-color="primary"
+                              density="comfortable"
+                              v-if="shouldShowPagination"
+                              v-model="page"
+                              :length="pagesCount"
+                          ></v-pagination>
+                      </v-col>
+                      <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                          <v-btn variant="outlined" @click="fromUrl()" min-width="0" :title="$vuetify.locale.t('$vuetify.from_link')"><v-icon size="large">mdi-link-variant</v-icon></v-btn>
+                          <v-btn color="primary" variant="flat" @click="fromDisk()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.choose_file_from_disk') }}</v-btn>
+                          <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                      </v-col>
+                  </v-row>
                 </v-card-actions>
-            </v-card>
+
+          </v-card>
         </v-dialog>
     </v-row>
 </template>
