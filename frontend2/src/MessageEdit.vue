@@ -291,6 +291,7 @@
               }
             },
             boldValue() {
+                // "?" is need to eliminate errors in console during changing the language
                 return this.$refs.tipTapRef?.$data?.editor?.isActive('bold')
             },
             boldClick() {
