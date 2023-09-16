@@ -39,7 +39,7 @@ import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
 import {hasLength, offerToJoinToPublicChatStatus, setTitle} from "@/utils";
 import bus, {
-  FILE_CREATED, FILE_REMOVED,
+  FILE_CREATED, FILE_REMOVED, FOCUS,
   MESSAGE_ADD,
   MESSAGE_BROADCAST,
   MESSAGE_DELETED,
@@ -118,11 +118,12 @@ export default {
       axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
         if (response.status != 204) {
           this.pinnedPromoted = response.data;
+        } else {
+          this.pinnedPromoted = null;
         }
       });
     },
     getInfo() {
-      this.pinnedPromoted = null;
       return this.fetchAndSetChat().catch(reason => {
         if (reason.response.status == 404) {
           this.goToChatList();
@@ -321,6 +322,9 @@ export default {
         this.pinnedPromoted = null;
       }
     },
+    onFocus() {
+      this.getInfo();
+    },
   },
   watch: {
     async chatId(newVal, oldVal) {
@@ -349,6 +353,7 @@ export default {
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+    bus.on(FOCUS, this.onFocus);
   },
   beforeUnmount() {
     this.graphQlUnsubscribe();
@@ -356,6 +361,7 @@ export default {
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+    bus.off(FOCUS, this.onFocus);
 
     this.chatStore.title = null;
     setTitle(null);

@@ -119,7 +119,7 @@ import axios from "axios";
 import bus, {
   CHAT_ADD,
   CHAT_DELETED,
-  CHAT_EDITED,
+  CHAT_EDITED, FOCUS,
   LOGGED_OUT, NOTIFICATION_ADD, NOTIFICATION_DELETE, OPEN_FILE_UPLOAD_MODAL, OPEN_PARTICIPANTS_DIALOG, PLAYER_MODAL,
   PROFILE_SET,
   SCROLL_DOWN, UNREAD_MESSAGES_CHANGED, VIDEO_CALL_INVITED, VIDEO_CALL_SCREEN_SHARE_CHANGED,
@@ -382,7 +382,12 @@ export default {
         },
         onShowFileUploadClicked() {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, { });
-        }
+        },
+        onFocus(e) {
+            // console.log("Focus", e);
+            this.chatStore.fetchNotificationsCount();
+            bus.emit(FOCUS);
+        },
     },
     components: {
         RightPanelActions,
@@ -404,9 +409,13 @@ export default {
         this.chatStore.fetchAvailableOauth2Providers().then(() => {
             this.chatStore.fetchUserProfile();
         })
+
+        addEventListener("focus", this.onFocus)
     },
 
     beforeUnmount() {
+        removeEventListener("focus", this.onFocus);
+
         this.graphQlUnsubscribe();
         destroyGraphqlClient();
 
