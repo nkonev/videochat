@@ -63,8 +63,8 @@
                 <v-card-actions class="d-flex flex-wrap flex-row">
                     <v-pagination
                         v-if="shouldShowPagination"
-                        v-model="filePage"
-                        :length="filePagesCount"
+                        v-model="page"
+                        :length="pagesCount"
                     ></v-pagination>
                     <v-spacer></v-spacer>
                     <v-btn variant="outlined" @click="fromUrl()" min-width="0" :title="$vuetify.locale.t('$vuetify.from_link')"><v-icon size="large">mdi-link-variant</v-icon></v-btn>
@@ -96,7 +96,7 @@
                 setExistingMediaCallback: null,
                 loading: false,
                 dto: dtoFactory(),
-                filePage: firstPage,
+                page: firstPage,
             }
         },
         watch: {
@@ -105,7 +105,7 @@
                     this.closeModal();
                 }
             },
-            filePage(newValue) {
+            page(newValue) {
                 if (this.show) {
                     console.debug("SettingNewPage", newValue);
                     this.dto = dtoFactory();
@@ -114,7 +114,7 @@
             },
         },
         computed: {
-            filePagesCount() {
+            pagesCount() {
                 const count = Math.ceil(this.dto.count / pageSize);
                 // console.debug("Calc pages count", count);
                 return count;
@@ -150,7 +150,7 @@
                 this.setExistingMediaCallback = null;
                 this.loading = false;
                 this.dto = dtoFactory();
-                this.filePage = firstPage;
+                this.page = firstPage;
             },
             title() {
                 switch (this.type) {
@@ -171,7 +171,7 @@
                 this.closeModal();
             },
             translatePage() {
-                return this.filePage - 1;
+                return this.page - 1;
             },
             updateFiles() {
                 if (!this.show) {
