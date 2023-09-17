@@ -12,6 +12,7 @@
             @customcontextmenu.stop="onShowContextMenu($event, item)"
             @deleteMessage="deleteMessage"
             @editMessage="editMessage"
+            @replyOnMessage="replyOnMessage"
             @onFilesClicked="onFilesClicked"
             @pinMessage="pinMessage"
             @removedFromPinned="removedFromPinned"
@@ -23,6 +24,7 @@
             :isBlog="chatDto.blog"
             @deleteMessage="this.deleteMessage"
             @editMessage="this.editMessage"
+            @replyOnMessage="this.replyOnMessage"
             @onFilesClicked="onFilesClicked"
             @showReadUsers="this.showReadUsers"
             @pinMessage="this.pinMessage"
@@ -45,13 +47,13 @@
       SEARCH_STRING_CHANGED, SET_EDIT_MESSAGE
     } from "@/bus/bus";
     import {
-      deepCopy,
-      findIndex,
-      hasLength,
-      replaceInArray,
-      replaceOrAppend,
-      replaceOrPrepend,
-      setAnswerPreviewFields
+        deepCopy, embed_message_reply,
+        findIndex,
+        hasLength,
+        replaceInArray,
+        replaceOrAppend,
+        replaceOrPrepend,
+        setAnswerPreviewFields
     } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -400,6 +402,20 @@
             bus.emit(SET_EDIT_MESSAGE, editMessageDto);
           } else {
             bus.emit(OPEN_EDIT_MESSAGE, editMessageDto);
+          }
+        },
+        replyOnMessage(dto) {
+          const replyMessage = {
+              embedMessage: {
+                  id: dto.id,
+                  embedType: embed_message_reply
+              },
+          };
+          setAnswerPreviewFields(replyMessage, dto.text, dto.owner.login);
+          if (!this.isMobile()) {
+              bus.emit(SET_EDIT_MESSAGE, replyMessage);
+          } else {
+              bus.emit(OPEN_EDIT_MESSAGE, replyMessage);
           }
         },
         onFilesClicked(item) {
