@@ -470,19 +470,30 @@
       },
 
       watch: {
-          async chatId(newVal, oldVal) {
-            console.debug("Chat id has been changed", oldVal, "->", newVal);
-            this.saveLastVisibleElement(oldVal);
-            if (hasLength(newVal)) {
-              await this.onProfileSet();
-            }
-          },
-          '$route.hash': {
+          // We use the same handler in order to fix resetting of message highlight when we click on resent message
+          // Reproduction:
+          // 1. Open chat A
+          // 2. Resend message to chat B
+          // 3. Open chat B
+          // 4. Click on user login of the last resent message
+          // 5. It should move you to chat A
+          // 6. Without this single handler, both handlers would invoke what leads us to resetting yellow highlight
+          '$route': {
             handler: async function (newValue, oldValue) {
-              if (hasLength(newValue)) {
-                console.log("Changed route hash, going to scroll", newValue)
-                await this.scrollToOrLoad(newValue);
-              }
+                // chatId
+                if (newValue.params.id != oldValue.params.id) {
+                    console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
+                    this.saveLastVisibleElement(oldValue.params.id); // for case exiting, e. g. to the Welcome page
+                    if (hasLength(newValue.params.id)) {
+                        await this.onProfileSet();
+                        return
+                    }
+                }
+                // hash
+                if (hasLength(newValue.hash)) {
+                    console.log("Changed route hash, going to scroll", newValue.hash)
+                    await this.scrollToOrLoad(newValue.hash);
+                }
             }
           }
       },
