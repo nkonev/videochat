@@ -389,7 +389,9 @@ export default {
         },
         onFocus(e) {
             // console.log("Focus", e);
-            this.chatStore.fetchNotificationsCount();
+            if (this.chatStore.currentUser) {
+                this.chatStore.fetchNotificationsCount();
+            }
             bus.emit(FOCUS);
         },
     },

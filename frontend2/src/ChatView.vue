@@ -326,7 +326,9 @@ export default {
       }
     },
     onFocus() {
-      this.getInfo();
+        if (this.chatStore.currentUser) {
+            this.getInfo();
+        }
     },
   },
   watch: {
