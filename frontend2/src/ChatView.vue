@@ -6,7 +6,7 @@
       <pane>
         <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
             <pane style="width: 100%">
-              <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted">
+              <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
                 <v-alert
                   closable
                   color="red-lighten-4"
