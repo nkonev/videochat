@@ -39,20 +39,20 @@ import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
 import {hasLength, offerToJoinToPublicChatStatus, setTitle} from "@/utils";
 import bus, {
-  FILE_CREATED, FILE_REMOVED, FOCUS,
-  MESSAGE_ADD,
-  MESSAGE_BROADCAST,
-  MESSAGE_DELETED,
-  MESSAGE_EDITED,
-  PARTICIPANT_ADDED,
-  PARTICIPANT_DELETED,
-  PARTICIPANT_EDITED,
-  PINNED_MESSAGE_PROMOTED,
-  PINNED_MESSAGE_UNPROMOTED,
-  PREVIEW_CREATED,
-  PROFILE_SET,
-  USER_TYPING,
-  VIDEO_CALL_USER_COUNT_CHANGED
+    FILE_CREATED, FILE_REMOVED, FOCUS, LOGGED_OUT,
+    MESSAGE_ADD,
+    MESSAGE_BROADCAST,
+    MESSAGE_DELETED,
+    MESSAGE_EDITED,
+    PARTICIPANT_ADDED,
+    PARTICIPANT_DELETED,
+    PARTICIPANT_EDITED,
+    PINNED_MESSAGE_PROMOTED,
+    PINNED_MESSAGE_UNPROMOTED,
+    PREVIEW_CREATED,
+    PROFILE_SET,
+    USER_TYPING,
+    VIDEO_CALL_USER_COUNT_CHANGED
 } from "@/bus/bus";
 import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
@@ -97,6 +97,9 @@ export default {
     onProfileSet() {
       this.getInfo();
       this.graphQlSubscribe();
+    },
+    onLogout() {
+      this.graphQlUnsubscribe();
     },
     fetchAndSetChat() {
       return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
@@ -351,6 +354,7 @@ export default {
     this.chatStore.showHangButton = false;
 
     bus.on(PROFILE_SET, this.onProfileSet);
+    bus.on(LOGGED_OUT, this.onLogout);
     bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     bus.on(FOCUS, this.onFocus);
@@ -359,6 +363,7 @@ export default {
     this.graphQlUnsubscribe();
 
     bus.off(PROFILE_SET, this.onProfileSet);
+    bus.off(LOGGED_OUT, this.onLogout);
     bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     bus.off(FOCUS, this.onFocus);
