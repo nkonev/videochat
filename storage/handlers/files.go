@@ -141,7 +141,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	filteredFilename := cleanFilename(reqDto.FileName)
 
-	aKey := services.GenerateFilename(filteredFilename, chatFileItemUuid, chatId)
+	aKey := services.GetKey(filteredFilename, chatFileItemUuid, chatId)
 
 	// check that this file does not exist
 	_, err = h.minio.StatObject(context.Background(), bucketName, aKey, minio.StatObjectOptions{})
@@ -320,7 +320,7 @@ func (h *FilesHandler) UploadHandler(c echo.Context) error {
 
 	filteredFilename := cleanFilename(reqDto.FileName)
 
-	aKey := services.GenerateFilename(filteredFilename, chatFileItemUuid, chatId)
+	aKey := services.GetKey(filteredFilename, chatFileItemUuid, chatId)
 
 	// check that this file does not exist
 	_, err = h.minio.StatObject(context.Background(), bucketName, aKey, minio.StatObjectOptions{})
@@ -426,12 +426,11 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 	src := strings.NewReader(bindTo.Text)
 
-	chatFileItemUuid := getFileId(bindTo.Id)
-	filename := services.GenerateFilename(bindTo.Filename, chatFileItemUuid, chatId)
+	aKey := services.GetKey(bindTo.Filename, fileItemUuid, chatId)
 
 	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil)
 
-	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
+	if _, err := h.minio.PutObject(context.Background(), bucketName, aKey, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
 		return err
 	}
@@ -456,13 +455,6 @@ func (h *FilesHandler) getCountFilesInFileItem(bucketName string, filenameChatPr
 func getFileItemUuid(fileId string) string {
 	split := strings.Split(fileId, "/")
 	return split[2]
-}
-
-func getFileId(fileId string) string {
-	split := strings.Split(fileId, "/")
-	filenameWithExt := split[3]
-	splitFn := strings.Split(filenameWithExt, ".")
-	return splitFn[0]
 }
 
 func (h *FilesHandler) ListHandler(c echo.Context) error {
@@ -867,7 +859,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 
 	chatFileItemUuid := uuid.New().String()
 
-	filename := services.GenerateFilename(bindTo.FileName, chatFileItemUuid, bindTo.ChatId)
+	aKey := services.GetKey(bindTo.FileName, chatFileItemUuid, bindTo.ChatId)
 
 	response := S3Response{
 		AccessKey: accessKeyID,
@@ -876,7 +868,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 		Endpoint:  endpoint,
 		Bucket:    h.minioConfig.Files,
 		Metadata:  metadata,
-		Filepath:  filename,
+		Filepath:  aKey,
 	}
 
 	return c.JSON(http.StatusOK, response)

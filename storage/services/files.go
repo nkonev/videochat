@@ -433,7 +433,7 @@ func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 	return chatId, ownerId, correlationId, nil
 }
 
-func GenerateFilename(filename string, chatFileItemUuid string, chatId int64) string {
+func GetKey(filename string, chatFileItemUuid string, chatId int64) string {
 	return fmt.Sprintf("chat/%v/%v/%v", chatId, chatFileItemUuid, filename)
 }
 

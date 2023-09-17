@@ -106,6 +106,7 @@
         <PinnedMessagesModal/>
         <ChatParticipantsModal/>
         <MessageResendToModal/>
+        <FileTextEditModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -145,6 +146,7 @@ import MessageReadUsersModal from "@/MessageReadUsersModal.vue"
 import PinnedMessagesModal from "@/PinnedMessagesModal.vue";
 import ChatParticipantsModal from "@/ChatParticipantsModal.vue";
 import MessageResendToModal from "@/MessageResendToModal.vue";
+import FileTextEditModal from "@/FileTextEditModal.vue";
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -410,6 +412,7 @@ export default {
         PinnedMessagesModal,
         ChatParticipantsModal,
         MessageResendToModal,
+        FileTextEditModal,
     },
     created() {
         createGraphQlClient();

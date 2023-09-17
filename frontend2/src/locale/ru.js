@@ -162,7 +162,7 @@ export default {
     copy_link_to_message: "Скопировать ссылку на сообщение",
     copy_link_to_chat: "Скопировать ссылку на чат",
     copy_selected: "Скопировать выделенный текст",
-    pinned_messages: "Закреплённые сообщения",
+    pinned_messages: "Закреплённые",
     pinned_message: "Закреплённое сообщение",
     pin_message: "Закрепить сообщение",
     no_pin_messages: "Нет закреплённых сообщений",
