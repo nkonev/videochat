@@ -121,6 +121,7 @@ export default {
       axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
         if (response.status != 204) {
           this.pinnedPromoted = response.data;
+          this.pinnedPromotedKey++
         } else {
           this.pinnedPromoted = null;
         }
