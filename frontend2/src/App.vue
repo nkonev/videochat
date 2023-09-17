@@ -105,6 +105,7 @@
         <MessageReadUsersModal/>
         <PinnedMessagesModal/>
         <ChatParticipantsModal/>
+        <MessageResendToModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -143,6 +144,7 @@ import NotificationsModal from "@/NotificationsModal.vue";
 import MessageReadUsersModal from "@/MessageReadUsersModal.vue"
 import PinnedMessagesModal from "@/PinnedMessagesModal.vue";
 import ChatParticipantsModal from "@/ChatParticipantsModal.vue";
+import MessageResendToModal from "@/MessageResendToModal.vue";
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -407,6 +409,7 @@ export default {
         MessageReadUsersModal,
         PinnedMessagesModal,
         ChatParticipantsModal,
+        MessageResendToModal,
     },
     created() {
         createGraphQlClient();

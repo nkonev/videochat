@@ -16,6 +16,7 @@
             @onFilesClicked="onFilesClicked"
             @pinMessage="pinMessage"
             @removedFromPinned="removedFromPinned"
+            @shareMessage="shareMessage"
           ></MessageItem>
           <div class="message-last-element" style="min-height: 1px; background: white"></div>
           <MessageItemContextMenu
@@ -28,7 +29,8 @@
             @onFilesClicked="onFilesClicked"
             @showReadUsers="this.showReadUsers"
             @pinMessage="this.pinMessage"
-            @removedFromPinned="removedFromPinned"
+            @removedFromPinned="this.removedFromPinned"
+            @shareMessage="this.shareMessage"
           />
         </div>
 
@@ -39,12 +41,20 @@
     import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {
-      CLOSE_SIMPLE_MODAL,
-      LOGGED_OUT, MESSAGE_ADD, MESSAGE_DELETED, MESSAGE_EDITED, OPEN_EDIT_MESSAGE, OPEN_MESSAGE_READ_USERS_DIALOG,
-      OPEN_SIMPLE_MODAL, OPEN_VIEW_FILES_DIALOG,
-      PROFILE_SET,
-      SCROLL_DOWN,
-      SEARCH_STRING_CHANGED, SET_EDIT_MESSAGE
+        CLOSE_SIMPLE_MODAL,
+        LOGGED_OUT,
+        MESSAGE_ADD,
+        MESSAGE_DELETED,
+        MESSAGE_EDITED,
+        OPEN_EDIT_MESSAGE,
+        OPEN_MESSAGE_READ_USERS_DIALOG,
+        OPEN_RESEND_TO_MODAL,
+        OPEN_SIMPLE_MODAL,
+        OPEN_VIEW_FILES_DIALOG,
+        PROFILE_SET,
+        SCROLL_DOWN,
+        SEARCH_STRING_CHANGED,
+        SET_EDIT_MESSAGE
     } from "@/bus/bus";
     import {
         deepCopy, embed_message_reply,
@@ -444,6 +454,9 @@
               pin: false
             },
           });
+        },
+        shareMessage(dto) {
+          bus.emit(OPEN_RESEND_TO_MODAL, dto)
         },
         onShowContextMenu(e, menuableItem){
           const tag = e?.target?.tagName?.toLowerCase();
