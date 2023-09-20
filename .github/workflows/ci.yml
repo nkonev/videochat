@@ -251,7 +251,7 @@ jobs:
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}"
           (cd video; make push-docker && echo "Will deploy video" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.VideoUpdateCommand }} )
 
-  integration-test:
+  e2e-test:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -287,9 +287,9 @@ jobs:
           key: ${{ runner.os }}-playwright-browsers-v0-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install Playwright Node.js dependencies
-        run: (cd integration-test; npm ci)
+        run: (cd e2e-test; npm ci)
       - name: Install Playwright browsers
-        run: (cd integration-test; npx playwright install)
+        run: (cd e2e-test; npx playwright install)
       - name: Cache frontend Node.js dependencies
         uses: actions/cache@v3
         with:
@@ -307,7 +307,7 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
-          key: ${{ runner.os }}-go-integration-test-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-e2e-test-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
@@ -339,10 +339,10 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1235 -- echo 'chat is up'
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1238 -- echo 'event is up'
       - name: Run your Playwright tests
-        run: (cd integration-test; npx playwright test)
+        run: (cd e2e-test; npx playwright test)
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: playwright-results
-          path: integration-test/test-results
+          path: e2e-test/test-results

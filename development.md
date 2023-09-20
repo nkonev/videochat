@@ -465,7 +465,7 @@ curl 'http://127.0.0.1:28200/chat/_mapping' | jq '.'
 curl 'http://127.0.0.1:28200/chat/_doc/3' | jq '.'
 ```
 
-# Starting server for integration tests
+# Starting server for e2e tests
 ```
 cd aaa
 export JAVA_HOME=/usr/lib/jvm/bellsoft-java17.x86_64
