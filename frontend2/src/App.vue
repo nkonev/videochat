@@ -107,6 +107,7 @@
         <ChatParticipantsModal/>
         <MessageResendToModal/>
         <FileTextEditModal/>
+        <PlayerModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -147,6 +148,7 @@ import PinnedMessagesModal from "@/PinnedMessagesModal.vue";
 import ChatParticipantsModal from "@/ChatParticipantsModal.vue";
 import MessageResendToModal from "@/MessageResendToModal.vue";
 import FileTextEditModal from "@/FileTextEditModal.vue";
+import PlayerModal from "@/PlayerModal.vue";
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -381,7 +383,7 @@ export default {
           }
         },
         onChatAvatarClick() {
-          bus.emit(PLAYER_MODAL, {"canShowAsImage": true, url: this.chatAvatar})
+          bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: this.chatStore.avatar})
         },
         onInfoClicked() {
           if (this.chatId) {
@@ -413,6 +415,7 @@ export default {
         ChatParticipantsModal,
         MessageResendToModal,
         FileTextEditModal,
+        PlayerModal,
     },
     created() {
         createGraphQlClient();
