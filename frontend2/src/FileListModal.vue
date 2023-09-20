@@ -97,9 +97,18 @@
 <script>
 
 import bus, {
-  CLOSE_SIMPLE_MODAL, PREVIEW_CREATED, OPEN_FILE_UPLOAD_MODAL,
-  OPEN_SIMPLE_MODAL, OPEN_TEXT_EDIT_MODAL,
-  OPEN_VIEW_FILES_DIALOG, SET_FILE_ITEM_UUID, FILE_CREATED, FILE_REMOVED, PLAYER_MODAL, SET_FILE_ITEM_FILE_COUNT
+  CLOSE_SIMPLE_MODAL,
+  PREVIEW_CREATED,
+  OPEN_FILE_UPLOAD_MODAL,
+  OPEN_SIMPLE_MODAL,
+  OPEN_TEXT_EDIT_MODAL,
+  OPEN_VIEW_FILES_DIALOG,
+  SET_FILE_ITEM_UUID,
+  FILE_CREATED,
+  FILE_REMOVED,
+  PLAYER_MODAL,
+  SET_FILE_ITEM_FILE_COUNT,
+  FILE_UPDATED
 } from "./bus/bus";
 import axios from "axios";
 import {
@@ -237,12 +246,6 @@ export default {
         },
         shareFile(dto, share) {
             axios.put(`/api/storage/publish/file`, {id: dto.id, public: share})
-                .then((response) => {
-                  replaceInArray(this.dto.files, response.data);
-                  this.$nextTick(()=>{
-                      this.$forceUpdate();
-                  })
-                })
         },
         fireEdit(dto) {
             bus.emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});
@@ -298,6 +301,18 @@ export default {
                 this.replaceItem(dto.fileInfoDto);
             }
         },
+        onFileUpdated(dto) {
+            console.log("onFileUpdated", dto);
+            if (!this.show) {
+                return
+            }
+            if (!hasLength(this.fileItemUuid) || dto.fileItemUuid == this.fileItemUuid) {
+                if (!hasLength(this.fileItemUuid)) {
+                  this.dto.count = dto.count;
+                }
+                this.replaceItem(dto.fileInfoDto);
+            }
+        },
         onFileRemoved(dto) {
             if (!this.show) {
                 return
@@ -333,12 +348,14 @@ export default {
         bus.on(OPEN_VIEW_FILES_DIALOG, this.showModal);
         bus.on(PREVIEW_CREATED, this.onPreviewCreated);
         bus.on(FILE_CREATED, this.onFileCreated);
+        bus.on(FILE_UPDATED, this.onFileUpdated);
         bus.on(FILE_REMOVED, this.onFileRemoved);
     },
     destroyed() {
         bus.off(OPEN_VIEW_FILES_DIALOG, this.showModal);
         bus.off(PREVIEW_CREATED, this.onPreviewCreated);
         bus.off(FILE_CREATED, this.onFileCreated);
+        bus.off(FILE_UPDATED, this.onFileUpdated);
         bus.off(FILE_REMOVED, this.onFileRemoved);
     },
 }

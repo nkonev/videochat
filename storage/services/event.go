@@ -11,7 +11,6 @@ import (
 	"nkonev.name/storage/producer"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
-	"strings"
 	"time"
 )
 
@@ -33,8 +32,8 @@ type EventService struct {
 	publisher    *producer.RabbitFileUploadedPublisher
 }
 
-func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string, chatId int64, eventName string, ctx context.Context) {
-	GetLogEntry(ctx).Debugf("Got %v %v", normalizedKey, eventName)
+func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string, chatId int64, eventType utils.EventType, ctx context.Context) {
+	GetLogEntry(ctx).Debugf("Got %v %v", normalizedKey, eventType)
 
 	fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
 	if err != nil {
@@ -44,7 +43,7 @@ func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string,
 
 	var objectInfo minio.ObjectInfo
 	var tagging *tags.Tags
-	if strings.HasPrefix(eventName, utils.ObjectCreated) {
+	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
 		objectInfo, err = s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Error during stat %v", err)
@@ -67,7 +66,7 @@ func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string,
 
 	var users map[int64]*dto.User = map[int64]*dto.User{}
 	var fileOwnerId int64
-	if strings.HasPrefix(eventName, utils.ObjectCreated) {
+	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
 		_, fileOwnerId, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
 		if err != nil {
 			Logger.Errorf("Error get metadata: %v", err)
@@ -81,18 +80,15 @@ func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string,
 
 	// iterate over chat participants
 	for _, participantId := range participantIds {
-		var created bool
 		var fileInfo *dto.FileInfoDto
-		if strings.HasPrefix(eventName, utils.ObjectCreated) {
-			created = true
+		if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
 			fileInfo, err = s.filesService.GetFileInfo(participantId, objectInfo, chatId, tagging, false)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Error get file info: %v, skipping", err)
 				continue
 			}
 			fileInfo.Owner = users[fileOwnerId]
-		} else if strings.HasPrefix(eventName, utils.ObjectRemoved) {
-			created = false
+		} else if eventType == utils.FILE_DELETED {
 			fileInfo = &dto.FileInfoDto{
 				Id:           normalizedKey,
 				LastModified: time.Now(),
@@ -102,6 +98,6 @@ func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string,
 			FileInfoDto: fileInfo,
 			Count:       int64(count),
 			FileItemUuid: fileItemUuid,
-		}, created, ctx)
+		}, eventType, ctx)
 	}
 }

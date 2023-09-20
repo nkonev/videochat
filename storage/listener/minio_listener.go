@@ -9,7 +9,6 @@ import (
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
-	"strings"
 )
 
 type MinioEventsListener func(*amqp.Delivery) error
@@ -51,10 +50,16 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 			return err
 		}
 
-		if (strings.HasPrefix(eventName, utils.ObjectCreated) && !strings.HasSuffix(eventName, utils.Tagging)) || strings.HasPrefix(eventName, utils.ObjectRemoved) {
-			eventService.HandleEvent(participantIds, normalizedKey, workingChatId, eventName, ctx)
+		eventType, err := utils.GetEventType(eventName)
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
+			return err
 		}
-		if (strings.HasPrefix(eventName, utils.ObjectCreated) && !strings.HasSuffix(eventName, utils.Tagging)) {
+
+		if eventType == utils.FILE_CREATED || eventType == utils.FILE_DELETED || eventType == utils.FILE_UPDATED {
+			eventService.HandleEvent(participantIds, normalizedKey, workingChatId, eventType, ctx)
+		}
+		if eventType == utils.FILE_CREATED {
 			previewService.HandleMinioEvent(participantIds, minioEvent, ctx)
 		}
 		return nil

@@ -39,20 +39,20 @@ import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
 import {hasLength, offerToJoinToPublicChatStatus, setTitle} from "@/utils";
 import bus, {
-    FILE_CREATED, FILE_REMOVED, FOCUS, LOGGED_OUT,
-    MESSAGE_ADD,
-    MESSAGE_BROADCAST,
-    MESSAGE_DELETED,
-    MESSAGE_EDITED,
-    PARTICIPANT_ADDED,
-    PARTICIPANT_DELETED,
-    PARTICIPANT_EDITED,
-    PINNED_MESSAGE_PROMOTED,
-    PINNED_MESSAGE_UNPROMOTED,
-    PREVIEW_CREATED,
-    PROFILE_SET,
-    USER_TYPING,
-    VIDEO_CALL_USER_COUNT_CHANGED
+  FILE_CREATED, FILE_REMOVED, FILE_UPDATED, FOCUS, LOGGED_OUT,
+  MESSAGE_ADD,
+  MESSAGE_BROADCAST,
+  MESSAGE_DELETED,
+  MESSAGE_EDITED,
+  PARTICIPANT_ADDED,
+  PARTICIPANT_DELETED,
+  PARTICIPANT_EDITED,
+  PINNED_MESSAGE_PROMOTED,
+  PINNED_MESSAGE_UNPROMOTED,
+  PREVIEW_CREATED,
+  PROFILE_SET,
+  USER_TYPING,
+  VIDEO_CALL_USER_COUNT_CHANGED
 } from "@/bus/bus";
 import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
@@ -308,6 +308,9 @@ export default {
       } else if (getChatEventsData(e).eventType === "file_removed") {
         const d = getChatEventsData(e).fileEvent;
         bus.emit(FILE_REMOVED, d);
+      } else if (getChatEventsData(e).eventType === "file_updated") {
+        const d = getChatEventsData(e).fileEvent;
+        bus.emit(FILE_UPDATED, d);
       }
     },
     isVideoRoute() {

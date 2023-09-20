@@ -65,10 +65,17 @@ type MinioConfig struct {
 	UserAvatar, ChatAvatar, Files, FilesPreview string
 }
 
-const Tagging = "Tagging"
+// https://min.io/docs/minio/linux/reference/minio-mc/mc-event-add.html#mc-event-supported-events
 
 const ObjectCreated = "s3:ObjectCreated"
 const ObjectRemoved = "s3:ObjectRemoved"
+
+const ObjectCreatedCompleteMultipartUpload = ObjectCreated + ":CompleteMultipartUpload"
+
+const ObjectRemovedDelete = ObjectRemoved + ":Delete"
+
+const ObjectCreatedPutTagging = ObjectCreated + ":PutTagging"
+const ObjectCreatedPut = ObjectCreated + ":Put"
 
 func SetVideoPreviewExtension(key string) string {
 	return SetExtension(key, "jpg")

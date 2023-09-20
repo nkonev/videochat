@@ -3,6 +3,7 @@ package producer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/streadway/amqp"
 	"nkonev.name/storage/dto"
@@ -45,14 +46,22 @@ func (rp *RabbitFileUploadedPublisher) Publish(userId, chatId int64, previewCrea
 	return nil
 }
 
-func (rp *RabbitFileUploadedPublisher) PublishFileEvent(userId, chatId int64, fileInfoDto *dto.WrappedFileInfoDto, created bool, ctx context.Context) error {
-
-	var eventType = "file_created"
-	if !created {
-		eventType = "file_removed"
+func (rp *RabbitFileUploadedPublisher) PublishFileEvent(userId, chatId int64, fileInfoDto *dto.WrappedFileInfoDto, eventType utils.EventType, ctx context.Context) error {
+	var outputEventType string
+	switch eventType {
+	case utils.FILE_CREATED:
+		outputEventType = "file_created"
+	case utils.FILE_DELETED:
+		outputEventType = "file_removed"
+	case utils.FILE_UPDATED:
+		outputEventType = "file_updated"
+	default:
+		GetLogEntry(ctx).Errorf("Error during determining rabbitmq output event type")
+		return errors.New("Unknown type")
 	}
+
 	event := dto.ChatEvent{
-		EventType: eventType,
+		EventType: outputEventType,
 		UserId:    userId,
 		ChatId:    chatId,
 		FileEvent: fileInfoDto,
