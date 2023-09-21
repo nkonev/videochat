@@ -107,8 +107,7 @@ import bus, {
   FILE_CREATED,
   FILE_REMOVED,
   PLAYER_MODAL,
-  SET_FILE_ITEM_FILE_COUNT,
-  FILE_UPDATED
+  FILE_UPDATED, LOAD_FILES_COUNT
 } from "./bus/bus";
 import axios from "axios";
 import {
@@ -228,15 +227,9 @@ export default {
                     })
                     .then((response) => {
                         if (this.$data.messageEditing) {
-                            bus.emit(SET_FILE_ITEM_UUID, {fileItemUuid: this.fileItemUuid, chatId: this.chatId});
-                            bus.emit(SET_FILE_ITEM_FILE_COUNT, {count: response.data.count, chatId: this.chatId});
+                            bus.emit(LOAD_FILES_COUNT);
                         }
 
-                        if (response.data.count == 0) {
-                            if (this.page > firstPage) {
-                                this.page--;
-                            }
-                        }
                         bus.emit(CLOSE_SIMPLE_MODAL);
                     }).finally(()=>{
                       that.loading = false;

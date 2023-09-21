@@ -568,6 +568,8 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
+	showResponse := utils.ParseBooleanOr(c.QueryParam("response"), false)
+
 	bucketName := h.minioConfig.Files
 
 	// check this fileItem belongs to user
@@ -593,6 +595,10 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during removing object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	if !showResponse {
+		return c.NoContent(http.StatusOK)
 	}
 
 	filesPage := utils.FixPageString(c.QueryParam("page"))
@@ -678,6 +684,8 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return err
 	}
 
+	showResponse := utils.ParseBooleanOr(c.QueryParam("response"), false)
+
 	// check user is owner
 	fileId := bindTo.Id
 	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
@@ -708,6 +716,10 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during saving tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	if !showResponse {
+		return c.NoContent(http.StatusOK)
 	}
 
 	objectInfo, err = h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})

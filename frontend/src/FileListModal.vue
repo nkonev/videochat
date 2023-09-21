@@ -186,7 +186,7 @@ export default {
                 title: this.$vuetify.lang.t('$vuetify.delete_file_title'),
                 text: this.$vuetify.lang.t('$vuetify.delete_file_text', dto.filename),
                 actionFunction: ()=> {
-                    axios.delete(`/api/storage/${this.chatId}/file`, {
+                    axios.delete(`/api/storage/${this.chatId}/file?response=true`, {
                         data: {id: dto.id},
                         params: {
                             page: this.translatePage(),
@@ -210,7 +210,7 @@ export default {
             });
         },
         shareFile(dto, share) {
-            axios.put(`/api/storage/publish/file`, {id: dto.id, public: share})
+            axios.put(`/api/storage/publish/file?response=true`, {id: dto.id, public: share})
                 .then((response) => {
                   replaceInArray(this.dto.files, response.data);
                   this.$nextTick(()=>{

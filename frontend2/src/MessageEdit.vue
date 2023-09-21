@@ -118,7 +118,7 @@
       OPEN_MESSAGE_EDIT_SMILEY,
       OPEN_VIEW_FILES_DIALOG,
       PROFILE_SET,
-      SET_EDIT_MESSAGE, SET_FILE_ITEM_FILE_COUNT,
+      SET_EDIT_MESSAGE,
       SET_FILE_ITEM_UUID,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
@@ -185,12 +185,26 @@
             },
             loadFilesCount() {
                 if (this.editMessageDto.fileItemUuid) {
-                    axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
+                    return axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
                         .then((response) => {
                             this.fileCount = response.data.count;
+                            return response
                         });
+                } else {
+                  return Promise.resolve(false)
                 }
             },
+            loadFilesCountAndResetFileItemUuidIfNeed() {
+              this.loadFilesCount().then((resp) => {
+                if (resp) {
+                  if (this.fileCount === 0) {
+                    this.editMessageDto.fileItemUuid = null;
+                    this.saveToStore();
+                  }
+                }
+              })
+            },
+
             resetAnswer() {
                 this.showAnswer = false;
                 this.answerOnPreview = null;
@@ -280,14 +294,6 @@
               if (chatId == this.chatId) {
                 this.editMessageDto.fileItemUuid = fileItemUuid;
                 this.saveToStore();
-              }
-            },
-            onSetFileItemFileCount({count, chatId}) {
-              if (chatId == this.chatId) {
-                this.fileCount = count;
-                if (this.fileCount === 0) {
-                  this.editMessageDto.fileItemUuid = null;
-                }
               }
             },
             boldValue() {
@@ -431,22 +437,20 @@
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.on(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
-            bus.on(SET_FILE_ITEM_FILE_COUNT, this.onSetFileItemFileCount);
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
-            bus.on(LOAD_FILES_COUNT, this.loadFilesCount);
+            bus.on(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             this.loadFromStore();
         },
         beforeDestroy() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.off(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
-            bus.off(SET_FILE_ITEM_FILE_COUNT, this.onSetFileItemFileCount);
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
             bus.off(PROFILE_SET, this.onProfileSet);
-            bus.off(LOAD_FILES_COUNT, this.loadFilesCount);
+            bus.off(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
         },
         created(){
             this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});

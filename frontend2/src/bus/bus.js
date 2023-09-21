@@ -31,7 +31,6 @@ export const OPEN_EDIT_MESSAGE = "openEditMessage";
 export const CLOSE_EDIT_MESSAGE = "closeEditMessage";
 export const SET_FILE_ITEM_UUID = "setFileItemUuid";
 export const INCREMENT_FILE_ITEM_FILE_COUNT = "incrementFileItemFileCount";
-export const SET_FILE_ITEM_FILE_COUNT = "setFileItemFileCount";
 export const MEDIA_LINK_SET = "mediaLinkSet";
 export const EMBED_LINK_SET = "embedLinkSet";
 export const PREVIEW_CREATED = "previewCreated";
