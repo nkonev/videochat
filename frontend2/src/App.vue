@@ -463,8 +463,7 @@ export default {
   &-text {
     font-size: .875rem;
     font-weight: 500;
-    letter-spacing: .0892857143em;
-    text-indent: .0892857143em;
+    letter-spacing: .09em;
     height: 1.6em;
     white-space: break-spaces;
     overflow: hidden;
@@ -475,6 +474,10 @@ export default {
     letter-spacing: initial;
     text-transform: initial;
     opacity: 50%;
+    height: 1.6em;
+    white-space: break-spaces;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &-hoverable {
