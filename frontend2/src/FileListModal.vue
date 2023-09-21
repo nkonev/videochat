@@ -207,6 +207,8 @@ export default {
             messageId: this.messageIdToDetachFiles,
             fileItemUuid: null
           }).then(()=>{
+            bus.emit(SET_FILE_ITEM_UUID, {fileItemUuid: null, chatId: this.chatId});
+            bus.emit(LOAD_FILES_COUNT);
             this.closeModal();
           })
         },
