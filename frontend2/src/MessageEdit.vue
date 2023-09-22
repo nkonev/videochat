@@ -89,7 +89,7 @@
                             <v-icon :size="getIconSize()">mdi-delete</v-icon>
                           </v-btn>
                           <v-btn v-if="chatStore.canBroadcastTextMessage" icon rounded="0" :size="getBtnSize()" :variant="sendBroadcast ? 'tonal' : 'plain'" density="comfortable" @click="sendBroadcast = !sendBroadcast" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_broadcast')">
-                            <v-icon :size="getIconSize()">mdi-multicast</v-icon>
+                            <v-icon :size="getIconSize()">mdi-broadcast</v-icon>
                           </v-btn>
                         <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" width="64" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
                       </div>
