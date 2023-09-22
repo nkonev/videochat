@@ -49,14 +49,12 @@
             <v-icon :x-large="isMobile()">mdi-cloud-upload</v-icon>
           </v-btn>
 
-          <v-spacer></v-spacer>
-          <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="v-avatar chat-avatar" :src="chatStore.avatar"/>
-          <div color="white" class="d-flex flex-column px-2 app-title" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': chatId ? 'pointer' : 'default'}">
+          <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
+          <div class="d-flex flex-column app-title mx-2" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': chatId ? 'pointer' : 'default'}">
             <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="chatStore.title"></div>
             <div v-if="!!chatStore.chatUsersCount" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
               {{ chatStore.chatUsersCount }} {{ $vuetify.locale.t('$vuetify.participants') }}</div>
           </div>
-          <v-spacer></v-spacer>
 
           <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em; margin-right: 2px">
             <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" :label="searchName()">
@@ -459,6 +457,7 @@ export default {
 }
 
 .app-title {
+  width: 100%;
 
   &-text {
     font-size: .875rem;
