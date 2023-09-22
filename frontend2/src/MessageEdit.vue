@@ -141,6 +141,7 @@
     import MessageEditSmileyModal from "@/MessageEditSmileyModal.vue";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
+    import throttle from "lodash/throttle";
 
     export default {
         props:['chatId'],
@@ -453,7 +454,7 @@
             bus.off(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
         },
         created(){
-            this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});
+            this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);
             this.notifyAboutBroadcast = debounce(this.notifyAboutBroadcast, 100, {leading:true, trailing:true});
         },
         watch: {
