@@ -6,7 +6,7 @@
             </div>
               <tiptap
                   ref="tipTapRef"
-                  @input="onInput"
+                  @myinput="onInput"
                   @keydown.ctrl.enter.native="sendMessageToChat"
                   @keydown.esc.native="resetInput()"
               />
@@ -85,13 +85,13 @@
                                   </v-btn>
                               </v-badge>
                           </template>
-                          <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" class="mr-2" @click="resetInput()" :title="$vuetify.locale.t('$vuetify.message_edit_clear')">
+                          <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" @click="resetInput()" :title="$vuetify.locale.t('$vuetify.message_edit_clear')">
                             <v-icon :size="getIconSize()">mdi-delete</v-icon>
                           </v-btn>
-                          <v-switch v-if="chatStore.canBroadcast" dense hide-details class="ma-0" v-model="sendBroadcast"
-                              :label="$vuetify.locale.t('$vuetify.message_broadcast')"
-                          ></v-switch>
-                          <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 send" density="comfortable" icon="mdi-send" width="64" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
+                          <v-btn v-if="chatStore.canBroadcastTextMessage" icon rounded="0" :size="getBtnSize()" :variant="sendBroadcast ? 'tonal' : 'plain'" density="comfortable" @click="sendBroadcast = !sendBroadcast" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_broadcast')">
+                            <v-icon :size="getIconSize()">mdi-multicast</v-icon>
+                          </v-btn>
+                        <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" width="64" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
                       </div>
 
                   </div>

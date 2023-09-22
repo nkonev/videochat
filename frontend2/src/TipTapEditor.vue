@@ -88,7 +88,7 @@ export default {
     },
     onUpdateContent() {
       const value = this.getContent();
-      this.$emit("input", value);
+      this.$emit("myinput", value);
     },
     setCursorToEnd() {
       this.editor.commands.focus('end')
