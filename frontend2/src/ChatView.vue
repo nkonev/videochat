@@ -7,13 +7,12 @@
         <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
             <pane style="width: 100%">
               <v-tooltip
-                v-if="writingUsers.length || broadcastMessage"
+                v-if="broadcastMessage"
                 :model-value="showTooltip"
                 activator=".message-edit-pane"
                 location="bottom start"
               >
-                <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} {{ $vuetify.locale.t('$vuetify.user_is_writing') }}</span>
-                <span v-else v-html="broadcastMessage"></span>
+                <span v-html="broadcastMessage"></span>
               </v-tooltip>
 
               <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
@@ -365,6 +364,8 @@ export default {
       } else {
         this.writingUsers.push({timestamp: +new Date(), login: data.login})
       }
+
+      this.chatStore.moreImportantSubtitleInfo = this.writingUsers.map(v=>v.login).join(', ') + " " + this.$vuetify.locale.t('$vuetify.user_is_writing');
     },
     onUserBroadcast(dto) {
       console.log("onUserBroadcast", dto);
@@ -412,6 +413,9 @@ export default {
     writingUsersTimerId = setInterval(()=>{
       const curr = + new Date();
       this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
+      if (this.writingUsers.length == 0) {
+        this.chatStore.moreImportantSubtitleInfo = null;
+      }
     }, 500);
 
   },

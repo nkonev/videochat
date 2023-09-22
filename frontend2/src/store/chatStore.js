@@ -33,7 +33,8 @@ export const useChatStore = defineStore('chat', {
         showRecordStartButton: false,
         showRecordStopButton: false,
         progressCount: 0,
-        fileUploadingQueue: []
+        fileUploadingQueue: [],
+        moreImportantSubtitleInfo: null,
     }
   },
   actions: {

@@ -52,8 +52,9 @@
           <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
           <div class="d-flex flex-column app-title mx-2" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': chatId ? 'pointer' : 'default'}">
             <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="chatStore.title"></div>
-            <div v-if="!!chatStore.chatUsersCount" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
-              {{ chatStore.chatUsersCount }} {{ $vuetify.locale.t('$vuetify.participants') }}</div>
+            <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
+              {{ getSubtitle() }}
+            </div>
           </div>
 
           <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em; margin-right: 2px">
@@ -397,6 +398,16 @@ export default {
                 this.chatStore.fetchNotificationsCount();
             }
             bus.emit(FOCUS);
+        },
+        getSubtitle() {
+            if (!!this.chatStore.moreImportantSubtitleInfo) {
+                return this.chatStore.moreImportantSubtitleInfo
+            } else {
+                return this.chatStore.chatUsersCount + " " + this.$vuetify.locale.t('$vuetify.participants')
+            }
+        },
+        shouldShowSubtitle() {
+            return !!this.chatStore.chatUsersCount || !!this.chatStore.moreImportantSubtitleInfo
         },
     },
     components: {
