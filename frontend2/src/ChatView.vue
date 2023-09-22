@@ -6,6 +6,16 @@
       <pane>
         <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
             <pane style="width: 100%">
+              <v-tooltip
+                v-if="writingUsers.length || broadcastMessage"
+                :model-value="showTooltip"
+                activator=".message-edit-pane"
+                location="bottom start"
+              >
+                <span v-if="!broadcastMessage">{{writingUsers.map(v=>v.login).join(', ')}} {{ $vuetify.locale.t('$vuetify.user_is_writing') }}</span>
+                <span v-else v-html="broadcastMessage"></span>
+              </v-tooltip>
+
               <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
                 <v-alert
                   closable
@@ -20,7 +30,7 @@
 
               <MessageList :chatDto="chatDto"/>
             </pane>
-          <pane size="25">
+          <pane size="25" class="message-edit-pane">
             <MessageEdit :chatId="this.chatId"/>
           </pane>
         </splitpanes>
@@ -68,6 +78,9 @@ const getChatEventsData = (message) => {
   return message.data?.chatEvents
 };
 
+let writingUsersTimerId;
+
+
 export default {
   mixins: [
     heightMixin(),
@@ -78,6 +91,9 @@ export default {
       chatDto: chatDtoFactory(),
       pinnedPromoted: null,
       pinnedPromotedKey: +new Date(),
+      writingUsers: [],
+      showTooltip: true,
+      broadcastMessage: null,
     }
   },
   components: {
@@ -334,6 +350,32 @@ export default {
             this.getInfo();
         }
     },
+    onUserTyping(data) {
+      console.debug("OnUserTyping", data);
+
+      if (this.currentUser && this.currentUser.id == data.participantId) {
+        console.log("Skipping myself typing notifications");
+        return;
+      }
+      this.showTooltip = true;
+
+      const idx = this.writingUsers.findIndex(value => value.login === data.login);
+      if (idx !== -1) {
+        this.writingUsers[idx].timestamp = + new Date();
+      } else {
+        this.writingUsers.push({timestamp: +new Date(), login: data.login})
+      }
+    },
+    onUserBroadcast(dto) {
+      console.log("onUserBroadcast", dto);
+      const stripped = dto.text;
+      if (stripped && stripped.length > 0) {
+        this.showTooltip = true;
+        this.broadcastMessage = dto.text;
+      } else {
+        this.broadcastMessage = null;
+      }
+    },
   },
   watch: {
     async chatId(newVal, oldVal) {
@@ -364,6 +406,14 @@ export default {
     bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     bus.on(FOCUS, this.onFocus);
+    bus.on(USER_TYPING, this.onUserTyping);
+    bus.on(MESSAGE_BROADCAST, this.onUserBroadcast);
+
+    writingUsersTimerId = setInterval(()=>{
+      const curr = + new Date();
+      this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
+    }, 500);
+
   },
   beforeUnmount() {
     this.graphQlUnsubscribe();
@@ -373,6 +423,8 @@ export default {
     bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     bus.off(FOCUS, this.onFocus);
+    bus.off(USER_TYPING, this.onUserTyping);
+    bus.off(MESSAGE_BROADCAST, this.onUserBroadcast);
 
     this.chatStore.title = null;
     setTitle(null);
@@ -390,6 +442,7 @@ export default {
     this.chatStore.showChatEditButton = false;
 
     this.pinnedPromoted = null;
+    clearInterval(writingUsersTimerId);
   }
 }
 </script>
