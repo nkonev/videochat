@@ -353,7 +353,7 @@ export default {
     onUserTyping(data) {
       console.debug("OnUserTyping", data);
 
-      if (this.currentUser && this.currentUser.id == data.participantId) {
+      if (this.chatStore.currentUser?.id == data.participantId) {
         console.log("Skipping myself typing notifications");
         return;
       }
