@@ -692,17 +692,24 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 		return err
 	}
 
-	_, err = mc.db.AddMessageRead(messageId, userPrincipalDto.UserId, chatId)
-	if err != nil {
-		return err
-	}
-	mc.notificator.NotifyRemoveMention(c, []int64{userPrincipalDto.UserId}, chatId, messageId)
-	mc.notificator.NotifyRemoveReply(c, &dto.ReplyDto{
-		MessageId: messageId,
-		ChatId:    chatId,
-	}, &userPrincipalDto.UserId)
+	return db.Transact(mc.db, func(tx *db.Tx) error {
+		// here we don't check message ownership because user can read foreign messages
+		// (any user has their own last read message per chat)
 
-	return c.NoContent(http.StatusAccepted)
+		wasAdded, err := tx.AddMessageRead(messageId, userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		mc.notificator.NotifyRemoveMention(c, []int64{userPrincipalDto.UserId}, chatId, messageId)
+		mc.notificator.NotifyRemoveReply(c, &dto.ReplyDto{
+			MessageId: messageId,
+			ChatId:    chatId,
+		}, &userPrincipalDto.UserId)
+		if wasAdded {
+			mc.notificator.ChatNotifyMessageCount([]int64{userPrincipalDto.UserId}, c, chatId, tx)
+		}
+		return c.NoContent(http.StatusAccepted)
+	})
 }
 
 func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
