@@ -180,31 +180,29 @@ func (ch *ChatHandler) GetChatPage(c echo.Context) error {
 		return err
 	}
 
-	previous, err := utils.GetBooleanWithError(c.QueryParam("previous")) // next page or previous
-	if err != nil {
-		return err
-	}
-
 	size := utils.FixSizeString(c.QueryParam("size"))
 
 	return db.Transact(ch.db, func(tx *db.Tx) error {
-		position, err := tx.GetChatPosition(itemId, userPrincipalDto.UserId)
+		rowNumber, err := tx.GetChatRowNumber(itemId, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
-		// position is in [1, count]
 
 		var page = 0
+		var remainder = 0
 
-		if previous {
-			page = (position - 1) / size
-		} else {
-			page = (position + 1) / size
+		page = rowNumber / size
+		remainder = rowNumber % size
+
+		var returnPage = 0
+
+		returnPage = page
+		if remainder > 0 {
+			returnPage++
 		}
+		returnPage = (rowNumber + 1) / size
 
-		page = position / size
-
-		return c.JSON(http.StatusOK, &utils.H{"page": page})
+		return c.JSON(http.StatusOK, &utils.H{"page": returnPage})
 	})
 }
 

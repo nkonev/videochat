@@ -116,18 +116,17 @@ func provideScanToChat(chat *Chat) []any {
 	}
 }
 
-
-func (tx *Tx) GetChatPosition(itemId, userId int64) (int, error) {
+// rowNumber is in [1, count]
+func (tx *Tx) GetChatRowNumber(itemId, userId int64) (int, error) {
 
 	var theQuery = `
-		SELECT al.crow FROM (
+		SELECT al.nrow FROM (
 		SELECT 
 		    ch.id as cid,
-			ROW_NUMBER () OVER (ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC) as crow
+			ROW_NUMBER () OVER (ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC) as nrow
 		FROM 
 			chat ch 
-			LEFT JOIN chat_pinned cp 
-				on (ch.id = cp.chat_id and cp.user_id = $1) 
+			LEFT JOIN chat_pinned cp ON (ch.id = cp.chat_id AND cp.user_id = $1) 
 		WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 )
 		) al WHERE al.cid = $2
 	`

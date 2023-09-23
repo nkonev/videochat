@@ -26,7 +26,10 @@
 
 <script>
 import axios from "axios";
-import infiniteScrollMixin, {directionBottom, reduceToLength} from "@/mixins/infiniteScrollMixin";
+import infiniteScrollMixin, {
+    directionBottom,
+    directionTop,
+} from "@/mixins/infiniteScrollMixin";
 import {chat_list_name, chat_name} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
@@ -57,11 +60,21 @@ export default {
   },
 
   methods: {
+    getMaxItemsLength() {
+        return 240
+    },
+    getReduceToLength() {
+        return 80 // in case numeric pages, should complement with getMaxItemsLength() and PAGE_SIZE
+    },
     reduceBottom() {
-        this.items = this.items.slice(0, reduceToLength);
+        console.log("reduceBottom");
+        this.items = this.items.slice(0, this.getReduceToLength());
+        this.onReduce(directionBottom);
     },
     reduceTop() {
-        this.items = this.items.slice(-reduceToLength);
+        console.log("reduceTop");
+        this.items = this.items.slice(-this.getReduceToLength());
+        this.onReduce(directionTop);
     },
     findBottomElementId() {
         return this.items[this.items.length-1]?.id
@@ -73,23 +86,36 @@ export default {
         this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
         console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
     },
+    async scrollTop() {
+      return await this.$nextTick(() => {
+          this.scrollerDiv.scrollTop = 0;
+      });
+    },
     initialDirection() {
       return directionBottom
     },
     async onFirstLoad() {
       this.loadedTop = true;
+        await this.scrollTop();
     },
-    async onChangeDirection() {
-      if (this.isTopDirection()) { // became
+    async onReduce(aDirection) {
+      if (aDirection == directionTop) { // became
           const id = this.findTopElementId();
+          //console.log("Going to get top page", aDirection, id);
           this.pageTop = await axios
-              .get(`/api/chat/get-page`, {params: {id: id, previous: true, size: PAGE_SIZE,}})
-              .then(({data}) => data.page)
+              .get(`/api/chat/get-page`, {params: {id: id, size: PAGE_SIZE,}})
+              .then(({data}) => data.page) - 1; // as in load() -> axios.get().then()
+          if (this.pageTop == -1) {
+              this.pageTop = 0
+          }
+          console.log("Set page top", this.pageTop, "for id", id);
       } else {
           const id = this.findBottomElementId();
+          //console.log("Going to get bottom page", aDirection, id);
           this.pageBottom = await axios
-              .get(`/api/chat/get-page`, {params: {id: id, previous: false, size: PAGE_SIZE,}})
-              .then(({data}) => data.page)
+              .get(`/api/chat/get-page`, {params: {id: id, size: PAGE_SIZE,}})
+              .then(({data}) => data.page);
+          console.log("Set page bottom", this.pageBottom, "for id", id);
       }
     },
     async load() {

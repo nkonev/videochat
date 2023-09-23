@@ -3,10 +3,8 @@ import debounce from "lodash/debounce";
 export const directionTop = 'top';
 export const directionBottom = 'bottom';
 
-export const maxItemsLength = 200;
-export const reduceToLength = 100;
-
-// expects bottomElementSelector(), topElementSelector(), getItemId(id),
+// expects getMaxItemsLength(),
+// bottomElementSelector(), topElementSelector(), getItemId(id),
 // load(), onFirstLoad(), initialDirection(), saveScroll(), scrollerSelector(),
 // reduceTop(), reduceBottom()
 // onScroll() should be called from template
@@ -39,7 +37,7 @@ export default (name) => {
       },
 
       async reduceListIfNeed() {
-        if (this.items.length > maxItemsLength) {
+        if (this.items.length > this.getMaxItemsLength()) {
           return this.$nextTick(() => {
             if (this.isTopDirection()) {
                 this.reduceBottom();
@@ -48,7 +46,7 @@ export default (name) => {
                 this.reduceTop();
                 this.loadedTop = false;
             }
-            console.log("Reduced to", maxItemsLength, this.loadedBottom, this.loadedTop, "in", name);
+            console.log("Reduced to", this.getMaxItemsLength(), this.loadedBottom, this.loadedTop, "in", name);
           });
         }
       },
@@ -67,15 +65,9 @@ export default (name) => {
         if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.isTopDirection()) {
           this.aDirection = directionBottom;
           // console.debug("Infinity scrolling direction has been changed to bottom");
-          if (this.onChangeDirection) {
-            this.onChangeDirection();
-          }
         } else if (this.scrollerProbeCurrent != 0 && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
           this.aDirection = directionTop;
           // console.debug("Infinity scrolling direction has been changed to top");
-          if (this.onChangeDirection) {
-            this.onChangeDirection();
-          }
         } else {
           // console.debug("Infinity scrolling direction has been remained untouched", this.aDirection);
         }

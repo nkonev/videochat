@@ -38,7 +38,7 @@
 
 <script>
     import axios from "axios";
-    import infiniteScrollMixin, {directionTop, reduceToLength} from "@/mixins/infiniteScrollMixin";
+    import infiniteScrollMixin, {directionTop} from "@/mixins/infiniteScrollMixin";
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {
         CLOSE_SIMPLE_MODAL,
@@ -159,6 +159,12 @@
           }
         },
 
+        getMaxItemsLength() {
+            return 200
+        },
+        getReduceToLength() {
+            return 100
+        },
         getMaximumItemId() {
           return this.items.length ? Math.max(...this.items.map(it => it.id)) : null
         },
@@ -166,11 +172,11 @@
           return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
         },
         reduceBottom() {
-          this.items = this.items.slice(-reduceToLength);
+          this.items = this.items.slice(-this.getReduceToLength());
           this.startingFromItemIdBottom = this.getMaximumItemId();
         },
         reduceTop() {
-          this.items = this.items.slice(0, reduceToLength);
+          this.items = this.items.slice(0, this.getReduceToLength());
           this.startingFromItemIdTop = this.getMinimumItemId();
         },
         saveScroll(top) {
