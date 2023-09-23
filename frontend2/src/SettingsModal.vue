@@ -14,7 +14,7 @@
             <v-tab value="choose_language">
               {{ $vuetify.locale.t('$vuetify.language') }}
             </v-tab>
-            <v-tab value="a_video_settings">
+            <v-tab value="a_video_settings" v-if="shouldShowVideoSettings()">
               {{ $vuetify.locale.t('$vuetify.video') }}
             </v-tab>
             <v-tab value="the_notifications">
@@ -69,6 +69,9 @@ export default {
     },
     hideLoginModal() {
       this.$data.show = false;
+    },
+    shouldShowVideoSettings() {
+        return !!this.$route.params.id
     },
   },
   created() {
