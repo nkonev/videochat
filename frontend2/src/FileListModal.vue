@@ -277,12 +277,10 @@ export default {
             console.log("Removing item", dto);
             const idxToRemove = findIndex(this.dto.files, dto);
             this.dto.files.splice(idxToRemove, 1);
-            this.$forceUpdate();
         },
         replaceItem(dto) {
             console.log("Replacing item", dto);
             replaceOrPrepend(this.dto.files, [dto]);
-            this.$forceUpdate();
         },
         onFileCreated(dto) {
             console.log("onFileCreated", dto);

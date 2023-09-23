@@ -177,7 +177,7 @@ func configureEcho(
 	e.DELETE("/internal/remove-file-item", mc.RemoveFileItem)
 
 	e.GET("/chat/:id/message/pin", mc.GetPinnedMessages)
-	e.GET("/chat/:id/message/pin/promoted", mc.GetPinnedMessage)
+	e.GET("/chat/:id/message/pin/promoted", mc.GetPinnedPromotedMessage)
 	e.PUT("/chat/:id/message/:messageId/pin", mc.PinMessage)
 	e.PUT("/chat/:id/pin", ch.PinChat)
 

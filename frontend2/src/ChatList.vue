@@ -274,7 +274,7 @@ export default {
     },
     getItemClass(item) {
           return {
-              'pinned': item.pinned,
+              'pinned-bold': item.pinned,
           }
     },
     getChatName(item) {
@@ -480,7 +480,7 @@ export default {
 </style>
 
 <style lang="stylus" scoped>
-.pinned {
+.pinned-bold {
     font-weight bold
 }
 </style>

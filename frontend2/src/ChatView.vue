@@ -220,6 +220,7 @@ export default {
                                   }
                                   pinned
                                   blogPost
+                                  pinnedPromoted
                                 }
 
                                 subscription{

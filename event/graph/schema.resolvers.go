@@ -284,7 +284,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				CanPlayAsVideo: fileEvent.FileInfoDto.CanPlayAsVideo,
 				CanShowAsImage: fileEvent.FileInfoDto.CanShowAsImage,
 			},
-			Count: fileEvent.Count,
+			Count:        fileEvent.Count,
 			FileItemUUID: &fileEvent.FileItemUuid,
 		}
 	}
@@ -305,6 +305,7 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 		FileItemUUID:   messageDto.FileItemUuid,
 		Pinned:         messageDto.Pinned,
 		BlogPost:       messageDto.BlogPost,
+		PinnedPromoted: messageDto.PinnedPromoted,
 	}
 	embedMessageDto := messageDto.EmbedMessage
 	if embedMessageDto != nil {

@@ -38,6 +38,7 @@ type DisplayMessageDto {
     embedMessage:   EmbedMessageResponse
     pinned:         Boolean!
     blogPost:       Boolean!
+    pinnedPromoted: Boolean
 }
 
 type MessageDeletedDto {

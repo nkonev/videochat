@@ -110,6 +110,7 @@ type ComplexityRoot struct {
 		Owner          func(childComplexity int) int
 		OwnerID        func(childComplexity int) int
 		Pinned         func(childComplexity int) int
+		PinnedPromoted func(childComplexity int) int
 		Text           func(childComplexity int) int
 	}
 
@@ -615,6 +616,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DisplayMessageDto.Pinned(childComplexity), true
+
+	case "DisplayMessageDto.pinnedPromoted":
+		if e.complexity.DisplayMessageDto.PinnedPromoted == nil {
+			break
+		}
+
+		return e.complexity.DisplayMessageDto.PinnedPromoted(childComplexity), true
 
 	case "DisplayMessageDto.text":
 		if e.complexity.DisplayMessageDto.Text == nil {
@@ -1344,6 +1352,7 @@ type DisplayMessageDto {
     embedMessage:   EmbedMessageResponse
     pinned:         Boolean!
     blogPost:       Boolean!
+    pinnedPromoted: Boolean
 }
 
 type MessageDeletedDto {
@@ -2725,6 +2734,8 @@ func (ec *executionContext) fieldContext_ChatEvent_messageEvent(ctx context.Cont
 				return ec.fieldContext_DisplayMessageDto_pinned(ctx, field)
 			case "blogPost":
 				return ec.fieldContext_DisplayMessageDto_blogPost(ctx, field)
+			case "pinnedPromoted":
+				return ec.fieldContext_DisplayMessageDto_pinnedPromoted(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
 		},
@@ -3783,6 +3794,47 @@ func (ec *executionContext) _DisplayMessageDto_blogPost(ctx context.Context, fie
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_blogPost(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayMessageDto_pinnedPromoted(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DisplayMessageDto_pinnedPromoted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PinnedPromoted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DisplayMessageDto_pinnedPromoted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DisplayMessageDto",
 		Field:      field,
@@ -6014,6 +6066,8 @@ func (ec *executionContext) fieldContext_PinnedMessageEvent_message(ctx context.
 				return ec.fieldContext_DisplayMessageDto_pinned(ctx, field)
 			case "blogPost":
 				return ec.fieldContext_DisplayMessageDto_blogPost(ctx, field)
+			case "pinnedPromoted":
+				return ec.fieldContext_DisplayMessageDto_pinnedPromoted(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
 		},
@@ -10125,6 +10179,10 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "pinnedPromoted":
+
+			out.Values[i] = ec._DisplayMessageDto_pinnedPromoted(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

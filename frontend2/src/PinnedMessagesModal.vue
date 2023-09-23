@@ -15,7 +15,7 @@
                                         <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                                     </v-list-item-subtitle>
                                     <v-list-item-title>
-                                        <router-link :to="getPinnedRouteObject(item)" class="text-primary pinned-text">
+                                        <router-link :to="getPinnedRouteObject(item)" :class="getItemClass(item)">
                                             {{ item.text }}
                                         </router-link>
                                     </v-list-item-title>
@@ -82,7 +82,7 @@ import bus, {
     OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
 } from "./bus/bus";
 import axios from "axios";
-import {getHumanReadableDate, formatSize, findIndex, replaceOrAppend, hasLength} from "./utils";
+import {getHumanReadableDate, formatSize, findIndex, replaceOrAppend, hasLength, deepCopy} from "./utils";
 import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 
 const firstPage = 1;
@@ -170,14 +170,10 @@ export default {
             console.log("Removing item", dto);
             const idxToRemove = findIndex(this.dto.data, dto);
             this.dto.data.splice(idxToRemove, 1);
-            this.$forceUpdate();
         },
         replaceItem(dto) {
-            console.log("Replacing item", dto);
-
+            //console.log("Replacing item", dto);
             replaceOrAppend(this.dto.data, [dto]);
-
-            this.$forceUpdate();
         },
         onPinnedMessageUnpromoted(dto) {
             if (this.show) {
@@ -192,7 +188,12 @@ export default {
         onPinnedMessagePromoted(dto) {
             if (this.show) {
                 if (dto.message.chatId == this.chatId) {
-                    this.replaceItem(dto.message);
+                    //reset previous promoted
+                    this.dto.data.forEach((item)=>{
+                        item.pinnedPromoted = false;
+                    })
+                    const copied = deepCopy(dto.message);
+                    this.replaceItem(copied);
                     this.dto.totalCount = dto.totalCount;
                 } else {
                     console.log("Skipping", dto)
@@ -205,6 +206,13 @@ export default {
         getPinnedRouteObject(item) {
             const routeName = this.isVideoRoute() ? videochat_name : chat_name;
             return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+        },
+        getItemClass(item) {
+            return {
+                "text-primary": true,
+                "pinned-text": true,
+                'pinned-bold': !!item.pinnedPromoted,
+            }
         },
     },
     filters: {
@@ -241,5 +249,9 @@ export default {
 
 <style lang="stylus" scoped>
 @import "pinned.styl"
+
+.pinned-bold {
+    font-weight bold
+}
 
 </style>

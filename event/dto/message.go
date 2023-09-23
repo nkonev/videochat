@@ -30,6 +30,7 @@ type DisplayMessageDto struct {
 	EmbedMessage   *EmbedMessageResponse `json:"embedMessage"`
 	Pinned         bool                  `json:"pinned"`
 	BlogPost       bool                  `json:"blogPost"`
+	PinnedPromoted *bool                 `json:"pinnedPromoted"`
 }
 
 type MessageDeletedDto struct {

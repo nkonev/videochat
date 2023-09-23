@@ -979,6 +979,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				return err
 			}
 
+			// actually instead of unpromote - remove is better
 			err = mc.sendPromotePinnedMessageEvent(c, res, tx, chatId, participantIds, userPrincipalDto.UserId, false, count1)
 			if err != nil {
 				return err
@@ -1133,7 +1134,8 @@ func (mc *MessageHandler) GetPinnedMessages(c echo.Context) error {
 		messageDtos := make([]*dto.DisplayMessageDto, 0)
 		for _, c := range messages {
 			converted := convertToMessageDto(c, owners, chatsSet, userPrincipalDto.UserId)
-			patchForView(mc.stripAllTags, converted)
+
+			patchForView(mc.stripAllTags, converted, c.PinPromoted)
 			messageDtos = append(messageDtos, converted)
 		}
 
@@ -1149,7 +1151,7 @@ func (mc *MessageHandler) GetPinnedMessages(c echo.Context) error {
 	})
 }
 
-func (mc *MessageHandler) GetPinnedMessage(c echo.Context) error {
+func (mc *MessageHandler) GetPinnedPromotedMessage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
@@ -1191,17 +1193,18 @@ func (mc *MessageHandler) GetPinnedMessage(c echo.Context) error {
 
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 		res := convertToMessageDto(message, owners, chatsSet, userPrincipalDto.UserId)
-		patchForView(mc.stripAllTags, res)
+		patchForView(mc.stripAllTags, res, true)
 
 		return c.JSON(http.StatusOK, res)
 	})
 }
 
-func patchForView(cleanTagsPolicy *services.StripTagsPolicy, message *dto.DisplayMessageDto) {
+func patchForView(cleanTagsPolicy *services.StripTagsPolicy, message *dto.DisplayMessageDto, promote bool) {
 	if message.EmbedMessage != nil && message.EmbedMessage.EmbedType == dto.EmbedMessageTypeResend {
 		message.Text = message.EmbedMessage.Text
 	}
 	message.Text = createMessagePreviewWithoutLogin(cleanTagsPolicy, message.Text)
+	message.PinnedPromoted = &promote
 }
 
 func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, displayMessage *dto.DisplayMessageDto, tx *db.Tx, chatId int64, participantIds []int64, behalfUserId int64, promote bool, count int64) error {
@@ -1213,7 +1216,7 @@ func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, displayM
 		return err
 	}
 
-	patchForView(mc.stripAllTags, copiedMsg)
+	patchForView(mc.stripAllTags, copiedMsg, promote)
 
 	// notify about promote to the pinned
 	mc.notificator.NotifyAboutPromotePinnedMessage(c, chatId, &dto.PinnedMessageEvent{
