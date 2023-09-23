@@ -1,10 +1,8 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo" width="fit-content" max-width="100%" scrollable>
-            <v-card>
-                <v-card-title>{{ getTitle() }}</v-card-title>
-
-                <v-card-text class="py-0 d-flex justify-center">
+            <v-card :title="getTitle()">
+                <v-card-text class="d-flex justify-center">
                         <video class="video-custom-class" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
                         <img class="image-custom-class" v-if="dto?.canShowAsImage" :src="dto.url"/>
                 </v-card-text>
