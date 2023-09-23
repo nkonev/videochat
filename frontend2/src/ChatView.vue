@@ -1,11 +1,11 @@
 <template>
     <splitpanes class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar">
-      <pane size="20">
+      <pane size="25">
         <ChatList :embedded="true"/>
       </pane>
       <pane>
         <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
-            <pane style="width: 100%">
+          <pane style="width: 100%">
               <v-tooltip
                 v-if="broadcastMessage"
                 :model-value="showTooltip"
@@ -28,8 +28,8 @@
               </div>
 
               <MessageList :chatDto="chatDto"/>
-            </pane>
-          <pane size="25" class="message-edit-pane">
+          </pane>
+          <pane size="15" class="message-edit-pane">
             <MessageEdit :chatId="this.chatId"/>
           </pane>
         </splitpanes>
