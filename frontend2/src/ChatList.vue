@@ -74,11 +74,19 @@ import bus, {
     OPEN_CHAT_EDIT,
     OPEN_SIMPLE_MODAL,
     PROFILE_SET,
-    SEARCH_STRING_CHANGED
+    SEARCH_STRING_CHANGED, UNREAD_MESSAGES_CHANGED
 } from "@/bus/bus";
 import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
-import {hasLength, isArrEqual, replaceOrAppend, replaceOrPrepend, setTitle} from "@/utils";
+import {
+    dynamicSortMultiple,
+    findIndex,
+    hasLength,
+    isArrEqual,
+    replaceOrAppend,
+    replaceOrPrepend,
+    setTitle
+} from "@/utils";
 import cloneDeep from "lodash/cloneDeep";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 
@@ -387,8 +395,23 @@ export default {
                       }
                   })
               })
-              //this.$forceUpdate();
           }
+    },
+    onChangeUnreadMessages(dto) {
+          const chatId = dto.chatId;
+          let idxOf = findIndex(this.items, {id: chatId});
+          if (idxOf != -1) {
+              this.items[idxOf].unreadMessages = dto.unreadMessages;
+              this.items[idxOf].lastUpdateDateTime = dto.lastUpdateDateTime;
+
+              this.sort(this.items);
+          } else {
+              console.log("Not found to update unread messages", dto)
+          }
+    },
+    sort(items) {
+          // also see in chat/db/chat.go:GetChatsByLimitOffset
+          items.sort(dynamicSortMultiple("-pinned", "-lastUpdateDateTime", "-id"))
     },
 
   },
@@ -421,6 +444,7 @@ export default {
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
+    bus.on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
 
     if (this.$route.name == chat_list_name) {
       this.chatStore.searchType = SEARCH_MODE_CHATS;
@@ -428,6 +452,7 @@ export default {
   },
 
   beforeUnmount() {
+    this.graphQlUnsubscribe();
     this.reset();
     this.uninstallScroller();
     console.log("Scroller", scrollerName, "has been uninstalled");
@@ -435,6 +460,7 @@ export default {
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
+    bus.off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
 
     setTitle(null);
     this.chatStore.title = null;
