@@ -2,6 +2,7 @@
   <v-dialog
     v-model="show"
     width="auto"
+    scrollable
   >
     <v-card>
 
