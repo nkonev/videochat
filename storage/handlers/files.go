@@ -601,6 +601,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}
 
+	// TODO remove the rest
 	filesPage := utils.FixPageString(c.QueryParam("page"))
 	filesSize := utils.FixSizeString(c.QueryParam("size"))
 	filesOffset := utils.GetOffset(filesPage, filesSize)
@@ -722,6 +723,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}
 
+	// TODO remove the rest
 	objectInfo, err = h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during stat %v", err)
