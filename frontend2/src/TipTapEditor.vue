@@ -43,7 +43,7 @@ import { v4 as uuidv4 } from 'uuid';
 const empty = "";
 
 const embedUploadFunction = (chatId, files, correlationId) => {
-    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: uuidv4(), shouldSetFileUuidToMessage: false, predefinedFiles: files, correlationId: correlationId});
+    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: uuidv4(), shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId});
     bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 }
 
