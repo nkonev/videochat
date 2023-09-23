@@ -379,7 +379,7 @@ export default {
           return [];
       }
       const tmps = cloneDeep(items);
-      return tmps.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.currentUser?.id)[0]);
+      return tmps.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.chatStore.currentUser?.id)[0]);
     },
     getGraphQlSubscriptionQuery() {
           return `
