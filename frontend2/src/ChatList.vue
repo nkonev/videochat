@@ -7,7 +7,7 @@
                 v-for="(item, index) in items"
                 :key="item.id"
                 :id="getItemId(item.id)"
-                class="list-item-prepend-spacer-16 py-2"
+                class="list-item-prepend-spacer-16 pb-2"
                 @contextmenu.prevent="onShowContextMenu($event, item)"
                 @click.prevent="openChat(item)"
                 :href="getLink(item)"
