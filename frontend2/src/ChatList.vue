@@ -29,9 +29,9 @@
                 <template v-slot:default>
                     <v-list-item-title>
                         <span class="chat-name min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)" v-html="getChatName(item)"></span>
-                        <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.locale.t('$vuetify.unread_messages')"></v-badge>
+                        <v-badge v-if="item.unreadMessages" color="primary" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.locale.t('$vuetify.unread_messages')"></v-badge>
                         <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.call_in_process')"/>
-                        <v-badge v-if="item.hasScreenShares" icon="mdi-monitor-screenshot" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.screen_share_in_process')"/>
+                        <v-badge v-if="item.hasScreenShares" color="primary" icon="mdi-monitor-screenshot" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.screen_share_in_process')"/>
                         <v-badge v-if="item.blog" color="grey" icon="mdi-postage-stamp" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.blog')"/>
                     </v-list-item-title>
                     <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}">
@@ -78,7 +78,9 @@ import bus, {
 } from "@/bus/bus";
 import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
-import {hasLength, replaceOrAppend, replaceOrPrepend, setTitle} from "@/utils";
+import {hasLength, isArrEqual, replaceOrAppend, replaceOrPrepend, setTitle} from "@/utils";
+import cloneDeep from "lodash/cloneDeep";
+import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 
 const PAGE_SIZE = 40;
 
@@ -89,6 +91,7 @@ export default {
     infiniteScrollMixin(scrollerName),
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
+    graphqlSubscriptionMixin('userOnlineTetATetInChatList'),
   ],
   props:['embedded'],
   data() {
@@ -99,6 +102,9 @@ export default {
   },
   computed: {
     ...mapStores(useChatStore),
+      tetAtetParticipants() {
+          return this.getTetATetParticipantIds(this.items);
+      },
   },
 
   methods: {
@@ -352,6 +358,38 @@ export default {
         this.chatStore.title = this.$vuetify.locale.t('$vuetify.chats');
         setTitle(this.$vuetify.locale.t('$vuetify.chats'));
     },
+    getTetATetParticipantIds(items) {
+      if (!items) {
+          return [];
+      }
+      const tmps = cloneDeep(items);
+      return tmps.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.currentUser?.id)[0]);
+    },
+    getGraphQlSubscriptionQuery() {
+          return `
+                subscription {
+                    userOnlineEvents(userIds:[${this.tetAtetParticipants}]) {
+                        id
+                        online
+                    }
+                }`
+    },
+    onNextSubscriptionElement(items) {
+          this.onUserOnlineChanged(items);
+    },
+    onUserOnlineChanged(rawData) {
+          const dtos = rawData?.data?.userOnlineEvents;
+          if (dtos) {
+              this.items.forEach(item => {
+                  dtos.forEach(dtoItem => {
+                      if (item.tetATet && item.participants.filter((p)=> p.id == dtoItem.id).length) {
+                          item.online = dtoItem.online;
+                      }
+                  })
+              })
+              //this.$forceUpdate();
+          }
+    },
 
   },
   created() {
@@ -362,6 +400,15 @@ export default {
           handler: function (newValue, oldValue) {
               this.setTopTitle();
           },
+      },
+      tetAtetParticipants: function(newValue, oldValue) {
+          if (newValue.length == 0) {
+              this.graphQlUnsubscribe();
+          } else {
+              if (!isArrEqual(oldValue, newValue)) {
+                  this.graphQlSubscribe();
+              }
+          }
       },
   },
   async mounted() {
