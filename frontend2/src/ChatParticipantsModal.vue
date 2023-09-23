@@ -30,7 +30,7 @@
                                     <v-col class="flex-grow-0 flex-shrink-0">
                                         <v-list-item-title><a class="colored-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{item.login + (item.id == chatStore.currentUser.id ? $vuetify.locale.t('$vuetify.you_brackets') : '' )}}</a></v-list-item-title>
                                     </v-col>
-                                    <v-col v-if="!isMobile()" class="flex-grow-1 flex-shrink-0">
+                                    <v-col v-if="!isMobile()" class="ml-4 flex-grow-1 flex-shrink-0">
                                         <v-progress-linear
                                             v-if="item.callingTo"
                                             color="success"
