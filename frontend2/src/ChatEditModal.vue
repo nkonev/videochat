@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" :persistent="isNew" scrollable>
             <v-card :title="getTitle()">
-                <v-card-text>
+                <v-card-text class="pb-0">
                     <v-form
                         ref="form"
                         v-model="valid"
@@ -18,7 +18,7 @@
                         ></v-text-field>
                         <v-autocomplete
                                 v-model="editDto.participantIds"
-                                :disabled="isLoading"
+                                :loading="isLoading"
                                 :items="people"
                                 chips
                                 closable-chips
@@ -72,8 +72,8 @@
                         ></v-checkbox>
 
                         <template v-if="!isNew">
-                            <v-container class="pb-0 px-0 pt-1">
-                                <v-img v-if="editDto.avatarBig || editDto.avatar"
+                            <v-container class="pa-0 ma-0 mt-2">
+                                <v-img v-if="hasAva"
                                        :src="ava"
                                        :aspect-ratio="16/9"
                                        min-width="600"
@@ -82,13 +82,13 @@
                                        @click="openAvatarDialog"
                                 >
                                 </v-img>
-                                <v-btn v-else color="primary" @click="openAvatarDialog()">{{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}</v-btn>
                             </v-container>
                         </template>
                     </v-form>
                 </v-card-text>
 
                 <v-card-actions>
+                    <v-btn v-if="!hasAva" variant="outlined" @click="openAvatarDialog()"><v-icon>mdi-image-outline</v-icon> {{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}</v-btn>
                     <v-spacer></v-spacer>
                     <v-btn color="primary" variant="flat" @click="saveChat" id="chat-save-btn">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
                     <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
@@ -103,6 +103,7 @@
     import debounce from "lodash/debounce";
     import bus, {OPEN_CHAT_EDIT, OPEN_CHOOSE_AVATAR} from "./bus/bus";
     import {chat_name} from "@/router/routes";
+    import {hasLength} from "@/utils";
 
     const dtoFactory = ()=>{
         return {
@@ -110,7 +111,7 @@
             name: "",
             participantIds: [ ],
             canResend: false,
-            availableToSearch: false // it's default for all the new chats, excluding tet-a-tet
+            availableToSearch: false, // it's default for all the new chats, excluding tet-a-tet
         }
     };
 
@@ -127,7 +128,7 @@
                 // chatNameRules: [
                 //     v => !!v || requiredMessage,
                 // ],
-                valid: true
+                valid: true,
             }
         },
         computed: {
@@ -140,14 +141,17 @@
                 return !this.editChatId;
             },
             ava() {
-                if (this.editDto.avatarBig) {
+                if (hasLength(this.editDto.avatarBig)) {
                     return this.editDto.avatarBig
-                } else if (this.editDto.avatar) {
+                } else if (hasLength(this.editDto.avatar)) {
                     return this.editDto.avatar
                 } else {
                     return null
                 }
-            }
+            },
+            hasAva() {
+                return hasLength(this.editDto.avatarBig) || hasLength(this.editDto.avatar)
+            },
         },
         methods: {
             showModal(chatId) {
@@ -198,16 +202,20 @@
                     })
                         .then((response) => {
                             console.log("Fetched users", response.data.users);
-                            this.people = [...this.people, ...response.data.users];
+                            this.people = response.data.users;
                         })
-                        .finally(() => (this.isLoading = false))
+                        .finally(() => {
+                            this.isLoading = false;
+                        })
                 } else {
                     axios.get(`/api/chat/${this.editChatId}/user-candidate?searchString=${searchString}`)
                         .then((response) => {
                             console.log("Fetched users", response.data);
-                            this.people = [...this.people, ...response.data];
+                            this.people = response.data;
                         })
-                        .finally(() => (this.isLoading = false))
+                        .finally(() => {
+                            this.isLoading = false;
+                        })
                 }
             },
             saveChat() {
