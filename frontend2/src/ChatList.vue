@@ -78,7 +78,7 @@ import bus, {
 } from "@/bus/bus";
 import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
-import {hasLength, setTitle} from "@/utils";
+import {hasLength, replaceOrAppend, replaceOrPrepend, setTitle} from "@/utils";
 
 const PAGE_SIZE = 40;
 
@@ -182,11 +182,12 @@ export default {
                 this.transformItem(item);
           });
 
-
+          // replaceOrPrepend() and replaceOrAppend() for the (future) situation when order has been changed on server,
+          // e.g. some chat has been popped up on sever due to somebody updated it
           if (this.isTopDirection()) {
-              this.items = items.concat(this.items);
+              replaceOrPrepend(this.items, items.reverse());
           } else {
-              this.items = this.items.concat(items);
+              replaceOrAppend(this.items, items);
           }
 
           if (items.length < PAGE_SIZE) {
