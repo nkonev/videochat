@@ -143,6 +143,7 @@ export default {
         searchBySelected() {
             const selectedText = this.selection;
             this.searchString = selectedText;
+            this.chatStore.searchType = SEARCH_MODE_MESSAGES;
         },
     },
     computed: {
