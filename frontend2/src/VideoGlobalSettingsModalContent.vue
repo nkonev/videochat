@@ -1,6 +1,7 @@
 <template>
 
-                <v-card-text class="pb-0">
+            <v-card-text class="pb-0">
+
                     <v-row no-gutters>
                         <v-col
                         >
@@ -124,10 +125,8 @@
                                 :label="$vuetify.locale.t('$vuetify.room_adaptive_stream')"
                             ></v-checkbox>
                         </v-col>
-
                     </v-row>
-
-                </v-card-text>
+            </v-card-text>
 
 </template>
 
@@ -242,7 +241,7 @@
             },
             changeCodec(v) {
                 setStoredCodec(v)
-            }
+            },
         },
         computed: {
             qualityItems() {
@@ -266,7 +265,7 @@
         created() {
             bus.on(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged)
         },
-        destroyed() {
+        beforeUnmount() {
             bus.off(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged)
         },
     }

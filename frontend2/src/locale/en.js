@@ -201,5 +201,6 @@ export default {
     start: "Start",
     welcome: "Welcome",
     attach_files_to_message: "Attach existing files to message",
-    detach_files_from_message: "Detach files from message"
+    detach_files_from_message: "Detach files from message",
+    for_video_setting_please_open_chat: "For video settings please open a chat"
 }

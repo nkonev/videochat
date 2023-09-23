@@ -18,6 +18,9 @@
             <v-tab value="a_video_settings" v-if="shouldShowVideoSettings()">
               {{ $vuetify.locale.t('$vuetify.video') }}
             </v-tab>
+            <v-tab value="a_video_settings_impossible" v-else>
+                  {{ $vuetify.locale.t('$vuetify.video') }}
+            </v-tab>
             <v-tab value="the_notifications">
               {{ $vuetify.locale.t('$vuetify.notifications') }}
             </v-tab>
@@ -31,6 +34,11 @@
             </v-window-item>
             <v-window-item value="a_video_settings">
                 <VideoGlobalSettingsModalContent/>
+            </v-window-item>
+            <v-window-item value="a_video_settings_impossible">
+                <v-container>
+                    {{ $vuetify.locale.t('$vuetify.for_video_setting_please_open_chat') }}
+                </v-container>
             </v-window-item>
             <v-window-item value="the_notifications">
                 <NotificationSettingsModalContent/>

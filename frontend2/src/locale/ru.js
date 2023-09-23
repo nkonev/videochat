@@ -201,5 +201,6 @@ export default {
     start: "Начало",
     welcome: "Добро пожаловать",
     attach_files_to_message: "Прицепить имеющиеся файлы к сообщению",
-    detach_files_from_message: "Отцепить файлы от сообщения"
+    detach_files_from_message: "Отцепить файлы от сообщения",
+    for_video_setting_please_open_chat: "Для настроки видео, пожалуйста, откройте чат"
 }
