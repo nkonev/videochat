@@ -48,6 +48,7 @@ import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
 import {hasLength, offerToJoinToPublicChatStatus, setTitle} from "@/utils";
 import bus, {
+    CHAT_DELETED,
     CHAT_EDITED,
     FILE_CREATED, FILE_REMOVED, FILE_UPDATED, FOCUS, LOGGED_OUT,
     MESSAGE_ADD,
@@ -120,18 +121,21 @@ export default {
     fetchAndSetChat() {
       return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
         console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
-        this.chatStore.title = data.name;
-        setTitle(data.name);
-        this.chatStore.avatar = data.avatar;
-        this.chatStore.chatUsersCount = data.participantsCount;
-        this.chatStore.showChatEditButton = data.canEdit;
-        this.chatStore.canBroadcastTextMessage = data.canBroadcast;
+        this.commonChatEdit(data);
         this.chatStore.tetATet = data.tetATet;
         if (data.blog) {
           this.chatStore.showGoToBlogButton = this.chatId;
         }
         this.chatDto = data;
       })
+    },
+    commonChatEdit(data) {
+        this.chatStore.title = data.name;
+        setTitle(data.name);
+        this.chatStore.avatar = data.avatar;
+        this.chatStore.chatUsersCount = data.participantsCount;
+        this.chatStore.showChatEditButton = data.canEdit;
+        this.chatStore.canBroadcastTextMessage = data.canBroadcast;
     },
     fetchPromotedMessage() {
       axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
@@ -380,12 +384,14 @@ export default {
     },
     onChatChange(data) {
         if (data.id == this.chatId) {
+            this.commonChatEdit(data);
             this.chatDto = data;
-            this.chatStore.chatUsersCount = data.participantsCount;
-            this.chatStore.title = data.name;
-            setTitle(data.name);
-            this.chatStore.avatar = data.avatar;
         }
+    },
+    onChatDelete(dto) {
+      if (dto.id == this.chatId) {
+          this.$router.push(({name: chat_list_name}))
+      }
     },
 
   },
@@ -421,6 +427,7 @@ export default {
     bus.on(USER_TYPING, this.onUserTyping);
     bus.on(MESSAGE_BROADCAST, this.onUserBroadcast);
     bus.on(CHAT_EDITED, this.onChatChange);
+    bus.on(CHAT_DELETED, this.onChatDelete);
 
     writingUsersTimerId = setInterval(()=>{
       const curr = + new Date();
@@ -442,6 +449,7 @@ export default {
     bus.off(USER_TYPING, this.onUserTyping);
     bus.off(MESSAGE_BROADCAST, this.onUserBroadcast);
     bus.off(CHAT_EDITED, this.onChatChange);
+    bus.off(CHAT_DELETED, this.onChatDelete);
 
     this.chatStore.title = null;
     setTitle(null);
