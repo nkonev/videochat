@@ -107,6 +107,7 @@
         <MessageResendToModal/>
         <FileTextEditModal/>
         <PlayerModal/>
+        <ChatEditModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.drawer">
@@ -148,6 +149,7 @@ import ChatParticipantsModal from "@/ChatParticipantsModal.vue";
 import MessageResendToModal from "@/MessageResendToModal.vue";
 import FileTextEditModal from "@/FileTextEditModal.vue";
 import PlayerModal from "@/PlayerModal.vue";
+import ChatEditModal from "@/ChatEditModal.vue";
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -411,6 +413,7 @@ export default {
         },
     },
     components: {
+        ChatEditModal,
         RightPanelActions,
         LoginModal,
         SettingsModal,

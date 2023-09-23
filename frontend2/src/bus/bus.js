@@ -92,3 +92,4 @@ export const OPEN_PINNED_MESSAGES_MODAL = "openPinnedMessagesModal";
 
 export const OPEN_RESEND_TO_MODAL = "openSendTo";
 
+export const OPEN_CHOOSE_AVATAR = "openChooseAvatar";

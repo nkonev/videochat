@@ -48,20 +48,21 @@ import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
 import {hasLength, offerToJoinToPublicChatStatus, setTitle} from "@/utils";
 import bus, {
-  FILE_CREATED, FILE_REMOVED, FILE_UPDATED, FOCUS, LOGGED_OUT,
-  MESSAGE_ADD,
-  MESSAGE_BROADCAST,
-  MESSAGE_DELETED,
-  MESSAGE_EDITED,
-  PARTICIPANT_ADDED,
-  PARTICIPANT_DELETED,
-  PARTICIPANT_EDITED,
-  PINNED_MESSAGE_PROMOTED,
-  PINNED_MESSAGE_UNPROMOTED,
-  PREVIEW_CREATED,
-  PROFILE_SET,
-  USER_TYPING,
-  VIDEO_CALL_USER_COUNT_CHANGED
+    CHAT_EDITED,
+    FILE_CREATED, FILE_REMOVED, FILE_UPDATED, FOCUS, LOGGED_OUT,
+    MESSAGE_ADD,
+    MESSAGE_BROADCAST,
+    MESSAGE_DELETED,
+    MESSAGE_EDITED,
+    PARTICIPANT_ADDED,
+    PARTICIPANT_DELETED,
+    PARTICIPANT_EDITED,
+    PINNED_MESSAGE_PROMOTED,
+    PINNED_MESSAGE_UNPROMOTED,
+    PREVIEW_CREATED,
+    PROFILE_SET,
+    USER_TYPING,
+    VIDEO_CALL_USER_COUNT_CHANGED
 } from "@/bus/bus";
 import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
@@ -377,6 +378,16 @@ export default {
         this.broadcastMessage = null;
       }
     },
+    onChatChange(data) {
+        if (data.id == this.chatId) {
+            this.chatDto = data;
+            this.chatStore.chatUsersCount = data.participantsCount;
+            this.chatStore.title = data.name;
+            setTitle(data.name);
+            this.chatStore.avatar = data.avatar;
+        }
+    },
+
   },
   watch: {
     async chatId(newVal, oldVal) {
@@ -409,6 +420,7 @@ export default {
     bus.on(FOCUS, this.onFocus);
     bus.on(USER_TYPING, this.onUserTyping);
     bus.on(MESSAGE_BROADCAST, this.onUserBroadcast);
+    bus.on(CHAT_EDITED, this.onChatChange);
 
     writingUsersTimerId = setInterval(()=>{
       const curr = + new Date();
@@ -429,6 +441,7 @@ export default {
     bus.off(FOCUS, this.onFocus);
     bus.off(USER_TYPING, this.onUserTyping);
     bus.off(MESSAGE_BROADCAST, this.onUserBroadcast);
+    bus.off(CHAT_EDITED, this.onChatChange);
 
     this.chatStore.title = null;
     setTitle(null);
