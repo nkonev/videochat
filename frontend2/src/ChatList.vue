@@ -262,6 +262,7 @@ export default {
       await this.reloadItems();
     },
     onLoggedOut() {
+      this.graphQlUnsubscribe();
       this.reset();
     },
 
