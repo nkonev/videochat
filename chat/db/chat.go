@@ -466,10 +466,6 @@ func (tx *Tx) DeleteChat(id int64) error {
 		return tracerr.Wrap(err)
 	}
 
-	if _, err := tx.Exec(fmt.Sprintf(`DROP SEQUENCE message_chat_id_%v;`, id)); err != nil {
-		return tracerr.Wrap(err)
-	}
-
 	if res, err := tx.Exec("DELETE FROM chat WHERE id = $1", id); err != nil {
 		return tracerr.Wrap(err)
 	} else {
