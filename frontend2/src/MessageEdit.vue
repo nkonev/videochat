@@ -126,8 +126,14 @@
     import {
         chatEditMessageDtoFactory,
         colorBackground,
-        colorText, embed, getAnswerPreviewFields, link_dialog_type_add_link_to_text, link_dialog_type_add_media_embed,
-        media_image, media_video
+        colorText,
+        embed,
+        getAnswerPreviewFields,
+        hasLength,
+        link_dialog_type_add_link_to_text,
+        link_dialog_type_add_media_embed,
+        media_image,
+        media_video
     } from "@/utils";
     import {
         getStoredChatEditMessageDto,
@@ -142,6 +148,7 @@
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import throttle from "lodash/throttle";
+    import {v4 as uuidv4} from "uuid";
 
     export default {
         props:['chatId'],
@@ -281,7 +288,11 @@
               }
             },
             openFileUploadForAddingFiles() {
-                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.editMessageDto.fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.editMessageDto.id});
+                let fileItemUuid = this.editMessageDto.fileItemUuid;
+                if (!hasLength(fileItemUuid)) {
+                    fileItemUuid = uuidv4();
+                }
+                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.editMessageDto.id});
             },
             onFilesClicked() {
                 bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.editMessageDto.id});

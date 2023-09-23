@@ -121,7 +121,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	bucketName := h.minioConfig.Files
 
-	chatFileItemUuid := uuid.New().String()
+	chatFileItemUuid := uuid.New().String() // TODO leave null by default
 
 	fileItemUuidString := reqDto.FileItemUuid
 	if fileItemUuidString != nil && *fileItemUuidString != "" {

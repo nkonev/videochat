@@ -75,7 +75,7 @@ export default {
         return {
             show: false,
             inputFiles: [],
-            fileItemUuid: null, // null at first upload, non-nul when user adds files,
+            fileItemUuid: null,
             limitError: null,
             showFileInput: false,
             isLoadingPresignedLinks: false,
