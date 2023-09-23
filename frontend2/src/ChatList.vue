@@ -503,9 +503,7 @@ export default {
 
   beforeUnmount() {
     this.graphQlUnsubscribe();
-    this.reset();
     this.uninstallScroller();
-    console.log("Scroller", scrollerName, "has been uninstalled");
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);

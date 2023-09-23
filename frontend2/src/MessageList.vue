@@ -532,8 +532,6 @@
         this.markInstance = null;
         removeEventListener("beforeunload", this.beforeUnload);
 
-        this.reset();
-
         this.uninstallScroller();
         bus.off(MESSAGE_ADD, this.onNewMessage);
         bus.off(MESSAGE_DELETED, this.onDeleteMessage);
