@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="720" scrollable>
+        <v-dialog v-model="show" max-width="640" scrollable>
             <v-card :title="$vuetify.locale.t('$vuetify.notifications')">
                 <v-card-text class="ma-0 pa-0">
                     <v-list class="pb-0 notification-list" v-if="!loading">

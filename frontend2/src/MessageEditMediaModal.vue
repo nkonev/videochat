@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="800" scrollable>
+        <v-dialog v-model="show" max-width="640" scrollable>
           <v-card :title="title()">
                 <v-card-text>
                     <v-row
