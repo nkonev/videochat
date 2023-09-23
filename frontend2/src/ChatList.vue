@@ -28,7 +28,7 @@
 
                 <template v-slot:default>
                     <v-list-item-title>
-                        <span class="chat-name min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)" v-html="getChatName(item)"></span>
+                        <span class="chat-name" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)" v-html="getChatName(item)"></span>
                         <v-badge v-if="item.unreadMessages" color="primary" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.locale.t('$vuetify.unread_messages')"></v-badge>
                         <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.call_in_process')"/>
                         <v-badge v-if="item.hasScreenShares" color="primary" icon="mdi-monitor-screenshot" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.screen_share_in_process')"/>
@@ -69,6 +69,8 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
+    CHAT_ADD,
+    CHAT_DELETED, CHAT_EDITED,
     CLOSE_SIMPLE_MODAL,
     LOGGED_OUT,
     OPEN_CHAT_EDIT,
@@ -82,13 +84,14 @@ import {
     dynamicSortMultiple,
     findIndex,
     hasLength,
-    isArrEqual,
+    isArrEqual, replaceInArray,
     replaceOrAppend,
     replaceOrPrepend,
     setTitle
 } from "@/utils";
 import cloneDeep from "lodash/cloneDeep";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
+import Mark from "mark.js";
 
 const PAGE_SIZE = 40;
 
@@ -106,6 +109,7 @@ export default {
     return {
         pageTop: 0,
         pageBottom: 0,
+        markInstance: null,
     }
   },
   computed: {
@@ -221,6 +225,7 @@ export default {
                 this.pageBottom += 1;
             }
           }
+          this.performMarking();
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
           return this.$nextTick();
@@ -414,6 +419,46 @@ export default {
           // also see in chat/db/chat.go:GetChatsByLimitOffset
           items.sort(dynamicSortMultiple("-pinned", "-lastUpdateDateTime", "-id"))
     },
+    performMarking() {
+        this.$nextTick(()=>{
+            if (hasLength(this.searchString)) {
+                this.markInstance.unmark();
+                this.markInstance.mark(this.searchString);
+            }
+        })
+    },
+    addItem(dto) {
+          console.log("Adding item", dto);
+          this.transformItem(dto);
+          this.items.unshift(dto);
+          this.sort(this.items);
+          this.performMarking();
+    },
+    changeItem(dto) {
+          console.log("Replacing item", dto);
+          this.transformItem(dto);
+          if (this.hasItem(dto)) {
+              replaceInArray(this.items, dto);
+          } else {
+              this.items.unshift(dto);
+          }
+          this.sort(this.items);
+          this.performMarking();
+    },
+    removeItem(dto) {
+          if (this.hasItem(dto)) {
+              console.log("Removing item", dto);
+              const idxToRemove = findIndex(this.items, dto);
+              this.items.splice(idxToRemove, 1);
+          } else {
+              console.log("Item was not be removed", dto);
+          }
+    },
+      // does should change items list (new item added to visible part or not for example)
+    hasItem(item) {
+          let idxOf = findIndex(this.items, item);
+          return idxOf !== -1;
+    },
 
   },
   created() {
@@ -446,10 +491,14 @@ export default {
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
     bus.on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
+    bus.on(CHAT_ADD, this.addItem);
+    bus.on(CHAT_EDITED, this.changeItem);
+    bus.on(CHAT_DELETED, this.removeItem);
 
     if (this.$route.name == chat_list_name) {
       this.chatStore.searchType = SEARCH_MODE_CHATS;
     }
+    this.markInstance = new Mark("div#chat-list-items .chat-name");
   },
 
   beforeUnmount() {
@@ -462,6 +511,9 @@ export default {
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
     bus.off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
+    bus.off(CHAT_ADD, this.addItem);
+    bus.off(CHAT_EDITED, this.changeItem);
+    bus.off(CHAT_DELETED, this.removeItem);
 
     setTitle(null);
     this.chatStore.title = null;
