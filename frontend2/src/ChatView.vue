@@ -1,7 +1,7 @@
 <template>
     <splitpanes class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar">
       <pane size="20">
-        <ChatList/>
+        <ChatList :embedded="true"/>
       </pane>
       <pane>
         <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>

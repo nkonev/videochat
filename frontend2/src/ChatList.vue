@@ -1,24 +1,58 @@
 <template>
 
-  <v-container :style="heightWithoutAppBar" fluid class="ma-0 px-0 pt-0 pb-2">
-    <div class="my-chat-scroller" @scroll.passive="onScroll">
-      <div class="chat-first-element" style="min-height: 1px; background: white"></div>
-      <div v-for="item in items" :key="item.id" class="card mb-3" :id="getItemId(item.id)">
-        <div class="row g-0">
-          <div class="col">
-            <img :src="item.avatar" style="max-width: 64px; max-height: 64px">
-          </div>
-          <div class="col">
-            <div class="card-body">
-              <h5 class="card-title" @click="goToChat(item.id)">{{ item.name }}</h5>
-            </div>
-          </div>
-          <hr/>
-        </div>
-      </div>
-      <div class="chat-last-element" style="min-height: 1px; background: white"></div>
+  <v-container :style="heightWithoutAppBar" fluid class="ma-0 pa-0">
+      <v-list id="chat-list-items" class="my-chat-scroller" @scroll.passive="onScroll">
+            <div class="chat-first-element" style="min-height: 1px; background: white"></div>
+            <v-list-item
+                v-for="(item, index) in items"
+                :key="item.id"
+                :id="getItemId(item.id)"
+                class="list-item-prepend-spacer-16"
+                @contextmenu.prevent="onShowContextMenu($event, item)"
+                @click.prevent="openChat(item)"
+                :href="getLink(item)"
+            >
+                <template v-slot:prepend v-if="hasLength(item.avatar)">
+                    <v-badge
+                        v-if="item.avatar"
+                        color="success accent-4"
+                        dot
+                        location="right bottom"
+                        overlap
+                        bordered
+                        :model-value="item.online"
+                    >
+                        <v-avatar :image="item.avatar"></v-avatar>
+                    </v-badge>
+                </template>
 
-    </div>
+                <template v-slot:default>
+                    <v-list-item-title>
+                        <span class="chat-name min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)" v-html="getChatName(item)"></span>
+                        <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.locale.t('$vuetify.unread_messages')"></v-badge>
+                        <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.call_in_process')"/>
+                        <v-badge v-if="item.hasScreenShares" icon="mdi-monitor-screenshot" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.screen_share_in_process')"/>
+                        <v-badge v-if="item.blog" color="grey" icon="mdi-postage-stamp" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.blog')"/>
+                    </v-list-item-title>
+                    <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}">
+                        {{ printParticipants(item) }}
+                    </v-list-item-subtitle>
+                </template>
+
+                <template v-slot:append v-if="!isMobile() && !embedded">
+                    <v-list-item-action>
+                            <template v-if="!item.isResultFromSearch">
+                                <v-btn variant="flat" icon v-if="item.pinned" @click.stop.prevent="removedFromPinned(item)" :title="$vuetify.locale.t('$vuetify.remove_from_pinned')"><v-icon size="large">mdi-pin-off-outline</v-icon></v-btn>
+                                <v-btn variant="flat" icon v-else @click.stop.prevent="pinChat(item)" :title="$vuetify.locale.t('$vuetify.pin_chat')"><v-icon size="large">mdi-pin</v-icon></v-btn>
+                            </template>
+                            <v-btn variant="flat" icon v-if="item.canEdit" @click.stop.prevent="editChat(item)" :title="$vuetify.locale.t('$vuetify.edit_chat')"><v-icon color="primary" size="large">mdi-lead-pencil</v-icon></v-btn>
+                            <v-btn variant="flat" icon v-if="item.canDelete" @click.stop.prevent="deleteChat(item)" :title="$vuetify.locale.t('$vuetify.delete_chat')"><v-icon color="red" size="large">mdi-delete</v-icon></v-btn>
+                            <v-btn variant="flat" icon v-if="item.canLeave" @click.stop.prevent="leaveChat(item)" :title="$vuetify.locale.t('$vuetify.leave_chat')"><v-icon size="large">mdi-exit-run</v-icon></v-btn>
+                    </v-list-item-action>
+                </template>
+            </v-list-item>
+            <div class="chat-last-element" style="min-height: 1px; background: white"></div>
+      </v-list>
 
   </v-container>
 
@@ -30,14 +64,21 @@ import infiniteScrollMixin, {
     directionBottom,
     directionTop,
 } from "@/mixins/infiniteScrollMixin";
-import {chat_list_name, chat_name} from "@/router/routes";
+import {chat, chat_list_name, chat_name} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
-import bus, {LOGGED_OUT, PROFILE_SET, SEARCH_STRING_CHANGED} from "@/bus/bus";
+import bus, {
+    CLOSE_SIMPLE_MODAL,
+    LOGGED_OUT,
+    OPEN_CHAT_EDIT,
+    OPEN_SIMPLE_MODAL,
+    PROFILE_SET,
+    SEARCH_STRING_CHANGED
+} from "@/bus/bus";
 import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
-import {setTitle} from "@/utils";
+import {hasLength, setTitle} from "@/utils";
 
 const PAGE_SIZE = 40;
 
@@ -49,6 +90,7 @@ export default {
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
   ],
+  props:['embedded'],
   data() {
     return {
         pageTop: 0,
@@ -60,6 +102,7 @@ export default {
   },
 
   methods: {
+    hasLength,
     getMaxItemsLength() {
         return 240
     },
@@ -96,7 +139,7 @@ export default {
     },
     async onFirstLoad() {
       this.loadedTop = true;
-        await this.scrollTop();
+      await this.scrollTop();
     },
     async onReduce(aDirection) {
       if (aDirection == directionTop) { // became
@@ -135,6 +178,10 @@ export default {
         .then((res) => {
           const items = res.data.data;
           console.log("Get items in ", scrollerName, items, "page", page);
+          items.forEach((item) => {
+                this.transformItem(item);
+          });
+
 
           if (this.isTopDirection()) {
               this.items = items.concat(this.items);
@@ -186,9 +233,6 @@ export default {
       this.pageBottom = 0;
     },
 
-    goToChat(id) {
-        goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: id}})
-    },
     async onSearchStringChanged() {
       // Fixes excess delayed (because of debounce) reloading of items when
       // 1. we've chosen __AVAILABLE_FOR_SEARCH
@@ -209,14 +253,118 @@ export default {
     canDrawChats() {
       return !!this.chatStore.currentUser
     },
+    isSearchResult(item) {
+          return item?.isResultFromSearch === true
+    },
+    getItemClass(item) {
+          return {
+              'pinned': item.pinned,
+          }
+    },
+    getChatName(item) {
+          let bldr = item.name;
+          if (!item.avatar && item.online) {
+              bldr += (" (" + this.$vuetify.locale.t('$vuetify.user_online') + ")");
+          }
+          return bldr;
+    },
+    onShowContextMenu() {
+          console.warn("Not implemented")
+    },
+    openChat(item){
+          goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: item.id}})
+    },
+    getLink(item) {
+          return chat + "/" + item.id
+    },
+    printParticipants(chat) {
+          if (hasLength(chat.shortInfo)) {
+              return chat.shortInfo
+          }
+          let builder = "";
+          if (chat.tetATet) {
+              builder += this.$vuetify.locale.t('$vuetify.tet_a_tet');
+          } else {
+              const logins = chat.participants.map(p => p.login);
+              builder += logins.join(", ")
+          }
+          if (this.isSearchResult(chat)) {
+              builder = this.$vuetify.locale.t('$vuetify.this_is_search_result') + builder;
+          }
+          return builder;
+    },
+    pinChat(chat) {
+          axios.put(`/api/chat/${chat.id}/pin`, null, {
+              params: {
+                  pin: true
+              },
+          });
+    },
+    removedFromPinned(chat) {
+          axios.put(`/api/chat/${chat.id}/pin`, null, {
+              params: {
+                  pin: false
+              },
+          });
+    },
+    editChat(chat) {
+          const chatId = chat.id;
+          // console.log("Will add participants to chat", chatId);
+          bus.emit(OPEN_CHAT_EDIT, chatId);
+    },
+    deleteChat(chat) {
+          bus.emit(OPEN_SIMPLE_MODAL, {
+              buttonName: this.$vuetify.locale.t('$vuetify.delete_btn'),
+              title: this.$vuetify.locale.t('$vuetify.delete_chat_title', chat.id),
+              text: this.$vuetify.locale.t('$vuetify.delete_chat_text', chat.name),
+              actionFunction: (that) => {
+                  that.loading = true;
+                  axios.delete(`/api/chat/${chat.id}`)
+                      .then(() => {
+                          bus.emit(CLOSE_SIMPLE_MODAL);
+                      }).finally(()=>{
+                      that.loading = false;
+                  })
+              }
+          });
+    },
+    leaveChat(chat) {
+          bus.emit(OPEN_SIMPLE_MODAL, {
+              buttonName: this.$vuetify.locale.t('$vuetify.leave_btn'),
+              title: this.$vuetify.locale.t('$vuetify.leave_chat_title', chat.id),
+              text: this.$vuetify.locale.t('$vuetify.leave_chat_text', chat.name),
+              actionFunction: (that) => {
+                  that.loading = true;
+                  axios.put(`/api/chat/${chat.id}/leave`)
+                      .then(() => {
+                          bus.emit(CLOSE_SIMPLE_MODAL);
+                      }).finally(()=>{
+                      that.loading = false;
+                  })
+              }
+          });
+    },
+    transformItem(item) {
+          item.online = false;
+    },
+    setTopTitle() {
+        this.chatStore.title = this.$vuetify.locale.t('$vuetify.chats');
+        setTitle(this.$vuetify.locale.t('$vuetify.chats'));
+    },
+
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
   },
-
+  watch: {
+      '$vuetify.locale.current': {
+          handler: function (newValue, oldValue) {
+              this.setTopTitle();
+          },
+      },
+  },
   async mounted() {
-    this.chatStore.title = this.$vuetify.locale.t('$vuetify.chats');
-    setTitle(this.$vuetify.locale.t('$vuetify.chats'));
+    this.setTopTitle();
 
     if (this.canDrawChats()) {
       await this.onProfileSet();
@@ -254,4 +402,10 @@ export default {
   flex-direction column
 }
 
+</style>
+
+<style lang="stylus" scoped>
+.pinned {
+    font-weight bold
+}
 </style>
