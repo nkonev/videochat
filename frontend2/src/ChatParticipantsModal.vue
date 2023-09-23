@@ -220,7 +220,6 @@
             },
             changeChatAdmin(item) {
                 item.adminLoading = true;
-                this.$forceUpdate();
                 axios.put(`/api/chat/${this.dto.id}/user/${item.id}`, null, {
                     params: {
                         admin: !item.admin,
@@ -310,7 +309,6 @@
                             }
                         })
                     })
-                    this.$forceUpdate();
                 }
             },
             onChatDialStatusChange(dto) {
@@ -326,7 +324,6 @@
                         }
                     }
                 }
-                this.$forceUpdate();
             },
             onParticipantClick(user) {
                 const routeDto = { name: profile_name, params: { id: user.id }};
@@ -391,7 +388,6 @@
                 for (const user of tmp) {
                     this.addItem(user);
                 }
-                this.$forceUpdate();
             },
             onParticipantDeleted(users) {
                 if (!this.show) {
@@ -403,7 +399,6 @@
                 for (const user of tmp) {
                     this.removeItem(user);
                 }
-                this.$forceUpdate();
             },
             onParticipantEdited(users) {
                 if (!this.show) return
@@ -413,7 +408,6 @@
                 for (const user of tmp) {
                     this.changeItem(user);
                 }
-                this.$forceUpdate();
             },
             hasSearchString() {
                 return hasLength(this.userSearchString)
