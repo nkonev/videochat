@@ -94,6 +94,7 @@ import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import Mark from "mark.js";
 
 const PAGE_SIZE = 40;
+const SCROLLING_THRESHHOLD = 200; // px
 
 const scrollerName = 'ChatList';
 
@@ -204,6 +205,7 @@ export default {
           // e.g. some chat has been popped up on sever due to somebody updated it
           if (this.isTopDirection()) {
               replaceOrPrepend(this.items, items.reverse());
+              this.sort(this.items); // sorts possibly wrong order after loading items, appeared on server while user was scrolling
           } else {
               replaceOrAppend(this.items, items);
           }
@@ -427,12 +429,34 @@ export default {
             }
         })
     },
+    onScrollCallback() {
+          const isScrolledToTop = this.isScrolledToTop();
+          if (!isScrolledToTop) {
+              // during scrolling we disable adding new elements, so some messages can appear on server, so
+              // we set loadedTop to false in order to force infiniteScrollMixin to fetch new messages during scrollTop()
+              this.loadedTop = false;
+              // see also this.sort(this.items) in load()
+          }
+    },
+    isScrolledToTop() {
+          if (this.scrollerDiv) {
+              return Math.abs(this.scrollerDiv.scrollTop) < SCROLLING_THRESHHOLD
+          } else {
+              return false
+          }
+    },
     addItem(dto) {
-          console.log("Adding item", dto);
-          this.transformItem(dto);
-          this.items.unshift(dto);
-          this.sort(this.items);
-          this.performMarking();
+        const isScrolledToTop = this.isScrolledToTop();
+        const emptySearchString = !hasLength(this.searchString);
+        if (isScrolledToTop && emptySearchString) {
+            console.log("Adding item", dto);
+            this.transformItem(dto);
+            this.items.unshift(dto);
+            this.sort(this.items);
+            this.performMarking();
+        } else {
+            console.log("Skipping", dto, isScrolledToTop, emptySearchString)
+        }
     },
     changeItem(dto) {
           console.log("Replacing item", dto);
