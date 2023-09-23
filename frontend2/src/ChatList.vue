@@ -505,6 +505,7 @@ export default {
       },
   },
   async mounted() {
+    this.markInstance = new Mark("div#chat-list-items .chat-name");
     this.setTopTitle();
 
     if (this.canDrawChats()) {
@@ -522,7 +523,6 @@ export default {
     if (this.$route.name == chat_list_name) {
       this.chatStore.searchType = SEARCH_MODE_CHATS;
     }
-    this.markInstance = new Mark("div#chat-list-items .chat-name");
   },
 
   beforeUnmount() {
