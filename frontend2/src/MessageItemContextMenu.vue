@@ -10,7 +10,7 @@
         :close-delay="0"
         :close-on-back="false"
     >
-        <v-list class="my-m-list">
+        <v-list>
             <v-list-item
                 v-for="(item, index) in getContextMenuItems()"
                 :key="index"
