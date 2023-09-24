@@ -1,5 +1,5 @@
 import { format, parseISO, differenceInDays } from 'date-fns';
-import {blog} from "@/router/routes";
+import {blog, prefix} from "@/router/routes";
 
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
@@ -31,9 +31,9 @@ export const setIcon = (newMessages) => {
     document.getElementsByTagName('head')[0].appendChild(link);
   }
   if (newMessages) {
-    link.href = '/front2/favicon_new2.svg';
+    link.href = `${prefix}/favicon_new2.svg`;
   } else {
-    link.href = '/front2/favicon2.svg';
+    link.href = `${prefix}/favicon2.svg`;
   }
 }
 
