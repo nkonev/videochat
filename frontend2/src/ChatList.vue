@@ -8,7 +8,7 @@
                 :key="item.id"
                 :id="getItemId(item.id)"
                 class="list-item-prepend-spacer-16 pb-2"
-                @contextmenu.prevent="onShowContextMenu($event, item)"
+                @contextmenu.stop="onShowContextMenu($event, item)"
                 @click.prevent="openChat(item)"
                 :href="getLink(item)"
             >
@@ -53,6 +53,14 @@
             </v-list-item>
             <div class="chat-last-element" style="min-height: 1px; background: white"></div>
       </v-list>
+      <ChatListContextMenu
+        ref="contextMenuRef"
+        @editChat="this.editChat"
+        @deleteChat="this.deleteChat"
+        @leaveChat="this.leaveChat"
+        @pinChat="this.pinChat"
+        @removedFromPinned="this.removedFromPinned"
+      />
 
   </v-container>
 
@@ -92,6 +100,7 @@ import {
 import cloneDeep from "lodash/cloneDeep";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import Mark from "mark.js";
+import ChatListContextMenu from "@/ChatListContextMenu.vue";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -291,8 +300,8 @@ export default {
           }
           return bldr;
     },
-    onShowContextMenu() {
-          console.warn("Not implemented")
+    onShowContextMenu(e, menuableItem) {
+        this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
     },
     openChat(item){
           goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: item.id}})
@@ -484,6 +493,9 @@ export default {
           return idxOf !== -1;
     },
 
+  },
+  components: {
+    ChatListContextMenu
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})

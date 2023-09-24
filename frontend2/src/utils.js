@@ -1,5 +1,5 @@
 import { format, parseISO, differenceInDays } from 'date-fns';
-import {blog, prefix} from "@/router/routes";
+import {blog, chat, prefix, video_suffix} from "@/router/routes";
 
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
@@ -208,4 +208,14 @@ export function dynamicSortMultiple() {
         }
         return result;
     }
+}
+
+export const copyChatLink = (chatId) => {
+  const link = getUrlPrefix() + chat + '/' + chatId;
+  navigator.clipboard.writeText(link);
+}
+
+export const copyCallLink = (chatId) => {
+  const link = getUrlPrefix() + chat + '/' + chatId + video_suffix;
+  navigator.clipboard.writeText(link);
 }

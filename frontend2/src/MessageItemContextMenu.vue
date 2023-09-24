@@ -42,9 +42,22 @@ export default {
       contextMenuMixin(),
     ],
     props: ['canResend', 'isBlog'],
+    data(){
+      return {
+        selection: null,
+      }
+    },
     methods:{
         className() {
           return "message-item-context-menu"
+        },
+        onShowContextMenu(e, menuableItem) {
+          this.selection = this.getSelection();
+          this.onShowContextMenuBase(e, menuableItem);
+        },
+        onCloseContextMenu() {
+          this.selection = null;
+          this.onCloseContextMenuBase();
         },
         getContextMenuItems() {
             const ret = [];

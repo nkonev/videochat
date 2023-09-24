@@ -4,7 +4,6 @@ export default () => {
       return {
         showContextMenu: false,
         menuableItem: null,
-        selection: null,
         contextMenuX: 0,
         contextMenuY: 0,
       }
@@ -24,14 +23,13 @@ export default () => {
           }
         }
       },
-      onShowContextMenu(e, menuableItem) {
+      onShowContextMenuBase(e, menuableItem) {
         this.showContextMenu = false;
         e.preventDefault();
         this.contextMenuX = e.clientX;
         this.contextMenuY = e.clientY;
 
         this.menuableItem = menuableItem;
-        this.selection = this.getSelection();
 
         this.$nextTick(() => {
           this.showContextMenu = true;
@@ -39,10 +37,9 @@ export default () => {
           this.setPosition()
         })
       },
-      onCloseContextMenu() {
+      onCloseContextMenuBase() {
         this.showContextMenu = false;
         this.menuableItem = null;
-        this.selection = null;
       },
     }
   }
