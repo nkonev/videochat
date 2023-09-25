@@ -249,10 +249,10 @@
 
             if (!this.hasInitialHash && items.length < PAGE_SIZE) {
               if (this.isTopDirection()) {
-                console.log("Setting this.loadedTop");
+                //console.log("Setting this.loadedTop");
                 this.loadedTop = true;
               } else {
-                console.log("Setting this.loadedBottom");
+                //console.log("Setting this.loadedBottom");
                 this.loadedBottom = true;
               }
             }

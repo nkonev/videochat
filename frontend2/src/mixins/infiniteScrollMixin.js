@@ -179,6 +179,7 @@ export default (name) => {
           this.$nextTick(()=>{
             this.initScroller();
             console.log("Scroller", name, "has been installed");
+            this.timeout = null;
           })
         }, 1500); // must be > than debounce millis in observer (it seems this strange behavior can be explained by optimizations in Firefox)
         // tests in Firefox
