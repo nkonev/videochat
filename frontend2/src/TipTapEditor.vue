@@ -228,12 +228,15 @@ export default {
     }
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     bus.off(PREVIEW_CREATED, this.onPreviewCreated);
     bus.off(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.off(EMBED_LINK_SET, this.onEmbedLinkSet);
 
     this.editor.destroy();
+    if (this.fileInput) {
+      this.fileInput.onchange = null;
+    }
     this.fileInput = null;
   },
 };

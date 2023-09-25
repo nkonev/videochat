@@ -1,5 +1,7 @@
 <template>
     <v-row justify="center">
+        <input id="image-input" type="file" style="display: none;" accept="image/*"/>
+
         <v-dialog v-model="show" max-width="640" :persistent="isNew" scrollable>
             <v-card :title="getTitle()">
                 <v-card-text class="pb-0">
@@ -88,6 +90,7 @@
                 </v-card-text>
 
                 <v-card-actions>
+                    <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromChat()"><v-icon>mdi-image-remove</v-icon> {{ $vuetify.locale.t('$vuetify.remove_avatar_btn') }}</v-btn>
                     <v-btn v-if="!hasAva" variant="outlined" @click="openAvatarDialog()"><v-icon>mdi-image-outline</v-icon> {{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}</v-btn>
                     <v-spacer></v-spacer>
                     <v-btn color="primary" variant="flat" @click="saveChat" id="chat-save-btn">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
@@ -104,6 +107,7 @@
     import bus, {OPEN_CHAT_EDIT, OPEN_CHOOSE_AVATAR} from "./bus/bus";
     import {chat_name} from "@/router/routes";
     import {hasLength} from "@/utils";
+    import {v4 as uuidv4} from "uuid";
 
     const dtoFactory = ()=>{
         return {
@@ -129,6 +133,7 @@
                 //     v => !!v || requiredMessage,
                 // ],
                 valid: true,
+                fileInput: null,
             }
         },
         computed: {
@@ -265,35 +270,7 @@
                 this.valid = true;
             },
             openAvatarDialog() {
-                bus.emit(OPEN_CHOOSE_AVATAR, {
-                    initialAvatarCallback: () => {
-                        return this.ava;
-                    },
-                    uploadAvatarFileCallback: (blob) => {
-                        if (!blob) {
-                            return Promise.resolve(false);
-                        }
-                        const config = {
-                            headers: { 'content-type': 'multipart/form-data' }
-                        }
-                        const formData = new FormData();
-                        formData.append('data', blob);
-                        return axios.post(`/api/storage/chat/${this.editDto.id}/avatar`, formData, config)
-                    },
-                    removeAvatarUrlCallback: () => {
-                        this.editDto.avatar = null;
-                        this.editDto.avatarBig = null;
-                        return axios.put(`/api/chat`, this.editDto);
-                    },
-                    storeAvatarUrlCallback: (res) => {
-                        this.editDto.avatar = res.data.relativeUrl;
-                        this.editDto.avatarBig = res.data.relativeBigUrl;
-                        return axios.put(`/api/chat`, this.editDto);
-                    },
-                    onSuccessCallback: () => {
-                        this.loadData();
-                    }
-                });
+                this.fileInput.click();
             },
             getTitle() {
                 if (!this.isNew) {
@@ -302,14 +279,47 @@
                     return this.$vuetify.locale.t('$vuetify.create_chat')
                 }
             },
+            setAvatarToChat(file) {
+              const config = {
+                headers: { 'content-type': 'multipart/form-data' }
+              }
+              const formData = new FormData();
+              formData.append('data', file);
+              return axios.post(`/api/storage/chat/${this.editDto.id}/avatar`, formData, config)
+                .then((res) => {
+                  this.editDto.avatar = res.data.relativeUrl;
+                  this.editDto.avatarBig = res.data.relativeBigUrl;
+                  return axios.put(`/api/chat`, this.editDto);
+                })
+            },
+            removeAvatarFromChat() {
+                this.editDto.avatar = null;
+                this.editDto.avatarBig = null;
+                return axios.put(`/api/chat`, this.editDto);
+            },
         },
         created() {
             // https://forum-archive.vuejs.org/topic/5174/debounce-replacement-in-vue-2-0
             this.doSearch = debounce(this.doSearch, 700);
             bus.on(OPEN_CHAT_EDIT, this.showModal);
         },
-        destroyed() {
+        beforeUnmount() {
+            if (this.fileInput) {
+              this.fileInput.onchange = null;
+            }
+            this.fileInput = null;
             bus.off(OPEN_CHAT_EDIT, this.showModal);
         },
+        mounted() {
+          this.fileInput = document.getElementById('image-input');
+          this.fileInput.onchange = (e) => {
+            this.correlationId = uuidv4();
+            if (e.target.files.length) {
+              const files = Array.from(e.target.files);
+              const file = files[0];
+              this.setAvatarToChat(file);
+            }
+          }
+        }
     }
 </script>
