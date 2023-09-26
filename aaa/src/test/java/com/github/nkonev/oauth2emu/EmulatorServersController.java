@@ -76,7 +76,7 @@ public class EmulatorServersController {
         try {
             restTemplate.put(urlPrefix + "/internal/reset", users);
         } catch (Exception e) {
-            LOGGER.warn("Error during resetting aaa");
+            LOGGER.warn("Error during resetting aaa: {}", e.getMessage());
         }
 
         LOGGER.info("Resetting emulators");
