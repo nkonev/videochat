@@ -3,12 +3,14 @@ package com.github.nkonev.aaa.it;
 import com.github.nkonev.aaa.AbstractTestRunner;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.oauth2emu.OAuth2EmulatorServers;
-import com.github.nkonev.oauth2emu.UserTestService;
+import com.github.nkonev.aaa.services.UserTestService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
 
@@ -42,7 +44,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
 
     @BeforeEach
     public void clearOauthBindingsInDb() {
-        userTestService.clearOauthBindingsInDb();
+        userTestService.clearOauthBindingsInDb(List.of(facebookLogin, vkontakteLogin, googleLogin));
     }
 
     @BeforeEach

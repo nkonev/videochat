@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nkonev.aaa.dto.SuccessfulLoginDTO;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.aaa.util.ContextPathHelper;
-import com.github.nkonev.oauth2emu.UserTestService;
+import com.github.nkonev.aaa.services.UserTestService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;

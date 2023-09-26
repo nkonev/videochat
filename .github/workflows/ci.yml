@@ -329,7 +329,7 @@ jobs:
           (cd event; make check-env download generate package-go)
       - name: Run microservices
         run: |
-          (cd aaa; ./run-with-oauth2.sh &) # migrates database as well
+          (cd aaa; ./run-with-oauth2.sh &)
           (cd chat; ./chat &)
           (cd event; ./event &)
       - name: Wait for microservices
@@ -337,7 +337,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:8060 -- echo 'aaa is up' # because aaa creates schema
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1235 -- echo 'chat is up'
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1238 -- echo 'event is up'
-          # Once we started aaa (with creating schema) we start emulator which connects to the database
+          # Once we started aaa (compiling) we start the emulator
           (cd aaa; ./run-oauth2-emu.sh &)
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator controller is up'
       - name: Run your Playwright tests

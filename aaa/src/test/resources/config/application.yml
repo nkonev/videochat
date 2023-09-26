@@ -39,6 +39,8 @@ spring:
     ldap:
       repositories:
         enabled: false
+  config:
+    import: classpath:/config/user-test-controller.yml
 
 custom:
   email:

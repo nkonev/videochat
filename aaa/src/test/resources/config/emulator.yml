@@ -13,27 +13,3 @@ spring:
 server.port: 9080
 
 server.tomcat.basedir: ${java.io.tmpdir}/com.github.nkonev.oauth2emu.tomcat
-
-spring.datasource:
-    name: aaa_ds
-    type: org.apache.tomcat.jdbc.pool.DataSource
-    # https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters
-    url: jdbc:postgresql://127.0.0.1:35432/aaa?connectTimeout=10&socketTimeout=40
-    username: aaa
-    password: "aaaPazZw0rd"
-    driverClassName: org.postgresql.Driver
-    # https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#boot-features-connect-to-production-database
-    # https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html#Common_Attributes
-    # https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-connect-to-production-database
-    tomcat:
-      minIdle: 4
-      maxIdle: 8
-      maxActive: 10
-      maxWait: 60000
-      testOnBorrow: true
-      testOnConnect: true
-      testWhileIdle: true
-      timeBetweenEvictionRunsMillis: 5000
-      validationQuery: SELECT 1;
-      validationQueryTimeout: 4
-      logValidationErrors: true
