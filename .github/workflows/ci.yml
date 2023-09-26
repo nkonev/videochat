@@ -313,6 +313,18 @@ jobs:
 
       - name: Start and wait docker-compose
         run: |
+          lsof -i:35432
+          lsof -i:36379
+          lsof -i:36672
+          lsof -i:16686
+          lsof -i:9000
+          lsof -i:8081
+          lsof -i:8060
+          lsof -i:1235
+          lsof -i:1238
+          lsof -i:9080
+          
+          
           docker-compose up -d postgresql redis rabbitmq jaeger minio frontend traefik
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
