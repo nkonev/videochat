@@ -519,6 +519,7 @@ export default {
   async mounted() {
     this.markInstance = new Mark("div#chat-list-items .chat-name");
     this.setTopTitle();
+    this.chatStore.isShowSearch = true;
 
     if (this.canDrawChats()) {
       await this.onProfileSet();
@@ -551,6 +552,7 @@ export default {
 
     setTitle(null);
     this.chatStore.title = null;
+    this.chatStore.isShowSearch = false;
   }
 }
 </script>

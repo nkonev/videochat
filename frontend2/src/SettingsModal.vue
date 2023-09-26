@@ -15,6 +15,9 @@
             <v-tab value="choose_language">
               {{ $vuetify.locale.t('$vuetify.language') }}
             </v-tab>
+            <v-tab value="user_profile_self">
+              {{ $vuetify.locale.t('$vuetify.user_profile_short') }}
+            </v-tab>
             <v-tab value="a_video_settings">
               {{ $vuetify.locale.t('$vuetify.video') }}
             </v-tab>
@@ -28,6 +31,9 @@
         <v-window v-model="tab">
             <v-window-item value="choose_language">
                 <LanguageModalContent/>
+            </v-window-item>
+            <v-window-item value="user_profile_self">
+                <UserSelfProfile/>
             </v-window-item>
             <v-window-item value="a_video_settings">
                 <VideoGlobalSettingsModalContent  v-if="shouldShowVideoSettings()"/>
@@ -54,6 +60,7 @@ import bus, { OPEN_SETTINGS} from "@/bus/bus";
 import LanguageModalContent from "@/LanguageModalContent.vue";
 import VideoGlobalSettingsModalContent from "@/VideoGlobalSettingsModalContent.vue";
 import NotificationSettingsModalContent from "@/NotificationSettingsModalContent.vue";
+import UserSelfProfile from "@/UserSelfProfile.vue";
 
 export default {
   data () {
@@ -66,6 +73,7 @@ export default {
       LanguageModalContent,
       VideoGlobalSettingsModalContent,
       NotificationSettingsModalContent,
+      UserSelfProfile,
   },
   methods: {
     showLoginModal() {

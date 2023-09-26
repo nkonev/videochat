@@ -52,6 +52,7 @@ public class EmulatorServersController {
     @PostConstruct
     public void postConstruct() {
         OAuth2EmulatorServers.start();
+        commandReceiver();
     }
 
     @PreDestroy

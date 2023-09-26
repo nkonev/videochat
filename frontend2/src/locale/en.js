@@ -38,6 +38,7 @@ export default {
     room_dynacast: "Dynacast",
     room_adaptive_stream: "Adaptive stream",
     user_profile: "User profile",
+    user_profile_short: "Profile",
     bound_oauth2_providers: "Bound OAuth2 providers",
     not_bound_oauth2_providers: "Available OAuth2 providers",
     email: "Email",

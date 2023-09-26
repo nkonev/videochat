@@ -464,7 +464,7 @@ export default {
     this.chatStore.showRecordStartButton = false;
     this.chatStore.showRecordStopButton = false;
     this.chatStore.chatUsersCount = 0;
-    this.chatStore.isShowSearch = true;
+    this.chatStore.isShowSearch = false;
     this.chatStore.showChatEditButton = false;
 
     this.pinnedPromoted = null;

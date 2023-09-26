@@ -38,6 +38,7 @@ export default {
     room_dynacast: "Dynacast",
     room_adaptive_stream: "Адаптивный поток",
     user_profile: "Профиль пользователя",
+    user_profile_short: "Профиль",
     bound_oauth2_providers: "Привязанные OAuth2 провайдеры",
     not_bound_oauth2_providers: "Доступные OAuth2 провайдеры",
     email: "Email",
