@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 # You need to start EmulatorServersController firstly
 # export JAVA_HOME=/usr/lib/jvm/bellsoft-java17.x86_64
 ./mvnw clean package -DskipTests

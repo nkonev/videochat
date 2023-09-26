@@ -26,7 +26,7 @@ import javax.annotation.PreDestroy;
 @ImportAutoConfiguration({
         ServletWebServerFactoryAutoConfiguration.class,
         DataSourceAutoConfiguration.class,
-        JdbcTemplateAutoConfiguration.class,
+        JdbcTemplateAutoConfiguration.class, // it expects migrated (up-to-date) database for UserTestService
         DispatcherServletAutoConfiguration.class,
         WebMvcAutoConfiguration.class
 })
@@ -74,5 +74,6 @@ public class EmulatorServersController {
         OAuth2EmulatorServers.configureFacebookEmulator(urlPrefix);
         OAuth2EmulatorServers.configureVkontakteEmulator(urlPrefix);
         OAuth2EmulatorServers.configureGoogleEmulator(urlPrefix);
+        LOGGER.info("Emulators were configured");
     }
 }
