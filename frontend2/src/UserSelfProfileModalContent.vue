@@ -176,8 +176,12 @@
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.password') }}</v-card-title>
         <v-btn v-if="!showPasswordInput" class="mx-4 mb-4" color="primary" dark
                @click="showPasswordInput = !showPasswordInput">
-            {{ $vuetify.locale.t('$vuetify.change_password') }}
-            <v-icon dark right>mdi-lock</v-icon>
+            <template v-slot:default>
+              {{ $vuetify.locale.t('$vuetify.change_password') }}
+            </template>
+            <template v-slot:append>
+              <v-icon dark>mdi-lock</v-icon>
+            </template>
         </v-btn>
         <v-container v-if="showPasswordInput" class="ma-0 py-0 d-flex flex-row user-self-settings-container">
           <v-text-field
@@ -201,8 +205,12 @@
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.short_info') }}</v-card-title>
         <v-btn v-if="!showShortInfoInput" class="mx-4 mb-4" color="primary" dark
                @click="showShortInfoInput = !showShortInfoInput; shortInfoPrevious = chatStore.currentUser.shortInfo">
-            {{ $vuetify.locale.t('$vuetify.change_short_info') }}
-            <v-icon dark right>mdi-information</v-icon>
+            <template v-slot:default>
+              {{ $vuetify.locale.t('$vuetify.change_short_info') }}
+            </template>
+            <template v-slot:append>
+              <v-icon dark>mdi-information</v-icon>
+            </template>
         </v-btn>
         <v-container v-if="showShortInfoInput" class="ma-0 py-0 d-flex flex-row user-self-settings-container">
           <v-text-field
