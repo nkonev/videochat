@@ -1,7 +1,7 @@
 <template>
         <v-card-title class="title pb-0 pt-2">{{ $vuetify.locale.t('$vuetify.user_profile') }} #{{ chatStore.currentUser.id }}</v-card-title>
 
-        <v-container class="d-flex justify-space-around flex-column">
+        <v-container class="d-flex justify-space-around flex-column pb-0">
             <v-img v-if="chatStore.currentUser.avatarBig || chatStore.currentUser.avatar"
                    :src="ava"
                    :aspect-ratio="16/9"
@@ -33,7 +33,27 @@
               </v-container>
             </v-container>
 
-            <v-list-item-subtitle v-if="chatStore.currentUser.email">{{ chatStore.currentUser.email }}</v-list-item-subtitle>
+            <v-container class="ma-0 pa-0 d-flex flex-row">
+              <v-list-item-subtitle v-if="!showEmailInput && chatStore.currentUser.email" class="align-self-center text-h6">{{ chatStore.currentUser.email }}</v-list-item-subtitle>
+              <v-btn v-if="!showEmailInput" color="primary" size="x-small" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_email')" @click="showEmailInput = !showEmailInput; emailPrevious = chatStore.currentUser.email">
+                <v-icon dark>mdi-lead-pencil</v-icon>
+              </v-btn>
+              <v-container v-if="showEmailInput" class="ma-0 pa-0 d-flex flex-row">
+                <v-text-field
+                  v-model="chatStore.currentUser.email"
+                  :rules="[rules.required, rules.email]"
+                  label="E-mail"
+                  @keyup.native.enter="sendEmail()"
+                  variant="outlined"
+                  hide-details
+                  density="compact"
+                  class="mr-1"
+                ></v-text-field>
+                <v-icon @click="sendEmail()" color="primary" class="mx-1 align-self-center">mdi-check-bold</v-icon>
+                <v-icon @click="showEmailInput = false; chatStore.currentUser.email = emailPrevious" class="mx-1 align-self-center">mdi-cancel</v-icon>
+              </v-container>
+            </v-container>
+
         </v-container>
 
         <v-divider class="mx-4"></v-divider>
@@ -178,36 +198,6 @@
                 </v-row>
             </v-col>
         </v-row>
-
-
-        <v-divider class="mx-4"></v-divider>
-        <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.email') }}</v-card-title>
-        <v-btn v-if="!showEmailInput" class="mx-4 mb-4" color="primary" dark @click="showEmailInput = !showEmailInput; emailPrevious = chatStore.currentUser.email">
-            {{ $vuetify.locale.t('$vuetify.change_email') }}
-            <v-icon dark right>mdi-email</v-icon>
-        </v-btn>
-        <v-row v-if="showEmailInput" no-gutters>
-            <v-col cols="12" >
-                <v-row :align="'center'" no-gutters>
-                    <v-col class="ml-4">
-                        <v-text-field
-                            v-model="chatStore.currentUser.email"
-                            :rules="[rules.required, rules.email]"
-                            label="E-mail"
-                            @keyup.native.enter="sendEmail()"
-                            variant="outlined"
-                        ></v-text-field>
-                    </v-col>
-                    <v-col md="auto" class="ml-1 mr-4">
-                        <v-row :align="'center'" no-gutters>
-                            <v-icon @click="sendEmail()" color="primary">mdi-check-bold</v-icon>
-                            <v-icon @click="showEmailInput = false; chatStore.currentUser.email = emailPrevious">mdi-cancel</v-icon>
-                        </v-row>
-                    </v-col>
-                </v-row>
-            </v-col>
-        </v-row>
-
 
         <v-divider class="mx-4"></v-divider>
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.short_info') }}</v-card-title>
