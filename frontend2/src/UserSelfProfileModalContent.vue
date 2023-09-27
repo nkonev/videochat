@@ -25,6 +25,7 @@
                 close
                 class="c-btn-vk py-5 mr-2"
                 text-color="white"
+                closable
                 close-icon="mdi-delete"
                 @click:close="removeVk"
             >
@@ -38,6 +39,7 @@
                 close
                 class="c-btn-fb py-5 mr-2"
                 text-color="white"
+                closable
                 close-icon="mdi-delete"
                 @click:close="removeFb"
             >
@@ -51,6 +53,7 @@
                 close
                 class="c-btn-google py-5 mr-2"
                 text-color="white"
+                closable
                 close-icon="mdi-delete"
                 @click:close="removeGoogle"
             >
@@ -64,6 +67,7 @@
                 close
                 class="c-btn-keycloak py-5 mr-2"
                 text-color="white"
+                closable
                 close-icon="mdi-delete"
                 @click:close="removeKeycloak"
             >
@@ -82,7 +86,6 @@
                 label
                 class="c-btn-vk py-5 mr-2"
                 text-color="white"
-                close-icon="mdi-delete"
             >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon>
             </v-chip>
@@ -94,7 +97,6 @@
                 label
                 class="c-btn-fb py-5 mr-2"
                 text-color="white"
-                close-icon="mdi-delete"
             >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook'}" :size="'2x'"></font-awesome-icon>
             </v-chip>
@@ -106,7 +108,6 @@
                 label
                 class="c-btn-google py-5 mr-2"
                 text-color="white"
-                close-icon="mdi-delete"
             >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google'}" :size="'2x'"></font-awesome-icon>
             </v-chip>
@@ -118,7 +119,6 @@
                 label
                 class="c-btn-keycloak py-5 mr-2"
                 text-color="white"
-                close-icon="mdi-delete"
             >
                 <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'key'}" :size="'2x'"></font-awesome-icon>
             </v-chip>
