@@ -33,7 +33,7 @@
                 <LanguageModalContent/>
             </v-window-item>
             <v-window-item value="user_profile_self">
-                <UserSelfProfile/>
+                <UserSelfProfileModalContent/>
             </v-window-item>
             <v-window-item value="a_video_settings">
                 <VideoGlobalSettingsModalContent  v-if="shouldShowVideoSettings()"/>
@@ -60,7 +60,7 @@ import bus, { OPEN_SETTINGS} from "@/bus/bus";
 import LanguageModalContent from "@/LanguageModalContent.vue";
 import VideoGlobalSettingsModalContent from "@/VideoGlobalSettingsModalContent.vue";
 import NotificationSettingsModalContent from "@/NotificationSettingsModalContent.vue";
-import UserSelfProfile from "@/UserSelfProfile.vue";
+import UserSelfProfileModalContent from "@/UserSelfProfileModalContent.vue";
 
 export default {
   data () {
@@ -73,7 +73,7 @@ export default {
       LanguageModalContent,
       VideoGlobalSettingsModalContent,
       NotificationSettingsModalContent,
-      UserSelfProfile,
+      UserSelfProfileModalContent,
   },
   methods: {
     showLoginModal() {
