@@ -1,7 +1,7 @@
 <template>
         <v-card-title class="title pb-0 pt-2">{{ $vuetify.locale.t('$vuetify.user_profile') }} #{{ chatStore.currentUser.id }}</v-card-title>
 
-        <v-container class="d-flex justify-space-around flex-column pb-0">
+        <v-container class="d-flex justify-space-around flex-column pb-0 user-self-settings-container">
             <v-img v-if="chatStore.currentUser.avatarBig || chatStore.currentUser.avatar"
                    :src="ava"
                    :aspect-ratio="16/9"
@@ -24,14 +24,17 @@
                   :label="$vuetify.locale.t('$vuetify.login')"
                   @keyup.native.enter="sendLogin()"
                   variant="outlined"
-                  hide-details
                   density="compact"
-                  class="mr-1"
-                ></v-text-field>
-                <v-icon @click="sendLogin()" color="primary" class="mx-1 align-self-center">mdi-check-bold</v-icon>
-                <v-icon @click="showLoginInput = false; chatStore.currentUser.login = loginPrevious" class="mx-1 align-self-center">mdi-cancel</v-icon>
+                  class="mt-3"
+                >
+                  <template v-slot:append>
+                    <v-icon @click="sendLogin()" color="primary" class="mx-1 ml-2">mdi-check-bold</v-icon>
+                    <v-icon @click="showLoginInput = false; chatStore.currentUser.login = loginPrevious" class="mx-1">mdi-cancel</v-icon>
+                  </template>
+                </v-text-field>
               </v-container>
             </v-container>
+            <v-divider></v-divider>
 
             <v-container class="ma-0 pa-0 d-flex flex-row">
               <v-list-item-subtitle v-if="!showEmailInput && chatStore.currentUser.email" class="align-self-center text-h6">{{ chatStore.currentUser.email }}</v-list-item-subtitle>
@@ -45,12 +48,14 @@
                   label="E-mail"
                   @keyup.native.enter="sendEmail()"
                   variant="outlined"
-                  hide-details
                   density="compact"
-                  class="mr-1"
-                ></v-text-field>
-                <v-icon @click="sendEmail()" color="primary" class="mx-1 align-self-center">mdi-check-bold</v-icon>
-                <v-icon @click="showEmailInput = false; chatStore.currentUser.email = emailPrevious" class="mx-1 align-self-center">mdi-cancel</v-icon>
+                  class="mt-3"
+                >
+                  <template v-slot:append>
+                    <v-icon @click="sendEmail()" color="primary" class="mx-1 ml-2">mdi-check-bold</v-icon>
+                    <v-icon @click="showEmailInput = false; chatStore.currentUser.email = emailPrevious" class="mx-1">mdi-cancel</v-icon>
+                  </template>
+                </v-text-field>
               </v-container>
             </v-container>
 
@@ -174,57 +179,46 @@
             {{ $vuetify.locale.t('$vuetify.change_password') }}
             <v-icon dark right>mdi-lock</v-icon>
         </v-btn>
-        <v-row v-if="showPasswordInput" no-gutters>
-            <v-col cols="12" >
-                <v-row :align="'center'" no-gutters>
-                    <v-col class="ml-4">
-                        <v-text-field
-                            v-model="password"
-                            :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
-                            @click:append="showInputablePassword = !showInputablePassword"
-                            :type="showInputablePassword ? 'text' : 'password'"
-                            :rules="[rules.required, rules.min]"
-                            :label="$vuetify.locale.t('$vuetify.password')"
-                            @keyup.native.enter="sendPassword()"
-                            variant="outlined"
-                        ></v-text-field>
-                    </v-col>
-                    <v-col md="auto" class="ml-1 mr-4">
-                        <v-row :align="'center'" no-gutters>
-                            <v-icon @click="sendPassword()" color="primary">mdi-check-bold</v-icon>
-                            <v-icon @click="showPasswordInput = false">mdi-cancel</v-icon>
-                        </v-row>
-                    </v-col>
-                </v-row>
-            </v-col>
-        </v-row>
+        <v-container v-if="showPasswordInput" class="ma-0 py-0 d-flex flex-row user-self-settings-container">
+          <v-text-field
+            v-model="password"
+            :type="showInputablePassword ? 'text' : 'password'"
+            :rules="[rules.required, rules.min]"
+            :label="$vuetify.locale.t('$vuetify.password')"
+            @keyup.native.enter="sendPassword()"
+            variant="outlined"
+            density="compact"
+          >
+            <template v-slot:append>
+              <v-icon @click="showInputablePassword = !showInputablePassword" class="mx-1 ml-3">{{showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'}}</v-icon>
+              <v-icon @click="sendPassword()" color="primary" class="mx-1">mdi-check-bold</v-icon>
+              <v-icon @click="showPasswordInput = false" class="mx-1">mdi-cancel</v-icon>
+            </template>
+          </v-text-field>
+        </v-container>
 
         <v-divider class="mx-4"></v-divider>
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.short_info') }}</v-card-title>
-        <v-btn v-if="!showShortInfoInput" class="mx-4 mb-4" color="primary" dark @click="showShortInfoInput = !showShortInfoInput; shortInfoPrevious = chatStore.currentUser.shortInfo">
+        <v-btn v-if="!showShortInfoInput" class="mx-4 mb-4" color="primary" dark
+               @click="showShortInfoInput = !showShortInfoInput; shortInfoPrevious = chatStore.currentUser.shortInfo">
             {{ $vuetify.locale.t('$vuetify.change_short_info') }}
             <v-icon dark right>mdi-information</v-icon>
         </v-btn>
-        <v-row v-if="showShortInfoInput" no-gutters>
-            <v-col cols="12" >
-                <v-row :align="'center'" no-gutters>
-                    <v-col class="ml-4">
-                        <v-text-field
-                            v-model="chatStore.currentUser.shortInfo"
-                            label="Short info"
-                            @keyup.native.enter="sendShortInfo()"
-                            variant="outlined"
-                        ></v-text-field>
-                    </v-col>
-                    <v-col md="auto" class="ml-1 mr-4">
-                        <v-row :align="'center'" no-gutters>
-                            <v-icon @click="sendShortInfo()" color="primary">mdi-check-bold</v-icon>
-                            <v-icon @click="showShortInfoInput = false; chatStore.currentUser.shortInfo = shortInfoPrevious">mdi-cancel</v-icon>
-                        </v-row>
-                    </v-col>
-                </v-row>
-            </v-col>
-        </v-row>
+        <v-container v-if="showShortInfoInput" class="ma-0 py-0 d-flex flex-row user-self-settings-container">
+          <v-text-field
+            v-model="chatStore.currentUser.shortInfo"
+            label="Short info"
+            @keyup.native.enter="sendShortInfo()"
+            variant="outlined"
+            density="compact"
+            hide-details
+          >
+            <template v-slot:append>
+              <v-icon @click="sendShortInfo()" color="primary" class="mx-1 ml-3">mdi-check-bold</v-icon>
+              <v-icon @click="showShortInfoInput = false; chatStore.currentUser.shortInfo = shortInfoPrevious" class="mx-1">mdi-cancel</v-icon>
+            </template>
+          </v-text-field>
+        </v-container>
 
 </template>
 
@@ -430,4 +424,12 @@ export default {
 
 <style lang="stylus" scoped>
   @import "oAuth2.styl"
+</style>
+
+<style lang="stylus">
+.user-self-settings-container {
+  .v-input__append {
+    margin-inline-start: unset
+  }
+}
 </style>
