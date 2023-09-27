@@ -19,7 +19,7 @@
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.bound_oauth2_providers') }}</v-card-title>
         <v-card-actions class="mx-2" v-if="shouldShowBound()">
             <v-chip
-                v-if="chatStore.currentUser.oauth2Identifiers.vkontakteId && chatStore.availableOAuth2Providers.includes('vkontakte')"
+                v-if="chatStore.currentUser.oauth2Identifiers.vkontakteId"
                 min-width="80px"
                 label
                 close
@@ -32,7 +32,7 @@
             </v-chip>
 
             <v-chip
-                v-if="chatStore.currentUser.oauth2Identifiers.facebookId && chatStore.availableOAuth2Providers.includes('facebook')"
+                v-if="chatStore.currentUser.oauth2Identifiers.facebookId"
                 min-width="80px"
                 label
                 close
@@ -45,7 +45,7 @@
             </v-chip>
 
             <v-chip
-                v-if="chatStore.currentUser.oauth2Identifiers.googleId && chatStore.availableOAuth2Providers.includes('google')"
+                v-if="chatStore.currentUser.oauth2Identifiers.googleId"
                 min-width="80px"
                 label
                 close
@@ -58,7 +58,7 @@
             </v-chip>
 
             <v-chip
-                v-if="chatStore.currentUser.oauth2Identifiers.keycloakId && chatStore.availableOAuth2Providers.includes('keycloak')"
+                v-if="chatStore.currentUser.oauth2Identifiers.keycloakId"
                 min-width="80px"
                 label
                 close
@@ -76,7 +76,7 @@
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.not_bound_oauth2_providers') }}</v-card-title>
         <v-card-actions class="mx-2" v-if="shouldShowUnbound()">
             <v-chip
-                v-if="!chatStore.currentUser.oauth2Identifiers.vkontakteId && chatStore.availableOAuth2Providers.includes('vkontakte')"
+                v-if="!chatStore.currentUser.oauth2Identifiers.vkontakteId"
                 @click="submitOauthVkontakte"
                 min-width="80px"
                 label
@@ -88,7 +88,7 @@
             </v-chip>
 
             <v-chip
-                v-if="!chatStore.currentUser.oauth2Identifiers.facebookId && chatStore.availableOAuth2Providers.includes('facebook')"
+                v-if="!chatStore.currentUser.oauth2Identifiers.facebookId"
                 @click="submitOauthFacebook"
                 min-width="80px"
                 label
@@ -100,7 +100,7 @@
             </v-chip>
 
             <v-chip
-                v-if="!chatStore.currentUser.oauth2Identifiers.googleId && chatStore.availableOAuth2Providers.includes('google')"
+                v-if="!chatStore.currentUser.oauth2Identifiers.googleId"
                 @click="submitOauthGoogle"
                 min-width="80px"
                 label
@@ -112,7 +112,7 @@
             </v-chip>
 
             <v-chip
-                v-if="!chatStore.currentUser.oauth2Identifiers.keycloakId && chatStore.availableOAuth2Providers.includes('keycloak')"
+                v-if="!chatStore.currentUser.oauth2Identifiers.keycloakId"
                 @click="submitOauthKeycloak"
                 min-width="80px"
                 label
@@ -310,10 +310,20 @@ export default {
               break
             }
           }
-          return has
+          return has && (
+            this.chatStore.availableOAuth2Providers.includes('vkontakte') ||
+            this.chatStore.availableOAuth2Providers.includes('facebook') ||
+            this.chatStore.availableOAuth2Providers.includes('google') ||
+            this.chatStore.availableOAuth2Providers.includes('keycloak')
+          )
         },
         shouldShowUnbound() {
-          return this.chatStore.availableOAuth2Providers.length
+          return this.chatStore.availableOAuth2Providers.length && (
+            this.chatStore.availableOAuth2Providers.includes('vkontakte') ||
+            this.chatStore.availableOAuth2Providers.includes('facebook') ||
+            this.chatStore.availableOAuth2Providers.includes('google') ||
+            this.chatStore.availableOAuth2Providers.includes('keycloak')
+          )
         },
         submitOauthVkontakte() {
             window.location.href = '/api/login/oauth2/vkontakte';
