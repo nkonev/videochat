@@ -11,7 +11,28 @@
             >
             </v-img>
             <v-btn v-else color="primary" @click="openAvatarDialog()">{{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}</v-btn>
-            <v-list-item-title class="headline mb-1 mt-2">{{ chatStore.currentUser.login }}</v-list-item-title>
+
+            <v-container class="ma-0 pa-0 mt-2 d-flex flex-row">
+              <v-list-item-title v-if="!showLoginInput" class="align-self-center text-h3">{{ chatStore.currentUser.login }}</v-list-item-title>
+              <v-btn v-if="!showLoginInput" color="primary" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_login')" @click="showLoginInput = !showLoginInput; loginPrevious = chatStore.currentUser.login">
+                <v-icon dark size="x-large">mdi-lead-pencil</v-icon>
+              </v-btn>
+              <v-container v-if="showLoginInput" class="ma-0 pa-0 d-flex flex-row">
+                <v-text-field
+                  v-model="chatStore.currentUser.login"
+                  :rules="[rules.required]"
+                  :label="$vuetify.locale.t('$vuetify.login')"
+                  @keyup.native.enter="sendLogin()"
+                  variant="outlined"
+                  hide-details
+                  density="compact"
+                  class="mr-1"
+                ></v-text-field>
+                <v-icon @click="sendLogin()" color="primary" class="mx-1 align-self-center">mdi-check-bold</v-icon>
+                <v-icon @click="showLoginInput = false; chatStore.currentUser.login = loginPrevious" class="mx-1 align-self-center">mdi-cancel</v-icon>
+              </v-container>
+            </v-container>
+
             <v-list-item-subtitle v-if="chatStore.currentUser.email">{{ chatStore.currentUser.email }}</v-list-item-subtitle>
         </v-container>
 
@@ -124,35 +145,6 @@
             </v-chip>
 
         </v-card-actions>
-
-
-        <v-divider class="mx-4"></v-divider>
-        <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.login') }}</v-card-title>
-        <v-btn v-if="!showLoginInput" class="mx-4 mb-4" color="primary" dark @click="showLoginInput = !showLoginInput; loginPrevious = chatStore.currentUser.login">
-            {{ $vuetify.locale.t('$vuetify.change_login') }}
-            <v-icon dark right>mdi-account</v-icon>
-        </v-btn>
-        <v-row v-if="showLoginInput" no-gutters>
-            <v-col cols="12" >
-                <v-row :align="'center'" no-gutters>
-                    <v-col class="ml-4">
-                        <v-text-field
-                            v-model="chatStore.currentUser.login"
-                            :rules="[rules.required]"
-                            :label="$vuetify.locale.t('$vuetify.login')"
-                            @keyup.native.enter="sendLogin()"
-                            variant="outlined"
-                        ></v-text-field>
-                    </v-col>
-                    <v-col md="auto" class="ml-1 mr-4">
-                        <v-row :align="'center'" no-gutters>
-                            <v-icon @click="sendLogin()" color="primary">mdi-check-bold</v-icon>
-                            <v-icon @click="showLoginInput = false; chatStore.currentUser.login = loginPrevious">mdi-cancel</v-icon>
-                        </v-row>
-                    </v-col>
-                </v-row>
-            </v-col>
-        </v-row>
 
 
         <v-divider class="mx-4"></v-divider>
