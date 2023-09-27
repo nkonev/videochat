@@ -465,6 +465,11 @@ curl 'http://127.0.0.1:28200/chat/_mapping' | jq '.'
 curl 'http://127.0.0.1:28200/chat/_doc/3' | jq '.'
 ```
 
+# OAuth2 servers emulator
+```
+curl -X PUT -i 'http://localhost:9080/recreate-oauth2-mocks'
+```
+
 # Starting server for e2e tests
 ```
 cd aaa

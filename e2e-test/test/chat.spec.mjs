@@ -7,7 +7,7 @@ import axios from "axios";
 
 // https://playwright.dev/docs/intro
 test('login vkontakte and google then create chat then write a message', async ({ browser }) => {
-    await axios.post(recreateAaaOauth2MocksUrl);
+    await axios.put(recreateAaaOauth2MocksUrl);
     await axios.delete(removeChatParticipantsUrl);
 
     const googleContext = await browser.newContext();

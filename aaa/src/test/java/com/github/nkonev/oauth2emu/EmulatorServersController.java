@@ -17,12 +17,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.RequestEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import java.net.URI;
 import java.util.List;
 
 import static com.github.nkonev.aaa.it.OAuth2EmulatorTests.*;
@@ -67,14 +69,14 @@ public class EmulatorServersController {
         OAuth2EmulatorServers.stop();
     }
 
-    @PostMapping("/recreate-oauth2-mocks")
+    @PutMapping("/recreate-oauth2-mocks")
     public void commandReceiver() {
         LOGGER.info("Removing oauth2-aware users");
 
         List<String> users = List.of(facebookLogin, vkontakteLogin, googleLogin);
 
         try {
-            restTemplate.put(urlPrefix + "/internal/reset", users);
+            restTemplate.put(URI.create(urlPrefix + "/internal/reset"), users);
         } catch (Exception e) {
             LOGGER.warn("Error during resetting aaa: {}", e.getMessage());
         }

@@ -20,7 +20,7 @@ test('login unsuccessful', async ({ page }) => {
 });
 
 test('login vkontakte', async ({ page }) => {
-    await axios.post(recreateAaaOauth2MocksUrl)
+    await axios.put(recreateAaaOauth2MocksUrl);
 
     const loginPage = new Login(page);
     await loginPage.navigate();
