@@ -5,7 +5,6 @@
             <v-img v-if="hasAva"
                    :src="ava"
                    class="mt-2"
-                   @click="openAvatarDialog()"
             >
             </v-img>
 
@@ -224,10 +223,6 @@
             </template>
           </v-text-field>
         </v-container>
-        <Teleport to="#prepending-buttons" :disabled="!enabled">
-          <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromProfile()"><v-icon>mdi-image-remove</v-icon> {{ $vuetify.locale.t('$vuetify.remove_avatar_btn') }}</v-btn>
-          <v-btn v-if="!hasAva" variant="outlined" @click="openAvatarDialog()"><v-icon>mdi-image-outline</v-icon> {{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}</v-btn>
-        </Teleport>
 </template>
 
 <script>
@@ -235,7 +230,6 @@ import axios from "axios";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {deepCopy, hasLength, setTitle} from "@/utils";
-import {v4 as uuidv4} from "uuid";
 
 export default {
     props: ['enabled'],
@@ -252,7 +246,6 @@ export default {
             password: "",
             emailPrevious: "",
             shortInfoPrevious: null,
-            fileInput: null,
         }
     },
     computed: {
@@ -380,45 +373,10 @@ export default {
                     this.chatStore.fetchUserProfile()
                 })
         },
-
-        setAvatarToProfile(file) {
-          const config = {
-            headers: { 'content-type': 'multipart/form-data' }
-          }
-          const formData = new FormData();
-          formData.append('data', file);
-          return axios.post('/api/storage/avatar', formData, config)
-            .then((res) => {
-              return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl}).then((response) => {
-                return this.chatStore.fetchUserProfile()
-              })
-            })
-        },
-        removeAvatarFromProfile() {
-          return axios.patch(`/api/profile`, {removeAvatar: true}).then((response) => {
-            return this.chatStore.fetchUserProfile()
-          });
-        },
-        openAvatarDialog() {
-            this.fileInput.click();
-        },
     },
     mounted() {
-      this.fileInput = document.getElementById('image-input');
-      this.fileInput.onchange = (e) => {
-          this.correlationId = uuidv4();
-          if (e.target.files.length) {
-              const files = Array.from(e.target.files);
-              const file = files[0];
-              this.setAvatarToProfile(file);
-          }
-      }
     },
     beforeUnmount() {
-      if (this.fileInput) {
-          this.fileInput.onchange = null;
-      }
-      this.fileInput = null;
     },
 }
 </script>

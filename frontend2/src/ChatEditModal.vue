@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <input id="image-input" type="file" style="display: none;" accept="image/*"/>
+        <input id="image-input-chat-avatar" type="file" style="display: none;" accept="image/*"/>
 
         <v-dialog v-model="show" max-width="640" :persistent="isNew" scrollable>
             <v-card :title="getTitle()">
@@ -81,7 +81,6 @@
                                        min-width="600"
                                        min-height="600"
                                        max-height="800"
-                                       @click="openAvatarDialog()"
                                 >
                                 </v-img>
                             </v-container>
@@ -311,7 +310,7 @@
             bus.off(OPEN_CHAT_EDIT, this.showModal);
         },
         mounted() {
-          this.fileInput = document.getElementById('image-input');
+          this.fileInput = document.getElementById('image-input-chat-avatar');
           this.fileInput.onchange = (e) => {
             this.correlationId = uuidv4();
             if (e.target.files.length) {
