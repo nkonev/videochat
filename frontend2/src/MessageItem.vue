@@ -53,7 +53,7 @@
         props: ['id', 'item', 'chatId', 'my', 'highlight', 'canResend', 'isInBlog'],
         methods: {
             getOwnerLink(item) {
-                return { name: profile_name, params: { id: item.owner.id }}
+                return { name: profile_name, params: { id: item.owner?.id }}
             },
             onMessageClick(event, dto) {
                 if (this.isMobile()) {
@@ -95,7 +95,7 @@
             },
 
             getOwner(owner) {
-                return owner.login
+                return owner?.login
             },
             getDate(item) {
                 return getHumanReadableDate(item.createDateTime)
