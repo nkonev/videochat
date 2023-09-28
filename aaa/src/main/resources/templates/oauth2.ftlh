@@ -13,10 +13,9 @@
     <#include "header.ftlh">
     <h1>OAuth2 login test</h1>
 
-    <a href="/api/login/oauth2/facebook" id="a-facebook">Facebook</a>
-    <a href="/api/login/oauth2/vkontakte" id="a-vkontakte">Vkontakte</a>
-    <a href="/api/login/oauth2/google" id="a-google">Google</a>
-    <a href="/api/login/oauth2/keycloak" id="a-keycloak">Keycloak</a>
+    <#list availableOauth2Providers as item>
+        <a href="/api/login/oauth2/${item}" id="a-${item}">${item}</a> <br/>
+    </#list>
 
 </div>
 </body>

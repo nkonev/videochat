@@ -6,10 +6,9 @@
 
     <div id="principalId">id: <@sec.authentication property="principal.id"/></div>
 
-    <div id="facebookId">facebookId: <@sec.authentication property="principal.oauth2Identifiers.facebookId"/></div>
-    <div id="vkontakteId">vkontakteId: <@sec.authentication property="principal.oauth2Identifiers.vkontakteId"/></div>
-    <div id="googleId">googleId: <@sec.authentication property="principal.oauth2Identifiers.googleId"/></div>
-    <div id="keycloakId">keycloakId: <@sec.authentication property="principal.oauth2Identifiers.keycloakId"/></div>
+    <#list myOauth2Identifiers as propName, propValue>
+        ${propName}: ${(propValue)!"no id"} <br/>
+    </#list>
 
     <@form.form action="/api/logout" method="post">
         <input id="btn-logout" type="submit" value="Logout"/>

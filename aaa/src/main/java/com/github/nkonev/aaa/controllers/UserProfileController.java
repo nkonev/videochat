@@ -11,13 +11,12 @@ import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
 import com.github.nkonev.aaa.security.OAuth2Providers;
 import com.github.nkonev.aaa.services.EventService;
+import com.github.nkonev.aaa.services.OAuth2ProvidersService;
 import com.github.nkonev.aaa.services.UserService;
 import com.github.nkonev.aaa.utils.PageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
@@ -38,7 +37,6 @@ import java.util.stream.Collectors;
 import static com.github.nkonev.aaa.Constants.Headers.*;
 import static com.github.nkonev.aaa.Constants.MAX_USERS_RESPONSE_LENGTH;
 import static com.github.nkonev.aaa.converter.UserAccountConverter.convertRolesToStringList;
-import static java.util.stream.Stream.ofNullable;
 
 /**
  * Created by nik on 08.06.17.
@@ -66,7 +64,7 @@ public class UserProfileController {
     private EventService notifier;
 
     @Autowired
-    private ObjectProvider<OAuth2ClientProperties> oAuth2ClientProperties;
+    private OAuth2ProvidersService oAuth2ProvidersService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
@@ -376,10 +374,7 @@ public class UserProfileController {
 
     @GetMapping(Constants.Urls.API + "/oauth2/providers")
     public Set<String> availableOauth2Providers() {
-        return ofNullable(oAuth2ClientProperties.getIfAvailable())
-                .map(OAuth2ClientProperties::getRegistration)
-                .flatMap(stringRegistrationMap -> stringRegistrationMap.keySet().stream())
-                .collect(Collectors.toSet());
+        return oAuth2ProvidersService.availableOauth2Providers();
     }
 
 }
