@@ -141,17 +141,15 @@ export default {
     bus.on(OPEN_SETTINGS, this.showLoginModal);
   },
   mounted() {
-    this.$nextTick(()=>{
-      this.fileInput = document.getElementById('image-input-profile-avatar');
-      this.fileInput.onchange = (e) => {
-        this.correlationId = uuidv4();
-        if (e.target.files.length) {
-          const files = Array.from(e.target.files);
-          const file = files[0];
-          this.setAvatarToProfile(file);
-        }
+    this.fileInput = document.getElementById('image-input-profile-avatar');
+    this.fileInput.onchange = (e) => {
+      this.correlationId = uuidv4();
+      if (e.target.files.length) {
+        const files = Array.from(e.target.files);
+        const file = files[0];
+        this.setAvatarToProfile(file);
       }
-    })
+    }
   },
   beforeUnmount() {
     bus.off(OPEN_SETTINGS, this.showLoginModal);
