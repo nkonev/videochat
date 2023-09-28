@@ -224,7 +224,7 @@
             </template>
           </v-text-field>
         </v-container>
-        <Teleport to="#prepending-buttons">
+        <Teleport to="#prepending-buttons" :disabled="!enabled">
           <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromProfile()"><v-icon>mdi-image-remove</v-icon> {{ $vuetify.locale.t('$vuetify.remove_avatar_btn') }}</v-btn>
           <v-btn v-if="!hasAva" variant="outlined" @click="openAvatarDialog()"><v-icon>mdi-image-outline</v-icon> {{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}</v-btn>
         </Teleport>
@@ -238,6 +238,7 @@ import {deepCopy, hasLength, setTitle} from "@/utils";
 import {v4 as uuidv4} from "uuid";
 
 export default {
+    props: ['enabled'],
     data() {
         return {
             showInputablePassword: false,

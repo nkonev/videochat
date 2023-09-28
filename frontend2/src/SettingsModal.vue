@@ -33,7 +33,7 @@
                 <LanguageModalContent/>
             </v-window-item>
             <v-window-item value="user_profile_self">
-                <UserSelfProfileModalContent/>
+                <UserSelfProfileModalContent :enabled="tab == 'user_profile_self'"/>
             </v-window-item>
             <v-window-item value="a_video_settings">
                 <VideoGlobalSettingsModalContent  v-if="shouldShowVideoSettings()"/>
