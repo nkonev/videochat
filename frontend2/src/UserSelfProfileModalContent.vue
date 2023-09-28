@@ -379,16 +379,6 @@ export default {
                     this.chatStore.fetchUserProfile()
                 })
         },
-        setMainTitle() {
-          const aTitle = this.$vuetify.locale.t('$vuetify.user_profile');
-          this.chatStore.title = aTitle;
-          setTitle(aTitle);
-        },
-        unsetMainTitle() {
-          const aTitle = null;
-          this.chatStore.title = aTitle;
-          setTitle(aTitle);
-        },
 
         setAvatarToProfile(file) {
           const config = {
@@ -413,7 +403,6 @@ export default {
         },
     },
     mounted() {
-      this.setMainTitle();
       this.fileInput = document.getElementById('image-input');
       this.fileInput.onchange = (e) => {
           this.correlationId = uuidv4();
@@ -425,20 +414,11 @@ export default {
       }
     },
     beforeUnmount() {
-      this.unsetMainTitle();
       if (this.fileInput) {
           this.fileInput.onchange = null;
       }
       this.fileInput = null;
     },
-    watch: {
-      '$vuetify.locale.current': {
-        handler: function (newValue, oldValue) {
-          this.setMainTitle();
-        },
-      }
-    },
-
 }
 </script>
 
