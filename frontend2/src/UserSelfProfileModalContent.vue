@@ -5,7 +5,7 @@
             <v-img v-if="hasAva"
                    :src="ava"
                    class="mt-2"
-                   @click="openAvatarDialog"
+                   @click="openAvatarDialog()"
             >
             </v-img>
 

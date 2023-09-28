@@ -81,7 +81,7 @@
                                        min-width="600"
                                        min-height="600"
                                        max-height="800"
-                                       @click="openAvatarDialog"
+                                       @click="openAvatarDialog()"
                                 >
                                 </v-img>
                             </v-container>
@@ -104,7 +104,7 @@
 <script>
     import axios from "axios";
     import debounce from "lodash/debounce";
-    import bus, {OPEN_CHAT_EDIT, OPEN_CHOOSE_AVATAR} from "./bus/bus";
+    import bus, {OPEN_CHAT_EDIT} from "./bus/bus";
     import {chat_name} from "@/router/routes";
     import {hasLength} from "@/utils";
     import {v4 as uuidv4} from "uuid";
