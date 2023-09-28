@@ -48,6 +48,7 @@
       </v-card-text>
 
       <v-card-actions>
+        <div id="prepending-buttons"/>
         <v-spacer/>
         <v-btn color="red" variant="flat" @click="hideLoginModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
       </v-card-actions>

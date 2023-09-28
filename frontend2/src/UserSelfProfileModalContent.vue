@@ -1,16 +1,13 @@
 <template>
         <v-card-title class="title pb-0 pt-2">{{ $vuetify.locale.t('$vuetify.user_profile') }} #{{ chatStore.currentUser.id }}</v-card-title>
 
-        <v-container class="d-flex justify-space-around flex-column pb-0 user-self-settings-container">
-            <v-img v-if="chatStore.currentUser.avatarBig || chatStore.currentUser.avatar"
+        <v-container class="d-flex justify-space-around flex-column py-0 user-self-settings-container">
+            <v-img v-if="hasAva"
                    :src="ava"
-                   :aspect-ratio="16/9"
-                   min-width="400"
-                   min-height="400"
+                   class="mt-2"
                    @click="openAvatarDialog"
             >
             </v-img>
-            <v-btn v-else color="primary" @click="openAvatarDialog()">{{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}</v-btn>
 
             <v-container class="ma-0 pa-0 mt-2 d-flex flex-row">
               <v-list-item-title v-if="!showLoginInput" class="align-self-center text-h3">{{ chatStore.currentUser.login }}</v-list-item-title>
@@ -227,7 +224,10 @@
             </template>
           </v-text-field>
         </v-container>
-
+        <Teleport to="#prepending-buttons">
+          <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromProfile()"><v-icon>mdi-image-remove</v-icon> {{ $vuetify.locale.t('$vuetify.remove_avatar_btn') }}</v-btn>
+          <v-btn v-if="!hasAva" variant="outlined" @click="openAvatarDialog()"><v-icon>mdi-image-outline</v-icon> {{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}</v-btn>
+        </Teleport>
 </template>
 
 <script>
@@ -235,6 +235,7 @@ import axios from "axios";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {deepCopy, hasLength, setTitle} from "@/utils";
+import {v4 as uuidv4} from "uuid";
 
 export default {
     data() {
@@ -249,7 +250,8 @@ export default {
             loginPrevious: "",
             password: "",
             emailPrevious: "",
-            shortInfoPrevious: null
+            shortInfoPrevious: null,
+            fileInput: null,
         }
     },
     computed: {
@@ -265,6 +267,10 @@ export default {
                     return null
                 }
             }
+        },
+        hasAva() {
+          const maybeUser = this.chatStore.currentUser;
+          return hasLength(maybeUser?.avatarBig) || hasLength(maybeUser?.avatar)
         },
         rules() {
           const minChars = 8;
@@ -384,40 +390,46 @@ export default {
           setTitle(aTitle);
         },
 
+        setAvatarToProfile(file) {
+          const config = {
+            headers: { 'content-type': 'multipart/form-data' }
+          }
+          const formData = new FormData();
+          formData.append('data', file);
+          return axios.post('/api/storage/avatar', formData, config)
+            .then((res) => {
+              return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl}).then((response) => {
+                return this.chatStore.fetchUserProfile()
+              })
+            })
+        },
+        removeAvatarFromProfile() {
+          return axios.patch(`/api/profile`, {removeAvatar: true}).then((response) => {
+            return this.chatStore.fetchUserProfile()
+          });
+        },
         openAvatarDialog() {
-          console.warn("Not implemented");
-            // bus.$emit(OPEN_CHOOSE_AVATAR, {
-            //     initialAvatarCallback: () => {
-            //         return this.ava
-            //     },
-            //     uploadAvatarFileCallback: (blob) => {
-            //         if (!blob) {
-            //             return Promise.resolve(false);
-            //         }
-            //         const config = {
-            //             headers: { 'content-type': 'multipart/form-data' }
-            //         }
-            //         const formData = new FormData();
-            //         formData.append('data', blob);
-            //         return axios.post('/api/storage/avatar', formData, config)
-            //     },
-            //     removeAvatarUrlCallback: () => {
-            //         return axios.patch(`/api/profile`, {removeAvatar: true});
-            //     },
-            //     storeAvatarUrlCallback: (res) => {
-            //         return axios.patch(`/api/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl});
-            //     },
-            //     onSuccessCallback: () => {
-            //         this.$store.dispatch(FETCH_USER_PROFILE);
-            //     }
-            // });
+            this.fileInput.click();
         },
     },
     mounted() {
       this.setMainTitle();
+      this.fileInput = document.getElementById('image-input');
+      this.fileInput.onchange = (e) => {
+          this.correlationId = uuidv4();
+          if (e.target.files.length) {
+              const files = Array.from(e.target.files);
+              const file = files[0];
+              this.setAvatarToProfile(file);
+          }
+      }
     },
     beforeUnmount() {
       this.unsetMainTitle();
+      if (this.fileInput) {
+          this.fileInput.onchange = null;
+      }
+      this.fileInput = null;
     },
     watch: {
       '$vuetify.locale.current': {
