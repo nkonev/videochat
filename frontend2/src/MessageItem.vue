@@ -1,6 +1,6 @@
 <template>
     <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="id">
-      <div v-if="item.owner && item.owner.avatar" class="message-owner-avatar mt-2 pr-0 mr-3">
+      <div v-if="item.owner && item.owner.avatar" class="item-avatar mt-2 pr-0 mr-3">
         <router-link :to="getOwnerLink(item)" class="user-link">
           <img :src="item.owner.avatar">
         </router-link>
@@ -166,6 +166,7 @@
 <style lang="stylus" scoped>
   @import "common.styl"
   @import "messageWrapper.styl"
+  @import "itemAvatar.styl"
 
   .list-item-head {
     text-decoration none
@@ -212,19 +213,4 @@
       0% { background: yellow }
   }
 
-  .message-owner-avatar {
-    align-items: center;
-    border-radius: 50%;
-    overflow: hidden;
-
-    height: 40px;
-    min-width: 40px;
-    width: 40px;
-
-    img {
-      border-radius: inherit;
-      height: inherit;
-      width: inherit;
-    }
-  }
 </style>

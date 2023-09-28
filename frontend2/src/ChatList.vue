@@ -22,7 +22,9 @@
                         bordered
                         :model-value="item.online"
                     >
-                        <v-avatar :image="item.avatar"></v-avatar>
+                      <span class="item-avatar">
+                        <img :src="item.avatar">
+                      </span>
                     </v-badge>
                 </template>
 
@@ -568,6 +570,8 @@ export default {
 </style>
 
 <style lang="stylus" scoped>
+@import "itemAvatar.styl"
+
 .pinned-bold {
     font-weight bold
 }
