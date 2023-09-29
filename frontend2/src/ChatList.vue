@@ -521,7 +521,6 @@ export default {
   async mounted() {
     this.markInstance = new Mark("div#chat-list-items .chat-name");
     this.setTopTitle();
-    this.chatStore.isShowSearch = true;
 
     if (this.canDrawChats()) {
       await this.onProfileSet();
@@ -536,6 +535,7 @@ export default {
     bus.on(CHAT_DELETED, this.removeItem);
 
     if (this.$route.name == chat_list_name) {
+      this.chatStore.isShowSearch = true;
       this.chatStore.searchType = SEARCH_MODE_CHATS;
     }
   },
@@ -554,7 +554,10 @@ export default {
 
     setTitle(null);
     this.chatStore.title = null;
-    this.chatStore.isShowSearch = false;
+
+    if (this.$route.name == chat_list_name) {
+      this.chatStore.isShowSearch = false;
+    }
   }
 }
 </script>
