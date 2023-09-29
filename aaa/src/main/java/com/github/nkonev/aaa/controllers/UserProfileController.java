@@ -143,7 +143,7 @@ public class UserProfileController {
             Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH,
             Constants.Urls.API+Constants.Urls.USER+Constants.Urls.SEARCH
     })
-    public SearchUsersResponseDto searchUserInternal(
+    public SearchUsersResponseDto searchUser(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody SearchUsersRequestDto request
     ) {
