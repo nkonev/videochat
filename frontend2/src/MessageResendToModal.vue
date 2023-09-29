@@ -142,9 +142,11 @@ export default {
     },
     created() {
         this.doSearch = debounce(this.doSearch, 700);
-        bus.on(OPEN_RESEND_TO_MODAL, this.showModal);
     },
-    destroyed() {
+    mounted() {
+      bus.on(OPEN_RESEND_TO_MODAL, this.showModal);
+    },
+    beforeUnmount() {
         bus.off(OPEN_RESEND_TO_MODAL, this.showModal);
     },
 }

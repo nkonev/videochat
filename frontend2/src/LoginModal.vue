@@ -115,10 +115,10 @@
 
             }
         },
-        created() {
+        mounted() {
             bus.on(LOGGED_OUT, this.showLoginModal);
         },
-        destroyed() {
+        beforeUnmount() {
             bus.off(LOGGED_OUT, this.showLoginModal);
         },
         computed: {

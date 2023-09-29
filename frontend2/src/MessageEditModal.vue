@@ -69,11 +69,11 @@
                 return !this.messageId;
             },
         },
-        created() {
+        mounted() {
             bus.on(OPEN_EDIT_MESSAGE, this.showModal);
             bus.on(CLOSE_EDIT_MESSAGE, this.closeModal);
         },
-        destroyed() {
+        beforeUnmount() {
             bus.off(OPEN_EDIT_MESSAGE, this.showModal);
             bus.off(CLOSE_EDIT_MESSAGE, this.closeModal);
         }

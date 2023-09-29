@@ -231,12 +231,12 @@ export default {
           }
         },
     },
-    created() {
+    mounted() {
         bus.on(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
         bus.on(NOTIFICATION_ADD, this.notificationAdd);
         bus.on(NOTIFICATION_DELETE, this.notificationDelete);
     },
-    destroyed() {
+    beforeUnmount() {
         bus.off(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
         bus.off(NOTIFICATION_ADD, this.notificationAdd);
         bus.off(NOTIFICATION_DELETE, this.notificationDelete);

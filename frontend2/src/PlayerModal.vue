@@ -47,10 +47,10 @@ export default {
             }
         },
     },
-    created() {
+    mounted() {
         bus.on(PLAYER_MODAL, this.showModal);
     },
-    destroyed() {
+    beforeUnmount() {
         bus.off(PLAYER_MODAL, this.showModal);
     },
     watch: {

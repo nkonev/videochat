@@ -234,12 +234,12 @@ export default {
             }
         }
     },
-    created() {
+    mounted() {
         bus.on(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
         bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
         bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     },
-    destroyed() {
+    beforeUnmount() {
         bus.off(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
         bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
         bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);

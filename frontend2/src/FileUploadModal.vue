@@ -283,12 +283,12 @@ export default {
             return !!this.inputFiles.length
         }
     },
-    created() {
+    mounted() {
         bus.on(OPEN_FILE_UPLOAD_MODAL, this.showModal);
         bus.on(CLOSE_FILE_UPLOAD_MODAL, this.hideModal);
         bus.on(FILE_UPLOAD_MODAL_START_UPLOADING, this.upload);
     },
-    destroyed() {
+    beforeUnmount() {
         bus.off(OPEN_FILE_UPLOAD_MODAL, this.showModal);
         bus.off(CLOSE_FILE_UPLOAD_MODAL, this.hideModal);
         bus.off(FILE_UPLOAD_MODAL_START_UPLOADING, this.upload);

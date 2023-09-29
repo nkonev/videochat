@@ -62,11 +62,11 @@
                 this.$data.buttonName = "";
             },
         },
-        created() {
+        mounted() {
             bus.on(OPEN_SIMPLE_MODAL, this.showModal);
             bus.on(CLOSE_SIMPLE_MODAL, this.hideModal)
         },
-        destroyed() {
+        beforeUnmount() {
             bus.off(OPEN_SIMPLE_MODAL, this.showModal);
             bus.off(CLOSE_SIMPLE_MODAL, this.hideModal)
         },

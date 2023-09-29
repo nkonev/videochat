@@ -167,10 +167,10 @@ export default {
             }
         },
     },
-    created() {
+    mounted() {
         bus.on(OPEN_MESSAGE_READ_USERS_DIALOG, this.showModal);
     },
-    destroyed() {
+    beforeUnmount() {
         bus.off(OPEN_MESSAGE_READ_USERS_DIALOG, this.showModal);
     },
 }

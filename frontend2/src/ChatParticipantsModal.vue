@@ -472,10 +472,7 @@
             bus.on(CHAT_EDITED, this.onChatEdit);
             bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
         },
-        beforeDestroy() {
-
-        },
-        destroyed() {
+        beforeUnmount() {
             bus.off(OPEN_PARTICIPANTS_DIALOG, this.showModal);
             bus.off(PARTICIPANT_ADDED, this.onParticipantAdded);
             bus.off(PARTICIPANT_DELETED, this.onParticipantDeleted);

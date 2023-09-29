@@ -96,10 +96,10 @@ import {
                 this.mediaType = null;
             }
         },
-        created() {
+        mounted() {
             bus.on(OPEN_MESSAGE_EDIT_LINK, this.showModal);
         },
-        destroyed() {
+        beforeUnmount() {
             bus.off(OPEN_MESSAGE_EDIT_LINK, this.showModal);
         },
     }

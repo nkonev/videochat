@@ -338,13 +338,15 @@ export default {
     },
     created() {
         this.doSearch = debounce(this.doSearch, 700);
-        bus.on(OPEN_VIEW_FILES_DIALOG, this.showModal);
-        bus.on(PREVIEW_CREATED, this.onPreviewCreated);
-        bus.on(FILE_CREATED, this.onFileCreated);
-        bus.on(FILE_UPDATED, this.onFileUpdated);
-        bus.on(FILE_REMOVED, this.onFileRemoved);
     },
-    destroyed() {
+    mounted() {
+      bus.on(OPEN_VIEW_FILES_DIALOG, this.showModal);
+      bus.on(PREVIEW_CREATED, this.onPreviewCreated);
+      bus.on(FILE_CREATED, this.onFileCreated);
+      bus.on(FILE_UPDATED, this.onFileUpdated);
+      bus.on(FILE_REMOVED, this.onFileRemoved);
+    },
+    beforeUnmount() {
         bus.off(OPEN_VIEW_FILES_DIALOG, this.showModal);
         bus.off(PREVIEW_CREATED, this.onPreviewCreated);
         bus.off(FILE_CREATED, this.onFileCreated);

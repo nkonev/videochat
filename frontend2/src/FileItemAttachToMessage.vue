@@ -160,10 +160,10 @@ export default {
           }
         },
     },
-    created() {
+    mounted() {
         bus.on(ATTACH_FILES_TO_MESSAGE_MODAL, this.showModal);
     },
-    destroyed() {
+    beforeUnmount() {
         bus.off(ATTACH_FILES_TO_MESSAGE_MODAL, this.showModal);
     },
 }

@@ -455,7 +455,7 @@
             bus.on(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             this.loadFromStore();
         },
-        beforeDestroy() {
+        beforeUnmount() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.off(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
