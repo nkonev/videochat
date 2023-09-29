@@ -50,7 +50,7 @@
           </v-btn>
 
           <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
-          <div class="d-flex flex-column app-title mx-2" :class="chatId ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': chatId ? 'pointer' : 'default'}">
+          <div class="d-flex flex-column app-title mx-2" :class="isInChat() ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
             <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="chatStore.title"></div>
             <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
               {{ getSubtitle() }}
@@ -177,7 +177,11 @@ export default {
         },
         // it differs from original
         chatId() {
+          if (!this.isInChat()) {
+            return null
+          } else {
             return this.$route.params.id
+          }
         },
         notificationsCount() {
             return this.chatStore.notificationsCount
@@ -393,8 +397,11 @@ export default {
         onChatAvatarClick() {
           bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: this.chatStore.avatar})
         },
+        isInChat() {
+          return this.$route.name == chat_name || this.$route.name == videochat_name
+        },
         onInfoClicked() {
-          if (this.chatId) {
+          if (this.isInChat()) {
             bus.emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
           }
         },
