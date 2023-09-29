@@ -50,8 +50,22 @@
 
       <v-card-actions>
         <template v-if="tab == 'user_profile_self'">
-          <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromProfile()"><v-icon>mdi-image-remove</v-icon> {{ $vuetify.locale.t('$vuetify.remove_avatar_btn') }}</v-btn>
-          <v-btn v-if="!hasAva" variant="outlined" @click="openAvatarDialog()"><v-icon>mdi-image-outline</v-icon> {{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}</v-btn>
+          <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromProfile()">
+            <template v-slot:prepend>
+              <v-icon>mdi-image-remove</v-icon>
+            </template>
+            <template v-slot:default>
+              {{ $vuetify.locale.t('$vuetify.remove_avatar_btn') }}
+            </template>
+          </v-btn>
+          <v-btn v-if="!hasAva" variant="outlined" @click="openAvatarDialog()">
+            <template v-slot:prepend>
+              <v-icon>mdi-image-outline</v-icon>
+            </template>
+            <template v-slot:default>
+              {{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}
+            </template>
+          </v-btn>
         </template>
         <v-spacer/>
         <v-btn color="red" variant="flat" @click="hideLoginModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
@@ -143,7 +157,6 @@ export default {
   mounted() {
     this.fileInput = document.getElementById('image-input-profile-avatar');
     this.fileInput.onchange = (e) => {
-      this.correlationId = uuidv4();
       if (e.target.files.length) {
         const files = Array.from(e.target.files);
         const file = files[0];
