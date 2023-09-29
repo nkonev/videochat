@@ -1,11 +1,11 @@
 <template>
   <v-card v-if="viewableUser"
           class="mr-auto"
-          max-width="800"
+          width="800"
   >
     <v-container class="d-flex justify-space-around flex-column py-0 user-self-settings-container">
-      <div class="title pb-0 pt-2">{{ $vuetify.locale.t('$vuetify.user_profile') }} #{{ viewableUser.id }}</div>
-
+      <v-card-title class="title px-0 pb-0">
+        {{ $vuetify.locale.t('$vuetify.user_profile') }} #{{ viewableUser.id }}      </v-card-title>
       <v-img v-if="hasAva"
          :src="ava"
              max-width="320"
