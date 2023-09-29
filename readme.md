@@ -6,11 +6,11 @@ Your open source self-hosted videoconference platform.
 # Why
 Today Web is ubiquitous. Most of computer's users have web browsers. 
 Usually they are relatively modern versions of either Chrome- or Firefox-based browsers.
-It looks enough to make video calls. But...
+It seems enough to make video calls. But...
 
 Many of popular video platforms ignore this fact. 
 They force you to install their Electron-based application on your computer.
-Hence, along with web browser you open their Electron-based application, the resource consumption grows.
+Hence, along with web browser you open their heavy application, the resource consumption grows.
 
 Many of popular video platforms store your data in their servers, they control your data.
 This opens risks of any kind of data leak, selling some data or metadata about you, 
@@ -19,8 +19,8 @@ tracking and observing your actions.
 They show you annoying or inappropriate ads, you have no option to disable it.
 
 This project offers you a self-hosted solution, which you can embed into your infrastructure, 
-so you will owe your data, and you can apply needed security policies, 
-whether to open or not this service to the Internet, hide it behind your corporate VPN and so on.
+so you will possess your data, and you can apply needed security policies, 
+whether to expose or not this service to the Internet, hide it behind your corporate VPN and so on.
 
 # Screenshots
 Click on image to open a screenshot gallery.
