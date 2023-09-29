@@ -21,6 +21,82 @@
                     <v-list-item-title>
                         <span class="user-name" v-html="getUserName(item)"></span>
                     </v-list-item-title>
+                    <v-list-item-subtitle>
+                      <v-chip
+                        density="comfortable"
+                        v-if="item.oauth2Identifiers.vkontakteId"
+                        class="mr-1 c-btn-vk cursor-pointer"
+                        text-color="white"
+                      >
+                        <template v-slot:prepend>
+                          <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}"></font-awesome-icon>
+                        </template>
+                        <template v-slot:default>
+                          <span class="ml-1">
+                            Vkontakte
+                          </span>
+                        </template>
+                      </v-chip>
+                      <v-chip
+                        density="comfortable"
+                        v-if="item.oauth2Identifiers.facebookId"
+                        class="mr-1 c-btn-fb cursor-pointer"
+                        text-color="white"
+                      >
+                        <template v-slot:prepend>
+                          <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook'}"></font-awesome-icon>
+                        </template>
+                        <template v-slot:default>
+                          <span class="ml-1">
+                            Facebook
+                          </span>
+                        </template>
+                      </v-chip>
+                      <v-chip
+                        density="comfortable"
+                        v-if="item.oauth2Identifiers.googleId"
+                        class="mr-1 c-btn-google cursor-pointer"
+                        text-color="white"
+                      >
+                        <template v-slot:prepend>
+                          <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google'}"></font-awesome-icon>
+                        </template>
+                        <template v-slot:default>
+                          <span class="ml-1">
+                            Google
+                          </span>
+                        </template>
+                      </v-chip>
+                      <v-chip
+                        density="comfortable"
+                        v-if="item.oauth2Identifiers.keycloakId"
+                        class="mr-1 c-btn-keycloak cursor-pointer"
+                        text-color="white"
+                      >
+                        <template v-slot:prepend>
+                          <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'key'}"></font-awesome-icon>
+                        </template>
+                        <template v-slot:default>
+                          <span class="ml-1">
+                            Keycloak
+                          </span>
+                        </template>
+                      </v-chip>
+
+                      <v-chip v-for="(role, index) in item.additionalData.roles"
+                        density="comfortable"
+                        class="mr-1 cursor-pointer"
+                        v-if="item.oauth2Identifiers.vkontakteId"
+                        text-color="white"
+                      >
+                        <template v-slot:default>
+                          <span>
+                            {{role}}
+                          </span>
+                        </template>
+                      </v-chip>
+
+                    </v-list-item-subtitle>
                 </template>
 
             </v-list-item>
@@ -315,8 +391,10 @@ export default {
 
 <style lang="stylus" scoped>
 @import "itemAvatar.styl"
+@import "oAuth2.styl"
 
-.pinned-bold {
-    font-weight bold
+.cursor-pointer {
+  cursor pointer
 }
+
 </style>

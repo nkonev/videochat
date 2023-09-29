@@ -3,12 +3,13 @@ package com.github.nkonev.aaa.dto;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 public record UserAccountDTOExtended (
     @JsonUnwrapped
     UserAccountDTO userAccountDTO,
 
-    DataDTO managementData,
+    DataDTO additionalData,
 
     boolean canLock,
 
@@ -31,7 +32,7 @@ public record UserAccountDTOExtended (
         boolean enabled,
         boolean expired,
         boolean locked,
-        UserRole role
+        Set<UserRole> roles
     ) { }
 
 }
