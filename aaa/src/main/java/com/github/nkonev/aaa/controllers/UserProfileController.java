@@ -200,7 +200,7 @@ public class UserProfileController {
             if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.id())) {
                 result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null));
             } else {
-                result.add(userAccountConverter.convertToUserAccountDTO(userAccountEntity));
+                result.add(UserAccountConverter.convertToUserAccountDTO(userAccountEntity));
             }
         }
         return result;
@@ -215,7 +215,7 @@ public class UserProfileController {
         if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.id())) {
             return UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null);
         } else {
-            return userAccountConverter.convertToUserAccountDTO(userAccountEntity);
+            return UserAccountConverter.convertToUserAccountDTO(userAccountEntity);
         }
     }
 
