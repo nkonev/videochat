@@ -5,7 +5,7 @@ Your open source self-hosted videoconference platform.
 
 # Why
 Today Web is ubiquitous. Most of computer's users have web browsers. 
-Usually they are relatively modern versions of either Chrome- or Firefox-based browsers.
+Usually they are modern versions of either Chrome- or Firefox-based browsers.
 It seems enough to make video calls. But...
 
 Many of popular video platforms ignore this fact. 
@@ -13,7 +13,7 @@ They force you to install their Electron-based application on your computer.
 Hence, along with web browser you open their heavy application, the resource consumption grows.
 
 Many of popular video platforms store your data in their servers, they control your data.
-This opens risks of any kind of data leak, selling some data or metadata about you, 
+This increases risks of any kind of data leak, selling some data or metadata about you, 
 tracking and observing your actions.
 
 They show you annoying or inappropriate ads, you have no option to disable it.
