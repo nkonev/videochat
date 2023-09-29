@@ -143,13 +143,13 @@ public class UserProfileController {
             Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH,
             Constants.Urls.API+Constants.Urls.USER+Constants.Urls.SEARCH
     })
-    public SearchUsersResponseDto searchUser(
+    public SearchUsersResponseDto searchUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody SearchUsersRequestDto request
     ) {
         LOGGER.info("Searching users");
         PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(request.page), PageUtils.fixSize(request.size), Sort.Direction.ASC, "id");
-        var searchString = request.searchString.trim();
+        var searchString = request.searchString != null ? request.searchString.trim() : "";
 
         final String forDbSearch = "%" + searchString + "%";
         List<UserAccount> resultPage;
@@ -171,6 +171,19 @@ public class UserProfileController {
                 resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList()),
                 count
         );
+    }
+
+    record GetPageResponse(int page) {}
+
+    @GetMapping(Constants.Urls.API + Constants.Urls.USER + "/get-page")
+    public GetPageResponse getPage(@RequestParam("id") long id, @RequestParam("size") int rawSize) {
+        // copy from ChatHandler.GetChatPage
+        var size = PageUtils.fixSize(rawSize);
+        int rowNumber = userAccountRepository.getUserRowNumber(id);
+
+        var returnPage = (rowNumber + 1) / size;
+
+        return new GetPageResponse(returnPage);
     }
 
     @PutMapping(Constants.Urls.INTERNAL_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE)

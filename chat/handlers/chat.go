@@ -188,19 +188,7 @@ func (ch *ChatHandler) GetChatPage(c echo.Context) error {
 			return err
 		}
 
-		var page = 0
-		var remainder = 0
-
-		page = rowNumber / size
-		remainder = rowNumber % size
-
-		var returnPage = 0
-
-		returnPage = page
-		if remainder > 0 {
-			returnPage++
-		}
-		returnPage = (rowNumber + 1) / size
+		var returnPage = (rowNumber + 1) / size
 
 		return c.JSON(http.StatusOK, &utils.H{"page": returnPage})
 	})

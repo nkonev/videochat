@@ -3,6 +3,7 @@ import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
 
 export const SEARCH_MODE_CHATS = "qc"
 export const SEARCH_MODE_MESSAGES = "qm"
+export const SEARCH_MODE_USERS = "qu"
 
 export const goToPreserving = (route, router, to) => {
     const prev = deepCopy(route.query);
@@ -46,6 +47,13 @@ export const searchStringFacade = () => {
                     bus.emit(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, {oldValue: oldValue, newValue: newValue});
                 }
                 ,
+            },
+            ['$route.query.'+SEARCH_MODE_USERS]: {
+              handler: function (newValue, oldValue) {
+                console.debug("Route changed from q", SEARCH_MODE_USERS, oldValue, "->", newValue);
+                bus.emit(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, {oldValue: oldValue, newValue: newValue});
+              }
+              ,
             },
         }
     }

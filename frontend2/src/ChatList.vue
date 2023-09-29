@@ -212,7 +212,7 @@ export default {
                 this.transformItem(item);
           });
 
-          // replaceOrPrepend() and replaceOrAppend() for the (future) situation when order has been changed on server,
+          // replaceOrPrepend() and replaceOrAppend() for the situation when order has been changed on server,
           // e.g. some chat has been popped up on sever due to somebody updated it
           if (this.isTopDirection()) {
               replaceOrPrepend(this.items, items.reverse());

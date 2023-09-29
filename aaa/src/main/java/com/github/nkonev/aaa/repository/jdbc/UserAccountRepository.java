@@ -50,4 +50,15 @@ public interface UserAccountRepository extends PagingAndSortingRepository<UserAc
     void updateLastLogin(@Param("userName") String username, @Param("newLastLoginDateTime") LocalDateTime localDateTime);
 
     List<UserAccount> findByIdInOrderById(List<Long> userIds);
+
+    @Query("""
+		SELECT al.nrow FROM (
+		SELECT
+		    u.id as uid,
+			ROW_NUMBER () OVER() AS nrow
+		FROM
+			users u
+		) al WHERE al.uid = :id
+    """)
+    int getUserRowNumber(@Param("id") long id);
 }

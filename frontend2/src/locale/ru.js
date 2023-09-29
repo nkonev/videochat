@@ -9,6 +9,7 @@ export default {
     mute_video: "Выключить видео",
     fullscreen: "На весь экран",
     files: "Файлы",
+    users: "Пользователи",
     find_user: "Найти пользователя",
     new_chat: "Новый чат",
     edit_chat: "Редактировать чат",

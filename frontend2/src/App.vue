@@ -60,7 +60,7 @@
           <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em; margin-right: 2px">
             <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" :label="searchName()">
               <template v-slot:append-inner>
-                <v-btn icon density="compact" @click.prevent="switchSearchType()"><v-icon class="search-icon">{{ searchIcon }}</v-icon></v-btn>
+                <v-btn icon density="compact" @click.prevent="switchSearchType()" :disabled="!canSwitchSearchType()"><v-icon class="search-icon">{{ searchIcon }}</v-icon></v-btn>
               </template>
             </v-text-field>
           </v-card>
@@ -119,7 +119,7 @@
 <script>
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
 import {hasLength} from "@/utils";
-import { chat_name, videochat_name} from "@/router/routes";
+import {chat_list_name, chat_name, videochat_name} from "@/router/routes";
 import axios from "axios";
 import bus, {
   CHAT_ADD,
@@ -133,7 +133,7 @@ import bus, {
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
-import {searchStringFacade, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
+import {searchStringFacade, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import RightPanelActions from "@/RightPanelActions.vue";
 import SettingsModal from "@/SettingsModal.vue";
 import SimpleModal from "@/SimpleModal.vue";
@@ -190,6 +190,8 @@ export default {
             return 'mdi-forum'
           } else if (this.chatStore.searchType == SEARCH_MODE_MESSAGES) {
             return 'mdi-message-text-outline'
+          } else if (this.chatStore.searchType == SEARCH_MODE_USERS) {
+            return 'mdi-account-group'
           }
         },
         shouldShowFileUpload() {
@@ -243,6 +245,9 @@ export default {
         resetVariables() {
             this.chatStore.unsetNotifications();
         },
+        canSwitchSearchType() {
+            return this.$route.name == chat_name || this.$route.name == videochat_name || this.$route.name == chat_list_name
+        },
         switchSearchType() {
           this.chatStore.switchSearchType()
         },
@@ -254,6 +259,8 @@ export default {
               return this.$vuetify.locale.t('$vuetify.search_in_chats')
             } else if (this.chatStore.searchType == SEARCH_MODE_MESSAGES) {
               return this.$vuetify.locale.t('$vuetify.search_in_messages')
+            } else if (this.chatStore.searchType == SEARCH_MODE_USERS) {
+              return this.$vuetify.locale.t('$vuetify.find_user')
             }
         },
         getGraphQlSubscriptionQuery() {

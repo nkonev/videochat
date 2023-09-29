@@ -1,6 +1,6 @@
 <template>
     <v-list>
-      <v-list-item v-if="chatStore.currentUser" @click.prevent="onProfileClicked()" link :href="getRouteProfile()"
+      <v-list-item v-if="chatStore.currentUser"
                    :prepend-avatar="chatStore.currentUser.avatar"
                    :title="chatStore.currentUser.login"
                    :subtitle="chatStore.currentUser.shortInfo"
@@ -33,6 +33,7 @@
             {{ $vuetify.locale.t('$vuetify.notifications') }}
         </template>
       </v-list-item>
+      <v-list-item @click.prevent="openUsers()" prepend-icon="mdi-account-group" :title="$vuetify.locale.t('$vuetify.users')"></v-list-item>
       <v-list-item @click.prevent="openSettings()" prepend-icon="mdi-cog" :title="$vuetify.locale.t('$vuetify.settings')"></v-list-item>
       <v-list-item :disabled="loading" @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
     </v-list>
@@ -42,7 +43,16 @@
 <script>
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
-import {chat_list_name, chat_name, chats, profile, profile_self_name, root, root_name} from "@/router/routes";
+import {
+  chat_list_name,
+  chat_name,
+  chats,
+  profile,
+  profile_list_name,
+  profile_self_name,
+  root,
+  root_name
+} from "@/router/routes";
 import axios from "axios";
 import bus, {
     LOGGED_OUT, OPEN_CHAT_EDIT,
@@ -79,16 +89,8 @@ export default {
     editChat() {
       bus.emit(OPEN_CHAT_EDIT, this.chatId);
     },
-    goProfile() {
-      this.$router.push(({ name: profile_self_name}))
-    },
     shouldDisplayEditChat() {
       return this.chatStore.showChatEditButton;
-    },
-    onProfileClicked() {
-      if (!this.isMobile()) {
-        this.goProfile();
-      }
     },
     getRouteRoot() {
       return root
@@ -102,11 +104,11 @@ export default {
     goChats() {
       goToPreserving(this.$route, this.$router, { name: chat_list_name});
     },
+    openUsers() {
+      goToPreserving(this.$route, this.$router, { name: profile_list_name});
+    },
     canShowFiles() {
       return hasLength(this.chatId);
-    },
-    getRouteProfile() {
-      return profile
     },
     openSettings() {
       bus.emit(OPEN_SETTINGS)
