@@ -18,8 +18,18 @@
         </span>
 
         <span class="ml-2 mb-2 d-flex flex-row align-self-end">
-          <span v-if="online" class="text-grey "><v-icon color="success">mdi-checkbox-marked-circle</v-icon> {{ $vuetify.locale.t('$vuetify.user_online') }}</span>
-          <span v-else class="text-grey align-self-center"><v-icon color="red">mdi-checkbox-marked-circle</v-icon> {{ $vuetify.locale.t('$vuetify.user_offline') }}</span>
+          <span v-if="online" class="text-grey d-flex flex-row">
+            <v-icon color="success">mdi-checkbox-marked-circle</v-icon>
+            <span class="ml-1">
+              {{ $vuetify.locale.t('$vuetify.user_online') }}
+            </span>
+          </span>
+          <span v-else class="text-grey d-flex flex-row">
+            <v-icon color="red">mdi-checkbox-marked-circle</v-icon>
+            <span class="ml-1">
+              {{ $vuetify.locale.t('$vuetify.user_offline') }}
+            </span>
+          </span>
         </span>
       </v-list-item-title>
       <v-divider></v-divider>
@@ -29,8 +39,10 @@
 
       <v-container class="ma-0 pa-0">
         <v-btn v-if="isNotMyself()" color="primary" @click="tetATet(viewableUser.id)">
-          <v-icon>mdi-message-text-outline</v-icon>
-          {{ $vuetify.locale.t('$vuetify.user_open_chat') }}
+          <template v-slot:prepend><v-icon>mdi-message-text-outline</v-icon></template>
+          <template v-slot:default>
+            {{ $vuetify.locale.t('$vuetify.user_open_chat') }}
+          </template>
         </v-btn>
       </v-container>
     </v-container>
