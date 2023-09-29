@@ -83,6 +83,7 @@
                         </template>
                       </v-chip>
 
+                      <template v-if="item.additionalData">
                       <v-chip v-for="(role, index) in item.additionalData.roles"
                         density="comfortable"
                         class="mr-1 cursor-pointer"
@@ -95,6 +96,7 @@
                           </span>
                         </template>
                       </v-chip>
+                      </template>
 
                     </v-list-item-subtitle>
                 </template>

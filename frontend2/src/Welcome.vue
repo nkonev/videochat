@@ -27,13 +27,13 @@
 </template>
 
 <script>
-import {publicallyAvailableForSearchChatsQuery, setTitle} from "@/utils";
+  import {publicallyAvailableForSearchChatsQuery, setTitle} from "@/utils";
   import {mapStores} from "pinia";
   import {useChatStore} from "@/store/chatStore";
   import heightMixin from "@/mixins/heightMixin";
-import {blog, chat_list_name} from "@/router/routes";
-  import bus, {OPEN_CHAT_EDIT, OPEN_FIND_USER} from "@/bus/bus";
-import {SEARCH_MODE_CHATS} from "@/mixins/searchString";
+  import {blog, chat_list_name, profile_list_name} from "@/router/routes";
+  import bus, {OPEN_CHAT_EDIT} from "@/bus/bus";
+  import {goToPreserving, SEARCH_MODE_CHATS} from "@/mixins/searchString";
 
   export default {
     mixins: [
@@ -47,7 +47,7 @@ import {SEARCH_MODE_CHATS} from "@/mixins/searchString";
         bus.emit(OPEN_CHAT_EDIT, null);
       },
       findUser() {
-        bus.emit(OPEN_FIND_USER)
+        goToPreserving(this.$route, this.$router, { name: profile_list_name});
       },
       availableChats() {
         this.$router.push({ name: chat_list_name, hash: null, query: {[SEARCH_MODE_CHATS] : publicallyAvailableForSearchChatsQuery} })

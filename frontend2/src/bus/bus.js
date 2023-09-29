@@ -80,7 +80,6 @@ export const FILE_UPDATED = "fileUpdated";
 
 export const ATTACH_FILES_TO_MESSAGE_MODAL = "attachFilesToMessage";
 export const OPEN_CHAT_EDIT = "openChatEdit";
-export const OPEN_FIND_USER = "openFindUser";
 
 export const LOAD_FILES_COUNT = "loadFilesCount";
 
