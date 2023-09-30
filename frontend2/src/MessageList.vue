@@ -41,20 +41,20 @@
     import infiniteScrollMixin, {directionTop} from "@/mixins/infiniteScrollMixin";
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {
-        CLOSE_SIMPLE_MODAL,
-        LOGGED_OUT,
-        MESSAGE_ADD,
-        MESSAGE_DELETED,
-        MESSAGE_EDITED,
-        OPEN_EDIT_MESSAGE,
-        OPEN_MESSAGE_READ_USERS_DIALOG,
-        OPEN_RESEND_TO_MODAL,
-        OPEN_SIMPLE_MODAL,
-        OPEN_VIEW_FILES_DIALOG,
-        PROFILE_SET,
-        SCROLL_DOWN,
-        SEARCH_STRING_CHANGED,
-        SET_EDIT_MESSAGE
+      CLOSE_SIMPLE_MODAL,
+      LOGGED_OUT,
+      MESSAGE_ADD,
+      MESSAGE_DELETED,
+      MESSAGE_EDITED,
+      OPEN_EDIT_MESSAGE,
+      OPEN_MESSAGE_READ_USERS_DIALOG,
+      OPEN_RESEND_TO_MODAL,
+      OPEN_SIMPLE_MODAL,
+      OPEN_VIEW_FILES_DIALOG,
+      PROFILE_SET,
+      SCROLL_DOWN,
+      SEARCH_STRING_CHANGED,
+      SET_EDIT_MESSAGE, USER_PROFILE_CHANGED
     } from "@/bus/bus";
     import {
         deepCopy, embed_message_reply,
@@ -470,6 +470,13 @@
             this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
           }
         },
+        onUserProfileChanged(user) {
+          this.items.forEach(item => {
+            if (item.owner.id == user.id) {
+              item.owner = user;
+            }
+          });
+        },
       },
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
@@ -523,6 +530,7 @@
         bus.on(MESSAGE_ADD, this.onNewMessage);
         bus.on(MESSAGE_DELETED, this.onDeleteMessage);
         bus.on(MESSAGE_EDITED, this.onEditMessage);
+        bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
       },
@@ -540,6 +548,7 @@
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(SCROLL_DOWN, this.onScrollDownButton);
+        bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
       }
     }
 </script>

@@ -124,10 +124,17 @@
 <script>
     import axios from "axios";
     import bus, {
-        CHAT_DELETED, CHAT_EDITED,
-        CLOSE_SIMPLE_MODAL, OPEN_CHAT_EDIT,
-        OPEN_PARTICIPANTS_DIALOG,
-        OPEN_SIMPLE_MODAL, PARTICIPANT_ADDED, PARTICIPANT_DELETED, PARTICIPANT_EDITED, VIDEO_DIAL_STATUS_CHANGED,
+      CHAT_DELETED,
+      CHAT_EDITED,
+      CLOSE_SIMPLE_MODAL,
+      OPEN_CHAT_EDIT,
+      OPEN_PARTICIPANTS_DIALOG,
+      OPEN_SIMPLE_MODAL,
+      PARTICIPANT_ADDED,
+      PARTICIPANT_DELETED,
+      PARTICIPANT_EDITED,
+      USER_PROFILE_CHANGED,
+      VIDEO_DIAL_STATUS_CHANGED,
     } from "./bus/bus";
     import {profile, profile_name, videochat_name} from "./router/routes";
     import graphqlSubscriptionMixin from "./mixins/graphqlSubscriptionMixin"
@@ -409,6 +416,14 @@
                     this.changeItem(user);
                 }
             },
+            onUserProfileChanged(user) {
+              this.participantsDto.participants.forEach(item => {
+                if (item.id == user.id) { // replaces content of tet-a-tet. It's better to move it to chat
+                  item.avatar = user.avatar;
+                  item.login = user.login;
+                }
+              });
+            },
             hasSearchString() {
                 return hasLength(this.userSearchString)
             },
@@ -471,6 +486,7 @@
             bus.on(CHAT_DELETED, this.onChatDelete);
             bus.on(CHAT_EDITED, this.onChatEdit);
             bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+            bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
         beforeUnmount() {
             bus.off(OPEN_PARTICIPANTS_DIALOG, this.showModal);
@@ -480,6 +496,7 @@
             bus.off(CHAT_DELETED, this.onChatDelete);
             bus.off(CHAT_EDITED, this.onChatEdit);
             bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+            bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
     }
 </script>

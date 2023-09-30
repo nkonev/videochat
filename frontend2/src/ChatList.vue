@@ -79,14 +79,14 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
-    CHAT_ADD,
-    CHAT_DELETED, CHAT_EDITED,
-    CLOSE_SIMPLE_MODAL,
-    LOGGED_OUT,
-    OPEN_CHAT_EDIT,
-    OPEN_SIMPLE_MODAL,
-    PROFILE_SET,
-    SEARCH_STRING_CHANGED, UNREAD_MESSAGES_CHANGED
+  CHAT_ADD,
+  CHAT_DELETED, CHAT_EDITED,
+  CLOSE_SIMPLE_MODAL,
+  LOGGED_OUT,
+  OPEN_CHAT_EDIT,
+  OPEN_SIMPLE_MODAL,
+  PROFILE_SET,
+  SEARCH_STRING_CHANGED, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED
 } from "@/bus/bus";
 import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -494,6 +494,15 @@ export default {
           let idxOf = findIndex(this.items, item);
           return idxOf !== -1;
     },
+    onUserProfileChanged(user) {
+      this.items.forEach(item => {
+        replaceInArray(item.participants, user); // replaces participants of "normal" chat
+        if (item.tetATet && item.participants.map(p => p.id).includes(user.id)) { // replaces content of tet-a-tet. It's better to move it to chat
+          item.avatar = user.avatar;
+          item.name = user.login;
+        }
+      });
+    },
 
   },
   components: {
@@ -533,6 +542,7 @@ export default {
     bus.on(CHAT_ADD, this.addItem);
     bus.on(CHAT_EDITED, this.changeItem);
     bus.on(CHAT_DELETED, this.removeItem);
+    bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
 
     if (this.$route.name == chat_list_name) {
       this.chatStore.isShowSearch = true;
@@ -551,6 +561,7 @@ export default {
     bus.off(CHAT_ADD, this.addItem);
     bus.off(CHAT_EDITED, this.changeItem);
     bus.off(CHAT_DELETED, this.removeItem);
+    bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
 
     setTitle(null);
     this.chatStore.title = null;
