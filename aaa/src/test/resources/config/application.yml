@@ -105,7 +105,6 @@ spring.datasource:
 # https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#howto-execute-flyway-database-migrations-on-startup
 # https://flywaydb.org/documentation/configfiles
 spring.flyway:
-  locations: classpath:/db/migration, classpath:/db/demo
   drop-first: true
   out-of-order: true
 
