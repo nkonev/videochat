@@ -27,6 +27,10 @@ curl -i 'http://localhost:8060/api/login' \
   --data-raw 'username=admin&password=admin'
 ```
 
+# aaa-with-oauth2
+```
+--spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/demo-migration.yml
+```
 
 ```
 docker exec -t videochat_postgres_1 pg_dump -U aaa -b --create --column-inserts --serializable-deferrable
