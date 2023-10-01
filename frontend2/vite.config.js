@@ -5,10 +5,19 @@ import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 // Utilities
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
+import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: `/front2`,
+  build: {
+    rollupOptions: {
+      input: {
+        appMain: resolve(__dirname, 'index.html'),
+        appBlog: resolve(__dirname, 'indexBlog.html'),
+      },
+    },
+  },
   plugins: [
     vue({
       template: { transformAssetUrls }
