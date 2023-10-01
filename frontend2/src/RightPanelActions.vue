@@ -33,7 +33,7 @@
             {{ $vuetify.locale.t('$vuetify.notifications') }}
         </template>
       </v-list-item>
-      <v-list-item @click.prevent="openUsers()" prepend-icon="mdi-account-group" :title="$vuetify.locale.t('$vuetify.users')"></v-list-item>
+      <v-list-item @click.prevent="openUsers()" :href="getRouteUsers()" prepend-icon="mdi-account-group" :title="$vuetify.locale.t('$vuetify.users')"></v-list-item>
       <v-list-item @click.prevent="openSettings()" prepend-icon="mdi-cog" :title="$vuetify.locale.t('$vuetify.settings')"></v-list-item>
       <v-list-item :disabled="loading" @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
     </v-list>
@@ -49,7 +49,7 @@ import {
   chats,
   profile,
   profile_list_name,
-  profile_self_name,
+  profile_self_name, profiles,
   root,
   root_name
 } from "@/router/routes";
@@ -100,6 +100,9 @@ export default {
     },
     getRouteChats() {
       return chats
+    },
+    getRouteUsers() {
+      return profiles;
     },
     goChats() {
       goToPreserving(this.$route, this.$router, { name: chat_list_name});
