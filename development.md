@@ -665,4 +665,4 @@ http://localhost:8081/front2
 
 # Initial multi page in Vite
 https://vitejs.dev/guide/build.html#multi-page-app
-http://localhost:8081/front2/indexBlog.html
+http://localhost:8081/front2/blog/
