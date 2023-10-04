@@ -1,26 +1,3 @@
-const assetExtensions = new Set([
-  'cjs',
-  'css',
-  'graphql',
-  'ico',
-  'jpeg',
-  'jpg',
-  'js',
-  'json',
-  'map',
-  'mjs',
-  'png',
-  'sass',
-  'scss',
-  'svg',
-  'styl',
-  'stylus',
-  'ts',
-  'tsx',
-  'woff',
-  'woff2',
-]);
-
 export default (base) => ({
   name: 'forward-to-trailing-slash',
   configureServer(server) {
@@ -51,12 +28,8 @@ export default (base) => ({
 
       const endsWithSlash = realUrl.pathname.endsWith('/');
       if (!endsWithSlash) {
-        const ext = realUrl.pathname.split('.').pop();
-        if (!ext || !assetExtensions.has(ext)) {
-          realUrl.pathname = `${realUrl.pathname}/`;
-          console.log("added slash", realUrl.pathname);
-          req.url = `${realUrl.pathname}${realUrl.search}`;
-        }
+        realUrl.pathname = `${realUrl.pathname}/`;
+        req.url = `${realUrl.pathname}${realUrl.search}`;
       }
 
       return next();
