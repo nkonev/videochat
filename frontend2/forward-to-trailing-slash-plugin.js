@@ -54,6 +54,7 @@ export default (base) => ({
         const ext = realUrl.pathname.split('.').pop();
         if (!ext || !assetExtensions.has(ext)) {
           realUrl.pathname = `${realUrl.pathname}/`;
+          console.log("added slash", realUrl.pathname);
           req.url = `${realUrl.pathname}${realUrl.search}`;
         }
       }
