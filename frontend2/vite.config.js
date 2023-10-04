@@ -1,6 +1,7 @@
 // Plugins
 import vue from '@vitejs/plugin-vue'
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+import forwardToTrailingSlashPlugin from './forward-to-trailing-slash-plugin.js'
 
 // Utilities
 import { defineConfig } from 'vite'
@@ -8,8 +9,10 @@ import { fileURLToPath, URL } from 'node:url'
 import { resolve } from 'path';
 
 // https://vitejs.dev/config/
+const base = "/front2";
+
 export default defineConfig({
-  base: `/front2`,
+  base: base,
   build: {
     rollupOptions: {
       input: {
@@ -19,6 +22,8 @@ export default defineConfig({
     },
   },
   plugins: [
+    // workaround https://github.com/vitejs/vite/issues/6596
+    forwardToTrailingSlashPlugin(base),
     vue({
       template: { transformAssetUrls }
     }),
