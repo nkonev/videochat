@@ -13,6 +13,8 @@ const assetExtensions = new Set([
   'sass',
   'scss',
   'svg',
+  'styl',
+  'stylus',
   'ts',
   'tsx',
   'woff',
@@ -31,8 +33,14 @@ export default (base) => ({
         return next();
       }
 
+      // needed for dynamic routing components in vue
       const startsWithSrc = url?.startsWith(`${normalizedBase}/src`);
       if (startsWithSrc) {
+        return next();
+      }
+
+      const startsNodeModules = url?.startsWith(`${normalizedBase}/node_modules`);
+      if (startsNodeModules) {
         return next();
       }
 
