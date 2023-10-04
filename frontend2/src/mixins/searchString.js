@@ -4,27 +4,31 @@ import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
 export const SEARCH_MODE_CHATS = "qc"
 export const SEARCH_MODE_MESSAGES = "qm"
 export const SEARCH_MODE_USERS = "qu"
+export const SEARCH_MODE_POSTS = "qp"
 
 export const goToPreserving = (route, router, to) => {
     const prev = deepCopy(route.query);
     router.push({ ...to, query: prev })
 }
 
+
+// this mixin expects
+// getStore() method
 export const searchStringFacade = () => {
     return {
         computed: {
             searchStringFacade: {
                 get() {
-                    return this.$route.query[this.chatStore.searchType];
+                    return this.$route.query[this.getStore().searchType];
                 },
                 set(newVal) {
                     const prev = deepCopy(this.$route.query);
 
                     let newQuery;
                     if (hasLength(newVal)) {
-                        prev[this.chatStore.searchType] = newVal;
+                        prev[this.getStore().searchType] = newVal;
                     } else {
-                        delete prev[this.chatStore.searchType]
+                        delete prev[this.getStore().searchType]
                     }
                     newQuery = prev;
 
@@ -54,6 +58,13 @@ export const searchStringFacade = () => {
                 bus.emit(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, {oldValue: oldValue, newValue: newValue});
               }
               ,
+            },
+            ['$route.query.'+SEARCH_MODE_POSTS]: {
+                handler: function (newValue, oldValue) {
+                    console.debug("Route changed from q", SEARCH_MODE_POSTS, oldValue, "->", newValue);
+                    bus.emit(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, {oldValue: oldValue, newValue: newValue});
+                }
+                ,
             },
         }
     }

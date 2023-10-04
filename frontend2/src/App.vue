@@ -203,6 +203,9 @@ export default {
         },
     },
     methods: {
+        getStore() {
+            return this.chatStore
+        },
         resetInput() {
           this.searchStringFacade = null
         },
