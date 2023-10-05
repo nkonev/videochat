@@ -2,6 +2,7 @@
 import vue from '@vitejs/plugin-vue'
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 import forwardToTrailingSlashPlugin from './forward-to-trailing-slash-plugin.js'
+import anotherEntrypointIndexHtml from "./another-entrypoint-index-html";
 
 // Utilities
 import { defineConfig } from 'vite'
@@ -22,8 +23,8 @@ export default defineConfig({
     },
   },
   plugins: [
-    // workaround https://github.com/vitejs/vite/issues/6596
     forwardToTrailingSlashPlugin(base),
+    anotherEntrypointIndexHtml(base, "/blog"),
     vue({
       template: { transformAssetUrls }
     }),

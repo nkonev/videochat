@@ -1,3 +1,4 @@
+// workaround - removes the need of the trailing slash https://github.com/vitejs/vite/issues/6596
 export default (base) => ({
   name: 'forward-to-trailing-slash',
   configureServer(server) {
