@@ -212,4 +212,5 @@ export default {
     registration_pending_confirmation_title: "Ожидание подтверждения",
     registration_confirmation_token_not_found: "Registration confirmation token is not found",
     registration_submit: "Зарегистрировать",
+    registration_user_not_found: "Зарегистрированный пользователь не найден",
 }

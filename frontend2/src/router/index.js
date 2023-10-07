@@ -9,7 +9,7 @@ import {
   profile_list_name,
   profile_name,
   profiles, registration, registration_name,
-  root_name, wrong_confirmation_token, wrong_confirmation_token_name
+  root_name, wrong_confirmation_token, wrong_confirmation_token_name, wrong_user, wrong_user_name
 } from "@/router/routes";
 
 const routes = [
@@ -52,6 +52,11 @@ const routes = [
       name: wrong_confirmation_token_name,
       path: wrong_confirmation_token,
       component: () => import('@/UserRegistrationWrongConfirmationToken.vue'),
+    },
+    {
+      name: wrong_user_name,
+      path: wrong_user,
+      component: () => import('@/UserRegistrationWrongUsername.vue'),
     },
 
 ]

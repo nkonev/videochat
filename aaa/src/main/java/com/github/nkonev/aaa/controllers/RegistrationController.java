@@ -94,7 +94,7 @@ public class RegistrationController {
      * @return
      */
     @GetMapping(value = Constants.Urls.API+ Constants.Urls.REGISTER_CONFIRM)
-    public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpServletRequest request, HttpServletResponse response) {
+    public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid) {
         String stringUuid = uuid.toString();
         Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(stringUuid);
         if (!userConfirmationTokenOptional.isPresent()) {
