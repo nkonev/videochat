@@ -46,8 +46,8 @@ public class EmulatorServersController {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("${custom.base-url}")
-    protected String urlPrefix;
+    @Value("${custom.template-engine-url-prefix}")
+    protected String templateEngineUrlPrefix;
 
     public static void main(String[] args) {
         new SpringApplicationBuilder()
@@ -76,7 +76,7 @@ public class EmulatorServersController {
         List<String> users = List.of(facebookLogin, vkontakteLogin, googleLogin);
 
         try {
-            restTemplate.put(URI.create(urlPrefix + "/internal/reset"), users);
+            restTemplate.put(URI.create(templateEngineUrlPrefix + "/internal/reset"), users);
         } catch (Exception e) {
             LOGGER.warn("Error during resetting aaa: {}", e.getMessage());
         }
@@ -87,9 +87,9 @@ public class EmulatorServersController {
         OAuth2EmulatorServers.resetGoogleEmulator();
 
         LOGGER.info("Configuring emulators");
-        OAuth2EmulatorServers.configureFacebookEmulator(urlPrefix);
-        OAuth2EmulatorServers.configureVkontakteEmulator(urlPrefix);
-        OAuth2EmulatorServers.configureGoogleEmulator(urlPrefix);
+        OAuth2EmulatorServers.configureFacebookEmulator(templateEngineUrlPrefix);
+        OAuth2EmulatorServers.configureVkontakteEmulator(templateEngineUrlPrefix);
+        OAuth2EmulatorServers.configureGoogleEmulator(templateEngineUrlPrefix);
         LOGGER.info("Emulators were configured");
     }
 }

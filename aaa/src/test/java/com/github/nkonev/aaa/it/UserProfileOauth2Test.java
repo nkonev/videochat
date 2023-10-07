@@ -41,7 +41,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
     }
 
     private void openOauth2TestPage() throws IOException {
-        currentPage = webClient.getPage(urlPrefix+"/oauth2.html");
+        currentPage = webClient.getPage(templateEngineUrlPrefix+"/oauth2.html");
     }
 
     private void clickFacebook() throws IOException {
@@ -75,7 +75,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
         }
 
         private void openLoginPage() throws IOException {
-            currentPage = webClient.getPage(urlPrefix+"/login.html");
+            currentPage = webClient.getPage(templateEngineUrlPrefix+"/login.html");
         }
 
         private String login;

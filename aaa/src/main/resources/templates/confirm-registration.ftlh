@@ -1,1 +1,1 @@
-Please open ${REGISTRATION_LINK_PLACEHOLDER} for complete registration ${LOGIN}.
+Please open ${REGISTRATION_LINK_PLACEHOLDER?no_esc} for complete registration ${LOGIN}.

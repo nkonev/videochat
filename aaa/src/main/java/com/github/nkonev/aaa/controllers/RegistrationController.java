@@ -1,5 +1,6 @@
 package com.github.nkonev.aaa.controllers;
 
+import com.github.nkonev.aaa.config.CustomConfig;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
@@ -44,6 +45,9 @@ public class RegistrationController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private CustomConfig customConfig;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationController.class);
 
     private UserConfirmationToken createUserConfirmationToken(UserAccount userAccount) {
@@ -83,22 +87,22 @@ public class RegistrationController {
      * @param uuid
      * @return
      */
-    @GetMapping(value = Constants.Urls.CONFIRM)
+    @GetMapping(value = Constants.Urls.API+ Constants.Urls.REGISTER_CONFIRM)
     public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid) {
         String stringUuid = uuid.toString();
         Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(stringUuid);
         if (!userConfirmationTokenOptional.isPresent()) {
-            return "redirect:/confirm/registration/token-not-found";
+            return "redirect:" + customConfig.getRegistrationConfirmExitTokenNotFoundUrl();
         }
         UserConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
         Optional<UserAccount> userAccountOptional = userAccountRepository.findById(userConfirmationToken.userId());
         if (!userAccountOptional.isPresent()) {
-            return "redirect:/confirm/registration/user-not-found";
+            return "redirect:" + customConfig.getRegistrationConfirmExitUserNotFoundUrl();
         }
         UserAccount userAccount = userAccountOptional.get();
         if (userAccount.enabled()) {
             LOGGER.warn("Somebody attempts secondary confirm already confirmed user account with email='{}'", userAccount);
-            return Constants.Urls.ROOT;  // respond static
+            return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
         }
 
         userAccount = userAccount.withEnabled(true);
@@ -106,7 +110,7 @@ public class RegistrationController {
 
         userConfirmationTokenRepository.deleteById(stringUuid);
 
-        return Constants.Urls.ROOT; // respond static
+        return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
     }
 
     @PostMapping(value = Constants.Urls.API+ Constants.Urls.RESEND_CONFIRMATION_EMAIL)

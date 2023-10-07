@@ -49,17 +49,17 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
 
     @BeforeEach
     public void configureFacebookEmulator() {
-        OAuth2EmulatorServers.configureFacebookEmulator(urlPrefix);
+        OAuth2EmulatorServers.configureFacebookEmulator(templateEngineUrlPrefix);
     }
 
     @BeforeEach
     public void configureVkontakteEmulator(){
-        OAuth2EmulatorServers.configureVkontakteEmulator(urlPrefix);
+        OAuth2EmulatorServers.configureVkontakteEmulator(templateEngineUrlPrefix);
     }
 
     @BeforeEach
     public void configureGoogleEmulator() {
-        OAuth2EmulatorServers.configureGoogleEmulator(urlPrefix);
+        OAuth2EmulatorServers.configureGoogleEmulator(templateEngineUrlPrefix);
     }
 
 

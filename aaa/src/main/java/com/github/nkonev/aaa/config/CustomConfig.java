@@ -10,6 +10,16 @@ public class CustomConfig {
     @Value("${custom.base-url}")
     private String baseUrl;
 
+    @Value("${custom.registration-confirm-exit-token-not-found-url}")
+    private String registrationConfirmExitTokenNotFoundUrl;
+
+    @Value("${custom.registration-confirm-exit-user-not-found-url}")
+    private String registrationConfirmExitUserNotFoundUrl;
+
+    @Value("${custom.registration-confirm-exit-success-url}")
+    private String registrationConfirmExitSuccessUrl;
+
+
     @Value("${http.client.connect-timeout:3s}")
     private Duration restClientConnectTimeout;
 
@@ -26,5 +36,17 @@ public class CustomConfig {
 
     public Duration getRestClientReadTimeout() {
         return restClientReadTimeout;
+    }
+
+    public String getRegistrationConfirmExitTokenNotFoundUrl() {
+        return registrationConfirmExitTokenNotFoundUrl;
+    }
+
+    public String getRegistrationConfirmExitUserNotFoundUrl() {
+        return registrationConfirmExitUserNotFoundUrl;
+    }
+
+    public String getRegistrationConfirmExitSuccessUrl() {
+        return registrationConfirmExitSuccessUrl;
     }
 }
