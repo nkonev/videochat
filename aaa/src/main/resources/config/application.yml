@@ -137,7 +137,6 @@ spring.rabbitmq:
   username: videoChat
   password: videoChatPazZw0rd
   # https://www.javainuse.com/messaging/rabbitmq/error
-  # dummy uncompleted, no retries because of lack of DLQ
   listener:
     simple:
       retry:
