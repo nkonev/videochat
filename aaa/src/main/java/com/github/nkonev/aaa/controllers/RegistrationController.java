@@ -1,24 +1,30 @@
 package com.github.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.config.CustomConfig;
-import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.aaa.Constants;
+import com.github.nkonev.aaa.config.CustomConfig;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.EditUserDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
+import com.github.nkonev.aaa.security.AaaAuthenticationToken;
 import com.github.nkonev.aaa.services.AsyncEmailService;
 import com.github.nkonev.aaa.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.Duration;
 import java.util.Optional;
@@ -88,7 +94,7 @@ public class RegistrationController {
      * @return
      */
     @GetMapping(value = Constants.Urls.API+ Constants.Urls.REGISTER_CONFIRM)
-    public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid) {
+    public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpServletRequest request, HttpServletResponse response) {
         String stringUuid = uuid.toString();
         Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(stringUuid);
         if (!userConfirmationTokenOptional.isPresent()) {
@@ -109,8 +115,16 @@ public class RegistrationController {
         userAccount = userAccountRepository.save(userAccount);
 
         userConfirmationTokenRepository.deleteById(stringUuid);
+        authenticate(userAccount);
 
         return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
+    }
+
+    private void authenticate(UserAccount userAccount) {
+        var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new AaaAuthenticationToken(auth));
+        SecurityContextHolder.setContext(context);
     }
 
     @PostMapping(value = Constants.Urls.API+ Constants.Urls.RESEND_CONFIRMATION_EMAIL)

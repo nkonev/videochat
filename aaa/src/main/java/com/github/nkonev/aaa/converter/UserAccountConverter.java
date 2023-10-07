@@ -84,12 +84,12 @@ public class UserAccountConverter {
         }
     }
 
-    private static SimpleGrantedAuthority convertRole(UserRole role) {
+    public static SimpleGrantedAuthority convertRole(UserRole role) {
         if (role==null) {return null;}
         return new SimpleGrantedAuthority(role.name());
     }
 
-    private static Collection<SimpleGrantedAuthority> convertRoles(Collection<UserRole> roles) {
+    public static Collection<SimpleGrantedAuthority> convertRoles(Collection<UserRole> roles) {
         if (roles==null) {return null;}
         return roles.stream().map(ur -> new SimpleGrantedAuthority(ur.name())).collect(Collectors.toSet());
     }
