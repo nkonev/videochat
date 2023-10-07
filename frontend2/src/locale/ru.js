@@ -207,4 +207,6 @@ export default {
     detach_files_from_message: "Отцепить файлы от сообщения",
     for_video_setting_please_open_chat: "Для настроки видео, пожалуйста, откройте чат",
     search_by_posts: "Поиск по блогам",
+    registration: "Регистрация",
+    pending_confirmation: "Пожалуйста, подтвердите регистрацию, кликнув по ссылке в письме",
 }

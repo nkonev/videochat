@@ -54,7 +54,7 @@ http:
       middlewares:
         - "retry-middleware"
     aaa-router:
-      rule: "PathPrefix(`/api/login`) || Path(`/api/logout`) || PathPrefix(`/api/profile`) || PathPrefix(`/api/user`) || PathPrefix(`/api/oauth2`)"
+      rule: "PathPrefix(`/api/login`) || Path(`/api/logout`) || PathPrefix(`/api/profile`) || PathPrefix(`/api/user`) || PathPrefix(`/api/oauth2`) || PathPrefix(`/api/register`)"
       service: aaa-service
       middlewares:
         - "retry-middleware"

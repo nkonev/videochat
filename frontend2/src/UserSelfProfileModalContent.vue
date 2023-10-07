@@ -41,7 +41,7 @@
                 <v-text-field
                   v-model="chatStore.currentUser.email"
                   :rules="[rules.required, rules.email]"
-                  label="E-mail"
+                  :label="$vuetify.locale.t('$vuetify.email')"
                   @keyup.native.enter="sendEmail()"
                   variant="outlined"
                   density="compact"
@@ -229,10 +229,12 @@
 import axios from "axios";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
-import {deepCopy, hasLength, setTitle} from "@/utils";
+import {deepCopy, hasLength} from "@/utils";
+import userProfileValidationRules from "@/mixins/userProfileValidationRules";
 
 export default {
     props: ['enabled'],
+    mixins: [userProfileValidationRules()],
     data() {
         return {
             showInputablePassword: false,
@@ -265,20 +267,6 @@ export default {
         hasAva() {
           const maybeUser = this.chatStore.currentUser;
           return hasLength(maybeUser?.avatarBig) || hasLength(maybeUser?.avatar)
-        },
-        rules() {
-          const minChars = 8;
-          const requiredMessage = this.$vuetify.locale.t('$vuetify.required');
-          const minCharsMessage = this.$vuetify.locale.t('$vuetify.min_characters', minChars);
-          const invalidEmailMessage = this.$vuetify.locale.t('$vuetify.invalid_email');
-          return {
-            required: value => !!value || requiredMessage,
-            min: v => v.length >= minChars || minCharsMessage,
-            email: value => {
-              const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-              return pattern.test(value) || invalidEmailMessage
-            },
-          }
         },
 
     },

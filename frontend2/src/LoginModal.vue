@@ -5,7 +5,23 @@
     -->
     <v-row justify="center">
         <v-dialog persistent v-model="show" max-width="440">
-            <v-card :title="$vuetify.locale.t('$vuetify.login_title')">
+            <v-card>
+                <v-card-title class="d-flex flex-row align-center ml-2">
+                  <span class="d-flex flex-grow-1">
+                      {{ $vuetify.locale.t('$vuetify.login_title') }}
+                  </span>
+                  <span class="d-flex">
+                    <v-btn
+                      id="register-btn"
+                      color="primary"
+                      @click="onRegisterClick"
+                      min-width="80px"
+                      variant="outlined"
+                    >
+                      {{ $vuetify.locale.t('$vuetify.registration') }}
+                    </v-btn>
+                  </span>
+                </v-card-title>
 
                 <v-card-text :class="isMobile() ? 'pa-4 pt-0' : 'pt-0'">
                     <v-form
@@ -61,6 +77,7 @@
                         >
                             {{ $vuetify.locale.t('$vuetify.login_action') }}
                         </v-btn>
+
                         <v-btn v-if="chatStore.availableOAuth2Providers.includes('vkontakte')" class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()">
                             <font-awesome-icon :icon="[ 'fab', 'vk']" :size="'2x'"></font-awesome-icon>
                         </v-btn>
@@ -86,6 +103,7 @@
     import axios from "axios";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
+    import {confirmation_pending_name, registration_name} from "@/router/routes";
 
     export default {
         data() {
@@ -201,6 +219,10 @@
                     this.loadingLogin = false;
                     this.disable = false;
                 }
+            },
+            onRegisterClick() {
+              this.show = false;
+              this.$router.push({name: registration_name} )
             },
             hideAlert() {
                 this.$data.showAlert = false;

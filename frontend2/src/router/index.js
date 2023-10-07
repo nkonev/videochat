@@ -4,11 +4,11 @@ import {
   chat,
   chat_list_name,
   chat_name,
-  chats,
+  chats, confirmation_pending, confirmation_pending_name,
   prefix, profile,
   profile_list_name,
   profile_name,
-  profiles,
+  profiles, registration, registration_name,
   root_name
 } from "@/router/routes";
 
@@ -37,6 +37,16 @@ const routes = [
       name: profile_list_name,
       path: profiles,
       component: () => import('@/UserList.vue'),
+    },
+    {
+      name: registration_name,
+      path: registration,
+      component: () => import('@/UserRegistration.vue'),
+    },
+    {
+      name: confirmation_pending_name,
+      path: confirmation_pending,
+      component: () => import('@/UserRegistrationPendingConfirmation.vue'),
     },
 
 ]
