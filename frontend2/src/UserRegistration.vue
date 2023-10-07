@@ -6,6 +6,7 @@
         v-model="login"
         :label="$vuetify.locale.t('$vuetify.login')"
         :rules="[rules.required]"
+        variant="outlined"
       ></v-text-field>
 
       <v-text-field
@@ -13,14 +14,21 @@
         v-model="email"
         :label="$vuetify.locale.t('$vuetify.email')"
         :rules="[rules.required, rules.email]"
+        variant="outlined"
       ></v-text-field>
 
       <v-text-field
         @input="hideAlert()"
         v-model="password"
+        :type="showInputablePassword ? 'text' : 'password'"
         :label="$vuetify.locale.t('$vuetify.password')"
         :rules="[rules.required, rules.min]"
-      ></v-text-field>
+        variant="outlined"
+      >
+        <template v-slot:append>
+          <v-icon @click="showInputablePassword = !showInputablePassword" class="mx-1 ml-3">{{showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'}}</v-icon>
+        </template>
+      </v-text-field>
 
       <v-alert
         v-if="showError"
@@ -48,7 +56,8 @@ export default {
     login: null,
     email: null,
     password: null,
-    error: ""
+    error: "",
+    showInputablePassword: false,
   }),
   computed: {
     ...mapStores(useChatStore),
@@ -72,7 +81,7 @@ export default {
         })
     },
     hideAlert() {
-      this.error = ""
+      this.error = "";
     },
   },
   mounted() {
@@ -83,6 +92,7 @@ export default {
     this.chatStore.title = null;
     setTitle(null);
     this.error = "";
+    this.showInputablePassword = false;
   }
 }
 </script>

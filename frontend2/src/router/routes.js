@@ -12,6 +12,8 @@ export const registration = `${prefix}/registration`;
 
 export const confirmation_pending = `${prefix}/confirmation-pending`;
 
+export const wrong_confirmation_token = `${prefix}/confirm/registration/token-not-found`;
+
 export const root_name = 'root';
 export const chat_list_name = 'chat_list';
 export const chat_name = 'chat_view';
@@ -26,3 +28,5 @@ export const confirmation_pending_name = "registration_confirmation_pending";
 
 export const messageIdPrefix = "message-"
 export const messageIdHashPrefix = '#' + messageIdPrefix;
+
+export const wrong_confirmation_token_name = `wrong_confirmation_token`;

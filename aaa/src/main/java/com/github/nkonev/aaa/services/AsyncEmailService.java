@@ -1,6 +1,5 @@
 package com.github.nkonev.aaa.services;
 
-import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

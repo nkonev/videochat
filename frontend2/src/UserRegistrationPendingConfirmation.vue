@@ -1,6 +1,6 @@
 <template>
   <v-sheet width="640" class="pl-2 pt-2">
-    {{ $vuetify.locale.t('$vuetify.pending_confirmation') }}
+    {{ $vuetify.locale.t('$vuetify.registration_pending_confirmation') }}
   </v-sheet>
 </template>
 
@@ -14,8 +14,8 @@ export default {
     ...mapStores(useChatStore),
   },
   mounted() {
-    this.chatStore.title = this.$vuetify.locale.t('$vuetify.pending_confirmation_title');
-    setTitle(this.$vuetify.locale.t('$vuetify.pending_confirmation_title'));
+    this.chatStore.title = this.$vuetify.locale.t('$vuetify.registration_pending_confirmation_title');
+    setTitle(this.$vuetify.locale.t('$vuetify.registration_pending_confirmation_title'));
   },
   beforeUnmount() {
     this.chatStore.title = null;
