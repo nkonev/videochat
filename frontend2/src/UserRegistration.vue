@@ -6,7 +6,7 @@
         v-model="login"
         :label="$vuetify.locale.t('$vuetify.login')"
         :rules="[rules.required]"
-        variant="outlined"
+        variant="underlined"
       ></v-text-field>
 
       <v-text-field
@@ -14,7 +14,7 @@
         v-model="email"
         :label="$vuetify.locale.t('$vuetify.email')"
         :rules="[rules.required, rules.email]"
-        variant="outlined"
+        variant="underlined"
       ></v-text-field>
 
       <v-text-field
@@ -23,7 +23,7 @@
         :type="showInputablePassword ? 'text' : 'password'"
         :label="$vuetify.locale.t('$vuetify.password')"
         :rules="[rules.required, rules.min]"
-        variant="outlined"
+        variant="underlined"
       >
         <template v-slot:append>
           <v-icon @click="showInputablePassword = !showInputablePassword" class="mx-1 ml-3">{{showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'}}</v-icon>
