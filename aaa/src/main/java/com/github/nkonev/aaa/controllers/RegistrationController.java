@@ -7,7 +7,7 @@ import com.github.nkonev.aaa.dto.EditUserDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.services.EmailService;
+import com.github.nkonev.aaa.services.AsyncEmailService;
 import com.github.nkonev.aaa.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class RegistrationController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private EmailService emailService;
+    private AsyncEmailService asyncEmailService;
 
     @Value("${custom.confirmation.registration.token.ttl-minutes}")
     private long userConfirmationTokenTtlMinutes;
@@ -71,7 +71,7 @@ public class RegistrationController {
 
         userAccount = userAccountRepository.save(userAccount);
         UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount);
-        emailService.sendUserConfirmationToken(userAccount.email(), userConfirmationToken, userAccount.username());
+        asyncEmailService.sendUserConfirmationToken(userAccount.email(), userConfirmationToken, userAccount.username());
     }
 
     /**
@@ -125,7 +125,7 @@ public class RegistrationController {
         }
 
         UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount);
-        emailService.sendUserConfirmationToken(email, userConfirmationToken, userAccount.username());
+        asyncEmailService.sendUserConfirmationToken(email, userConfirmationToken, userAccount.username());
     }
 
 }

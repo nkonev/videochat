@@ -1,6 +1,7 @@
 package com.github.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.nkonev.aaa.AbstractUtTestRunner;
 import com.github.nkonev.aaa.CommonTestConstants;
 import com.github.nkonev.aaa.Constants;
@@ -35,6 +36,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import javax.servlet.http.Cookie;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -215,7 +217,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @WithUserDetails(TestConstants.USER_ALICE)
     @org.junit.jupiter.api.Test
-    public void fullyAuthenticatedUserCannotBringForeignLogin() throws Exception {
+    public void fullyAuthenticatedUserCannotTakeForeignLogin() throws Exception {
         UserAccount userAccount = getUserFromBd(TestConstants.USER_ALICE);
 
         final String newLogin = TestConstants.USER_BOB;
@@ -239,7 +241,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @WithUserDetails(TestConstants.USER_ALICE)
     @Test
-    public void fullyAuthenticatedUserCannotBringForeignEmail() throws Exception {
+    public void fullyAuthenticatedUserCannotTakeForeignEmail() throws Exception {
         UserAccount userAccount = getUserFromBd(TestConstants.USER_ALICE);
 
         final String newEmail = TestConstants.USER_BOB+"@example.com";
@@ -271,13 +273,23 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     }
 
     @org.junit.jupiter.api.Test
-    @Disabled
-    public void adminCanSeeAnybodyProfileEmail() {
+    public void userCanSeeTheirOwnEmail() throws Exception {
+        String xsrf = "xsrf";
+        String session = getSession(xsrf, TestConstants.USER_ADMIN, password);
+        String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
 
+        UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_ADMIN);
+        RequestEntity requestEntity = RequestEntity
+            .get(new URI(urlWithContextPath() + Constants.Urls.API+Constants.Urls.USER + "/" + foreignUserAccount.id()))
+            .header(CommonTestConstants.HEADER_COOKIE, headerValue).build();
+        ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
+        var response = objectMapper.readValue(responseEntity.getBody(), JsonNode.class);
+        Assertions.assertEquals(foreignUserAccount.id(), response.get("id").asLong());
+        Assertions.assertEquals(foreignUserAccount.email(), response.get("email").asText());
     }
 
     /**
-     * Alice see Bob's profile and she don't see his email
+     * Alice see Bob's profile, and she doesn't see his email
      * @throws Exception
      */
     @WithUserDetails(TestConstants.USER_ALICE)
@@ -317,11 +329,20 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
 
     @org.junit.jupiter.api.Test
-    @Disabled
-    public void userCanSeeOnlyOwnProfileEmail() {
+    public void userCanSeeOnlyOwnProfileEmail() throws Exception {
+        String xsrf = "xsrf";
+        String session = getSession(xsrf, TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
+        String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
 
+        UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_BOB);
+        RequestEntity requestEntity = RequestEntity
+            .get(new URI(urlWithContextPath() + Constants.Urls.API+Constants.Urls.USER + "/" + foreignUserAccount.id()))
+            .header(CommonTestConstants.HEADER_COOKIE, headerValue).build();
+        ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
+        var response = objectMapper.readValue(responseEntity.getBody(), JsonNode.class);
+        Assertions.assertEquals(foreignUserAccount.id(), response.get("id").asLong());
+        Assertions.assertNull(response.get("email"));
     }
-
 
     @org.junit.jupiter.api.Test
     public void userCannotManageSessions() throws Exception {

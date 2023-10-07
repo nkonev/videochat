@@ -106,6 +106,9 @@ public abstract class AbstractTestRunner {
     @Autowired
     protected ObjectMapper objectMapper;
 
+    @Autowired
+    private RedisServerCommands redisServerCommands;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractTestRunner.class);
 
     protected String buildCookieHeader(HttpCookie... cookies) {
@@ -114,15 +117,8 @@ public abstract class AbstractTestRunner {
 
     @BeforeEach
     public void before() {
-        userConfirmationTokenRepository.deleteAll();
-    }
-
-    @Autowired
-    private RedisServerCommands redisServerCommands;
-
-    @PostConstruct
-    public void dropRedis(){
         redisServerCommands.flushDb();
+        userConfirmationTokenRepository.deleteAll();
     }
 
     public static class SessionHolder {

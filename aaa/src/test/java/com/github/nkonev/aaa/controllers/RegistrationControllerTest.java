@@ -15,7 +15,9 @@ import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.Retriever;
 import com.icegreen.greenmail.util.ServerSetup;
 import com.sun.mail.imap.IMAPMessage;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -29,8 +31,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.mail.Message;
 import java.net.URI;
+import java.time.Duration;
 import java.util.UUID;
 
+import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -55,10 +59,15 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
     @RegisterExtension
     protected GreenMailExtension greenMail = new GreenMailExtension(SMTP_IMAP).withConfiguration(GreenMailConfiguration.aConfig().withDisabledAuthentication());
 
+    @BeforeAll
+    public static void ba() {
+        Awaitility.setDefaultTimeout(Duration.ofSeconds(30));
+    }
+
     @Test
     public void testConfirmationSuccess() throws Exception {
-        final String email = "newbie@example.com";
-        final String username = "newbie";
+        final String email = "newly@example.com";
+        final String username = "newly";
         final String password = "password";
 
         EditUserDTO createUserDTO = new EditUserDTO(username, null, null,  null, password, email);
@@ -75,33 +84,11 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         String createAccountStr = createAccountRequest.getResponse().getContentAsString();
         LOGGER.info(createAccountStr);
 
-        // login unconfirmed fail
-        mockMvc.perform(
-                MockMvcRequestBuilders.post(SecurityConfig.API_LOGIN_URL)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param(SecurityConfig.USERNAME_PARAMETER, username)
-                        .param(SecurityConfig.PASSWORD_PARAMETER, password)
-                        .with(csrf())
-        )
-                .andExpect(status().isUnauthorized());
-
-        // user lost email and reissues token
-        {
-            long tokenCountBeforeResend = userConfirmationTokenRepository.count();
-            mockMvc.perform(
-                    post(Constants.Urls.API + Constants.Urls.RESEND_CONFIRMATION_EMAIL + "?email=" + email)
-                            .with(csrf())
-            )
-                    .andExpect(status().isOk());
-            Assertions.assertEquals(tokenCountBeforeResend+1, userConfirmationTokenRepository.count());
-        }
-
         // confirm
         // http://www.icegreen.com/greenmail/javadocs/com/icegreen/greenmail/util/Retriever.html
         try (Retriever r = new Retriever(greenMail.getImap())) {
-            Message[] messages = r.getMessages(email);
-            Assertions.assertEquals(2, messages.length, "backend should sent two email: a) during registration; b) during confirmation token reissue");
-            IMAPMessage imapMessage = (IMAPMessage)messages[1];
+            Message[] messages = await().ignoreExceptions().until(() -> r.getMessages(email), msgs -> msgs.length == 1);
+            IMAPMessage imapMessage = (IMAPMessage)messages[0];
             String content = (String) imapMessage.getContent();
 
             String parsedUrl = UrlParser.parseUrlFromMessage(content);
@@ -124,16 +111,96 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         )
                 .andExpect(status().isOk());
 
+    }
+
+    @Test
+    public void testRegistrationConfirmationAfterReissuingTokenSuccess() throws Exception {
+        final String email = "newbie@example.com";
+        final String username = "newbie";
+        final String password = "password";
+
+        EditUserDTO createUserDTO = new EditUserDTO(username, null, null,  null, password, email);
+
+        // register
+        MvcResult createAccountRequest = mockMvc.perform(
+                MockMvcRequestBuilders.post(Constants.Urls.API+ Constants.Urls.REGISTER)
+                    .content(objectMapper.writeValueAsString(createUserDTO))
+                    .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .with(csrf())
+            )
+            .andExpect(status().isOk())
+            .andReturn();
+        String createAccountStr = createAccountRequest.getResponse().getContentAsString();
+        LOGGER.info(createAccountStr);
+
+        // login unconfirmed fail
+        mockMvc.perform(
+                MockMvcRequestBuilders.post(SecurityConfig.API_LOGIN_URL)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .param(SecurityConfig.USERNAME_PARAMETER, username)
+                    .param(SecurityConfig.PASSWORD_PARAMETER, password)
+                    .with(csrf())
+            )
+            .andExpect(status().isUnauthorized());
+
+        // user lost email and reissues token
+        {
+            long tokenCountBeforeResend = userConfirmationTokenRepository.count();
+            mockMvc.perform(
+                    post(Constants.Urls.API + Constants.Urls.RESEND_CONFIRMATION_EMAIL + "?email=" + email)
+                        .with(csrf())
+                )
+                .andExpect(status().isOk());
+            Assertions.assertEquals(tokenCountBeforeResend+1, userConfirmationTokenRepository.count());
+        }
+
+        // confirm
+        // http://www.icegreen.com/greenmail/javadocs/com/icegreen/greenmail/util/Retriever.html
+        try (Retriever r = new Retriever(greenMail.getImap())) {
+            Message[] messages = await().ignoreExceptions().until(() -> r.getMessages(email), msgs -> msgs.length == 2); // backend should send two email: a) during registration; b) during confirmation token reissue
+            IMAPMessage imapMessage = (IMAPMessage)messages[1];
+            String content = (String) imapMessage.getContent();
+
+            String parsedUrl = UrlParser.parseUrlFromMessage(content);
+
+            String tokenUuidString = UriComponentsBuilder.fromUri(new URI(parsedUrl)).build().getQueryParams().get(Constants.Urls.UUID).get(0);
+            Assertions.assertTrue(userConfirmationTokenRepository.existsById(tokenUuidString));
+
+            // perform confirm
+            mockMvc.perform(get(parsedUrl)).andExpect(status().isOk());
+            Assertions.assertFalse(userConfirmationTokenRepository.existsById(tokenUuidString));
+        }
+
+        // login confirmed ok
+        mockMvc.perform(
+                post(SecurityConfig.API_LOGIN_URL)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .param(SecurityConfig.USERNAME_PARAMETER, username)
+                    .param(SecurityConfig.PASSWORD_PARAMETER, password)
+                    .with(csrf())
+            )
+            .andExpect(status().isOk());
+
         // resend for already confirmed does nothing
         {
             long tokenCountBeforeResend = userConfirmationTokenRepository.count();
             mockMvc.perform(
                     post(Constants.Urls.API + Constants.Urls.RESEND_CONFIRMATION_EMAIL + "?email=" + email)
-                            .with(csrf())
-            )
-                    .andExpect(status().isOk());
+                        .with(csrf())
+                )
+                .andExpect(status().isOk());
             Assertions.assertEquals(tokenCountBeforeResend, userConfirmationTokenRepository.count());
         }
+
+        // login confirmed ok
+        mockMvc.perform(
+                post(SecurityConfig.API_LOGIN_URL)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .param(SecurityConfig.USERNAME_PARAMETER, username)
+                    .param(SecurityConfig.PASSWORD_PARAMETER, password)
+                    .with(csrf())
+            )
+            .andExpect(status().isOk());
     }
 
     @Test
@@ -286,9 +353,9 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         Assertions.assertEquals(tokenCountBeforeResend, userConfirmationTokenRepository.count(), "new token shouldn't appear when attacker attempts reactivate banned(locked) user");
     }
 
-    // scheme simplified, suspect that user's email doesn't stolen
+    // presume that user's email doesn't stolen
     @Test
-    public void userCanRequestPasswordOnlyOnOwnEmail() throws Exception {
+    public void passwordReset() throws Exception {
         final String user = TestConstants.USER_BOB;
         final String email = user+"@example.com";
         final String newPassword = "new-password";
@@ -303,8 +370,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
 
         String passwordResetTokenUuidString;
         try (Retriever r = new Retriever(greenMail.getImap())) {
-            Message[] messages = r.getMessages(email);
-            Assertions.assertEquals(1, messages.length, "backend should sent one email for password reset");
+            Message[] messages = await().ignoreExceptions().until(() -> r.getMessages(email), msgs -> msgs.length == 1);
             IMAPMessage imapMessage = (IMAPMessage)messages[0];
             String content = (String) imapMessage.getContent();
 

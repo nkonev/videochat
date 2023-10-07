@@ -1,17 +1,16 @@
 package com.github.nkonev.aaa.it;
 
 import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.Cookie;
 import com.github.nkonev.aaa.AbstractHtmlUnitRunner;
 import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.FailoverUtils;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.security.OAuth2Providers;
-import org.checkerframework.checker.units.qual.K;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.RequestEntity;
@@ -20,9 +19,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
+import java.util.concurrent.Callable;
+import java.util.function.Predicate;
 
 import static com.github.nkonev.aaa.CommonTestConstants.*;
 import static com.github.nkonev.aaa.Constants.Urls.API;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
 public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
@@ -31,6 +34,11 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
     private PasswordEncoder passwordEncoder;
 
     private HtmlPage currentPage;
+
+    @BeforeAll
+    public static void ba() {
+        Awaitility.setDefaultTimeout(Duration.ofSeconds(30));
+    }
 
     private void openOauth2TestPage() throws IOException {
         currentPage = webClient.getPage(urlPrefix+"/oauth2.html");
@@ -103,7 +111,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         clickFacebook();
 
-        UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
+        UserAccount userAccount = await().ignoreExceptions().until(() -> userAccountRepository.findByUsername(facebookLogin).orElseThrow(), o -> true);
         Assertions.assertNotNull(userAccount.id());
         Assertions.assertEquals(facebookLogin, userAccount.username());
     }
@@ -115,7 +123,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         clickFacebook();
 
-        UserAccount userAccount = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
+        UserAccount userAccount = await().ignoreExceptions().until(() -> userAccountRepository.findByUsername(facebookLogin).orElseThrow(), o -> true);
         Long facebookLoggedId = userAccount.id();
         Assertions.assertNotNull(facebookLoggedId);
         Assertions.assertEquals(facebookLogin, userAccount.username());
@@ -126,7 +134,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         clickVkontakte();
 
-        UserAccount userAccountFbAndVk = FailoverUtils.retry(10, () -> userAccountRepository.findByUsername(facebookLogin).orElseThrow());
+        UserAccount userAccountFbAndVk = await().ignoreExceptions().until(() -> userAccountRepository.findByUsername(facebookLogin).orElseThrow(), o -> true);
         String userAccountFbAndVkFacebookId = userAccountFbAndVk.oauth2Identifiers().facebookId();
         Assertions.assertNotNull(userAccountFbAndVkFacebookId);
         Assertions.assertNotNull(userAccountFbAndVk.oauth2Identifiers().vkontakteId());
@@ -148,13 +156,13 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         clickVkontakte();
 
-        long countBeforeDelete = FailoverUtils.retry(10, () -> {
+        long countBeforeDelete = await().ignoreExceptions().until(() -> {
             long c = userAccountRepository.count();
             if (countInitial+1 != c) {
-                throw new RuntimeException("User still not created");
+                throw new RuntimeException("User is still not created");
             }
             return c;
-        });
+        }, o -> true);
 
         UserAccount userAccount = userAccountRepository.findByUsername(vkontakteLogin).orElseThrow();
 
@@ -175,11 +183,8 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
         ResponseEntity<String> selfDeleteResponse1 = testRestTemplate.exchange(selfDeleteRequest1, String.class);
         Assertions.assertEquals(200, selfDeleteResponse1.getStatusCodeValue());
 
-        FailoverUtils.retry(10, () -> {
-            long countAfter = userAccountRepository.count();
-            Assertions.assertEquals(countBeforeDelete-1, countAfter);
-            return null;
-        });
+        long countAfter = await().ignoreExceptions().until(() -> userAccountRepository.count(), o -> true);
+        Assertions.assertEquals(countBeforeDelete-1, countAfter);
     }
 
     @Test
@@ -279,13 +284,13 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         clickGoogle();
 
-        long countBeforeDelete = FailoverUtils.retry(10, () -> {
+        long countBeforeDelete = await().ignoreExceptions().until(() -> {
             long c = userAccountRepository.count();
             if (countInitial+1 != c) {
                 throw new RuntimeException("User still not created");
             }
             return c;
-        });
+        }, o -> true);
 
         UserAccount userAccount = userAccountRepository.findByUsername(googleLogin).orElseThrow();
 
@@ -307,11 +312,8 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
         ResponseEntity<String> selfDeleteResponse1 = testRestTemplate.exchange(selfDeleteRequest1, String.class);
         Assertions.assertEquals(200, selfDeleteResponse1.getStatusCodeValue());
 
-        FailoverUtils.retry(10, () -> {
-            long countAfter = userAccountRepository.count();
-            Assertions.assertEquals(countBeforeDelete-1, countAfter);
-            return null;
-        });
+        long countAfter = await().ignoreExceptions().until(() -> userAccountRepository.count(), o -> true);
+        Assertions.assertEquals(countBeforeDelete-1, countAfter);
     }
 
 

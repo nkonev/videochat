@@ -6,7 +6,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.exception.PasswordResetTokenNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.services.EmailService;
+import com.github.nkonev.aaa.services.AsyncEmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class PasswordResetController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private EmailService emailService;
+    private AsyncEmailService asyncEmailService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PasswordResetController.class);
 
@@ -68,7 +68,7 @@ public class PasswordResetController {
 
         passwordResetToken = passwordResetTokenRepository.save(passwordResetToken);
 
-        emailService.sendPasswordResetToken(userAccount.email(), passwordResetToken, userAccount.username());
+        asyncEmailService.sendPasswordResetToken(userAccount.email(), passwordResetToken, userAccount.username());
     }
 
     record PasswordResetDto(
