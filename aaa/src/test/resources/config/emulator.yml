@@ -1,6 +1,6 @@
 logging.level.root: INFO
 
-custom.template-engine-url-prefix: "http://localhost:${server.port}"
+custom.template-engine-url-prefix: "http://localhost:8060"
 
 logging:
   pattern:
