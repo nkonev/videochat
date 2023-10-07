@@ -40,7 +40,7 @@ import {hasLength, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {confirmation_pending, confirmation_pending_name, root_name} from "@/router/routes";
+import {confirmation_pending_name} from "@/router/routes";
 
 export default {
   mixins: [userProfileValidationRules()],

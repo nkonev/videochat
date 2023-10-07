@@ -3,3 +3,23 @@
     {{ $vuetify.locale.t('$vuetify.pending_confirmation') }}
   </v-sheet>
 </template>
+
+<script>
+import {setTitle} from "@/utils";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore";
+
+export default {
+  computed: {
+    ...mapStores(useChatStore),
+  },
+  mounted() {
+    this.chatStore.title = this.$vuetify.locale.t('$vuetify.pending_confirmation_title');
+    setTitle(this.$vuetify.locale.t('$vuetify.pending_confirmation_title'));
+  },
+  beforeUnmount() {
+    this.chatStore.title = null;
+    setTitle(null);
+  }
+}
+</script>

@@ -209,4 +209,5 @@ export default {
     search_by_posts: "Search by blogs",
     registration: "Registration",
     pending_confirmation: "Please, continue registration by clicking on clink in the confirmation e-mail",
+    pending_confirmation_title: "Pending confirmation",
 }

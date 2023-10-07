@@ -6,6 +6,8 @@ import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -46,6 +48,8 @@ public class EmailService {
     private static final String PASSWORD_RESET_LINK_PLACEHOLDER = "PASSWORD_RESET_LINK_PLACEHOLDER";
     private static final String LOGIN_PLACEHOLDER = "LOGIN";
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
+
     public void sendUserConfirmationToken(String email, UserConfirmationToken userConfirmationToken, String login) {
         // https://yandex.ru/support/mail-new/mail-clients.html
         // https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
@@ -59,6 +63,7 @@ public class EmailService {
         final var text = renderTemplate("confirm-registration.ftlh",
                 Map.of(REG_LINK_PLACEHOLDER, regLink, LOGIN_PLACEHOLDER, login));
 
+        LOGGER.trace("For registartion confirmation '{}' generated email text '{}'", email, text);
         msg.setText(text);
         mailSender.send(msg);
     }
@@ -72,6 +77,8 @@ public class EmailService {
         final var passwordResetLink = customConfig.getBaseUrl() + Constants.Urls.PASSWORD_RESET+ "?"+ Constants.Urls.UUID +"=" + passwordResetToken.uuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
         final var text = renderTemplate("password-reset.ftlh",
                 Map.of(PASSWORD_RESET_LINK_PLACEHOLDER, passwordResetLink, LOGIN_PLACEHOLDER, login));
+
+        LOGGER.trace("For password reset '{}' generated email text '{}'", email, text);
 
         msg.setText(text);
 

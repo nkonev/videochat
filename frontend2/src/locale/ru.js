@@ -209,4 +209,5 @@ export default {
     search_by_posts: "Поиск по блогам",
     registration: "Регистрация",
     pending_confirmation: "Пожалуйста, подтвердите регистрацию, кликнув по ссылке в письме",
+    pending_confirmation_title: "Ожидание подтверждения",
 }

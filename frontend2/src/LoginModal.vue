@@ -144,6 +144,9 @@
         },
         methods: {
             showLoginModal() {
+                if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name) {
+                    return
+                }
                 this.$data.show = true;
             },
             hideLoginModal() {
