@@ -11,14 +11,6 @@
 
       <v-text-field
         @input="hideAlert()"
-        v-model="email"
-        :label="$vuetify.locale.t('$vuetify.email')"
-        :rules="[rules.required, rules.email]"
-        variant="underlined"
-      ></v-text-field>
-
-      <v-text-field
-        @input="hideAlert()"
         v-model="password"
         :type="showInputablePassword ? 'text' : 'password'"
         :label="$vuetify.locale.t('$vuetify.password')"
@@ -30,6 +22,14 @@
         </template>
       </v-text-field>
 
+      <v-text-field
+        @input="hideAlert()"
+        v-model="email"
+        :label="$vuetify.locale.t('$vuetify.email')"
+        :rules="[rules.required, rules.email]"
+        variant="underlined"
+      ></v-text-field>
+
       <v-alert
         v-if="showError"
         density="compact"
@@ -37,7 +37,7 @@
         :text="error"
       ></v-alert>
 
-      <v-btn type="submit" color="primary" block class="mt-2">Submit</v-btn>
+      <v-btn type="submit" color="primary" block class="mt-2">{{ $vuetify.locale.t('$vuetify.registration_submit') }}</v-btn>
     </v-form>
   </v-sheet>
 </template>

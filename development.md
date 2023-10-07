@@ -486,6 +486,13 @@ export JAVA_HOME=/usr/lib/jvm/bellsoft-java17.x86_64
 curl -i -X POST 'http://localhost:9080/recreate-oauth2-mocks'
 ```
 
+Or in the IDE
+```
+--spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/oauth2-keycloak.yml,file:src/test/resources/config/demo-migration.yml,file:src/test/resources/config/log-email.yml
+```
+
+To interact with emilator, you need to use `http://localhost:8081`, not `http://127.0.0.1:8081`.
+
 # Playwright
 https://playwright.dev/docs/intro
 ```

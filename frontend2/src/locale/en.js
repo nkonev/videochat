@@ -211,4 +211,5 @@ export default {
     registration_pending_confirmation: "Please, continue registration by clicking on clink in the confirmation e-mail",
     registration_pending_confirmation_title: "Pending confirmation",
     registration_confirmation_token_not_found: "Registration confirmation token is not found",
+    registration_submit: "Register",
 }

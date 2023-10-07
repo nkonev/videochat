@@ -211,4 +211,5 @@ export default {
     registration_pending_confirmation: "Пожалуйста, подтвердите регистрацию, кликнув по ссылке в письме",
     registration_pending_confirmation_title: "Ожидание подтверждения",
     registration_confirmation_token_not_found: "Registration confirmation token is not found",
+    registration_submit: "Зарегистрировать",
 }
