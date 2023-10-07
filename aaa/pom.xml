@@ -513,7 +513,7 @@
 
     <profiles>
         <profile>
-            <id>integration_test</id>
+            <id>oauth2_emulator</id>
             <build>
                 <plugins>
                     <plugin>

@@ -1,2 +1,2 @@
 #!/bin/bash
-exec ./mvnw -Pintegration_test spring-boot:run
+exec ./mvnw -Poauth2_emulator spring-boot:run
