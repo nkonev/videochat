@@ -19,6 +19,9 @@ public class CustomConfig {
     @Value("${custom.registration-confirm-exit-success-url}")
     private String registrationConfirmExitSuccessUrl;
 
+    @Value("${custom.password-reset-enter-new-url}")
+    private String passwordRestoreEnterNew;
+
 
     @Value("${http.client.connect-timeout:3s}")
     private Duration restClientConnectTimeout;
@@ -48,5 +51,9 @@ public class CustomConfig {
 
     public String getRegistrationConfirmExitSuccessUrl() {
         return registrationConfirmExitSuccessUrl;
+    }
+
+    public String getPasswordRestoreEnterNew() {
+        return passwordRestoreEnterNew;
     }
 }

@@ -1,15 +1,27 @@
 // Composables
 import {createRouter, createWebHistory} from 'vue-router'
 import {
-  chat,
-  chat_list_name,
-  chat_name,
-  chats, confirmation_pending, confirmation_pending_name,
-  prefix, profile,
-  profile_list_name,
-  profile_name,
-  profiles, registration, registration_name,
-  root_name, wrong_confirmation_token, wrong_confirmation_token_name, wrong_user, wrong_user_name
+    chat,
+    chat_list_name,
+    chat_name,
+    chats,
+    confirmation_pending,
+    confirmation_pending_name,
+    forgot_password,
+    forgot_password_name, password_restore_check_email,
+    password_restore_check_email_name, password_restore_enter_new, password_restore_enter_new_name,
+    prefix,
+    profile,
+    profile_list_name,
+    profile_name,
+    profiles,
+    registration,
+    registration_name,
+    root_name,
+    wrong_confirmation_token,
+    wrong_confirmation_token_name,
+    wrong_user,
+    wrong_user_name
 } from "@/router/routes";
 
 const routes = [
@@ -57,6 +69,21 @@ const routes = [
       name: wrong_user_name,
       path: wrong_user,
       component: () => import('@/UserRegistrationWrongUsername.vue'),
+    },
+    {
+      name: forgot_password_name,
+      path: forgot_password,
+      component: () => import('@/UserRestorePassword.vue'),
+    },
+    {
+        name: password_restore_check_email_name,
+        path: password_restore_check_email,
+        component: () => import('@/UserRestorePasswordCheckEmail.vue'),
+    },
+    {
+        name: password_restore_enter_new_name,
+        path: password_restore_enter_new,
+        component: () => import('@/UserRestorePasswordEnterNew.vue'),
     },
 
 ]

@@ -213,4 +213,9 @@ export default {
     registration_confirmation_token_not_found: "Registration confirmation token is not found",
     registration_submit: "Register",
     registration_user_not_found: "Registered user is not found",
+    forgot_password: "Forgot a password",
+    password_restoration: "Password restoration",
+    request_password_reset: "Request password reset",
+    password_restore_check_email: "Check your email",
+    set_new_password: "Set new password",
 }

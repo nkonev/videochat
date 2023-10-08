@@ -1,32 +1,40 @@
 package com.github.nkonev.aaa.controllers;
 
+import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.exception.PasswordResetTokenNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import com.github.nkonev.aaa.security.AaaAuthenticationToken;
 import com.github.nkonev.aaa.services.AsyncEmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.net.URI;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
 @RestController
 @Transactional
-public class PasswordResetController {
+public class PasswordResetController extends WithAuthentication {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
@@ -81,7 +89,7 @@ public class PasswordResetController {
     ) {}
 
     @PostMapping(value = Constants.Urls.API + Constants.Urls.PASSWORD_RESET_SET_NEW)
-    public void resetPassword(@RequestBody @Valid PasswordResetDto passwordResetDto) {
+    public void resetPassword(@RequestBody @Valid PasswordResetDto passwordResetDto, HttpServletResponse httpResponse) {
 
         // webpage parses token uuid from URL
         // .. and js sends this request
@@ -100,6 +108,7 @@ public class PasswordResetController {
 
         userAccount = userAccount.withPassword(passwordEncoder.encode(passwordResetDto.newPassword()));
         userAccount = userAccountRepository.save(userAccount);
-        return;
+        authenticate(userAccount);
     }
+
 }

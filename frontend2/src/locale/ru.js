@@ -210,7 +210,12 @@ export default {
     registration: "Регистрация",
     registration_pending_confirmation: "Пожалуйста, подтвердите регистрацию, кликнув по ссылке в письме",
     registration_pending_confirmation_title: "Ожидание подтверждения",
-    registration_confirmation_token_not_found: "Registration confirmation token is not found",
+    registration_confirmation_token_not_found: "Токен не найден",
     registration_submit: "Зарегистрировать",
     registration_user_not_found: "Зарегистрированный пользователь не найден",
+    forgot_password: "Забыл пароль",
+    password_restoration: "Восстановление пароля",
+    request_password_reset: "Запросить сброс пароля",
+    password_restore_check_email: "Проверьте e-mail",
+    set_new_password: "Установить новый пароль",
 }

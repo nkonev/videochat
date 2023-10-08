@@ -32,7 +32,7 @@ import java.util.UUID;
 
 @Controller
 @Transactional
-public class RegistrationController {
+public class RegistrationController extends WithAuthentication {
     @Autowired
     private UserAccountRepository userAccountRepository;
 
@@ -118,13 +118,6 @@ public class RegistrationController {
         authenticate(userAccount);
 
         return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
-    }
-
-    private void authenticate(UserAccount userAccount) {
-        var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(new AaaAuthenticationToken(auth));
-        SecurityContextHolder.setContext(context);
     }
 
     @PostMapping(value = Constants.Urls.API+ Constants.Urls.RESEND_CONFIRMATION_EMAIL)

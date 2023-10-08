@@ -12,9 +12,24 @@
                   </span>
                   <span class="d-flex">
                     <v-btn
+                      id="forgot-password-btn"
+                      class="ml-2"
+                      color="primary"
+                      @click="onForgotPasswordClick"
+                      size="small"
+                      min-width="80px"
+                      variant="outlined"
+                    >
+                      {{ $vuetify.locale.t('$vuetify.forgot_password') }}
+                    </v-btn>
+                  </span>
+                  <span class="d-flex">
+                    <v-btn
                       id="register-btn"
+                      class="ml-2"
                       color="primary"
                       @click="onRegisterClick"
+                      size="small"
                       min-width="80px"
                       variant="outlined"
                     >
@@ -103,7 +118,12 @@
     import axios from "axios";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
-    import {confirmation_pending_name, registration_name} from "@/router/routes";
+    import {
+        confirmation_pending_name,
+        forgot_password_name,
+        password_restore_enter_new_name,
+        registration_name
+    } from "@/router/routes";
 
     export default {
         data() {
@@ -144,7 +164,7 @@
         },
         methods: {
             showLoginModal() {
-                if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name) {
+                if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name || this.$route.name == forgot_password_name || this.$route.name == password_restore_enter_new_name) {
                     return
                 }
                 this.$data.show = true;
@@ -226,6 +246,10 @@
             onRegisterClick() {
               this.show = false;
               this.$router.push({name: registration_name} )
+            },
+            onForgotPasswordClick() {
+              this.show = false;
+              this.$router.push({name: forgot_password_name} )
             },
             hideAlert() {
                 this.$data.showAlert = false;
