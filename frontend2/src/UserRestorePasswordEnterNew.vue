@@ -2,6 +2,15 @@
   <v-sheet width="640" class="pl-2 pt-2">
     <v-form fast-fail @submit.prevent="onSubmit()">
         <v-text-field
+            disabled
+            @input="hideAlert()"
+            v-model="login"
+            :label="$vuetify.locale.t('$vuetify.login')"
+            :rules="[rules.required]"
+            variant="underlined"
+        ></v-text-field>
+
+        <v-text-field
             @input="hideAlert()"
             v-model="password"
             :type="showInputablePassword ? 'text' : 'password'"
@@ -45,7 +54,10 @@ export default {
     ...mapStores(useChatStore),
     showError() {
       return hasLength(this.error)
-    }
+    },
+    login() {
+      return this.$route.query.login
+    },
   },
   methods: {
     onSubmit() {
