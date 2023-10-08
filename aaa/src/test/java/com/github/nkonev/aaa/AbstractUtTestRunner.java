@@ -5,6 +5,10 @@ package com.github.nkonev.aaa;
  */
 
 import com.github.nkonev.aaa.security.SecurityConfig;
+import com.icegreen.greenmail.configuration.GreenMailConfiguration;
+import com.icegreen.greenmail.junit5.GreenMailExtension;
+import com.icegreen.greenmail.util.ServerSetup;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,5 +58,13 @@ public abstract class AbstractUtTestRunner extends AbstractTestRunner {
 
         return mvcResult.getResponse().getCookie(getAuthCookieName()).getValue();
     }
+
+    private static final int portOffset = 3100;
+    private static final ServerSetup SMTP = new ServerSetup(25+portOffset, null, ServerSetup.PROTOCOL_SMTP);
+    private static final ServerSetup IMAP = new ServerSetup(143+portOffset, null, ServerSetup.PROTOCOL_IMAP);
+    private static final ServerSetup[] SMTP_IMAP = new ServerSetup[]{SMTP, IMAP};
+
+    @RegisterExtension
+    protected GreenMailExtension greenMail = new GreenMailExtension(SMTP_IMAP).withConfiguration(GreenMailConfiguration.aConfig().withDisabledAuthentication());
 
 }
