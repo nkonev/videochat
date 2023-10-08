@@ -11,7 +11,7 @@ import App from './App.vue'
 import { createApp } from 'vue'
 
 // Plugins
-import {hasLength, isMobileBrowser, offerToJoinToPublicChatStatus} from "@/utils";
+import {hasLength, isMobileBrowser} from "@/utils";
 import vuetify from "@/plugins/vuetify";
 import router from "@/router";
 import axios from "axios";
@@ -103,7 +103,7 @@ axios.interceptors.response.use((response) => {
 }, (error) => {
     // https://github.com/axios/axios/issues/932#issuecomment-307390761
     // console.log("Catch error", error, error.request, error.response, error.config);
-    if (axios.isCancel(error) || error.response.status == offerToJoinToPublicChatStatus) {
+    if (axios.isCancel(error)) {
         return Promise.reject(error)
     } else if (error && error.response && error.response.status == 401 ) {
         console.log("Catch 401 Unauthorized, emitting ", LOGGED_OUT);

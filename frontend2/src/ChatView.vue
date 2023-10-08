@@ -46,7 +46,7 @@ import heightMixin from "@/mixins/heightMixin";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {hasLength, offerToJoinToPublicChatStatus, setTitle} from "@/utils";
+import {hasLength, setTitle} from "@/utils";
 import bus, {
     CHAT_DELETED,
     CHAT_EDITED,
@@ -152,10 +152,6 @@ export default {
         if (reason.response.status == 404) {
           this.goToChatList();
           return Promise.reject();
-        } else if (reason.response.status == offerToJoinToPublicChatStatus) {
-          return axios.put(`/api/chat/${this.chatId}/join`).then(() => {
-            return this.fetchAndSetChat();
-          })
         } else {
           return Promise.resolve();
         }

@@ -306,7 +306,13 @@ export default {
         this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
     },
     openChat(item){
-          goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: item.id}})
+        if (this.isSearchResult(item)) {
+            axios.put(`/api/chat/${item.id}/join`).then(() => {
+                goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: item.id}})
+            })
+        } else {
+            goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: item.id}})
+        }
     },
     getLink(item) {
           return chat + "/" + item.id
