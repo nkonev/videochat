@@ -120,7 +120,7 @@
     import {useChatStore} from "@/store/chatStore";
     import {
         confirmation_pending_name,
-        forgot_password_name,
+        forgot_password_name, password_restore_check_email_name,
         password_restore_enter_new_name,
         registration_name
     } from "@/router/routes";
@@ -164,9 +164,6 @@
         },
         methods: {
             showLoginModal() {
-                if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name || this.$route.name == forgot_password_name || this.$route.name == password_restore_enter_new_name) {
-                    return
-                }
                 this.$data.show = true;
             },
             hideLoginModal() {

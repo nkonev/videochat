@@ -119,7 +119,14 @@
 <script>
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
 import {hasLength} from "@/utils";
-import {chat_list_name, chat_name, videochat_name} from "@/router/routes";
+import {
+    chat_list_name,
+    chat_name,
+    confirmation_pending_name,
+    forgot_password_name, password_restore_check_email_name, password_restore_enter_new_name,
+    registration_name,
+    videochat_name
+} from "@/router/routes";
 import axios from "axios";
 import bus, {
   CHAT_ADD,
@@ -150,6 +157,7 @@ import MessageResendToModal from "@/MessageResendToModal.vue";
 import FileTextEditModal from "@/FileTextEditModal.vue";
 import PlayerModal from "@/PlayerModal.vue";
 import ChatEditModal from "@/ChatEditModal.vue";
+import {once} from "lodash/function";
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -428,6 +436,14 @@ export default {
         shouldShowSubtitle() {
             return !!this.chatStore.chatUsersCount || !!this.chatStore.moreImportantSubtitleInfo
         },
+        afterRouteInitialized() {
+            this.chatStore.fetchAvailableOauth2Providers().then(() => {
+                if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name || this.$route.name == forgot_password_name || this.$route.name == password_restore_enter_new_name || this.$route.name == password_restore_check_email_name || this.$route.name == confirmation_pending_name) {
+                    return
+                }
+                this.chatStore.fetchUserProfile();
+            })
+        },
     },
     components: {
         ChatEditModal,
@@ -452,13 +468,14 @@ export default {
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
 
-        this.chatStore.fetchAvailableOauth2Providers().then(() => {
-            this.chatStore.fetchUserProfile();
+        addEventListener("focus", this.onFocus);
+
+        this.afterRouteInitialized = once(this.afterRouteInitialized);
+
+        this.$router.afterEach((to, from) => {
+            this.afterRouteInitialized()
         })
-
-        addEventListener("focus", this.onFocus)
     },
-
     beforeUnmount() {
         removeEventListener("focus", this.onFocus);
 

@@ -108,6 +108,7 @@ axios.interceptors.response.use((response) => {
     } else if (error && error.response && error.response.status == 401 ) {
         console.log("Catch 401 Unauthorized, emitting ", LOGGED_OUT);
         chatStore.unsetUser();
+        console.log('EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE');
         bus.emit(LOGGED_OUT, null);
         return Promise.reject(error)
     } else if (!error.config.url.includes('/message/read/')) {
