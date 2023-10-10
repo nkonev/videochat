@@ -9,7 +9,7 @@ const routes = [
     },
     {
         name: blog_post_name,
-        path: blog_post,
+        path: blog_post + `/:id`,
         component: () => import('@/BlogPost.vue'),
     },
 
