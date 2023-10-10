@@ -207,7 +207,7 @@ export default {
     detach_files_from_message: "Detach files from message",
     search_by_posts: "Search by blogs",
     registration: "Registration",
-    registration_pending_confirmation: "Please, continue registration by clicking on clink in the confirmation e-mail",
+    registration_pending_confirmation: "Please, continue registration by clicking on the link in the confirmation e-mail",
     registration_pending_confirmation_title: "Pending confirmation",
     registration_confirmation_token_not_found: "Registration confirmation token is not found",
     registration_submit: "Register",
