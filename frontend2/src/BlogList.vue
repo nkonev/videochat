@@ -27,23 +27,18 @@
           </v-card>
         </v-card-text>
 
-        <v-card-text class="text-primary pb-0" v-html="item.preview">
+        <v-card-text class="post-text pb-0" v-html="item.preview">
         </v-card-text>
 
         <v-card-actions v-if="item?.owner != null">
-          <v-list-item class="grow">
+          <v-list-item>
               <template v-slot:prepend>
-                  <a @click.prevent="onParticipantClick(item.owner)" :href="getProfileLink(item.owner)">
-                      <v-img
-                          @click.prevent="onParticipantClick(item.owner)" :href="getProfileLink(item.owner)"
-                          class="elevation-6"
-                          :src="item?.owner?.avatar"
-                      ></v-img>
-                  </a>
+                  <v-avatar :image="item?.owner?.avatar">
+                  </v-avatar>
               </template>
 
               <template v-slot:default>
-                  <v-list-item-title><a @click.prevent="onParticipantClick(item.owner)" :href="getProfileLink(item.owner)">{{ item?.owner?.login }}</a></v-list-item-title>
+                  <v-list-item-title><a @click.prevent="onParticipantClick(item.owner)" :href="getProfileLink(item.owner)" class="colored-link">{{ item?.owner?.login }}</a></v-list-item-title>
                   <v-list-item-subtitle>
                       {{ getDate(item) }}
                   </v-list-item-subtitle>
@@ -293,6 +288,8 @@ export default {
 </script>
 
 <style lang="stylus">
+@import "constants.styl"
+
 .post-title {
   background rgba(0, 0, 0, 0.5);
 
@@ -302,6 +299,10 @@ export default {
     word-break: break-word;
   }
 }
+.post-text {
+    color $blackColor
+}
+
 .myclass {
   flex: 1 1 300px;
 }

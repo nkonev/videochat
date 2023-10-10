@@ -108,6 +108,13 @@ export default {
 </script>
 
 <style lang="stylus">
+@import "constants.styl"
+
+.colored-link {
+    color: $linkColor;
+    text-decoration none
+}
+
 .v-breadcrumbs {
   li > a {
     color white
