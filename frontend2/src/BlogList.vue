@@ -1,5 +1,5 @@
 <template>
-  <v-container class="ma-0 pa-0" style="height: 100%" fluid>
+  <v-container class="ma-0 pa-2" style="height: 100%" fluid>
     <div class="my-blog-scroller d-flex flex-wrap align-start" id="blog-post-list">
       <div class="blog-first-element" style="min-height: 1px; background: white"></div>
 
@@ -37,7 +37,6 @@
                       <v-img
                           @click.prevent="onParticipantClick(item.owner)" :href="getProfileLink(item.owner)"
                           class="elevation-6"
-                          alt=""
                           :src="item?.owner?.avatar"
                       ></v-img>
                   </a>

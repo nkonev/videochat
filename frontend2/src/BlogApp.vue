@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar app color='indigo' dark dense>
+    <v-app-bar color='indigo' dark :density="getDensity()">
       <v-breadcrumbs
         :items="getBreadcrumbs()"
       >
@@ -87,6 +87,9 @@ export default {
         if (this.blogStore.searchType == SEARCH_MODE_POSTS) {
             return this.$vuetify.locale.t('$vuetify.search_by_posts')
         }
+    },
+    getDensity() {
+          return this.isMobile() ? "comfortable" : "compact";
     },
   },
   computed: {
