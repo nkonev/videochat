@@ -54,7 +54,7 @@ export default () => {
                 this.serverPreferredCodec = false;
 
                 return axios
-                    .get(`/api/video/${this.chatId}/config`)
+                    .get(`/api/video/config`)
                     .then(response => response.data)
                     .then(respData => {
                         if (hasLength(respData.videoResolution)) {

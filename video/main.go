@@ -155,7 +155,8 @@ func configureApiEcho(
 
 	e.GET("/video/:chatId/token", th.GetTokenHandler)
 	e.GET("/video/:chatId/users", uh.GetVideoUsers)
-	e.GET("/video/:chatId/config", ch.GetConfig)
+	e.GET("/video/:chatId/config", ch.GetConfigOld) // TODO
+	e.GET("/video/config", ch.GetConfig)
 	e.POST("/internal/livekit-webhook", lhf.GetLivekitWebhookHandler())
 	e.PUT("/video/:chatId/kick", uh.Kick)
 	e.PUT("/video/:chatId/mute", uh.Mute)

@@ -41,7 +41,7 @@ type FrontendConfigDto struct {
 	Codec   *string     `json:"codec"`
 }
 
-func (h *ConfigHandler) GetConfig(c echo.Context) error {
+func (h *ConfigHandler) GetConfigOld(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
@@ -56,6 +56,22 @@ func (h *ConfigHandler) GetConfig(c echo.Context) error {
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
 	}
+
+	frontendConfig := h.config.FrontendConfig
+	var responseSliceFrontendConfig = FrontendConfigDto{}
+
+	responseSliceFrontendConfig.VideoResolution = frontendConfig.VideoResolution
+	responseSliceFrontendConfig.ScreenResolution = frontendConfig.ScreenResolution
+	responseSliceFrontendConfig.VideoSimulcast = frontendConfig.VideoSimulcast
+	responseSliceFrontendConfig.ScreenSimulcast = frontendConfig.ScreenSimulcast
+	responseSliceFrontendConfig.RoomDynacast = frontendConfig.RoomDynacast
+	responseSliceFrontendConfig.RoomAdaptiveStream = frontendConfig.RoomAdaptiveStream
+	responseSliceFrontendConfig.Codec = frontendConfig.Codec
+
+	return c.JSON(http.StatusOK, responseSliceFrontendConfig)
+}
+
+func (h *ConfigHandler) GetConfig(c echo.Context) error {
 
 	frontendConfig := h.config.FrontendConfig
 	var responseSliceFrontendConfig = FrontendConfigDto{}

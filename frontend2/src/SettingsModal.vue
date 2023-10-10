@@ -37,10 +37,7 @@
                 <UserSelfProfileModalContent/>
             </v-window-item>
             <v-window-item value="a_video_settings">
-                <VideoGlobalSettingsModalContent  v-if="shouldShowVideoSettings()"/>
-                <v-container v-else>
-                    {{ $vuetify.locale.t('$vuetify.for_video_setting_please_open_chat') }}
-                </v-container>
+                <VideoGlobalSettingsModalContent/>
             </v-window-item>
             <v-window-item value="the_notifications">
                 <NotificationSettingsModalContent/>
@@ -106,9 +103,6 @@ export default {
     },
     hideLoginModal() {
       this.$data.show = false;
-    },
-    shouldShowVideoSettings() {
-        return !!this.$route.params.id
     },
     setAvatarToProfile(file) {
       const config = {
