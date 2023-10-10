@@ -106,7 +106,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 			return err
 		} else {
 			if hasHash {
-				_, err = tx.AddMessageRead(startingFromItemId, userPrincipalDto.UserId, chatId)
+				err := mc.addMessageReadAndSendIt(tx, c, chatId, startingFromItemId, userPrincipalDto.UserId)
 				if err != nil {
 					return err
 				}
@@ -696,7 +696,7 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 		// here we don't check message ownership because user can read foreign messages
 		// (any user has their own last read message per chat)
 
-		wasAdded, err := tx.AddMessageRead(messageId, userPrincipalDto.UserId, chatId)
+		err := mc.addMessageReadAndSendIt(tx, c, chatId, messageId, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -705,11 +705,20 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 			MessageId: messageId,
 			ChatId:    chatId,
 		}, &userPrincipalDto.UserId)
-		if wasAdded {
-			mc.notificator.ChatNotifyMessageCount([]int64{userPrincipalDto.UserId}, c, chatId, tx)
-		}
 		return c.NoContent(http.StatusAccepted)
 	})
+}
+
+func (mc *MessageHandler) addMessageReadAndSendIt(tx *db.Tx, c echo.Context, chatId int64, messageId int64, userId int64) error {
+	wasAdded, err := tx.AddMessageRead(messageId, userId, chatId)
+	if err != nil {
+		return err
+	}
+	if wasAdded {
+		mc.notificator.ChatNotifyMessageCount([]int64{userId}, c, chatId, tx)
+	}
+
+	return nil
 }
 
 func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
