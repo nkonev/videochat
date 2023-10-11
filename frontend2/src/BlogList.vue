@@ -1,6 +1,6 @@
 <template>
-  <v-container class="ma-0 pa-2" style="height: 100%" fluid>
-    <div class="my-blog-scroller d-flex flex-wrap align-start" id="blog-post-list">
+  <v-container class="ma-0 pa-0" :style="heightWithoutAppBar" fluid>
+    <div class="my-blog-scroller" id="blog-post-list">
       <div class="blog-first-element" style="min-height: 1px; background: white"></div>
 
       <v-card
@@ -67,6 +67,7 @@ import {mapStores} from "pinia";
 import {useBlogStore} from "@/store/blogStore";
 import {SEARCH_MODE_POSTS, searchString} from "@/mixins/searchString";
 import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
+import heightMixin from "@/mixins/heightMixin";
 
 const PAGE_SIZE = 40;
 
@@ -74,6 +75,7 @@ const scrollerName = 'BlogList';
 
 export default {
   mixins: [
+      heightMixin(),
       infiniteScrollMixin(scrollerName),
       searchString(SEARCH_MODE_POSTS),
   ],
@@ -289,6 +291,14 @@ export default {
 
 <style lang="stylus">
 @import "constants.styl"
+
+.my-blog-scroller {
+  height 100%
+  overflow-y scroll !important
+  display flex
+  flex-wrap wrap
+  align-items start
+}
 
 .post-title {
   background rgba(0, 0, 0, 0.5);
