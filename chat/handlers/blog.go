@@ -156,6 +156,26 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 
 }
 
+func (h *BlogHandler) GetBlogPage(c echo.Context) error {
+	itemId, err := utils.ParseInt64(c.QueryParam("id"))
+	if err != nil {
+		return err
+	}
+
+	size := utils.FixSizeString(c.QueryParam("size"))
+
+	return db.Transact(h.db, func(tx *db.Tx) error {
+		rowNumber, err := tx.GetBlogRowNumber(itemId)
+		if err != nil {
+			return err
+		}
+
+		var returnPage = (rowNumber + 1) / size
+
+		return c.JSON(http.StatusOK, &utils.H{"page": returnPage})
+	})
+}
+
 func (h *BlogHandler) getPreviewUrl(aKey string) *string {
 	var previewUrl *string = nil
 

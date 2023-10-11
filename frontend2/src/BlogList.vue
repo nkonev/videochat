@@ -1,11 +1,12 @@
 <template>
   <v-container class="ma-0 pa-0" :style="heightWithoutAppBar" fluid>
-    <div class="my-blog-scroller" id="blog-post-list">
+    <div class="my-blog-scroller" id="blog-post-list" @scroll.passive="onScroll">
       <div class="blog-first-element" style="min-height: 1px; background: white"></div>
 
       <v-card
         v-for="(item, index) in items"
         :key="item.id"
+        :id="getItemId(item.id)"
         class="mb-2 mr-2 myclass"
         :min-width="isMobile() ? 200 : 400"
         max-width="600"
@@ -167,7 +168,6 @@ export default {
                 // e.g. some chat has been popped up on sever due to somebody updated it
                 if (this.isTopDirection()) {
                     replaceOrPrepend(this.items, items.reverse());
-                    this.sort(this.items); // sorts possibly wrong order after loading items, appeared on server while user was scrolling
                 } else {
                     replaceOrAppend(this.items, items);
                 }

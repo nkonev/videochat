@@ -140,6 +140,28 @@ func (tx *Tx) GetChatRowNumber(itemId, userId int64) (int, error) {
 	}
 }
 
+func (tx *Tx) GetBlogRowNumber(itemId int64) (int, error) {
+
+	var theQuery = `
+		SELECT al.nrow FROM (
+		SELECT 
+		    ch.id as cid,
+			ROW_NUMBER () OVER (ORDER BY (ch.create_date_time, ch.id) DESC) as nrow
+		FROM 
+			chat ch 
+		WHERE ch.blog IS true
+		) al WHERE al.cid = $1
+	`
+	var position int
+	row := tx.QueryRow(theQuery, itemId)
+	err := row.Scan(&position)
+	if err != nil {
+		return 0, tracerr.Wrap(err)
+	} else {
+		return position, nil
+	}
+}
+
 func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
