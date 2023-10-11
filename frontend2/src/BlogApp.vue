@@ -1,6 +1,13 @@
 <template>
   <v-app>
     <v-app-bar color='indigo' dark :density="getDensity()">
+      <v-progress-linear
+          v-if="showProgress"
+          indeterminate
+          color="white"
+          absolute
+      ></v-progress-linear>
+
       <v-breadcrumbs
         :items="getBreadcrumbs()"
       >
@@ -102,6 +109,9 @@ export default {
     },
     hasSearchString() {
       return hasLength(this.searchString)
+    },
+    showProgress() {
+        return this.blogStore.progressCount > 0
     },
   },
 }
