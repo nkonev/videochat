@@ -284,6 +284,7 @@ export default {
         bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
   },
   beforeUnmount() {
+        this.uninstallScroller();
         bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
   }
 }
