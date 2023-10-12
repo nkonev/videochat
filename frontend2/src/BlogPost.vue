@@ -49,6 +49,8 @@ import axios from "axios";
 import MessageItem from "@/MessageItem";
 import {getHumanReadableDate, hasLength, replaceOrAppend, setTitle} from "@/utils";
 import {chat, messageIdHashPrefix, profile, profile_name} from "@/router/routes";
+import {mapStores} from "pinia";
+import {useBlogStore} from "@/store/blogStore";
 
 const pageSize = 40;
 
@@ -83,10 +85,13 @@ export default {
       window.location.href = this.getChatLink();
     },
     getBlog(id) {
+      this.blogStore.incrementProgressCount();
       return axios.get('/api/blog/'+id).then(({data}) => {
         this.blogDto = data;
         this.startingFromItemId = data.messageId;
         setTitle(this.blogDto.title);
+      }).finally(()=>{
+        this.blogStore.decrementProgressCount();
       });
     },
     getDate(date) {
@@ -97,6 +102,7 @@ export default {
       }
     },
     getComments(blogId) { // TODO replace with infinity loader
+      this.blogStore.incrementProgressCount();
       if (this.items.length) {
         this.startingFromItemId = Math.max(...this.items.map(it => it.id));
         console.log("this.startingFromItemId set to", this.startingFromItemId);
@@ -114,11 +120,16 @@ export default {
           this.page += 1;
           replaceOrAppend(this.items, list);
         }
+      }).finally(()=>{
+        this.blogStore.decrementProgressCount();
       });
     },
   },
   components: {
     MessageItem,
+  },
+  computed: {
+    ...mapStores(useBlogStore),
   },
   mounted() {
     this.getBlog(this.$route.params.id).then(()=>{
