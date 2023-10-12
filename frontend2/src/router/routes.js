@@ -4,6 +4,9 @@ export const root = prefix;
 export const chat = `${prefix}/chat`;
 export const chats = `${prefix}/chats`;
 export const blog = `${prefix}/blog`;
+
+export const blog_post = `${prefix}/blog/post`;
+
 export const profile = `${prefix}/user`;
 export const profiles = `${prefix}/users`;
 export const video_suffix = `${prefix}/video`;

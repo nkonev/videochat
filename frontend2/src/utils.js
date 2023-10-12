@@ -1,5 +1,5 @@
 import { format, parseISO, differenceInDays } from 'date-fns';
-import {blog, chat, prefix, video_suffix} from "@/router/routes";
+import {blog_post, chat, prefix, video_suffix} from "@/router/routes";
 
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
@@ -45,7 +45,7 @@ export const embed_message_reply = "reply";
 export const embed_message_resend = "resend";
 
 export const getBlogLink = (chatId) => {
-    return blog + '/post/' + chatId;
+    return blog_post + "/" + chatId;
 }
 
 export const getHumanReadableDate = (timestamp) => {

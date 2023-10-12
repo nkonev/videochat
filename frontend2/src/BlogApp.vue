@@ -65,12 +65,12 @@ export default {
     getBreadcrumbs() {
       const ret = [
         {
-          text: 'Videochat',
+          title: 'Videochat',
           disabled: false,
           href: root,
         },
         {
-          text: 'Blog',
+          title: 'Blog',
           disabled: false,
           exactPath: true,
           to: blog,
@@ -79,9 +79,9 @@ export default {
       if (this.$route.name == blog_post_name) {
         ret.push(
           {
-            text: 'Post',
+            title: 'Post',
             disabled: false,
-            to: blog_post,
+            to: blog_post + "/" + this.$route.params.id,
           },
         )
       }
