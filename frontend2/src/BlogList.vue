@@ -262,7 +262,7 @@ export default {
         setTitle(this.$vuetify.locale.t('$vuetify.blogs'));
         this.blogStore.title = this.$vuetify.locale.t('$vuetify.blogs');
     },
-    async onProfileSet() {
+    async start() {
         await this.reloadItems();
     },
   },
@@ -278,7 +278,7 @@ export default {
         this.blogStore.searchType = SEARCH_MODE_POSTS;
 
         if (this.canDrawBlogs()) {
-            await this.onProfileSet();
+            await this.start();
         }
 
         bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
