@@ -38,9 +38,11 @@
                       <v-icon :x-large="isMobile()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'red--text'">mdi-phone</v-icon>
                   </v-btn>
               </v-badge>
-
-
           </template>
+
+          <v-btn v-if="chatStore.showGoToBlogButton && !isMobile()" icon :href="goToBlogLink()" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')">
+            <v-icon>mdi-postage-stamp</v-icon>
+          </v-btn>
 
           <v-btn v-if="chatStore.showScrollDown" icon @click="scrollDown()" :title="$vuetify.locale.t('$vuetify.scroll_down')">
             <v-icon :x-large="isMobile()">mdi-arrow-down-thick</v-icon>
@@ -118,7 +120,7 @@
 
 <script>
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
-import {hasLength} from "@/utils";
+import {getBlogLink, hasLength} from "@/utils";
 import {
     chat_list_name,
     chat_name,
@@ -268,6 +270,9 @@ export default {
         },
         scrollDown () {
           bus.emit(SCROLL_DOWN)
+        },
+        goToBlogLink() {
+          return getBlogLink(this.chatId)
         },
         searchName() {
             if (this.chatStore.searchType == SEARCH_MODE_CHATS) {

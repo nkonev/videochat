@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import {copyCallLink, copyChatLink} from "@/utils";
+import {copyCallLink, copyChatLink, getBlogLink} from "@/utils";
 import contextMenuMixin from "@/mixins/contextMenuMixin";
 
 export default {
@@ -72,10 +72,16 @@ export default {
                 if (this.menuableItem.canLeave) {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.leave_btn'), icon: 'mdi-exit-run', action: () => this.$emit('leaveChat', this.menuableItem) });
                 }
+                if (this.menuableItem.blog) {
+                  ret.push({title: this.$vuetify.locale.t('$vuetify.go_to_blog_post'), icon: 'mdi-postage-stamp', action: () => this.goToBlog(this.menuableItem) });
+                }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.copy_link_to_chat'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
                 ret.push({title: this.$vuetify.locale.t('$vuetify.copy_video_call_link'), icon: 'mdi-content-copy', action: () => this.copyCallLink(this.menuableItem) });
             }
             return ret;
+        },
+        goToBlog(item) {
+          window.location.href = getBlogLink(item.id)
         },
         copyLink(item) {
             copyChatLink(item.id)
