@@ -79,7 +79,7 @@ export default {
       if (this.$route.name == blog_post_name) {
         ret.push(
           {
-            title: 'Post',
+            title: 'Post #' + this.$route.params.id,
             disabled: false,
             to: blog_post + "/" + this.$route.params.id,
           },
