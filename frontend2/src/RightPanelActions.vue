@@ -12,6 +12,7 @@
     <v-list density="compact" nav>
       <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-home" :title="$vuetify.locale.t('$vuetify.start')"></v-list-item>
       <v-list-item @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
+      <v-list-item @click.prevent="goBlogs()" :href="getRouteBlogs()" prepend-icon="mdi-postage-stamp" :title="$vuetify.locale.t('$vuetify.blogs')"></v-list-item>
       <v-list-item @click="createChat()" prepend-icon="mdi-plus" :title="$vuetify.locale.t('$vuetify.new_chat')"></v-list-item>
       <v-list-item @click="editChat()" v-if="shouldDisplayEditChat()" prepend-icon="mdi-lead-pencil" :title="$vuetify.locale.t('$vuetify.edit_chat')"></v-list-item>
       <v-list-item v-if="canShowFiles()" @click.prevent="openFiles()" prepend-icon="mdi-file-download" :title="$vuetify.locale.t('$vuetify.files')"></v-list-item>
@@ -44,6 +45,7 @@
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {
+  blog,
   chat_list_name,
   chat_name,
   chats,
@@ -101,11 +103,17 @@ export default {
     getRouteChats() {
       return chats
     },
+    getRouteBlogs() {
+      return blog
+    },
     getRouteUsers() {
       return profiles;
     },
     goChats() {
       goToPreserving(this.$route, this.$router, { name: chat_list_name});
+    },
+    goBlogs() {
+      window.location.href = blog
     },
     openUsers() {
       goToPreserving(this.$route, this.$router, { name: profile_list_name});
