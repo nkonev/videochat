@@ -160,7 +160,7 @@ export default {
         params: {
           startingFromItemId: startingFromItemId,
           size: PAGE_SIZE,
-          reverse: this.isTopDirection(), // TODO not implemented
+          reverse: this.isTopDirection(),
         },
       })
         .then((res) => {
