@@ -31,13 +31,16 @@
     </div>
 
     <template v-if="blogDto.messageId">
-      <v-list id="comment-list">
+      <v-list class="my-messages-scroller">
+          <div class="message-first-element" style="min-height: 1px; background: green"></div>
           <MessageItem v-for="(item, index) in items"
+            :id="getItemId(item.id)"
             :key="item.id"
             :item="item"
             :chatId="item.chatId"
             :isInBlog="true"
           ></MessageItem>
+          <div class="message-last-element" style="min-height: 1px; background: red"></div>
       </v-list>
 
     </template>
@@ -47,12 +50,16 @@
 <script>
 import axios from "axios";
 import MessageItem from "@/MessageItem";
-import {getHumanReadableDate, hasLength, replaceOrAppend, setTitle} from "@/utils";
-import {chat, messageIdHashPrefix, profile, profile_name} from "@/router/routes";
+import {getHumanReadableDate, hasLength, replaceOrAppend, replaceOrPrepend, setTitle} from "@/utils";
+import {chat, messageIdHashPrefix, messageIdPrefix, profile, profile_name} from "@/router/routes";
 import {mapStores} from "pinia";
 import {useBlogStore} from "@/store/blogStore";
+import infiniteScrollMixin, {directionBottom, directionTop} from "@/mixins/infiniteScrollMixin";
+import {removeTopMessagePosition} from "@/store/localStore";
 
-const pageSize = 40;
+const PAGE_SIZE = 40;
+
+const scrollerName = 'CommentList';
 
 const blogDtoFactory = () => {
   return {
@@ -61,12 +68,16 @@ const blogDtoFactory = () => {
 }
 
 export default {
+  mixins: [
+    infiniteScrollMixin(scrollerName),
+  ],
   data() {
     return {
       blogDto: blogDtoFactory(),
+
+      startingFromItemIdTop: null,
+      startingFromItemIdBottom: null,
       startingFromItemId: null,
-      page: 0,
-      items: [ ]
     }
   },
   methods: {
@@ -101,29 +112,112 @@ export default {
         return null
       }
     },
-    getComments(blogId) { // TODO replace with infinity loader
-      this.blogStore.incrementProgressCount();
-      if (this.items.length) {
-        this.startingFromItemId = Math.max(...this.items.map(it => it.id));
-        console.log("this.startingFromItemId set to", this.startingFromItemId);
+    getMaxItemsLength() {
+      return 200
+    },
+    getReduceToLength() {
+      return 100
+    },
+    getMaximumItemId() {
+      return this.items.length ? Math.max(...this.items.map(it => it.id)) : null
+    },
+    getMinimumItemId() {
+      return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
+    },
+    reduceBottom() {
+      this.items = this.items.slice(-this.getReduceToLength());
+      this.startingFromItemIdBottom = this.getMaximumItemId();
+    },
+    reduceTop() {
+      this.items = this.items.slice(0, this.getReduceToLength());
+      this.startingFromItemIdTop = this.getMinimumItemId();
+    },
+    saveScroll(top) {
+      this.preservedScroll = top ? this.getMinimumItemId() : this.getMaximumItemId();
+      console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
+    },
+    initialDirection() {
+      return directionBottom
+    },
+    async onFirstLoad() {
+      this.loadedBottom = true;
+    },
+    async load() {
+      if (!this.canDrawMessages()) {
+        return Promise.resolve()
       }
 
-      axios.get(`/api/blog/${blogId}/comment`, {
+      this.blogStore.incrementProgressCount();
+      let startingFromItemId;
+      if (this.startingFromItemId) {
+        startingFromItemId = this.startingFromItemId;
+        this.startingFromItemId = null;
+      } else {
+        startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
+      }
+      console.log(">>>>>>>", this.isTopDirection(), this.startingFromItemIdBottom)
+
+      return axios.get(`/api/blog/${this.$route.params.id}/comment`, {
         params: {
-          startingFromItemId: this.startingFromItemId,
-          page: this.page,
-          size: pageSize,
+          startingFromItemId: startingFromItemId,
+          size: PAGE_SIZE,
+          reverse: this.isTopDirection(), // TODO not implemented
         },
-      }).then(({ data }) => {
-        const list = data;
-        if (list.length) {
-          this.page += 1;
-          replaceOrAppend(this.items, list);
-        }
-      }).finally(()=>{
-        this.blogStore.decrementProgressCount();
-      });
+      })
+        .then((res) => {
+          const items = res.data;
+          console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
+
+          if (this.isTopDirection()) {
+            replaceOrAppend(this.items, items);
+          } else {
+            replaceOrPrepend(this.items, items.reverse());
+          }
+
+          if (items.length < PAGE_SIZE) {
+            if (this.isTopDirection()) {
+              //console.log("Setting this.loadedTop");
+              this.loadedTop = true;
+            } else {
+              //console.log("Setting this.loadedBottom");
+              this.loadedBottom = true;
+            }
+          }
+          this.updateTopAndBottomIds();
+
+        }).finally(()=>{
+          this.blogStore.decrementProgressCount();
+          return this.$nextTick();
+        })
     },
+    updateTopAndBottomIds() {
+      this.startingFromItemIdTop = this.getMinimumItemId();
+      this.startingFromItemIdBottom = this.getMaximumItemId();
+    },
+    bottomElementSelector() {
+      return ".message-first-element"
+    },
+    topElementSelector() {
+      return ".message-last-element"
+    },
+
+    getItemId(id) {
+      return messageIdPrefix + id
+    },
+    scrollerSelector() {
+      return ".my-messages-scroller"
+    },
+    reset() {
+      this.resetInfiniteScrollVars();
+      this.blogStore.showScrollDown = false;
+
+      this.startingFromItemIdTop = null;
+      this.startingFromItemIdBottom = null;
+    },
+    canDrawMessages() {
+      return true
+    },
+
   },
   components: {
     MessageItem,
@@ -131,16 +225,14 @@ export default {
   computed: {
     ...mapStores(useBlogStore),
   },
-  mounted() {
-    this.getBlog(this.$route.params.id).then(()=>{
-      this.getComments(this.$route.params.id);
+  async mounted() {
+    return this.getBlog(this.$route.params.id).then(async ()=>{
+      await this.reloadItems();
     });
   },
   beforeUnmount() {
     this.blogDto = blogDtoFactory();
-    this.startingFromItemId = null;
-    this.page = 0;
-    this.items = [];
+    this.uninstallScroller();
   },
 }
 </script>
@@ -148,6 +240,13 @@ export default {
 <style lang="stylus" scoped>
 @import "common.styl"
 @import "messageWrapper.styl"
+
+.my-messages-scroller {
+  height 100%
+  width: 100%
+  overflow-y scroll !important
+  background white
+}
 
 .top-panel {
   width 100%
