@@ -57,13 +57,6 @@ minio:
     chatAvatar: "chat-avatar"
     files: "files"
     filesPreview: "files-preview"
-  cleaner:
-    files:
-      # Start every
-      interval: 60s
-    previews:
-      # Start every
-      interval: 60s
 
 chat:
   url:
@@ -93,5 +86,9 @@ redis:
   maxRetries: 10000
 
 schedulers:
-  cleanFilesOfDeletedChatTask: true
-  actualizePreviewsTask: true
+  cleanFilesOfDeletedChatTask:
+    enabled: true
+    interval: 60s
+  actualizePreviewsTask:
+    enabled: true
+    interval: 60s

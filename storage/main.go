@@ -337,7 +337,7 @@ func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig,
 }
 
 func runScheduler(dt *redis.CleanFilesOfDeletedChatTask, a *redis.ActualizePreviewsTask) {
-	if viper.GetBool("schedulers.cleanFilesOfDeletedChatTask") {
+	if viper.GetBool("schedulers.cleanFilesOfDeletedChatTask.enabled") {
 		go func() {
 			Logger.Infof("Starting scheduler cleanFilesOfDeletedChatTask")
 			err := dt.Run(context.Background())
@@ -346,7 +346,7 @@ func runScheduler(dt *redis.CleanFilesOfDeletedChatTask, a *redis.ActualizePrevi
 			}
 		}()
 	}
-	if viper.GetBool("schedulers.actualizePreviewsTask") {
+	if viper.GetBool("schedulers.actualizePreviewsTask.enabled") {
 		go func() {
 			Logger.Infof("Starting scheduler actualizePreviewsTask")
 			err := a.Run(context.Background())

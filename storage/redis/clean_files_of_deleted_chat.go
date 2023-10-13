@@ -20,10 +20,10 @@ func CleanFilesOfDeletedChatScheduler(
 	redisConnector *redisV8.Client,
 	service *CleanFilesOfDeletedChatService,
 ) *CleanFilesOfDeletedChatTask {
-	var interv = viper.GetDuration("minio.cleaner.files.interval")
+	var interv = viper.GetDuration("schedulers.cleanFilesOfDeletedChatTask.interval")
 	logger.Logger.Infof("Created CleanFilesOfDeletedChatScheduler with interval %v", interv)
 	return &CleanFilesOfDeletedChatTask{&gointerlock.GoInterval{
-		Name:           "deletedChatFilesCleaner",
+		Name:           "cleanFilesOfDeletedChatTask",
 		Interval:       interv,
 		Arg:            service.doJob,
 		RedisConnector: redisConnector,

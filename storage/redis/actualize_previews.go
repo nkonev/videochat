@@ -20,10 +20,10 @@ func ActualizePreviewsScheduler(
 	redisConnector *redisV8.Client,
 	service *ActualizePreviewsService,
 ) *ActualizePreviewsTask {
-	var interv = viper.GetDuration("minio.cleaner.previews.interval")
+	var interv = viper.GetDuration("schedulers.actualizePreviewsTask.interval")
 	logger.Logger.Infof("Created ActualizePreviewsScheduler with interval %v", interv)
 	return &ActualizePreviewsTask{&gointerlock.GoInterval{
-		Name:           "deletePreviewsOfDeletedFilesCleaner",
+		Name:           "actualizePreviewsTask",
 		Interval:       interv,
 		Arg:            service.doJob,
 		RedisConnector: redisConnector,
