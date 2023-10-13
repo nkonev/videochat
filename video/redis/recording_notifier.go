@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
+	"github.com/spf13/viper"
 	"nkonev.name/video/config"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
@@ -23,11 +24,6 @@ func NewRecordingNotifierService(scheduleService *services.StateChangedEventServ
 
 func (srv *RecordingNotifierService) doJob() {
 
-	if srv.conf.VideoCallUsersCountNotificationPeriod == 0 {
-		Logger.Debugf("Scheduler in RecordingNotifierService is disabled")
-		return
-	}
-
 	Logger.Debugf("Invoked periodic RecordingNotifierService")
 	ctx := context.Background()
 	srv.scheduleService.NotifyAllChatsAboutVideoCallRecording(ctx)
@@ -44,10 +40,10 @@ func RecordingNotifierScheduler(
 	service *VideoCallUsersCountNotifierService,
 	conf *config.ExtendedConfig,
 ) *RecordingNotifierTask {
-	var interv = conf.VideoCallRecordingNotificationPeriod
+	var interv = viper.GetDuration("schedulers.videoRecordingNotifierTask.notificationPeriod")
 	Logger.Infof("Created RecordingNotifierService periodic notificator with interval %v", interv)
 	return &RecordingNotifierTask{&gointerlock.GoInterval{
-		Name:           "recordingPeriodicNotifier",
+		Name:           "videoRecordingNotifierTask",
 		Interval:       interv,
 		Arg:            service.doJob,
 		RedisConnector: redisConnector,

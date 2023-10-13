@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
+	"github.com/spf13/viper"
 	"nkonev.name/video/config"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
@@ -23,11 +24,6 @@ func NewVideoCallUsersCountNotifierService(scheduleService *services.StateChange
 
 func (srv *VideoCallUsersCountNotifierService) doJob() {
 
-	if srv.conf.VideoCallUsersCountNotificationPeriod == 0 {
-		Logger.Debugf("Scheduler in VideoCallUsersCountNotifierService is disabled")
-		return
-	}
-
 	Logger.Debugf("Invoked periodic ChatNotifier")
 	ctx := context.Background()
 	srv.scheduleService.NotifyAllChatsAboutVideoCallUsersCount(ctx)
@@ -44,10 +40,10 @@ func VideoCallUsersCountNotifierScheduler(
 	service *VideoCallUsersCountNotifierService,
 	conf *config.ExtendedConfig,
 ) *VideoCallUsersCountNotifierTask {
-	var interv = conf.VideoCallUsersCountNotificationPeriod
+	var interv = viper.GetDuration("schedulers.videoCallUsersCountNotifierTask.notificationPeriod")
 	Logger.Infof("Created video call users count periodic notificator with interval %v", interv)
 	return &VideoCallUsersCountNotifierTask{&gointerlock.GoInterval{
-		Name:           "videoCallUsersCountPeriodicNotifier",
+		Name:           "videoCallUsersCountNotifierTask",
 		Interval:       interv,
 		Arg:            service.doJob,
 		RedisConnector: redisConnector,

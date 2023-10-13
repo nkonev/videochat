@@ -145,9 +145,6 @@ type ExtendedConfig struct {
 	JaegerConfig                          JaegerConfig     `mapstructure:"jaeger"`
 	HttpServerConfig                      HttpServerConfig `mapstructure:"server"`
 	RabbitMqConfig                        RabbitMqConfig   `mapstructure:"rabbitmq"`
-	VideoCallUsersCountNotificationPeriod time.Duration    `mapstructure:"videoCallUsersCountNotificationPeriod"`
-	VideoCallRecordingNotificationPeriod  time.Duration    `mapstructure:"videoCallRecordingNotificationPeriod"`
-	DialPeriod                            time.Duration    `mapstructure:"dialPeriod"`
 	OnlyRoleAdminRecording                bool             `mapstructure:"onlyRoleAdminRecording"`
 	RecordPreset                          string           `mapstructure:"recordPreset"`
 	RedisConfig                           RedisConfig      `mapstructure:"redis"`

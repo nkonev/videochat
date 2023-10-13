@@ -58,9 +58,7 @@ rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
   debug: true
 
-videoCallUsersCountNotificationPeriod: 2s
-videoCallRecordingNotificationPeriod: 20s
-dialPeriod: 5s
+
 # used to forbid records by guests on demo server
 onlyRoleAdminRecording: false
 recordPreset: H264_1080P_30
@@ -72,6 +70,12 @@ redis:
   maxRetries: 10000
 
 schedulers:
-  videoUsersCountNotifierTask: true
-  chatDialerTask: true
-  videoRecordingNotifierTask: true
+  videoCallUsersCountNotifierTask:
+    enabled: true
+    notificationPeriod: 2s
+  chatDialerTask:
+    enabled: true
+    dialPeriod: 5s
+  videoRecordingNotifierTask:
+    enabled: true
+    notificationPeriod: 20s

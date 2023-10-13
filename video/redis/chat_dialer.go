@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
+	"github.com/spf13/viper"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
@@ -31,11 +32,6 @@ func NewChatDialerService(scheduleService *services.DialRedisRepository, conf *c
 }
 
 func (srv *ChatDialerService) doJob() {
-
-	if srv.conf.VideoCallUsersCountNotificationPeriod == 0 {
-		Logger.Debugf("Scheduler in ChatDialerService is disabled")
-		return
-	}
 
 	Logger.Debugf("Invoked periodic ChatDialer")
 	ctx := context.Background()
@@ -150,10 +146,10 @@ func ChatDialerScheduler(
 	service *ChatDialerService,
 	conf *config.ExtendedConfig,
 ) *ChatDialerTask {
-	var interv = conf.VideoCallUsersCountNotificationPeriod
+	var interv = viper.GetDuration("schedulers.chatDialerTask.dialPeriod")
 	Logger.Infof("Created chats dialer with interval %v", interv)
 	return &ChatDialerTask{&gointerlock.GoInterval{
-		Name:           "chatDialer",
+		Name:           "chatDialerTask",
 		Interval:       interv,
 		Arg:            service.doJob,
 		RedisConnector: redisConnector,
