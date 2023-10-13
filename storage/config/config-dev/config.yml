@@ -91,3 +91,7 @@ redis:
   password: ""
   db: 3
   maxRetries: 10000
+
+schedulers:
+  cleanFilesOfDeletedChatTask: true
+  actualizePreviewsTask: true

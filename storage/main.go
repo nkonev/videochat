@@ -337,18 +337,22 @@ func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig,
 }
 
 func runScheduler(dt *redis.CleanFilesOfDeletedChatTask, a *redis.ActualizePreviewsTask) {
-	go func() {
-		err := dt.Run(context.Background())
-		if err != nil {
-			Logger.Errorf("Error during working cleanFilesOfDeletedChatTask: %s", err)
-		}
-	}()
-	go func() {
-		err := a.Run(context.Background())
-		if err != nil {
-			Logger.Errorf("Error during working actualizePreviewsTask: %s", err)
-		}
-	}()
-
-	Logger.Infof("Cleaning schedulers are started")
+	if viper.GetBool("schedulers.cleanFilesOfDeletedChatTask") {
+		go func() {
+			Logger.Infof("Starting scheduler cleanFilesOfDeletedChatTask")
+			err := dt.Run(context.Background())
+			if err != nil {
+				Logger.Errorf("Error during working cleanFilesOfDeletedChatTask: %s", err)
+			}
+		}()
+	}
+	if viper.GetBool("schedulers.actualizePreviewsTask") {
+		go func() {
+			Logger.Infof("Starting scheduler actualizePreviewsTask")
+			err := a.Run(context.Background())
+			if err != nil {
+				Logger.Errorf("Error during working actualizePreviewsTask: %s", err)
+			}
+		}()
+	}
 }

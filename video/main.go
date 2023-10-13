@@ -232,26 +232,33 @@ func runApiEcho(e *ApiEcho, cfg *config.ExtendedConfig) {
 }
 
 func runScheduler(chatNotifierTask *redis.VideoCallUsersCountNotifierTask, chatDialerTask *redis.ChatDialerTask, videoRecordingTask *redis.RecordingNotifierTask) {
-	go func() {
-		err := chatNotifierTask.Run(context.Background())
-		if err != nil {
-			Logger.Errorf("Error during working videoUsersCountNotifierTask: %s", err)
-		}
-	}()
-	go func() {
-		err := chatDialerTask.Run(context.Background())
-		if err != nil {
-			Logger.Errorf("Error during working chatDialerTask: %s", err)
-		}
-	}()
-	go func() {
-		err := videoRecordingTask.Run(context.Background())
-		if err != nil {
-			Logger.Errorf("Error during working chatDialerTask: %s", err)
-		}
-	}()
-
-	Logger.Infof("Schedulers are started")
+	if viper.GetBool("schedulers.videoUsersCountNotifierTask") {
+		go func() {
+			Logger.Infof("Starting scheduler videoUsersCountNotifierTask")
+			err := chatNotifierTask.Run(context.Background())
+			if err != nil {
+				Logger.Errorf("Error during working videoUsersCountNotifierTask: %s", err)
+			}
+		}()
+	}
+	if viper.GetBool("schedulers.chatDialerTask") {
+		go func() {
+			Logger.Infof("Starting scheduler chatDialerTask")
+			err := chatDialerTask.Run(context.Background())
+			if err != nil {
+				Logger.Errorf("Error during working chatDialerTask: %s", err)
+			}
+		}()
+	}
+	if viper.GetBool("schedulers.videoRecordingNotifierTask") {
+		go func() {
+			Logger.Infof("Starting scheduler videoRecordingNotifierTask")
+			err := videoRecordingTask.Run(context.Background())
+			if err != nil {
+				Logger.Errorf("Error during working videoRecordingNotifierTask: %s", err)
+			}
+		}()
+	}
 }
 
 func createTypedConfig() (*config.ExtendedConfig, error) {

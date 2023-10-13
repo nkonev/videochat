@@ -70,3 +70,8 @@ redis:
   password: ""
   db: 4
   maxRetries: 10000
+
+schedulers:
+  videoUsersCountNotifierTask: true
+  chatDialerTask: true
+  videoRecordingNotifierTask: true
