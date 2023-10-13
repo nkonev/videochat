@@ -61,7 +61,7 @@ custom:
     token:
       ttl-minutes: 5
   online-estimation: 10m
-  tasks:
+  schedulers:
     user-online:
       enabled: false
       batch-size: 20
