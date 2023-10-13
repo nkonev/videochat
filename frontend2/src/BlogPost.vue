@@ -17,7 +17,7 @@
                 <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
               <div class="ma-0 pa-0 go-to-chat">
-                <v-btn icon :href="getChatLink()" @click="toChat()" :title="$vuetify.locale.t('$vuetify.go_to_chat')"><v-icon dark>mdi-forum</v-icon></v-btn>
+                <v-btn variant="plain" size="large" :href="getChatLink()" @click="toChat()" :title="$vuetify.locale.t('$vuetify.go_to_chat')"><v-icon size="large">mdi-forum</v-icon></v-btn>
               </div>
             </div>
           </template>
@@ -158,6 +158,8 @@ export default {
 }
 
 .post-content {
+  position relative
+  z-index 100
   background white
   border-color $borderColor
   border-style: dashed;
