@@ -1,8 +1,9 @@
 <template>
-  <div class="ma-2">
-    <h1 v-html="blogDto.title"></h1>
+  <v-container class="ma-0 pa-0" :style="heightWithoutAppBar" fluid>
+  <div class="my-messages-scroller" @scroll.passive="onScroll">
+    <h1 v-html="blogDto.title" class="ml-3 mt-2"></h1>
 
-    <div class="pr-1 mr-1 pl-1 mt-0 message-item-root" >
+    <div class="pr-1 mr-1 pl-1 mt-0 ml-3 message-item-root" >
       <div class="message-item-with-buttons-wrapper">
         <v-list-item class="grow" v-if="blogDto?.owner">
           <template v-slot:prepend>
@@ -31,20 +32,18 @@
     </div>
 
     <template v-if="blogDto.messageId">
-      <v-list class="my-messages-scroller">
-          <div class="message-first-element" style="min-height: 1px; background: green"></div>
-          <MessageItem v-for="(item, index) in items"
-            :id="getItemId(item.id)"
-            :key="item.id"
-            :item="item"
-            :chatId="item.chatId"
-            :isInBlog="true"
-          ></MessageItem>
-          <div class="message-last-element" style="min-height: 1px; background: red"></div>
-      </v-list>
-
+        <div class="message-first-element" style="min-height: 1px; background: green"></div>
+        <MessageItem v-for="(item, index) in items"
+          :id="getItemId(item.id)"
+          :key="item.id"
+          :item="item"
+          :chatId="item.chatId"
+          :isInBlog="true"
+        ></MessageItem>
+        <div class="message-last-element" style="min-height: 1px; background: red"></div>
     </template>
   </div>
+  </v-container>
 </template>
 
 <script>
@@ -56,6 +55,7 @@ import {mapStores} from "pinia";
 import {useBlogStore} from "@/store/blogStore";
 import infiniteScrollMixin, {directionBottom, directionTop} from "@/mixins/infiniteScrollMixin";
 import {removeTopMessagePosition} from "@/store/localStore";
+import heightMixin from "@/mixins/heightMixin";
 
 const PAGE_SIZE = 40;
 
@@ -69,6 +69,7 @@ const blogDtoFactory = () => {
 
 export default {
   mixins: [
+    heightMixin(),
     infiniteScrollMixin(scrollerName),
   ],
   data() {
@@ -140,7 +141,7 @@ export default {
       return directionBottom
     },
     async onFirstLoad() {
-      this.loadedBottom = true;
+      this.loadedTop = true;
     },
     async load() {
       if (!this.canDrawMessages()) {
@@ -168,9 +169,9 @@ export default {
           console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
           if (this.isTopDirection()) {
-            replaceOrAppend(this.items, items);
+            replaceOrPrepend(this.items, items);
           } else {
-            replaceOrPrepend(this.items, items.reverse());
+            replaceOrAppend(this.items, items);
           }
 
           if (items.length < PAGE_SIZE) {
@@ -194,10 +195,10 @@ export default {
       this.startingFromItemIdBottom = this.getMaximumItemId();
     },
     bottomElementSelector() {
-      return ".message-first-element"
+      return ".message-last-element"
     },
     topElementSelector() {
-      return ".message-last-element"
+      return ".message-first-element"
     },
 
     getItemId(id) {
@@ -243,6 +244,8 @@ export default {
 .my-messages-scroller {
   height 100%
   width: 100%
+  display flex
+  flex-direction column
   overflow-y scroll !important
   background white
 }
