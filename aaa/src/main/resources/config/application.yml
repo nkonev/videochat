@@ -17,7 +17,6 @@ custom.registration-confirm-exit-user-not-found-url: "http://localhost:8081/fron
 custom.registration-confirm-exit-success-url: "http://localhost:8081/front2"
 custom.password-reset-enter-new-url: "http://localhost:8081/front2/password-restore/enter-new"
 
-custom.tasks.user-online: true
 
 # https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
 # https://yandex.ru/support/mail-new/mail-clients.html
@@ -84,8 +83,11 @@ custom:
     token:
       ttl-minutes: 5
   online-estimation: 10m
-  user-online-batch-size: 20
-  user-online-cron: "*/20 * * * * *"
+  tasks:
+    user-online:
+      enabled: true
+      batch-size: 20
+      cron: "*/20 * * * * *"
 
 server.tomcat.accesslog.enabled: false
 server.tomcat.accesslog.pattern: '%t %a "%r" %s (%D ms)'

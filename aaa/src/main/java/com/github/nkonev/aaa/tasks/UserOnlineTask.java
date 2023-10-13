@@ -13,7 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-@ConditionalOnProperty("custom.tasks.user-online")
+@ConditionalOnProperty("custom.tasks.user-online.enabled")
 @Service
 public class UserOnlineTask {
 
@@ -26,12 +26,12 @@ public class UserOnlineTask {
     @Autowired
     private EventService eventService;
 
-    @Value("${custom.user-online-batch-size}")
+    @Value("${custom.tasks.user-online.batch-size}")
     private int userOnlineBatchSize;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserOnlineTask.class);
 
-    @Scheduled(cron = "${custom.user-online-cron}")
+    @Scheduled(cron = "${custom.tasks.user-online.cron}")
     @SchedulerLock(name = "userOnlineTask")
     public void scheduledTask() {
         final int pageSize = userOnlineBatchSize;
