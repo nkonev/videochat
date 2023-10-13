@@ -155,7 +155,6 @@ export default {
       } else {
         startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
       }
-      console.log(">>>>>>>", this.isTopDirection(), this.startingFromItemIdBottom)
 
       return axios.get(`/api/blog/${this.$route.params.id}/comment`, {
         params: {
