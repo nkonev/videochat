@@ -17,6 +17,8 @@ custom.registration-confirm-exit-user-not-found-url: "http://localhost:8081/fron
 custom.registration-confirm-exit-success-url: "http://localhost:8081/front2"
 custom.password-reset-enter-new-url: "http://localhost:8081/front2/password-restore/enter-new"
 
+custom.tasks.user-online: true
+
 # https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
 # https://yandex.ru/support/mail-new/mail-clients.html
 # https://stackoverflow.com/questions/411331/using-javamail-with-tls
