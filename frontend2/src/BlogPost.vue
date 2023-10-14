@@ -126,11 +126,11 @@ export default {
       return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
     },
     reduceBottom() {
-      this.items = this.items.slice(-this.getReduceToLength());
+      this.items = this.items.slice(0, this.getReduceToLength());
       this.startingFromItemIdBottom = this.getMaximumItemId();
     },
     reduceTop() {
-      this.items = this.items.slice(0, this.getReduceToLength());
+      this.items = this.items.slice(-this.getReduceToLength());
       this.startingFromItemIdTop = this.getMinimumItemId();
     },
     saveScroll(top) {

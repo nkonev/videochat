@@ -31,6 +31,8 @@
             @pinMessage="this.pinMessage"
             @removedFromPinned="this.removedFromPinned"
             @shareMessage="this.shareMessage"
+            @makeBlogPost="makeBlogPost"
+            @goToBlog="goToBlog"
           />
         </div>
 
@@ -57,13 +59,13 @@
       SET_EDIT_MESSAGE, USER_PROFILE_CHANGED
     } from "@/bus/bus";
     import {
-        deepCopy, embed_message_reply,
-        findIndex,
-        hasLength,
-        replaceInArray,
-        replaceOrAppend,
-        replaceOrPrepend,
-        setAnswerPreviewFields
+      deepCopy, embed_message_reply,
+      findIndex, getBlogLink,
+      hasLength,
+      replaceInArray,
+      replaceOrAppend,
+      replaceOrPrepend,
+      setAnswerPreviewFields
     } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -477,6 +479,16 @@
             }
           });
         },
+        getBlogLink() {
+          return getBlogLink(this.chatId);
+        },
+        makeBlogPost(dto) {
+          axios.put(`/api/chat/${this.chatId}/message/${dto.id}/blog-post`);
+        },
+        goToBlog() {
+          window.location.href = this.getBlogLink();
+        },
+
       },
       created() {
         this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
