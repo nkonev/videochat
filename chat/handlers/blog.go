@@ -301,12 +301,11 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		CreateDateTime: chatBasic.CreateDateTime,
 	}
 
-	posts, err := h.db.BlogPosts([]int64{blogId})
+	post, err := h.getBlogPost(blogId)
 	if err != nil {
 		return err
 	}
-	if len(posts) == 1 {
-		post := posts[0]
+	if post != nil {
 		response.OwnerId = &post.OwnerId
 		response.MessageId = &post.MessageId
 		patchedText := h.patchStorageUrlToPublic(post.Text)
@@ -323,6 +322,18 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, response)
+}
+
+func (h *BlogHandler) getBlogPost(blogId int64) (*db.BlogPost, error) {
+	posts, err := h.db.BlogPosts([]int64{blogId})
+	if err != nil {
+		return nil, err
+	}
+	if len(posts) == 1 {
+		post := posts[0]
+		return post, nil
+	}
+	return nil, nil
 }
 
 func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
@@ -350,7 +361,15 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	size := utils.FixSizeString(c.QueryParam("size"))
 	reverse := utils.GetBoolean(c.QueryParam("reverse"))
 
-	messages, err := h.db.GetMessages(blogId, size, startingFromItemId, reverse, false, "")
+	post, err := h.getBlogPost(blogId)
+	if err != nil {
+		return err
+	}
+	if post == nil {
+		GetLogEntry(c.Request().Context()).Infof("Messages of this chat %v does no have blog posts", blogId)
+		return c.NoContent(http.StatusNoContent)
+	}
+	messages, err := h.db.GetComments(blogId, post.MessageId, size, startingFromItemId, reverse)
 	if err != nil {
 		return err
 	}
