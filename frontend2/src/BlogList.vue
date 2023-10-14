@@ -20,8 +20,8 @@
               :src="item.imageUrl"
             >
               <v-container class="post-title ma-0 pa-0">
-                <v-card-title>
-                  <router-link :to="getBlogPostLink(item)" class="post-title-text" v-html="item.title"></router-link>
+                <v-card-title @click.prevent="goToBlog(item)">
+                  <a class="post-title-text" v-html="item.title" :href="getLink(item)"></a>
                 </v-card-title>
               </v-container>
             </v-img>
@@ -61,12 +61,12 @@ import {getHumanReadableDate, hasLength, replaceOrAppend, replaceOrPrepend, setT
 import axios from "axios";
 import debounce from "lodash/debounce";
 import Mark from "mark.js";
-import {blog_post_name} from "@/router/blogRoutes";
+import {blog_post, blog_post_name} from "@/router/blogRoutes";
 import {profile, profile_name} from "@/router/routes";
 import infiniteScrollMixin, {directionBottom, directionTop} from "@/mixins/infiniteScrollMixin";
 import {mapStores} from "pinia";
 import {useBlogStore} from "@/store/blogStore";
-import {SEARCH_MODE_POSTS, searchString} from "@/mixins/searchString";
+import {goToPreserving, SEARCH_MODE_POSTS, searchString} from "@/mixins/searchString";
 import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
 import heightMixin from "@/mixins/heightMixin";
 
@@ -262,6 +262,12 @@ export default {
         setTitle(this.$vuetify.locale.t('$vuetify.blogs'));
         this.blogStore.title = this.$vuetify.locale.t('$vuetify.blogs');
     },
+    goToBlog(item) {
+        goToPreserving(this.$route, this.$router, { name: blog_post_name, params: { id: item.id} })
+    },
+    getLink(item) {
+        return blog_post + "/" + item.id
+    },
     async start() {
         await this.reloadItems();
     },
@@ -305,6 +311,7 @@ export default {
   background rgba(0, 0, 0, 0.5);
 
   .post-title-text {
+    cursor pointer
     color white
     text-decoration none
     word-break: break-word;
