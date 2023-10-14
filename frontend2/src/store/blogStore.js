@@ -7,7 +7,7 @@ export const useBlogStore = defineStore('blog', {
     return {
         lastError: "",
         errorColor: "",
-        isShowSearch: true,
+        isShowSearch: false,
         searchType: SEARCH_MODE_POSTS,
         title: "",
         progressCount: 0,

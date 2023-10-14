@@ -279,6 +279,7 @@ export default {
       this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
   },
   async mounted() {
+        this.blogStore.isShowSearch = true;
         this.markInstance = new Mark("div#blog-post-list");
         this.setTopTitle();
         this.blogStore.searchType = SEARCH_MODE_POSTS;
@@ -290,6 +291,7 @@ export default {
         bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
   },
   beforeUnmount() {
+        this.blogStore.isShowSearch = false;
         this.uninstallScroller();
         bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
   }

@@ -15,12 +15,14 @@
 
       <v-spacer></v-spacer>
 
-      <v-btn v-if="showSearchButton && isMobile()" icon :title="searchName()" @click="onOpenSearch()">
-        <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
-      </v-btn>
-      <v-card v-if="!showSearchButton || !isMobile()" variant="plain" min-width="330"  style="margin-left: 1.2em; margin-right: 2px">
-        <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" :label="searchName()"></v-text-field>
-      </v-card>
+      <template v-if="blogStore.isShowSearch">
+        <v-btn v-if="showSearchButton && isMobile()" icon :title="searchName()" @click="onOpenSearch()">
+          <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
+        </v-btn>
+        <v-card v-if="!showSearchButton || !isMobile()" variant="plain" min-width="330"  style="margin-left: 1.2em; margin-right: 2px">
+          <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" :label="searchName()"></v-text-field>
+        </v-card>
+      </template>
     </v-app-bar>
 
     <v-main>
