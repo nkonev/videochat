@@ -24,7 +24,6 @@
           </template>
         </v-list-item>
 
-
         <div class="pa-0 ma-0 mt-1 message-item-wrapper post-content">
           <v-container v-html="blogDto.text" class="message-item-text ml-0"></v-container>
         </div>
@@ -32,15 +31,17 @@
     </div>
 
     <template v-if="blogDto.messageId">
-        <div class="message-first-element" style="min-height: 1px; background: green"></div>
-        <MessageItem v-for="(item, index) in items"
-          :id="getItemId(item.id)"
-          :key="item.id"
-          :item="item"
-          :chatId="item.chatId"
-          :isInBlog="true"
-        ></MessageItem>
-        <div class="message-last-element" style="min-height: 1px; background: red"></div>
+        <div class="message-first-element" style="min-height: 1px; background: white"></div>
+        <v-container class="ma-0 pa-0 mb-2" fluid>
+          <MessageItem v-for="(item, index) in items"
+            :id="getItemId(item.id)"
+            :key="item.id"
+            :item="item"
+            :chatId="item.chatId"
+            :isInBlog="true"
+          ></MessageItem>
+        </v-container>
+        <div class="message-last-element" style="min-height: 1px; background: white"></div>
     </template>
   </div>
   </v-container>
