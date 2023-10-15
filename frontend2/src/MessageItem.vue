@@ -1,13 +1,13 @@
 <template>
     <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="id">
       <div v-if="item.owner && item.owner.avatar" class="item-avatar mt-2 pr-0 mr-3">
-        <router-link :to="getOwnerLink(item)" class="user-link">
+        <a :href="getOwnerLink(item)" class="user-link" @click.prevent.stop="onProfileClick(item)">
           <img :src="item.owner.avatar">
-        </router-link>
+        </a>
       </div>
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
-                <router-link :to="getOwnerLink(item)" class="colored-link">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
+                <a :href="getOwnerLink(item)" class="colored-link" @click.prevent.stop="onProfileClick(item)">{{getOwner(item.owner)}}</a><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                 <template v-if="!isMobile() && !isInBlog">
                     <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item)" size="small" :title="$vuetify.locale.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
                     <v-icon class="mx-1" v-if="item.canDelete" color="red" @click="deleteMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
@@ -47,13 +47,24 @@
         getHumanReadableDate,
     } from "@/utils";
     import "./messageBody.styl";
-    import {chat_name, messageIdHashPrefix, profile_name} from "@/router/routes"
+    import {chat_name, messageIdHashPrefix, profile, profile_name} from "@/router/routes"
 
     export default {
         props: ['id', 'item', 'chatId', 'my', 'highlight', 'canResend', 'isInBlog'],
         methods: {
-            getOwnerLink(item) {
+            getOwnerRoute(item) {
                 return { name: profile_name, params: { id: item.owner?.id }}
+            },
+            getOwnerLink(item) {
+                return profile + "/" + item.owner?.id;
+            },
+            onProfileClick(item) {
+                if (this.isInBlog) {
+                    window.location.href = this.getOwnerLink(item);
+                } else {
+                    const route = this.getOwnerRoute(item);
+                    this.$router.push(route);
+                }
             },
             onMessageClick(event, dto) {
                 if (this.isMobile()) {
