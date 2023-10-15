@@ -123,11 +123,6 @@ export default {
         console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
         this.commonChatEdit(data);
         this.chatStore.tetATet = data.tetATet;
-        if (data.blog) {
-          this.chatStore.showGoToBlogButton = this.chatId;
-        } else {
-          this.chatStore.showGoToBlogButton = null;
-        }
         this.chatDto = data;
       })
     },
@@ -138,6 +133,11 @@ export default {
         this.chatStore.chatUsersCount = data.participantsCount;
         this.chatStore.showChatEditButton = data.canEdit;
         this.chatStore.canBroadcastTextMessage = data.canBroadcast;
+        if (data.blog) {
+            this.chatStore.showGoToBlogButton = this.chatId;
+        } else {
+            this.chatStore.showGoToBlogButton = null;
+        }
     },
     fetchPromotedMessage() {
       axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
