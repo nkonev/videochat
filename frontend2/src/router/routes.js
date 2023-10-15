@@ -31,7 +31,7 @@ export const root_name = 'root';
 export const chat_list_name = 'chat_list';
 export const chat_name = 'chat_view';
 export const videochat_name = 'videochat';
-export const profile_self_name = 'profileSelf';
+
 export const profile_name = 'profileUser';
 export const profile_list_name = 'profileUser_list';
 

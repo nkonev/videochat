@@ -47,11 +47,9 @@ import {useChatStore} from "@/store/chatStore";
 import {
   blog,
   chat_list_name,
-  chat_name,
   chats,
-  profile,
   profile_list_name,
-  profile_self_name, profiles,
+  profiles,
   root,
   root_name
 } from "@/router/routes";
