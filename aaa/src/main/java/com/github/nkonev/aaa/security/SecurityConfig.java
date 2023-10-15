@@ -13,12 +13,9 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.FormHttpMessageConverter;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
@@ -29,6 +26,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.web.client.RestTemplate;
@@ -36,12 +34,11 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Arrays;
 
 /**
- * http://websystique.com/springmvc/spring-mvc-4-and-spring-security-4-integration-example/
  * Created by nik on 08.06.17.
  */
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
     public static final String API_LOGIN_URL = Constants.Urls.API + "/login";
     public static final String API_LOGOUT_URL = Constants.Urls.API + "/logout";
@@ -66,7 +63,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private AaaUserDetailsService aaaUserDetailsService;
 
     @Autowired
-    private AuthenticationProvider ldapAuthenticationProvider;
+    private LdapAuthenticationProvider ldapAuthenticationProvider;
 
     @Autowired
     private AaaPreAuthenticationChecks aaaPreAuthenticationChecks;
@@ -110,21 +107,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return cookieCsrfTokenRepository;
     }
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        // https://dzone.com/articles/spring-security-4-authenticate-and-authorize-users
-        // http://www.programming-free.com/2015/09/spring-security-password-encryption.html
-        auth.authenticationProvider(ldapAuthenticationProvider);
-        auth.authenticationProvider(dbAuthenticationProvider());
-    }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(); // default strength is BCrypt.GENSALT_DEFAULT_LOG2_ROUNDS=10
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    // https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .antMatchers("/favicon.ico", "/static/**", Constants.Urls.API+"/**").permitAll();
         http.authorizeRequests()
@@ -164,8 +154,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         })
         );
 
+        http.authenticationProvider(ldapAuthenticationProvider);
+        http.authenticationProvider(dbAuthenticationProvider());
+
         http.headers().frameOptions().deny();
         http.headers().cacheControl().disable(); // see also AbstractImageUploadController#shouldReturnLikeCache
+
+        return http.build();
     }
 
     OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
