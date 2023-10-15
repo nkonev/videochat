@@ -72,7 +72,7 @@
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
     import MessageItemContextMenu from "@/MessageItemContextMenu.vue";
-    import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
+    import {chat_name, messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
     import {getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition} from "@/store/localStore";
     import Mark from "mark.js";
 
@@ -505,20 +505,22 @@
           // 6. Without this single handler, both handlers would invoke what leads us to resetting yellow highlight
           '$route': {
             handler: async function (newValue, oldValue) {
+              if (newValue.name == chat_name) {
                 // chatId
                 if (newValue.params.id != oldValue.params.id) {
-                    console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
-                    this.saveLastVisibleElement(oldValue.params.id); // for case exiting, e. g. to the Welcome page
-                    if (hasLength(newValue.params.id)) {
-                        await this.onProfileSet();
-                        return
-                    }
+                  console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
+                  this.saveLastVisibleElement(oldValue.params.id); // for case exiting, e. g. to the Welcome page
+                  if (hasLength(newValue.params.id)) {
+                    await this.onProfileSet();
+                    return
+                  }
                 }
                 // hash
                 if (hasLength(newValue.hash)) {
-                    console.log("Changed route hash, going to scroll", newValue.hash)
-                    await this.scrollToOrLoad(newValue.hash);
+                  console.log("Changed route hash, going to scroll", newValue.hash)
+                  await this.scrollToOrLoad(newValue.hash);
                 }
+              }
             }
           }
       },

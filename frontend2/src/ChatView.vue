@@ -393,10 +393,16 @@ export default {
 
   },
   watch: {
-    async chatId(newVal, oldVal) {
-      console.debug("Chat id has been changed", oldVal, "->", newVal);
-      if (hasLength(newVal)) {
-        await this.onProfileSet();
+    '$route': {
+      handler: async function (newValue, oldValue) {
+        if (newValue.name == chat_name) {
+          if (newValue.params.id != oldValue.params.id) {
+            console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
+            if (hasLength(newValue.params.id)) {
+              await this.onProfileSet();
+            }
+          }
+        }
       }
     },
   },
