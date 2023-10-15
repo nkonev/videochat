@@ -6,7 +6,7 @@
     <v-row justify="center">
         <v-dialog persistent v-model="show" max-width="440">
             <v-card>
-                <v-card-title class="d-flex flex-row align-center ml-2">
+                <v-card-title class="d-flex flex-row align-center">
                   <span class="d-flex flex-grow-1">
                       {{ $vuetify.locale.t('$vuetify.login_title') }}
                   </span>
@@ -38,7 +38,7 @@
                   </span>
                 </v-card-title>
 
-                <v-card-text :class="isMobile() ? 'pa-4 pt-0' : 'pt-0'">
+                <v-card-text :class="isMobile() ? 'pa-4 pt-0' : 'pl-4 pt-0'">
                     <v-form
                         ref="form"
                         v-model="valid"
