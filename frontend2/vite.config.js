@@ -1,8 +1,8 @@
 // Plugins
 import vue from '@vitejs/plugin-vue'
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
-import forwardToTrailingSlashPlugin from './forward-to-trailing-slash-plugin.js'
-import anotherEntrypointIndexHtmlPlugin from "./another-entrypoint-index-html-plugin";
+import forwardToTrailingSlashPlugin from './vite/forward-to-trailing-slash-plugin.js'
+import anotherEntrypointIndexHtmlPlugin from "./vite/another-entrypoint-index-html-plugin";
 
 // Utilities
 import { defineConfig } from 'vite'
