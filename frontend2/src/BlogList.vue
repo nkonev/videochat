@@ -34,7 +34,7 @@
         <v-card-actions v-if="item?.owner != null">
           <v-list-item>
               <template v-slot:prepend>
-                  <v-avatar :image="item?.owner?.avatar">
+                  <v-avatar class="with-pointer" :image="item?.owner?.avatar" @click.prevent="onParticipantClick(item.owner)">
                   </v-avatar>
               </template>
 
@@ -241,8 +241,7 @@ export default {
       }
     },
     onParticipantClick(user) {
-      const routeDto = { name: profile_name, params: { id: user.id }};
-      this.$router.push(routeDto);
+      window.location.href = this.getProfileLink(user)
     },
     getProfileLink(user) {
       let url = profile + "/" + user.id;

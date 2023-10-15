@@ -130,4 +130,8 @@ export default {
     color white
   }
 }
+
+.with-pointer {
+  cursor pointer
+}
 </style>

@@ -7,14 +7,14 @@
       <div class="message-item-with-buttons-wrapper">
         <v-list-item class="grow" v-if="blogDto?.owner">
           <template v-slot:prepend>
-            <v-avatar :image="blogDto.owner.avatar" @click.prevent="onParticipantClick(blogDto.owner)">
+            <v-avatar class="with-pointer" :image="blogDto.owner.avatar" @click.prevent="onParticipantClick(blogDto.owner)">
             </v-avatar>
           </template>
 
           <template v-slot:default>
             <div class="ma-0 pa-0 d-flex top-panel">
               <div class="author-and-date">
-                <v-list-item-title><a @click.prevent="onParticipantClick(blogDto.owner)" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
+                <v-list-item-title><a class="colored-link" @click.prevent="onParticipantClick(blogDto.owner)" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
                 <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
               <div class="ma-0 pa-0 go-to-chat">
