@@ -34,12 +34,15 @@
         <v-card-actions v-if="item?.owner != null">
           <v-list-item>
               <template v-slot:prepend>
-                  <v-avatar class="with-pointer" :image="item?.owner?.avatar" @click.prevent="onParticipantClick(item.owner)">
-                  </v-avatar>
+                  <div class="item-avatar pr-0 mr-3">
+                      <a :href="getProfileLink(item.owner)" class="user-link">
+                          <img :src="item?.owner?.avatar">
+                      </a>
+                  </div>
               </template>
 
               <template v-slot:default>
-                  <v-list-item-title><a @click.prevent="onParticipantClick(item.owner)" :href="getProfileLink(item.owner)" class="colored-link">{{ item?.owner?.login }}</a></v-list-item-title>
+                  <v-list-item-title><a :href="getProfileLink(item.owner)" class="colored-link">{{ item?.owner?.login }}</a></v-list-item-title>
                   <v-list-item-subtitle>
                       {{ getDate(item) }}
                   </v-list-item-subtitle>
@@ -240,9 +243,6 @@ export default {
         }
       }
     },
-    onParticipantClick(user) {
-      window.location.href = this.getProfileLink(user)
-    },
     getProfileLink(user) {
       let url = profile + "/" + user.id;
       return url;
@@ -299,6 +299,7 @@ export default {
 
 <style lang="stylus">
 @import "constants.styl"
+@import "itemAvatar.styl"
 
 .my-blog-scroller {
   height 100%
@@ -325,4 +326,8 @@ export default {
 .myclass {
   flex: 1 1 300px;
 }
+.user-link {
+    height 100%
+}
+
 </style>
