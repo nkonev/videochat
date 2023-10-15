@@ -138,8 +138,7 @@
     } from "./bus/bus";
     import {profile, profile_name, videochat_name} from "./router/routes";
     import graphqlSubscriptionMixin from "./mixins/graphqlSubscriptionMixin"
-    import {findIndex, hasLength, isArrEqual, moveToFirstPosition, replaceInArray} from "@/utils";
-    import cloneDeep from "lodash/cloneDeep";
+    import {deepCopy, findIndex, hasLength, isArrEqual, moveToFirstPosition, replaceInArray} from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
@@ -217,7 +216,7 @@
                             },
                         })
                         .then((response) => {
-                            const tmp = cloneDeep(response.data);
+                            const tmp = deepCopy(response.data);
                             this.transformParticipants(tmp.participants);
                             this.participantsDto = tmp;
                         }).finally(() => {
@@ -390,7 +389,7 @@
                     return
                 }
 
-                const tmp = cloneDeep(users);
+                const tmp = deepCopy(users);
                 this.transformParticipants(tmp);
                 for (const user of tmp) {
                     this.addItem(user);
@@ -401,7 +400,7 @@
                     return
                 }
 
-                const tmp = cloneDeep(users);
+                const tmp = deepCopy(users);
                 this.transformParticipants(tmp);
                 for (const user of tmp) {
                     this.removeItem(user);
@@ -410,7 +409,7 @@
             onParticipantEdited(users) {
                 if (!this.show) return
 
-                const tmp = cloneDeep(users);
+                const tmp = deepCopy(users);
                 this.transformParticipants(tmp);
                 for (const user of tmp) {
                     this.changeItem(user);

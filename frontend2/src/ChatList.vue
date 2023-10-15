@@ -91,6 +91,7 @@ import bus, {
 import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
+    deepCopy,
     dynamicSortMultiple,
     findIndex,
     hasLength,
@@ -99,7 +100,6 @@ import {
     replaceOrPrepend,
     setTitle
 } from "@/utils";
-import cloneDeep from "lodash/cloneDeep";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
@@ -395,7 +395,7 @@ export default {
       if (!items) {
           return [];
       }
-      const tmps = cloneDeep(items);
+      const tmps = deepCopy(items);
       return tmps.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.chatStore.currentUser?.id)[0]);
     },
     getGraphQlSubscriptionQuery() {
