@@ -18,7 +18,7 @@
                 <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
               <div class="ma-0 pa-0 go-to-chat">
-                <v-btn variant="plain" size="large" :href="getChatLink()" @click="toChat()" :title="$vuetify.locale.t('$vuetify.go_to_chat')"><v-icon size="large">mdi-forum</v-icon></v-btn>
+                <v-btn variant="plain" size="large" :href="getChatLink()" @click.prevent="toChat()" :title="$vuetify.locale.t('$vuetify.go_to_chat')"><v-icon size="large">mdi-forum</v-icon></v-btn>
               </div>
             </div>
           </template>
@@ -84,8 +84,7 @@ export default {
   },
   methods: {
     onParticipantClick(user) {
-      const routeDto = { name: profile_name, params: { id: user.id }};
-      this.$router.push(routeDto);
+      window.location.href = this.getProfileLink(user)
     },
     getProfileLink(user) {
       let url = profile + "/" + user.id;
