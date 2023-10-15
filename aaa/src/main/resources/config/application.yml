@@ -136,7 +136,7 @@ spring.datasource:
 spring.flyway:
   locations: classpath:/db/migration
   drop-first: false
-  out-of-order: true
+  out-of-order: false
 
 spring.redis.url: redis://127.0.0.1:36379/0
 
