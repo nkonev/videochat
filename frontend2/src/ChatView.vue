@@ -125,6 +125,8 @@ export default {
         this.chatStore.tetATet = data.tetATet;
         if (data.blog) {
           this.chatStore.showGoToBlogButton = this.chatId;
+        } else {
+          this.chatStore.showGoToBlogButton = null;
         }
         this.chatDto = data;
       })
