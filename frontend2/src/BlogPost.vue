@@ -5,7 +5,7 @@
 
     <div class="pr-1 mr-1 pl-1 mt-0 ml-3 message-item-root" >
       <div class="message-item-with-buttons-wrapper">
-        <v-list-item class="pl-0" v-if="blogDto?.owner">
+        <v-list-item class="pl-2 pt-0" v-if="blogDto?.owner">
           <template v-slot:prepend>
             <div class="item-avatar pr-0 mr-3">
               <a :href="getProfileLink(blogDto.owner)" class="user-link">
