@@ -89,6 +89,7 @@
                 </v-card-text>
 
                 <v-card-actions>
+                  <template v-if="!isNew">
                     <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromChat()">
                       <template v-slot:prepend>
                         <v-icon>mdi-image-remove</v-icon>
@@ -105,6 +106,7 @@
                         {{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}
                       </template>
                     </v-btn>
+                  </template>
                     <v-spacer></v-spacer>
                     <v-btn color="primary" variant="flat" @click="saveChat" id="chat-save-btn">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
                     <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
