@@ -68,6 +68,11 @@ func CreateAaaChannel(connection *rabbitmq.Connection, onMessage AaaUserProfileU
 				},
 			})
 
+			err := channel.ExchangeDeclare(AaaEventsExchange, "direct", true, false, false, false, nil)
+			if err != nil {
+				return err
+			}
+
 			aQueue := createAndBind(aaaEventsQueue, "", AaaEventsExchange, channel)
 			listen(channel, aQueue, onMessage, lc)
 			return nil
