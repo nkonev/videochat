@@ -241,7 +241,6 @@ export default {
         },
         createCall() {
             console.debug("createCall");
-            this.chatStore.showDrawer = false;
             axios.put(`/api/video/${this.chatId}/dial/start`).then(()=>{
                 const routerNewState = { name: videochat_name};
                 goToPreserving(this.$route, this.$router, routerNewState);
@@ -253,7 +252,6 @@ export default {
             const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
             goToPreserving(this.$route, this.$router, routerNewState);
             this.updateLastAnsweredTimestamp();
-            this.chatStore.showDrawer = true;
         },
         updateLastAnsweredTimestamp() {
             this.lastAnswered = +new Date();
