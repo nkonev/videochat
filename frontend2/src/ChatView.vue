@@ -7,6 +7,10 @@
         <splitpanes class="default-theme" :dbl-click-splitter="false">
           <pane>
             <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
+              <pane v-if="videoIsOnTop() && isAllowedVideo()" min-size="15" size="30">
+                <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()" />
+              </pane>
+
               <pane style="width: 100%">
                   <v-tooltip
                     v-if="broadcastMessage"
