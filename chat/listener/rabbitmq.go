@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
@@ -58,6 +59,13 @@ func CreateAaaChannel(connection *rabbitmq.Connection, onMessage AaaUserProfileU
 	return &AaaEventsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		connection,
 		func(channel *rabbitmq.Channel) error {
+			lc.Append(fx.Hook{
+				OnStop: func(ctx context.Context) error {
+					Logger.Infof("Stopping queue listening '%v'", aaaEventsQueue)
+					return channel.Close()
+				},
+			})
+
 			aQueue := create(aaaEventsQueue, channel)
 			listen(channel, aQueue, onMessage, lc)
 			return nil

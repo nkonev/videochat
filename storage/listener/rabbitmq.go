@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
@@ -60,6 +61,13 @@ func CreateMinioEventsChannel(connection *rabbitmq.Connection, onMessage MinioEv
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		connection,
 		func(channel *rabbitmq.Channel) error {
+			lc.Append(fx.Hook{
+				OnStop: func(ctx context.Context) error {
+					Logger.Infof("Stopping queue listening '%v'", queueName)
+					return channel.Close()
+				},
+			})
+
 			err := channel.ExchangeDeclare(MinioEventsExchange, "direct", true, false, false, false, nil)
 			if err != nil {
 				return err

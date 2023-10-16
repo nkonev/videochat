@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/google/uuid"
 	"github.com/streadway/amqp"
@@ -60,6 +61,13 @@ func CreateEventsChannel(connection *rabbitmq.Connection, onMessage EventsListen
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		connection,
 		func(channel *rabbitmq.Channel) error {
+			lc.Append(fx.Hook{
+				OnStop: func(ctx context.Context) error {
+					Logger.Infof("Stopping queue listening '%v'", fanoutQueueName)
+					return channel.Close()
+				},
+			})
+
 			err := channel.ExchangeDeclare(AsyncEventsFanoutExchange, "fanout", true, false, false, false, nil)
 			if err != nil {
 				return err
