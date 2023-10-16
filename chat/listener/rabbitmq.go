@@ -20,7 +20,7 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	q, err = consumeCh.QueueDeclare(
 		name,  // name
 		true,  // durable - it prevents queue loss on rabbitmq restart
-		false, // delete when unused
+		true, // delete when unused
 		false, // exclusive
 		false, // no-wait
 		nil,   // arguments
@@ -32,8 +32,37 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	return &q
 }
 
-func CreateAaaChannel(connection *rabbitmq.Connection) *AaaEventsChannel {
-	return &AaaEventsChannel{myRabbit.CreateRabbitMqChannel(connection)}
+func createAndBind(name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+	var err error
+	var q amqp.Queue
+	q, err = consumeCh.QueueDeclare(
+		name,  // name
+		true,  // durable - it prevents queue loss on rabbitmq restart
+		true,  // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		Logger.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
+		Logger.Panic(err)
+	}
+	err = consumeCh.QueueBind(q.Name, key, exchange, false, nil)
+	if err != nil {
+		Logger.Warnf("Unable to bind to queue %v, restarting. error %v", name, err)
+		Logger.Panic(err)
+	}
+	return &q
+}
+func CreateAaaChannel(connection *rabbitmq.Connection, onMessage AaaUserProfileUpdateListener, lc fx.Lifecycle) *AaaEventsChannel {
+	return &AaaEventsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
+		connection,
+		func(channel *rabbitmq.Channel) error {
+			aQueue := create(aaaEventsQueue, channel)
+			listen(channel, aQueue, onMessage, lc)
+			return nil
+		},
+	)}
 }
 
 func CreateAaaQueue(consumeCh *AaaEventsChannel) *AaaEventsQueue {

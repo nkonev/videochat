@@ -15,7 +15,7 @@ public class RabbitMqTestConfig {
     // see in chat/listener/rabbitmq.go
     @Bean
     public Queue aaaEvents() {
-        return new Queue(QUEUE_PROFILE_EVENTS_NAME, true);
+        return new Queue(QUEUE_PROFILE_EVENTS_NAME, true, false, true);
     }
 
     // see in event/listener/rabbitmq.go

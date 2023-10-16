@@ -54,13 +54,11 @@ func main() {
 			producer.NewRabbitNotificationsPublisher,
 			listener.CreateAaaUserProfileUpdateListener,
 			rabbitmq.CreateRabbitMqConnection,
-			listener.CreateAaaChannel,
-			listener.CreateAaaQueue,
 		),
 		fx.Invoke(
 			runMigrations,
 			runEcho,
-			listener.ListenAaaQueue,
+			listener.CreateAaaChannel,
 		),
 	)
 	app.Run()
