@@ -9,7 +9,9 @@ import (
 	myRabbit "nkonev.name/chat/rabbitmq"
 )
 
-const aaaEventsQueue = "aaa-profile-events"
+const AaaEventsExchange = "aaa-profile-events-exchange"
+
+const aaaEventsQueue = "chat-aaa-profile-events"
 
 type AaaEventsQueue struct{ *amqp.Queue }
 
@@ -66,7 +68,7 @@ func CreateAaaChannel(connection *rabbitmq.Connection, onMessage AaaUserProfileU
 				},
 			})
 
-			aQueue := create(aaaEventsQueue, channel)
+			aQueue := createAndBind(aaaEventsQueue, "", AaaEventsExchange, channel)
 			listen(channel, aQueue, onMessage, lc)
 			return nil
 		},

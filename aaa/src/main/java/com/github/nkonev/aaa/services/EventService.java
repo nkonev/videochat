@@ -19,7 +19,7 @@ public class EventService {
     private RabbitTemplate rabbitTemplate;
 
     public void notifyProfileUpdated(UserAccount userAccount) {
-        rabbitTemplate.convertAndSend(QUEUE_PROFILE_EVENTS_NAME, UserAccountConverter.convertToUserAccountDTO(userAccount));
+        rabbitTemplate.convertAndSend(QUEUE_PROFILE_EVENTS_NAME, "", UserAccountConverter.convertToUserAccountDTO(userAccount));
     }
 
     public void notifyOnlineChanged(List<UserProfileController.UserOnlineResponse> userOnline) {
