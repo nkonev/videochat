@@ -35,7 +35,7 @@
                       <v-icon :x-large="isMobile()" color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                   </v-btn>
                   <v-btn v-if="chatStore.showHangButton" icon @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
-                      <v-icon :x-large="isMobile()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'red--text'">mdi-phone</v-icon>
+                      <v-icon :x-large="isMobile()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
                   </v-btn>
               </v-badge>
           </template>
@@ -142,7 +142,13 @@ import bus, {
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
 import { mapStores } from 'pinia'
-import {searchStringFacade, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES, SEARCH_MODE_USERS} from "@/mixins/searchString";
+import {
+  searchStringFacade,
+  SEARCH_MODE_CHATS,
+  SEARCH_MODE_MESSAGES,
+  SEARCH_MODE_USERS,
+  goToPreserving
+} from "@/mixins/searchString";
 import RightPanelActions from "@/RightPanelActions.vue";
 import SettingsModal from "@/SettingsModal.vue";
 import SimpleModal from "@/SimpleModal.vue";
@@ -237,14 +243,14 @@ export default {
             console.debug("createCall");
             axios.put(`/api/video/${this.chatId}/dial/start`).then(()=>{
                 const routerNewState = { name: videochat_name};
-                // this.navigateToWithPreservingSearchStringInQuery(routerNewState); // TODO
+                goToPreserving(this.$route, this.$router, routerNewState);
                 this.updateLastAnsweredTimestamp();
             })
         },
         stopCall() {
             console.debug("stopping Call");
             const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
-            // this.navigateToWithPreservingSearchStringInQuery(routerNewState); // TODO
+            goToPreserving(this.$route, this.$router, routerNewState);
             this.updateLastAnsweredTimestamp();
         },
         updateLastAnsweredTimestamp() {

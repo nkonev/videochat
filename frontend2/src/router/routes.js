@@ -9,7 +9,7 @@ export const blog_post = `${prefix}/blog/post`;
 
 export const profile = `${prefix}/user`;
 export const profiles = `${prefix}/users`;
-export const video_suffix = `${prefix}/video`;
+export const video_suffix = `/video`;
 
 export const registration = `${prefix}/registration`;
 

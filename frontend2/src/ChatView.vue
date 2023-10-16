@@ -4,34 +4,42 @@
         <ChatList :embedded="true"/>
       </pane>
       <pane>
-        <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
-          <pane style="width: 100%">
-              <v-tooltip
-                v-if="broadcastMessage"
-                :model-value="showTooltip"
-                activator=".message-edit-pane"
-                location="bottom start"
-              >
-                <span v-html="broadcastMessage"></span>
-              </v-tooltip>
+        <splitpanes class="default-theme" :dbl-click-splitter="false">
+          <pane>
+            <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
+              <pane style="width: 100%">
+                  <v-tooltip
+                    v-if="broadcastMessage"
+                    :model-value="showTooltip"
+                    activator=".message-edit-pane"
+                    location="bottom start"
+                  >
+                    <span v-html="broadcastMessage"></span>
+                  </v-tooltip>
 
-              <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
-                <v-alert
-                  closable
-                  color="red-lighten-4"
-                  elevation="2"
-                  density="compact"
-                >
-                  <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text">
-                  </router-link>
-                </v-alert>
-              </div>
+                  <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
+                    <v-alert
+                      closable
+                      color="red-lighten-4"
+                      elevation="2"
+                      density="compact"
+                    >
+                      <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text">
+                      </router-link>
+                    </v-alert>
+                  </div>
 
-              <MessageList :chatDto="chatDto"/>
+                  <MessageList :chatDto="chatDto"/>
+              </pane>
+              <pane size="15" class="message-edit-pane">
+                <MessageEdit :chatId="this.chatId"/>
+              </pane>
+            </splitpanes>
           </pane>
-          <pane size="15" class="message-edit-pane">
-            <MessageEdit :chatId="this.chatId"/>
+          <pane v-if="videoIsAtSide() && isAllowedVideo()" min-size="15" size="40">
+            <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()"/>
           </pane>
+
         </splitpanes>
       </pane>
     </splitpanes>
@@ -46,7 +54,7 @@ import heightMixin from "@/mixins/heightMixin";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {hasLength, setTitle} from "@/utils";
+import {hasLength, isChatRoute, setTitle} from "@/utils";
 import bus, {
     CHAT_DELETED,
     CHAT_EDITED,
@@ -67,6 +75,8 @@ import bus, {
 } from "@/bus/bus";
 import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
+import ChatVideo from "@/ChatVideo.vue";
+import videoPositionMixin from "@/mixins/videoPositionMixin";
 
 const chatDtoFactory = () => {
   return {
@@ -86,6 +96,7 @@ export default {
   mixins: [
     heightMixin(),
     graphqlSubscriptionMixin('chatEvents'),
+    videoPositionMixin(),
   ],
   data() {
     return {
@@ -98,6 +109,7 @@ export default {
     }
   },
   components: {
+    ChatVideo,
     Splitpanes,
     Pane,
     ChatList,
@@ -392,12 +404,15 @@ export default {
           this.$router.push(({name: chat_list_name}))
       }
     },
+    isAllowedVideo() {
+      return this.chatStore.currentUser && this.$route.name == videochat_name && this.chatDto?.participantIds?.length
+    },
 
   },
   watch: {
     '$route': {
       handler: async function (newValue, oldValue) {
-        if (newValue.name == chat_name) {
+        if (isChatRoute(newValue)) {
           if (newValue.params.id != oldValue.params.id) {
             console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
             if (hasLength(newValue.params.id)) {

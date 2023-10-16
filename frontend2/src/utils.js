@@ -1,5 +1,5 @@
 import { format, parseISO, differenceInDays } from 'date-fns';
-import {blog_post, chat, prefix, video_suffix} from "@/router/routes";
+import {blog_post, chat, chat_name, prefix, video_suffix, videochat_name} from "@/router/routes";
 
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
@@ -218,4 +218,8 @@ export const copyChatLink = (chatId) => {
 export const copyCallLink = (chatId) => {
   const link = getUrlPrefix() + chat + '/' + chatId + video_suffix;
   navigator.clipboard.writeText(link);
+}
+
+export const isChatRoute = (route) => {
+  return route.name == chat_name || route.name == videochat_name
 }

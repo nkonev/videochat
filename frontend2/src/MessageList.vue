@@ -61,7 +61,7 @@
     import {
       deepCopy, embed_message_reply,
       findIndex, getBlogLink,
-      hasLength,
+      hasLength, isChatRoute,
       replaceInArray,
       replaceOrAppend,
       replaceOrPrepend,
@@ -505,7 +505,7 @@
           // 6. Without this single handler, both handlers would invoke what leads us to resetting yellow highlight
           '$route': {
             handler: async function (newValue, oldValue) {
-              if (newValue.name == chat_name) {
+              if (isChatRoute(newValue)) {
                 // chatId
                 if (newValue.params.id != oldValue.params.id) {
                   console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
