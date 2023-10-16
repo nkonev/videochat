@@ -271,7 +271,7 @@ export default {
             this.chatStore.unsetNotifications();
         },
         canSwitchSearchType() {
-            return this.$route.name == chat_name || this.$route.name == videochat_name || this.$route.name == chat_list_name
+            return this.isInChat() || this.$route.name == chat_list_name
         },
         switchSearchType() {
           this.chatStore.switchSearchType()
