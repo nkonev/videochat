@@ -12,11 +12,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMqConfig {
 
-    public static final String QUEUE_PROFILE_EVENTS_NAME = "aaa-profile-events-exchange";
+    public static final String EXCHANGE_PROFILE_EVENTS_NAME = "aaa-profile-events-exchange";
+
+    public static final String EXCHANGE_ONLINE_EVENTS_NAME = "async-events-exchange";
+
     public static final String QUEUE_USER_CONFIRMATION_EMAILS_NAME = "aaa-internal-user-confirmation-emails";
     public static final String QUEUE_PASSWORD_RESET_EMAILS_NAME = "aaa-internal-password-reset-email";
 
-    public static final String QUEUE_ONLINE_EVENTS_NAME = "async-events-exchange";
 
     @Autowired
     private ObjectMapper objectMapper;

@@ -4,8 +4,8 @@ import org.springframework.amqp.core.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static com.github.nkonev.aaa.config.RabbitMqConfig.QUEUE_ONLINE_EVENTS_NAME;
-import static com.github.nkonev.aaa.config.RabbitMqConfig.QUEUE_PROFILE_EVENTS_NAME;
+import static com.github.nkonev.aaa.config.RabbitMqConfig.EXCHANGE_ONLINE_EVENTS_NAME;
+import static com.github.nkonev.aaa.config.RabbitMqConfig.EXCHANGE_PROFILE_EVENTS_NAME;
 
 @Configuration
 public class RabbitMqTestConfig {
@@ -16,7 +16,7 @@ public class RabbitMqTestConfig {
 
     @Bean
     public Exchange aaaExchange() {
-        return new DirectExchange(QUEUE_PROFILE_EVENTS_NAME, true, false);
+        return new DirectExchange(EXCHANGE_PROFILE_EVENTS_NAME, true, false);
     }
 
     @Bean
@@ -32,7 +32,7 @@ public class RabbitMqTestConfig {
     // see in event/listener/rabbitmq.go
     @Bean
     public Exchange asyncEventsFanoutExchange() {
-        return new FanoutExchange(QUEUE_ONLINE_EVENTS_NAME, true, false);
+        return new FanoutExchange(EXCHANGE_ONLINE_EVENTS_NAME, true, false);
     }
 
 }
