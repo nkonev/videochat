@@ -120,7 +120,7 @@
 
 <script>
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
-import {getBlogLink, hasLength} from "@/utils";
+import {getBlogLink, hasLength, isChatRoute} from "@/utils";
 import {
     chat_list_name,
     chat_name,
@@ -422,7 +422,7 @@ export default {
           bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: this.chatStore.avatar})
         },
         isInChat() {
-          return this.$route.name == chat_name || this.$route.name == videochat_name
+          return isChatRoute(this.$route)
         },
         onInfoClicked() {
           if (this.isInChat()) {
