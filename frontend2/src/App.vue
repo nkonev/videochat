@@ -112,7 +112,7 @@
         <ChatEditModal/>
     </v-main>
 
-    <v-navigation-drawer location="right" v-model="chatStore.drawer">
+    <v-navigation-drawer location="right" v-model="chatStore.showDrawer">
         <RightPanelActions/>
     </v-navigation-drawer>
   </v-app>
@@ -203,7 +203,7 @@ export default {
             return this.chatStore.notificationsCount
         },
         showNotificationBadge() {
-            return this.notificationsCount != 0 && !this.chatStore.drawer
+            return this.notificationsCount != 0 && !this.chatStore.showDrawer
         },
         searchIcon() {
           if (this.chatStore.searchType == SEARCH_MODE_CHATS) {
@@ -237,10 +237,11 @@ export default {
             return hasLength(this.chatStore.currentUser?.shortInfo)
         },
         toggleLeftNavigation() {
-            this.chatStore.drawer = !this.chatStore.drawer;
+            this.chatStore.showDrawer = !this.chatStore.showDrawer;
         },
         createCall() {
             console.debug("createCall");
+            this.chatStore.showDrawer = false;
             axios.put(`/api/video/${this.chatId}/dial/start`).then(()=>{
                 const routerNewState = { name: videochat_name};
                 goToPreserving(this.$route, this.$router, routerNewState);
@@ -252,6 +253,7 @@ export default {
             const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
             goToPreserving(this.$route, this.$router, routerNewState);
             this.updateLastAnsweredTimestamp();
+            this.chatStore.showDrawer = true;
         },
         updateLastAnsweredTimestamp() {
             this.lastAnswered = +new Date();

@@ -17,7 +17,7 @@ export const useChatStore = defineStore('chat', {
         showAlert: false,
         lastError: "",
         errorColor: "",
-        showDrawer: isMobileBrowser(),
+        showDrawer: !isMobileBrowser(),
         isShowSearch: false,
         searchType: SEARCH_MODE_CHATS,
         showScrollDown: false,
