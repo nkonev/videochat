@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import Vue from 'vue';
+import {defineComponent} from 'vue';
 import {
   Room,
   RoomEvent,
@@ -41,7 +41,15 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import {goToPreserving} from "@/mixins/searchString";
 
-const UserVideoClass = Vue.extend(UserVideo);
+// const UserVideoClass0 = Vue.extend(UserVideo);
+// const componentDefinition = defineComponent({
+//   extends: defineComponent({ ...component }),
+//   data: () => ({params: params}),
+//   created: function() {
+//     componentInstance = this.$root
+//   }
+// });
+const UserVideoClass = defineComponent({ ...UserVideo });
 
 const first = 'first';
 const second = 'second';
@@ -66,16 +74,28 @@ export default {
     },
 
     createComponent(userIdentity, position, videoTagId, localVideoProperties) {
-      const component = new UserVideoClass({vuetify: vuetify,
-        propsData: {
+      // const component0 = new UserVideoClass({vuetify: vuetify,
+      //   propsData: {
+      //     id: videoTagId,
+      //     localVideoProperties: localVideoProperties,
+      //     videoIsOnTop: this.videoIsOnTop,
+      //     initialShowControls: localVideoProperties != null && this.isMobile()
+      //   },
+      //   store
+      // });
+
+      // TODO convey store and vuetify
+      const component = defineComponent({
+        extends: UserVideoClass,
+        props: { // TODO or propsData
           id: videoTagId,
           localVideoProperties: localVideoProperties,
           videoIsOnTop: this.videoIsOnTop,
           initialShowControls: localVideoProperties != null && this.isMobile()
         },
-        store
       });
-      component.$mount();
+
+      component.$mount(); // TODO check
       if (position == first) {
         this.insertChildAtIndex(this.videoContainerDiv, component.$el, 0);
       } else if (position == last) {
@@ -188,7 +208,7 @@ export default {
           console.log("Removing component=", component.getId());
           try {
             this.videoContainerDiv.removeChild(component.$el);
-            component.$destroy();
+            component.$destroy(); // TODO check
           } catch (e) {
             console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
           }
