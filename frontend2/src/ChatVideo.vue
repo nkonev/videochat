@@ -5,7 +5,6 @@
 
 <script>
 import Vue from 'vue';
-import {mapGetters} from 'vuex';
 import {
   Room,
   RoomEvent,
@@ -18,19 +17,7 @@ import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import { retry } from '@lifeomic/attempt';
-import store, {
-  SET_SHOW_CALL_BUTTON,
-  SET_SHOW_HANG_BUTTON,
-  SET_SHOW_RECORD_START_BUTTON,
-  GET_SHOW_RECORD_STOP_BUTTON,
-  SET_VIDEO_CHAT_USERS_COUNT,
-  SET_SHOW_RECORD_STOP_BUTTON,
-  GET_CAN_MAKE_RECORD,
-  GET_USER,
-  SET_CAN_SHOW_MICROPHONE_BUTTON,
-  SET_INITIALIZING_STARTING_VIDEO_RECORD,
-  SET_INITIALIZING_STOPPING_VIDEO_RECORD
-} from "@/store";
+import store from "@/store/index";
 import {
   defaultAudioMute,
   getWebsocketUrlPrefix,
@@ -39,20 +26,20 @@ import {
 import {
   getStoredAudioDevicePresents,
   getStoredVideoDevicePresents, NULL_CODEC,
-} from "@/localStore";
+} from "@/store/localStore";
 import bus, {
   ADD_SCREEN_SOURCE,
   ADD_VIDEO_SOURCE,
   REQUEST_CHANGE_VIDEO_PARAMETERS, SET_LOCAL_MICROPHONE_MUTED, VIDEO_CLOSED, VIDEO_OPENED,
   VIDEO_PARAMETERS_CHANGED
-} from "@/bus";
+} from "@/bus/bus";
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
-import {chat_name, videochat_name} from "@/routes";
-import videoServerSettingsMixin from "@/videoServerSettingsMixin";
-import queryMixin from "@/queryMixin";
-import refreshLocalMutedInAppBarMixin from "@/refreshLocalMutedInAppBarMixin";
+import {chat_name, videochat_name} from "@/router/routes";
+import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
+import refreshLocalMutedInAppBarMixin from "@/mixins/refreshLocalMutedInAppBarMixin";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
+import {goToPreserving} from "@/mixins/searchString";
 
 const UserVideoClass = Vue.extend(UserVideo);
 
@@ -61,7 +48,7 @@ const second = 'second';
 const last = 'last';
 
 export default {
-  mixins: [videoServerSettingsMixin(), queryMixin(), refreshLocalMutedInAppBarMixin()],
+  mixins: [videoServerSettingsMixin(), refreshLocalMutedInAppBarMixin()],
   props: ['chatDto', 'videoIsOnTop'],
   data() {
     return {
@@ -235,7 +222,7 @@ export default {
         console.log('Handling kick');
 
         const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
-        this.navigateToWithPreservingSearchStringInQuery(routerNewState);
+        goToPreserving(this.$route, this.$router, routerNewState);
       }
     },
 
@@ -262,7 +249,7 @@ export default {
         await this.room.localParticipant.unpublishTrack(publication.track, true);
       }
       await this.createLocalMediaTracks(null, null);
-      bus.$emit(VIDEO_PARAMETERS_CHANGED);
+      bus.emit(VIDEO_PARAMETERS_CHANGED);
       this.inRestarting = false;
     },
 
@@ -370,9 +357,9 @@ export default {
     refreshLocalMicrophoneAppBarButtons() {
       const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity);
       if (onlyOneLocalComponentWithAudio) {
-        this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, true);
+        this.chatStore.canShowMicrophoneButton = true;
       } else {
-        this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, false);
+        this.chatStore.canShowMicrophoneButton = false;
       }
     },
     onlyOneLocalTrackWithMicrophone(userIdentity) {
@@ -392,7 +379,7 @@ export default {
         this.refreshLocalMutedInAppBar(muted);
       } else {
         // just for case
-        this.$store.commit(SET_CAN_SHOW_MICROPHONE_BUTTON, false);
+        this.chatStore.canShowMicrophoneButton = false;
       }
     },
 
@@ -413,7 +400,7 @@ export default {
 
         if (!audioIsPresents && !videoIsPresents) {
           console.warn("Not able to build local media stream, returning a successful promise");
-          bus.$emit(VIDEO_PARAMETERS_CHANGED, {error: 'No media configured'});
+          bus.emit(VIDEO_PARAMETERS_CHANGED, {error: 'No media configured'});
           return Promise.reject('No media configured');
         }
 
@@ -474,14 +461,9 @@ export default {
   },
   computed: {
     ...mapStores(useChatStore),
-    ...mapGetters({
-      showRecordStopButton: GET_SHOW_RECORD_STOP_BUTTON,
-      canMakeRecord: GET_CAN_MAKE_RECORD,
-      currentUser: GET_USER,
-    }),
   },
   async mounted() {
-    bus.$emit(VIDEO_OPENED);
+    bus.emit(VIDEO_OPENED);
     this.chatId = this.chatDto.id;
     this.participantIds = this.chatDto.participantIds;
 
@@ -489,15 +471,15 @@ export default {
     this.chatStore.showCallButton = false;
     this.chatStore.showHangButton = true;
 
-    if (!this.showRecordStopButton && this.canMakeRecord) {
-      this.$store.commit(SET_SHOW_RECORD_START_BUTTON, true);
-      this.$store.commit(SET_SHOW_RECORD_STOP_BUTTON, false);
+    if (!this.chatStore.showRecordStopButton && this.chatStore.canMakeRecord) {
+      this.chatStore.showRecordStartButton = true;
+      this.chatStore.showRecordStopButton = false;
     }
 
-    bus.$on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
-    bus.$on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
-    bus.$on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
-    bus.$on(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
+    bus.on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
+    bus.on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
+    bus.on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
+    bus.on(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
 
     this.videoContainerDiv = document.getElementById("video-container");
 
@@ -510,21 +492,21 @@ export default {
       this.videoContainerDiv = null;
       this.inRestarting = false;
     });
-    bus.$emit(VIDEO_CLOSED);
+    bus.emit(VIDEO_CLOSED);
 
     this.chatStore.showCallButton = true;
     this.chatStore.showHangButton = false;
     this.chatStore.showDrawer = true;
 
-    this.$store.commit(SET_VIDEO_CHAT_USERS_COUNT, 0);
-    this.$store.commit(SET_SHOW_RECORD_START_BUTTON, false);
-    this.$store.commit(SET_INITIALIZING_STARTING_VIDEO_RECORD, false);
-    this.$store.commit(SET_INITIALIZING_STOPPING_VIDEO_RECORD, false);
+    this.chatStore.videoChatUsersCount = 0;
+    this.chatStore.showRecordStartButton = false;
+    this.chatStore.initializingStaringVideoRecord = false;
+    this.chatStore.initializingStoppingVideoRecord = false;
 
-    bus.$off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
-    bus.$off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
-    bus.$off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
-    bus.$off(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
+    bus.off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
+    bus.off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
+    bus.off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
+    bus.off(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
 
   },
 }

@@ -1,12 +1,12 @@
 <template>
     <div class="video-container-element" :class="videoIsOnTop ? 'video-container-element-position-top' : 'video-container-element-position-side'" ref="containerRef" @mouseenter="onMouseEnter()" @mouseleave="onMouseLeave()">
         <div class="video-container-element-control" v-show="showControls">
-            <v-btn large v-if="isLocal && audioPublication != null" icon @click="doMuteAudio(!audioMute)" :title="audioMute ? $vuetify.lang.t('$vuetify.unmute_audio') : $vuetify.lang.t('$vuetify.mute_audio')"><v-icon large :class="['video-container-element-control-item', muteAudioBlink && audioMute ? 'info-blink' : '']">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
-            <v-btn large v-if="isLocal && videoPublication != null" icon @click="doMuteVideo(!videoMute)" :title="videoMute ? $vuetify.lang.t('$vuetify.unmute_video') : $vuetify.lang.t('$vuetify.mute_video')"><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
-            <v-btn large icon @click="onEnterFullscreen" :title="$vuetify.lang.t('$vuetify.fullscreen')"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
-            <v-btn large v-if="isLocal" icon @click="onClose()" :title="$vuetify.lang.t('$vuetify.close')"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
+            <v-btn large v-if="isLocal && audioPublication != null" icon @click="doMuteAudio(!audioMute)" :title="audioMute ? $vuetify.locale.t('$vuetify.unmute_audio') : $vuetify.locale.t('$vuetify.mute_audio')"><v-icon large :class="['video-container-element-control-item', muteAudioBlink && audioMute ? 'info-blink' : '']">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
+            <v-btn large v-if="isLocal && videoPublication != null" icon @click="doMuteVideo(!videoMute)" :title="videoMute ? $vuetify.locale.t('$vuetify.unmute_video') : $vuetify.locale.t('$vuetify.mute_video')"><v-icon large class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
+            <v-btn large icon @click="onEnterFullscreen" :title="$vuetify.locale.t('$vuetify.fullscreen')"><v-icon large class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
+            <v-btn large v-if="isLocal" icon @click="onClose()" :title="$vuetify.locale.t('$vuetify.close')"><v-icon large class="video-container-element-control-item">mdi-close</v-icon></v-btn>
         </div>
-        <span v-if="!isLocal && avatarIsSet" class="video-container-element-hint">{{ $vuetify.lang.t('$vuetify.video_is_not_shown') }}</span>
+        <span v-if="!isLocal && avatarIsSet" class="video-container-element-hint">{{ $vuetify.locale.t('$vuetify.video_is_not_shown') }}</span>
         <img v-show="avatarIsSet && videoMute" @click="showControls=!showControls" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" @click="showControls=!showControls" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :id="id" autoPlay playsInline ref="videoRef"/>
         <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
@@ -16,7 +16,7 @@
 <script>
 
 import {hasLength} from "@/utils";
-import refreshLocalMutedInAppBarMixin from "@/refreshLocalMutedInAppBarMixin";
+import refreshLocalMutedInAppBarMixin from "@/mixins/refreshLocalMutedInAppBarMixin";
 
 function isFullscreen(){
     return !!(document.fullscreenElement)
@@ -28,7 +28,7 @@ export default {
     mixins: [refreshLocalMutedInAppBarMixin()],
 
     data()  {
-        const loadingMessage = this.$vuetify.lang.t('$vuetify.loading');
+      const loadingMessage = this.$vuetify.locale.t('$vuetify.loading');
 	    return {
             userName: loadingMessage,
             audioMute: true,

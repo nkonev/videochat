@@ -5,6 +5,10 @@ export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
 }
 
+export const isMobileFireFox = () => {
+  return navigator.userAgent.indexOf('Firefox') !== -1 && isMobileBrowser()
+}
+
 export const hasLength = (str) => {
     if (!str) {
         return false
@@ -223,3 +227,5 @@ export const copyCallLink = (chatId) => {
 export const isChatRoute = (route) => {
   return route.name == chat_name || route.name == videochat_name
 }
+
+export const defaultAudioMute = true;

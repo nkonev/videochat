@@ -92,3 +92,10 @@ export const OPEN_PINNED_MESSAGES_MODAL = "openPinnedMessagesModal";
 export const OPEN_RESEND_TO_MODAL = "openSendTo";
 
 export const USER_PROFILE_CHANGED = "userProfileChanged";
+
+export const ADD_VIDEO_SOURCE = "addVideoSource";
+export const ADD_SCREEN_SOURCE = "addScreenSource";
+
+export const SET_LOCAL_MICROPHONE_MUTED = "setLocalMicrophoneMuted";
+export const VIDEO_OPENED = "videoOpened";
+export const VIDEO_CLOSED = "videoClosed";
