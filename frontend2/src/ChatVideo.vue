@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import {defineComponent} from 'vue';
+import {createVNode, defineComponent} from 'vue';
 import {
   Room,
   RoomEvent,
@@ -49,7 +49,7 @@ import {goToPreserving} from "@/mixins/searchString";
 //     componentInstance = this.$root
 //   }
 // });
-const UserVideoClass = defineComponent({ ...UserVideo });
+// const UserVideoClass = defineComponent({ ...UserVideo });
 
 const first = 'first';
 const second = 'second';
@@ -84,18 +84,16 @@ export default {
       //   store
       // });
 
-      // TODO convey store and vuetify
       const component = defineComponent({
-        extends: UserVideoClass,
-        props: { // TODO or propsData
-          id: videoTagId,
-          localVideoProperties: localVideoProperties,
-          videoIsOnTop: this.videoIsOnTop,
-          initialShowControls: localVideoProperties != null && this.isMobile()
-        },
+        extends: defineComponent({ ...UserVideo, store, vuetify }),
       });
 
-      component.$mount(); // TODO check
+      createVNode(component, {
+        id: videoTagId,
+        localVideoProperties: localVideoProperties,
+        videoIsOnTop: this.videoIsOnTop,
+        initialShowControls: localVideoProperties != null && this.isMobile()
+      });
       if (position == first) {
         this.insertChildAtIndex(this.videoContainerDiv, component.$el, 0);
       } else if (position == last) {
@@ -208,7 +206,6 @@ export default {
           console.log("Removing component=", component.getId());
           try {
             this.videoContainerDiv.removeChild(component.$el);
-            component.$destroy(); // TODO check
           } catch (e) {
             console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
           }

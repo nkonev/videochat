@@ -182,12 +182,9 @@ export default {
             return this.localVideoProperties && !this.localVideoProperties.screen;
         }
     },
-    created(){
+    mounted(){
         this.showControls = this.initialShowControls;
     },
-    destroyed() {
-
-    }
 };
 </script>
 
