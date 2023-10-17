@@ -30,7 +30,7 @@ import {
 import bus, {
   ADD_SCREEN_SOURCE,
   ADD_VIDEO_SOURCE,
-  REQUEST_CHANGE_VIDEO_PARAMETERS, SET_LOCAL_MICROPHONE_MUTED, VIDEO_CLOSED, VIDEO_OPENED,
+  REQUEST_CHANGE_VIDEO_PARAMETERS, SET_LOCAL_MICROPHONE_MUTED,
   VIDEO_PARAMETERS_CHANGED
 } from "@/bus/bus";
 import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
@@ -463,7 +463,6 @@ export default {
     ...mapStores(useChatStore),
   },
   async mounted() {
-    bus.emit(VIDEO_OPENED);
     this.chatId = this.chatDto.id;
     this.participantIds = this.chatDto.participantIds;
 
@@ -492,7 +491,6 @@ export default {
       this.videoContainerDiv = null;
       this.inRestarting = false;
     });
-    bus.emit(VIDEO_CLOSED);
 
     this.chatStore.showCallButton = true;
     this.chatStore.showHangButton = false;
