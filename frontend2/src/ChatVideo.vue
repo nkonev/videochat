@@ -87,18 +87,18 @@ export default {
         extends: defineComponent({ ...UserVideo, store, vuetify }),
       });
 
-      createVNode(component, {
+      const node = createVNode(component, {
         id: videoTagId,
         localVideoProperties: localVideoProperties,
         videoIsOnTop: this.videoIsOnTop,
         initialShowControls: localVideoProperties != null && this.isMobile()
       });
       if (position == first) {
-        this.insertChildAtIndex(this.videoContainerDiv, component.$el, 0);
+        this.insertChildAtIndex(this.videoContainerDiv, node, 0);
       } else if (position == last) {
-        this.videoContainerDiv.append(component.$el);
+        this.videoContainerDiv.append(node);
       } else if (position == second) {
-        this.insertChildAtIndex(this.videoContainerDiv, component.$el, 1);
+        this.insertChildAtIndex(this.videoContainerDiv, node, 1);
       }
       this.addComponentForUser(userIdentity, component);
       return component;
