@@ -33,7 +33,6 @@ import bus, {
   REQUEST_CHANGE_VIDEO_PARAMETERS, SET_LOCAL_MICROPHONE_MUTED,
   VIDEO_PARAMETERS_CHANGED
 } from "@/bus/bus";
-import {ChatVideoUserComponentHolder} from "@/ChatVideoUserComponentHolder";
 import {chat_name, videochat_name} from "@/router/routes";
 import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
 import refreshLocalMutedInAppBarMixin from "@/mixins/refreshLocalMutedInAppBarMixin";
@@ -62,7 +61,7 @@ export default {
     return {
       room: null,
       videoContainerDiv: null,
-      userVideoComponents: new ChatVideoUserComponentHolder(),
+      userVideoComponents: new Map(),
       inRestarting: false,
       chatId: null,
       participantIds: [],
@@ -101,7 +100,7 @@ export default {
       } else if (position == second) {
         this.insertChildAtIndex(this.videoContainerDiv, component.$el, 1);
       }
-      this.userVideoComponents.addComponentForUser(userIdentity, component);
+      this.addComponentForUser(userIdentity, component);
       return component;
     },
     insertChildAtIndex(element, child, index) {
@@ -124,7 +123,7 @@ export default {
       const videoTagId = prefix + this.getNewId();
 
       const participantIdentityString = participant.identity;
-      const components = this.userVideoComponents.getByUser(participantIdentityString);
+      const components = this.getByUser(participantIdentityString);
       const candidatesWithoutVideo = components.filter(e => !e.getVideoStreamId());
       const candidatesWithoutAudio = components.filter(e => !e.getAudioStreamId());
 
@@ -200,7 +199,7 @@ export default {
       this.refreshLocalMicrophoneAppBarButtons();
     },
     removeComponent(userIdentity, track) {
-      for (const component of this.userVideoComponents.getByUser(userIdentity)) {
+      for (const component of this.getByUser(userIdentity)) {
         console.debug("For removal checking component=", component, "against", track);
         if (component.getVideoStreamId() == track.sid || component.getAudioStreamId() == track.sid) {
           console.log("Removing component=", component.getId());
@@ -209,7 +208,7 @@ export default {
           } catch (e) {
             console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
           }
-          this.userVideoComponents.removeComponentForUser(userIdentity, component);
+          this.removeComponentForUser(userIdentity, component);
         }
       }
     },
@@ -220,7 +219,7 @@ export default {
       for (const speaker of speakers) {
         const userIdentity = speaker.identity;
         const tracksSids = [...speaker.audioTracks.keys()];
-        const userComponents = this.userVideoComponents.getByUser(userIdentity);
+        const userComponents = this.getByUser(userIdentity);
         for (const component of userComponents) {
           const audioStreamId = component.getAudioStreamId();
           console.debug("Track sids", tracksSids, " component audio stream id", audioStreamId);
@@ -249,7 +248,7 @@ export default {
 
     handleTrackMuted(trackPublication, participant) {
       const participantIdentityString = participant.identity;
-      const components = this.userVideoComponents.getByUser(participantIdentityString);
+      const components = this.getByUser(participantIdentityString);
       const matchedVideoComponents = components.filter(e => trackPublication.trackSid == e.getVideoStreamId());
       const matchedAudioComponents = components.filter(e => trackPublication.trackSid == e.getAudioStreamId());
       for (const component of matchedVideoComponents) {
@@ -380,7 +379,7 @@ export default {
       }
     },
     onlyOneLocalTrackWithMicrophone(userIdentity) {
-      const userComponents = this.userVideoComponents.getByUser(userIdentity);
+      const userComponents = this.getByUser(userIdentity);
       const localComponentsWithAudio = userComponents.filter((component) => component.isComponentLocal() && component.getAudioStreamId() != null)
       if (localComponentsWithAudio.length == 1) {
         return localComponentsWithAudio[0]
@@ -474,6 +473,42 @@ export default {
     },
     onAddScreenSource() {
       this.createLocalMediaTracks(null, null, true);
+    },
+
+    addComponentForUser(userIdentity, component) {
+      let existingList = this.userVideoComponents.get(userIdentity);
+      if (!existingList) {
+        this.userVideoComponents.set(userIdentity, []);
+        existingList = this.userVideoComponents.get(userIdentity);
+      }
+      existingList.push(component);
+    },
+
+    removeComponentForUser(userIdentity, component) {
+      let existingList = this.userVideoComponents.get(userIdentity);
+      if (existingList) {
+        for(let i = 0; i < existingList.length; i++){
+          if (existingList[i].getId() == component.getId()) {
+            existingList.splice(i, 1);
+          }
+        }
+      }
+      if (existingList.length == 0) {
+        this.userVideoComponents.delete(userIdentity);
+      }
+    },
+
+    isEmpty() {
+      return this.userVideoComponents.size == 0
+    },
+
+    getByUser(userIdentity) {
+      let existingList = this.userVideoComponents.get(userIdentity);
+      if (!existingList) {
+        this.userVideoComponents.set(userIdentity, []);
+        existingList = this.userVideoComponents.get(userIdentity);
+      }
+      return existingList;
     },
   },
   computed: {
