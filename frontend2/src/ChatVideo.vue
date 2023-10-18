@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import {createApp, createVNode, defineComponent} from 'vue';
+import {createApp} from 'vue';
 import {
   Room,
   RoomEvent,
