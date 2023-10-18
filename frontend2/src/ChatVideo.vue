@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import {createVNode, defineComponent} from 'vue';
+import {createApp, createVNode, defineComponent} from 'vue';
 import {
   Room,
   RoomEvent,
@@ -20,7 +20,7 @@ import { retry } from '@lifeomic/attempt';
 import store from "@/store/index";
 import {
   defaultAudioMute,
-  getWebsocketUrlPrefix,
+  getWebsocketUrlPrefix, isMobileBrowser,
   isMobileFireFox
 } from "@/utils";
 import {
@@ -39,6 +39,7 @@ import refreshLocalMutedInAppBarMixin from "@/mixins/refreshLocalMutedInAppBarMi
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import {goToPreserving} from "@/mixins/searchString";
+import pinia from "@/store/index";
 
 // const UserVideoClass0 = Vue.extend(UserVideo);
 // const componentDefinition = defineComponent({
@@ -73,35 +74,32 @@ export default {
     },
 
     createComponent(userIdentity, position, videoTagId, localVideoProperties) {
-      // const component0 = new UserVideoClass({vuetify: vuetify,
-      //   propsData: {
-      //     id: videoTagId,
-      //     localVideoProperties: localVideoProperties,
-      //     videoIsOnTop: this.videoIsOnTop,
-      //     initialShowControls: localVideoProperties != null && this.isMobile()
-      //   },
-      //   store
-      // });
-
       const component = defineComponent({
-        extends: defineComponent({ ...UserVideo, store, vuetify }),
+        extends: defineComponent({ ...UserVideo }),
       });
-
-      const node = createVNode(component, {
+      const app = createApp(component, {
         id: videoTagId,
         localVideoProperties: localVideoProperties,
         videoIsOnTop: this.videoIsOnTop,
         initialShowControls: localVideoProperties != null && this.isMobile()
       });
-      if (position == first) {
-        this.insertChildAtIndex(this.videoContainerDiv, node, 0);
-      } else if (position == last) {
-        this.videoContainerDiv.append(node);
-      } else if (position == second) {
-        this.insertChildAtIndex(this.videoContainerDiv, node, 1);
+      app.config.globalProperties.isMobile = () => {
+        return isMobileBrowser()
       }
-      this.addComponentForUser(userIdentity, component);
-      return component;
+      app.use(vuetify);
+      app.use(pinia);
+      const instance = app.mount(this.videoContainerDiv);
+      const el = instance.$el;
+
+      if (position == first) {
+        this.insertChildAtIndex(this.videoContainerDiv, el, 0);
+      } else if (position == last) {
+        this.videoContainerDiv.append(el);
+      } else if (position == second) {
+        this.insertChildAtIndex(this.videoContainerDiv, el, 1);
+      }
+      this.addComponentForUser(userIdentity, instance);
+      return instance;
     },
     insertChildAtIndex(element, child, index) {
       if (!index) index = 0
@@ -205,6 +203,7 @@ export default {
           console.log("Removing component=", component.getId());
           try {
             this.videoContainerDiv.removeChild(component.$el);
+            // TODO app.unmount()
           } catch (e) {
             console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
           }

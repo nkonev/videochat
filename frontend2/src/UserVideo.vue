@@ -17,6 +17,8 @@
 
 import {hasLength} from "@/utils";
 import refreshLocalMutedInAppBarMixin from "@/mixins/refreshLocalMutedInAppBarMixin";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore";
 
 function isFullscreen(){
     return !!(document.fullscreenElement)
@@ -28,7 +30,8 @@ export default {
     mixins: [refreshLocalMutedInAppBarMixin()],
 
     data()  {
-      const loadingMessage = this.$vuetify.locale.t('$vuetify.loading');
+      //const loadingMessage = this.$vuetify.locale.t('$vuetify.loading'); // TODO use computed
+      const loadingMessage = 'Loading...';
 	    return {
             userName: loadingMessage,
             audioMute: true,
@@ -169,6 +172,7 @@ export default {
         },
     },
     computed: {
+        ...mapStores(useChatStore),
         avatarIsSet() {
             return hasLength(this.avatar);
         },
