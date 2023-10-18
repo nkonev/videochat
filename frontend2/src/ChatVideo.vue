@@ -41,16 +41,6 @@ import {mapStores} from "pinia";
 import {goToPreserving} from "@/mixins/searchString";
 import pinia from "@/store/index";
 
-// const UserVideoClass0 = Vue.extend(UserVideo);
-// const componentDefinition = defineComponent({
-//   extends: defineComponent({ ...component }),
-//   data: () => ({params: params}),
-//   created: function() {
-//     componentInstance = this.$root
-//   }
-// });
-// const UserVideoClass = defineComponent({ ...UserVideo });
-
 const first = 'first';
 const second = 'second';
 const last = 'last';
