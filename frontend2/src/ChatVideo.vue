@@ -74,10 +74,7 @@ export default {
     },
 
     createComponent(userIdentity, position, videoTagId, localVideoProperties) {
-      const component = defineComponent({
-        extends: defineComponent({ ...UserVideo }),
-      });
-      const app = createApp(component, {
+      const app = createApp(UserVideo, {
         id: videoTagId,
         localVideoProperties: localVideoProperties,
         videoIsOnTop: this.videoIsOnTop,
