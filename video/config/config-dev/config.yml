@@ -75,7 +75,7 @@ schedulers:
     notificationPeriod: 2s
   chatDialerTask:
     enabled: true
-    dialPeriod: 5s
+    dialPeriod: 2s
   videoRecordingNotifierTask:
     enabled: true
     notificationPeriod: 20s

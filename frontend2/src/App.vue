@@ -208,7 +208,7 @@ import {once} from "lodash/function";
 import PermissionsWarningModal from "@/PermissionsWarningModal.vue";
 import {prefix} from "@/router/routes"
 
-const reactOnAnswerThreshold = 3 * 1000; // ms
+const reactOnAnswerThreshold = 4 * 1000; // ms
 const audio = new Audio(`${prefix}/call.mp3`);
 const invitedVideoChatAlertTimeout = reactOnAnswerThreshold;
 
