@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	redisV8 "github.com/go-redis/redis/v8"
+	"github.com/spf13/viper"
 	"nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 )
@@ -23,17 +24,20 @@ const behalfUserIdConstant = "behalfUserId" // also it is dial owner - person wh
 const NoUser = -1
 
 func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId int64, behalfUserId int64) error {
-	add := s.redisClient.SAdd(ctx, dialChatMembersKey(chatId), userId)
-	err := add.Err()
+	expiration := viper.GetDuration("dialExpire")
+
+	err := s.redisClient.SAdd(ctx, dialChatMembersKey(chatId), userId).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
 		return err
 	}
+	_, err = s.redisClient.Expire(ctx, dialChatMembersKey(chatId), expiration).Result()
 	err = s.redisClient.HSet(ctx, dialMetaKey(chatId), behalfUserIdConstant, behalfUserId).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata %v", err)
 		return err
 	}
+	_, err = s.redisClient.Expire(ctx, dialMetaKey(chatId), expiration).Result()
 	return nil
 }
 
