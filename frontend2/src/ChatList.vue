@@ -85,7 +85,7 @@ import bus, {
   LOGGED_OUT,
   OPEN_CHAT_EDIT,
   OPEN_SIMPLE_MODAL,
-  PROFILE_SET,
+  PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
   SEARCH_STRING_CHANGED, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED
 } from "@/bus/bus";
 import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
@@ -266,6 +266,9 @@ export default {
       this.pageBottom = 0;
     },
 
+    async onSearchStringChangedDebounced() {
+      await this.onSearchStringChanged();
+    },
     async onSearchStringChanged() {
       // Fixes excess delayed (because of debounce) reloading of items when
       // 1. we've chosen __AVAILABLE_FOR_SEARCH
@@ -275,6 +278,9 @@ export default {
       if (this.isReady()) {
         await this.reloadItems();
       }
+    },
+    onWsRestoredRefresh() {
+      this.onSearchStringChanged();
     },
     async onProfileSet() {
       await this.reloadItems();
@@ -515,7 +521,7 @@ export default {
     ChatListContextMenu
   },
   created() {
-    this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
+    this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 200, {leading:false, trailing:true})
   },
   watch: {
       '$vuetify.locale.current': {
@@ -541,7 +547,7 @@ export default {
       await this.onProfileSet();
     }
 
-    bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
+    bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
     bus.on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
@@ -549,6 +555,7 @@ export default {
     bus.on(CHAT_EDITED, this.changeItem);
     bus.on(CHAT_DELETED, this.removeItem);
     bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+    bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
     if (this.$route.name == chat_list_name) {
       this.chatStore.isShowSearch = true;
@@ -560,7 +567,7 @@ export default {
     this.graphQlUnsubscribe();
     this.uninstallScroller();
 
-    bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChanged);
+    bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
     bus.off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
@@ -568,6 +575,7 @@ export default {
     bus.off(CHAT_EDITED, this.changeItem);
     bus.off(CHAT_DELETED, this.removeItem);
     bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+    bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
     setTitle(null);
     this.chatStore.title = null;

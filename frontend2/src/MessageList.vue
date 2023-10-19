@@ -53,7 +53,7 @@
       OPEN_RESEND_TO_MODAL,
       OPEN_SIMPLE_MODAL,
       OPEN_VIEW_FILES_DIALOG,
-      PROFILE_SET,
+      PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
       SCROLL_DOWN,
       SEARCH_STRING_CHANGED,
       SET_EDIT_MESSAGE, USER_PROFILE_CHANGED
@@ -304,6 +304,9 @@
           this.startingFromItemIdTop = null;
           this.startingFromItemIdBottom = null;
         },
+        async onSearchStringChangedDebounced() {
+          await this.onSearchStringChanged()
+        },
         async onSearchStringChanged() {
           await this.reloadItems();
         },
@@ -488,10 +491,13 @@
         goToBlog() {
           window.location.href = this.getBlogLink();
         },
+        onWsRestoredRefresh() {
+          this.onSearchStringChanged();
+        },
 
       },
       created() {
-        this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
+        this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 200, {leading:false, trailing:true})
       },
 
       watch: {
@@ -537,7 +543,7 @@
 
         addEventListener("beforeunload", this.beforeUnload);
 
-        bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
+        bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChangedDebounced);
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
         bus.on(SCROLL_DOWN, this.onScrollDownButton);
@@ -545,6 +551,7 @@
         bus.on(MESSAGE_DELETED, this.onDeleteMessage);
         bus.on(MESSAGE_EDITED, this.onEditMessage);
         bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+        bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
       },
@@ -558,11 +565,12 @@
         bus.off(MESSAGE_ADD, this.onNewMessage);
         bus.off(MESSAGE_DELETED, this.onDeleteMessage);
         bus.off(MESSAGE_EDITED, this.onEditMessage);
-        bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChanged);
+        bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChangedDebounced);
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(SCROLL_DOWN, this.onScrollDownButton);
         bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+        bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
       }
     }
 </script>

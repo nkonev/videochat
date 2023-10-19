@@ -60,22 +60,22 @@ import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
 import {hasLength, isChatRoute, setTitle} from "@/utils";
 import bus, {
-    CHAT_DELETED,
-    CHAT_EDITED,
-    FILE_CREATED, FILE_REMOVED, FILE_UPDATED, FOCUS, LOGGED_OUT,
-    MESSAGE_ADD,
-    MESSAGE_BROADCAST,
-    MESSAGE_DELETED,
-    MESSAGE_EDITED,
-    PARTICIPANT_ADDED,
-    PARTICIPANT_DELETED,
-    PARTICIPANT_EDITED,
-    PINNED_MESSAGE_PROMOTED,
-    PINNED_MESSAGE_UNPROMOTED,
-    PREVIEW_CREATED,
-    PROFILE_SET,
-    USER_TYPING,
-    VIDEO_CALL_USER_COUNT_CHANGED
+  CHAT_DELETED,
+  CHAT_EDITED,
+  FILE_CREATED, FILE_REMOVED, FILE_UPDATED, FOCUS, LOGGED_OUT,
+  MESSAGE_ADD,
+  MESSAGE_BROADCAST,
+  MESSAGE_DELETED,
+  MESSAGE_EDITED,
+  PARTICIPANT_ADDED,
+  PARTICIPANT_DELETED,
+  PARTICIPANT_EDITED,
+  PINNED_MESSAGE_PROMOTED,
+  PINNED_MESSAGE_UNPROMOTED,
+  PREVIEW_CREATED,
+  PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
+  USER_TYPING,
+  VIDEO_CALL_USER_COUNT_CHANGED
 } from "@/bus/bus";
 import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
@@ -416,7 +416,9 @@ export default {
         this.chatStore.videoChatUsersCount = dto.usersCount;
       }
     },
-
+    onWsRestoredRefresh() {
+      this.getInfo()
+    },
   },
   watch: {
     '$route': {
@@ -458,6 +460,7 @@ export default {
     bus.on(CHAT_EDITED, this.onChatChange);
     bus.on(CHAT_DELETED, this.onChatDelete);
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
+    bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
     writingUsersTimerId = setInterval(()=>{
       const curr = + new Date();
@@ -481,6 +484,7 @@ export default {
     bus.off(CHAT_EDITED, this.onChatChange);
     bus.off(CHAT_DELETED, this.onChatDelete);
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
+    bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
     this.chatStore.title = null;
     setTitle(null);

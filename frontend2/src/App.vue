@@ -91,6 +91,20 @@
               </v-btn>
             </template>
           </v-snackbar>
+          <v-snackbar v-model="showWebsocketRestored" color="black" timeout="-1" :multi-line="true" :transition="false">
+            {{ $vuetify.locale.t('$vuetify.websocket_restored') }}
+            <template v-slot:actions>
+              <v-btn
+                text
+                @click="onPressWebsocketRestored()"
+              >
+                {{ $vuetify.locale.t('$vuetify.btn_update') }}
+              </v-btn>
+              <v-btn text @click="showWebsocketRestored = false">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+
+            </template>
+          </v-snackbar>
+
 
           <router-view />
         </v-container>
@@ -135,9 +149,9 @@ import bus, {
   CHAT_DELETED,
   CHAT_EDITED, FOCUS,
   LOGGED_OUT, NOTIFICATION_ADD, NOTIFICATION_DELETE, OPEN_FILE_UPLOAD_MODAL, OPEN_PARTICIPANTS_DIALOG, PLAYER_MODAL,
-  PROFILE_SET,
+  PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
   SCROLL_DOWN, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED, VIDEO_CALL_INVITED, VIDEO_CALL_SCREEN_SHARE_CHANGED,
-  VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED, VIDEO_RECORDING_CHANGED,
+  VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED, VIDEO_RECORDING_CHANGED, WEBSOCKET_RESTORED,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -180,6 +194,7 @@ export default {
         return {
             lastAnswered: 0,
             showSearchButton: true,
+            showWebsocketRestored: false,
         }
     },
     computed: {
@@ -456,6 +471,13 @@ export default {
                 this.chatStore.fetchUserProfile();
             })
         },
+        onWsRestored() {
+          this.showWebsocketRestored = true;
+        },
+        onPressWebsocketRestored() {
+          this.showWebsocketRestored = false;
+          bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
+        },
     },
     components: {
         ChatEditModal,
@@ -479,6 +501,7 @@ export default {
 
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
+        bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
 
         addEventListener("focus", this.onFocus);
 
@@ -496,6 +519,7 @@ export default {
 
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
+        bus.off(WEBSOCKET_RESTORED, this.onWsRestored);
     },
 
     watch: {
