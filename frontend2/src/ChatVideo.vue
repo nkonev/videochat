@@ -75,6 +75,7 @@ export default {
       app.use(vuetify);
       app.use(pinia);
       const containerEl = document.createElement("div");
+      containerEl.className = 'video-container-wrapper';
 
       if (position == first) {
         this.insertChildAtIndex(this.videoContainerDiv, containerEl, 0);
@@ -574,5 +575,12 @@ export default {
   flex-direction: column;
 }
 
+
+</style>
+
+<style lang="stylus">
+.video-container-wrapper {
+  display contents
+}
 
 </style>
