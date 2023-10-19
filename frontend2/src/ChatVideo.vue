@@ -75,17 +75,18 @@ export default {
       }
       app.use(vuetify);
       app.use(pinia);
-      const instance = app.mount(this.videoContainerDiv);
-      const el = instance.$el;
+      const containerEl = document.createElement("div");
 
       if (position == first) {
-        this.insertChildAtIndex(this.videoContainerDiv, el, 0);
+        this.insertChildAtIndex(this.videoContainerDiv, containerEl, 0);
       } else if (position == last) {
-        this.videoContainerDiv.append(el);
+        this.videoContainerDiv.append(containerEl);
       } else if (position == second) {
-        this.insertChildAtIndex(this.videoContainerDiv, el, 1);
+        this.insertChildAtIndex(this.videoContainerDiv, containerEl, 1);
       }
-      this.addComponentForUser(userIdentity, {component: instance, app: app});
+      const instance = app.mount(containerEl);
+
+      this.addComponentForUser(userIdentity, {component: instance, app: app, containerEl: containerEl});
       return instance;
     },
     insertChildAtIndex(element, child, index) {
@@ -187,12 +188,13 @@ export default {
       for (const componentWrapper of this.getByUser(userIdentity)) {
         const component = componentWrapper.component;
         const app = componentWrapper.app;
+        const containerEl = componentWrapper.containerEl;
         console.debug("For removal checking component=", component, "against", track);
         if (component.getVideoStreamId() == track.sid || component.getAudioStreamId() == track.sid) {
           console.log("Removing component=", component.getId());
           try {
-            this.videoContainerDiv.removeChild(component.$el);
-            app.unmount()
+            app.unmount();
+            this.videoContainerDiv.removeChild(containerEl);
           } catch (e) {
             console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
           }
