@@ -10,7 +10,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { resolve } from 'path';
 
 // https://vitejs.dev/config/
-const base = "/front2";
+const base = "/";
 
 export default defineConfig({
   base: base,
@@ -23,8 +23,8 @@ export default defineConfig({
     },
   },
   plugins: [
-    forwardToTrailingSlashPlugin(base),
-    anotherEntrypointIndexHtmlPlugin(base, "/blog"),
+    forwardToTrailingSlashPlugin(),
+    anotherEntrypointIndexHtmlPlugin(null, "/blog"),
     vue({
       template: { transformAssetUrls }
     }),

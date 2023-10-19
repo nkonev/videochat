@@ -11,8 +11,9 @@ export default (base, subroute) => ({
           `${headers[':scheme'] ?? 'http'}://${headers[':authority'] ?? headers.host}`,
         );
 
-        if (realUrl.pathname.startsWith(`${base}${subroute}`)) {
-          realUrl.pathname = `${base}${subroute}/index.html`;
+        const normalizedBase = base ? base : "";
+        if (realUrl.pathname.startsWith(`${normalizedBase}${subroute}`)) {
+          realUrl.pathname = `${normalizedBase}${subroute}/index.html`;
           req.url = `${realUrl.pathname}${realUrl.search}`;
         }
 

@@ -1,10 +1,10 @@
 http:
   services:
-    frontend-service:
+    frontend-old-service:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:8082
-    frontend-2-service:
+    frontend-service:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:3000
@@ -50,7 +50,6 @@ http:
     frontend-2-router:
       rule: "PathPrefix(`/front2`)"
       service: frontend-2-service
-#      service: frontend-service
       middlewares:
         - "retry-middleware"
     aaa-router:

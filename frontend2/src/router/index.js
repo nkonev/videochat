@@ -16,7 +16,7 @@ import {
   profile_name,
   profiles,
   registration,
-  registration_name,
+  registration_name, root,
   root_name, video_suffix, videochat_name,
   wrong_confirmation_token,
   wrong_confirmation_token_name,
@@ -30,7 +30,7 @@ import {useChatStore} from "@/store/chatStore";
 const routes = [
     {
         name: root_name,
-        path: prefix,
+        path: root,
         component: () => import('@/Welcome.vue'),
     },
     {

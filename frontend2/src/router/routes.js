@@ -1,6 +1,6 @@
-export const prefix = "/front2"
+export const prefix = ""
 
-export const root = prefix;
+export const root = "/";
 export const chat = `${prefix}/chat`;
 export const chats = `${prefix}/chats`;
 export const blog = `${prefix}/blog`;
