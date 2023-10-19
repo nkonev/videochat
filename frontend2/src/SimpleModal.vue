@@ -56,7 +56,11 @@
                 this.$data.loading = false;
             },
             hideModal() {
-                this.lightClose();
+                this.$data.show = false;
+                this.$data.actionFunction = ()=>{};
+                this.$data.cancelFunction = null;
+                this.$data.loading = false;
+
                 this.$data.title = "";
                 this.$data.text = "";
                 this.$data.buttonName = "";
