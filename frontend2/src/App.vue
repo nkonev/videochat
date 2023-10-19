@@ -249,7 +249,8 @@ export default {
         },
         stopCall() {
             console.debug("stopping Call");
-            const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
+            this.chatStore.leavingVideoAcceptableParam = true;
+            const routerNewState = { name: chat_name };
             goToPreserving(this.$route, this.$router, routerNewState);
             this.updateLastAnsweredTimestamp();
         },

@@ -25,6 +25,7 @@ import {
 } from "@/router/routes";
 import vuetify from "@/plugins/vuetify";
 import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL} from "@/bus/bus";
+import {useChatStore} from "@/store/chatStore";
 
 const routes = [
     {
@@ -101,7 +102,9 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  if (from.name == videochat_name && to.name != videochat_name && from.params.id && from.params.id != to.params.id && to.params.leavingVideoAcceptableParam != true) {
+  const chatStore = useChatStore();
+
+  if (from.name == videochat_name && to.name != videochat_name && chatStore.leavingVideoAcceptableParam != true) {
     bus.emit(OPEN_SIMPLE_MODAL, {
       buttonName: vuetify.locale.t('$vuetify.ok'),
       title: vuetify.locale.t('$vuetify.leave_call'),
@@ -115,6 +118,7 @@ router.beforeEach((to, from, next) => {
       }
     });
   } else {
+    chatStore.leavingVideoAcceptableParam = false;
     next();
   }
 });

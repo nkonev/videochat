@@ -227,7 +227,8 @@ export default {
       if (this.$route.name == videochat_name && !this.inRestarting) {
         console.log('Handling kick');
 
-        const routerNewState = { name: chat_name, params: { leavingVideoAcceptableParam: true } };
+        this.chatStore.leavingVideoAcceptableParam = true;
+        const routerNewState = { name: chat_name };
         goToPreserving(this.$route, this.$router, routerNewState);
       }
     },
