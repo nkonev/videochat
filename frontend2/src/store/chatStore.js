@@ -1,7 +1,7 @@
 // Utilities
 import { defineStore } from 'pinia'
 import axios from "axios";
-import {findIndex, isMobileBrowser, setIcon} from "@/utils";
+import {isMobileBrowser, setIcon} from "@/utils";
 import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 
 export const useChatStore = defineStore('chat', {
@@ -18,6 +18,7 @@ export const useChatStore = defineStore('chat', {
         lastError: "",
         errorColor: "",
         showDrawer: !isMobileBrowser(),
+        showDrawerPrevious: false,
         isShowSearch: false,
         searchType: SEARCH_MODE_CHATS,
         showScrollDown: false,

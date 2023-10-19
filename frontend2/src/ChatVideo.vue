@@ -505,6 +505,7 @@ export default {
     this.chatId = this.chatDto.id;
     this.participantIds = this.chatDto.participantIds;
 
+    this.chatStore.showDrawerPrevious = this.chatStore.showDrawer;
     this.chatStore.showDrawer = false;
     this.chatStore.showCallButton = false;
     this.chatStore.showHangButton = true;
@@ -533,7 +534,7 @@ export default {
 
     this.chatStore.showCallButton = true;
     this.chatStore.showHangButton = false;
-    this.chatStore.showDrawer = true;
+    this.chatStore.showDrawer = this.chatStore.showDrawerPrevious;
 
     this.chatStore.videoChatUsersCount = 0;
     this.chatStore.showRecordStartButton = false;
