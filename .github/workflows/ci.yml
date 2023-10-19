@@ -54,7 +54,7 @@ jobs:
           echo "Will deploy aaa" &&
           ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.AaaUpdateCommand }}
 
-  frontend:
+  frontend-old:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -70,7 +70,42 @@ jobs:
           key: ${{ runner.os }}-frontend-cache-v1-${{ hashFiles('**/package-lock.json') }}
       - name: Build with npm run
         run: |
-          (cd frontend; npm install && npm run build)
+          (cd frontend-old; npm install && npm run build)
+      - name: Build docker image and deploy
+        if: github.ref == 'refs/heads/master' && false
+        run: |
+          mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
+          chmod 600 ~/.ssh/id_rsa
+          BUILDDIR=./build;
+          WORKDIR=./frontend-old;
+          IMAGE=nkonev/chat-frontend:latest;
+          GIT_HASH=$(git rev-list -1 HEAD);
+          cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp -r ../frontend-nginx/* $BUILDDIR && cp ../docker/nginx/frontend.conf $BUILDDIR &&
+          docker build -t $IMAGE --build-arg GIT_HASH=$GIT_HASH $BUILDDIR &&
+          echo "Will login to docker" &&
+          docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" &&
+          echo "Will push docker image" &&
+          docker push $IMAGE &&
+          echo "Will deploy frontend" &&
+          ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.FrontendUpdateCommand }}
+
+  frontend:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.16.0
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-frontend-cache-v2-${{ hashFiles('**/package-lock.json') }}
+      - name: Build with npm run
+        run: |
+          (cd frontend; npm install && npm run build && mkdir -p ../frontend-nginx/dist && mv dist/* ../frontend-nginx/dist/)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
@@ -88,24 +123,6 @@ jobs:
           docker push $IMAGE &&
           echo "Will deploy frontend" &&
           ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.FrontendUpdateCommand }}
-
-  frontend2:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.16.0
-      - name: Cache Node.js dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}-frontend-cache-v2-${{ hashFiles('**/package-lock.json') }}
-      - name: Build with npm run
-        run: |
-          (cd frontend; npm install && npm run build)
 
   chat:
     runs-on: ubuntu-22.04
