@@ -1,21 +1,27 @@
 <template>
     <v-menu
-        v-model="showContextMenu"
-        :position-x="contextMenuX"
-        :position-y="contextMenuY"
-        absolute
-        offset-y
+        :class="className()"
+        :model-value="showContextMenu"
         :transition="false"
+        :open-on-click="false"
+        :open-on-focus="false"
+        :open-on-hover="false"
+        :open-delay="0"
+        :close-delay="0"
+        :close-on-back="false"
     >
         <v-list>
             <v-list-item
                 v-for="(item, index) in getContextMenuItems()"
                 :key="index"
-                link
                 @click="item.action"
             >
-                <v-list-item-avatar><v-icon :color="item.iconColor">{{item.icon}}</v-icon></v-list-item-avatar>
-                <v-list-item-title>{{ item.title }}</v-list-item-title>
+              <template v-slot:prepend>
+                <v-icon :color="item.iconColor">
+                  {{item.icon}}
+                </v-icon>
+              </template>
+              <template v-slot:title>{{ item.title }}</template>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -23,75 +29,76 @@
 
 <script>
 
-import {chat, messageIdHashPrefix} from "./routes"
+import {chat, messageIdHashPrefix} from "./router/routes"
 import {getUrlPrefix, hasLength} from "@/utils";
-import {GET_SEARCH_STRING, GET_USER, SET_SEARCH_STRING} from "@/store";
-import {mapGetters} from "vuex";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore";
+import {SEARCH_MODE_MESSAGES, searchString} from "@/mixins/searchString";
+import contextMenuMixin from "@/mixins/contextMenuMixin";
 
 export default {
+    mixins: [
+      searchString(SEARCH_MODE_MESSAGES),
+      contextMenuMixin(),
+    ],
     props: ['canResend', 'isBlog'],
     data(){
-        return {
-            showContextMenu: false,
-            menuableItem: null,
-            contextMenuX: 0,
-            contextMenuY: 0,
-        }
+      return {
+        selection: null,
+      }
     },
     methods:{
-        onShowContextMenu(e, menuableItem) {
-            e.preventDefault();
-            this.showContextMenu = false;
-            this.contextMenuX = e.clientX;
-            this.contextMenuY = e.clientY;
-            this.menuableItem = menuableItem;
-            this.$nextTick(() => {
-                this.showContextMenu = true;
-            })
+        className() {
+          return "message-item-context-menu"
         },
-        onCloseContextMenu(){
-            this.showContextMenu = false
+        onShowContextMenu(e, menuableItem) {
+          this.selection = this.getSelection();
+          this.onShowContextMenuBase(e, menuableItem);
+        },
+        onCloseContextMenu() {
+          this.selection = null;
+          this.onCloseContextMenuBase();
         },
         getContextMenuItems() {
             const ret = [];
             if (this.menuableItem) {
-                if (hasLength(this.getSelection())) {
+                if (hasLength(this.selection)) {
                     ret.push({
-                        title: this.$vuetify.lang.t('$vuetify.copy_selected'),
+                        title: this.$vuetify.locale.t('$vuetify.copy_selected'),
                         icon: 'mdi-content-copy',
-                        action: () => this.copySelected()
+                        action: this.copySelected
                     });
                     ret.push({
-                        title: this.$vuetify.lang.t('$vuetify.search_by_selected'),
+                        title: this.$vuetify.locale.t('$vuetify.search_by_selected'),
                         icon: 'mdi-clipboard-search-outline',
-                        action: () => this.searchBySelected()
+                        action: this.searchBySelected
                     });
                 }
                 if (this.menuableItem.fileItemUuid) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.attached_message_files'), icon: 'mdi-file-download', action: () => this.$emit('onFilesClicked', this.menuableItem) });
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.attached_message_files'), icon: 'mdi-file-download', action: () => this.$emit('onFilesClicked', this.menuableItem) });
                 }
                 if (this.menuableItem.canDelete) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.delete_btn'), icon: 'mdi-delete', iconColor: 'error', action: () => this.$emit('deleteMessage', this.menuableItem) });
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.delete_btn'), icon: 'mdi-delete', iconColor: 'error', action: () => this.$emit('deleteMessage', this.menuableItem) });
                 }
                 if (this.menuableItem.canEdit) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.$emit('editMessage', this.menuableItem) });
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.$emit('editMessage', this.menuableItem) });
                 }
-                ret.push({title: this.$vuetify.lang.t('$vuetify.users_read'), icon: 'mdi-account-supervisor', action: () => this.$emit('showReadUsers', this.menuableItem) });
+                ret.push({title: this.$vuetify.locale.t('$vuetify.users_read'), icon: 'mdi-account-supervisor', action: () => this.$emit('showReadUsers', this.menuableItem) });
                 if (this.menuableItem.pinned) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.remove_from_pinned'), icon: 'mdi-pin-off-outline', action: () => this.$emit('removedFromPinned', this.menuableItem)});
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.remove_from_pinned'), icon: 'mdi-pin-off-outline', action: () => this.$emit('removedFromPinned', this.menuableItem)});
                 } else {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.pin_message'), icon: 'mdi-pin', action: () => this.$emit('pinMessage', this.menuableItem)});
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.pin_message'), icon: 'mdi-pin', action: () => this.$emit('pinMessage', this.menuableItem)});
                 }
-                ret.push({title: this.$vuetify.lang.t('$vuetify.reply'), icon: 'mdi-reply', action: () => this.$emit('replyOnMessage', this.menuableItem) });
+                ret.push({title: this.$vuetify.locale.t('$vuetify.reply'), icon: 'mdi-reply', action: () => this.$emit('replyOnMessage', this.menuableItem) });
                 if (this.canResend) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.share'), icon: 'mdi-share', action: () => this.$emit('shareMessage', this.menuableItem) });
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.share'), icon: 'mdi-share', action: () => this.$emit('shareMessage', this.menuableItem) });
                 }
-                ret.push({title: this.$vuetify.lang.t('$vuetify.copy_link_to_message'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
-                if (!this.menuableItem.blogPost && this.isBlog && this.menuableItem.owner.id == this.currentUser.id) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.make_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('makeBlogPost', this.menuableItem)});
+                ret.push({title: this.$vuetify.locale.t('$vuetify.copy_link_to_message'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
+                if (!this.menuableItem.blogPost && this.isBlog && this.menuableItem.owner.id == this.chatStore.currentUser.id) {
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.make_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('makeBlogPost', this.menuableItem)});
                 }
                 if (this.menuableItem.blogPost) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.go_to_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('goToBlog', this.menuableItem)});
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.go_to_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('goToBlog', this.menuableItem)});
                 }
             }
             return ret;
@@ -104,30 +111,20 @@ export default {
             return window.getSelection().toString();
         },
         copySelected() {
-            const selectedText = this.getSelection();
+            const selectedText = this.selection;
             navigator.clipboard.writeText(selectedText);
         },
         searchBySelected() {
-            const selectedText = this.getSelection();
+            const selectedText = this.selection;
             this.searchString = selectedText;
+            this.chatStore.searchType = SEARCH_MODE_MESSAGES;
         },
     },
     computed: {
         chatId() {
             return this.$route.params.id
         },
-        ...mapGetters({
-            currentUser: GET_USER,
-        }),
-        searchString: {
-            get(){
-                return this.$store.getters[GET_SEARCH_STRING];
-            },
-            set(newVal){
-                this.$store.commit(SET_SEARCH_STRING, newVal);
-                return newVal;
-            }
-        }
+        ...mapStores(useChatStore),
     },
 }
 </script>

@@ -1,40 +1,39 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="800" scrollable>
-            <v-card>
-                <v-card-title>{{ $vuetify.lang.t('$vuetify.pinned_messages') }}</v-card-title>
-
+        <v-dialog v-model="show" max-width="640" scrollable>
+            <v-card :title="$vuetify.locale.t('$vuetify.pinned_messages_full')">
                 <v-card-text class="ma-0 pa-0">
-                    <v-list v-if="!loading">
+                    <v-list class="pb-0" v-if="!loading">
                         <template v-if="dto.totalCount > 0">
                             <template v-for="(item, index) in dto.data">
-                                <v-list-item>
-                                    <v-list-item-avatar>
-                                        <img :src="item.owner.avatar"/>
-                                    </v-list-item-avatar>
-                                    <v-list-item-content class="py-2">
-                                        <v-list-item-title>
-                                            <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                                        </v-list-item-title>
-                                        <v-list-item-subtitle>
-                                            <router-link :to="getPinnedRouteObject(item)" style="text-decoration: none; cursor: pointer" class="text--primary">
-                                                {{ item.text }}
-                                            </router-link>
-                                        </v-list-item-subtitle>
-                                    </v-list-item-content>
+                                <v-list-item class="list-item-prepend-spacer-16">
+                                    <template v-slot:prepend v-if="hasLength(item.owner.avatar)">
+                                        <v-avatar :image="item.owner.avatar"></v-avatar>
+                                    </template>
 
-                                    <v-btn icon @click="promotePinMessage(item)">
-                                        <v-icon color="primary" dark :title="$vuetify.lang.t('$vuetify.pin_message')">mdi-pin</v-icon>
-                                    </v-btn>
-                                    <v-btn icon @click="unpinMessage(item)">
-                                        <v-icon color="error" dark :title="$vuetify.lang.t('$vuetify.remove_from_pinned')">mdi-delete</v-icon>
-                                    </v-btn>
+                                    <v-list-item-subtitle style="opacity: 1">
+                                        <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
+                                    </v-list-item-subtitle>
+                                    <v-list-item-title>
+                                        <router-link :to="getPinnedRouteObject(item)" :class="getItemClass(item)">
+                                            {{ item.text }}
+                                        </router-link>
+                                    </v-list-item-title>
+
+                                    <template v-slot:append>
+                                        <v-btn variant="flat" icon @click="promotePinMessage(item)">
+                                            <v-icon color="primary" dark :title="$vuetify.locale.t('$vuetify.pin_message')">mdi-pin</v-icon>
+                                        </v-btn>
+                                        <v-btn variant="flat" icon @click="unpinMessage(item)">
+                                            <v-icon color="red" dark :title="$vuetify.locale.t('$vuetify.remove_from_pinned')">mdi-delete</v-icon>
+                                        </v-btn>
+                                    </template>
                                 </v-list-item>
                                 <v-divider></v-divider>
                             </template>
                         </template>
                         <template v-else>
-                            <v-card-text>{{ $vuetify.lang.t('$vuetify.no_pin_messages') }}</v-card-text>
+                            <v-card-text>{{ $vuetify.locale.t('$vuetify.no_pin_messages') }}</v-card-text>
                         </template>
                     </v-list>
                     <v-progress-circular
@@ -47,14 +46,31 @@
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
-                    <v-pagination
-                        v-if="shouldShowPagination"
-                        v-model="page"
-                        :length="pagesCount"
-                    ></v-pagination>
-                    <v-spacer></v-spacer>
-                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+
+                    <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
+                    <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
+                        <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                            <v-pagination
+                                variant="elevated"
+                                active-color="primary"
+                                density="comfortable"
+                                v-if="shouldShowPagination"
+                                v-model="page"
+                                :length="pagesCount"
+                            ></v-pagination>
+                        </v-col>
+                        <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                            <v-btn
+                                variant="elevated"
+                                color="red"
+                                @click="closeModal()"
+                            >
+                                {{ $vuetify.locale.t('$vuetify.close') }}
+                            </v-btn>
+                        </v-col>
+                    </v-row>
                 </v-card-actions>
+
             </v-card>
         </v-dialog>
     </v-row>
@@ -64,12 +80,10 @@
 
 import bus, {
     OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
-} from "./bus";
-import {mapGetters} from "vuex";
-import {GET_USER} from "./store";
+} from "./bus/bus";
 import axios from "axios";
-import {getHumanReadableDate, formatSize, findIndex, replaceOrAppend} from "./utils";
-import {chat_name, messageIdHashPrefix, videochat_name} from "@/routes";
+import {getHumanReadableDate, formatSize, findIndex, replaceOrAppend, hasLength, deepCopy} from "./utils";
+import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -86,10 +100,9 @@ export default {
         }
     },
     computed: {
-        ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
         pagesCount() {
             const count = Math.ceil(this.dto.totalCount / pageSize);
-            console.debug("Calc pages count", count);
+            // console.debug("Calc pages count", count);
             return count;
         },
         shouldShowPagination() {
@@ -101,6 +114,7 @@ export default {
     },
 
     methods: {
+        hasLength,
         showModal() {
             this.show = true;
             this.getPinnedMessages();
@@ -156,14 +170,10 @@ export default {
             console.log("Removing item", dto);
             const idxToRemove = findIndex(this.dto.data, dto);
             this.dto.data.splice(idxToRemove, 1);
-            this.$forceUpdate();
         },
         replaceItem(dto) {
-            console.log("Replacing item", dto);
-
+            //console.log("Replacing item", dto);
             replaceOrAppend(this.dto.data, [dto]);
-
-            this.$forceUpdate();
         },
         onPinnedMessageUnpromoted(dto) {
             if (this.show) {
@@ -178,7 +188,12 @@ export default {
         onPinnedMessagePromoted(dto) {
             if (this.show) {
                 if (dto.message.chatId == this.chatId) {
-                    this.replaceItem(dto.message);
+                    //reset previous promoted
+                    this.dto.data.forEach((item)=>{
+                        item.pinnedPromoted = false;
+                    })
+                    const copied = deepCopy(dto.message);
+                    this.replaceItem(copied);
                     this.dto.totalCount = dto.totalCount;
                 } else {
                     console.log("Skipping", dto)
@@ -191,6 +206,13 @@ export default {
         getPinnedRouteObject(item) {
             const routeName = this.isVideoRoute() ? videochat_name : chat_name;
             return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+        },
+        getItemClass(item) {
+            return {
+                "text-primary": true,
+                "pinned-text": true,
+                'pinned-bold': !!item.pinnedPromoted,
+            }
         },
     },
     filters: {
@@ -212,15 +234,24 @@ export default {
             }
         }
     },
-    created() {
-        bus.$on(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
-        bus.$on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
-        bus.$on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+    mounted() {
+        bus.on(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
+        bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
+        bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     },
-    destroyed() {
-        bus.$off(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
-        bus.$off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
-        bus.$off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+    beforeUnmount() {
+        bus.off(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
+        bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
+        bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     },
 }
 </script>
+
+<style lang="stylus" scoped>
+@import "pinned.styl"
+
+.pinned-bold {
+    font-weight bold
+}
+
+</style>

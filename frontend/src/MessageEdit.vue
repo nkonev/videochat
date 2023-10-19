@@ -1,144 +1,159 @@
 <template>
-    <v-container id="sendButtonContainer" class="py-0 px-1 pb-1 d-flex flex-column" fluid
-    >
-            <div v-if="showAnswer" class="answer"><v-icon @click="resetAnswer()" :title="$vuetify.lang.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
-            <tiptap
-                :key="editorKey"
-                ref="tipTapRef"
-                @input="onInput"
-                @keydown.ctrl.enter.native="sendMessageToChat"
-                @keydown.esc.native="resetInput()"
-            />
+    <v-container class="ma-0 pa-0" style="height: 100%" fluid>
+      <v-container id="sendButtonContainer" class="py-0 px-0 pr-1 pb-1 d-flex flex-column" fluid>
+            <div class="answer-wrapper" v-if="showAnswer">
+              <div class="answer-text"><v-icon @click="resetAnswer()" :title="$vuetify.locale.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
+            </div>
+              <tiptap
+                  ref="tipTapRef"
+                  @myinput="onInput"
+                  @keydown.ctrl.enter.native="sendMessageToChat"
+                  @keydown.esc.native="resetInput()"
+              />
 
-                <div class="d-flex flex-wrap flex-row dashed-borders">
-                    <div style="max-width: 100%" v-if="$refs.tipTapRef">
-                        <v-slide-group
-                            multiple
-                            show-arrows
-                        >
-                            <v-btn icon :large="isMobile()" tile :input-value="boldValue()" @click="boldClick" :width="getBtnWidth()" :color="boldValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_bold')">
-                                <v-icon :large="isMobile()">mdi-format-bold</v-icon>
-                            </v-btn>
+                  <div class="d-flex flex-wrap flex-row dashed-borders">
+                      <div style="max-width: 100%" v-if="this.$refs.tipTapRef">
+                          <v-slide-group
+                              multiple
+                              show-arrows
+                          >
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="boldValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="boldValue()" @click="boldClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_bold')">
+                                  <v-icon :size="getIconSize()">mdi-format-bold</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile :input-value="italicValue()" @click="italicClick" :width="getBtnWidth()" :color="italicValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_italic')">
-                                <v-icon :large="isMobile()">mdi-format-italic</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="italicValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="italicValue()" @click="italicClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_italic')">
+                                  <v-icon :size="getIconSize()">mdi-format-italic</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile :input-value="underlineValue()" @click="underlineClick" :width="getBtnWidth()" :color="underlineValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_underline')">
-                                <v-icon :large="isMobile()">mdi-format-underline</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="underlineValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="underlineValue()" @click="underlineClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_underline')">
+                                  <v-icon :size="getIconSize()">mdi-format-underline</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile :input-value="strikeValue()" @click="strikeClick" :width="getBtnWidth()" :color="strikeValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_strike')">
-                                <v-icon :large="isMobile()">mdi-format-strikethrough-variant</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="strikeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="strikeValue()" @click="strikeClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_strike')">
+                                  <v-icon :size="getIconSize()">mdi-format-strikethrough-variant</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile :input-value="codeValue()" @click="codeClick" :width="getBtnWidth()" :color="codeValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_code')">
-                                <v-icon :large="isMobile()">mdi-code-braces</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="codeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="codeValue()" @click="codeClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_code')">
+                                  <v-icon :size="getIconSize()">mdi-code-braces</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" :width="getBtnWidth()" :color="linkValue() ? 'black' : ''" :title="$vuetify.lang.t('$vuetify.message_edit_link')">
-                                <v-icon :large="isMobile()">mdi-link-variant</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="linkValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_link')">
+                                  <v-icon :size="getIconSize()">mdi-link-variant</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile @click="imageClick" :width="getBtnWidth()" :title="$vuetify.lang.t('$vuetify.message_edit_image')">
-                                <v-icon :large="isMobile()">mdi-image-outline</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="imageClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_image')">
+                                  <v-icon :size="getIconSize()">mdi-image-outline</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile @click="videoClick" :width="getBtnWidth()" :title="$vuetify.lang.t('$vuetify.message_edit_video')">
-                                <v-icon :large="isMobile()">mdi-video</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="videoClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_video')">
+                                  <v-icon :size="getIconSize()">mdi-video</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile @click="embedClick" :width="getBtnWidth()" :title="$vuetify.lang.t('$vuetify.message_edit_embed')">
-                                <v-icon :large="isMobile()">mdi-youtube</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="embedClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_embed')">
+                                  <v-icon :size="getIconSize()">mdi-youtube</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile @click="textColorClick" :width="getBtnWidth()" :title="$vuetify.lang.t('$vuetify.message_edit_text_color')">
-                                <v-icon :large="isMobile()">mdi-invert-colors</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="textColorClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_text_color')">
+                                  <v-icon :size="getIconSize()">mdi-invert-colors</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile @click="backgroundColorClick" :width="getBtnWidth()" :title="$vuetify.lang.t('$vuetify.message_edit_background_color')">
-                                <v-icon :large="isMobile()">mdi-format-color-fill</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="backgroundColorClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_background_color')">
+                                  <v-icon :size="getIconSize()">mdi-format-color-fill</v-icon>
+                              </v-btn>
 
-                            <v-btn icon :large="isMobile()" tile @click="smileyClick" :width="getBtnWidth()" :title="$vuetify.lang.t('$vuetify.message_edit_smiley')">
-                                <v-icon :large="isMobile()">mdi-emoticon-outline</v-icon>
-                            </v-btn>
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="smileyClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_smiley')">
+                                  <v-icon :size="getIconSize()">mdi-emoticon-outline</v-icon>
+                              </v-btn>
 
-                        </v-slide-group>
-                    </div>
+                          </v-slide-group>
+                      </div>
 
-                    <div class="custom-toolbar-send">
-                        <v-btn v-if="!this.editMessageDto.fileItemUuid" icon tile :large="isMobile()" :width="getBtnWidth()" @click="openFileUpload()" :title="$vuetify.lang.t('$vuetify.message_edit_file')"><v-icon :large="isMobile()" color="primary">mdi-file-upload</v-icon></v-btn>
-                        <template v-if="this.editMessageDto.fileItemUuid">
-                            <v-badge
-                                :value="fileCount"
-                                :content="fileCount"
-                                color="green"
-                                overlap
-                                left
-                            >
-                                <v-btn icon tile :large="isMobile()" :width="getBtnWidth()" @click="onFilesClicked()" :title="$vuetify.lang.t('$vuetify.message_edit_attached_files')"><v-icon :large="isMobile()">mdi-file-document-multiple</v-icon></v-btn>
-                            </v-badge>
-                        </template>
-                        <v-btn icon tile :large="isMobile()" :width="getBtnWidth()" class="mr-2" @click="resetInput()" :title="$vuetify.lang.t('$vuetify.message_edit_clear')"><v-icon :large="isMobile()">mdi-delete</v-icon></v-btn>
-                        <v-switch v-if="canBroadcast" dense hide-details class="ma-0 mr-4" v-model="sendBroadcast"
-                            :label="$vuetify.lang.t('$vuetify.message_broadcast')"
-                        ></v-switch>
-                        <v-btn color="primary" @click="sendMessageToChat" tile class="mr-0 send" :title="$vuetify.lang.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"><v-icon color="white">mdi-send</v-icon></v-btn>
-                    </div>
+                      <div class="custom-toolbar-send">
+                          <v-btn v-if="!this.editMessageDto.fileItemUuid" icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" @click="openFileUploadForAddingFiles()" :title="$vuetify.locale.t('$vuetify.message_edit_file')">
+                            <v-icon :size="getIconSize()" color="primary">mdi-file-upload</v-icon>
+                          </v-btn>
+                          <template v-if="this.editMessageDto.fileItemUuid">
+                              <v-badge
+                                  :value="fileCount"
+                                  :content="fileCount"
+                                  color="green"
+                                  overlap
+                                  left
+                              >
+                                  <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" @click="onFilesClicked()" :title="$vuetify.locale.t('$vuetify.message_edit_attached_files')">
+                                    <v-icon :size="getIconSize()">mdi-file-document-multiple</v-icon>
+                                  </v-btn>
+                              </v-badge>
+                          </template>
+                          <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" @click="resetInput()" :title="$vuetify.locale.t('$vuetify.message_edit_clear')">
+                            <v-icon :size="getIconSize()">mdi-delete</v-icon>
+                          </v-btn>
+                          <v-btn v-if="chatStore.canBroadcastTextMessage" icon rounded="0" :size="getBtnSize()" :variant="sendBroadcast ? 'tonal' : 'plain'" density="comfortable" @click="sendBroadcast = !sendBroadcast" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_broadcast')">
+                            <v-icon :size="getIconSize()">mdi-broadcast</v-icon>
+                          </v-btn>
+                        <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" width="64" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
+                      </div>
 
-                </div>
+                  </div>
+      </v-container>
 
-        <MessageEditLinkModal/>
-        <MessageEditColorModal/>
-        <MessageEditMediaModal/>
-        <MessageEditSmileyModal/>
-
+      <!-- We store modals outside of container in order they not to contribute into the height (as it is done in App.vue) -->
+      <MessageEditLinkModal/>
+      <MessageEditColorModal/>
+      <MessageEditMediaModal/>
+      <MessageEditSmileyModal/>
     </v-container>
 </template>
 
 <script>
     import axios from "axios";
     import bus, {
-        CLOSE_EDIT_MESSAGE,
-        MESSAGE_EDIT_COLOR_SET,
-        MESSAGE_EDIT_LINK_SET,
-        OPEN_FILE_UPLOAD_MODAL,
-        OPEN_MESSAGE_EDIT_COLOR,
-        OPEN_MESSAGE_EDIT_LINK,
-        OPEN_MESSAGE_EDIT_MEDIA,
-        OPEN_MESSAGE_EDIT_SMILEY,
-        OPEN_VIEW_FILES_DIALOG,
-        PROFILE_SET,
-        SET_EDIT_MESSAGE,
-        SET_FILE_ITEM_UUID,
-    } from "./bus";
+      CLOSE_EDIT_MESSAGE, INCREMENT_FILE_ITEM_FILE_COUNT, LOAD_FILES_COUNT,
+      MESSAGE_EDIT_COLOR_SET,
+      MESSAGE_EDIT_LINK_SET,
+      OPEN_FILE_UPLOAD_MODAL,
+      OPEN_MESSAGE_EDIT_COLOR,
+      OPEN_MESSAGE_EDIT_LINK,
+      OPEN_MESSAGE_EDIT_MEDIA,
+      OPEN_MESSAGE_EDIT_SMILEY,
+      OPEN_VIEW_FILES_DIALOG,
+      PROFILE_SET,
+      SET_EDIT_MESSAGE,
+      SET_FILE_ITEM_UUID,
+    } from "./bus/bus";
     import debounce from "lodash/debounce";
-    import {mapGetters} from "vuex";
-    import {GET_CAN_BROADCAST_TEXT_MESSAGE, GET_USER} from "./store";
     import Tiptap from './TipTapEditor.vue'
     import {
         chatEditMessageDtoFactory,
         colorBackground,
-        colorText, embed, getAnswerPreviewFields, link_dialog_type_add_link_to_text, link_dialog_type_add_media_embed,
-        media_image, media_video
+        colorText,
+        embed,
+        getAnswerPreviewFields,
+        hasLength,
+        link_dialog_type_add_link_to_text,
+        link_dialog_type_add_media_embed,
+        media_image,
+        media_video
     } from "@/utils";
     import {
         getStoredChatEditMessageDto,
         removeStoredChatEditMessageDto,
         setStoredChatEditMessageDto
-    } from "@/localStore"
+    } from "@/store/localStore"
 
     import MessageEditLinkModal from "@/MessageEditLinkModal";
     import MessageEditColorModal from "@/MessageEditColorModal";
     import MessageEditMediaModal from "@/MessageEditMediaModal";
     import MessageEditSmileyModal from "@/MessageEditSmileyModal.vue";
+    import {mapStores} from "pinia";
+    import {useChatStore} from "@/store/chatStore";
+    import throttle from "lodash/throttle";
+    import {v4 as uuidv4} from "uuid";
 
     export default {
         props:['chatId'],
         data() {
             return {
-                editorKey: +new Date(),
                 editMessageDto: chatEditMessageDtoFactory(),
                 fileCount: null,
                 sendBroadcast: false,
@@ -157,7 +172,7 @@
                     (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto))
                         .then(response => {
                             this.resetInput();
-                            bus.$emit(CLOSE_EDIT_MESSAGE);
+                            bus.emit(CLOSE_EDIT_MESSAGE);
                         }).finally(() => {
                             this.sending = false;
                         })
@@ -178,12 +193,26 @@
             },
             loadFilesCount() {
                 if (this.editMessageDto.fileItemUuid) {
-                    axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
+                    return axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
                         .then((response) => {
-                            this.onFileItemUuid({fileItemUuid: this.editMessageDto.fileItemUuid, count: response.data.count})
+                            this.fileCount = response.data.count;
+                            return response
                         });
+                } else {
+                  return Promise.resolve(false)
                 }
             },
+            loadFilesCountAndResetFileItemUuidIfNeed() {
+              this.loadFilesCount().then((resp) => {
+                if (resp) {
+                  if (this.fileCount === 0) {
+                    this.editMessageDto.fileItemUuid = null;
+                    this.saveToStore();
+                  }
+                }
+              })
+            },
+
             resetAnswer() {
                 this.showAnswer = false;
                 this.answerOnPreview = null;
@@ -244,19 +273,40 @@
                     return '48px'
                 }
             },
-            openFileUpload() {
-                bus.$emit(OPEN_FILE_UPLOAD_MODAL, this.editMessageDto.fileItemUuid, true);
+            getBtnSize() {
+              if (this.isMobile()) {
+                return 'large'
+              } else {
+                return undefined
+              }
+            },
+            getIconSize() {
+              if (this.isMobile()) {
+                return 'large'
+              } else {
+                return undefined
+              }
+            },
+            openFileUploadForAddingFiles() {
+                let fileItemUuid = this.editMessageDto.fileItemUuid;
+                if (!hasLength(fileItemUuid)) {
+                    fileItemUuid = uuidv4();
+                }
+                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.editMessageDto.id});
             },
             onFilesClicked() {
-                bus.$emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true});
+                bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.editMessageDto.id});
             },
-            onFileItemUuid({fileItemUuid, count}) {
-                this.editMessageDto.fileItemUuid = fileItemUuid;
-                this.fileCount = count;
-                if (this.fileCount === 0) {
-                    this.editMessageDto.fileItemUuid = null;
+            onIncrementFileItemFileCount({chatId}) {
+                if (this.chatId == chatId) {
+                    this.fileCount++
                 }
+            },
+            onFileItemUuid({fileItemUuid, chatId}) {
+              if (chatId == this.chatId) {
+                this.editMessageDto.fileItemUuid = fileItemUuid;
                 this.saveToStore();
+              }
             },
             boldValue() {
                 return this.$refs.tipTapRef.$data.editor.isActive('bold')
@@ -290,7 +340,7 @@
             },
             linkClick() {
                 const previousUrl = this.$refs.tipTapRef.$data.editor.getAttributes('link').href;
-                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_link_to_text, previousUrl});
+                bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_link_to_text, previousUrl});
             },
             onMessageLinkSet(url) {
                 // empty
@@ -319,34 +369,48 @@
                 return this.$refs.tipTapRef.$data.editor.view.state.selection.empty;
             },
             imageClick() {
-                bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_image, () => this.$refs.tipTapRef.addImage(), this.$refs.tipTapRef.setImage);
+                bus.emit(
+                  OPEN_MESSAGE_EDIT_MEDIA,
+                  {
+                    type: media_image,
+                    fromDiskCallback: () => this.$refs.tipTapRef.addImage(),
+                    setExistingMediaCallback: this.$refs.tipTapRef.setImage
+                  }
+                );
             },
             videoClick() {
-                bus.$emit(OPEN_MESSAGE_EDIT_MEDIA, media_video, () => this.$refs.tipTapRef.addVideo(), this.$refs.tipTapRef.setVideo);
+                bus.emit(
+                  OPEN_MESSAGE_EDIT_MEDIA,
+                  {
+                    type: media_video,
+                    fromDiskCallback: () => this.$refs.tipTapRef.addVideo(),
+                    setExistingMediaCallback: this.$refs.tipTapRef.setVideo
+                  },
+                );
             },
             embedClick() {
-                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_embed, mediaType: embed});
+                bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_embed, mediaType: embed});
             },
             textColorClick(){
-                bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorText);
+                bus.emit(OPEN_MESSAGE_EDIT_COLOR, colorText);
             },
             backgroundColorClick() {
-                bus.$emit(OPEN_MESSAGE_EDIT_COLOR, colorBackground);
+                bus.emit(OPEN_MESSAGE_EDIT_COLOR, colorBackground);
             },
             smileyClick() {
-                bus.$emit(OPEN_MESSAGE_EDIT_SMILEY, (text) => this.$refs.tipTapRef.addText(text));
+                bus.emit(OPEN_MESSAGE_EDIT_SMILEY, (text) => this.$refs.tipTapRef.addText(text));
             },
-            onColorSet(color, colorMode) {
+            onColorSet({color, colorMode}) {
                 console.debug("Setting color", color, colorMode);
                 if (colorMode == colorText) {
                     if (color) {
-                        this.$refs.tipTapRef.$data.editor.chain().focus().setColor(color.hex).run()
+                        this.$refs.tipTapRef.$data.editor.chain().focus().setColor(color).run()
                     } else {
                         this.$refs.tipTapRef.$data.editor.chain().focus().unsetColor().run()
                     }
                 } else if (colorMode == colorBackground) {
                     if (color) {
-                        this.$refs.tipTapRef.$data.editor.chain().focus().setHighlight({ color: color.hex }).run()
+                        this.$refs.tipTapRef.$data.editor.chain().focus().setHighlight({ color: color }).run()
                     } else {
                         this.$refs.tipTapRef.$data.editor.chain().focus().unsetHighlight().run()
                     }
@@ -357,13 +421,15 @@
             },
             loadFromStore() {
                 this.editMessageDto = getStoredChatEditMessageDto(this.chatId, chatEditMessageDtoFactory());
-                if (this.editMessageDto.ownerId && this.editMessageDto.ownerId != this.currentUser?.id) {
+                if (this.editMessageDto.ownerId && this.editMessageDto.ownerId != this.chatStore.currentUser?.id) {
                     console.log("Removing owner from saved message")
                     this.editMessageDto.ownerId = null;
                     this.editMessageDto.id = null;
                 }
                 this.loadEmbedPreviewIfNeed(this.editMessageDto);
-                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+                this.$nextTick(()=>{
+                    this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+                });
                 this.loadFilesCount();
             },
             saveToStore() {
@@ -374,31 +440,32 @@
             },
         },
         computed: {
-            ...mapGetters({
-                currentUser: GET_USER,
-                canBroadcast: GET_CAN_BROADCAST_TEXT_MESSAGE,
-            }),
+          ...mapStores(useChatStore),
             userIsSet() {
-                return !!this.currentUser
+                return !!this.chatStore.currentUser
             }
         },
         mounted() {
-            bus.$on(SET_EDIT_MESSAGE, this.onSetMessage);
-            bus.$on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
-            bus.$on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
-            bus.$on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
-            bus.$on(PROFILE_SET, this.onProfileSet);
+            bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
+            bus.on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            bus.on(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
+            bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
+            bus.on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
+            bus.on(PROFILE_SET, this.onProfileSet);
+            bus.on(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             this.loadFromStore();
         },
-        beforeDestroy() {
-            bus.$off(SET_EDIT_MESSAGE, this.onSetMessage);
-            bus.$off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
-            bus.$off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
-            bus.$off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
-            bus.$off(PROFILE_SET, this.onProfileSet);
+        beforeUnmount() {
+            bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
+            bus.off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            bus.off(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
+            bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
+            bus.off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
+            bus.off(PROFILE_SET, this.onProfileSet);
+            bus.off(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
         },
         created(){
-            this.notifyAboutTyping = debounce(this.notifyAboutTyping, 500, {leading:true, trailing:false});
+            this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);
             this.notifyAboutBroadcast = debounce(this.notifyAboutBroadcast, 100, {leading:true, trailing:true});
         },
         watch: {
@@ -411,10 +478,8 @@
                     }
                 }
             },
-            '$vuetify.lang.current': {
+            '$vuetify.locale.current': {
                 handler: function (newValue, oldValue) {
-                    this.editorKey++;
-
                     // reload
                     this.$refs.tipTapRef.clearContent();
                     this.$nextTick(() => {
@@ -469,9 +534,13 @@
     align-items center
 }
 
-.answer {
+.answer-wrapper {
+    display: block
+}
+.answer-text {
     background: $embedMessageColor;
     white-space: nowrap;
     text-overflow: ellipsis;
+    overflow: hidden;
 }
 </style>

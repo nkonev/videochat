@@ -14,7 +14,7 @@
                 >
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
-                <v-toolbar-title>{{ isNew ? $vuetify.lang.t('$vuetify.message_creating') : $vuetify.lang.t('$vuetify.message_editing')}}</v-toolbar-title>
+                <v-toolbar-title>{{ isNew ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
             <div class="message-edit-dialog" :style="heightWithoutAppBar">
@@ -25,7 +25,7 @@
 </template>
 
 <script>
-    import bus, {CLOSE_EDIT_MESSAGE, OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "@/bus";
+    import bus, {CLOSE_EDIT_MESSAGE, OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "./bus/bus";
     import heightMixin from "@/heightMixin";
 
     export default {
@@ -43,7 +43,7 @@
                 this.show = true;
                 this.messageId = dto?.id;
                 this.$nextTick(()=>{
-                    bus.$emit(SET_EDIT_MESSAGE, dto);
+                    bus.emit(SET_EDIT_MESSAGE, dto);
                 })
             },
             closeModal() {
@@ -69,13 +69,13 @@
                 return !this.messageId;
             },
         },
-        created() {
-            bus.$on(OPEN_EDIT_MESSAGE, this.showModal);
-            bus.$on(CLOSE_EDIT_MESSAGE, this.closeModal);
+        mounted() {
+            bus.on(OPEN_EDIT_MESSAGE, this.showModal);
+            bus.on(CLOSE_EDIT_MESSAGE, this.closeModal);
         },
-        destroyed() {
-            bus.$off(OPEN_EDIT_MESSAGE, this.showModal);
-            bus.$off(CLOSE_EDIT_MESSAGE, this.closeModal);
+        beforeUnmount() {
+            bus.off(OPEN_EDIT_MESSAGE, this.showModal);
+            bus.off(CLOSE_EDIT_MESSAGE, this.closeModal);
         }
     }
 </script>

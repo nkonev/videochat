@@ -6,9 +6,39 @@
     <v-row justify="center">
         <v-dialog persistent v-model="show" max-width="440">
             <v-card>
-                <v-card-title :class="isMobile() ? 'pa-4 pb-2 headline' : 'headline'">{{ $vuetify.lang.t('$vuetify.login_title') }}</v-card-title>
+                <v-card-title class="d-flex flex-row align-center">
+                  <span class="d-flex flex-grow-1">
+                      {{ $vuetify.locale.t('$vuetify.login_title') }}
+                  </span>
+                  <span class="d-flex">
+                    <v-btn
+                      id="forgot-password-btn"
+                      class="ml-2"
+                      color="primary"
+                      @click="onForgotPasswordClick"
+                      size="small"
+                      min-width="80px"
+                      variant="outlined"
+                    >
+                      {{ $vuetify.locale.t('$vuetify.forgot_password') }}
+                    </v-btn>
+                  </span>
+                  <span class="d-flex">
+                    <v-btn
+                      id="register-btn"
+                      class="ml-2"
+                      color="primary"
+                      @click="onRegisterClick"
+                      size="small"
+                      min-width="80px"
+                      variant="outlined"
+                    >
+                      {{ $vuetify.locale.t('$vuetify.registration') }}
+                    </v-btn>
+                  </span>
+                </v-card-title>
 
-                <v-card-text :class="isMobile() ? 'pa-4 pt-0' : ''">
+                <v-card-text :class="isMobile() ? 'pa-4 pt-0' : 'pl-4 pt-0'">
                     <v-form
                         ref="form"
                         v-model="valid"
@@ -19,10 +49,11 @@
                                 id="login-text"
                                 v-model="username"
                                 :rules="usernameRules"
-                                :label="$vuetify.lang.t('$vuetify.login')"
+                                :label="$vuetify.locale.t('$vuetify.login')"
                                 required
                                 :disabled="disable"
                                 @input="hideAlert()"
+                                variant="underlined"
                         ></v-text-field>
 
                         <v-text-field
@@ -31,17 +62,19 @@
                                 :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
                                 @click:append="showInputablePassword = !showInputablePassword"
                                 :rules="passwordRules"
-                                :label="$vuetify.lang.t('$vuetify.password')"
+                                :label="$vuetify.locale.t('$vuetify.password')"
                                 required
                                 :type="showInputablePassword ? 'text' : 'password'"
                                 :disabled="disable"
                                 @input="hideAlert()"
+                                variant="underlined"
                         ></v-text-field>
 
                         <v-alert
                                 dismissible
                                 v-model="showAlert"
                                 type="error"
+                                class="mb-4"
                         >
                             <v-row align="center">
                                 <v-col class="grow">{{loginError}}</v-col>
@@ -57,12 +90,21 @@
                                 min-width="80px"
                                 :loading="loadingLogin"
                         >
-                            {{ $vuetify.lang.t('$vuetify.login_action') }}
+                            {{ $vuetify.locale.t('$vuetify.login_action') }}
                         </v-btn>
-                        <v-btn v-if="providers.includes('vkontakte')" class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn v-if="providers.includes('facebook')" class="mr-2 mb-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook' }" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn v-if="providers.includes('google')" class="mr-2 mb-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()"><font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google' }" :size="'2x'"></font-awesome-icon></v-btn>
-                        <v-btn v-if="providers.includes('keycloak')" class="mr-2 mb-2 c-btn-keycloak" :disabled="disable" :loading="loadingKeycloak" min-width="80px" @click="loginKeycloak()"><font-awesome-icon :icon="{ prefix: 'fa', iconName: 'key' }" :size="'2x'"></font-awesome-icon></v-btn>
+
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('vkontakte')" class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()">
+                            <font-awesome-icon :icon="[ 'fab', 'vk']" :size="'2x'"></font-awesome-icon>
+                        </v-btn>
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('facebook')" class="mr-2 mb-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()">
+                            <font-awesome-icon :icon="[ 'fab', 'facebook' ]" :size="'2x'"></font-awesome-icon>
+                        </v-btn>
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('google')" class="mr-2 mb-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()">
+                            <font-awesome-icon :icon="[ 'fab', 'google' ]" :size="'2x'"></font-awesome-icon>
+                        </v-btn>
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('keycloak')" class="mr-2 mb-2 c-btn-keycloak" :disabled="disable" :loading="loadingKeycloak" min-width="80px" @click="loginKeycloak()">
+                            <font-awesome-icon :icon="['fa', 'key' ]" :size="'2x'"></font-awesome-icon>
+                        </v-btn>
                     </v-form>
                 </v-card-text>
 
@@ -72,10 +114,16 @@
 </template>
 
 <script>
-    import bus, {LOGGED_IN, LOGGED_OUT} from "./bus";
+    import bus, {LOGGED_IN, LOGGED_OUT} from "./bus/bus";
     import axios from "axios";
-    import {FETCH_USER_PROFILE, GET_AVAILABLE_OAUTH2_PROVIDERS, GET_USER} from "./store";
-    import {mapGetters} from "vuex";
+    import {mapStores} from "pinia";
+    import {useChatStore} from "@/store/chatStore";
+    import {
+        confirmation_pending_name,
+        forgot_password_name, password_restore_check_email_name,
+        password_restore_enter_new_name,
+        registration_name
+    } from "@/router/routes";
 
     export default {
         data() {
@@ -105,14 +153,14 @@
 
             }
         },
-        created() {
-            bus.$on(LOGGED_OUT, this.showLoginModal);
+        mounted() {
+            bus.on(LOGGED_OUT, this.showLoginModal);
         },
-        destroyed() {
-            bus.$off(LOGGED_OUT, this.showLoginModal);
+        beforeUnmount() {
+            bus.off(LOGGED_OUT, this.showLoginModal);
         },
         computed: {
-            ...mapGetters({providers: GET_AVAILABLE_OAUTH2_PROVIDERS})
+            ...mapStores(useChatStore),
         },
         methods: {
             showLoginModal() {
@@ -171,8 +219,8 @@
                             // store.dispatch(replayPreviousUrl());
                             console.log("You successfully logged in");
                             this.hideLoginModal();
-                            this.$store.dispatch(FETCH_USER_PROFILE);
-                            bus.$emit(LOGGED_IN, null);
+                            this.chatStore.fetchUserProfile();
+                            bus.emit(LOGGED_IN, null);
                         })
                         .catch((error) => {
                             // handle error
@@ -192,6 +240,14 @@
                     this.disable = false;
                 }
             },
+            onRegisterClick() {
+              this.show = false;
+              this.$router.push({name: registration_name} )
+            },
+            onForgotPasswordClick() {
+              this.show = false;
+              this.$router.push({name: forgot_password_name} )
+            },
             hideAlert() {
                 this.$data.showAlert = false;
                 this.$data.loginError = "";
@@ -201,5 +257,5 @@
 </script>
 
 <style lang="stylus" scoped>
-    @import "OAuth2.styl"
+    @import "oAuth2.styl"
 </style>

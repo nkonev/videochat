@@ -2,21 +2,21 @@
     <v-row justify="center">
         <v-dialog v-model="show" persistent scrollable max-width="800">
             <v-card>
-                <v-card-title>{{ this.$vuetify.lang.t('$vuetify.file_editing', filename) }}</v-card-title>
+                <v-card-title>{{ this.$vuetify.locale.t('$vuetify.file_editing', filename) }}</v-card-title>
 
-                <v-card-text class="pb-0">
+                <v-card-text>
                     <v-progress-circular
                         indeterminate
                         color="primary"
                         v-if="loading"
                     ></v-progress-circular>
-                    <v-textarea v-model="editableText" v-else auto-grow autofocus filled dense hide-spin-buttons no-resize hide-details/>
+                    <v-textarea v-else v-model="editableText" auto-grow autofocus filled dense hide-spin-buttons hide-details/>
                 </v-card-text>
 
-                <v-card-actions class="pa-4">
-                    <v-btn color="primary" class="mr-4" @click="saveFile()">{{$vuetify.lang.t('$vuetify.ok')}}</v-btn>
-                    <v-btn color="error" class="mr-4" @click="closeModal()">{{$vuetify.lang.t('$vuetify.close')}}</v-btn>
+                <v-card-actions>
                     <v-spacer/>
+                    <v-btn variant="flat" color="primary" @click="saveFile()">{{$vuetify.locale.t('$vuetify.ok')}}</v-btn>
+                    <v-btn variant="flat" color="red" @click="closeModal()">{{$vuetify.locale.t('$vuetify.close')}}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -24,10 +24,9 @@
 </template>
 
 <script>
-import bus, {
-    OPEN_TEXT_EDIT_MODAL,
-    CLOSE_TEXT_EDIT_MODAL,
-} from "./bus";
+    import bus, {
+        OPEN_TEXT_EDIT_MODAL,
+    } from "./bus/bus";
     import axios from "axios";
 
     export default {
@@ -78,13 +77,11 @@ import bus, {
                     })
             },
         },
-        created() {
-            bus.$on(OPEN_TEXT_EDIT_MODAL, this.showModal);
-            bus.$on(CLOSE_TEXT_EDIT_MODAL, this.closeModal)
+        mounted() {
+            bus.on(OPEN_TEXT_EDIT_MODAL, this.showModal);
         },
-        destroyed() {
-            bus.$off(OPEN_TEXT_EDIT_MODAL, this.showModal);
-            bus.$off(CLOSE_TEXT_EDIT_MODAL, this.closeModal)
+        beforeUnmount() {
+            bus.off(OPEN_TEXT_EDIT_MODAL, this.showModal);
         },
     }
 </script>

@@ -1,67 +1,66 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="720" scrollable>
-            <v-card>
-                <v-card-title>{{ $vuetify.lang.t('$vuetify.notifications') }}</v-card-title>
+        <v-dialog v-model="show" max-width="640" scrollable>
+            <v-card :title="$vuetify.locale.t('$vuetify.notifications')">
                 <v-card-text class="ma-0 pa-0">
-                    <v-list class="pb-0">
-                        <template v-if="notifications.length > 0">
-                            <template v-for="(item, index) in notifications">
-                                <v-list-item link @click.prevent="onNotificationClick(item)" :href="getLink(item)">
-                                    <v-list-item-icon class="mr-4"><v-icon large>{{getNotificationIcon(item.notificationType)}}</v-icon></v-list-item-icon>
-                                    <v-list-item-content class="py-2">
-                                        <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
-                                        <v-list-item-subtitle>{{ getNotificationSubtitle(item) }}</v-list-item-subtitle>
-                                        <v-list-item-subtitle>
-                                            {{ getNotificationDate(item)}}
-                                        </v-list-item-subtitle>
-                                    </v-list-item-content>
+                    <v-list class="pb-0 notification-list" v-if="!loading">
+                        <template v-if="dto.data.length > 0">
+                            <template v-for="(item, index) in dto.data">
+                                <v-list-item link @click.prevent="onNotificationClick(item)" :href="getLink(item)" >
+                                  <template v-slot:prepend>
+                                    <v-icon size="x-large">
+                                      {{ getNotificationIcon(item.notificationType) }}
+                                    </v-icon>
+                                  </template>
+                                  <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
+                                  <v-list-item-subtitle>{{ getNotificationSubtitle(item) }}</v-list-item-subtitle>
+                                  <v-list-item-subtitle>
+                                    {{ getNotificationDate(item)}}
+                                  </v-list-item-subtitle>
                                 </v-list-item>
                             </template>
                         </template>
                         <template v-else>
-                            <v-card-text>{{ $vuetify.lang.t('$vuetify.no_notifications') }}</v-card-text>
+                            <v-card-text>{{ $vuetify.locale.t('$vuetify.no_notifications') }}</v-card-text>
                         </template>
 
                     </v-list>
+
+                    <v-progress-circular
+                      class="my-4 mx-4 py-4"
+                      v-else
+                      indeterminate
+                      color="primary"
+                    ></v-progress-circular>
+
                 </v-card-text>
-                <v-divider/>
+
                 <v-card-actions class="d-flex flex-wrap flex-row">
-                    <v-switch
-                        :label="$vuetify.lang.t('$vuetify.notify_about_mentions')"
-                        dense
-                        hide-details
-                        class="ma-0 ml-2 mr-4 py-1"
-                        v-model="notificationsSettings.mentionsEnabled"
-                        @click="putNotificationsSettings()"
-                    ></v-switch>
-                    <v-switch
-                        :label="$vuetify.lang.t('$vuetify.notify_about_missed_calls')"
-                        dense
-                        hide-details
-                        class="ma-0 ml-2 mr-4 py-1"
-                        v-model="notificationsSettings.missedCallsEnabled"
-                        @click="putNotificationsSettings()"
-                    ></v-switch>
-                    <v-switch
-                        :label="$vuetify.lang.t('$vuetify.notify_about_replies')"
-                        dense
-                        hide-details
-                        class="ma-0 ml-2 mr-4 py-1"
-                        v-model="notificationsSettings.answersEnabled"
-                        @click="putNotificationsSettings()"
-                    ></v-switch>
 
-                    <v-spacer></v-spacer>
-
-                    <v-btn
-                        color="error"
-                        class="my-1"
+                  <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
+                  <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
+                    <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                      <v-pagination
+                        variant="elevated"
+                        active-color="primary"
+                        density="comfortable"
+                        v-if="shouldShowPagination"
+                        v-model="page"
+                        :length="pagesCount"
+                      ></v-pagination>
+                    </v-col>
+                    <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                      <v-btn
+                        variant="elevated"
+                        color="red"
                         @click="closeModal()"
-                    >
-                        {{ $vuetify.lang.t('$vuetify.close') }}
-                    </v-btn>
+                      >
+                        {{ $vuetify.locale.t('$vuetify.close') }}
+                      </v-btn>
+                    </v-col>
+                  </v-row>
                 </v-card-actions>
+
             </v-card>
         </v-dialog>
     </v-row>
@@ -70,27 +69,80 @@
 <script>
 
 import bus, {
-    OPEN_NOTIFICATIONS_DIALOG,
-} from "./bus";
-import {mapGetters} from 'vuex'
-import {GET_NOTIFICATIONS, GET_NOTIFICATIONS_SETTINGS, SET_NOTIFICATIONS_SETTINGS} from "@/store";
-import {getHumanReadableDate, hasLength} from "./utils";
+  NOTIFICATION_ADD, NOTIFICATION_DELETE,
+  OPEN_NOTIFICATIONS_DIALOG,
+} from "./bus/bus";
+import {findIndex, getHumanReadableDate, hasLength, setIcon} from "./utils";
 import axios from "axios";
-import {chat, chat_name, messageIdHashPrefix} from "@/routes";
+import {chat, chat_name, messageIdHashPrefix} from "@/router/routes";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore";
+
+const firstPage = 1;
+const pageSize = 20;
+
+const dtoFactory = () => {return {data: [], totalCount: 0} };
 
 export default {
     data () {
         return {
             show: false,
+            dto: dtoFactory(),
+            page: firstPage,
+            loading: false,
         }
     },
 
     methods: {
         showModal() {
             this.show = true;
+            this.loadData();
         },
+        loadData() {
+          if (!this.show) {
+            return
+          }
+          this.loading = true;
+          axios.get(`/api/notification/notification`, {
+            params: {
+              page: this.translatePage(),
+              size: pageSize,
+            },
+          }).then(({data}) => {
+            this.dto = data;
+            this.loading = false;
+            this.chatStore.notificationsCount = data.totalCount;
+            setIcon(data != null && data.totalCount > 0);
+          })
+        },
+        translatePage() {
+          return this.page - 1;
+        },
+
+        notificationAdd(payload) {
+          if (this.show) {
+            const newArr = [payload, ...this.dto.data];
+            this.dto.data = newArr;
+            this.dto.totalCount++;
+          }
+          this.chatStore.notificationsCount++;
+        },
+        notificationDelete(payload) {
+          if (this.show) {
+            const arr = this.dto.data;
+            const idxToRemove = findIndex(arr, payload);
+            arr.splice(idxToRemove, 1);
+            this.dto.data = arr;
+            this.dto.totalCount--;
+          }
+          this.chatStore.notificationsCount--;
+        },
+
         closeModal() {
             this.show = false;
+            this.page = firstPage;
+            this.dto = dtoFactory();
+            this.loading = false;
         },
         getNotificationIcon(type) {
             switch (type) {
@@ -105,17 +157,17 @@ export default {
         getNotificationSubtitle(item) {
             switch (item.notificationType) {
                 case "missed_call":
-                    return this.$vuetify.lang.t('$vuetify.notification_missed_call', item.byLogin)
+                    return this.$vuetify.locale.t('$vuetify.notification_missed_call', item.byLogin)
                 case "mention":
-                    let builder1 = this.$vuetify.lang.t('$vuetify.notification_mention', item.byLogin)
+                    let builder1 = this.$vuetify.locale.t('$vuetify.notification_mention', item.byLogin)
                     if (hasLength(item.chatTitle)) {
-                        builder1 += (this.$vuetify.lang.t('$vuetify.in') + "'" + item.chatTitle + "'");
+                        builder1 += (this.$vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'");
                     }
                     return builder1
                 case "reply":
-                    let builder2 = this.$vuetify.lang.t('$vuetify.notification_reply', item.byLogin)
+                    let builder2 = this.$vuetify.locale.t('$vuetify.notification_reply', item.byLogin)
                     if (hasLength(item.chatTitle)) {
-                        builder2 += (this.$vuetify.lang.t('$vuetify.in') + "'" + item.chatTitle + "'")
+                        builder2 += (this.$vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'")
                     }
                     return builder2
             }
@@ -150,19 +202,19 @@ export default {
                 axios.put('/api/notification/read/' + item.id);
             }
         },
-        putNotificationsSettings() {
-            axios.put('/api/notification/settings', this.notificationsSettings).then(({data}) => {
-                this.$store.commit(SET_NOTIFICATIONS_SETTINGS, data);
-            })
-        },
     },
     computed: {
-        ...mapGetters({
-            notifications: GET_NOTIFICATIONS,
-            notificationsSettings: GET_NOTIFICATIONS_SETTINGS,
-        }),
+        ...mapStores(useChatStore),
         chatId() {
             return this.$route.params.id
+        },
+        shouldShowPagination() {
+          return this.dto != null && this.dto.data && this.dto.totalCount > pageSize
+        },
+        pagesCount() {
+          const count = Math.ceil(this.dto.totalCount / pageSize);
+          // console.debug("Calc pages count", count);
+          return count;
         },
     },
     watch: {
@@ -170,13 +222,33 @@ export default {
             if (!newValue) {
                 this.closeModal();
             }
-        }
+        },
+        page(newValue) {
+          if (this.show) {
+            console.debug("SettingNewPage", newValue);
+            this.dto = dtoFactory();
+            this.loadData();
+          }
+        },
     },
-    created() {
-        bus.$on(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
+    mounted() {
+        bus.on(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
+        bus.on(NOTIFICATION_ADD, this.notificationAdd);
+        bus.on(NOTIFICATION_DELETE, this.notificationDelete);
     },
-    destroyed() {
-        bus.$off(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
+    beforeUnmount() {
+        bus.off(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
+        bus.off(NOTIFICATION_ADD, this.notificationAdd);
+        bus.off(NOTIFICATION_DELETE, this.notificationDelete);
     },
 }
 </script>
+
+<style lang="stylus">
+.notification-list {
+  .v-list-item__prepend {
+    margin-right: 1em;
+    width: 32px;
+  }
+}
+</style>

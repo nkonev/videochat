@@ -1,502 +1,604 @@
 <template>
-    <v-container class="ma-0 pa-0" style="height: 100%" fluid>
-        <v-list v-if="items.length" id="chat-list-items">
-            <v-list-item @keydown.esc="onCloseContextMenu()"
-                    v-for="(item, index) in items"
-                    :key="item.id"
-                    @contextmenu.prevent="onShowContextMenu($event, item)"
-                    @click.prevent="openChat(item)"
-                    :href="getLink(item)"
+
+  <v-container :style="heightWithoutAppBar" fluid class="ma-0 pa-0">
+      <v-list id="chat-list-items" class="my-chat-scroller" @scroll.passive="onScroll">
+            <div class="chat-first-element" style="min-height: 1px; background: white"></div>
+            <v-list-item
+                v-for="(item, index) in items"
+                :key="item.id"
+                :id="getItemId(item.id)"
+                class="list-item-prepend-spacer-16 pb-2"
+                @contextmenu.stop="onShowContextMenu($event, item)"
+                @click.prevent="openChat(item)"
+                :href="getLink(item)"
             >
-                <v-badge
-                    v-if="item.avatar"
-                    color="success accent-4"
-                    dot
-                    bottom
-                    overlap
-                    bordered
-                    :value="item.online"
-                >
-                    <v-list-item-avatar class="ma-0 pa-0">
-                        <img :src="item.avatar"/>
-                    </v-list-item-avatar>
-                </v-badge>
-                <v-list-item-content :id="'chat-item-' + item.id" :class="item.avatar ? 'ml-4' : ''">
+                <template v-slot:prepend v-if="hasLength(item.avatar)">
+                    <v-badge
+                        v-if="item.avatar"
+                        color="success accent-4"
+                        dot
+                        location="right bottom"
+                        overlap
+                        bordered
+                        :model-value="item.online"
+                    >
+                      <span class="item-avatar">
+                        <img :src="item.avatar">
+                      </span>
+                    </v-badge>
+                </template>
+
+                <template v-slot:default>
                     <v-list-item-title>
-                        <span class="chat-name min-height" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)" v-html="getChatName(item)">
-                        </span>
-                        <v-badge v-if="item.unreadMessages" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.lang.t('$vuetify.unread_messages')"></v-badge>
-                        <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0" :title="$vuetify.lang.t('$vuetify.call_in_process')"/>
-                        <v-badge v-if="item.hasScreenShares" icon="mdi-monitor-screenshot" inline  class="mt-0" :title="$vuetify.lang.t('$vuetify.screen_share_in_process')"/>
-                        <v-badge v-if="item.blog" color="grey" icon="mdi-postage-stamp" inline  class="mt-0" :title="$vuetify.lang.t('$vuetify.blog')"/>
+                        <span class="chat-name" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)" v-html="getChatName(item)"></span>
+                        <v-badge v-if="item.unreadMessages" color="primary" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.locale.t('$vuetify.unread_messages')"></v-badge>
+                        <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.call_in_process')"/>
+                        <v-badge v-if="item.hasScreenShares" color="primary" icon="mdi-monitor-screenshot" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.screen_share_in_process')"/>
+                        <v-badge v-if="item.blog" color="grey" icon="mdi-postage-stamp" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.blog')"/>
                     </v-list-item-title>
                     <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}">
                         {{ printParticipants(item) }}
                     </v-list-item-subtitle>
-                </v-list-item-content>
-                <v-list-item-action v-if="!isMobile()">
-                    <v-container class="mb-0 mt-0 pl-0 pr-0 pb-0 pt-0">
-                        <template v-if="!item.isResultFromSearch">
-                            <v-btn v-if="item.pinned" icon @click.stop.prevent="removedFromPinned(item)" :title="$vuetify.lang.t('$vuetify.remove_from_pinned')"><v-icon dark>mdi-pin-off-outline</v-icon></v-btn>
-                            <v-btn v-else icon @click.stop.prevent="pinChat(item)" :title="$vuetify.lang.t('$vuetify.pin_chat')"><v-icon dark>mdi-pin</v-icon></v-btn>
-                        </template>
-                        <v-btn v-if="item.canEdit" icon color="primary" @click.stop.prevent="editChat(item)" :title="$vuetify.lang.t('$vuetify.edit_chat')"><v-icon dark>mdi-lead-pencil</v-icon></v-btn>
-                        <v-btn v-if="item.canDelete" icon @click.stop.prevent="deleteChat(item)" :title="$vuetify.lang.t('$vuetify.delete_chat')" color="error"><v-icon dark>mdi-delete</v-icon></v-btn>
-                        <v-btn v-if="item.canLeave" icon @click.stop.prevent="leaveChat(item)" :title="$vuetify.lang.t('$vuetify.leave_chat')"><v-icon dark>mdi-exit-run</v-icon></v-btn>
-                    </v-container>
-                </v-list-item-action>
-            </v-list-item>
-        </v-list>
-        <ChatListContextMenu
-            ref="contextMenuRef"
-            @editChat="this.editChat"
-            @deleteChat="this.deleteChat"
-            @leaveChat="this.leaveChat"
-            @pinChat="this.pinChat"
-            @removedFromPinned="this.removedFromPinned"
-        />
-        <infinite-loading @infinite="infiniteHandler" :identifier="infiniteId">
-            <template slot="no-more"><span/></template>
-            <template slot="no-results"><span/></template>
-        </infinite-loading>
+                </template>
 
-        <Welcome v-if="shouldShowWelcome()"/>
-    </v-container>
+                <template v-slot:append v-if="!isMobile() && !embedded">
+                    <v-list-item-action>
+                            <template v-if="!item.isResultFromSearch">
+                                <v-btn variant="flat" icon v-if="item.pinned" @click.stop.prevent="removedFromPinned(item)" :title="$vuetify.locale.t('$vuetify.remove_from_pinned')"><v-icon size="large">mdi-pin-off-outline</v-icon></v-btn>
+                                <v-btn variant="flat" icon v-else @click.stop.prevent="pinChat(item)" :title="$vuetify.locale.t('$vuetify.pin_chat')"><v-icon size="large">mdi-pin</v-icon></v-btn>
+                            </template>
+                            <v-btn variant="flat" icon v-if="item.canEdit" @click.stop.prevent="editChat(item)" :title="$vuetify.locale.t('$vuetify.edit_chat')"><v-icon color="primary" size="large">mdi-lead-pencil</v-icon></v-btn>
+                            <v-btn variant="flat" icon v-if="item.canDelete" @click.stop.prevent="deleteChat(item)" :title="$vuetify.locale.t('$vuetify.delete_chat')"><v-icon color="red" size="large">mdi-delete</v-icon></v-btn>
+                            <v-btn variant="flat" icon v-if="item.canLeave" @click.stop.prevent="leaveChat(item)" :title="$vuetify.locale.t('$vuetify.leave_chat')"><v-icon size="large">mdi-exit-run</v-icon></v-btn>
+                    </v-list-item-action>
+                </template>
+            </v-list-item>
+            <div class="chat-last-element" style="min-height: 1px; background: white"></div>
+      </v-list>
+      <ChatListContextMenu
+        ref="contextMenuRef"
+        @editChat="this.editChat"
+        @deleteChat="this.deleteChat"
+        @leaveChat="this.leaveChat"
+        @pinChat="this.pinChat"
+        @removedFromPinned="this.removedFromPinned"
+      />
+
+  </v-container>
 
 </template>
 
 <script>
-    import Vue from 'vue';
-    import bus, {
-        CHAT_ADD,
-        CHAT_EDITED,
-        CHAT_DELETED,
-        OPEN_CHAT_EDIT,
-        OPEN_SIMPLE_MODAL,
-        UNREAD_MESSAGES_CHANGED,
-        USER_PROFILE_CHANGED,
-        CLOSE_SIMPLE_MODAL,
-        REFRESH_ON_WEBSOCKET_RESTORED,
-        VIDEO_CALL_USER_COUNT_CHANGED, LOGGED_OUT, PROFILE_SET, VIDEO_CALL_SCREEN_SHARE_CHANGED,
-    } from "./bus";
-    import {chat, chat_name} from "./routes";
-    import InfiniteLoading from './lib/vue-infinite-loading/src/components/InfiniteLoading.vue';
-    import {
-        findIndex,
-        replaceOrAppend,
-        replaceInArray,
-        hasLength,
-        publicallyAvailableForSearchChatsQuery,
-        dynamicSortMultiple, isArrEqual
-    } from "./utils";
-    import axios from "axios";
-    import debounce from "lodash/debounce";
-    import Mark from "mark.js";
-    import queryMixin from "@/queryMixin";
-    import Welcome from "@/Welcome";
+import axios from "axios";
+import infiniteScrollMixin, {
+    directionBottom,
+    directionTop,
+} from "@/mixins/infiniteScrollMixin";
+import {chat, chat_list_name, chat_name} from "@/router/routes";
+import {useChatStore} from "@/store/chatStore";
+import {mapStores} from "pinia";
+import heightMixin from "@/mixins/heightMixin";
+import bus, {
+  CHAT_ADD,
+  CHAT_DELETED, CHAT_EDITED,
+  CLOSE_SIMPLE_MODAL,
+  LOGGED_OUT,
+  OPEN_CHAT_EDIT,
+  OPEN_SIMPLE_MODAL,
+  PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
+  SEARCH_STRING_CHANGED, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED
+} from "@/bus/bus";
+import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
+import debounce from "lodash/debounce";
+import {
+    deepCopy,
+    dynamicSortMultiple,
+    findIndex,
+    hasLength,
+    isArrEqual, replaceInArray,
+    replaceOrAppend,
+    replaceOrPrepend,
+    setTitle
+} from "@/utils";
+import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
+import Mark from "mark.js";
+import ChatListContextMenu from "@/ChatListContextMenu.vue";
 
-    import {
-        GET_USER,
-        SET_CHAT_ID,
-        SET_CHAT_USERS_COUNT, SET_SEARCH_NAME,
-        SET_SHOW_CHAT_EDIT_BUTTON,
-        SET_SHOW_SEARCH,
-        SET_TITLE
-    } from "./store";
+const PAGE_SIZE = 40;
+const SCROLLING_THRESHHOLD = 200; // px
 
-    import {mapGetters} from "vuex";
+const scrollerName = 'ChatList';
 
+export default {
+  mixins: [
+    infiniteScrollMixin(scrollerName),
+    heightMixin(),
+    searchString(SEARCH_MODE_CHATS),
+    graphqlSubscriptionMixin('userOnlineTetATetInChatList'),
+  ],
+  props:['embedded'],
+  data() {
+    return {
+        pageTop: 0,
+        pageBottom: 0,
+        markInstance: null,
+    }
+  },
+  computed: {
+    ...mapStores(useChatStore),
+      tetAtetParticipants() {
+          return this.getTetATetParticipantIds(this.items);
+      },
+  },
 
-    import ChatListContextMenu from "@/ChatListContextMenu";
-    import graphqlSubscriptionMixin from "@/graphqlSubscriptionMixin";
-    import cloneDeep from "lodash/cloneDeep";
+  methods: {
+    hasLength,
+    getMaxItemsLength() {
+        return 240
+    },
+    getReduceToLength() {
+        return 80 // in case numeric pages, should complement with getMaxItemsLength() and PAGE_SIZE
+    },
+    reduceBottom() {
+        console.log("reduceBottom");
+        this.items = this.items.slice(0, this.getReduceToLength());
+        this.onReduce(directionBottom);
+    },
+    reduceTop() {
+        console.log("reduceTop");
+        this.items = this.items.slice(-this.getReduceToLength());
+        this.onReduce(directionTop);
+    },
+    findBottomElementId() {
+        return this.items[this.items.length-1]?.id
+    },
+    findTopElementId() {
+        return this.items[0]?.id
+    },
+    saveScroll(top) {
+        this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
+        console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
+    },
+    async scrollTop() {
+      return await this.$nextTick(() => {
+          this.scrollerDiv.scrollTop = 0;
+      });
+    },
+    initialDirection() {
+      return directionBottom
+    },
+    async onFirstLoad() {
+      this.loadedTop = true;
+      await this.scrollTop();
+    },
+    async onReduce(aDirection) {
+      if (aDirection == directionTop) { // became
+          const id = this.findTopElementId();
+          //console.log("Going to get top page", aDirection, id);
+          this.pageTop = await axios
+              .get(`/api/chat/get-page`, {params: {id: id, size: PAGE_SIZE,}})
+              .then(({data}) => data.page) - 1; // as in load() -> axios.get().then()
+          if (this.pageTop == -1) {
+              this.pageTop = 0
+          }
+          console.log("Set page top", this.pageTop, "for id", id);
+      } else {
+          const id = this.findBottomElementId();
+          //console.log("Going to get bottom page", aDirection, id);
+          this.pageBottom = await axios
+              .get(`/api/chat/get-page`, {params: {id: id, size: PAGE_SIZE,}})
+              .then(({data}) => data.page);
+          console.log("Set page bottom", this.pageBottom, "for id", id);
+      }
+    },
+    async load() {
+      if (!this.canDrawChats()) {
+        return Promise.resolve()
+      }
 
-    const pageSize = 40;
+      this.chatStore.incrementProgressCount();
+      const page = this.isTopDirection() ? this.pageTop : this.pageBottom;
+      return axios.get(`/api/chat`, {
+        params: {
+          page: page,
+          size: PAGE_SIZE,
+          searchString: this.searchString,
+        },
+      })
+        .then((res) => {
+          const items = res.data.data;
+          console.log("Get items in ", scrollerName, items, "page", page);
+          items.forEach((item) => {
+                this.transformItem(item);
+          });
 
-    export default {
-        mixins: [queryMixin(), graphqlSubscriptionMixin('userOnlineTetATetInChatList')],
+          // replaceOrPrepend() and replaceOrAppend() for the situation when order has been changed on server,
+          // e.g. some chat has been popped up on sever due to somebody updated it
+          if (this.isTopDirection()) {
+              replaceOrPrepend(this.items, items.reverse());
+              this.sort(this.items); // sorts possibly wrong order after loading items, appeared on server while user was scrolling
+          } else {
+              replaceOrAppend(this.items, items);
+          }
 
-        data() {
-            return {
-                page: 0,
-                items: [],
-                infiniteId: +new Date(),
-                itemsLoaded: false,
-                markInstance: null,
+          if (items.length < PAGE_SIZE) {
+            if (this.isTopDirection()) {
+              this.loadedTop = true;
+            } else {
+              this.loadedBottom = true;
             }
-        },
-        components:{
-            InfiniteLoading,
-            ChatListContextMenu,
-            Welcome,
-        },
-        computed: {
-            ...mapGetters({currentUser: GET_USER}),
-            userIsSet() {
-                return !!this.currentUser
-            },
-            tetAtetParticipants() {
-                return this.getTetATetParticipantIds(this.items);
-            },
-        },
-        methods:{
-            // not working until you will change this.items list
-            reloadItems() {
-                this.infiniteId += 1;
-                console.log("Resetting infinite loader", this.infiniteId);
-            },
-            searchStringChangedDebounced(searchString) {
-                this.searchStringChangedStraight(searchString);
-            },
-            searchStringChangedStraight(searchString) {
-                this.resetVariables();
-                this.reloadItems();
-            },
-            onLoggedIn() {
-                if (this.items.length === 0) {
-                    this.reloadItems();
+          } else {
+            if (this.isTopDirection()) {
+                this.pageTop -= 1;
+                if (this.pageTop == -1) {
+                    this.loadedTop = true;
+                    this.pageTop = 0;
                 }
-            },
-            onLoggedOut() {
-                this.resetVariables();
-            },
-            resetVariables() {
-                this.items = [];
-                this.page = 0;
-                this.itemsLoaded = false;
-            },
-            addItem(dto) {
-                console.log("Adding item", dto);
-                this.transformItem(dto);
-                this.items.unshift(dto);
-                this.sort(this.items);
-                this.$forceUpdate();
-                this.performMarking();
-            },
-            changeItem(dto) {
-                console.log("Replacing item", dto);
-                this.transformItem(dto);
-                if (this.hasItem(dto)) {
-                    replaceInArray(this.items, dto);
-                } else {
-                    this.items.unshift(dto);
-                }
-                this.sort(this.items);
-                this.$forceUpdate();
-                this.performMarking();
-            },
-            removeItem(dto) {
-                if (this.hasItem(dto)) {
-                    console.log("Removing item", dto);
-                    const idxToRemove = findIndex(this.items, dto);
-                    this.items.splice(idxToRemove, 1);
-                    this.$forceUpdate();
-                } else {
-                    console.log("Item was not be removed", dto);
-                }
-            },
-            // does should change items list (new item added to visible part or not for example)
-            hasItem(item) {
-                let idxOf = findIndex(this.items, item);
-                return idxOf !== -1;
-            },
+            } else {
+                this.pageBottom += 1;
+            }
+          }
+          this.performMarking();
+        }).finally(()=>{
+          this.chatStore.decrementProgressCount();
+          return this.$nextTick();
+        })
+    },
 
-            openChat(item){
-                this.$router.push(({ name: chat_name, params: { id: item.id}}));
-            },
+    bottomElementSelector() {
+      return ".chat-last-element"
+    },
+    topElementSelector() {
+      return ".chat-first-element"
+    },
 
-            infiniteHandler($state) {
-                if (!this.userIsSet) {
-                    $state.complete();
-                    return
-                }
+    getItemId(id) {
+      return 'chat-item-' + id
+    },
 
-                console.debug("infiniteHandler", '"' + this.searchString + '"');
-                axios.get('/api/chat', {
-                    params: {
-                        page: this.page,
-                        size: pageSize,
-                        searchString: this.searchString,
-                    },
-                }).then(({ data }) => {
-                    const list = data.data;
-                    if (list.length) {
-                        this.page += 1;
-                        list.forEach((item) => {
-                            this.transformItem(item);
-                        });
-                        //this.items = [...this.items, ...list];
-                        replaceOrAppend(this.items, list);
-                        $state.loaded();
-                    } else {
-                        $state.complete();
-                    }
-                    this.itemsLoaded = true;
+    scrollerSelector() {
+        return ".my-chat-scroller"
+    },
+    reset() {
+      this.resetInfiniteScrollVars();
 
-                    this.performMarking();
-                });
-            },
-            performMarking() {
-                Vue.nextTick(() => {
-                    if (hasLength(this.searchString)) {
-                        this.markInstance.unmark();
-                        this.markInstance.mark(this.searchString);
-                    }
-                })
-            },
-            editChat(chat) {
-                const chatId = chat.id;
-                console.log("Will add participants to chat", chatId);
-                bus.$emit(OPEN_CHAT_EDIT, chatId);
-            },
-            printParticipants(chat) {
-                if (hasLength(chat.shortInfo)) {
-                    return chat.shortInfo
-                }
-                let builder = "";
-                if (chat.tetATet) {
-                    builder += this.$vuetify.lang.t('$vuetify.tet_a_tet');
-                } else {
-                    const logins = chat.participants.map(p => p.login);
-                    builder += logins.join(", ")
-                }
-                if (this.isSearchResult(chat)) {
-                    builder = this.$vuetify.lang.t('$vuetify.this_is_search_result') + builder;
-                }
-                return builder;
-            },
-            deleteChat(chat) {
-                bus.$emit(OPEN_SIMPLE_MODAL, {
-                    buttonName: this.$vuetify.lang.t('$vuetify.delete_btn'),
-                    title: this.$vuetify.lang.t('$vuetify.delete_chat_title', chat.id),
-                    text: this.$vuetify.lang.t('$vuetify.delete_chat_text', chat.name),
-                    actionFunction: ()=> {
-                        axios.delete(`/api/chat/${chat.id}`)
-                            .then(() => {
-                                bus.$emit(CLOSE_SIMPLE_MODAL);
-                            })
-                    }
-                });
-            },
-            leaveChat(chat) {
-                bus.$emit(OPEN_SIMPLE_MODAL, {
-                    buttonName: this.$vuetify.lang.t('$vuetify.leave_btn'),
-                    title: this.$vuetify.lang.t('$vuetify.leave_chat_title', chat.id),
-                    text: this.$vuetify.lang.t('$vuetify.leave_chat_text', chat.name),
-                    actionFunction: ()=> {
-                        axios.put(`/api/chat/${chat.id}/leave`)
-                            .then(() => {
-                                bus.$emit(CLOSE_SIMPLE_MODAL);
-                            })
-                    }
-                });
-            },
-            pinChat(chat) {
-                axios.put(`/api/chat/${chat.id}/pin`, null, {
-                    params: {
-                        pin: true
-                    },
-                });
-            },
-            removedFromPinned(chat) {
-                axios.put(`/api/chat/${chat.id}/pin`, null, {
-                    params: {
-                        pin: false
-                    },
-                });
-            },
-            onChangeUnreadMessages(dto) {
-                const chatId = dto.chatId;
-                let idxOf = findIndex(this.items, {id: chatId});
-                if (idxOf != -1) {
-                    this.items[idxOf].unreadMessages = dto.unreadMessages;
-                    this.items[idxOf].lastUpdateDateTime = dto.lastUpdateDateTime;
+      this.pageTop = 0;
+      this.pageBottom = 0;
+    },
 
-                    this.sort(this.items);
-                    this.$forceUpdate();
-                } else {
-                    console.log("Not found to update unread messages", dto)
-                }
-            },
-            onUserProfileChanged(user) {
-                this.items.forEach(item => {
-                    replaceInArray(item.participants, user);
-                });
-                this.$forceUpdate();
-            },
-            onWsRestoredRefresh() {
-                this.searchStringChanged(null);
-            },
-            searchStringChanged(str) {
-                this.itemsLoaded = false;
-                if (str == publicallyAvailableForSearchChatsQuery) {
-                    this.searchStringChangedStraight(str);
-                } else {
-                    this.searchStringChangedDebounced(str);
-                }
-            },
-            onVideoCallChanged(dto) {
-                let matched = false;
-                this.items.forEach(item => {
-                    if (item.id == dto.chatId) {
-                        item.videoChatUsersCount = dto.usersCount;
-                        matched = true;
-                    }
-                });
-                if (matched) {
-                    this.$forceUpdate();
-                }
-            },
-            onVideoScreenShareChanged(dto) {
-                let matched = false;
-                this.items.forEach(item => {
-                    if (item.id == dto.chatId) {
-                        item.hasScreenShares = dto.hasScreenShares;
-                        matched = true;
-                    }
-                });
-                if (matched) {
-                    this.$forceUpdate();
-                }
-            },
-            onShowContextMenu(e, menuableItem){
-                this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
-            },
-            onCloseContextMenu(){
-                this.$refs.contextMenuRef.onCloseContextMenu()
-            },
-            shouldShowWelcome(){
-                return this.userIsSet && !this.items.length && this.itemsLoaded && !hasLength(this.searchString)
-            },
+    async onSearchStringChangedDebounced() {
+      await this.onSearchStringChanged();
+    },
+    async onSearchStringChanged() {
+      // Fixes excess delayed (because of debounce) reloading of items when
+      // 1. we've chosen __AVAILABLE_FOR_SEARCH
+      // 2. then go to the Welcome
+      // 3. without this change there will be excess delayed invocation
+      // 4. but we've already destroyed this component, so it will be an error in the log
+      if (this.isReady()) {
+        await this.reloadItems();
+      }
+    },
+    onWsRestoredRefresh() {
+      this.onSearchStringChanged();
+    },
+    async onProfileSet() {
+      await this.reloadItems();
+    },
+    onLoggedOut() {
+      this.graphQlUnsubscribe();
+      this.reset();
+    },
 
-            transformItem(item) {
-                item.online = false;
-            },
-            getTetATetParticipantIds(items) {
-                if (!items) {
-                    return [];
-                }
-                const tmps = cloneDeep(items);
-                return tmps.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.currentUser?.id)[0]);
-            },
-            onUserOnlineChanged(rawData) {
-                const dtos = rawData?.data?.userOnlineEvents;
-                if (dtos) {
-                    this.items.forEach(item => {
-                        dtos.forEach(dtoItem => {
-                            if (item.tetATet && item.participants.filter((p)=> p.id == dtoItem.id).length) {
-                                item.online = dtoItem.online;
-                            }
-                        })
-                    })
-                    this.$forceUpdate();
-                }
-            },
-
-            getGraphQlSubscriptionQuery() {
-                return `
+    canDrawChats() {
+      return !!this.chatStore.currentUser
+    },
+    isSearchResult(item) {
+          return item?.isResultFromSearch === true
+    },
+    getItemClass(item) {
+          return {
+              'pinned-bold': item.pinned,
+          }
+    },
+    getChatName(item) {
+          let bldr = item.name;
+          if (!item.avatar && item.online) {
+              bldr += (" (" + this.$vuetify.locale.t('$vuetify.user_online') + ")");
+          }
+          return bldr;
+    },
+    onShowContextMenu(e, menuableItem) {
+        this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+    },
+    openChat(item){
+        if (this.isSearchResult(item)) {
+            axios.put(`/api/chat/${item.id}/join`).then(() => {
+                goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: item.id}})
+            })
+        } else {
+            goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: item.id}})
+        }
+    },
+    getLink(item) {
+          return chat + "/" + item.id
+    },
+    printParticipants(chat) {
+          if (hasLength(chat.shortInfo)) {
+              return chat.shortInfo
+          }
+          let builder = "";
+          if (chat.tetATet) {
+              builder += this.$vuetify.locale.t('$vuetify.tet_a_tet');
+          } else {
+              const logins = chat.participants.map(p => p.login);
+              builder += logins.join(", ")
+          }
+          if (this.isSearchResult(chat)) {
+              builder = this.$vuetify.locale.t('$vuetify.this_is_search_result') + builder;
+          }
+          return builder;
+    },
+    pinChat(chat) {
+          axios.put(`/api/chat/${chat.id}/pin`, null, {
+              params: {
+                  pin: true
+              },
+          });
+    },
+    removedFromPinned(chat) {
+          axios.put(`/api/chat/${chat.id}/pin`, null, {
+              params: {
+                  pin: false
+              },
+          });
+    },
+    editChat(chat) {
+          const chatId = chat.id;
+          // console.log("Will add participants to chat", chatId);
+          bus.emit(OPEN_CHAT_EDIT, chatId);
+    },
+    deleteChat(chat) {
+          bus.emit(OPEN_SIMPLE_MODAL, {
+              buttonName: this.$vuetify.locale.t('$vuetify.delete_btn'),
+              title: this.$vuetify.locale.t('$vuetify.delete_chat_title', chat.id),
+              text: this.$vuetify.locale.t('$vuetify.delete_chat_text', chat.name),
+              actionFunction: (that) => {
+                  that.loading = true;
+                  axios.delete(`/api/chat/${chat.id}`)
+                      .then(() => {
+                          bus.emit(CLOSE_SIMPLE_MODAL);
+                      }).finally(()=>{
+                      that.loading = false;
+                  })
+              }
+          });
+    },
+    leaveChat(chat) {
+          bus.emit(OPEN_SIMPLE_MODAL, {
+              buttonName: this.$vuetify.locale.t('$vuetify.leave_btn'),
+              title: this.$vuetify.locale.t('$vuetify.leave_chat_title', chat.id),
+              text: this.$vuetify.locale.t('$vuetify.leave_chat_text', chat.name),
+              actionFunction: (that) => {
+                  that.loading = true;
+                  axios.put(`/api/chat/${chat.id}/leave`)
+                      .then(() => {
+                          bus.emit(CLOSE_SIMPLE_MODAL);
+                      }).finally(()=>{
+                      that.loading = false;
+                  })
+              }
+          });
+    },
+    transformItem(item) {
+          item.online = false;
+    },
+    setTopTitle() {
+        this.chatStore.title = this.$vuetify.locale.t('$vuetify.chats');
+        setTitle(this.$vuetify.locale.t('$vuetify.chats'));
+    },
+    getTetATetParticipantIds(items) {
+      if (!items) {
+          return [];
+      }
+      const tmps = deepCopy(items);
+      return tmps.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.chatStore.currentUser?.id)[0]);
+    },
+    getGraphQlSubscriptionQuery() {
+          return `
                 subscription {
                     userOnlineEvents(userIds:[${this.tetAtetParticipants}]) {
                         id
                         online
                     }
                 }`
-            },
-            onNextSubscriptionElement(items) {
-                this.onUserOnlineChanged(items);
-            },
+    },
+    onNextSubscriptionElement(items) {
+          this.onUserOnlineChanged(items);
+    },
+    onUserOnlineChanged(rawData) {
+          const dtos = rawData?.data?.userOnlineEvents;
+          if (dtos) {
+              this.items.forEach(item => {
+                  dtos.forEach(dtoItem => {
+                      if (item.tetATet && item.participants.filter((p)=> p.id == dtoItem.id).length) {
+                          item.online = dtoItem.online;
+                      }
+                  })
+              })
+          }
+    },
+    onChangeUnreadMessages(dto) {
+          const chatId = dto.chatId;
+          let idxOf = findIndex(this.items, {id: chatId});
+          if (idxOf != -1) {
+              this.items[idxOf].unreadMessages = dto.unreadMessages;
+              this.items[idxOf].lastUpdateDateTime = dto.lastUpdateDateTime;
 
-            getLink(item) {
-                return chat + "/" + item.id
-            },
-            getChatName(item) {
-                let bldr = item.name;
-                if (!item.avatar && item.online) {
-                    bldr += (" (" + this.$vuetify.lang.t('$vuetify.user_online') + ")");
-                }
-                return bldr;
-            },
-            isSearchResult(item) {
-                return item?.isResultFromSearch === true
-            },
-            getItemClass(item) {
-                return {
-                    'pinned': item.pinned,
-                }
-            },
-            sort(items) {
-                // also see in chat/db/chat.go:GetChatsByLimitOffset
-                items.sort(dynamicSortMultiple("-pinned", "-lastUpdateDateTime", "-id"))
-            },
-        },
-        created() {
-            this.searchStringChangedDebounced = debounce(this.searchStringChangedDebounced, 700, {leading:false, trailing:true});
+              this.sort(this.items);
+          } else {
+              console.log("Not found to update unread messages", dto)
+          }
+    },
+    sort(items) {
+          // also see in chat/db/chat.go:GetChatsByLimitOffset
+          items.sort(dynamicSortMultiple("-pinned", "-lastUpdateDateTime", "-id"))
+    },
+    performMarking() {
+        this.$nextTick(()=>{
+            if (hasLength(this.searchString)) {
+                this.markInstance.unmark();
+                this.markInstance.mark(this.searchString);
+            }
+        })
+    },
+    onScrollCallback() {
+          const isScrolledToTop = this.isScrolledToTop();
+          if (!isScrolledToTop) {
+              // during scrolling we disable adding new elements, so some messages can appear on server, so
+              // we set loadedTop to false in order to force infiniteScrollMixin to fetch new messages during scrollTop()
+              this.loadedTop = false;
+              // see also this.sort(this.items) in load()
+          }
+    },
+    isScrolledToTop() {
+          if (this.scrollerDiv) {
+              return Math.abs(this.scrollerDiv.scrollTop) < SCROLLING_THRESHHOLD
+          } else {
+              return false
+          }
+    },
+    addItem(dto) {
+        const isScrolledToTop = this.isScrolledToTop();
+        const emptySearchString = !hasLength(this.searchString);
+        if (isScrolledToTop && emptySearchString) {
+            console.log("Adding item", dto);
+            this.transformItem(dto);
+            this.items.unshift(dto);
+            this.sort(this.items);
+            this.performMarking();
+        } else {
+            console.log("Skipping", dto, isScrolledToTop, emptySearchString)
+        }
+    },
+    changeItem(dto) {
+          console.log("Replacing item", dto);
+          this.transformItem(dto);
+          if (this.hasItem(dto)) {
+              replaceInArray(this.items, dto);
+          } else {
+              this.items.unshift(dto);
+          }
+          this.sort(this.items);
+          this.performMarking();
+    },
+    removeItem(dto) {
+          if (this.hasItem(dto)) {
+              console.log("Removing item", dto);
+              const idxToRemove = findIndex(this.items, dto);
+              this.items.splice(idxToRemove, 1);
+          } else {
+              console.log("Item was not be removed", dto);
+          }
+    },
+      // does should change items list (new item added to visible part or not for example)
+    hasItem(item) {
+          let idxOf = findIndex(this.items, item);
+          return idxOf !== -1;
+    },
+    onUserProfileChanged(user) {
+      this.items.forEach(item => {
+        replaceInArray(item.participants, user); // replaces participants of "normal" chat
+        if (item.tetATet && this.getTetATetParticipantIds([item]).includes(user.id)) { // replaces content of tet-a-tet. It's better to move it to chat
+          item.avatar = user.avatar;
+          item.name = user.login;
+        }
+      });
+    },
 
-            bus.$on(PROFILE_SET, this.onLoggedIn);
-            bus.$on(LOGGED_OUT, this.onLoggedOut);
-            bus.$on(CHAT_ADD, this.addItem);
-            bus.$on(CHAT_EDITED, this.changeItem);
-            bus.$on(CHAT_DELETED, this.removeItem);
-            bus.$on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
-            bus.$on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
-            bus.$on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
-            bus.$on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
-            bus.$on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
-
-            this.initQueryAndWatcher();
-        },
-        beforeDestroy() {
-            this.graphQlUnsubscribe();
-            this.closeQueryWatcher();
-        },
-        destroyed() {
-            bus.$off(PROFILE_SET, this.onLoggedIn);
-            bus.$off(LOGGED_OUT, this.onLoggedOut);
-            bus.$off(CHAT_ADD, this.addItem);
-            bus.$off(CHAT_EDITED, this.changeItem);
-            bus.$off(CHAT_DELETED, this.removeItem);
-            bus.$off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
-            bus.$off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
-            bus.$off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
-            bus.$off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
-            bus.$off(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
-        },
-        mounted() {
-            this.markInstance = new Mark("div#chat-list-items .chat-name");
-
-            this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
-            this.$store.commit(SET_CHAT_USERS_COUNT, 0);
-            this.$store.commit(SET_SHOW_SEARCH, true);
-            this.$store.commit(SET_SEARCH_NAME, this.$vuetify.lang.t('$vuetify.search_in_chats'));
-            this.$store.commit(SET_CHAT_ID, null);
-            this.$store.commit(SET_SHOW_CHAT_EDIT_BUTTON, false);
-        },
-        watch: {
-          '$vuetify.lang.current': {
-            handler: function (newValue, oldValue) {
-              this.$store.commit(SET_TITLE, this.$vuetify.lang.t('$vuetify.chats'));
-                this.$store.commit(SET_SEARCH_NAME, this.$vuetify.lang.t('$vuetify.search_in_chats'));
-            },
+  },
+  components: {
+    ChatListContextMenu
+  },
+  created() {
+    this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 200, {leading:false, trailing:true})
+  },
+  watch: {
+      '$vuetify.locale.current': {
+          handler: function (newValue, oldValue) {
+              this.setTopTitle();
           },
-          tetAtetParticipants: function(newValue, oldValue) {
-              if (newValue.length == 0) {
-                  this.graphQlUnsubscribe();
-              } else {
-                  if (!isArrEqual(oldValue, newValue)) {
-                      this.graphQlSubscribe();
-                  }
+      },
+      tetAtetParticipants: function(newValue, oldValue) {
+          if (newValue.length == 0) {
+              this.graphQlUnsubscribe();
+          } else {
+              if (!isArrEqual(oldValue, newValue)) {
+                  this.graphQlSubscribe();
               }
-          },
-        },
+          }
+      },
+  },
+  async mounted() {
+    this.markInstance = new Mark("div#chat-list-items .chat-name");
+    this.setTopTitle();
+
+    if (this.canDrawChats()) {
+      await this.onProfileSet();
     }
+
+    bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
+    bus.on(PROFILE_SET, this.onProfileSet);
+    bus.on(LOGGED_OUT, this.onLoggedOut);
+    bus.on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
+    bus.on(CHAT_ADD, this.addItem);
+    bus.on(CHAT_EDITED, this.changeItem);
+    bus.on(CHAT_DELETED, this.removeItem);
+    bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+    bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+
+    if (this.$route.name == chat_list_name) {
+      this.chatStore.isShowSearch = true;
+      this.chatStore.searchType = SEARCH_MODE_CHATS;
+    }
+  },
+
+  beforeUnmount() {
+    this.graphQlUnsubscribe();
+    this.uninstallScroller();
+
+    bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
+    bus.off(PROFILE_SET, this.onProfileSet);
+    bus.off(LOGGED_OUT, this.onLoggedOut);
+    bus.off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
+    bus.off(CHAT_ADD, this.addItem);
+    bus.off(CHAT_EDITED, this.changeItem);
+    bus.off(CHAT_DELETED, this.removeItem);
+    bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+    bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+
+    setTitle(null);
+    this.chatStore.title = null;
+
+    this.chatStore.isShowSearch = false;
+  }
+}
 </script>
 
+<style lang="stylus">
+.my-chat-scroller {
+  height 100%
+  overflow-y scroll !important
+  display flex
+  flex-direction column
+}
+
+</style>
+
 <style lang="stylus" scoped>
-    .min-height {
-        display inline-block
-        min-height 22px
-    }
-    .pinned {
-        font-weight bold
-    }
+@import "itemAvatar.styl"
+
+.pinned-bold {
+    font-weight bold
+}
 </style>

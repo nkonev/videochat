@@ -1,4 +1,4 @@
-import { VueRenderer } from '@tiptap/vue-2'
+import { VueRenderer } from '@tiptap/vue-3'
 import tippy from 'tippy.js'
 import axios from "axios";
 
@@ -24,12 +24,9 @@ export default (chatId) => {
             return {
                 onStart: props => {
                     component = new VueRenderer(MentionList, {
-                        // using vue 2:
-                        parent: this,
-                        propsData: props,
                         // using vue 3:
-                        // props,
-                        // editor: props.editor,
+                        props,
+                        editor: props.editor,
                     })
 
                     if (!props.clientRect) {

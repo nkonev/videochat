@@ -1,5 +1,6 @@
 import {Image} from '@tiptap/extension-image';
 import {Plugin, PluginKey} from 'prosemirror-state';
+import {hasLength} from "@/utils";
 
 export const buildImageHandler = (uploadFunction) => {
     return Image.extend({
@@ -8,18 +9,6 @@ export const buildImageHandler = (uploadFunction) => {
                 new Plugin({
                     key: new PluginKey('imageHandler'),
                     props: {
-                        handlePaste: (view, event) => {
-                            const items = (event.clipboardData || event.originalEvent.clipboardData).items;
-                            for (const item of items) {
-                                if (item.type.indexOf("image") === 0) {
-                                    event.preventDefault();
-
-                                    const image = item.getAsFile();
-
-                                    uploadFunction(image);
-                                }
-                            }
-                        },
 
                         handleDOMEvents: {
                             drop: (view, event) => {
@@ -51,16 +40,38 @@ export const buildImageHandler = (uploadFunction) => {
 
                                 images.forEach(async (image) => {
 
-                                    const node = schema.nodes.image.create({
-                                        src: await uploadFunction(image),
-                                    });
-                                    const transaction = view.state.tr.insert(coordinates.pos, node);
-                                    view.dispatch(transaction);
+                                    const anUrl = await uploadFunction(image);
 
+                                    if (hasLength(anUrl)) {
+                                        const node = schema.nodes.image.create({
+                                          src: anUrl,
+                                        });
+                                        const transaction = view.state.tr.insert(coordinates.pos, node);
+                                        view.dispatch(transaction);
+                                    }
                                 });
 
                                 return true;
                             },
+                            // we place handler here (but not in props)
+                            // in order to pass text if no image was found
+                            async paste(view, event) {
+                                  let imageSet = false;
+                                  const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                                  for (const item of items) {
+                                      if (item.type.indexOf("image") === 0) {
+                                          event.preventDefault();
+
+                                          const image = item.getAsFile();
+
+                                          await uploadFunction(image);
+                                          imageSet = true;
+                                      }
+                                  }
+                                  if (imageSet) {
+                                      return true
+                                  }
+                            }
                         },
                     }
                 }),

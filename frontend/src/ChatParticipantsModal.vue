@@ -1,86 +1,87 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="700" scrollable :persistent="hasSearchString()">
+        <v-dialog v-model="show" max-width="640" scrollable :persistent="hasSearchString()">
             <v-card>
-                <v-card-title>
-                    {{ $vuetify.lang.t('$vuetify.participants_modal_title') }}
-                    <v-text-field class="ml-4 pt-0 mt-0" prepend-icon="mdi-magnify" hide-details single-line v-model="userSearchString" :label="$vuetify.lang.t('$vuetify.search_by_users')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+                <v-card-title class="d-flex align-center ml-2">
+                    {{ $vuetify.locale.t('$vuetify.participants_modal_title') }}
+                    <v-text-field class="ml-4" variant="outlined" density="compact" prepend-icon="mdi-magnify" hide-details single-line v-model="userSearchString" :label="$vuetify.locale.t('$vuetify.search_by_users')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
                 </v-card-title>
 
-                <v-card-text  class="ma-0 pa-0">
+                <v-card-text class="ma-0 pa-0">
                     <v-list v-if="participantsDto.participants && participantsDto.participants.length > 0">
                         <template v-for="(item, index) in participantsDto.participants">
-                            <v-list-item class="pl-2 ml-1 pr-0 mr-3 mb-1 mt-1">
-                                <v-badge
-                                    v-if="item.avatar"
-                                    color="success accent-4"
-                                    dot
-                                    bottom
-                                    overlap
-                                    bordered
-                                    :value="item.online"
-                                >
-                                    <a @click.prevent="onParticipantClick(item)" :href="getLink(item)">
-                                        <v-list-item-avatar class="ma-0 pa-0">
-                                            <v-img :src="item.avatar"></v-img>
-                                        </v-list-item-avatar>
-                                    </a>
-                                </v-badge>
-                                <v-list-item-content class="ml-4">
-                                    <v-row no-gutters align="center" class="d-flex flex-row">
-                                        <v-col class="flex-grow-0 flex-shrink-0">
-                                            <v-list-item-title :class="!isMobile() ? 'mr-2' : ''"><a @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{item.login + (item.id == currentUser.id ? $vuetify.lang.t('$vuetify.you_brackets') : '' )}}</a></v-list-item-title>
-                                        </v-col>
-                                        <v-col v-if="!isMobile()" class="flex-grow-1 flex-shrink-0">
-                                            <v-progress-linear
-                                                v-if="item.callingTo"
-                                                color="success"
-                                                buffer-value="0"
-                                                height="16"
-                                                indeterminate
-                                                stream
-                                                rounded
-                                                reverse
-                                            ></v-progress-linear>
-                                        </v-col>
-                                    </v-row>
-                                </v-list-item-content>
-                                <template v-if="item.admin || dto.canChangeChatAdmins">
-                                    <template v-if="dto.canChangeChatAdmins && (item.id != currentUser.id)">
-                                        <v-btn
-                                            :color="item.admin ? 'primary' : 'disabled'"
-                                            :loading="item.adminLoading ? true : false"
-                                            @click="changeChatAdmin(item)"
-                                            icon
-                                            :title="item.admin ? $vuetify.lang.t('$vuetify.revoke_admin') : $vuetify.lang.t('$vuetify.grant_admin')"
-                                        >
-                                            <v-icon>mdi-crown</v-icon>
-                                        </v-btn>
+                            <v-list-item class="list-item-prepend-spacer-16">
+                                <template v-slot:prepend v-if="hasLength(item.avatar)">
+                                    <v-badge
+                                        v-if="item.avatar"
+                                        color="success accent-4"
+                                        dot
+                                        location="right bottom"
+                                        overlap
+                                        bordered
+                                        :model-value="item.online"
+                                    >
+                                        <v-avatar :image="item.avatar"></v-avatar>
+                                    </v-badge>
+
+                                </template>
+
+                                <v-row no-gutters align="center" class="d-flex flex-row">
+                                    <v-col class="flex-grow-0 flex-shrink-0">
+                                        <v-list-item-title><a class="colored-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{item.login + (item.id == chatStore.currentUser.id ? $vuetify.locale.t('$vuetify.you_brackets') : '' )}}</a></v-list-item-title>
+                                    </v-col>
+                                    <v-col v-if="!isMobile()" class="ml-4 flex-grow-1 flex-shrink-0">
+                                        <v-progress-linear
+                                            v-if="item.callingTo"
+                                            color="success"
+                                            buffer-value="0"
+                                            height="16"
+                                            indeterminate
+                                            stream
+                                            rounded
+                                            reverse
+                                        ></v-progress-linear>
+                                    </v-col>
+                                </v-row>
+
+                                <template v-slot:append>
+                                    <template v-if="item.admin || dto.canChangeChatAdmins">
+                                        <template v-if="dto.canChangeChatAdmins && (item.id != chatStore.currentUser.id)">
+                                            <v-btn
+                                                variant="flat"
+                                                :loading="item.adminLoading ? true : false"
+                                                @click="changeChatAdmin(item)"
+                                                icon
+                                                :title="item.admin ? $vuetify.locale.t('$vuetify.revoke_admin') : $vuetify.locale.t('$vuetify.grant_admin')"
+                                            >
+                                                <v-icon :color="item.admin ? 'primary' : 'disabled'">mdi-crown</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <template v-else-if="item.admin">
+                                              <span class="pl-1 pr-1" :title="$vuetify.locale.t('$vuetify.admin')">
+                                                  <v-icon color="primary">mdi-crown</v-icon>
+                                              </span>
+                                        </template>
                                     </template>
-                                    <template v-else-if="item.admin">
-                                          <span class="pl-1 pr-1" :title="$vuetify.lang.t('$vuetify.admin')">
-                                              <v-icon color="primary">mdi-crown</v-icon>
-                                          </span>
+                                    <template v-if="dto.canEdit && item.id != chatStore.currentUser.id">
+                                        <v-btn variant="flat" icon @click="deleteParticipant(item)" :title="$vuetify.locale.t('$vuetify.delete_from_chat')"><v-icon color="red">mdi-delete</v-icon></v-btn>
                                     </template>
-                                </template>
-                                <template v-if="dto.canEdit && item.id != currentUser.id">
-                                    <v-btn icon @click="deleteParticipant(item)" color="error" :title="$vuetify.lang.t('$vuetify.delete_from_chat')"><v-icon dark>mdi-delete</v-icon></v-btn>
-                                </template>
-                                <template v-if="dto.canVideoKick && item.id != currentUser.id && isVideo()">
-                                    <v-btn icon @click="kickFromVideoCall(item.id)" :title="$vuetify.lang.t('$vuetify.kick')"><v-icon color="error">mdi-block-helper</v-icon></v-btn>
-                                </template>
-                                <template v-if="dto.canAudioMute && item.id != currentUser.id && isVideo()">
-                                    <v-btn icon @click="forceMute(item.id)" :title="$vuetify.lang.t('$vuetify.force_mute')"><v-icon color="error">mdi-microphone-off</v-icon></v-btn>
-                                </template>
-                                <template v-if="item.id != currentUser.id">
-                                    <v-btn icon @click="startCalling(item)" :title="item.callingTo ? $vuetify.lang.t('$vuetify.stop_call') : $vuetify.lang.t('$vuetify.call')"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
+                                    <template v-if="dto.canVideoKick && item.id != chatStore.currentUser.id && isVideo()">
+                                        <v-btn variant="flat" icon @click="kickFromVideoCall(item.id)" :title="$vuetify.locale.t('$vuetify.kick')"><v-icon color="red">mdi-block-helper</v-icon></v-btn>
+                                    </template>
+                                    <template v-if="dto.canAudioMute && item.id != chatStore.currentUser.id && isVideo()">
+                                        <v-btn variant="flat" icon @click="forceMute(item.id)" :title="$vuetify.locale.t('$vuetify.force_mute')"><v-icon color="red">mdi-microphone-off</v-icon></v-btn>
+                                    </template>
+                                    <template v-if="item.id != chatStore.currentUser.id">
+                                        <v-btn variant="flat" icon @click="startCalling(item)" :title="item.callingTo ? $vuetify.locale.t('$vuetify.stop_call') : $vuetify.locale.t('$vuetify.call')"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
+                                    </template>
                                 </template>
                             </v-list-item>
                             <v-divider></v-divider>
                         </template>
                     </v-list>
                     <template v-else-if="!loading">
-                        <v-card-text>{{ $vuetify.lang.t('$vuetify.participants_not_found') }}</v-card-text>
+                        <v-card-text>{{ $vuetify.locale.t('$vuetify.participants_not_found') }}</v-card-text>
                     </template>
 
                     <v-progress-circular
@@ -92,17 +93,28 @@
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
-                    <v-pagination
-                        v-if="shouldShowPagination"
-                        v-model="participantsPage"
-                        :length="participantsPagesCount"
-                    ></v-pagination>
-                    <v-spacer></v-spacer>
-                    <v-btn v-if="dto.canEdit" color="primary" class="my-1 ml-4 mr-2" @click="addParticipants()">
-                        {{ $vuetify.lang.t('$vuetify.add') }}
-                    </v-btn>
-                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+
+                    <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
+                    <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
+                        <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                            <v-pagination
+                                variant="elevated"
+                                active-color="primary"
+                                density="comfortable"
+                                v-if="shouldShowPagination"
+                                v-model="page"
+                                :length="pagesCount"
+                            ></v-pagination>
+                        </v-col>
+                        <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                            <v-btn v-if="dto.canEdit" color="primary" variant="flat" @click="addParticipants()">
+                                {{ $vuetify.locale.t('$vuetify.add') }}
+                            </v-btn>
+                            <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                        </v-col>
+                    </v-row>
                 </v-card-actions>
+
 
             </v-card>
         </v-dialog>
@@ -112,18 +124,24 @@
 <script>
     import axios from "axios";
     import bus, {
-        CHAT_DELETED, CHAT_EDITED,
-        CLOSE_SIMPLE_MODAL, OPEN_CHAT_EDIT,
-        OPEN_PARTICIPANTS_DIALOG,
-        OPEN_SIMPLE_MODAL, PARTICIPANT_ADDED, PARTICIPANT_DELETED, PARTICIPANT_EDITED, VIDEO_DIAL_STATUS_CHANGED,
-    } from "./bus";
-    import {mapGetters} from "vuex";
-    import {GET_USER} from "./store";
-    import {profile, profile_name, videochat_name} from "./routes";
-    import graphqlSubscriptionMixin from "./graphqlSubscriptionMixin"
-    import {findIndex, hasLength, isArrEqual, moveToFirstPosition, replaceInArray} from "@/utils";
-    import cloneDeep from "lodash/cloneDeep";
+      CHAT_DELETED,
+      CHAT_EDITED,
+      CLOSE_SIMPLE_MODAL,
+      OPEN_CHAT_EDIT,
+      OPEN_PARTICIPANTS_DIALOG,
+      OPEN_SIMPLE_MODAL,
+      PARTICIPANT_ADDED,
+      PARTICIPANT_DELETED,
+      PARTICIPANT_EDITED,
+      USER_PROFILE_CHANGED,
+      VIDEO_DIAL_STATUS_CHANGED,
+    } from "./bus/bus";
+    import {profile, profile_name, videochat_name} from "./router/routes";
+    import graphqlSubscriptionMixin from "./mixins/graphqlSubscriptionMixin"
+    import {deepCopy, findIndex, hasLength, isArrEqual, moveToFirstPosition, replaceInArray} from "@/utils";
     import debounce from "lodash/debounce";
+    import {mapStores} from "pinia";
+    import {useChatStore} from "@/store/chatStore";
     const firstPage = 1;
     const pageSize = 20;
 
@@ -147,23 +165,24 @@
                 participantsDto: participantsDtoFactory(),
                 chatId: null,
                 userSearchString: null,
-                participantsPage: firstPage,
+                page: firstPage,
                 loading: false,
             }
         },
         computed: {
-            ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
-            participantsPagesCount() {
+            pagesCount() {
                 const count = Math.ceil(this.participantsDto.participantsCount / pageSize);
-                console.debug("Calc pages count", count);
+                // console.debug("Calc pages count", count);
                 return count;
             },
             shouldShowPagination() {
                 return this.participantsDto != null && this.participantsDto.participantsCount > pageSize
-            }
+            },
+            ...mapStores(useChatStore),
         },
 
         methods: {
+            hasLength,
             showModal(chatId) {
                 this.chatId = chatId;
 
@@ -176,7 +195,7 @@
                 }
             },
             translatePage() {
-                return this.participantsPage - 1;
+                return this.page - 1;
             },
             loadData() {
                 console.log("Getting info about chat id in modal, chatId=", this.chatId);
@@ -197,7 +216,7 @@
                             },
                         })
                         .then((response) => {
-                            const tmp = cloneDeep(response.data);
+                            const tmp = deepCopy(response.data);
                             this.transformParticipants(tmp.participants);
                             this.participantsDto = tmp;
                         }).finally(() => {
@@ -207,7 +226,6 @@
             },
             changeChatAdmin(item) {
                 item.adminLoading = true;
-                this.$forceUpdate();
                 axios.put(`/api/chat/${this.dto.id}/user/${item.id}`, null, {
                     params: {
                         admin: !item.admin,
@@ -239,11 +257,12 @@
                 axios.put(`/api/video/${this.dto.id}/mute?userId=${userId}`)
             },
             deleteParticipant(participant) {
-                bus.$emit(OPEN_SIMPLE_MODAL, {
-                    buttonName: this.$vuetify.lang.t('$vuetify.delete_btn'),
-                    title: this.$vuetify.lang.t('$vuetify.delete_participant', participant.id),
-                    text: this.$vuetify.lang.t('$vuetify.delete_participant_text', participant.id, participant.login),
-                    actionFunction: ()=> {
+                bus.emit(OPEN_SIMPLE_MODAL, {
+                    buttonName: this.$vuetify.locale.t('$vuetify.delete_btn'),
+                    title: this.$vuetify.locale.t('$vuetify.delete_participant', participant.id),
+                    text: this.$vuetify.locale.t('$vuetify.delete_participant_text', participant.id, participant.login),
+                    actionFunction: (that)=> {
+                        that.loading = true;
                         axios.delete(`/api/chat/${this.dto.id}/user/${participant.id}`, {
                                 params: {
                                     page: this.translatePage(),
@@ -251,23 +270,27 @@
                                 },
                             })
                             .then(() => {
-                                bus.$emit(CLOSE_SIMPLE_MODAL);
+                                bus.emit(CLOSE_SIMPLE_MODAL);
+                            }).finally(()=>{
+                                that.loading = false;
                             })
                     }
                 });
             },
             closeModal() {
                 console.debug("Closing ChatParticipantsModal");
+                this.graphQlUnsubscribe();
+
                 this.loading = false;
                 this.show = false;
                 this.chatId = null;
                 this.dto = dtoFactory();
                 this.participantsDto = participantsDtoFactory();
                 this.userSearchString = null;
-                this.participantsPage = firstPage;
+                this.page = firstPage;
             },
             addParticipants() {
-                bus.$emit(OPEN_CHAT_EDIT, this.chatId);
+                bus.emit(OPEN_CHAT_EDIT, this.chatId);
             },
             onChatDelete(dto) {
                 if (this.show && dto.id == this.chatId) {
@@ -292,7 +315,6 @@
                             }
                         })
                     })
-                    this.$forceUpdate();
                 }
             },
             onChatDialStatusChange(dto) {
@@ -308,7 +330,6 @@
                         }
                     }
                 }
-                this.$forceUpdate();
             },
             onParticipantClick(user) {
                 const routeDto = { name: profile_name, params: { id: user.id }};
@@ -368,34 +389,39 @@
                     return
                 }
 
-                const tmp = cloneDeep(users);
+                const tmp = deepCopy(users);
                 this.transformParticipants(tmp);
                 for (const user of tmp) {
                     this.addItem(user);
                 }
-                this.$forceUpdate();
             },
             onParticipantDeleted(users) {
                 if (!this.show) {
                     return
                 }
 
-                const tmp = cloneDeep(users);
+                const tmp = deepCopy(users);
                 this.transformParticipants(tmp);
                 for (const user of tmp) {
                     this.removeItem(user);
                 }
-                this.$forceUpdate();
             },
             onParticipantEdited(users) {
                 if (!this.show) return
 
-                const tmp = cloneDeep(users);
+                const tmp = deepCopy(users);
                 this.transformParticipants(tmp);
                 for (const user of tmp) {
                     this.changeItem(user);
                 }
-                this.$forceUpdate();
+            },
+            onUserProfileChanged(user) {
+              this.participantsDto.participants.forEach(item => {
+                if (item.id == user.id) { // replaces content of tet-a-tet. It's better to move it to chat
+                  item.avatar = user.avatar;
+                  item.login = user.login;
+                }
+              });
             },
             hasSearchString() {
                 return hasLength(this.userSearchString)
@@ -404,17 +430,18 @@
                 this.userSearchString = null;
             },
             isVideo() {
-                return this.$router.currentRoute.name == videochat_name
+                return this.$route.name == videochat_name
             },
 
             getGraphQlSubscriptionQuery() {
                 return `
-                subscription {
-                    userOnlineEvents(userIds:[${this.participantsDto.participants.map((p)=> p.id ).join(", ")}]) {
-                        id
-                        online
+                    subscription {
+                        userOnlineEvents(userIds:[${this.participantsDto.participants.map((p)=> p.id ).join(", ")}]) {
+                            id
+                            online
+                        }
                     }
-                }`
+                `
             },
             onNextSubscriptionElement(items) {
                 this.onUserOnlineChanged(items);
@@ -424,7 +451,7 @@
             userSearchString (searchString) {
               this.doSearch();
             },
-            participantsPage(newValue) {
+            page(newValue) {
                 if (this.show) {
                     console.debug("SettingNewPage", newValue);
                     this.participantsDto = participantsDtoFactory();
@@ -451,25 +478,24 @@
 
         created() {
             this.doSearch = debounce(this.doSearch, 700);
-            bus.$on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
-            bus.$on(PARTICIPANT_ADDED, this.onParticipantAdded);
-            bus.$on(PARTICIPANT_DELETED, this.onParticipantDeleted);
-            bus.$on(PARTICIPANT_EDITED, this.onParticipantEdited);
-            bus.$on(CHAT_DELETED, this.onChatDelete);
-            bus.$on(CHAT_EDITED, this.onChatEdit);
-            bus.$on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+            bus.on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
+            bus.on(PARTICIPANT_ADDED, this.onParticipantAdded);
+            bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
+            bus.on(PARTICIPANT_EDITED, this.onParticipantEdited);
+            bus.on(CHAT_DELETED, this.onChatDelete);
+            bus.on(CHAT_EDITED, this.onChatEdit);
+            bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+            bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
-        beforeDestroy() {
-            this.graphQlUnsubscribe();
-        },
-        destroyed() {
-            bus.$off(OPEN_PARTICIPANTS_DIALOG, this.showModal);
-            bus.$off(PARTICIPANT_ADDED, this.onParticipantAdded);
-            bus.$off(PARTICIPANT_DELETED, this.onParticipantDeleted);
-            bus.$off(PARTICIPANT_EDITED, this.onParticipantEdited);
-            bus.$off(CHAT_DELETED, this.onChatDelete);
-            bus.$off(CHAT_EDITED, this.onChatEdit);
-            bus.$off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+        beforeUnmount() {
+            bus.off(OPEN_PARTICIPANTS_DIALOG, this.showModal);
+            bus.off(PARTICIPANT_ADDED, this.onParticipantAdded);
+            bus.off(PARTICIPANT_DELETED, this.onParticipantDeleted);
+            bus.off(PARTICIPANT_EDITED, this.onParticipantEdited);
+            bus.off(CHAT_DELETED, this.onChatDelete);
+            bus.off(CHAT_EDITED, this.onChatEdit);
+            bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+            bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
         },
     }
 </script>

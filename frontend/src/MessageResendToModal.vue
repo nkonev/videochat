@@ -1,32 +1,30 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="480"  scrollable :persistent="hasSearchString()">
+        <v-dialog v-model="show" max-width="640" scrollable :persistent="hasSearchString()">
             <v-card>
-                <v-card-title>
-                    {{ $vuetify.lang.t('$vuetify.share_to') }}
+                <v-card-title class="d-flex align-center ml-2">
+                    {{ $vuetify.locale.t('$vuetify.share_to') }}
+                    <v-text-field class="ml-4" variant="outlined" density="compact" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.locale.t('$vuetify.search_by_chats')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
                 </v-card-title>
-                <v-container class="ma-0 pa-0">
-                    <v-text-field class="ml-4 mr-4 pt-0 mt-0" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.lang.t('$vuetify.search_by_chats')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
-                </v-container>
+
                 <v-card-text class="ma-0 pa-0">
                     <v-list class="pb-0" v-if="!loading">
                         <template v-if="chats.length > 0">
                             <template v-for="(item, index) in chats">
-                                <v-hover v-slot:default="{ hover }">
-                                    <v-list-item link @click="resendMessageTo(item.id)">
-                                        <v-list-item-avatar v-if="item.avatar">
-                                            <img :src="item.avatar"/>
-                                        </v-list-item-avatar>
-                                        <v-list-item-content class="py-2">
-                                            <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
-                                            <v-list-item-subtitle :class="!hover ? 'white-colored' : ''">{{ hover ? $vuetify.lang.t('$vuetify.resend_to_here') : '-' }}</v-list-item-subtitle>
-                                        </v-list-item-content>
+                                <v-hover v-slot="{ isHovering, props }">
+                                    <v-list-item @click="resendMessageTo(item.id)" v-bind="props" class="list-item-prepend-spacer-16">
+                                        <template v-slot:prepend v-if="hasLength(item.avatar)">
+                                            <v-avatar :image="item.avatar"></v-avatar>
+                                        </template>
+                                        <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
+                                        <v-list-item-subtitle :class="!isHovering ? 'white-colored' : ''">{{ isHovering ? $vuetify.locale.t('$vuetify.resend_to_here') : '-' }}</v-list-item-subtitle>
                                     </v-list-item>
+
                                 </v-hover>
                             </template>
                         </template>
                         <template v-else>
-                            <v-card-text>{{ $vuetify.lang.t('$vuetify.no_chats') }}</v-card-text>
+                            <v-card-text>{{ $vuetify.locale.t('$vuetify.no_chats') }}</v-card-text>
                         </template>
                     </v-list>
                     <v-progress-circular
@@ -39,13 +37,14 @@
                 <v-card-actions class="d-flex flex-wrap flex-row">
                     <v-spacer></v-spacer>
                     <v-btn
-                        color="error"
-                        class="my-1"
+                        variant="elevated"
+                        color="red"
                         @click="closeModal()"
                     >
-                        {{ $vuetify.lang.t('$vuetify.close') }}
+                        {{ $vuetify.locale.t('$vuetify.close') }}
                     </v-btn>
                 </v-card-actions>
+
             </v-card>
         </v-dialog>
     </v-row>
@@ -55,7 +54,7 @@
 
 import bus, {
     OPEN_RESEND_TO_MODAL,
-} from "./bus";
+} from "./bus/bus";
 import {hasLength} from "./utils";
 import axios from "axios";
 import debounce from "lodash/debounce";
@@ -72,6 +71,7 @@ export default {
     },
 
     methods: {
+        hasLength,
         showModal(messageDto) {
             this.show = true;
             this.messageDto = messageDto;
@@ -142,10 +142,12 @@ export default {
     },
     created() {
         this.doSearch = debounce(this.doSearch, 700);
-        bus.$on(OPEN_RESEND_TO_MODAL, this.showModal);
     },
-    destroyed() {
-        bus.$off(OPEN_RESEND_TO_MODAL, this.showModal);
+    mounted() {
+      bus.on(OPEN_RESEND_TO_MODAL, this.showModal);
+    },
+    beforeUnmount() {
+        bus.off(OPEN_RESEND_TO_MODAL, this.showModal);
     },
 }
 </script>

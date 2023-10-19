@@ -1,52 +1,49 @@
 <template>
     <v-menu
-        v-model="showContextMenu"
-        :position-x="contextMenuX"
-        :position-y="contextMenuY"
-        absolute
-        offset-y
+        :class="className()"
+        :model-value="showContextMenu"
         :transition="false"
+        :open-on-click="false"
+        :open-on-focus="false"
+        :open-on-hover="false"
+        :open-delay="0"
+        :close-delay="0"
+        :close-on-back="false"
     >
         <v-list>
             <v-list-item
                 v-for="(item, index) in getContextMenuItems()"
                 :key="index"
-                link
                 @click="item.action"
             >
-                <v-list-item-avatar><v-icon :color="item.iconColor">{{item.icon}}</v-icon></v-list-item-avatar>
-                <v-list-item-title>{{ item.title }}</v-list-item-title>
+              <template v-slot:prepend>
+                <v-icon :color="item.iconColor">
+                  {{item.icon}}
+                </v-icon>
+              </template>
+              <template v-slot:title>{{ item.title }}</template>
             </v-list-item>
         </v-list>
     </v-menu>
 </template>
 
 <script>
-import {copyCallLink, copyChatLink, getUrlPrefix} from "@/utils";
-import {chat, messageIdHashPrefix} from "@/routes";
+import {copyCallLink, copyChatLink, getBlogLink} from "@/utils";
+import contextMenuMixin from "@/mixins/contextMenuMixin";
 
 export default {
-    data(){
-        return {
-            showContextMenu: false,
-            menuableItem: null,
-            contextMenuX: 0,
-            contextMenuY: 0,
-        }
-    },
+    mixins: [
+      contextMenuMixin(),
+    ],
     methods:{
-        onShowContextMenu(e, menuableItem) {
-            e.preventDefault();
-            this.showContextMenu = false;
-            this.contextMenuX = e.clientX;
-            this.contextMenuY = e.clientY;
-            this.menuableItem = menuableItem;
-            this.$nextTick(() => {
-                this.showContextMenu = true;
-            })
+        className() {
+            return "chat-item-context-menu"
         },
-        onCloseContextMenu(){
-            this.showContextMenu = false
+        onShowContextMenu(e, menuableItem) {
+          this.onShowContextMenuBase(e, menuableItem);
+        },
+        onCloseContextMenu() {
+          this.onCloseContextMenuBase();
         },
         getContextMenuItems() {
             const ret = [];
@@ -54,31 +51,37 @@ export default {
                 if (!this.menuableItem.isResultFromSearch) {
                     if (this.menuableItem.pinned) {
                         ret.push({
-                            title: this.$vuetify.lang.t('$vuetify.remove_from_pinned'),
+                            title: this.$vuetify.locale.t('$vuetify.remove_from_pinned'),
                             icon: 'mdi-pin-off-outline',
                             action: () => this.$emit('removedFromPinned', this.menuableItem)
                         });
                     } else {
                         ret.push({
-                            title: this.$vuetify.lang.t('$vuetify.pin_chat'),
+                            title: this.$vuetify.locale.t('$vuetify.pin_chat'),
                             icon: 'mdi-pin',
                             action: () => this.$emit('pinChat', this.menuableItem)
                         });
                     }
                 }
                 if (this.menuableItem.canEdit) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.$emit('editChat', this.menuableItem) });
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.$emit('editChat', this.menuableItem) });
                 }
                 if (this.menuableItem.canDelete) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.delete_btn'), icon: 'mdi-delete', iconColor: 'error', action: () => this.$emit('deleteChat', this.menuableItem) });
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.delete_btn'), icon: 'mdi-delete', iconColor: 'error', action: () => this.$emit('deleteChat', this.menuableItem) });
                 }
                 if (this.menuableItem.canLeave) {
-                    ret.push({title: this.$vuetify.lang.t('$vuetify.leave_btn'), icon: 'mdi-exit-run', action: () => this.$emit('leaveChat', this.menuableItem) });
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.leave_btn'), icon: 'mdi-exit-run', action: () => this.$emit('leaveChat', this.menuableItem) });
                 }
-                ret.push({title: this.$vuetify.lang.t('$vuetify.copy_link_to_chat'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
-                ret.push({title: this.$vuetify.lang.t('$vuetify.copy_video_call_link'), icon: 'mdi-content-copy', action: () => this.copyCallLink(this.menuableItem) });
+                if (this.menuableItem.blog) {
+                  ret.push({title: this.$vuetify.locale.t('$vuetify.go_to_blog_post'), icon: 'mdi-postage-stamp', action: () => this.goToBlog(this.menuableItem) });
+                }
+                ret.push({title: this.$vuetify.locale.t('$vuetify.copy_link_to_chat'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
+                ret.push({title: this.$vuetify.locale.t('$vuetify.copy_video_call_link'), icon: 'mdi-content-copy', action: () => this.copyCallLink(this.menuableItem) });
             }
             return ret;
+        },
+        goToBlog(item) {
+          window.location.href = getBlogLink(item.id)
         },
         copyLink(item) {
             copyChatLink(item.id)

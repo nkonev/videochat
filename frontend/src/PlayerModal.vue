@@ -1,17 +1,15 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo" width="fit-content" max-width="100%">
-            <v-card>
-                <v-card-title>{{ getTitle() }}</v-card-title>
-
-                <v-card-text class="py-0 d-flex justify-center">
-                        <video class="video-custom-class" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls></video>
-                        <img class="image-custom-class" v-if="dto?.canShowAsImage" :src="dto.url"></img>
+        <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo" width="fit-content" max-width="100%" scrollable>
+            <v-card :title="getTitle()">
+                <v-card-text class="d-flex justify-center">
+                        <video class="video-custom-class" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
+                        <img class="image-custom-class" v-if="dto?.canShowAsImage" :src="dto.url"/>
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
                     <v-spacer></v-spacer>
-                    <v-btn color="error" class="my-1" @click="hideModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="red" variant="flat" @click="hideModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -21,7 +19,7 @@
 <script>
 import bus, {
     PLAYER_MODAL,
-} from "./bus";
+} from "./bus/bus";
 
 export default {
     data () {
@@ -41,19 +39,19 @@ export default {
         },
         getTitle() {
             if (this.$data.dto?.canPlayAsVideo) {
-                return this.$vuetify.lang.t('$vuetify.play')
+                return this.$vuetify.locale.t('$vuetify.play')
             } else if (this.$data.dto?.canShowAsImage) {
-                return this.$vuetify.lang.t('$vuetify.view')
+                return this.$vuetify.locale.t('$vuetify.view')
             } else {
                 return ""
             }
         },
     },
-    created() {
-        bus.$on(PLAYER_MODAL, this.showModal);
+    mounted() {
+        bus.on(PLAYER_MODAL, this.showModal);
     },
-    destroyed() {
-        bus.$off(PLAYER_MODAL, this.showModal);
+    beforeUnmount() {
+        bus.off(PLAYER_MODAL, this.showModal);
     },
     watch: {
         show(newValue) {
@@ -65,6 +63,6 @@ export default {
 }
 </script>
 
-<style lang="stylus">
-    @import "message.styl"
+<style lang="stylus" scoped>
+@import "messageBody.styl"
 </style>

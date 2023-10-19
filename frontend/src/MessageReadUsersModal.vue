@@ -1,33 +1,23 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" max-width="480" scrollable>
-            <v-card>
-                <v-card-title>
-                    {{ $vuetify.lang.t('$vuetify.users_read') }}
-                </v-card-title>
+            <v-card :title="$vuetify.locale.t('$vuetify.users_read')">
                 <v-card-text class="ma-0 pa-0">
                     <v-container class="px-6 pt-0" v-html="participantsDto.text"></v-container>
                     <v-list v-if="participantsDto.participants && participantsDto.participants.length > 0">
                         <template v-for="(item, index) in participantsDto.participants">
-                            <v-list-item class="pl-2 ml-1 pr-0 mr-3 mb-1 mt-1">
-                                <a v-if="item.avatar" @click.prevent="onParticipantClick(item)" :href="getLink(item)">
-                                    <v-list-item-avatar class="ma-0 pa-0">
-                                        <v-img :src="item.avatar"></v-img>
-                                    </v-list-item-avatar>
-                                </a>
-                                <v-list-item-content class="ml-4">
-                                    <v-row no-gutters align="center" class="d-flex flex-row">
-                                        <v-col class="flex-grow-0 flex-shrink-0">
-                                            <v-list-item-title :class="!isMobile() ? 'mr-2' : ''"><a @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{item.login + (item.id == currentUser.id ? $vuetify.lang.t('$vuetify.you_brackets') : '' )}}</a></v-list-item-title>
-                                        </v-col>
-                                    </v-row>
-                                </v-list-item-content>
+                            <v-list-item @click.prevent="onParticipantClick(item)" :href="getLink(item)">
+                                <template v-slot:prepend v-if="hasLength(item.avatar)">
+                                    <v-avatar :image="item.avatar"></v-avatar>
+                                </template>
+                                <v-list-item-title>
+                                {{item.login + (item.id == chatStore.currentUser.id ? $vuetify.locale.t('$vuetify.you_brackets') : '' )}}
+                              </v-list-item-title>
                             </v-list-item>
-                            <v-divider></v-divider>
                         </template>
                     </v-list>
                     <template v-else-if="!loading">
-                        <v-card-text>{{ $vuetify.lang.t('$vuetify.participants_not_found') }}</v-card-text>
+                        <v-card-text>{{ $vuetify.locale.t('$vuetify.participants_not_found') }}</v-card-text>
                     </template>
 
                     <v-progress-circular
@@ -39,13 +29,29 @@
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
-                    <v-pagination
+
+                <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
+                  <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
+                    <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                      <v-pagination
+                        variant="elevated"
+                        active-color="primary"
+                        density="comfortable"
                         v-if="shouldShowPagination"
-                        v-model="participantsPage"
-                        :length="participantsPagesCount"
-                    ></v-pagination>
-                    <v-spacer></v-spacer>
-                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                        v-model="page"
+                        :length="pagesCount"
+                      ></v-pagination>
+                    </v-col>
+                    <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                      <v-btn
+                        variant="elevated"
+                        color="red"
+                        @click="closeModal()"
+                      >
+                        {{ $vuetify.locale.t('$vuetify.close') }}
+                      </v-btn>
+                    </v-col>
+                  </v-row>
                 </v-card-actions>
 
             </v-card>
@@ -57,11 +63,12 @@
 
 import bus, {
     OPEN_MESSAGE_READ_USERS_DIALOG,
-} from "./bus";
+} from "./bus/bus";
 import axios from "axios";
-import {profile, profile_name} from "@/routes";
-import {mapGetters} from "vuex";
-import {GET_USER} from "@/store";
+import {profile, profile_name} from "@/router/routes";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore";
+import {hasLength} from "@/utils";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -79,13 +86,14 @@ export default {
         return {
             show: false,
             participantsDto: participantsDtoFactory(),
-            participantsPage: firstPage,
+            page: firstPage,
             loading: false,
             messageDto: null,
         }
     },
 
     methods: {
+        hasLength,
         showModal(messageDto) {
             this.show = true;
             this.messageDto = messageDto;
@@ -117,7 +125,7 @@ export default {
 
         },
         translatePage() {
-            return this.participantsPage - 1;
+            return this.page - 1;
         },
         onParticipantClick(user) {
             const routeDto = { name: profile_name, params: { id: user.id }};
@@ -131,13 +139,13 @@ export default {
         },
     },
     computed: {
+        ...mapStores(useChatStore),
         chatId() {
             return this.$route.params.id
         },
-        ...mapGetters({currentUser: GET_USER}), // currentUser is here, 'getUser' -- in store.js
-        participantsPagesCount() {
+        pagesCount() {
             const count = Math.ceil(this.participantsDto.participantsCount / pageSize);
-            console.debug("Calc pages count", count);
+            // console.debug("Calc pages count", count);
             return count;
         },
         shouldShowPagination() {
@@ -151,18 +159,20 @@ export default {
                 this.closeModal();
             }
         },
+        page(newValue) {
+            if (this.show) {
+                console.debug("SettingNewPage", newValue);
+                this.participantsDto = participantsDtoFactory();
+                this.loadData();
+            }
+        },
     },
-    created() {
-        bus.$on(OPEN_MESSAGE_READ_USERS_DIALOG, this.showModal);
+    mounted() {
+        bus.on(OPEN_MESSAGE_READ_USERS_DIALOG, this.showModal);
     },
-    destroyed() {
-        bus.$off(OPEN_MESSAGE_READ_USERS_DIALOG, this.showModal);
+    beforeUnmount() {
+        bus.off(OPEN_MESSAGE_READ_USERS_DIALOG, this.showModal);
     },
 }
 </script>
 
-<style lang="stylus">
-.white-colored {
-    color white !important
-}
-</style>

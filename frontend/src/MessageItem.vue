@@ -1,27 +1,26 @@
 <template>
-    <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="'message-' + item.id">
-        <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}" class="user-link">
-            <v-list-item-avatar v-if="item.owner && item.owner.avatar" class="pr-0 mr-3">
-                <img :src="item.owner.avatar"></img>
-            </v-list-item-avatar>
-        </router-link>
-
+    <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="id">
+      <div v-if="item.owner && item.owner.avatar" class="item-avatar mt-2 pr-0 mr-3">
+        <a :href="getOwnerLink(item)" class="user-link" @click.prevent.stop="onProfileClick(item)">
+          <img :src="item.owner.avatar">
+        </a>
+      </div>
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
-                <router-link :to="{ name: 'profileUser', params: { id: item.owner.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.lang.t('$vuetify.time_at')}} </span>{{getDate(item)}}
+                <a :href="getOwnerLink(item)" class="colored-link" @click.prevent.stop="onProfileClick(item)">{{getOwner(item.owner)}}</a><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                 <template v-if="!isMobile() && !isInBlog">
-                    <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item)" small :title="$vuetify.lang.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
-                    <v-icon class="mx-1" v-if="item.canDelete" color="error" @click="deleteMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.delete_btn')">mdi-delete</v-icon>
-                    <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark small :title="$vuetify.lang.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
-                    <v-icon class="mx-1" small :title="$vuetify.lang.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
-                    <v-icon v-if="canResend" class="mx-1" small :title="$vuetify.lang.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
-                    <v-icon v-if="!item.pinned" class="mx-1" small :title="$vuetify.lang.t('$vuetify.pin_message')" @click="pinMessage(item)">mdi-pin</v-icon>
-                    <v-icon v-if="item.pinned" class="mx-1" small :title="$vuetify.lang.t('$vuetify.remove_from_pinned')" @click="removedFromPinned(item)">mdi-pin-off-outline</v-icon>
-                    <a v-if="item.blogPost" class="mx-1" :href="getBlogLink(item)" :title="$vuetify.lang.t('$vuetify.go_to_blog_post')"><v-icon small>mdi-postage-stamp</v-icon></a>
-                    <router-link class="mx-1 hash" :to="getMessageLink(item)" :title="$vuetify.lang.t('$vuetify.link')">#</router-link>
+                    <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item)" size="small" :title="$vuetify.locale.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
+                    <v-icon class="mx-1" v-if="item.canDelete" color="red" @click="deleteMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
+                    <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
+                    <v-icon class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
+                    <v-icon v-if="canResend" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
+                    <v-icon v-if="!item.pinned" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.pin_message')" @click="pinMessage(item)">mdi-pin</v-icon>
+                    <v-icon v-if="item.pinned" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.remove_from_pinned')" @click="removedFromPinned(item)">mdi-pin-off-outline</v-icon>
+                    <a v-if="item.blogPost" class="mx-1 colored-link" :href="getBlogLink(item)" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')"><v-icon size="small">mdi-postage-stamp</v-icon></a>
+                    <router-link class="mx-1 hash colored-link" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')">#</router-link>
                 </template>
             </v-container>
-            <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick(item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
+            <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick($event, item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
                 <div v-if="item.embedMessage" class="embedded-message">
                     <template v-if="canRenderLinkToSource(item)">
                         <router-link class="list-item-head" :to="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</router-link>
@@ -47,19 +46,39 @@
         embed_message_resend, getBlogLink,
         getHumanReadableDate,
     } from "@/utils";
-    import "./message.styl";
-    import {chat_name, messageIdHashPrefix} from "./routes"
+    import "./messageBody.styl";
+    import {chat_name, messageIdHashPrefix, profile, profile_name} from "@/router/routes"
 
     export default {
-        props: ['item', 'chatId', 'my', 'highlight', 'canResend', 'isInBlog'],
+        props: ['id', 'item', 'chatId', 'my', 'highlight', 'canResend', 'isInBlog'],
         methods: {
-            onMessageClick(dto) {
-                if (!this.isInBlog) {
-                    axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`)
+            getOwnerRoute(item) {
+                return { name: profile_name, params: { id: item.owner?.id }}
+            },
+            getOwnerLink(item) {
+                return profile + "/" + item.owner?.id;
+            },
+            onProfileClick(item) {
+                if (this.isInBlog) {
+                    window.location.href = this.getOwnerLink(item);
+                } else {
+                    const route = this.getOwnerRoute(item);
+                    this.$router.push(route);
                 }
             },
+            onMessageClick(event, dto) {
+                if (this.isMobile()) {
+                  this.onShowContextMenu(event, dto);
+                }
+                this.sendRead(dto);
+            },
             onMessageMouseMove(item) {
-                this.onMessageClick(item);
+                this.sendRead(item);
+            },
+            sendRead(dto) {
+              if (!this.isInBlog) {
+                axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`)
+              }
             },
             deleteMessage(dto){
                 this.$emit('deleteMessage', dto)
@@ -87,7 +106,7 @@
             },
 
             getOwner(owner) {
-                return owner.login
+                return owner?.login
             },
             getDate(item) {
                 return getHumanReadableDate(item.createDateTime)
@@ -98,7 +117,8 @@
                     params: {
                         id: this.chatId
                     },
-                    hash: messageIdHashPrefix + item.id
+                    hash: messageIdHashPrefix + item.id,
+                    query: this.$route.query
                 }
             },
             getEmbedLinkTo(item) {
@@ -133,7 +153,7 @@
                 if (item.embedMessage.embedType == embed_message_reply) {
                     return this.getOwner(item.embedMessage.owner)
                 } else if (item.embedMessage.embedType == embed_message_resend) {
-                    return this.getOwner(item.embedMessage.owner) + this.$vuetify.lang.t('$vuetify.in') + item.embedMessage.chatName;
+                    return this.getOwner(item.embedMessage.owner) + this.$vuetify.locale.t('$vuetify.in') + item.embedMessage.chatName;
                 }
             },
             getEmbedHeadLite(item){
@@ -145,7 +165,7 @@
                 return item.embedMessage == null || item.embedMessage.embedType == embed_message_reply
             },
             onShowContextMenu(event, item) {
-                this.$emit('contextmenu', event, item)
+                this.$emit('customcontextmenu', event, item)
             },
         },
         created() {
@@ -154,8 +174,17 @@
     }
 </script>
 
-<style lang="stylus">
+<style lang="stylus" scoped>
   @import "common.styl"
+  @import "messageWrapper.styl"
+  @import "itemAvatar.styl"
+
+  .list-item-head {
+    text-decoration none
+    a {
+      text-decoration none
+    }
+  }
 
   .embedded-message {
       background: $embedMessageColor;
@@ -164,6 +193,11 @@
       margin: 0.5em 0.5em 0.5em 0.5em;
       padding: 0.3em 0.5em 0.5em 0.5em;
       quotes: "\201C""\201D""\2018""\2019";
+
+      .message-item-text {
+        padding: revert
+      }
+
   }
 
   .user-link {

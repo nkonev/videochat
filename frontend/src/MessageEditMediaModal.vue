@@ -1,47 +1,54 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" scrollable>
-            <v-card>
-                <v-card-title>{{ title() }}</v-card-title>
-
+          <v-card :title="title()">
                 <v-card-text>
-                    <v-row dense v-if="!loading">
-                        <template v-if="dto.count > 0">
-                            <v-col
-                                v-for="mediaFile in dto.files"
-                                :key="mediaFile.id"
-                                :cols="6"
-                            >
-                                <v-hover>
-                                    <template v-slot:default="{ hover }">
-                                        <v-card>
+                    <v-row
+                      dense
+                      v-if="!loading"
+                      class="fill-height"
+                      align="center"
+                      justify="start"
+                    >
+                        <template
+                          v-if="dto.count > 0"
+                          v-for="(mediaFile, i) in dto.files"
+                          :key="mediaFile.id"
+                        >
+                            <v-col :cols="6">
+                                <v-hover v-slot="{ isHovering, props }">
+
+                                    <v-card v-bind="props" @click="accept(mediaFile)">
+
                                             <v-img
                                                 :src="mediaFile.previewUrl"
-                                                class="white--text align-end"
                                                 gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+                                                class="align-end"
                                                 height="200px"
+                                                cover
                                             >
-                                                <v-card-title v-text="mediaFile.filename"></v-card-title>
+                                                <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
+
                                             </v-img>
 
-                                            <v-fade-transition>
-                                                <v-overlay
-                                                    v-if="hover"
-                                                    absolute
-                                                    @click="accept(mediaFile)"
-                                                    style="cursor: pointer"
-                                                >
-                                                    {{ $vuetify.lang.t('$vuetify.click_to_choose') }}
-                                                </v-overlay>
-                                            </v-fade-transition>
+                                            <!-- Even transition="false" doesn't actually disable the transition, it fixes breakage of the markup of hover -->
+                                            <v-overlay
+                                                :model-value="isHovering"
+                                                :transition="false"
+                                                contained
+                                                class="align-center justify-center cursor-pointer"
+                                            >
+                                                <div class="text-white">
+                                                    {{ $vuetify.locale.t('$vuetify.click_to_choose') }}
+                                                </div>
+                                            </v-overlay>
 
-                                        </v-card>
-                                    </template>
+                                    </v-card>
                                 </v-hover>
                             </v-col>
                         </template>
                         <template v-else>
-                            <v-card-text>{{ $vuetify.lang.t('$vuetify.no_files') }}</v-card-text>
+                            <v-card-text>{{ $vuetify.locale.t('$vuetify.no_files') }}</v-card-text>
                         </template>
                     </v-row>
 
@@ -54,17 +61,28 @@
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
-                    <v-pagination
-                        v-if="shouldShowPagination"
-                        v-model="filePage"
-                        :length="filePagesCount"
-                    ></v-pagination>
-                    <v-spacer></v-spacer>
-                    <v-btn color="primary" class="mr-2 my-1" @click="fromUrl()" min-width="0" :title="$vuetify.lang.t('$vuetify.from_link')"><v-icon>mdi-link-variant</v-icon></v-btn>
-                    <v-btn color="primary" class="mr-2 my-1" @click="fromDisk()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.lang.t('$vuetify.choose_file_from_disk') }}</v-btn>
-                    <v-btn color="error" class="my-1" @click="closeModal()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+
+                  <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
+                  <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
+                      <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                          <v-pagination
+                              variant="elevated"
+                              active-color="primary"
+                              density="comfortable"
+                              v-if="shouldShowPagination"
+                              v-model="page"
+                              :length="pagesCount"
+                          ></v-pagination>
+                      </v-col>
+                      <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                          <v-btn variant="outlined" @click="fromUrl()" min-width="0" :title="$vuetify.locale.t('$vuetify.from_link')"><v-icon size="large">mdi-link-variant</v-icon></v-btn>
+                          <v-btn color="primary" variant="flat" @click="fromDisk()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.choose_file_from_disk') }}</v-btn>
+                          <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                      </v-col>
+                  </v-row>
                 </v-card-actions>
-            </v-card>
+
+          </v-card>
         </v-dialog>
     </v-row>
 </template>
@@ -72,7 +90,7 @@
 <script>
     import axios from "axios";
 
-    import bus, {OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA} from "./bus";
+    import bus, {OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA} from "./bus/bus";
     import {link_dialog_type_add_media_by_link, media_image, media_video} from "@/utils";
 
     const firstPage = 1;
@@ -89,7 +107,7 @@
                 setExistingMediaCallback: null,
                 loading: false,
                 dto: dtoFactory(),
-                filePage: firstPage,
+                page: firstPage,
             }
         },
         watch: {
@@ -98,7 +116,7 @@
                     this.closeModal();
                 }
             },
-            filePage(newValue) {
+            page(newValue) {
                 if (this.show) {
                     console.debug("SettingNewPage", newValue);
                     this.dto = dtoFactory();
@@ -107,9 +125,9 @@
             },
         },
         computed: {
-            filePagesCount() {
+            pagesCount() {
                 const count = Math.ceil(this.dto.count / pageSize);
-                console.debug("Calc pages count", count);
+                // console.debug("Calc pages count", count);
                 return count;
             },
             shouldShowPagination() {
@@ -120,7 +138,7 @@
             },
         },
         methods: {
-            showModal(type, fromDiskCallback, setExistingMediaCallback) {
+            showModal({type, fromDiskCallback, setExistingMediaCallback}) {
                 this.$data.show = true;
                 this.type = type;
                 this.fromDiskCallback = fromDiskCallback;
@@ -143,18 +161,18 @@
                 this.setExistingMediaCallback = null;
                 this.loading = false;
                 this.dto = dtoFactory();
-                this.filePage = firstPage;
+                this.page = firstPage;
             },
             title() {
                 switch (this.type) {
                     case media_video:
-                        return this.$vuetify.lang.t('$vuetify.message_edit_video')
+                        return this.$vuetify.locale.t('$vuetify.message_edit_video')
                     case media_image:
-                        return this.$vuetify.lang.t('$vuetify.message_edit_image')
+                        return this.$vuetify.locale.t('$vuetify.message_edit_image')
                 }
             },
             fromUrl() {
-                bus.$emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_by_link, mediaType: this.type});
+                bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_by_link, mediaType: this.type});
                 this.closeModal();
             },
             fromDisk() {
@@ -164,7 +182,7 @@
                 this.closeModal();
             },
             translatePage() {
-                return this.filePage - 1;
+                return this.page - 1;
             },
             updateFiles() {
                 if (!this.show) {
@@ -186,11 +204,20 @@
                     })
             },
         },
-        created() {
-            bus.$on(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
+        mounted() {
+            bus.on(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
         },
-        destroyed() {
-            bus.$off(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
+        beforeUnmount() {
+            bus.off(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
         },
     }
 </script>
+
+<style lang="stylus" scoped>
+  .breaks {
+    white-space: break-spaces;
+  }
+  .cursor-pointer {
+    cursor pointer
+  }
+</style>

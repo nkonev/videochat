@@ -1,15 +1,21 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" max-width="360" persistent>
-            <v-card>
-                <v-card-title>{{title}}</v-card-title>
+            <v-card :title="title" :disabled="loading">
+                <v-progress-linear
+                  :active="loading"
+                  :indeterminate="loading"
+                  absolute
+                  bottom
+                  color="primary"
+                ></v-progress-linear>
 
                 <v-card-text>{{text}}</v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
                     <v-spacer></v-spacer>
-                    <v-btn color="error" class="my-1 mr-2" @click="actionFunction()">{{buttonName}}</v-btn>
-                    <v-btn class="my-1" @click="lightClose()">{{ $vuetify.lang.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="red" variant="flat" @click="actionFunction(this)">{{buttonName}}</v-btn>
+                    <v-btn variant="outlined" @click="lightClose()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -17,12 +23,13 @@
 </template>
 
 <script>
-    import bus, {OPEN_SIMPLE_MODAL, CLOSE_SIMPLE_MODAL} from "./bus";
+    import bus, {OPEN_SIMPLE_MODAL, CLOSE_SIMPLE_MODAL} from "./bus/bus";
 
     export default {
         data () {
             return {
                 show: false,
+                loading: false,
                 title: "",
                 text: "",
                 buttonName: "",
@@ -46,21 +53,26 @@
                 this.$data.show = false;
                 this.$data.actionFunction = ()=>{};
                 this.$data.cancelFunction = null;
+                this.$data.loading = false;
             },
             hideModal() {
-                this.lightClose();
+                this.$data.show = false;
+                this.$data.actionFunction = ()=>{};
+                this.$data.cancelFunction = null;
+                this.$data.loading = false;
+
                 this.$data.title = "";
                 this.$data.text = "";
                 this.$data.buttonName = "";
             },
         },
-        created() {
-            bus.$on(OPEN_SIMPLE_MODAL, this.showModal);
-            bus.$on(CLOSE_SIMPLE_MODAL, this.hideModal)
+        mounted() {
+            bus.on(OPEN_SIMPLE_MODAL, this.showModal);
+            bus.on(CLOSE_SIMPLE_MODAL, this.hideModal)
         },
-        destroyed() {
-            bus.$off(OPEN_SIMPLE_MODAL, this.showModal);
-            bus.$off(CLOSE_SIMPLE_MODAL, this.hideModal)
+        beforeUnmount() {
+            bus.off(OPEN_SIMPLE_MODAL, this.showModal);
+            bus.off(CLOSE_SIMPLE_MODAL, this.hideModal)
         },
     }
 </script>

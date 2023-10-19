@@ -1,123 +1,137 @@
 <template>
-    <v-app>
-        <v-app-bar app color='indigo' dark dense>
-            <v-breadcrumbs
-                :items="getBreadcrumbs()"
-            >
-            </v-breadcrumbs>
+  <v-app>
+    <v-app-bar color='indigo' dark :density="getDensity()">
+      <v-progress-linear
+          v-if="showProgress"
+          indeterminate
+          color="white"
+          absolute
+      ></v-progress-linear>
 
-            <v-spacer></v-spacer>
+      <v-breadcrumbs
+        :items="getBreadcrumbs()"
+      >
+      </v-breadcrumbs>
 
-            <template v-if="isShowSearch">
-                <v-btn v-if="showSearchButton && isMobile()" icon :title="searchName" @click="onOpenSearch()">
-                    <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
-                </v-btn>
-                <v-card v-if="!showSearchButton || !isMobile()" light :width="isMobile() ? '100%' : ''">
-                    <v-text-field prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="searchName" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true"></v-text-field>
-                </v-card>
-            </template>
-        </v-app-bar>
+      <v-spacer></v-spacer>
 
-        <!-- Sizes your content based upon application components -->
-        <v-main>
+      <template v-if="blogStore.isShowSearch">
+        <v-btn v-if="showSearchButton && isMobile()" icon :title="searchName()" @click="onOpenSearch()">
+          <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
+        </v-btn>
+        <v-card v-if="!showSearchButton || !isMobile()" variant="plain" min-width="330"  style="margin-left: 1.2em; margin-right: 2px">
+          <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" :label="searchName()"></v-text-field>
+        </v-card>
+      </template>
+    </v-app-bar>
 
-            <!-- Provides the application the proper gutter -->
-            <v-container fluid>
+    <v-main>
+      <v-container fluid class="ma-0 pa-0" style="height: 100%; width: 100%">
+        <router-view />
+      </v-container>
 
-                <!-- If using vue-router -->
-                <router-view></router-view>
+    </v-main>
 
-            </v-container>
-        </v-main>
-    </v-app>
+  </v-app>
 </template>
 
 <script>
-import 'typeface-roboto'
-import {GET_SEARCH_NAME, GET_SEARCH_STRING, GET_SHOW_SEARCH, SET_SEARCH_STRING} from "@/blogStore";
-import {mapGetters} from 'vuex'
-import bus, {SEARCH_STRING_CHANGED} from "@/blogBus";
-import {blog, blog_post_name} from "@/blogRoutes";
+import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
+import {blog, blog_post, blog_post_name} from "@/router/blogRoutes";
 import {hasLength} from "@/utils";
-
-let unsubscribe;
+import {
+    SEARCH_MODE_POSTS,
+    searchStringFacade
+} from "@/mixins/searchString";
+import {root} from "@/router/routes";
+import {mapStores} from "pinia";
+import {useBlogStore} from "@/store/blogStore";
 
 export default {
-    data: () => ({
-        showSearchButton: true,
-    }),
-    methods: {
-        resetInput() {
-            this.searchString = null;
-            this.showSearchButton = true;
-        },
-        getBreadcrumbs() {
-            const ret = [
-                {
-                    text: 'Videochat',
-                    disabled: false,
-                    href: '/',
-                },
-                {
-                    text: 'Blog',
-                    disabled: false,
-                    exactPath: true,
-                    to: blog,
-                },
-            ];
-            if (this.$route.name == blog_post_name) {
-                ret.push(
-                    {
-                        text: 'Post',
-                        disabled: false,
-                        to: '/blog/post',
-                    },
-                )
-            }
-            return ret
-        },
-        onOpenSearch() {
-            this.showSearchButton = false;
-        },
+  mixins: [
+      searchStringFacade(),
+  ],
+  data: () => ({
+    showSearchButton: true,
+  }),
+  methods: {
+    getStore() {
+        return this.blogStore
     },
-    computed: {
-        searchString: {
-            get() {
-                return this.$store.getters[GET_SEARCH_STRING];
-            },
-            set(newVal) {
-                this.$store.commit(SET_SEARCH_STRING, newVal);
-                return newVal;
-            }
+    resetInput() {
+      this.searchStringFacade = null;
+      this.showSearchButton = true;
+    },
+    getBreadcrumbs() {
+      const ret = [
+        {
+          title: 'Videochat',
+          disabled: false,
+          href: root,
         },
-        ...mapGetters({
-            searchName: GET_SEARCH_NAME,
-            isShowSearch: GET_SHOW_SEARCH,
-        }),
-        hasSearchString() {
-            return hasLength(this.searchString)
+        {
+          title: 'Blog',
+          disabled: false,
+          exactPath: true,
+          to: blog,
+        },
+      ];
+      if (this.$route.name == blog_post_name) {
+        ret.push(
+          {
+            title: 'Post #' + this.$route.params.id,
+            disabled: false,
+            to: blog_post + "/" + this.$route.params.id,
+          },
+        )
+      }
+      return ret
+    },
+    onOpenSearch() {
+      this.showSearchButton = false;
+    },
+    searchName() {
+        if (this.blogStore.searchType == SEARCH_MODE_POSTS) {
+            return this.$vuetify.locale.t('$vuetify.search_by_posts')
         }
     },
-    created() {
-        unsubscribe = this.$store.subscribe((mutation, state) => {
-            if (mutation.type == SET_SEARCH_STRING) {
-                bus.$emit(SEARCH_STRING_CHANGED, mutation.payload);
-                if (!hasLength(mutation.payload)) {
-                    this.showSearchButton = true;
-                }
-            }
-        });
+    getDensity() {
+          return this.isMobile() ? "comfortable" : "compact";
     },
-    beforeDestroy() {
-        unsubscribe();
-    }
+  },
+  computed: {
+    // https://pinia.vuejs.org/cookbook/options-api.html#usage-without-setup
+    ...mapStores(useBlogStore),
+    searchIcon() {
+      if (this.blogStore.searchType == SEARCH_MODE_POSTS) {
+          return 'mdi-forum'
+      }
+    },
+    hasSearchString() {
+      return hasLength(this.searchStringFacade)
+    },
+    showProgress() {
+        return this.blogStore.progressCount > 0
+    },
+  },
 }
 </script>
 
 <style lang="stylus">
-    .v-breadcrumbs {
-        li > a {
-            color white
-        }
-    }
+@import "constants.styl"
+
+.colored-link {
+    color: $linkColor;
+    text-decoration none
+}
+
+.v-breadcrumbs {
+  li > a {
+    color white
+  }
+}
+
+.with-pointer {
+  cursor pointer
+}
 </style>

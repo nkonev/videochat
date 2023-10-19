@@ -9,8 +9,8 @@
 
 <script>
 import "prosemirror-view/style/prosemirror.css";
-import "./message.styl";
-import { Editor, EditorContent } from "@tiptap/vue-2";
+import "./messageBody.styl";
+import { Editor, EditorContent } from "@tiptap/vue-3";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Italic from "@tiptap/extension-italic";
@@ -35,7 +35,7 @@ import bus, {
     OPEN_FILE_UPLOAD_MODAL,
     MEDIA_LINK_SET,
     EMBED_LINK_SET
-} from "./bus";
+} from "./bus/bus";
 import Video from "@/TipTapVideo";
 import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
@@ -43,8 +43,8 @@ import { v4 as uuidv4 } from 'uuid';
 const empty = "";
 
 const embedUploadFunction = (chatId, files, correlationId) => {
-    bus.$emit(OPEN_FILE_UPLOAD_MODAL, null, false, files, correlationId);
-    bus.$emit(FILE_UPLOAD_MODAL_START_UPLOADING);
+    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: uuidv4(), shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId});
+    bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 }
 
 const domParser = new DOMParser();
@@ -88,7 +88,7 @@ export default {
     },
     onUpdateContent() {
       const value = this.getContent();
-      this.$emit("input", value);
+      this.$emit("myinput", value);
     },
     setCursorToEnd() {
       this.editor.commands.focus('end')
@@ -144,9 +144,9 @@ export default {
     },
   },
   mounted() {
-    bus.$on(PREVIEW_CREATED, this.onPreviewCreated);
-    bus.$on(MEDIA_LINK_SET, this.onMediaLinkSet);
-    bus.$on(EMBED_LINK_SET, this.onEmbedLinkSet);
+    bus.on(PREVIEW_CREATED, this.onPreviewCreated);
+    bus.on(MEDIA_LINK_SET, this.onMediaLinkSet);
+    bus.on(EMBED_LINK_SET, this.onEmbedLinkSet);
 
     const imagePluginInstance = buildImageHandler(
     (image) => {
@@ -175,7 +175,7 @@ export default {
           History,
           Placeholder.configure({
               placeholder: ({ node }) => {
-                return this.$vuetify.lang.t('$vuetify.message_edit_placeholder')
+                return this.$vuetify.locale.t('$vuetify.message_edit_placeholder')
               },
           }),
           Text,
@@ -228,12 +228,15 @@ export default {
     }
   },
 
-  beforeDestroy() {
-    bus.$off(PREVIEW_CREATED, this.onPreviewCreated);
-    bus.$off(MEDIA_LINK_SET, this.onMediaLinkSet);
-    bus.$off(EMBED_LINK_SET, this.onEmbedLinkSet);
+  beforeUnmount() {
+    bus.off(PREVIEW_CREATED, this.onPreviewCreated);
+    bus.off(MEDIA_LINK_SET, this.onMediaLinkSet);
+    bus.off(EMBED_LINK_SET, this.onEmbedLinkSet);
 
     this.editor.destroy();
+    if (this.fileInput) {
+      this.fileInput.onchange = null;
+    }
     this.fileInput = null;
   },
 };
