@@ -101,7 +101,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  if (from.name == videochat_name && to.name != videochat_name && from.params.id && from.params.id != to.params.id) {
+  if (from.name == videochat_name && to.name != videochat_name && from.params.id && from.params.id != to.params.id && to.params.leavingVideoAcceptableParam != true) {
     bus.emit(OPEN_SIMPLE_MODAL, {
       buttonName: vuetify.locale.t('$vuetify.ok'),
       title: vuetify.locale.t('$vuetify.leave_call'),
