@@ -411,6 +411,11 @@ export default {
     isAllowedVideo() {
       return this.chatStore.currentUser && this.$route.name == videochat_name && this.chatDto?.participantIds?.length
     },
+    onVideoCallChanged(dto) {
+      if (dto.chatId == this.chatId) {
+        this.chatStore.videoChatUsersCount = dto.usersCount;
+      }
+    },
 
   },
   watch: {
@@ -452,6 +457,7 @@ export default {
     bus.on(MESSAGE_BROADCAST, this.onUserBroadcast);
     bus.on(CHAT_EDITED, this.onChatChange);
     bus.on(CHAT_DELETED, this.onChatDelete);
+    bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
 
     writingUsersTimerId = setInterval(()=>{
       const curr = + new Date();
@@ -474,6 +480,7 @@ export default {
     bus.off(MESSAGE_BROADCAST, this.onUserBroadcast);
     bus.off(CHAT_EDITED, this.onChatChange);
     bus.off(CHAT_DELETED, this.onChatDelete);
+    bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
 
     this.chatStore.title = null;
     setTitle(null);
