@@ -17,7 +17,6 @@ import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import { retry } from '@lifeomic/attempt';
-import store from "@/store/index";
 import {
   defaultAudioMute,
   getWebsocketUrlPrefix, isMobileBrowser,
