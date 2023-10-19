@@ -185,56 +185,56 @@
                     this.changing = true;
                 }
                 setVideoResolution(newVideoResolution);
-                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+                bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeScreenResolution(newVideoResolution) {
                 if (this.isVideoRoute()) {
                     this.changing = true;
                 }
                 setScreenResolution(newVideoResolution);
-                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+                bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeAudioPresents(v) {
                 if (this.isVideoRoute()) {
                     this.changing = true;
                 }
                 setStoredAudioPresents(v);
-                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+                bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeVideoPresents(v) {
                 if (this.isVideoRoute()) {
                     this.changing = true;
                 }
                 setStoredVideoPresents(v);
-                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+                bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeVideoSimulcast(v) {
                 if (this.isVideoRoute()) {
                     this.changing = true;
                 }
                 setStoredVideoSimulcast(v);
-                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+                bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeScreenSimulcast(v) {
                 if (this.isVideoRoute()) {
                     this.changing = true;
                 }
                 setStoredScreenSimulcast(v);
-                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+                bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeRoomDynacast(v) {
                 if (this.isVideoRoute()) {
                     this.changing = true;
                 }
                 setStoredRoomDynacast(v);
-                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+                bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeRoomAdaptiveStream(v) {
                 if (this.isVideoRoute()) {
                     this.changing = true;
                 }
                 setStoredRoomAdaptiveStream(v);
-                bus.$emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
+                bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeVideoPosition(v) {
                 setStoredVideoPosition(v)
