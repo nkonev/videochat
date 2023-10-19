@@ -104,6 +104,15 @@
 
             </template>
           </v-snackbar>
+          <v-snackbar v-model="invitedVideoChatAlert" color="success" timeout="-1" :multi-line="true" :transition="false">
+            <span class="call-blink">
+                {{ $vuetify.locale.t('$vuetify.you_called', invitedVideoChatId, invitedVideoChatName) }}
+            </span>
+            <template v-slot:actions>
+              <v-btn icon size="x-large" @click="onClickInvitation()"><v-icon size="x-large" color="white">mdi-phone</v-icon></v-btn>
+              <v-btn icon size="x-large" @click="onClickCancelInvitation()"><v-icon size="x-large" color="white">mdi-close-circle</v-icon></v-btn>
+            </template>
+          </v-snackbar>
 
 
           <router-view />
@@ -124,6 +133,7 @@
         <FileTextEditModal/>
         <PlayerModal/>
         <ChatEditModal/>
+        <PermissionsWarningModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.showDrawer">
@@ -147,11 +157,26 @@ import axios from "axios";
 import bus, {
   CHAT_ADD,
   CHAT_DELETED,
-  CHAT_EDITED, FOCUS,
-  LOGGED_OUT, NOTIFICATION_ADD, NOTIFICATION_DELETE, OPEN_FILE_UPLOAD_MODAL, OPEN_PARTICIPANTS_DIALOG, PLAYER_MODAL,
-  PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
-  SCROLL_DOWN, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED, VIDEO_CALL_INVITED, VIDEO_CALL_SCREEN_SHARE_CHANGED,
-  VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED, VIDEO_RECORDING_CHANGED, WEBSOCKET_RESTORED,
+  CHAT_EDITED,
+  FOCUS,
+  LOGGED_OUT,
+  NOTIFICATION_ADD,
+  NOTIFICATION_DELETE,
+  OPEN_FILE_UPLOAD_MODAL,
+  OPEN_PARTICIPANTS_DIALOG,
+  OPEN_PERMISSIONS_WARNING_MODAL,
+  PLAYER_MODAL,
+  PROFILE_SET,
+  REFRESH_ON_WEBSOCKET_RESTORED,
+  SCROLL_DOWN,
+  UNREAD_MESSAGES_CHANGED,
+  USER_PROFILE_CHANGED,
+  VIDEO_CALL_INVITED,
+  VIDEO_CALL_SCREEN_SHARE_CHANGED,
+  VIDEO_CALL_USER_COUNT_CHANGED,
+  VIDEO_DIAL_STATUS_CHANGED,
+  VIDEO_RECORDING_CHANGED,
+  WEBSOCKET_RESTORED,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -180,6 +205,14 @@ import FileTextEditModal from "@/FileTextEditModal.vue";
 import PlayerModal from "@/PlayerModal.vue";
 import ChatEditModal from "@/ChatEditModal.vue";
 import {once} from "lodash/function";
+import PermissionsWarningModal from "@/PermissionsWarningModal.vue";
+import {prefix} from "@/router/routes"
+
+const reactOnAnswerThreshold = 3 * 1000; // ms
+const audio = new Audio(`${prefix}/call.mp3`);
+const invitedVideoChatAlertTimeout = reactOnAnswerThreshold;
+
+let invitedVideoChatAlertTimer;
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -195,6 +228,9 @@ export default {
             lastAnswered: 0,
             showSearchButton: true,
             showWebsocketRestored: false,
+            invitedVideoChatId: 0,
+            invitedVideoChatName: null,
+            invitedVideoChatAlert: false,
         }
     },
     computed: {
@@ -478,6 +514,45 @@ export default {
           this.showWebsocketRestored = false;
           bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
         },
+        onVideoCallInvited(data) {
+          if ((+new Date() - this.lastAnswered) > reactOnAnswerThreshold) {
+            this.invitedVideoChatId = data.chatId;
+            this.invitedVideoChatName = data.chatName;
+            this.invitedVideoChatAlert = true;
+
+            // restart the timer
+            if (invitedVideoChatAlertTimer) {
+              clearInterval(invitedVideoChatAlertTimer);
+            }
+            // set auto-close snackbar
+            invitedVideoChatAlertTimer = setTimeout(()=>{
+              this.invitedVideoChatAlert = false;
+              invitedVideoChatAlertTimer = null;
+            }, invitedVideoChatAlertTimeout);
+
+            audio.play().catch(error => {
+              console.warn("Unable to play sound", error);
+              bus.emit(OPEN_PERMISSIONS_WARNING_MODAL);
+            })
+          }
+        },
+        onClickInvitation() {
+          axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`).then(()=>{
+            const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
+            goToPreserving(this.$route, this.$router, routerNewState);
+            this.invitedVideoChatId = 0;
+            this.invitedVideoChatName = null;
+            this.invitedVideoChatAlert = false;
+            this.updateLastAnsweredTimestamp();
+          });
+        },
+        onClickCancelInvitation() {
+          axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`).then(()=>{
+            this.invitedVideoChatAlert = false;
+            this.updateLastAnsweredTimestamp();
+          });
+        },
+
     },
     components: {
         ChatEditModal,
@@ -495,6 +570,7 @@ export default {
         MessageResendToModal,
         FileTextEditModal,
         PlayerModal,
+        PermissionsWarningModal,
     },
     created() {
         createGraphQlClient();
@@ -502,11 +578,11 @@ export default {
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
         bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
+        bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
 
         addEventListener("focus", this.onFocus);
 
         this.afterRouteInitialized = once(this.afterRouteInitialized);
-
         this.$router.afterEach((to, from) => {
             this.afterRouteInitialized()
         })
@@ -520,6 +596,7 @@ export default {
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(WEBSOCKET_RESTORED, this.onWsRestored);
+        bus.off(VIDEO_CALL_INVITED, this.onVideoCallInvited);
     },
 
     watch: {
