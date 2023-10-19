@@ -30,7 +30,6 @@ export default {
     mixins: [refreshLocalMutedInAppBarMixin()],
 
     data()  {
-      //const loadingMessage = this.$vuetify.locale.t('$vuetify.loading'); // TODO use computed
       const loadingMessage = 'Loading...';
 	    return {
             userName: loadingMessage,
