@@ -85,7 +85,7 @@ export default {
       } else if (position == second) {
         this.insertChildAtIndex(this.videoContainerDiv, el, 1);
       }
-      this.addComponentForUser(userIdentity, instance);
+      this.addComponentForUser(userIdentity, {component: instance, app: app});
       return instance;
     },
     insertChildAtIndex(element, child, index) {
@@ -108,7 +108,7 @@ export default {
       const videoTagId = prefix + this.getNewId();
 
       const participantIdentityString = participant.identity;
-      const components = this.getByUser(participantIdentityString);
+      const components = this.getByUser(participantIdentityString).map(c => c.component);
       const candidatesWithoutVideo = components.filter(e => !e.getVideoStreamId());
       const candidatesWithoutAudio = components.filter(e => !e.getAudioStreamId());
 
@@ -184,17 +184,19 @@ export default {
       this.refreshLocalMicrophoneAppBarButtons();
     },
     removeComponent(userIdentity, track) {
-      for (const component of this.getByUser(userIdentity)) {
+      for (const componentWrapper of this.getByUser(userIdentity)) {
+        const component = componentWrapper.component;
+        const app = componentWrapper.app;
         console.debug("For removal checking component=", component, "against", track);
         if (component.getVideoStreamId() == track.sid || component.getAudioStreamId() == track.sid) {
           console.log("Removing component=", component.getId());
           try {
             this.videoContainerDiv.removeChild(component.$el);
-            // TODO app.unmount()
+            app.unmount()
           } catch (e) {
             console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
           }
-          this.removeComponentForUser(userIdentity, component);
+          this.removeComponentForUser(userIdentity, componentWrapper);
         }
       }
     },
@@ -205,7 +207,7 @@ export default {
       for (const speaker of speakers) {
         const userIdentity = speaker.identity;
         const tracksSids = [...speaker.audioTracks.keys()];
-        const userComponents = this.getByUser(userIdentity);
+        const userComponents = this.getByUser(userIdentity).map(c => c.component);
         for (const component of userComponents) {
           const audioStreamId = component.getAudioStreamId();
           console.debug("Track sids", tracksSids, " component audio stream id", audioStreamId);
@@ -234,7 +236,7 @@ export default {
 
     handleTrackMuted(trackPublication, participant) {
       const participantIdentityString = participant.identity;
-      const components = this.getByUser(participantIdentityString);
+      const components = this.getByUser(participantIdentityString).map(c => c.component);
       const matchedVideoComponents = components.filter(e => trackPublication.trackSid == e.getVideoStreamId());
       const matchedAudioComponents = components.filter(e => trackPublication.trackSid == e.getAudioStreamId());
       for (const component of matchedVideoComponents) {
@@ -365,7 +367,7 @@ export default {
       }
     },
     onlyOneLocalTrackWithMicrophone(userIdentity) {
-      const userComponents = this.getByUser(userIdentity);
+      const userComponents = this.getByUser(userIdentity).map(c => c.component);
       const localComponentsWithAudio = userComponents.filter((component) => component.isComponentLocal() && component.getAudioStreamId() != null)
       if (localComponentsWithAudio.length == 1) {
         return localComponentsWithAudio[0]
@@ -461,20 +463,20 @@ export default {
       this.createLocalMediaTracks(null, null, true);
     },
 
-    addComponentForUser(userIdentity, component) {
+    addComponentForUser(userIdentity, componentWrapper) {
       let existingList = this.userVideoComponents.get(userIdentity);
       if (!existingList) {
         this.userVideoComponents.set(userIdentity, []);
         existingList = this.userVideoComponents.get(userIdentity);
       }
-      existingList.push(component);
+      existingList.push(componentWrapper);
     },
 
-    removeComponentForUser(userIdentity, component) {
+    removeComponentForUser(userIdentity, componentWrapper) {
       let existingList = this.userVideoComponents.get(userIdentity);
       if (existingList) {
         for(let i = 0; i < existingList.length; i++){
-          if (existingList[i].getId() == component.getId()) {
+          if (existingList[i].component.getId() == componentWrapper.component.getId()) {
             existingList.splice(i, 1);
           }
         }
@@ -482,10 +484,6 @@ export default {
       if (existingList.length == 0) {
         this.userVideoComponents.delete(userIdentity);
       }
-    },
-
-    isEmpty() {
-      return this.userVideoComponents.size == 0
     },
 
     getByUser(userIdentity) {
