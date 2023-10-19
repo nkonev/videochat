@@ -63,4 +63,3 @@ Demo server [installation](https://chat.nkonev.name/)
 * Replace `api.site.local` with your actual hostname, remove 8080 if need
 * Configure ssl in `deploy/traefik_conf/traefik.yml`
 * Open ports (if need) to Traefik and Livekit, described in `deploy/docker-compose-infra.template.yml`
-
