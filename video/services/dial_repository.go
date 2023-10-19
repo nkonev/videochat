@@ -32,12 +32,22 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		return err
 	}
 	_, err = s.redisClient.Expire(ctx, dialChatMembersKey(chatId), expiration).Result()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial expiration %v", err)
+		return err
+	}
+
 	err = s.redisClient.HSet(ctx, dialMetaKey(chatId), behalfUserIdConstant, behalfUserId).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata %v", err)
 		return err
 	}
 	_, err = s.redisClient.Expire(ctx, dialMetaKey(chatId), expiration).Result()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata expiration %v", err)
+		return err
+	}
+
 	return nil
 }
 
