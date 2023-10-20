@@ -27,7 +27,7 @@
                     </v-list>
 
                     <v-progress-circular
-                      class="my-4 mx-4 py-4"
+                      class="ma-4"
                       v-else
                       indeterminate
                       color="primary"

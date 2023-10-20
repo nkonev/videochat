@@ -60,7 +60,7 @@
                         </template>
                     </v-row>
                     <v-progress-circular
-                        class="my-4 py-4"
+                        class="my-4"
                         v-else
                         indeterminate
                         color="primary"

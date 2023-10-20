@@ -21,7 +21,7 @@
                     </template>
 
                     <v-progress-circular
-                        class="ma-4 pa-4"
+                        class="ma-4"
                         v-if="loading"
                         indeterminate
                         color="primary"
