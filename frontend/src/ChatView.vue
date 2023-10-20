@@ -35,7 +35,7 @@
 
                   <MessageList :chatDto="chatDto"/>
               </pane>
-              <pane size="15" class="message-edit-pane">
+              <pane size="20" class="message-edit-pane">
                 <MessageEdit :chatId="this.chatId"/>
               </pane>
             </splitpanes>
