@@ -340,7 +340,7 @@ jobs:
           (cd chat; ./chat &)
           (cd event; ./event &)
           # Using port 3000 we mimic to Vite's npm run dev
-          (docker run --rm -it -p 3000:8082 nkonev/chat-frontend:latest &)
+          (docker run --rm -p 3000:8082 nkonev/chat-frontend:latest &)
       - name: Wait for microservices
         run: |
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:8060 -- echo 'aaa is up' # because aaa creates schema
