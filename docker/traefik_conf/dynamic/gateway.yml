@@ -47,11 +47,11 @@ http:
       service: frontend-service
       middlewares:
         - "retry-middleware"
-    frontend-2-router:
-      rule: "PathPrefix(`/front2`)"
-      service: frontend-2-service
-      middlewares:
-        - "retry-middleware"
+#    frontend-old-router:
+#      rule: "PathPrefix(`/`)"
+#      service: frontend-old-service
+#      middlewares:
+#        - "retry-middleware"
     aaa-router:
       rule: "PathPrefix(`/api/login`) || Path(`/api/logout`) || PathPrefix(`/api/profile`) || PathPrefix(`/api/user`) || PathPrefix(`/api/oauth2`) || PathPrefix(`/api/register`) || PathPrefix(`/api/request-password-reset`) || PathPrefix(`/api/password-reset-set-new`)"
       service: aaa-service
