@@ -27,7 +27,7 @@ services:
       backend:
 
   # static server
-  frontend:
+  frontend-old:
     image: nginx:1.23.1
     restart: unless-stopped
     ports:
