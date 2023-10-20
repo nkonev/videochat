@@ -18,6 +18,8 @@ export const defaultWrongUser = {
 
 export const webUiUrl = "http://localhost:8081/";
 
+export const webUiChatsUrl = "http://localhost:8081/chats";
+
 export const recreateAaaOauth2MocksUrl = "http://localhost:9080/recreate-oauth2-mocks"
 
 export const removeChatParticipantsUrl = "http://localhost:1235/internal/delete-all-participants"

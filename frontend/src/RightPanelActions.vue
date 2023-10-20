@@ -1,6 +1,6 @@
 <template>
     <v-list>
-      <v-list-item class="test-user-login" v-if="chatStore.currentUser"
+      <v-list-item id="test-user-login" v-if="chatStore.currentUser"
                    :prepend-avatar="chatStore.currentUser.avatar"
                    :title="chatStore.currentUser.login"
                    :subtitle="chatStore.currentUser.shortInfo"
@@ -13,7 +13,7 @@
       <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-home" :title="$vuetify.locale.t('$vuetify.start')"></v-list-item>
       <v-list-item @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
       <v-list-item @click.prevent="goBlogs()" :href="getRouteBlogs()" prepend-icon="mdi-postage-stamp" :title="$vuetify.locale.t('$vuetify.blogs')"></v-list-item>
-      <v-list-item @click="createChat()" prepend-icon="mdi-plus" :title="$vuetify.locale.t('$vuetify.new_chat')"></v-list-item>
+      <v-list-item @click="createChat()" prepend-icon="mdi-plus" id="test-new-chat-dialog-button" :title="$vuetify.locale.t('$vuetify.new_chat')"></v-list-item>
       <v-list-item @click="editChat()" v-if="shouldDisplayEditChat()" prepend-icon="mdi-lead-pencil" :title="$vuetify.locale.t('$vuetify.edit_chat')"></v-list-item>
       <v-list-item v-if="canShowFiles()" @click.prevent="openFiles()" prepend-icon="mdi-file-download" :title="$vuetify.locale.t('$vuetify.files')"></v-list-item>
       <v-list-item @click="openPinnedMessages()" v-if="shouldPinnedMessages()" prepend-icon="mdi-pin" :title="$vuetify.locale.t('$vuetify.pinned_messages')"></v-list-item>

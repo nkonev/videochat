@@ -10,7 +10,7 @@ export default class ChatView {
     }
 
     async getMessage(index) {
-        return (await this.page.locator('#messagesScroller .message-item-text').nth(index).textContent()).trim()
+        return (await this.page.locator('.my-messages-scroller .message-item-text').nth(index).textContent()).trim()
     }
 
 }

@@ -12,7 +12,7 @@
                         @keydown.native.enter.prevent="saveChat"
                     >
                         <v-text-field
-                            id="new-chat-text"
+                            id="test-chat-text"
                             :label="$vuetify.locale.t('$vuetify.chat_name')"
                             v-model="editDto.name"
                             variant="outlined"
@@ -108,7 +108,7 @@
                     </v-btn>
                   </template>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" variant="flat" @click="saveChat" id="chat-save-btn">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
+                    <v-btn color="primary" variant="flat" @click="saveChat" id="test-chat-save-btn">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
                     <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>

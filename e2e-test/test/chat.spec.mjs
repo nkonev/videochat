@@ -33,6 +33,7 @@ test('login vkontakte and google then create chat then write a message', async (
     await vkChatViewPage.sendMessage(helloMike);
 
     const googleChatList = new ChatList(googlePage);
+    googleChatList.navigate();
     await expect(googleChatList.getRowsLocator().nth(0)).toHaveText(chatName);
     const googleChatsCount = await (googleChatList.getRowsLocator().count());
     console.log("count behalf google is", googleChatsCount);
@@ -45,7 +46,10 @@ test('login vkontakte and google then create chat then write a message', async (
     const helloJoe = "Hello, Joe!";
     await googleChatViewPage.sendMessage(helloJoe);
 
-    const receivedJoeMessage = await vkChatViewPage.getMessage(1);
+    const receivedMikeMessageVk = await vkChatViewPage.getMessage(1);
+    expect(receivedMikeMessageVk).toBe(helloMike);
+
+    const receivedJoeMessage = await vkChatViewPage.getMessage(0);
     expect(receivedJoeMessage).toBe(helloJoe);
 });
 
