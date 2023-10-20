@@ -104,6 +104,7 @@
                                 v-if="shouldShowPagination"
                                 v-model="page"
                                 :length="pagesCount"
+                                :total-visible="7"
                             ></v-pagination>
                         </v-col>
                         <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
