@@ -331,7 +331,7 @@ jobs:
       - name: Build microservices
         run: |
           (cd aaa; ./mvnw -DskipTests clean package)
-          (cd frontend; make download package)
+          (cd frontend; make check-env download package)
           (cd chat; make check-env download generate package-go)
           (cd event; make check-env download generate package-go)
       - name: Run microservices

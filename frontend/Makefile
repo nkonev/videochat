@@ -1,7 +1,10 @@
-.PHONY: download package-docker push-docker clean
+.PHONY: check-env download package-docker push-docker clean
 
 download:
 	npm install
+
+check-env:
+	docker version && echo -n 'npm: ' && npm --version && echo -n 'node: ' && node --version
 
 BUILDDIR := ./build
 DIST := ./dist
