@@ -27,7 +27,7 @@ package-docker:
 package: package-node generate-git package-docker
 
 push-docker:
-	echo "Will push docker chat image" && \
+	echo "Will push docker frontend image" && \
 	docker push $(IMAGE)
 
 clean:
