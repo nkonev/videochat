@@ -383,14 +383,19 @@ const ownerIdKey = "ownerid"
 const chatIdKey = "chatid"
 const correlationIdKey = "correlationid"
 
+const recordingKey = "recording"
+
 const originalKey = "originalkey"
 
-func SerializeMetadataSimple(userId int64, chatId int64, correlationId *string) map[string]string {
+func SerializeMetadataSimple(userId int64, chatId int64, correlationId *string, isRecording *bool) map[string]string {
 	var userMetadata = map[string]string{}
 	userMetadata[ownerIdKey] = utils.Int64ToString(userId)
 	userMetadata[chatIdKey] = utils.Int64ToString(chatId)
 	if correlationId != nil {
 		userMetadata[correlationIdKey] = *correlationId
+	}
+	if isRecording != nil {
+		userMetadata[recordingKey] = utils.BooleanToString(*isRecording)
 	}
 	return userMetadata
 }
@@ -483,6 +488,14 @@ func CorrelationIdKey(hasAmzPrefix bool) string {
 		prefix = xAmzMetaPrefix
 	}
 	return prefix + strings.Title(correlationIdKey)
+}
+
+func RecordingKey(hasAmzPrefix bool) string {
+	var prefix = ""
+	if hasAmzPrefix {
+		prefix = xAmzMetaPrefix
+	}
+	return prefix + strings.Title(recordingKey)
 }
 
 func SerializeTags(public bool) map[string]string {

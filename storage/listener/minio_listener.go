@@ -21,10 +21,11 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 
 		eventName := gjson.Get(strData, "EventName").String()
 		key := gjson.Get(strData, "Key").String()
-		result := gjson.Get(strData, "Records.0.s3.object.userMetadata") // empty in case delete
-		chatId := result.Get(services.ChatIdKey(true)).Int()
-		ownerId := result.Get(services.OwnerIdKey(true)).Int()
-		correlationIdStr := result.Get(services.CorrelationIdKey(true)).String()
+		userMetadata := gjson.Get(strData, "Records.0.s3.object.userMetadata") // empty in case delete
+		chatId := userMetadata.Get(services.ChatIdKey(true)).Int()
+		ownerId := userMetadata.Get(services.OwnerIdKey(true)).Int()
+		correlationIdStr := userMetadata.Get(services.CorrelationIdKey(true)).String()
+		isRecording := userMetadata.Get(services.RecordingKey(true)).Bool()
 		var correlationId *string
 		if correlationIdStr != "" {
 			correlationId = &correlationIdStr
@@ -50,7 +51,7 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 			return err
 		}
 
-		eventType, err := utils.GetEventType(eventName)
+		eventType, err := utils.GetEventType(eventName, isRecording)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
 			return err

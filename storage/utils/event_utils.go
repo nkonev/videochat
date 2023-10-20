@@ -11,7 +11,7 @@ const (
 	FILE_UPDATED
 )
 
-func GetEventType(eventName string) (EventType, error) {
+func GetEventType(eventName string, isRecording bool) (EventType, error) {
 	var eventType EventType
 	switch eventName {
 	case ObjectCreatedCompleteMultipartUpload:
@@ -20,8 +20,13 @@ func GetEventType(eventName string) (EventType, error) {
 		eventType = FILE_DELETED
 	case ObjectCreatedPutTagging:
 		eventType = FILE_UPDATED
-	case ObjectCreatedPut:
-		eventType = FILE_UPDATED
+	case ObjectCreatedPut: {
+		if isRecording {
+			eventType = FILE_CREATED
+		} else {
+			eventType = FILE_UPDATED
+		}
+	}
 	default:
 		return UNKNOWN, errors.New("Unable to determine event type")
 	}

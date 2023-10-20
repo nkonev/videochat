@@ -107,6 +107,10 @@ func InterfaceToString(i interface{}) string {
 	return fmt.Sprintf("%v", i)
 }
 
+func BooleanToString(i bool) string {
+	return fmt.Sprintf("%v", i)
+}
+
 func ParseBoolean(str string) (bool, error) {
 	return strconv.ParseBool(str)
 }

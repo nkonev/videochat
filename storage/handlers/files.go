@@ -159,7 +159,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
 	}
 
-	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId)
+	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId, nil)
 
 	expire := viper.GetDuration("minio.multipart.expire")
 	expTime := time.Now().Add(expire)
@@ -428,7 +428,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 	aKey := services.GetKey(bindTo.Filename, fileItemUuid, chatId)
 
-	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil)
+	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil, nil)
 
 	if _, err := h.minio.PutObject(context.Background(), bucketName, aKey, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
@@ -869,7 +869,8 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 
-	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, bindTo.ChatId, nil)
+	isRecording := true
+	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, bindTo.ChatId, nil, &isRecording)
 
 	chatFileItemUuid := uuid.New().String()
 
