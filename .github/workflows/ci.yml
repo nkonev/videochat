@@ -115,7 +115,7 @@ jobs:
           WORKDIR=./frontend;
           IMAGE=nkonev/chat-frontend:latest;
           GIT_HASH=$(git rev-list -1 HEAD);
-          cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp ./nginx/frontend.conf $BUILDDIR && cp -r ./dist $BUILDDIR &&
+          cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp ./nginx/frontend.conf $BUILDDIR && mv ./dist $BUILDDIR &&
           docker build -t $IMAGE --build-arg GIT_HASH=$GIT_HASH $BUILDDIR &&
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" &&
