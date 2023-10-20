@@ -80,7 +80,7 @@ jobs:
           WORKDIR=./frontend-old;
           IMAGE=nkonev/chat-frontend:latest;
           GIT_HASH=$(git rev-list -1 HEAD);
-          cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp -r ../frontend-nginx/* $BUILDDIR && cp ../docker/nginx/frontend.conf $BUILDDIR &&
+          cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp -r ./dist $BUILDDIR && cp ../docker/nginx/frontend.conf $BUILDDIR &&
           docker build -t $IMAGE --build-arg GIT_HASH=$GIT_HASH $BUILDDIR &&
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" &&
@@ -105,7 +105,7 @@ jobs:
           key: ${{ runner.os }}-frontend-cache-v2-${{ hashFiles('**/package-lock.json') }}
       - name: Build with npm run
         run: |
-          (cd frontend; npm install && npm run build && mkdir -p ../frontend-nginx/dist && mv dist/* ../frontend-nginx/dist/)
+          (cd frontend; npm install && npm run build)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
@@ -115,7 +115,7 @@ jobs:
           WORKDIR=./frontend;
           IMAGE=nkonev/chat-frontend:latest;
           GIT_HASH=$(git rev-list -1 HEAD);
-          cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp -r ../frontend-nginx/* $BUILDDIR && cp ../docker/nginx/frontend.conf $BUILDDIR &&
+          cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp -r ./nginx/* $BUILDDIR && cp ../docker/nginx/frontend.conf $BUILDDIR &&
           docker build -t $IMAGE --build-arg GIT_HASH=$GIT_HASH $BUILDDIR &&
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" &&

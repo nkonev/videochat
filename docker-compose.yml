@@ -27,19 +27,20 @@ services:
       backend:
 
   # static server
-  frontend-old:
-    image: nginx:1.23.1
-    restart: unless-stopped
-    ports:
-      - 8082:8082
-    volumes:
-      - ./frontend-nginx:/usr/share/nginx/html:z
-      - ./docker/nginx/frontend.conf:/etc/nginx/conf.d/default.conf:z
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "1"
+  # TODO fix paths for old front
+#  frontend-old:
+#    image: nginx:1.23.1
+#    restart: unless-stopped
+#    ports:
+#      - 8082:8082
+#    volumes:
+#      - ./frontend-nginx:/usr/share/nginx/html:z
+#      - ./docker/nginx/frontend.conf:/etc/nginx/conf.d/default.conf:z
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "50m"
+#        max-file: "1"
   postgresql:
     image: postgres:15.1-alpine3.17
     restart: unless-stopped
