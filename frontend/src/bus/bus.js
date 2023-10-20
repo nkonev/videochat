@@ -96,6 +96,8 @@ export const USER_PROFILE_CHANGED = "userProfileChanged";
 export const ADD_VIDEO_SOURCE = "addVideoSource";
 export const ADD_SCREEN_SOURCE = "addScreenSource";
 
+export const ADD_VIDEO_SOURCE_DIALOG = "addVideoSourceDialog";
+
 export const SET_LOCAL_MICROPHONE_MUTED = "setLocalMicrophoneMuted";
 
 export const REFRESH_ON_WEBSOCKET_RESTORED = "refreshOnWsRestored";

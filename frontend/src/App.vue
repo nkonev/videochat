@@ -53,6 +53,19 @@
             <v-icon>mdi-postage-stamp</v-icon>
           </v-btn>
 
+          <v-btn v-if="chatStore.showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.locale.t('$vuetify.screen_share')">
+            <v-icon>mdi-monitor-screenshot</v-icon>
+          </v-btn>
+          <v-btn v-if="chatStore.showHangButton && !isMobile()" icon @click="addVideoSource()" :title="$vuetify.locale.t('$vuetify.source_add')">
+            <v-icon>mdi-video-plus</v-icon>
+          </v-btn>
+          <v-btn v-if="chatStore.showRecordStartButton && !isMobile()" icon @click="startRecord()" :loading="chatStore.initializingStaringVideoRecord" :title="$vuetify.locale.t('$vuetify.start_record')">
+            <v-icon>mdi-record-rec</v-icon>
+          </v-btn>
+          <v-btn v-if="chatStore.showRecordStopButton && !isMobile()" icon @click="stopRecord()" :loading="chatStore.initializingStoppingVideoRecord" :title="$vuetify.locale.t('$vuetify.stop_record')">
+            <v-icon color="red">mdi-stop</v-icon>
+          </v-btn>
+
           <v-btn v-if="chatStore.showScrollDown" icon @click="scrollDown()" :title="$vuetify.locale.t('$vuetify.scroll_down')">
             <v-icon :x-large="isMobile()">mdi-arrow-down-thick</v-icon>
           </v-btn>
@@ -143,6 +156,7 @@
         <PlayerModal/>
         <ChatEditModal/>
         <PermissionsWarningModal/>
+        <VideoAddNewSourceModal/>
     </v-main>
 
     <v-navigation-drawer location="right" v-model="chatStore.showDrawer">
@@ -164,6 +178,7 @@ import {
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
+  ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG,
   CHAT_ADD,
   CHAT_DELETED,
   CHAT_EDITED,
@@ -216,6 +231,7 @@ import ChatEditModal from "@/ChatEditModal.vue";
 import {once} from "lodash/function";
 import PermissionsWarningModal from "@/PermissionsWarningModal.vue";
 import {prefix} from "@/router/routes"
+import VideoAddNewSourceModal from "@/VideoAddNewSourceModal.vue";
 
 const reactOnAnswerThreshold = 4 * 1000; // ms
 const audio = new Audio(`${prefix}/call.mp3`);
@@ -570,6 +586,39 @@ export default {
         copyCallLink() {
           copyCallLink(this.chatId)
         },
+        addVideoSource() {
+          bus.emit(ADD_VIDEO_SOURCE_DIALOG);
+        },
+        addScreenSource() {
+          bus.emit(ADD_SCREEN_SOURCE);
+        },
+        onVideRecordingChanged(e) {
+          if (this.isVideoRoute()) {
+            this.chatStore.showRecordStartButton = !e.recordInProgress;
+            this.chatStore.showRecordStopButton = e.recordInProgress;
+          } else if (e.recordInProcess) {
+            this.chatStore.showRecordStartButton = !e.recordInProgress;
+            this.chatStore.showRecordStopButton = e.recordInProgress;
+          }
+          if (this.chatStore.initializingStaringVideoRecord && e.recordInProgress) {
+            this.chatStore.initializingStaringVideoRecord = false;
+          }
+          if (this.chatStore.initializingStoppingVideoRecord && !e.recordInProgress) {
+            this.chatStore.initializingStoppingVideoRecord = false;
+          }
+        },
+        startRecord() {
+          axios.put(`/api/video/${this.chatId}/record/start`);
+          this.chatStore.initializingStaringVideoRecord = true;
+        },
+        stopRecord() {
+          axios.put(`/api/video/${this.chatId}/record/stop`);
+          this.chatStore.initializingStoppingVideoRecord = true;
+        },
+        isVideoRoute() {
+          return this.$route.name == videochat_name
+        },
+
     },
     components: {
         ChatEditModal,
@@ -588,6 +637,7 @@ export default {
         FileTextEditModal,
         PlayerModal,
         PermissionsWarningModal,
+        VideoAddNewSourceModal,
     },
     created() {
         createGraphQlClient();
@@ -596,6 +646,7 @@ export default {
         bus.on(LOGGED_OUT, this.onLoggedOut);
         bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
+        bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
 
         addEventListener("focus", this.onFocus);
 
@@ -614,6 +665,7 @@ export default {
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.off(VIDEO_CALL_INVITED, this.onVideoCallInvited);
+        bus.off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
     },
 
     watch: {

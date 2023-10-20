@@ -395,7 +395,9 @@ export default {
       await this.room.disconnect();
       this.room = null;
     },
-
+    onAddVideoSource({videoId, audioId, isScreen}) {
+      this.createLocalMediaTracks(videoId, audioId, isScreen)
+    },
     async createLocalMediaTracks(videoId, audioId, isScreen) {
       let tracks = [];
 
@@ -515,7 +517,7 @@ export default {
       this.chatStore.showRecordStopButton = false;
     }
 
-    bus.on(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
+    bus.on(ADD_VIDEO_SOURCE, this.onAddVideoSource);
     bus.on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
     bus.on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
     bus.on(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
@@ -541,7 +543,7 @@ export default {
     this.chatStore.initializingStaringVideoRecord = false;
     this.chatStore.initializingStoppingVideoRecord = false;
 
-    bus.off(ADD_VIDEO_SOURCE, this.createLocalMediaTracks);
+    bus.off(ADD_VIDEO_SOURCE, this.onAddVideoSource);
     bus.off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
     bus.off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
     bus.off(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
