@@ -125,7 +125,7 @@ export default {
             this.dto.data = newArr;
             this.dto.totalCount++;
           }
-          this.chatStore.notificationsCount++;
+          this.chatStore.incrementNotificationCount();
         },
         notificationDelete(payload) {
           if (this.show) {
@@ -135,7 +135,7 @@ export default {
             this.dto.data = arr;
             this.dto.totalCount--;
           }
-          this.chatStore.notificationsCount--;
+          this.chatStore.decrementNotificationCount();
         },
 
         closeModal() {

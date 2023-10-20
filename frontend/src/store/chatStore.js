@@ -60,11 +60,20 @@ export const useChatStore = defineStore('chat', {
               this.availableOAuth2Providers = data;
           });
     },
+    incrementNotificationCount() {
+      this.setNotificationCount(this.notificationsCount + 1);
+    },
+    decrementNotificationCount() {
+      this.setNotificationCount(this.notificationsCount - 1);
+    },
+    setNotificationCount(count){
+      this.notificationsCount = count;
+      setIcon(count > 0);
+    },
     fetchNotificationsCount() {
       axios.get(`/api/notification/count`).then(( {data} ) => {
         console.debug("fetched notifications =", data);
-        this.notificationsCount = data.totalCount;
-        setIcon(data.totalCount > 0);
+        this.setNotificationCount(data.totalCount);
       });
       axios.get(`/api/notification/settings`).then(( {data} ) => {
         console.debug("fetched notifications settings =", data);
