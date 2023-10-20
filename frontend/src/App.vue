@@ -40,6 +40,12 @@
               </v-badge>
           </template>
 
+          <template v-if="chatStore.canShowMicrophoneButton">
+            <v-btn v-if="chatStore.showHangButton && !isMobile() && chatStore.showMicrophoneOnButton" icon @click="offMicrophone()" :title="$vuetify.locale.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
+            <v-btn v-if="chatStore.showHangButton && !isMobile() && chatStore.showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.locale.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
+          </template>
+
+
           <v-btn v-if="chatStore.showGoToBlogButton && !isMobile()" icon :href="goToBlogLink()" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')">
             <v-icon>mdi-postage-stamp</v-icon>
           </v-btn>
@@ -168,7 +174,7 @@ import bus, {
   PLAYER_MODAL,
   PROFILE_SET,
   REFRESH_ON_WEBSOCKET_RESTORED,
-  SCROLL_DOWN,
+  SCROLL_DOWN, SET_LOCAL_MICROPHONE_MUTED,
   UNREAD_MESSAGES_CHANGED,
   USER_PROFILE_CHANGED,
   VIDEO_CALL_INVITED,
@@ -551,6 +557,12 @@ export default {
             this.invitedVideoChatAlert = false;
             this.updateLastAnsweredTimestamp();
           });
+        },
+        onMicrophone() {
+          bus.emit(SET_LOCAL_MICROPHONE_MUTED, false);
+        },
+        offMicrophone() {
+          bus.emit(SET_LOCAL_MICROPHONE_MUTED, true);
         },
 
     },
