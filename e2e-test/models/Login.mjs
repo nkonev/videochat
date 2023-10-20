@@ -39,7 +39,7 @@ export default class Login {
     }
 
     async assertNickname(expected) {
-        return expect(this.page.locator('.v-navigation-drawer .user-login')).toHaveText(expected)
+        return expect(this.page.locator('.v-navigation-drawer__content .test-user-login .v-list-item-title')).toHaveText(expected)
     }
 
 }

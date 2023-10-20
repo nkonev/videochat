@@ -1,6 +1,6 @@
 <template>
     <v-list>
-      <v-list-item v-if="chatStore.currentUser"
+      <v-list-item class="test-user-login" v-if="chatStore.currentUser"
                    :prepend-avatar="chatStore.currentUser.avatar"
                    :title="chatStore.currentUser.login"
                    :subtitle="chatStore.currentUser.shortInfo"
