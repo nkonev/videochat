@@ -87,7 +87,6 @@
                       <v-chip v-for="(role, index) in item.additionalData.roles"
                         density="comfortable"
                         class="mr-1 cursor-pointer"
-                        v-if="item.oauth2Identifiers.vkontakteId"
                         text-color="white"
                       >
                         <template v-slot:default>
