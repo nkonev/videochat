@@ -9,7 +9,7 @@
             </v-img>
 
             <v-container class="ma-0 pa-0 mt-2 d-flex flex-row">
-              <v-list-item-title v-if="!showLoginInput" class="align-self-center text-h3">{{ chatStore.currentUser.login }}</v-list-item-title>
+              <span v-if="!showLoginInput" class="align-self-center text-h3">{{ chatStore.currentUser.login }}</span>
               <v-btn v-if="!showLoginInput" color="primary" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_login')" @click="showLoginInput = !showLoginInput; loginPrevious = chatStore.currentUser.login">
                 <v-icon dark size="x-large">mdi-lead-pencil</v-icon>
               </v-btn>
@@ -33,7 +33,7 @@
             <v-divider></v-divider>
 
             <v-container class="ma-0 pa-0 d-flex flex-row">
-              <v-list-item-subtitle v-if="!showEmailInput && chatStore.currentUser.email" class="align-self-center text-h6">{{ chatStore.currentUser.email }}</v-list-item-subtitle>
+              <span v-if="!showEmailInput && chatStore.currentUser.email" class="align-self-center text-h6">{{ chatStore.currentUser.email }}</span>
               <v-btn v-if="!showEmailInput" color="primary" size="x-small" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_email')" @click="showEmailInput = !showEmailInput; emailPrevious = chatStore.currentUser.email">
                 <v-icon dark>mdi-lead-pencil</v-icon>
               </v-btn>
