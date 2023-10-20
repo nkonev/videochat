@@ -132,6 +132,7 @@ export default {
       this.graphQlSubscribe();
     },
     onLogout() {
+      this.partialReset();
       this.graphQlUnsubscribe();
     },
     fetchAndSetChat() {
@@ -419,6 +420,15 @@ export default {
     onWsRestoredRefresh() {
       this.getInfo()
     },
+    partialReset() {
+      this.chatStore.videoChatUsersCount=0;
+      this.chatStore.canMakeRecord=false;
+      this.pinnedPromoted=null;
+      this.chatStore.canBroadcastTextMessage = false;
+      this.chatStore.showRecordStartButton = false;
+      this.chatStore.showRecordStopButton = false;
+      this.chatStore.showChatEditButton = false;
+    },
   },
   watch: {
     '$route': {
@@ -492,16 +502,10 @@ export default {
     this.chatStore.showGoToBlogButton = null;
     this.chatStore.showCallButton = false;
     this.chatStore.showHangButton = false;
-    this.chatStore.videoChatUsersCount = 0;
-    this.chatStore.canMakeRecord = false;
-    this.chatStore.canBroadcastTextMessage = false;
-    this.chatStore.showRecordStartButton = false;
-    this.chatStore.showRecordStopButton = false;
-    this.chatStore.chatUsersCount = 0;
     this.chatStore.isShowSearch = false;
-    this.chatStore.showChatEditButton = false;
+    this.chatStore.chatUsersCount = 0;
 
-    this.pinnedPromoted = null;
+    this.partialReset();
     clearInterval(writingUsersTimerId);
   }
 }
