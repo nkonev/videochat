@@ -36,23 +36,16 @@ jobs:
           sleep 15 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
       - name: Build and test with Maven
         run: |
-          (cd aaa; ./mvnw clean package)
+          (cd aaa; make check-env clean package test)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
-          BUILDDIR=./build;
-          WORKDIR=./aaa;
-          IMAGE=nkonev/chat-aaa:latest;
-          cd $WORKDIR && mkdir -p $BUILDDIR && cp ./Dockerfile $BUILDDIR && cp target/*-exec.jar $BUILDDIR &&
-          docker build -t $IMAGE $BUILDDIR &&
           echo "Will login to docker" &&
-          docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" &&
-          echo "Will push docker image" &&
-          docker push $IMAGE &&
-          echo "Will deploy aaa" &&
-          ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.AaaUpdateCommand }}
+          docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" 
+          (cd aaa; make push-docker && echo "Will deploy aaa" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.AaaUpdateCommand }} )
+          
 
   frontend-old:
     runs-on: ubuntu-22.04
@@ -105,7 +98,7 @@ jobs:
           key: ${{ runner.os }}-frontend-cache-v2-${{ hashFiles('**/package-lock.json') }}
       - name: Build with npm run
         run: |
-          (cd frontend; make check-env download package)
+          (cd frontend; make check-env clean download package)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
@@ -141,7 +134,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
       - name: Build and test with make
-        run: (cd chat; sleep 5 && make check-env download generate test package)
+        run: (cd chat; sleep 5 && make check-env clean download generate test package)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
@@ -168,7 +161,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Build and test with make
-        run: (cd event; make check-env download generate test package)
+        run: (cd event; make check-env clean download generate test package)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
@@ -195,7 +188,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Build and test with make
-        run: (cd notification; make check-env download generate test package)
+        run: (cd notification; make check-env clean download generate test package)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
@@ -222,7 +215,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Build and test with make
-        run: (cd storage; make check-env download generate test package)
+        run: (cd storage; make check-env clean download generate test package)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
@@ -249,7 +242,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Build and test with make
-        run: (cd video; make check-env download generate test package)
+        run: (cd video; make check-env clean download generate test package)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
@@ -330,10 +323,10 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
       - name: Build microservices
         run: |
-          (cd aaa; ./mvnw -DskipTests clean package)
-          (cd frontend; make check-env download package)
-          (cd chat; make check-env download generate package-go)
-          (cd event; make check-env download generate package-go)
+          (cd aaa; make check-env clean package-java)
+          (cd frontend; make check-env clean download package)
+          (cd chat; make check-env clean download generate package-go)
+          (cd event; make check-env clean download generate package-go)
       - name: Run microservices
         run: |
           (cd aaa; ./run-with-oauth2.sh &)

@@ -150,8 +150,6 @@
                                     <arg value="git-info.sh"/>
                                     <arg value="${project.build.outputDirectory}/static/${git-json}"/>
                                 </exec>
-                                <!-- this file used by travis (see .travis.yml) for pick-up version and use it in docker push -->
-                                <echo file="${project.build.directory}/VERSIONFILE">${project.version}</echo>
                             </tasks>
                         </configuration>
                         <goals>
