@@ -317,9 +317,4 @@ export default {
     height: 0;
 }
 
-.ProseMirror img {
-    max-width: 100%;
-    height: auto;
-}
-
 </style>
