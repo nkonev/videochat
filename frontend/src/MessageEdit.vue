@@ -256,7 +256,7 @@
                 }
             },
             onInput(val) {
-                this.editMessageDto.text = this.getContent();
+                this.editMessageDto.text = val;
 
                 this.saveToStore();
 

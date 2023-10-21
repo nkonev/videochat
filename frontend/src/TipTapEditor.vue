@@ -75,16 +75,30 @@ export default {
     clearContent() {
       this.editor.commands.setContent(empty, false);
     },
+    removeByQuery(el, query) {
+      el.querySelectorAll(query).forEach(function(item, index){
+        item.parentNode.removeChild(item);
+      })
+    },
+    clearHtml(value) {
+        const htmlDoc = domParser.parseFromString(value, 'text/html');
+        this.removeByQuery(htmlDoc, 'p.is-empty');
+        let str = htmlDoc.querySelector("body").innerHTML;
+        const withP = str.replace(/<br>\\*/g, "</p><p>");
+        const rmDuplicatedP = withP.replace(/<p><\/p>/gi, '');
+        return rmDuplicatedP;
+    },
     getContent() {
       const value = this.editor.getHTML();
-      if (this.messageTextIsNotEmpty(value)) {
-        return value
+      const str = this.clearHtml(value);
+      if (this.messageTextIsNotEmpty(str)) {
+        return str
       } else {
         return empty
       }
     },
     messageTextIsNotEmpty(text) {
-       return text && text !== "" && text !== '<p><br></p>' && text !== '<p></p>'
+       return text && text !== ""
     },
     onUpdateContent() {
       const value = this.getContent();
@@ -208,9 +222,8 @@ export default {
           //  and https://discuss.prosemirror.net/t/how-to-preserve-hard-breaks-when-pasting-html-into-a-plain-text-schema/4202/5
           //  and prosemirror-view/src/clipboard.ts parseFromClipboard()
           transformPastedHTML(html) {
-              const withP = html.replace(/<br>\\*/g, "</p><p>");
-              const rmDuplicatedP = withP.replace(/<p><\/p>/gi, '');
-              return rmDuplicatedP;
+              const cleared = this.clearHtml(html);
+              return cleared
           },
       },
       content: empty,
