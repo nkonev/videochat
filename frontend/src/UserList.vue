@@ -341,7 +341,7 @@ export default {
 
   },
   created() {
-    this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
+    this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
   },
   watch: {
       '$vuetify.locale.current': {

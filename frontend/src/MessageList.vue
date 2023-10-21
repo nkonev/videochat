@@ -497,7 +497,7 @@
 
       },
       created() {
-        this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 200, {leading:false, trailing:true})
+        this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true})
       },
 
       watch: {

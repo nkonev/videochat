@@ -275,7 +275,7 @@ export default {
       ...mapStores(useBlogStore),
   },
   created() {
-      this.onSearchStringChanged = debounce(this.onSearchStringChanged, 200, {leading:false, trailing:true})
+      this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
   },
   async mounted() {
         this.blogStore.isShowSearch = true;
