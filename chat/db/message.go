@@ -88,6 +88,9 @@ func provideScanToMessage(message *Message) []any {
 
 func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
 	if hasHash {
+		// has hash means that frontend's page has message hash
+		// it means we need to calculate page/2 to the top and to the bottom
+		// to respond page containing from two halves
 		leftLimit := limit / 2
 		rightLimit := limit / 2
 
@@ -98,13 +101,12 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			rightLimit = 1
 		}
 
-		leftLimitRes := co.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit)
 		var leftMessageId, rightMessageId int64
+		leftLimitRes := co.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit)
 		err := leftLimitRes.Scan(&leftMessageId)
 		if err != nil {
 			return nil, tracerr.Wrap(err)
 		}
-
 		rightLimitRes := co.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT m.id FROM message_chat_%v m WHERE id >= $1 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit)
 		err = rightLimitRes.Scan(&rightMessageId)
 		if err != nil {
