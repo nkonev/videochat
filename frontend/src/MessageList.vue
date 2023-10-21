@@ -208,26 +208,21 @@
 
           this.chatStore.incrementProgressCount();
           let startingFromItemId;
+          let hasHash;
           if (this.hasInitialHash) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
             // how to check:
             // 1. click on hash
             // 2. reload page
             // 3. press "arrow down" (Scroll down)
             // 4. It is going to invoke this load method which will use cashed and reset hasInitialHash = false
-            startingFromItemId = this.highlightMessageId
+            startingFromItemId = this.highlightMessageId;
+            hasHash = this.hasInitialHash;
           } else if (this.loadedHash) {
-            startingFromItemId = this.loadedHash
+            startingFromItemId = this.loadedHash;
+            hasHash = !!this.loadedHash;
           } else {
             startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
-          }
-
-          let hasHash;
-          if (this.hasInitialHash) {
-            hasHash = this.hasInitialHash
-          } else if (this.loadedHash) {
-            hasHash = !!this.loadedHash
-          } else {
-            hasHash = false
+            hasHash = false;
           }
 
           return axios.get(`/api/chat/${this.chatId}/message`, {
