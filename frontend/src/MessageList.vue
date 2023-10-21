@@ -189,9 +189,9 @@
           return directionTop
         },
         async onFirstLoad() {
-            if (this.highlightMessageId) {
+            if (this.highlightMessageId && !hasLength(this.searchString)) {
               await this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
-            } else if (this.loadedHash) {
+            } else if (this.loadedHash && !hasLength(this.searchString)) {
               await this.scrollTo(messageIdHashPrefix + this.loadedHash);
             } else {
               await this.scrollDown(); // we need it to prevent browser's scrolling
@@ -209,7 +209,7 @@
           this.chatStore.incrementProgressCount();
           let startingFromItemId;
           let hasHash;
-          if (this.hasInitialHash) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
+          if (this.hasInitialHash && !hasLength(this.searchString)) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
             // how to check:
             // 1. click on hash
             // 2. reload page
@@ -217,7 +217,7 @@
             // 4. It is going to invoke this load method which will use cashed and reset hasInitialHash = false
             startingFromItemId = this.highlightMessageId;
             hasHash = this.hasInitialHash;
-          } else if (this.loadedHash) {
+          } else if (this.loadedHash && !hasLength(this.searchString)) {
             startingFromItemId = this.loadedHash;
             hasHash = !!this.loadedHash;
           } else {
@@ -244,7 +244,7 @@
               replaceOrPrepend(this.items, items);
             }
 
-            if (!this.hasInitialHash && items.length < PAGE_SIZE) {
+            if (!this.hasInitialHash && !this.loadedHash && items.length < PAGE_SIZE) {
               if (this.isTopDirection()) {
                 //console.log("Setting this.loadedTop");
                 this.loadedTop = true;
