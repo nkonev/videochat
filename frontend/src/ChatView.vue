@@ -514,6 +514,8 @@ export default {
 
 <style scoped lang="stylus">
 @import "pinned.styl"
+@import "constants.styl"
+
 .pinned-promoted {
   position: fixed
   z-index: 4;
@@ -521,7 +523,7 @@ export default {
 }
 .pinned-promoted-mobile {
     margin-right: unset;
-    top: 56px;
+    top: $mobileAppBarHeight;
     left: 0;
 }
 </style>
