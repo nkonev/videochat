@@ -134,6 +134,9 @@ export default {
           candidateToAppendVideo.setUserName(md.login);
           candidateToAppendVideo.setAvatar(md.avatar);
           candidateToAppendVideo.setUserId(md.userId);
+          if (localVideoProperties) {
+            this.chatStore.initializingVideoCall = false;
+          }
           return
         } else if (track.kind == 'audio') {
           console.debug("Processing audio track", track);
@@ -155,6 +158,9 @@ export default {
           candidateToAppendAudio.setUserName(md.login);
           candidateToAppendAudio.setAvatar(md.avatar);
           candidateToAppendAudio.setUserId(md.userId);
+          if (localVideoProperties) {
+            this.chatStore.initializingVideoCall = false;
+          }
           return
         }
       }
@@ -503,6 +509,8 @@ export default {
     ...mapStores(useChatStore),
   },
   async mounted() {
+    this.chatStore.initializingVideoCall = true;
+
     this.chatId = this.chatDto.id;
     this.participantIds = this.chatDto.participantIds;
 
@@ -510,6 +518,8 @@ export default {
     this.chatStore.showDrawer = false;
     this.chatStore.showCallButton = false;
     this.chatStore.showHangButton = true;
+
+    await axios.put(`/api/video/${this.chatId}/dial/start`);
 
     if (!this.chatStore.showRecordStopButton && this.chatStore.canMakeRecord) {
       this.chatStore.showRecordStartButton = true;

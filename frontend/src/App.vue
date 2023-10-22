@@ -31,11 +31,11 @@
                        overlap
                        offset-y="1.8em"
               >
-                  <v-btn v-if="chatStore.showCallButton" icon @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
-                      <v-icon :x-large="isMobile()" color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
+                  <v-btn v-if="chatStore.showCallButton" icon :loading="chatStore.initializingVideoCall" @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
+                      <v-icon color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                   </v-btn>
-                  <v-btn v-if="chatStore.showHangButton" icon @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
-                      <v-icon :x-large="isMobile()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
+                  <v-btn v-if="chatStore.showHangButton" icon :loading="chatStore.initializingVideoCall" @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
+                      <v-icon :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
                   </v-btn>
               </v-badge>
           </template>
@@ -317,11 +317,9 @@ export default {
         },
         createCall() {
             console.debug("createCall");
-            axios.put(`/api/video/${this.chatId}/dial/start`).then(()=>{
-                const routerNewState = { name: videochat_name};
-                goToPreserving(this.$route, this.$router, routerNewState);
-                this.updateLastAnsweredTimestamp();
-            })
+            const routerNewState = { name: videochat_name};
+            goToPreserving(this.$route, this.$router, routerNewState);
+            this.updateLastAnsweredTimestamp();
         },
         stopCall() {
             console.debug("stopping Call");

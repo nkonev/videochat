@@ -165,16 +165,18 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		return err
 	}
 
+	// in this block we start calling in case tet-a-tet
 	usersOfChat := basicChatInfo.ParticipantIds
 	if basicChatInfo.TetATet && len(usersOfChat) > 0 {
 		if err != nil {
 			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
-		var oppositeUser int64 = services.NoUser
+		var oppositeUser *int64
 		for _, userId := range usersOfChat {
 			if userId != userPrincipalDto.UserId {
-				oppositeUser = userId
+				var deUid = userId
+				oppositeUser = &deUid
 				break
 			}
 		}
@@ -186,14 +188,23 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
+		var oppositeUserOfVideo *int64
+		for _, ou := range usersOfVideo {
+			if ou != userPrincipalDto.UserId {
+				var deOu = ou
+				oppositeUserOfVideo = &deOu
+				break
+			}
+		}
+
 		// and we(behalf user) doesn't have incoming call
-		if len(usersOfVideo) == 0 && oppositeUser != services.NoUser {
-			// we should call the counterpart
-			vh.addToCalling(c, oppositeUser, true, chatId, userPrincipalDto)
+		if oppositeUserOfVideo == nil && oppositeUser != nil {
+			// we should call the counterpart (opposite user)
+			vh.addToCalling(c, *oppositeUser, true, chatId, userPrincipalDto)
 		}
 	}
 
-	// duplicate "take the phone" which cancels ringing logic for opposite user
+	// duplicate "take the phone" (pressing green tube) which cancels ringing logic for opposite user (or myself)
 	vh.cancelCallingLogic(c, chatId, userPrincipalDto)
 
 	return c.NoContent(http.StatusOK)
