@@ -2,7 +2,7 @@
 
             <v-card-text class="pb-0">
 
-                    <v-row no-gutters>
+                    <v-row no-gutters class="mb-4">
                         <v-col
                         >
                             <v-checkbox
@@ -29,8 +29,19 @@
                     </v-row>
 
                     <v-select
+                        :label="$vuetify.locale.t('$vuetify.video_position')"
+                        :items="positionItems"
+                        density="comfortable"
+                        color="primary"
+                        @update:modelValue="changeVideoPosition"
+                        v-model="videoPosition"
+                        variant="underlined"
+                    ></v-select>
+
+
+                    <v-select
                         :disabled="serverPreferredCodec"
-                        :messages="$vuetify.locale.t('$vuetify.codec')"
+                        :label="$vuetify.locale.t('$vuetify.codec')"
                         :items="codecItems"
                         density="comfortable"
                         color="primary"
@@ -41,7 +52,7 @@
 
                     <v-select
                         :disabled="serverPreferredVideoResolution"
-                        :messages="$vuetify.locale.t('$vuetify.video_resolution')"
+                        :label="$vuetify.locale.t('$vuetify.video_resolution')"
                         :items="qualityItems"
                         density="comfortable"
                         color="primary"
@@ -52,22 +63,12 @@
 
                     <v-select
                         :disabled="serverPreferredScreenResolution"
-                        :messages="$vuetify.locale.t('$vuetify.screen_resolution')"
+                        :label="$vuetify.locale.t('$vuetify.screen_resolution')"
                         :items="qualityItems"
                         density="comfortable"
                         color="primary"
                         @update:modelValue="changeScreenResolution"
                         v-model="screenResolution"
-                        variant="underlined"
-                    ></v-select>
-
-                    <v-select
-                        :messages="$vuetify.locale.t('$vuetify.video_position')"
-                        :items="positionItems"
-                        density="comfortable"
-                        color="primary"
-                        @update:modelValue="changeVideoPosition"
-                        v-model="videoPosition"
                         variant="underlined"
                     ></v-select>
 
