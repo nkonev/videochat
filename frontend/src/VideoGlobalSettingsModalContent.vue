@@ -53,7 +53,7 @@
                     <v-select
                         :disabled="serverPreferredVideoResolution"
                         :label="$vuetify.locale.t('$vuetify.video_resolution')"
-                        :items="qualityItems"
+                        :items="displayQualityItems"
                         density="comfortable"
                         color="primary"
                         @update:modelValue="changeVideoResolution"
@@ -64,7 +64,7 @@
                     <v-select
                         :disabled="serverPreferredScreenResolution"
                         :label="$vuetify.locale.t('$vuetify.screen_resolution')"
-                        :items="qualityItems"
+                        :items="screenQualityItems"
                         density="comfortable"
                         color="primary"
                         @update:modelValue="changeScreenResolution"
@@ -150,7 +150,7 @@
         VIDEO_POSITION_AUTO,
         VIDEO_POSITION_ON_THE_TOP,
         VIDEO_POSITION_SIDE,
-        setStoredVideoPosition, getStoredVideoPosition, setStoredCodec
+        setStoredVideoPosition, getStoredVideoPosition, setStoredCodec, NULL_CODEC, NULL_SCREEN_RESOLUTION
     } from "./store/localStore";
     import {videochat_name} from "./router/routes";
     import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
@@ -245,13 +245,17 @@
             },
         },
         computed: {
-            qualityItems() {
+            displayQualityItems() {
                 // ./frontend/node_modules/livekit-client/dist/room/track/options.d.ts
                 return ['h180', 'h360', 'h720', 'h1080', 'h1440', 'h2160']
             },
+            screenQualityItems() {
+                // ./frontend/node_modules/livekit-client/dist/room/track/options.d.ts
+                return [NULL_SCREEN_RESOLUTION, 'h180', 'h360', 'h720', 'h1080', 'h1440', 'h2160']
+            },
             codecItems() {
                 // ./frontend/node_modules/livekit-client/dist/room/track/options.d.ts
-                return ['null', 'vp8', 'h264', 'vp9', 'av1']
+                return [NULL_CODEC, 'vp8', 'h264', 'vp9', 'av1']
             },
             positionItems() {
                 return [VIDEO_POSITION_AUTO, VIDEO_POSITION_ON_THE_TOP, VIDEO_POSITION_SIDE]

@@ -23,8 +23,8 @@ import {
   isMobileFireFox
 } from "@/utils";
 import {
-  getStoredAudioDevicePresents,
-  getStoredVideoDevicePresents, NULL_CODEC,
+    getStoredAudioDevicePresents,
+    getStoredVideoDevicePresents, NULL_CODEC, NULL_SCREEN_RESOLUTION,
 } from "@/store/localStore";
 import bus, {
   ADD_SCREEN_SOURCE,
@@ -403,7 +403,7 @@ export default {
 
       try {
         const videoResolution = VideoPresets[this.videoResolution].resolution;
-        const screenResolution = VideoPresets[this.screenResolution].resolution;
+        const normalizedScreenResolution = this.screenResolution === NULL_SCREEN_RESOLUTION ? undefined : VideoPresets[this.screenResolution].resolution;
         const audioIsPresents = getStoredAudioDevicePresents();
         const videoIsPresents = getStoredVideoDevicePresents();
 
@@ -414,15 +414,15 @@ export default {
         }
 
         console.info(
-          "Creating media tracks", "audioId", audioId, "videoid", videoId,
-          "videoResolution", videoResolution, "screenResolution", screenResolution,
+          "Creating media tracks", "isScreen", isScreen, "audioId", audioId, "videoid", videoId,
+          "videoResolution", videoResolution, "screenResolution", normalizedScreenResolution,
           "videoSimulcast", this.videoSimulcast, "screenSimulcast", this.screenSimulcast,
         );
 
         if (isScreen) {
           tracks = await createLocalScreenTracks({
             audio: audioIsPresents,
-            resolution: screenResolution
+            resolution: normalizedScreenResolution
           });
         } else {
           tracks = await createLocalTracks({

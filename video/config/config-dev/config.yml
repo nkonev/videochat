@@ -46,7 +46,7 @@ livekit:
 
 frontend:
   videoResolution: h720
-  screenResolution: h1080
+  screenResolution: "null"
   videoSimulcast: true
   screenSimulcast: false
   roomDynacast: true

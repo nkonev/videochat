@@ -2,8 +2,8 @@ import {hasLength} from "@/utils";
 
 const defaultResolution = 'h720';
 
-export const KEY_VIDEO_RESOLUTION = 'videoResolution2';
-export const KEY_SCREEN_RESOLUTION = 'screenResolution2';
+export const KEY_VIDEO_RESOLUTION = 'videoResolution';
+export const KEY_SCREEN_RESOLUTION = 'screenResolution';
 
 export const getVideoResolution = () => {
     let got = localStorage.getItem(KEY_VIDEO_RESOLUTION);
@@ -14,10 +14,12 @@ export const getVideoResolution = () => {
     return got;
 }
 
+export const NULL_SCREEN_RESOLUTION = 'null';
+
 export const getScreenResolution = () => {
     let got = localStorage.getItem(KEY_SCREEN_RESOLUTION);
     if (!got) {
-        localStorage.setItem(KEY_SCREEN_RESOLUTION, defaultResolution);
+        localStorage.setItem(KEY_SCREEN_RESOLUTION, NULL_SCREEN_RESOLUTION);
         got = localStorage.getItem(KEY_SCREEN_RESOLUTION);
     }
     return got;
@@ -186,7 +188,7 @@ export const setStoredVideoPosition = (v) => {
 
 export const NULL_CODEC = 'null';
 
-export const KEY_CODEC = 'codec2';
+export const KEY_CODEC = 'codec';
 export const getStoredCodec = () => {
     let v = JSON.parse(localStorage.getItem(KEY_CODEC));
     if (v === null) {
