@@ -290,7 +290,10 @@ export default {
           )
         },
         shouldShowUnbound() {
-          return !!this.chatStore.availableOAuth2Providers.length
+            return this.shouldShowUnboundVkontakte() ||
+                    this.shouldShowUnboundFacebook() ||
+                    this.shouldShowUnboundGoogle() ||
+                    this.shouldShowUnboundKeycloak()
         },
         shouldShowUnboundVkontakte() {
             return !this.chatStore.currentUser.oauth2Identifiers.vkontakteId &&
