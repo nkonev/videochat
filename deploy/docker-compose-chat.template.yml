@@ -40,6 +40,7 @@ services:
       - CHAT_BASEURL=http://api.site.local:8080
       - CHAT_MESSAGE.ALLOWEDMEDIAURLS=http://api.site.local:8080,
       - CHAT_MESSAGE.ALLOWEDIFRAMEURLS=https://www.youtube.com,https://coub.com,https://vk.com,https://rutube.ru
+      - CHAT_ONLYADMINCANCREATEBLOG=false
 
     logging:
       driver: "journald"

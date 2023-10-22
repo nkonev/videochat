@@ -8,6 +8,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -345,6 +346,11 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
+	if !ch.checkCanCreateBlog(userPrincipalDto.Roles, bindTo.Blog) {
+		GetLogEntry(c.Request().Context()).Errorf("Blog is disabled for regular users")
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
 	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
 		id, _, err := tx.CreateChat(convertToCreatableChat(bindTo, ch.policy))
 		if err != nil {
@@ -445,6 +451,11 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
+	}
+
+	if !ch.checkCanCreateBlog(userPrincipalDto.Roles, bindTo.Blog) {
+		GetLogEntry(c.Request().Context()).Errorf("Blog is disabled for regular users")
+		return c.NoContent(http.StatusUnauthorized)
 	}
 
 	var userIdsToNotifyAboutChatChanged []int64
@@ -1331,4 +1342,22 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &ParticipantsBelongToChat{Users: users})
+}
+
+func (ch *ChatHandler) checkCanCreateBlog(roles []string, blog bool) bool {
+	if !viper.GetBool("onlyAdminCanCreateBlog") {
+		return true
+	}
+	if blog {
+		adminFound := false
+		for _, role := range roles {
+			if "ROLE_ADMIN" == role {
+				adminFound = true
+				break
+			}
+		}
+		return adminFound
+	} else {
+		return true
+	}
 }
