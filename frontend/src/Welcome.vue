@@ -4,20 +4,20 @@
       <v-card>
         <v-card-title class="d-flex justify-space-around">{{$vuetify.locale.t('$vuetify.welcome_participant', chatStore.currentUser?.login)}}</v-card-title>
         <v-card-actions class="d-flex justify-space-around flex-wrap flex-row pb-0">
-          <v-btn color="primary" @click="createChat()" text>
-            <v-icon>mdi-plus</v-icon>
+          <v-btn :size="getBtnSize()" color="primary" @click="createChat()" text :class="isMobile() ? 'my-2' : ''">
+            <v-icon :size="getIconSize()">mdi-plus</v-icon>
             {{ $vuetify.locale.t('$vuetify.new_chat') }}
           </v-btn>
-          <v-btn @click="findUser()" text>
-            <v-icon>mdi-magnify</v-icon>
+          <v-btn :size="getBtnSize()" @click="findUser()" text :class="isMobile() ? 'my-2' : ''">
+            <v-icon :size="getIconSize()">mdi-magnify</v-icon>
             {{ $vuetify.locale.t('$vuetify.find_user') }}
           </v-btn>
-          <v-btn @click="availableChats()" text>
-            <v-icon>mdi-forum</v-icon>
+          <v-btn :size="getBtnSize()" @click="availableChats()" text :class="isMobile() ? 'my-2' : ''">
+            <v-icon :size="getIconSize()">mdi-forum</v-icon>
             {{ $vuetify.locale.t('$vuetify.public_chats') }}
           </v-btn>
-          <v-btn @click="goBlog()" text>
-            <v-icon>mdi-postage-stamp</v-icon>
+          <v-btn :size="getBtnSize()" @click="goBlog()" text :class="isMobile() ? 'my-2' : ''">
+            <v-icon :size="getIconSize()">mdi-postage-stamp</v-icon>
             {{ $vuetify.locale.t('$vuetify.blogs') }}
           </v-btn>
         </v-card-actions>
@@ -55,6 +55,22 @@
       goBlog() {
         window.location.href = blog
       },
+
+      getBtnSize() {
+        if (this.isMobile()) {
+            return 'large'
+        } else {
+            return undefined
+        }
+      },
+      getIconSize() {
+        if (this.isMobile()) {
+            return 'large'
+        } else {
+            return undefined
+        }
+      },
+
     },
     mounted() {
       this.chatStore.title = this.$vuetify.locale.t('$vuetify.welcome');
