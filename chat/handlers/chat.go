@@ -64,10 +64,18 @@ type ChatHandler struct {
 	restClient      *client.RestClient
 	policy          *services.SanitizerPolicy
 	stripTagsPolicy *services.StripTagsPolicy
+	canCreateBlog   bool
 }
 
 func NewChatHandler(dbR *db.DB, notificator services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy, cleanTagsPolicy *services.StripTagsPolicy) *ChatHandler {
-	return &ChatHandler{db: dbR, notificator: notificator, restClient: restClient, policy: policy, stripTagsPolicy: cleanTagsPolicy}
+	return &ChatHandler{
+		db: dbR,
+		notificator: notificator,
+		restClient: restClient,
+		policy: policy,
+		stripTagsPolicy: cleanTagsPolicy,
+		canCreateBlog: viper.GetBool("onlyAdminCanCreateBlog"),
+	}
 }
 
 func (a *CreateChatDto) Validate() error {
@@ -1345,7 +1353,7 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 }
 
 func (ch *ChatHandler) checkCanCreateBlog(roles []string, blog bool) bool {
-	if !viper.GetBool("onlyAdminCanCreateBlog") {
+	if !ch.canCreateBlog {
 		return true
 	}
 	if blog {
@@ -1360,4 +1368,14 @@ func (ch *ChatHandler) checkCanCreateBlog(roles []string, blog bool) bool {
 	} else {
 		return true
 	}
+}
+
+func (ch *ChatHandler) CanCreateBlog(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	return c.JSON(http.StatusOK, &utils.H{"canCreateBlog": ch.checkCanCreateBlog(userPrincipalDto.Roles, true)} )
 }

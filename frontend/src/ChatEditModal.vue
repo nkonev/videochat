@@ -69,6 +69,7 @@
                         ></v-checkbox>
 
                         <v-checkbox
+                            v-if="canCreateBlog"
                             v-model="editDto.blog"
                             :label="$vuetify.locale.t('$vuetify.blog')"
                             hide-details
@@ -147,11 +148,9 @@
                 editDto: dtoFactory(),
                 isLoading: false,
                 people: [  ], // available person to chat with
-                // chatNameRules: [
-                //     v => !!v || requiredMessage,
-                // ],
                 valid: true,
                 fileInput: null,
+                canCreateBlog: false,
             }
         },
         computed: {
@@ -180,12 +179,19 @@
             showModal(chatId) {
                 this.$data.show = true;
                 this.editChatId = chatId;
+                this.loadCanCreateBlog();
                 if (this.editChatId) {
                     this.loadData();
                 } else {
                     this.editDto = dtoFactory();
                 }
 
+            },
+            loadCanCreateBlog() {
+                axios.get("/api/chat/can-create-blog")
+                    .then((response) => {
+                        this.canCreateBlog = response.data.canCreateBlog;
+                    })
             },
             loadData() {
                 console.log("Getting info about chat id", this.editChatId);
@@ -286,6 +292,7 @@
                 this.isLoading = false;
                 this.people = [  ];
                 this.valid = true;
+                this.canCreateBlog = false;
             },
             openAvatarDialog() {
                 this.fileInput.click();
