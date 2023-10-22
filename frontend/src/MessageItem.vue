@@ -1,6 +1,6 @@
 <template>
     <div class="pr-1 mr-1 pl-4 mt-4 message-item-root" :id="id">
-      <div v-if="item.owner && item.owner.avatar" class="item-avatar mt-2 pr-0 mr-3">
+      <div v-if="hasLength(item?.owner?.avatar)" class="item-avatar mt-2 pr-0 mr-3">
         <a :href="getOwnerLink(item)" class="user-link" @click.prevent.stop="onProfileClick(item)">
           <img :src="item.owner.avatar">
         </a>
@@ -44,7 +44,7 @@
     import {
         embed_message_reply,
         embed_message_resend, getBlogLink,
-        getHumanReadableDate,
+        getHumanReadableDate, hasLength,
     } from "@/utils";
     import "./messageBody.styl";
     import {chat_name, messageIdHashPrefix, profile, profile_name} from "@/router/routes"
@@ -52,6 +52,7 @@
     export default {
         props: ['id', 'item', 'chatId', 'my', 'highlight', 'canResend', 'isInBlog'],
         methods: {
+            hasLength,
             getOwnerRoute(item) {
                 return { name: profile_name, params: { id: item.owner?.id }}
             },

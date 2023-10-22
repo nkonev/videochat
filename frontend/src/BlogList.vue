@@ -33,7 +33,7 @@
 
         <v-card-actions v-if="item?.owner != null">
           <v-list-item>
-              <template v-slot:prepend>
+              <template v-slot:prepend v-if="hasLength(item?.owner?.avatar)">
                   <div class="item-avatar pr-0 mr-3">
                       <a :href="getProfileLink(item.owner)" class="user-link">
                           <img :src="item?.owner?.avatar">
@@ -91,6 +91,7 @@ export default {
     }
   },
   methods: {
+    hasLength,
     getMaxItemsLength() {
         return 240
     },

@@ -12,9 +12,18 @@
                 :href="getLink(item)"
             >
                 <template v-slot:prepend v-if="hasLength(item.avatar)">
-                    <span class="item-avatar">
-                      <img :src="item.avatar">
-                    </span>
+                  <v-badge
+                    color="success accent-4"
+                    dot
+                    location="right bottom"
+                    overlap
+                    bordered
+                    :model-value="item.online"
+                  >
+                      <span class="item-avatar">
+                        <img :src="item.avatar">
+                      </span>
+                  </v-badge>
                 </template>
 
                 <template v-slot:default>
@@ -131,6 +140,7 @@ import {
     setTitle
 } from "@/utils";
 import Mark from "mark.js";
+import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -142,6 +152,7 @@ export default {
     infiniteScrollMixin(scrollerName),
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
+    graphqlSubscriptionMixin('userOnlineInUserList'),
   ],
   data() {
     return {
@@ -229,6 +240,9 @@ export default {
         .then((res) => {
           const items = res.data.users;
           console.log("Get items in ", scrollerName, items, "page", page);
+          items.forEach((item) => {
+            this.transformItem(item);
+          });
 
           if (this.isTopDirection()) {
               replaceOrPrepend(this.items, items.reverse());
@@ -253,6 +267,7 @@ export default {
                 this.pageBottom += 1;
             }
           }
+          this.graphQlSubscribe();
           this.performMarking();
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
@@ -282,11 +297,7 @@ export default {
     },
 
     async onSearchStringChanged() {
-      // Fixes excess delayed (because of debounce) reloading of items when
-      // 1. we've chosen __AVAILABLE_FOR_SEARCH
-      // 2. then go to the Welcome
-      // 3. without this change there will be excess delayed invocation
-      // 4. but we've already destroyed this component, so it will be an error in the log
+      // Fixes excess delayed (because of debounce) reloading of items when (copied from ChatList.vue)
       if (this.isReady()) {
         await this.reloadItems();
       }
@@ -300,9 +311,6 @@ export default {
 
     canDrawUsers() {
       return !!this.chatStore.currentUser
-    },
-    getUserName(item) {
-          return item.login;
     },
     openUser(item){
           goToPreserving(this.$route, this.$router, { name: profile_name, params: { id: item.id}})
@@ -338,6 +346,41 @@ export default {
               return false
           }
     },
+    transformItem(item) {
+      item.online = false;
+    },
+    getUserName(item) {
+      let bldr = item.login;
+      if (!hasLength(item.avatar) && item.online) {
+        bldr += " (" + this.$vuetify.locale.t('$vuetify.user_online') + ")";
+      }
+      return bldr;
+    },
+    getGraphQlSubscriptionQuery() {
+      const userIds = this.items.map(item => item.id);
+      return `
+            subscription {
+                userOnlineEvents(userIds:[${userIds}]) {
+                    id
+                    online
+                }
+            }`
+    },
+    onNextSubscriptionElement(items) {
+          this.onUserOnlineChanged(items);
+    },
+    onUserOnlineChanged(rawData) {
+          const dtos = rawData?.data?.userOnlineEvents;
+          if (dtos) {
+              this.items.forEach(item => {
+                  dtos.forEach(dtoItem => {
+                      if (item.id == dtoItem.id) {
+                          item.online = dtoItem.online;
+                      }
+                  })
+              })
+          }
+    },
 
   },
   created() {
@@ -368,6 +411,7 @@ export default {
 
   beforeUnmount() {
     this.uninstallScroller();
+    this.graphQlUnsubscribe();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);

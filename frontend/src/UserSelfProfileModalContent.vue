@@ -255,9 +255,9 @@ export default {
         ava() {
             const maybeUser = this.chatStore.currentUser;
             if (maybeUser) {
-                if (maybeUser.avatarBig) {
+                if (hasLength(maybeUser.avatarBig)) {
                     return maybeUser.avatarBig
-                } else if (maybeUser.avatar) {
+                } else if (hasLength(maybeUser.avatar)) {
                     return maybeUser.avatar
                 } else {
                     return null

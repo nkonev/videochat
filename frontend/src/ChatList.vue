@@ -14,7 +14,6 @@
             >
                 <template v-slot:prepend v-if="hasLength(item.avatar)">
                     <v-badge
-                        v-if="item.avatar"
                         color="success accent-4"
                         dot
                         location="right bottom"
@@ -303,8 +302,8 @@ export default {
     },
     getChatName(item) {
           let bldr = item.name;
-          if (!item.avatar && item.online) {
-              bldr += (" (" + this.$vuetify.locale.t('$vuetify.user_online') + ")");
+          if (!hasLength(item.avatar) && item.online) {
+              bldr += " (" + this.$vuetify.locale.t('$vuetify.user_online') + ")";
           }
           return bldr;
     },

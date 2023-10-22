@@ -119,9 +119,9 @@ export default {
     ava() {
       const maybeUser = this.viewableUser;
       if (maybeUser) {
-        if (maybeUser.avatarBig) {
+        if (hasLength(maybeUser.avatarBig)) {
           return maybeUser.avatarBig
-        } else if (maybeUser.avatar) {
+        } else if (hasLength(maybeUser.avatar)) {
           return maybeUser.avatar
         } else {
           return null
@@ -134,15 +134,6 @@ export default {
     },
   },
   methods: {
-    getAvatar(u) {
-      if (u.avatarBig) {
-        return u.avatarBig
-      } else if (u.avatar) {
-        return u.avatar
-      } else {
-        return null
-      }
-    },
     isNotMyself() {
       return this.chatStore.currentUser && this.chatStore.currentUser.id != this.viewableUser.id
     },
