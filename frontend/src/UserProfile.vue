@@ -1,7 +1,7 @@
 <template>
   <v-card v-if="viewableUser"
           class="mr-auto"
-          width="800"
+          width="fit-content"
   >
     <v-container class="d-flex justify-space-around flex-column py-0 user-self-settings-container">
       <v-card-title class="title px-0 pb-0">

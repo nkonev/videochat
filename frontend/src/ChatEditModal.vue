@@ -57,6 +57,7 @@
                             :label="$vuetify.locale.t('$vuetify.can_resend')"
                             hide-details
                             density="compact"
+                            color="primary"
                         ></v-checkbox>
 
                         <v-checkbox
@@ -64,6 +65,7 @@
                             :label="$vuetify.locale.t('$vuetify.available_to_search')"
                             hide-details
                             density="compact"
+                            color="primary"
                         ></v-checkbox>
 
                         <v-checkbox
@@ -71,6 +73,7 @@
                             :label="$vuetify.locale.t('$vuetify.blog')"
                             hide-details
                             density="compact"
+                            color="primary"
                         ></v-checkbox>
 
                         <template v-if="!isNew">
