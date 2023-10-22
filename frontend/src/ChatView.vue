@@ -21,7 +21,7 @@
                     <span v-html="broadcastMessage"></span>
                   </v-tooltip>
 
-                  <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
+                  <div v-if="pinnedPromoted" :key="pinnedPromotedKey" :class="!isMobile() ? 'pinned-promoted' : ['pinned-promoted', 'pinned-promoted-mobile']" :title="$vuetify.locale.t('$vuetify.pinned_message')">
                     <v-alert
                       closable
                       color="red-lighten-4"
@@ -518,6 +518,11 @@ export default {
   position: fixed
   z-index: 4;
   margin-right: 284px;
+}
+.pinned-promoted-mobile {
+    margin-right: unset;
+    top: 56px;
+    left: 0;
 }
 </style>
 
