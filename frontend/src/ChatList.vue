@@ -78,14 +78,20 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
-  CHAT_ADD,
-  CHAT_DELETED, CHAT_EDITED,
-  CLOSE_SIMPLE_MODAL,
-  LOGGED_OUT,
-  OPEN_CHAT_EDIT,
-  OPEN_SIMPLE_MODAL,
-  PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
-  SEARCH_STRING_CHANGED, UNREAD_MESSAGES_CHANGED, USER_PROFILE_CHANGED
+    CHAT_ADD,
+    CHAT_DELETED,
+    CHAT_EDITED,
+    CLOSE_SIMPLE_MODAL,
+    LOGGED_OUT,
+    OPEN_CHAT_EDIT,
+    OPEN_SIMPLE_MODAL,
+    PROFILE_SET,
+    REFRESH_ON_WEBSOCKET_RESTORED,
+    SEARCH_STRING_CHANGED,
+    UNREAD_MESSAGES_CHANGED,
+    USER_PROFILE_CHANGED,
+    VIDEO_CALL_SCREEN_SHARE_CHANGED,
+    VIDEO_CALL_USER_COUNT_CHANGED
 } from "@/bus/bus";
 import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -514,6 +520,20 @@ export default {
         }
       });
     },
+    onVideoCallChanged(dto) {
+          this.items.forEach(item => {
+              if (item.id == dto.chatId) {
+                  item.videoChatUsersCount = dto.usersCount;
+              }
+          });
+    },
+    onVideoScreenShareChanged(dto) {
+          this.items.forEach(item => {
+              if (item.id == dto.chatId) {
+                  item.hasScreenShares = dto.hasScreenShares;
+              }
+          });
+    },
 
   },
   components: {
@@ -555,6 +575,8 @@ export default {
     bus.on(CHAT_DELETED, this.removeItem);
     bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+    bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
+    bus.on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
 
     if (this.$route.name == chat_list_name) {
       this.chatStore.isShowSearch = true;
@@ -575,6 +597,8 @@ export default {
     bus.off(CHAT_DELETED, this.removeItem);
     bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+    bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
+    bus.off(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
 
     setTitle(null);
     this.chatStore.title = null;
