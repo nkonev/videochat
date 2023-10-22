@@ -4,7 +4,7 @@ export default () => {
         computed: {
             heightWithoutAppBar() {
                 if (this.isMobile()) {
-                    return 'height: calc(100dvh - 56px)' // see also $mobileAppBarHeight in constants.styl
+                    return 'height: calc(100dvh - 56px)'
                 } else {
                     return 'height: calc(100dvh - 48px)'
                 }

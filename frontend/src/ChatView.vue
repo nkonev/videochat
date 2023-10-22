@@ -11,7 +11,7 @@
                 <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()" />
               </pane>
 
-              <pane style="width: 100%">
+              <pane style="width: 100%" :class="isMobile() ? 'message-pane-mobile' : ''">
                   <v-tooltip
                     v-if="broadcastMessage"
                     :model-value="showTooltip"
@@ -514,7 +514,6 @@ export default {
 
 <style scoped lang="stylus">
 @import "pinned.styl"
-@import "constants.styl"
 
 .pinned-promoted {
   position: fixed
@@ -523,8 +522,9 @@ export default {
 }
 .pinned-promoted-mobile {
     margin-right: unset;
-    top: $mobileAppBarHeight;
-    left: 0;
+}
+.message-pane-mobile {
+    align-items: unset;
 }
 </style>
 
