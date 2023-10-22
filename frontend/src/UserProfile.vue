@@ -210,6 +210,9 @@ export default {
   beforeUnmount() {
     this.graphQlUnsubscribe();
     this.unsetMainTitle();
+
+    this.viewableUser = null;
+    this.online = false;
   },
   watch: {
     '$vuetify.locale.current': {
