@@ -61,7 +61,7 @@
         <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.bound_oauth2_providers') }}</v-card-title>
         <v-card-actions class="mx-2" v-if="shouldShowBound()">
             <v-chip
-                v-if="chatStore.currentUser.oauth2Identifiers.vkontakteId"
+                v-if="shouldShowBoundVkontakte()"
                 min-width="80px"
                 label
                 close
@@ -75,7 +75,7 @@
             </v-chip>
 
             <v-chip
-                v-if="chatStore.currentUser.oauth2Identifiers.facebookId"
+                v-if="shouldShowBoundFacebook()"
                 min-width="80px"
                 label
                 close
@@ -89,7 +89,7 @@
             </v-chip>
 
             <v-chip
-                v-if="chatStore.currentUser.oauth2Identifiers.googleId"
+                v-if="shouldShowBoundGoogle()"
                 min-width="80px"
                 label
                 close
@@ -103,7 +103,7 @@
             </v-chip>
 
             <v-chip
-                v-if="chatStore.currentUser.oauth2Identifiers.keycloakId"
+                v-if="shouldShowBoundKeycloak()"
                 min-width="80px"
                 label
                 close
@@ -272,23 +272,31 @@ export default {
     },
     methods: {
         shouldShowBound() {
-          const copied = deepCopy(this.chatStore.currentUser.oauth2Identifiers);
-          delete copied["@class"];
-
-          let has = false;
-          for (const aProp in copied) {
-            if (hasLength(copied[aProp])) {
-              has = true;
-              break
-            }
-          }
-          return has && (
-            this.chatStore.availableOAuth2Providers.includes('vkontakte') ||
-            this.chatStore.availableOAuth2Providers.includes('facebook') ||
-            this.chatStore.availableOAuth2Providers.includes('google') ||
-            this.chatStore.availableOAuth2Providers.includes('keycloak')
-          )
+            return this.shouldShowBoundVkontakte() ||
+                this.shouldShowBoundFacebook() ||
+                this.shouldShowBoundGoogle() ||
+                this.shouldShowBoundKeycloak()
         },
+
+        shouldShowBoundVkontakte() {
+            return this.chatStore.currentUser.oauth2Identifiers.vkontakteId &&
+                this.chatStore.availableOAuth2Providers.includes('vkontakte')
+        },
+        shouldShowBoundFacebook() {
+            return this.chatStore.currentUser.oauth2Identifiers.facebookId &&
+                this.chatStore.availableOAuth2Providers.includes('facebook')
+        },
+        shouldShowBoundGoogle() {
+            return this.chatStore.currentUser.oauth2Identifiers.googleId &&
+                this.chatStore.availableOAuth2Providers.includes('google')
+        },
+        shouldShowBoundKeycloak() {
+            return this.chatStore.currentUser.oauth2Identifiers.keycloakId &&
+                this.chatStore.availableOAuth2Providers.includes('keycloak')
+        },
+
+
+
         shouldShowUnbound() {
             return this.shouldShowUnboundVkontakte() ||
                     this.shouldShowUnboundFacebook() ||
