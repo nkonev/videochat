@@ -47,6 +47,9 @@
         getHumanReadableDate, hasLength,
     } from "@/utils";
     import "./messageBody.styl";
+    import "./messageWrapper.styl";
+    import "./itemAvatar.styl";
+
     import {chat_name, messageIdHashPrefix, profile, profile_name} from "@/router/routes"
 
     export default {
@@ -177,8 +180,6 @@
 
 <style lang="stylus" scoped>
   @import "common.styl"
-  @import "messageWrapper.styl"
-  @import "itemAvatar.styl"
 
   .list-item-head {
     text-decoration none
