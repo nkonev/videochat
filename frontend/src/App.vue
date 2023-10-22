@@ -159,7 +159,7 @@
         <VideoAddNewSourceModal/>
     </v-main>
 
-    <v-navigation-drawer location="right" v-model="chatStore.showDrawer">
+    <v-navigation-drawer :location="isMobile() ? 'left' : 'right'" v-model="chatStore.showDrawer">
         <RightPanelActions/>
     </v-navigation-drawer>
   </v-app>
