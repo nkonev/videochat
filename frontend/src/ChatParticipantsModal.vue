@@ -28,7 +28,7 @@
 
                                 <v-row no-gutters align="center" class="d-flex flex-row">
                                     <v-col class="flex-grow-0 flex-shrink-0">
-                                        <v-list-item-title><a class="colored-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{item.login + (item.id == chatStore.currentUser.id ? $vuetify.locale.t('$vuetify.you_brackets') : '' )}}</a></v-list-item-title>
+                                        <v-list-item-title><a class="colored-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{getUserName(item)}}</a></v-list-item-title>
                                     </v-col>
                                     <v-col v-if="!isMobile()" class="ml-4 flex-grow-1 flex-shrink-0">
                                         <v-progress-linear
@@ -355,6 +355,19 @@
                         item.callingTo = false;
                     });
                 }
+            },
+            getUserName(item) {
+                let bldr = "";
+                bldr += item.login;
+                if (item.id == this.chatStore.currentUser.id) {
+                    bldr += " ";
+                    bldr += this.$vuetify.locale.t('$vuetify.you_brackets');
+                    bldr += " ";
+                }
+                if (!hasLength(item.avatar) && item.online) {
+                    bldr += " (" + this.$vuetify.locale.t('$vuetify.user_online') + ")";
+                }
+                return bldr;
             },
 
             addItem(dto) {
