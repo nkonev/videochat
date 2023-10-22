@@ -1,6 +1,6 @@
 <template>
     <splitpanes class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar">
-      <pane size="25">
+      <pane size="25" v-if="!isMobile()">
         <ChatList :embedded="true"/>
       </pane>
       <pane>
