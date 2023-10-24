@@ -12,14 +12,16 @@ type NotificationService struct {
 	rabbitMqUserCountPublisher *producer.RabbitUserCountPublisher
 	rabbitMqRecordPublisher    *producer.RabbitRecordingPublisher
 	rabbitMqScreenSharePublisher *producer.RabbitScreenSharePublisher
+	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
 	restClient                 *client.RestClient
 }
 
-func NewNotificationService(producer *producer.RabbitUserCountPublisher, restClient *client.RestClient, rabbitMqRecordPublisher *producer.RabbitRecordingPublisher, rabbitMqScreenSharePublisher *producer.RabbitScreenSharePublisher) *NotificationService {
+func NewNotificationService(producer *producer.RabbitUserCountPublisher, restClient *client.RestClient, rabbitMqRecordPublisher *producer.RabbitRecordingPublisher, rabbitMqScreenSharePublisher *producer.RabbitScreenSharePublisher, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher) *NotificationService {
 	return &NotificationService{
 		rabbitMqUserCountPublisher: producer,
 		rabbitMqScreenSharePublisher: rabbitMqScreenSharePublisher,
 		rabbitMqRecordPublisher:    rabbitMqRecordPublisher,
+		rabbitUserIdsPublisher: rabbitUserIdsPublisher,
 		restClient:                 restClient,
 	}
 }
@@ -36,6 +38,17 @@ func (h *NotificationService) NotifyVideoUserCountChanged(participantIds []int64
 	}
 
 	return h.rabbitMqUserCountPublisher.Publish(participantIds, &chatNotifyDto, ctx)
+}
+
+func (h *NotificationService) NotifyVideoUserIdsChanged(participantIds []int64, chatId int64, ctx context.Context) error {
+	Logger.Debugf("Notifying about user ids for chat_id=%v", chatId)
+
+	var chatNotifyDto = dto.VideoCallUserIdsChangedDto{
+		UserIds:    participantIds,
+		ChatId:     chatId,
+	}
+
+	return h.rabbitUserIdsPublisher.Publish(&chatNotifyDto, ctx)
 }
 
 func (h *NotificationService) NotifyVideoScreenShareChanged(participantIds []int64, chatId int64, hasScreenShares bool, ctx context.Context) error {

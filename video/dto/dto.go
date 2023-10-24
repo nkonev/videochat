@@ -12,6 +12,11 @@ type VideoCallUserCountChangedDto struct {
 	ChatId     int64 `json:"chatId"`
 }
 
+type VideoCallUserIdsChangedDto struct {
+	UserIds      []int64 `json:"userIds"`
+	ChatId     int64 `json:"chatId"`
+}
+
 type VideoCallScreenShareChangedDto struct {
 	ChatId     int64 `json:"chatId"`
 	HasScreenShares bool `json:"hasScreenShares"`

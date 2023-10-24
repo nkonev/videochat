@@ -25,7 +25,7 @@ func NewStateChangedEventService(conf *config.ExtendedConfig, livekitRoomClient 
 
 func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx context.Context) {
 	listRoomReq := &livekit.ListRoomsRequest{}
-	rooms, err := h.livekitRoomClient.ListRooms(context.Background(), listRoomReq)
+	rooms, err := h.livekitRoomClient.ListRooms(ctx, listRoomReq)
 	if err != nil {
 		Logger.Error(err, "error during reading rooms %v", err)
 		return
@@ -38,7 +38,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 		}
 
 		// Here room.NumParticipants are zeroed, so we need to invoke service
-		usersCount, hasScreenShares, err := h.userService.CountUsers(context.Background(), room.Name)
+		usersCount, hasScreenShares, err := h.userService.CountUsers(ctx, room.Name)
 		if err != nil {
 			Logger.Errorf("got error during counting users in scheduler, %v", err)
 		} else {
@@ -62,9 +62,45 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 	}
 }
 
+
+func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersIds(ctx context.Context) {
+	listRoomReq := &livekit.ListRoomsRequest{}
+	rooms, err := h.livekitRoomClient.ListRooms(ctx, listRoomReq)
+	if err != nil {
+		Logger.Error(err, "error during reading rooms %v", err)
+		return
+	}
+	for _, room := range rooms.Rooms {
+		chatId, err := utils.GetRoomIdFromName(room.Name)
+		if err != nil {
+			Logger.Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
+			continue
+		}
+
+		participantIds, err := h.restClient.GetChatParticipantIds(chatId, ctx)
+		if err != nil {
+			Logger.Error(err, "Failed during getting chat participantIds")
+			return
+		}
+
+		// TODO as a non very good solution we can call h.restClient.GetChatParticipantIds(chatId, ctx) here and make userOnline=true or false and then send them
+		// TODO duplicate sends when 2 rooms contain the same user
+		videoParticipants, err := h.userService.GetVideoParticipants(chatId, ctx)
+		if err != nil {
+			Logger.Errorf("got error during counting users in scheduler, %v", err)
+			continue
+		}
+		err = h.notificationService.NotifyVideoUserIdsChanged(videoParticipants, chatId, ctx)
+		if err != nil {
+			Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", err)
+		}
+
+	}
+}
+
 func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx context.Context) {
 	listRoomReq := &livekit.ListRoomsRequest{}
-	rooms, err := h.livekitRoomClient.ListRooms(context.Background(), listRoomReq)
+	rooms, err := h.livekitRoomClient.ListRooms(ctx, listRoomReq)
 	if err != nil {
 		Logger.Error(err, "error during reading rooms %v", err)
 		return

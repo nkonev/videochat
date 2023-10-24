@@ -53,6 +53,7 @@ func main() {
 			rabbitmq.CreateRabbitMqConnection,
 			producer.NewRabbitUserCountPublisher,
 			producer.NewRabbitInvitePublisher,
+			producer.NewRabbitUserIdsPublisher,
 			producer.NewRabbitDialStatusPublisher,
 			producer.NewRabbitRecordingPublisher,
 			producer.NewRabbitNotificationsPublisher,
@@ -65,6 +66,7 @@ func main() {
 			redis.RedisV8,
 			redis.NewVideoCallUsersCountNotifierService,
 			redis.VideoCallUsersCountNotifierScheduler,
+			redis.VideoCallUsersIdsNotifierScheduler,
 			redis.NewChatDialerService,
 			redis.ChatDialerScheduler,
 			redis.NewRecordingNotifierService,
@@ -231,7 +233,7 @@ func runApiEcho(e *ApiEcho, cfg *config.ExtendedConfig) {
 	Logger.Info("Api server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func runScheduler(chatNotifierTask *redis.VideoCallUsersCountNotifierTask, chatDialerTask *redis.ChatDialerTask, videoRecordingTask *redis.RecordingNotifierTask) {
+func runScheduler(chatNotifierTask *redis.VideoCallUsersCountNotifierTask, chatDialerTask *redis.ChatDialerTask, videoRecordingTask *redis.RecordingNotifierTask, videoCallUserIdsTask *redis.VideoCallUsersIdsNotifierTask) {
 	if viper.GetBool("schedulers.videoCallUsersCountNotifierTask.enabled") {
 		go func() {
 			Logger.Infof("Starting scheduler videoCallUsersCountNotifierTask")
@@ -256,6 +258,15 @@ func runScheduler(chatNotifierTask *redis.VideoCallUsersCountNotifierTask, chatD
 			err := videoRecordingTask.Run(context.Background())
 			if err != nil {
 				Logger.Errorf("Error during working videoRecordingNotifierTask: %s", err)
+			}
+		}()
+	}
+	if viper.GetBool("schedulers.videoCallUsersIdsNotifierTask.enabled") {
+		go func() {
+			Logger.Infof("Starting scheduler videoCallUsersIdsNotifierTask")
+			err := videoCallUserIdsTask.Run(context.Background())
+			if err != nil {
+				Logger.Errorf("Error during working videoCallUsersIdsNotifierTask: %s", err)
 			}
 		}()
 	}
