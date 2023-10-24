@@ -43,7 +43,7 @@ export default {
   },
   methods: {
     onSubmit() {
-      axios.post("/api/request-password-reset", null, { params: {
+      axios.post("/api/aaa/request-password-reset", null, { params: {
               email: this.email,
           }})
         .then(() => {

@@ -82,7 +82,7 @@ public class UserProfileController {
      * @return current logged in profile
      */
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = Constants.Urls.API+Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
     public com.github.nkonev.aaa.dto.UserSelfProfileDTO checkAuthenticated(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
         LOGGER.info("Requesting external user profile");
         Long expiresAt = getExpiresAt(session);
@@ -108,7 +108,7 @@ public class UserProfileController {
     }
 
 
-    @GetMapping(value = Constants.Urls.API+Constants.Urls.USER)
+    @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.USER)
     public com.github.nkonev.aaa.dto.Wrapper<com.github.nkonev.aaa.dto.UserAccountDTOExtended> getUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestParam(value = "page", required=false, defaultValue = "0") int page,
@@ -141,7 +141,7 @@ public class UserProfileController {
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PostMapping(value = {
             Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH,
-            Constants.Urls.API+Constants.Urls.USER+Constants.Urls.SEARCH
+            Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.SEARCH
     })
     public SearchUsersResponseDto searchUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
@@ -175,7 +175,7 @@ public class UserProfileController {
 
     record GetPageResponse(int page) {}
 
-    @GetMapping(Constants.Urls.API + Constants.Urls.USER + "/get-page")
+    @GetMapping(Constants.Urls.PUBLIC_API + Constants.Urls.USER + "/get-page")
     public GetPageResponse getPage(@RequestParam("id") long id, @RequestParam("size") int rawSize) {
         // copy from ChatHandler.GetChatPage
         var size = PageUtils.fixSize(rawSize);
@@ -197,7 +197,7 @@ public class UserProfileController {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(currentUser, userAccount);
     }
 
-    @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.LIST)
+    @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.LIST)
     public List<Record> getUsers(
             @RequestParam(value = "userId") List<Long> userIds,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
@@ -219,7 +219,7 @@ public class UserProfileController {
         return result;
     }
 
-    @GetMapping(value = Constants.Urls.API+Constants.Urls.USER+Constants.Urls.USER_ID)
+    @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.USER_ID)
     public Record getUser(
             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
@@ -241,7 +241,7 @@ public class UserProfileController {
         return getUsers(userIds, userAccountPrincipal);
     }
 
-    @PostMapping(Constants.Urls.API+Constants.Urls.PROFILE)
+    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
     @PreAuthorize("isAuthenticated()")
     public com.github.nkonev.aaa.dto.EditUserDTO editProfile(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
@@ -274,7 +274,7 @@ public class UserProfileController {
         return userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
     }
 
-    @PatchMapping(Constants.Urls.API+Constants.Urls.PROFILE)
+    @PatchMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
     @PreAuthorize("isAuthenticated()")
     public com.github.nkonev.aaa.dto.EditUserDTO editNonEmpty(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
@@ -304,7 +304,7 @@ public class UserProfileController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(Constants.Urls.API+Constants.Urls.SESSIONS+"/my")
+    @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS+"/my")
     public Map<String, Session> mySessions(@AuthenticationPrincipal UserAccountDetailsDTO userDetails){
         return aaaUserDetailsService.getMySessions(userDetails);
     }
@@ -312,7 +312,7 @@ public class UserProfileController {
     public record UserOnlineResponse (long userId, boolean online) {}
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(Constants.Urls.API+Constants.Urls.USER+Constants.Urls.ONLINE)
+    @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.ONLINE)
     public List<UserOnlineResponse> getOnlineForUsers(@RequestParam(value = "userId") List<Long> userIds){
         return aaaUserDetailsService.getUsersOnline(userIds);
     }
@@ -322,19 +322,19 @@ public class UserProfileController {
     }
 
     @PreAuthorize("@aaaSecurityService.hasSessionManagementPermission(#userAccount)")
-    @GetMapping(Constants.Urls.API+Constants.Urls.SESSIONS)
+    @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS)
     public Map<String, Session> sessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
         return aaaUserDetailsService.getSessions(userId);
     }
 
     @PreAuthorize("@aaaSecurityService.hasSessionManagementPermission(#userAccount)")
-    @DeleteMapping(Constants.Urls.API+Constants.Urls.SESSIONS)
+    @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS)
     public void killSessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
         aaaUserDetailsService.killSessions(userId);
     }
 
     @PreAuthorize("@aaaSecurityService.canLock(#userAccountDetailsDTO, #lockDTO)")
-    @PostMapping(Constants.Urls.API+Constants.Urls.USER + Constants.Urls.LOCK)
+    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.LOCK)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.LockDTO lockDTO){
         UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.userId());
         if (lockDTO.lock()){
@@ -347,13 +347,13 @@ public class UserProfileController {
     }
 
     @PreAuthorize("@aaaSecurityService.canDelete(#userAccountDetailsDTO, #userId)")
-    @DeleteMapping(Constants.Urls.API+Constants.Urls.USER)
+    @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER)
     public long deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
         return userService.deleteUser(userId);
     }
 
     @PreAuthorize("@aaaSecurityService.canChangeRole(#userAccountDetailsDTO, #userId)")
-    @PostMapping(Constants.Urls.API+Constants.Urls.USER + Constants.Urls.ROLE)
+    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam long userId, @RequestParam UserRole role){
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
         userAccount = userAccount.withRole(role);
@@ -362,14 +362,14 @@ public class UserProfileController {
     }
 
     @PreAuthorize("@aaaSecurityService.canSelfDelete(#userAccountDetailsDTO)")
-    @DeleteMapping(Constants.Urls.API+Constants.Urls.PROFILE)
+    @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
     public void selfDeleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
         long userId = userAccountDetailsDTO.getId();
         userService.deleteUser(userId);
     }
 
     @PreAuthorize("isAuthenticated()")
-    @DeleteMapping(Constants.Urls.API+Constants.Urls.PROFILE+"/{provider}")
+    @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE+"/{provider}")
     public void selfDeleteBindingOauth2Provider(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @PathVariable("provider") String provider){
         long userId = userAccountDetailsDTO.getId();
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
@@ -385,7 +385,7 @@ public class UserProfileController {
         aaaUserDetailsService.refreshUserDetails(userAccount);
     }
 
-    @GetMapping(Constants.Urls.API + "/oauth2/providers")
+    @GetMapping(Constants.Urls.PUBLIC_API + "/oauth2/providers")
     public Set<String> availableOauth2Providers() {
         return oAuth2ProvidersService.availableOauth2Providers();
     }

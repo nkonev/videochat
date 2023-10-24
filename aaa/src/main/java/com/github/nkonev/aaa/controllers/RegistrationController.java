@@ -8,23 +8,18 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
-import com.github.nkonev.aaa.security.AaaAuthenticationToken;
 import com.github.nkonev.aaa.services.AsyncEmailService;
 import com.github.nkonev.aaa.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.Duration;
 import java.util.Optional;
@@ -67,7 +62,7 @@ public class RegistrationController extends WithAuthentication {
         return userConfirmationTokenRepository.save(userConfirmationToken);
     }
 
-    @PostMapping(value = Constants.Urls.API+ Constants.Urls.REGISTER)
+    @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
     @ResponseBody
     public void register(@RequestBody @Valid EditUserDTO userAccountDTO) {
         userAccountDTO = UserAccountConverter.trimAndValidateNonAouth2Login(userAccountDTO);
@@ -93,7 +88,7 @@ public class RegistrationController extends WithAuthentication {
      * @param uuid
      * @return
      */
-    @GetMapping(value = Constants.Urls.API+ Constants.Urls.REGISTER_CONFIRM)
+    @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER_CONFIRM)
     public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid) {
         String stringUuid = uuid.toString();
         Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(stringUuid);
@@ -120,7 +115,7 @@ public class RegistrationController extends WithAuthentication {
         return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
     }
 
-    @PostMapping(value = Constants.Urls.API+ Constants.Urls.RESEND_CONFIRMATION_EMAIL)
+    @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
     @ResponseBody
     public void resendConfirmationToken(@RequestParam(value = "email") String email) {
         Optional<UserAccount> userAccountOptional = userAccountRepository.findByEmail(email);

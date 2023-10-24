@@ -13,7 +13,7 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.services.aaa-service.loadbalancer.server.port=8060"
-        - "traefik.http.routers.aaa-router.rule=PathPrefix(`/api/login`) || Path(`/api/logout`) || PathPrefix(`/api/profile`) || PathPrefix(`/api/user`) || PathPrefix(`/api/oauth2`) || PathPrefix(`/api/register`) || PathPrefix(`/api/request-password-reset`) || PathPrefix(`/api/password-reset-set-new`)"
+        - "traefik.http.routers.aaa-router.rule=PathPrefix(`/api/aaa`)"
         - "traefik.http.routers.aaa-router.entrypoints=http"
         - "traefik.http.routers.aaa-router.middlewares=retry-middleware@file"
 
@@ -33,23 +33,23 @@ services:
       - CUSTOM_EMAIL_FROM=username@yandex.ru
       - SPRING_MAIL_USERNAME=username
       - SPRING_MAIL_PASSWORD=password
-      - CUSTOM_BASE-URL=http://api.site.local:8080/api
-      - CUSTOM_REGISTRATION-CONFIRM-EXIT-TOKEN-NOT-FOUND-URL=http://api.site.local:8080/front2/confirm/registration/token-not-found
-      - CUSTOM_REGISTRATION-CONFIRM-EXIT-USER-NOT-FOUND-URL=http://api.site.local:8080/front2/confirm/registration/user-not-found
-      - CUSTOM_REGISTRATION-CONFIRM-EXIT-SUCCESS-URL=http://api.site.local:8080/front2
-      - CUSTOM_PASSWORD-RESET-ENTER-NEW-URL=http://api.site.local:8080/front2/password-restore/enter-new
+      - CUSTOM_BASE-URL=http://api.site.local:8080/api/aaa
+      - CUSTOM_REGISTRATION-CONFIRM-EXIT-TOKEN-NOT-FOUND-URL=http://api.site.local:8080/confirm/registration/token-not-found
+      - CUSTOM_REGISTRATION-CONFIRM-EXIT-USER-NOT-FOUND-URL=http://api.site.local:8080/confirm/registration/user-not-found
+      - CUSTOM_REGISTRATION-CONFIRM-EXIT-SUCCESS-URL=http://api.site.local:8080
+      - CUSTOM_PASSWORD-RESET-ENTER-NEW-URL=http://api.site.local:8080/password-restore/enter-new
       - MANAGEMENT_HEALTH_MAIL_ENABLED=false
       - spring.security.oauth2.client.registration.vkontakte.client-id=6805077
       - spring.security.oauth2.client.registration.vkontakte.client-secret=your-app-client-secret
-      - spring.security.oauth2.client.registration.vkontakte.redirect-uri="{baseUrl}/api/login/oauth2/code/{registrationId}"
+      - spring.security.oauth2.client.registration.vkontakte.redirect-uri="{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
       - spring.security.oauth2.client.registration.vkontakte.authorization-grant-type=authorization_code
       - spring.security.oauth2.client.registration.vkontakte.client-authentication-method=post
       - spring.security.oauth2.client.registration.facebook.client-id=1684113965162824
       - spring.security.oauth2.client.registration.facebook.client-secret=your-app-client-secret
-      - spring.security.oauth2.client.registration.facebook.redirect-uri="{baseUrl}/api/login/oauth2/code/{registrationId}"
+      - spring.security.oauth2.client.registration.facebook.redirect-uri="{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
       - spring.security.oauth2.client.registration.google.client-id=987654321
       - spring.security.oauth2.client.registration.google.client-secret=your-app-client-secret
-      - spring.security.oauth2.client.registration.google.redirect-uri="{baseUrl}/api/login/oauth2/code/{registrationId}"
+      - spring.security.oauth2.client.registration.google.redirect-uri="{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
       - spring.security.oauth2.client.provider.vkontakte.authorization-uri=https://oauth.vk.com/authorize
       - spring.security.oauth2.client.provider.vkontakte.token-uri=https://oauth.vk.com/access_token
       - spring.security.oauth2.client.provider.vkontakte.user-info-uri=https://api.vk.com/method/users.get?v=5.92

@@ -50,13 +50,13 @@ export const useChatStore = defineStore('chat', {
       this.currentUser = null
     },
     fetchUserProfile() {
-        axios.get(`/api/profile`).then(( {data} ) => {
+        axios.get(`/api/aaa/profile`).then(( {data} ) => {
             console.debug("fetched profile =", data);
             this.currentUser = data;
         });
     },
     fetchAvailableOauth2Providers() {
-          return axios.get(`/api/oauth2/providers`).then(( {data} ) => {
+          return axios.get(`/api/aaa/oauth2/providers`).then(( {data} ) => {
               console.debug("fetched oauth2 providers =", data);
               this.availableOAuth2Providers = data;
           });

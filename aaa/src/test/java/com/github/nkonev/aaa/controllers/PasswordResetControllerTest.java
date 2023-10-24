@@ -38,7 +38,7 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
 
         // invoke resend, this sends url /password-reset?uuid=<uuid> and confirm code to email
         mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.REQUEST_PASSWORD_RESET+"?email="+email)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.REQUEST_PASSWORD_RESET+"?email="+email)
                     .with(csrf())
             )
             .andExpect(status().isOk());
@@ -61,7 +61,7 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
 
         // user click "set new password" button in modal
         mockMvc.perform(
-            post(Constants.Urls.API+ Constants.Urls.PASSWORD_RESET_SET_NEW)
+            post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
                 .content(objectMapper.writeValueAsString(passwordResetDto))
                 .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .with(csrf())
@@ -92,7 +92,7 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
         PasswordResetController.PasswordResetDto passwordResetDto = new PasswordResetController.PasswordResetDto(tokenUuid, "qwqwqwqwqwqwqwqw");
 
         mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.PASSWORD_RESET_SET_NEW)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
                     .content(objectMapper.writeValueAsString(passwordResetDto))
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
@@ -113,7 +113,7 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
         PasswordResetController.PasswordResetDto passwordResetDto = new PasswordResetController.PasswordResetDto(tokenUuid, "qwqwqwqwqwqwqwqw");
 
         mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.PASSWORD_RESET_SET_NEW)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
                     .content(objectMapper.writeValueAsString(passwordResetDto))
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
@@ -130,7 +130,7 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
         PasswordResetController.PasswordResetDto passwordResetDto = new PasswordResetController.PasswordResetDto(UUID.randomUUID(), emptyPassword);
 
         mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.PASSWORD_RESET_SET_NEW)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
                     .content(objectMapper.writeValueAsString(passwordResetDto))
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())

@@ -139,7 +139,7 @@ export default {
     },
     loadUser() {
       this.viewableUser = null;
-      axios.get(`/api/user/${this.userId}`).then((response) => {
+      axios.get(`/api/aaa/user/${this.userId}`).then((response) => {
         this.viewableUser = response.data;
       })
     },

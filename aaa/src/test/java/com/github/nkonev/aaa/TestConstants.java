@@ -4,10 +4,6 @@ package com.github.nkonev.aaa;
  * Created by nik on 28.05.17.
  */
 public class TestConstants {
-    public static final String RESTDOCS_SNIPPETS_DIR = "target/generated-snippets";
-    public static final String SWAGGER_DIR = "target/swagger";
-    public static final String SWAGGER_JSON = "swagger.json";
-    public static final String SPRINGFOX_DOCS_URL = "/v2/api-docs";
 
     public static final String SQL_URL = "/sql";
     public static final String SQL_QUERY = "select * from users;";

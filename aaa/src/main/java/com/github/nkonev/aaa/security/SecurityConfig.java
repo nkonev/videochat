@@ -40,14 +40,14 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    public static final String API_LOGIN_URL = Constants.Urls.API + "/login";
-    public static final String API_LOGOUT_URL = Constants.Urls.API + "/logout";
+    public static final String API_LOGIN_URL = Constants.Urls.PUBLIC_API + "/login";
+    public static final String API_LOGOUT_URL = Constants.Urls.PUBLIC_API + "/logout";
 
     public static final String USERNAME_PARAMETER = "username";
     public static final String PASSWORD_PARAMETER = "password";
     public static final String REMEMBER_ME_PARAMETER = "remember-me";
 
-    public static final String API_LOGIN_OAUTH = Constants.Urls.API + "/login/oauth2";
+    public static final String API_LOGIN_OAUTH = Constants.Urls.PUBLIC_API + "/login/oauth2";
     private static final String AUTHORIZATION_RESPONSE_BASE_URI = API_LOGIN_OAUTH + "/code/*";
 
     @Autowired
@@ -116,9 +116,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .antMatchers("/favicon.ico", "/static/**", Constants.Urls.API+"/**").permitAll();
+                .antMatchers("/favicon.ico", "/static/**", Constants.Urls.PUBLIC_API +"/**").permitAll();
         http.authorizeRequests()
-                .antMatchers(Constants.Urls.API+ Constants.Urls.ADMIN+"/**").hasAuthority(UserRole.ROLE_ADMIN.name());
+                .antMatchers(Constants.Urls.PUBLIC_API + Constants.Urls.ADMIN+"/**").hasAuthority(UserRole.ROLE_ADMIN.name());
         http.authorizeRequests().requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll();
 
         http.csrf()

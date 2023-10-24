@@ -124,7 +124,7 @@ export default {
     },
     logout(){
       this.loading = true;
-      axios.post(`/api/logout`).then(() => {
+      axios.post(`/api/aaa/logout`).then(() => {
         this.chatStore.unsetUser();
         bus.emit(LOGGED_OUT, null);
       }).finally(()=>{

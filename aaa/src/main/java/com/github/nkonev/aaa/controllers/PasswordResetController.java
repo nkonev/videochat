@@ -1,21 +1,16 @@
 package com.github.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.exception.PasswordResetTokenNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.security.AaaAuthenticationToken;
 import com.github.nkonev.aaa.services.AsyncEmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +22,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.net.URI;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
@@ -59,7 +53,7 @@ public class PasswordResetController extends WithAuthentication {
      * Yes, if your email is stolen you can lost your account
      * @param email
      */
-    @PostMapping(value = Constants.Urls.API+ Constants.Urls.REQUEST_PASSWORD_RESET)
+    @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REQUEST_PASSWORD_RESET)
     public void requestPasswordReset(String email) {
         String uuid = UUID.randomUUID().toString();
 
@@ -88,7 +82,7 @@ public class PasswordResetController extends WithAuthentication {
         String newPassword
     ) {}
 
-    @PostMapping(value = Constants.Urls.API + Constants.Urls.PASSWORD_RESET_SET_NEW)
+    @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
     public void resetPassword(@RequestBody @Valid PasswordResetDto passwordResetDto, HttpServletResponse httpResponse) {
 
         // webpage parses token uuid from URL

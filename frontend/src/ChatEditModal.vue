@@ -226,7 +226,7 @@
                 this.isLoading = true;
 
                 if (this.isNew) {
-                    axios.post(`/api/user/search`, {
+                    axios.post(`/api/aaa/user/search`, {
                         searchString: searchString
                     })
                         .then((response) => {

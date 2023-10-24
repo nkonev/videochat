@@ -11,7 +11,7 @@
 #logging.level.org.hibernate.SQL: DEBUG
 #logging.level.org.hibernate.type: TRACE
 
-custom.base-url: "http://localhost:8081/api"
+custom.base-url: "http://localhost:8081/api/aaa"
 custom.registration-confirm-exit-token-not-found-url: "http://localhost:8081/front2/confirm/registration/token-not-found"
 custom.registration-confirm-exit-user-not-found-url: "http://localhost:8081/front2/confirm/registration/user-not-found"
 custom.registration-confirm-exit-success-url: "http://localhost:8081/front2"

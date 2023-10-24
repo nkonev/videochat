@@ -15,12 +15,10 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
-import com.github.nkonev.aaa.security.SecurityConfig;
 import com.github.nkonev.aaa.services.EventReceiver;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +34,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import javax.servlet.http.Cookie;
 import java.net.HttpCookie;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.github.nkonev.aaa.security.SecurityConfig.PASSWORD_PARAMETER;
-import static com.github.nkonev.aaa.security.SecurityConfig.USERNAME_PARAMETER;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -70,7 +65,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @org.junit.jupiter.api.Test
     public void testGetAliceProfileWhichNotContainsPassword() throws Exception {
         MvcResult getPostsRequest = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.PROFILE)
+                get(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.login").value(TestConstants.USER_ALICE))
@@ -96,7 +91,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withLogin(newLogin);
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.PROFILE)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .with(csrf())
@@ -111,7 +106,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         Assertions.assertEquals(initialPassword, getUserFromBd(newLogin).password(), "password shouldn't be affected if there isn't set explicitly");
 
         MvcResult getPostsRequest = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.PROFILE)
+                get(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.login").value(newLogin))
@@ -143,7 +138,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withPassword(newPassword);
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.PROFILE)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -171,7 +166,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withPassword(newPassword);
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.PROFILE)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -202,7 +197,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         userMap.put("id", foreignUserAccount.id());
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.PROFILE)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(userMap))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -226,7 +221,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withLogin(newLogin);
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.PROFILE)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -255,7 +250,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withEmail(newEmail);
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.PROFILE)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -280,7 +275,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_ADMIN);
         RequestEntity requestEntity = RequestEntity
-            .get(new URI(urlWithContextPath() + Constants.Urls.API+Constants.Urls.USER + "/" + foreignUserAccount.id()))
+            .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API +Constants.Urls.USER + "/" + foreignUserAccount.id()))
             .header(CommonTestConstants.HEADER_COOKIE, headerValue).build();
         ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
         var response = objectMapper.readValue(responseEntity.getBody(), JsonNode.class);
@@ -299,7 +294,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String bobEmail = bob.email();
 
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.id())
+                get(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.id())
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].email").doesNotExist())
@@ -318,7 +313,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String bobEmail = bob.email();
 
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.id()+"&userId="+alice.id())
+                get(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.id()+"&userId="+alice.id())
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].login").value(TestConstants.USER_ALICE))
@@ -336,7 +331,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_BOB);
         RequestEntity requestEntity = RequestEntity
-            .get(new URI(urlWithContextPath() + Constants.Urls.API+Constants.Urls.USER + "/" + foreignUserAccount.id()))
+            .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API +Constants.Urls.USER + "/" + foreignUserAccount.id()))
             .header(CommonTestConstants.HEADER_COOKIE, headerValue).build();
         ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
         var response = objectMapper.readValue(responseEntity.getBody(), JsonNode.class);
@@ -353,7 +348,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
 
         RequestEntity requestEntity = RequestEntity
-                .get(new URI(urlWithContextPath() + Constants.Urls.API + Constants.Urls.SESSIONS + "?userId=1"))
+                .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API + Constants.Urls.SESSIONS + "?userId=1"))
                 .header(CommonTestConstants.HEADER_COOKIE, headerValue).build();
 
         ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
@@ -373,7 +368,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
 
         RequestEntity requestEntity = RequestEntity
-                .get(new URI(urlWithContextPath() + Constants.Urls.API + Constants.Urls.SESSIONS + "?userId=1"))
+                .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API + Constants.Urls.SESSIONS + "?userId=1"))
                 .header(CommonTestConstants.HEADER_COOKIE, headerValue).build();
 
         ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
@@ -386,7 +381,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     public void userCannotManageSessionsView() throws Exception {
 
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.USER)
+                get(Constants.Urls.PUBLIC_API + Constants.Urls.USER)
         )
                 .andDo(result -> {
                     LOGGER.info(result.getResponse().getContentAsString());
@@ -404,7 +399,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     public void adminCanManageSessionsView() throws Exception {
 
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.API+ Constants.Urls.USER)
+                get(Constants.Urls.PUBLIC_API + Constants.Urls.USER)
         )
                 .andDo(result -> {
                     LOGGER.info(result.getResponse().getContentAsString());
@@ -425,7 +420,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         // lock user 10
         LockDTO lockDTO = new LockDTO(userId, true);
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.USER + Constants.Urls.LOCK)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.USER + Constants.Urls.LOCK)
                         .content(objectMapper.writeValueAsBytes(lockDTO))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -449,7 +444,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         // lock user 10
         LockDTO lockDTO = new LockDTO(userId, true);
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.USER + Constants.Urls.LOCK)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.USER + Constants.Urls.LOCK)
                         .content(objectMapper.writeValueAsBytes(lockDTO))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -464,7 +459,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @org.junit.jupiter.api.Test
     public void userSearchJohnSmithTrim() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.USER + Constants.Urls.SEARCH)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.USER + Constants.Urls.SEARCH)
                         .content("""
                                 {
                                     "searchString": "%s"
@@ -484,7 +479,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @org.junit.jupiter.api.Test
     public void userSearchJohnSmithIgnoreCase() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
-                post(Constants.Urls.API+ Constants.Urls.USER + Constants.Urls.SEARCH)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.USER + Constants.Urls.SEARCH)
                 .content("""
                         {
                             "searchString": "%s"
@@ -520,7 +515,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         long id = createUserForDelete("lol2");
 
         MvcResult mvcResult = mockMvc.perform(
-                delete(Constants.Urls.API+ Constants.Urls.USER)
+                delete(Constants.Urls.PUBLIC_API + Constants.Urls.USER)
                         .param("userId", ""+id)
                         .with(csrf())
         )
@@ -537,7 +532,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         long id = createUserForDelete("lol1");
 
         MvcResult mvcResult = mockMvc.perform(
-                delete(Constants.Urls.API+ Constants.Urls.USER)
+                delete(Constants.Urls.PUBLIC_API + Constants.Urls.USER)
                 .param("userId", ""+id)
                         .with(csrf())
         )
@@ -554,7 +549,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String session = getSession(xsrf, "admin", "admin");
 
         mockMvc.perform(
-                        get(Constants.Urls.API+Constants.Urls.SESSIONS+"/my")
+                        get(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS+"/my")
                                 .cookie(new Cookie(getAuthCookieName(), session))
                 ).andDo(mvcResult1 -> {
                     LOGGER.info(mvcResult1.getResponse().getContentAsString());

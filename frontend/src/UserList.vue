@@ -210,7 +210,7 @@ export default {
           const id = this.findTopElementId();
           //console.log("Going to get top page", aDirection, id);
           this.pageTop = await axios
-              .get(`/api/user/get-page`, {params: {id: id, size: PAGE_SIZE,}})
+              .get(`/api/aaa/user/get-page`, {params: {id: id, size: PAGE_SIZE,}})
               .then(({data}) => data.page) - 1; // as in load() -> axios.get().then()
           if (this.pageTop == -1) {
               this.pageTop = 0
@@ -220,7 +220,7 @@ export default {
           const id = this.findBottomElementId();
           //console.log("Going to get bottom page", aDirection, id);
           this.pageBottom = await axios
-              .get(`/api/user/get-page`, {params: {id: id, size: PAGE_SIZE,}})
+              .get(`/api/aaa/user/get-page`, {params: {id: id, size: PAGE_SIZE,}})
               .then(({data}) => data.page);
           console.log("Set page bottom", this.pageBottom, "for id", id);
       }
@@ -232,7 +232,7 @@ export default {
 
       this.chatStore.incrementProgressCount();
       const page = this.isTopDirection() ? this.pageTop : this.pageBottom;
-      return axios.post(`/api/user/search`, {
+      return axios.post(`/api/aaa/user/search`, {
           page: page,
           size: PAGE_SIZE,
           searchString: this.searchString,

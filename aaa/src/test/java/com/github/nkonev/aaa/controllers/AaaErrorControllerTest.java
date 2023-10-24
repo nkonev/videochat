@@ -11,12 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.test.web.servlet.MvcResult;
-import java.net.URI;
-import java.util.ArrayList;
+
 import java.util.Map;
 import static com.github.nkonev.aaa.security.SecurityConfig.PASSWORD_PARAMETER;
 import static com.github.nkonev.aaa.security.SecurityConfig.USERNAME_PARAMETER;
-import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -48,7 +46,7 @@ public class AaaErrorControllerTest extends AbstractUtTestRunner {
      */
     @Test
     public void testNotAuthorized() throws Exception {
-        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.API+ Constants.Urls.PROFILE, String.class);
+        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE, String.class);
         String str = responseEntity.getBody();
         Assertions.assertEquals(401, responseEntity.getStatusCodeValue());
 
@@ -81,7 +79,7 @@ public class AaaErrorControllerTest extends AbstractUtTestRunner {
 
     @Test
     public void testSqlExceptionIsHidden() throws Exception {
-        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.API+ TestConstants.SQL_URL, String.class);
+        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.PUBLIC_API + TestConstants.SQL_URL, String.class);
         String str = responseEntity.getBody();
         Assertions.assertEquals(500, responseEntity.getStatusCodeValue());
 
@@ -98,7 +96,7 @@ public class AaaErrorControllerTest extends AbstractUtTestRunner {
 
     @Test
     public void testUserDetailsWithPasswordIsNotSerialized() throws Exception {
-        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.API+TestConstants.USER_DETAILS, String.class);
+        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.PUBLIC_API +TestConstants.USER_DETAILS, String.class);
         String str = responseEntity.getBody();
         Assertions.assertEquals(500, responseEntity.getStatusCodeValue());
 

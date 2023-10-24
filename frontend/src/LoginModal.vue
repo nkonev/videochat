@@ -173,22 +173,22 @@
             loginVk() {
                 this.loadingVk = true;
                 this.disable = true;
-                window.location.href = '/api/login/oauth2/vkontakte';
+                window.location.href = '/api/aaa/login/oauth2/vkontakte';
             },
             loginFb() {
                 this.loadingFb = true;
                 this.disable = true;
-                window.location.href = '/api/login/oauth2/facebook';
+                window.location.href = '/api/aaa/login/oauth2/facebook';
             },
             loginGoogle() {
                 this.loadingGoogle = true;
                 this.disable = true;
-                window.location.href = '/api/login/oauth2/google';
+                window.location.href = '/api/aaa/login/oauth2/google';
             },
             loginKeycloak() {
                 this.loadingKeycloak = true;
                 this.disable = true;
-                window.location.href = '/api/login/oauth2/keycloak';
+                window.location.href = '/api/aaa/login/oauth2/keycloak';
             },
             validate () {
                 return this.$refs.form.validate()
@@ -214,7 +214,7 @@
                         params.append(key, dto[key])
                     });
 
-                    axios.post(`/api/login`, params)
+                    axios.post(`/api/aaa/login`, params)
                         .then((value) => {
                             // store.dispatch(replayPreviousUrl());
                             console.log("You successfully logged in");

@@ -1,5 +1,6 @@
 package com.github.nkonev.oauth2emu;
 
+import com.github.nkonev.aaa.Constants;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -103,7 +104,7 @@ public class OAuth2EmulatorServers {
                     String state = httpRequest.getQueryStringParameters().getEntries().stream().filter(parameter -> "state".equals(parameter.getName().getValue())).findFirst().get().getValues().get(0).getValue();
                     return response().withHeaders(
                             new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "text/html; charset=\"utf-8\""),
-                            new Header(HttpHeaderNames.LOCATION.toString(), baseUrl+"/api/login/oauth2/code/facebook?code=fake_code&state="+state)
+                            new Header(HttpHeaderNames.LOCATION.toString(), baseUrl+ Constants.Urls.PUBLIC_API +"/login/oauth2/code/facebook?code=fake_code&state="+state)
                     ).withStatusCode(302);
                 });
 
@@ -141,7 +142,7 @@ public class OAuth2EmulatorServers {
                     String state = httpRequest.getQueryStringParameters().getEntries().stream().filter(parameter -> "state".equals(parameter.getName().getValue())).findFirst().get().getValues().get(0).getValue();
                     return response().withHeaders(
                             new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "text/html; charset=\"utf-8\""),
-                            new Header(HttpHeaderNames.LOCATION.toString(), baseUrl+"/api/login/oauth2/code/vkontakte?code=fake_code&state="+state)
+                            new Header(HttpHeaderNames.LOCATION.toString(), baseUrl+Constants.Urls.PUBLIC_API+"/login/oauth2/code/vkontakte?code=fake_code&state="+state)
                     ).withStatusCode(302);
                 });
 
@@ -195,7 +196,7 @@ public class OAuth2EmulatorServers {
                     nonceHolder.set(httpRequest.getQueryStringParameters().getEntries().stream().filter(parameter -> "nonce".equals(parameter.getName().getValue())).findFirst().get().getValues().get(0).getValue());
                     return response().withHeaders(
                             new Header(HttpHeaderNames.CONTENT_TYPE.toString(), "text/html; charset=\"utf-8\""),
-                            new Header(HttpHeaderNames.LOCATION.toString(), baseUrl+"/api/login/oauth2/code/google?code=fake_code&state="+state)
+                            new Header(HttpHeaderNames.LOCATION.toString(), baseUrl+Constants.Urls.PUBLIC_API+"/login/oauth2/code/google?code=fake_code&state="+state)
                     ).withStatusCode(302);
                 });
 

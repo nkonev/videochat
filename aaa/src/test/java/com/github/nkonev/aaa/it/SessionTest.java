@@ -12,20 +12,12 @@ import org.springframework.boot.web.servlet.server.AbstractServletWebServerFacto
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import java.net.HttpCookie;
+
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.github.nkonev.aaa.CommonTestConstants.*;
-import static com.github.nkonev.aaa.Constants.Urls.API;
+import static com.github.nkonev.aaa.Constants.Urls.PUBLIC_API;
 import static com.github.nkonev.aaa.Constants.Urls.LOCK;
-import static com.github.nkonev.aaa.security.SecurityConfig.*;
-import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
 public class SessionTest extends OAuth2EmulatorTests {
@@ -45,7 +37,7 @@ public class SessionTest extends OAuth2EmulatorTests {
         SessionHolder userAliceSession = login(CommonTestConstants.USER_LOCKED, CommonTestConstants.COMMON_PASSWORD);
 
         RequestEntity myPostsRequest1 = RequestEntity
-                .get(new URI(urlWithContextPath()+ API + Constants.Urls.PROFILE))
+                .get(new URI(urlWithContextPath()+ PUBLIC_API + Constants.Urls.PROFILE))
                 .header(HEADER_XSRF_TOKEN, userAliceSession.newXsrf)
                 .header(COOKIE, userAliceSession.getCookiesArray())
                 .build();
@@ -56,7 +48,7 @@ public class SessionTest extends OAuth2EmulatorTests {
         SessionHolder userAdminSession = login(username, password);
         LockDTO lockDTO = new LockDTO(userAliceSession.userId, true);
         RequestEntity lockRequest = RequestEntity
-                .post(new URI(urlWithContextPath()+API+ Constants.Urls.USER+LOCK))
+                .post(new URI(urlWithContextPath()+ PUBLIC_API + Constants.Urls.USER+LOCK))
                 .header(HEADER_XSRF_TOKEN, userAdminSession.newXsrf)
                 .header(COOKIE, userAdminSession.getCookiesArray())
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -67,7 +59,7 @@ public class SessionTest extends OAuth2EmulatorTests {
 
 
         RequestEntity myPostsRequest3 = RequestEntity
-                .get(new URI(urlWithContextPath()+ API + Constants.Urls.PROFILE))
+                .get(new URI(urlWithContextPath()+ PUBLIC_API + Constants.Urls.PROFILE))
                 .header(HEADER_XSRF_TOKEN, userAliceSession.newXsrf)
                 .header(COOKIE, userAliceSession.getCookiesArray())
                 .build();

@@ -6,16 +6,16 @@ spring.security:
           client-id: 6805077
           client-secret: your-app-client-secret
           authorization-grant-type: authorization_code
-          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+          redirect-uri: "{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
           client-authentication-method: post
         facebook:
           client-id: 1684113965162824
           client-secret: your-app-client-secret
-          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+          redirect-uri: "{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
         google:
           client-id: 987654321
           client-secret: your-app-client-secret
-          redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+          redirect-uri: "{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
           token-uri: http://127.0.0.1:10082/mock/google/oauth2/v4/token
       provider:
         vkontakte:

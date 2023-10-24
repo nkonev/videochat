@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class UserAccountDetailsDTOController {
-    @GetMapping(Constants.Urls.API + TestConstants.USER_DETAILS)
+    @GetMapping(Constants.Urls.PUBLIC_API + TestConstants.USER_DETAILS)
     public UserAccountDetailsDTO getUserDetails() {
         return new UserAccountDetailsDTO(null, null, null, null, null, false, false, true, null, null);
     }

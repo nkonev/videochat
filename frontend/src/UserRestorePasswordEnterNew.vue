@@ -61,7 +61,7 @@ export default {
   },
   methods: {
     onSubmit() {
-      axios.post("/api/password-reset-set-new",{
+      axios.post("/api/aaa/password-reset-set-new",{
           passwordResetToken: this.$route.query.uuid,
           newPassword: this.password,
       })

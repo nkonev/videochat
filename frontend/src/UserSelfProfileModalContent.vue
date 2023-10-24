@@ -321,65 +321,65 @@ export default {
         },
 
         submitOauthVkontakte() {
-            window.location.href = '/api/login/oauth2/vkontakte';
+            window.location.href = '/api/aaa/login/oauth2/vkontakte';
         },
         submitOauthFacebook() {
-            window.location.href = '/api/login/oauth2/facebook';
+            window.location.href = '/api/aaa/login/oauth2/facebook';
         },
         submitOauthGoogle() {
-            window.location.href = '/api/login/oauth2/google';
+            window.location.href = '/api/aaa/login/oauth2/google';
         },
         submitOauthKeycloak() {
-            window.location.href = '/api/login/oauth2/keycloak';
+            window.location.href = '/api/aaa/login/oauth2/keycloak';
         },
 
         sendLogin() {
-            axios.patch('/api/profile', {login: this.chatStore.currentUser.login})
+            axios.patch('/api/aaa/profile', {login: this.chatStore.currentUser.login})
                 .then((response) => {
                     this.chatStore.fetchUserProfile()
                     this.showLoginInput = false;
                 })
         },
         sendPassword() {
-            axios.patch('/api/profile', {password: this.password})
+            axios.patch('/api/aaa/profile', {password: this.password})
                 .then((response) => {
                     this.showPasswordInput = false;
                 })
         },
         sendEmail() {
-            axios.patch('/api/profile', {email: this.chatStore.currentUser.email})
+            axios.patch('/api/aaa/profile', {email: this.chatStore.currentUser.email})
                 .then((response) => {
                     this.chatStore.fetchUserProfile()
                     this.showEmailInput = false;
                 })
         },
         sendShortInfo() {
-            axios.patch('/api/profile', {shortInfo: this.chatStore.currentUser.shortInfo})
+            axios.patch('/api/aaa/profile', {shortInfo: this.chatStore.currentUser.shortInfo})
                 .then((response) => {
                     this.chatStore.fetchUserProfile()
                     this.showShortInfoInput = false;
                 })
         },
         removeVk() {
-            axios.delete('/api/profile/vkontakte')
+            axios.delete('/api/aaa/profile/vkontakte')
                 .then((response) => {
                   this.chatStore.fetchUserProfile()
                 })
         },
         removeFb() {
-            axios.delete('/api/profile/facebook')
+            axios.delete('/api/aaa/profile/facebook')
                 .then((response) => {
                   this.chatStore.fetchUserProfile()
                 })
         },
         removeGoogle() {
-            axios.delete('/api/profile/google')
+            axios.delete('/api/aaa/profile/google')
                 .then((response) => {
                   this.chatStore.fetchUserProfile()
                 })
         },
         removeKeycloak() {
-            axios.delete('/api/profile/keycloak')
+            axios.delete('/api/aaa/profile/keycloak')
                 .then((response) => {
                     this.chatStore.fetchUserProfile()
                 })

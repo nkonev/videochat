@@ -72,7 +72,7 @@ export default {
         email: this.email,
         password: this.password,
       }
-      axios.post("/api/register", data)
+      axios.post("/api/aaa/register", data)
         .then(() => {
           this.$router.push({name: confirmation_pending_name} )
         })
