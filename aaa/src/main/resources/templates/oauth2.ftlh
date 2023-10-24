@@ -14,7 +14,7 @@
     <h1>OAuth2 login test</h1>
 
     <#list availableOauth2Providers as item>
-        <a href="/api/login/oauth2/${item}" id="a-${item}">${item}</a> <br/>
+        <a href="/api/aaa/login/oauth2/${item}" id="a-${item}">${item}</a> <br/>
     </#list>
 
 </div>

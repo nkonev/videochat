@@ -10,7 +10,7 @@
         ${propName}: ${(propValue)!"no id"} <br/>
     </#list>
 
-    <@form.form action="/api/logout" method="post">
+    <@form.form action="/api/aaa/logout" method="post">
         <input id="btn-logout" type="submit" value="Logout"/>
     </@form.form>
 </@sec.authorize>

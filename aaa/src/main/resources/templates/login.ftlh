@@ -13,7 +13,7 @@
     <h1>Login page</h1>
     <#assign form=JspTaglibs["http://www.springframework.org/tags/form"]/>
 
-    <@form.form action="/api/login" method="post">
+    <@form.form action="/api/aaa/login" method="post">
         <input id="username" name="username" type="text" placeholder="Username"/>
         <input id="password" name="password" type="password" placeholder="Password"/>
         <input id="btn-login" type="submit" value="Login"/>
