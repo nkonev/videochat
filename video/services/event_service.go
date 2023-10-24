@@ -82,7 +82,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx conte
 		participantIds, err := h.restClient.GetChatParticipantIds(chatId, ctx)
 		if err != nil {
 			Logger.Error(err, "Failed during getting chat participantIds")
-			return
+			continue
 		}
 
 		videoParticipants, err := h.userService.GetVideoParticipants(chatId, ctx)
