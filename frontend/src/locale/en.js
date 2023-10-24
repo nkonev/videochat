@@ -23,7 +23,7 @@ export default {
     login: "Login",
     password: "Password",
     login_action: "Login",
-    create_chat: "Create chat",
+    create_chat: "Create a chat",
     chat_name: "Chat name",
     edit: "Edit",
     ok: "Ok",
