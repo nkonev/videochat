@@ -10,8 +10,8 @@ import (
 	"nkonev.name/video/logger"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
-	"nkonev.name/video/redis"
 	"nkonev.name/video/services"
+	"nkonev.name/video/tasks"
 	"nkonev.name/video/utils"
 )
 
@@ -21,12 +21,12 @@ type InviteHandler struct {
 	dialStatusPublisher   *producer.RabbitDialStatusPublisher
 	notificationPublisher *producer.RabbitNotificationsPublisher
 	userService           *services.UserService
-	chatDialerService     *redis.ChatDialerService
+	chatDialerService     *tasks.ChatDialerService
 }
 
 const MissedCall = "missed_call"
 
-func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService, chatDialerService *redis.ChatDialerService) *InviteHandler {
+func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService, chatDialerService *tasks.ChatDialerService) *InviteHandler {
 	return &InviteHandler{
 		dialRedisRepository:   dialService,
 		chatClient:            chatClient,

@@ -30,9 +30,9 @@ import (
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
 	"nkonev.name/storage/rabbitmq"
-	"nkonev.name/storage/redis"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
+	"nkonev.name/storage/tasks"
 	"nkonev.name/storage/utils"
 )
 
@@ -50,11 +50,11 @@ func main() {
 			configureAwsS3,
 			configureMinioEntities,
 			configureEcho,
-			redis.RedisV8,
-			redis.NewCleanFilesOfDeletedChatService,
-			redis.CleanFilesOfDeletedChatScheduler,
-			redis.NewActualizePreviewsService,
-			redis.ActualizePreviewsScheduler,
+			tasks.RedisV8,
+			tasks.NewCleanFilesOfDeletedChatService,
+			tasks.CleanFilesOfDeletedChatScheduler,
+			tasks.NewActualizePreviewsService,
+			tasks.ActualizePreviewsScheduler,
 			client.NewChatAccessClient,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
@@ -336,7 +336,7 @@ func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig,
 	}, nil
 }
 
-func runScheduler(dt *redis.CleanFilesOfDeletedChatTask, a *redis.ActualizePreviewsTask) {
+func runScheduler(dt *tasks.CleanFilesOfDeletedChatTask, a *tasks.ActualizePreviewsTask) {
 	if viper.GetBool("schedulers.cleanFilesOfDeletedChatTask.enabled") {
 		go func() {
 			Logger.Infof("Starting scheduler cleanFilesOfDeletedChatTask")

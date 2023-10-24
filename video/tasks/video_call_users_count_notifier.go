@@ -1,4 +1,4 @@
-package redis
+package tasks
 
 import (
 	"context"
@@ -10,40 +10,40 @@ import (
 	"nkonev.name/video/services"
 )
 
-type VideoCallUsersIdsNotifierService struct {
+type VideoCallUsersCountNotifierService struct {
 	scheduleService *services.StateChangedEventService
 	conf            *config.ExtendedConfig
 }
 
-func NewVideoCallUsersIdsNotifierService(scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig) *VideoCallUsersIdsNotifierService {
-	return &VideoCallUsersIdsNotifierService{
+func NewVideoCallUsersCountNotifierService(scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig) *VideoCallUsersCountNotifierService {
+	return &VideoCallUsersCountNotifierService{
 		scheduleService: scheduleService,
 		conf:            conf,
 	}
 }
 
-func (srv *VideoCallUsersIdsNotifierService) doJob() {
+func (srv *VideoCallUsersCountNotifierService) doJob() {
 
 	Logger.Debugf("Invoked periodic ChatNotifier")
 	ctx := context.Background()
-	srv.scheduleService.NotifyAllChatsAboutVideoCallUsersIds(ctx)
+	srv.scheduleService.NotifyAllChatsAboutVideoCallUsersCount(ctx)
 
 	Logger.Debugf("End of ChatNotifier")
 }
 
-type VideoCallUsersIdsNotifierTask struct {
+type VideoCallUsersCountNotifierTask struct {
 	*gointerlock.GoInterval
 }
 
-func VideoCallUsersIdsNotifierScheduler(
+func VideoCallUsersCountNotifierScheduler(
 	redisConnector *redisV8.Client,
-	service *VideoCallUsersIdsNotifierService,
+	service *VideoCallUsersCountNotifierService,
 	conf *config.ExtendedConfig,
-) *VideoCallUsersIdsNotifierTask {
-	var interv = viper.GetDuration("schedulers.videoCallUsersIdsNotifierTask.notificationPeriod")
+) *VideoCallUsersCountNotifierTask {
+	var interv = viper.GetDuration("schedulers.videoCallUsersCountNotifierTask.notificationPeriod")
 	Logger.Infof("Created video call users count periodic notificator with interval %v", interv)
-	return &VideoCallUsersIdsNotifierTask{&gointerlock.GoInterval{
-		Name:           "videoCallUsersIdsNotifierTask",
+	return &VideoCallUsersCountNotifierTask{&gointerlock.GoInterval{
+		Name:           "videoCallUsersCountNotifierTask",
 		Interval:       interv,
 		Arg:            service.doJob,
 		RedisConnector: redisConnector,

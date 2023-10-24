@@ -23,8 +23,8 @@ import (
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 	"nkonev.name/video/rabbitmq"
-	"nkonev.name/video/redis"
 	"nkonev.name/video/services"
+	"nkonev.name/video/tasks"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -63,14 +63,15 @@ func main() {
 			services.NewStateChangedEventService,
 			services.NewDialRedisRepository,
 			services.NewEgressService,
-			redis.RedisV8,
-			redis.NewVideoCallUsersCountNotifierService,
-			redis.VideoCallUsersCountNotifierScheduler,
-			redis.VideoCallUsersIdsNotifierScheduler,
-			redis.NewChatDialerService,
-			redis.ChatDialerScheduler,
-			redis.NewRecordingNotifierService,
-			redis.RecordingNotifierScheduler,
+			tasks.RedisV8,
+			tasks.NewVideoCallUsersCountNotifierService,
+			tasks.VideoCallUsersCountNotifierScheduler,
+			tasks.NewUsersVideoStatusNotifierService,
+			tasks.UsersVideoStatusNotifierScheduler,
+			tasks.NewChatDialerService,
+			tasks.ChatDialerScheduler,
+			tasks.NewRecordingNotifierService,
+			tasks.RecordingNotifierScheduler,
 		),
 		fx.Invoke(
 			runApiEcho,
@@ -233,7 +234,7 @@ func runApiEcho(e *ApiEcho, cfg *config.ExtendedConfig) {
 	Logger.Info("Api server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func runScheduler(chatNotifierTask *redis.VideoCallUsersCountNotifierTask, chatDialerTask *redis.ChatDialerTask, videoRecordingTask *redis.RecordingNotifierTask, videoCallUserIdsTask *redis.VideoCallUsersIdsNotifierTask) {
+func runScheduler(chatNotifierTask *tasks.VideoCallUsersCountNotifierTask, chatDialerTask *tasks.ChatDialerTask, videoRecordingTask *tasks.RecordingNotifierTask, usersVideoStatusNotifierTask *tasks.UsersVideoStatusNotifierTask) {
 	if viper.GetBool("schedulers.videoCallUsersCountNotifierTask.enabled") {
 		go func() {
 			Logger.Infof("Starting scheduler videoCallUsersCountNotifierTask")
@@ -261,12 +262,12 @@ func runScheduler(chatNotifierTask *redis.VideoCallUsersCountNotifierTask, chatD
 			}
 		}()
 	}
-	if viper.GetBool("schedulers.videoCallUsersIdsNotifierTask.enabled") {
+	if viper.GetBool("schedulers.usersVideoStatusNotifierTask.enabled") {
 		go func() {
-			Logger.Infof("Starting scheduler videoCallUsersIdsNotifierTask")
-			err := videoCallUserIdsTask.Run(context.Background())
+			Logger.Infof("Starting scheduler usersVideoStatusNotifierTask")
+			err := usersVideoStatusNotifierTask.Run(context.Background())
 			if err != nil {
-				Logger.Errorf("Error during working videoCallUsersIdsNotifierTask: %s", err)
+				Logger.Errorf("Error during working usersVideoStatusNotifierTask: %s", err)
 			}
 		}()
 	}

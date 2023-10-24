@@ -197,9 +197,10 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		ChatEvents       func(childComplexity int, chatID int64) int
-		GlobalEvents     func(childComplexity int) int
-		UserOnlineEvents func(childComplexity int, userIds []int64) int
+		ChatEvents            func(childComplexity int, chatID int64) int
+		GlobalEvents          func(childComplexity int) int
+		UserOnlineEvents      func(childComplexity int, userIds []int64) int
+		UserVideoStatusEvents func(childComplexity int, userIds []int64) int
 	}
 
 	User struct {
@@ -217,6 +218,11 @@ type ComplexityRoot struct {
 	UserTypingDto struct {
 		Login         func(childComplexity int) int
 		ParticipantID func(childComplexity int) int
+	}
+
+	UserVideoStatusEvent struct {
+		IsInVideo func(childComplexity int) int
+		UserID    func(childComplexity int) int
 	}
 
 	UserWithAdmin struct {
@@ -271,6 +277,7 @@ type SubscriptionResolver interface {
 	ChatEvents(ctx context.Context, chatID int64) (<-chan *model.ChatEvent, error)
 	GlobalEvents(ctx context.Context) (<-chan *model.GlobalEvent, error)
 	UserOnlineEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserOnline, error)
+	UserVideoStatusEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserVideoStatusEvent, error)
 }
 
 type executableSchema struct {
@@ -1047,6 +1054,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.UserOnlineEvents(childComplexity, args["userIds"].([]int64)), true
 
+	case "Subscription.userVideoStatusEvents":
+		if e.complexity.Subscription.UserVideoStatusEvents == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_userVideoStatusEvents_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.UserVideoStatusEvents(childComplexity, args["userIds"].([]int64)), true
+
 	case "User.avatar":
 		if e.complexity.User.Avatar == nil {
 			break
@@ -1102,6 +1121,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserTypingDto.ParticipantID(childComplexity), true
+
+	case "UserVideoStatusEvent.isInVideo":
+		if e.complexity.UserVideoStatusEvent.IsInVideo == nil {
+			break
+		}
+
+		return e.complexity.UserVideoStatusEvent.IsInVideo(childComplexity), true
+
+	case "UserVideoStatusEvent.userId":
+		if e.complexity.UserVideoStatusEvent.UserID == nil {
+			break
+		}
+
+		return e.complexity.UserVideoStatusEvent.UserID(childComplexity), true
 
 	case "UserWithAdmin.admin":
 		if e.complexity.UserWithAdmin.Admin == nil {
@@ -1522,6 +1555,11 @@ type GlobalEvent {
     videoCallScreenShareChangedDto: VideoCallScreenShareChangedDto
 }
 
+type UserVideoStatusEvent {
+    userId:     Int64!
+    isInVideo:  Boolean!
+}
+
 type Query {
     ping: Boolean
 }
@@ -1530,6 +1568,7 @@ type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
     userOnlineEvents(userIds: [Int64!]!): [UserOnline!]!
+    userVideoStatusEvents(userIds: [Int64!]!): [UserVideoStatusEvent!]!
 }
 `, BuiltIn: false},
 }
@@ -1570,6 +1609,21 @@ func (ec *executionContext) field_Subscription_chatEvents_args(ctx context.Conte
 }
 
 func (ec *executionContext) field_Subscription_userOnlineEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []int64
+	if tmp, ok := rawArgs["userIds"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
+		arg0, err = ec.unmarshalNInt642ᚕint64ᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userIds"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Subscription_userVideoStatusEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 []int64
@@ -6748,6 +6802,81 @@ func (ec *executionContext) fieldContext_Subscription_userOnlineEvents(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Subscription_userVideoStatusEvents(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_userVideoStatusEvents(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().UserVideoStatusEvents(rctx, fc.Args["userIds"].([]int64))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan []*model.UserVideoStatusEvent):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNUserVideoStatusEvent2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserVideoStatusEventᚄ(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_userVideoStatusEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_UserVideoStatusEvent_userId(ctx, field)
+			case "isInVideo":
+				return ec.fieldContext_UserVideoStatusEvent_isInVideo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserVideoStatusEvent", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_userVideoStatusEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_id(ctx, field)
 	if err != nil {
@@ -7089,6 +7218,94 @@ func (ec *executionContext) fieldContext_UserTypingDto_participantId(ctx context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserVideoStatusEvent_userId(ctx context.Context, field graphql.CollectedField, obj *model.UserVideoStatusEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserVideoStatusEvent_userId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserVideoStatusEvent_userId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserVideoStatusEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserVideoStatusEvent_isInVideo(ctx context.Context, field graphql.CollectedField, obj *model.UserVideoStatusEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserVideoStatusEvent_isInVideo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsInVideo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserVideoStatusEvent_isInVideo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserVideoStatusEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10758,6 +10975,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_globalEvents(ctx, fields[0])
 	case "userOnlineEvents":
 		return ec._Subscription_userOnlineEvents(ctx, fields[0])
+	case "userVideoStatusEvents":
+		return ec._Subscription_userVideoStatusEvents(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -10861,6 +11080,41 @@ func (ec *executionContext) _UserTypingDto(ctx context.Context, sel ast.Selectio
 		case "participantId":
 
 			out.Values[i] = ec._UserTypingDto_participantId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var userVideoStatusEventImplementors = []string{"UserVideoStatusEvent"}
+
+func (ec *executionContext) _UserVideoStatusEvent(ctx context.Context, sel ast.SelectionSet, obj *model.UserVideoStatusEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userVideoStatusEventImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserVideoStatusEvent")
+		case "userId":
+
+			out.Values[i] = ec._UserVideoStatusEvent_userId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "isInVideo":
+
+			out.Values[i] = ec._UserVideoStatusEvent_isInVideo(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -11711,6 +11965,60 @@ func (ec *executionContext) marshalNUserOnline2ᚖnkonevᚗnameᚋeventᚋgraph�
 		return graphql.Null
 	}
 	return ec._UserOnline(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUserVideoStatusEvent2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserVideoStatusEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserVideoStatusEvent) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUserVideoStatusEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserVideoStatusEvent(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUserVideoStatusEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserVideoStatusEvent(ctx context.Context, sel ast.SelectionSet, v *model.UserVideoStatusEvent) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserVideoStatusEvent(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserWithAdmin) graphql.Marshaler {

@@ -6,6 +6,7 @@ import (
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
+	"nkonev.name/video/utils"
 )
 
 type NotificationService struct {
@@ -40,15 +41,24 @@ func (h *NotificationService) NotifyVideoUserCountChanged(participantIds []int64
 	return h.rabbitMqUserCountPublisher.Publish(participantIds, &chatNotifyDto, ctx)
 }
 
-func (h *NotificationService) NotifyVideoUserIdsChanged(participantIds []int64, chatId int64, ctx context.Context) error {
-	Logger.Debugf("Notifying about user ids for chat_id=%v", chatId)
+func (h *NotificationService) NotifyVideoUserIdsChanged(participantIds, videoParticipants []int64, ctx context.Context) error {
+	Logger.Debugf("Notifying about user ids %v", participantIds)
 
-	var chatNotifyDto = dto.VideoCallUserIdsChangedDto{
-		UserIds:    participantIds,
-		ChatId:     chatId,
+	var dtos = make([]dto.VideoCallUserCallStatusChangedDto, 0)
+
+	for _, chatParticipant := range participantIds {
+		var isInVideoCall = false
+		if utils.Contains(videoParticipants, chatParticipant) {
+			isInVideoCall = true
+		}
+		var aDto = dto.VideoCallUserCallStatusChangedDto{
+			UserId:    chatParticipant,
+			IsInVideo:     isInVideoCall,
+		}
+		dtos = append(dtos, aDto)
 	}
 
-	return h.rabbitUserIdsPublisher.Publish(&chatNotifyDto, ctx)
+	return h.rabbitUserIdsPublisher.Publish(&dto.VideoCallUsersCallStatusChangedDto{Users: dtos}, ctx)
 }
 
 func (h *NotificationService) NotifyVideoScreenShareChanged(participantIds []int64, chatId int64, hasScreenShares bool, ctx context.Context) error {

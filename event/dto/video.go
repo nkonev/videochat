@@ -37,3 +37,12 @@ type VideoCallRecordingChangedDto struct {
 	RecordInProgress bool  `json:"recordInProgress"`
 	ChatId           int64 `json:"chatId"`
 }
+
+type VideoCallUsersCallStatusChangedDto struct {
+	Users      []VideoCallUserCallStatusChangedDto `json:"users"`
+}
+
+type VideoCallUserCallStatusChangedDto struct {
+	UserId      int64 `json:"userId"`
+	IsInVideo   bool  `json:"isInVideo"`
+}

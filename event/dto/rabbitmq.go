@@ -7,8 +7,10 @@ import (
 )
 
 const CHAT_EVENTS = "events.chat"
-const GLOBAL_EVENTS = "events.global"
+const USER_EVENTS = "events.user"
 const USER_ONLINE = "user.online"
+
+const GLOBAL = "events.global"
 
 type PinnedMessageEvent struct {
 	Message    DisplayMessageDto `json:"message"`
@@ -68,7 +70,7 @@ type UserEvent struct {
 }
 
 func (UserEvent) Name() eventbus.EventName {
-	return GLOBAL_EVENTS
+	return USER_EVENTS
 }
 
 type PreviewCreatedEvent struct {
@@ -105,4 +107,13 @@ type FileInfoDto struct {
 	Owner          *User     `json:"owner"`
 	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
 	CanShowAsImage bool      `json:"canShowAsImage"`
+}
+
+type GlobalEvent struct {
+	EventType string `json:"eventType"`
+	VideoCallUsersCallStatusChangedEvent *VideoCallUsersCallStatusChangedDto `json:"videoCallUsersCallStatusChangedEvent"`
+}
+
+func (GlobalEvent) Name() eventbus.EventName {
+	return GLOBAL
 }

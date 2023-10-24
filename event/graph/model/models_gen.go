@@ -170,6 +170,11 @@ type UserTypingDto struct {
 	ParticipantID int64  `json:"participantId"`
 }
 
+type UserVideoStatusEvent struct {
+	UserID    int64 `json:"userId"`
+	IsInVideo bool  `json:"isInVideo"`
+}
+
 type UserWithAdmin struct {
 	ID        int64   `json:"id"`
 	Login     string  `json:"login"`

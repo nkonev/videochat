@@ -12,9 +12,13 @@ type VideoCallUserCountChangedDto struct {
 	ChatId     int64 `json:"chatId"`
 }
 
-type VideoCallUserIdsChangedDto struct {
-	UserIds      []int64 `json:"userIds"`
-	ChatId     int64 `json:"chatId"`
+type VideoCallUsersCallStatusChangedDto struct {
+	Users      []VideoCallUserCallStatusChangedDto `json:"users"`
+}
+
+type VideoCallUserCallStatusChangedDto struct {
+	UserId      int64 `json:"userId"`
+	IsInVideo   bool  `json:"isInVideo"`
 }
 
 type VideoCallScreenShareChangedDto struct {

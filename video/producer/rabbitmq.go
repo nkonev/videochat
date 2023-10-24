@@ -64,13 +64,11 @@ func NewRabbitUserCountPublisher(connection *rabbitmq.Connection) *RabbitUserCou
 
 
 
-func (rp *RabbitUserIdsPublisher) Publish(chatNotifyDto *dto.VideoCallUserIdsChangedDto, ctx context.Context) error {
+func (rp *RabbitUserIdsPublisher) Publish(videoCallUsersCallStatusChanged *dto.VideoCallUsersCallStatusChangedDto, ctx context.Context) error {
 
-
-	event := dto.UserEvent{
-		UserId: 0,// TODO it is not a global event because there is no userId. Introduce the different event type
-		EventType:               "video_user_count_changed",
-		VideoCallUserIdsEvent: chatNotifyDto,
+	event := dto.GlobalEvent{
+		EventType:               "user_in_video_call_changed",
+		VideoCallUsersCallStatusChangedEvent: videoCallUsersCallStatusChanged,
 	}
 
 	bytea, err := json.Marshal(event)

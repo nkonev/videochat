@@ -208,6 +208,11 @@ type GlobalEvent {
     videoCallScreenShareChangedDto: VideoCallScreenShareChangedDto
 }
 
+type UserVideoStatusEvent {
+    userId:     Int64!
+    isInVideo:  Boolean!
+}
+
 type Query {
     ping: Boolean
 }
@@ -216,4 +221,5 @@ type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
     userOnlineEvents(userIds: [Int64!]!): [UserOnline!]!
+    userVideoStatusEvents(userIds: [Int64!]!): [UserVideoStatusEvent!]!
 }

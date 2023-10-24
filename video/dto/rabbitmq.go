@@ -4,7 +4,6 @@ type UserEvent struct {
 	EventType                 string                        `json:"eventType"`
 	UserId                    int64                         `json:"userId"`
 	VideoCallUserCountEvent   *VideoCallUserCountChangedDto `json:"videoCallUserCountEvent"`
-	VideoCallUserIdsEvent     *VideoCallUserIdsChangedDto   `json:"videoCallUserIdsEvent"`
 	VideoChatInvitation       *VideoCallInvitation          `json:"videoCallInvitation"`
 	VideoParticipantDialEvent *VideoDialChanges             `json:"videoParticipantDialEvent"`
 	VideoCallRecordingEvent   *VideoCallRecordingChangedDto `json:"videoCallRecordingEvent"`
@@ -22,4 +21,9 @@ type NotificationEvent struct {
 	ByUserId               int64                   `json:"byUserId"`
 	ByLogin                string                  `json:"byLogin"`
 	MissedCallNotification *MissedCallNotification `json:"missedCallNotification"`
+}
+
+type GlobalEvent struct {
+	EventType string `json:"eventType"`
+	VideoCallUsersCallStatusChangedEvent *VideoCallUsersCallStatusChangedDto `json:"videoCallUsersCallStatusChangedEvent"`
 }

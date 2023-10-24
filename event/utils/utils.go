@@ -150,3 +150,8 @@ func Remove(ids []int64, elem int64) []int64 {
 func SecondsToStringMilliseconds(seconds int64) string {
 	return fmt.Sprintf("%v000", seconds)
 }
+
+func GetType(aDto interface{}) string {
+	strName := fmt.Sprintf("%T", aDto)
+	return strName
+}
