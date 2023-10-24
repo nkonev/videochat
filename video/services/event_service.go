@@ -45,7 +45,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 			participantIds, err := h.restClient.GetChatParticipantIds(chatId, ctx)
 			if err != nil {
 				Logger.Error(err, "Failed during getting chat participantIds")
-				return
+				continue
 			}
 
 			Logger.Debugf("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
@@ -79,12 +79,14 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 		recordInProgress, err := h.egressService.HasActiveEgresses(chatId, ctx)
 		if err != nil {
 			Logger.Errorf("got error during counting active egresses in scheduler, %v", err)
-		} else {
-			Logger.Debugf("Sending recording changed chatId=%v, recordInProgress=%v", chatId, recordInProgress)
-			err = h.notificationService.NotifyRecordingChanged(chatId, recordInProgress, ctx)
-			if err != nil {
-				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
-			}
+			continue
 		}
+
+		Logger.Debugf("Sending recording changed chatId=%v, recordInProgress=%v", chatId, recordInProgress)
+		err = h.notificationService.NotifyRecordingChanged(chatId, recordInProgress, ctx)
+		if err != nil {
+			Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
+		}
+
 	}
 }
