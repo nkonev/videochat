@@ -27,7 +27,7 @@ type NotificationEvent struct {
 	ChatTitle              string                  `json:"chatTitle"`
 }
 
-type GlobalEvent struct {
+type UserEvent struct {
 	EventType             string           `json:"eventType"`
 	UserId                int64            `json:"userId"`
 	UserNotificationEvent *NotificationDto `json:"userNotificationEvent"`

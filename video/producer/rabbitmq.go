@@ -18,7 +18,7 @@ const NotificationsFanoutExchange = "notifications-exchange"
 func (rp *RabbitUserCountPublisher) Publish(participantIds []int64, chatNotifyDto *dto.VideoCallUserCountChangedDto, ctx context.Context) error {
 
 	for _, participantId := range participantIds {
-		event := dto.GlobalEvent{
+		event := dto.UserEvent{
 			EventType:               "video_user_count_changed",
 			UserId:                  participantId,
 			VideoCallUserCountEvent: chatNotifyDto,
@@ -67,7 +67,7 @@ func NewRabbitUserCountPublisher(connection *rabbitmq.Connection) *RabbitUserCou
 func (rp *RabbitUserIdsPublisher) Publish(chatNotifyDto *dto.VideoCallUserIdsChangedDto, ctx context.Context) error {
 
 
-	event := dto.GlobalEvent{
+	event := dto.UserEvent{
 		UserId: 0,// TODO it is not a global event because there is no userId. Introduce the different event type
 		EventType:               "video_user_count_changed",
 		VideoCallUserIdsEvent: chatNotifyDto,
@@ -112,7 +112,7 @@ func NewRabbitUserIdsPublisher(connection *rabbitmq.Connection) *RabbitUserIdsPu
 
 
 func (rp *RabbitInvitePublisher) Publish(invitationDto *dto.VideoCallInvitation, toUserId int64) error {
-	event := dto.GlobalEvent{
+	event := dto.UserEvent{
 		EventType:           "video_call_invitation",
 		UserId:              toUserId,
 		VideoChatInvitation: invitationDto,
@@ -157,7 +157,7 @@ func (rp *RabbitDialStatusPublisher) Publish(req *dto.VideoIsInvitingDto) error 
 		})
 	}
 
-	event := dto.GlobalEvent{
+	event := dto.UserEvent{
 		EventType: "video_dial_status_changed",
 		UserId:    req.BehalfUserId,
 		VideoParticipantDialEvent: &dto.VideoDialChanges{
@@ -200,7 +200,7 @@ func NewRabbitDialStatusPublisher(connection *rabbitmq.Connection) *RabbitDialSt
 func (rp *RabbitRecordingPublisher) Publish(participantIds []int64, chatNotifyDto *dto.VideoCallRecordingChangedDto, ctx context.Context) error {
 
 	for _, participantId := range participantIds {
-		event := dto.GlobalEvent{
+		event := dto.UserEvent{
 			EventType:               "video_recording_changed",
 			UserId:                  participantId,
 			VideoCallRecordingEvent: chatNotifyDto,
@@ -273,7 +273,7 @@ func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection) *RabbitNot
 func (rp *RabbitScreenSharePublisher) Publish(participantIds []int64, chatNotifyDto *dto.VideoCallScreenShareChangedDto, ctx context.Context) error {
 
 	for _, participantId := range participantIds {
-		event := dto.GlobalEvent{
+		event := dto.UserEvent{
 			EventType:               "video_screenshare_changed",
 			UserId:                  participantId,
 			VideoCallScreenShareChangedDto: chatNotifyDto,

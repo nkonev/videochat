@@ -1,6 +1,6 @@
 package dto
 
-type GlobalEvent struct {
+type UserEvent struct {
 	EventType                 string                        `json:"eventType"`
 	UserId                    int64                         `json:"userId"`
 	VideoCallUserCountEvent   *VideoCallUserCountChangedDto `json:"videoCallUserCountEvent"`

@@ -17,7 +17,7 @@ func NewTypeRegistryInstance() *TypeRegistryInstance {
 	}
 
 	res.AddToRegistryIfNeed(dto.ChatEvent{})
-	res.AddToRegistryIfNeed(dto.GlobalEvent{})
+	res.AddToRegistryIfNeed(dto.UserEvent{})
 	res.AddToRegistryIfNeed([]dto.UserOnline{})
 
 	return res

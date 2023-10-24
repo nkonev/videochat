@@ -51,7 +51,7 @@ type NotificationDto struct {
 	ChatTitle        string    `json:"chatTitle"`
 }
 
-type GlobalEvent struct {
+type UserEvent struct {
 	EventType                     string                        `json:"eventType"`
 	UserId                        int64                         `json:"userId"`
 	ChatNotification              *ChatDtoWithAdmin             `json:"chatNotification"`
@@ -67,7 +67,7 @@ type GlobalEvent struct {
 	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
 }
 
-func (GlobalEvent) Name() eventbus.EventName {
+func (UserEvent) Name() eventbus.EventName {
 	return GLOBAL_EVENTS
 }
 

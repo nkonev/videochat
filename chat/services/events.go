@@ -74,7 +74,7 @@ func chatNotifyCommon(userIds []int64, not *eventsImpl, c echo.Context, newChatD
 
 	for _, participantId := range userIds {
 		if eventType == "chat_deleted" {
-			err := not.rabbitEventPublisher.Publish(dto.GlobalEvent{
+			err := not.rabbitEventPublisher.Publish(dto.UserEvent{
 				UserId:         participantId,
 				EventType:      eventType,
 				ChatDeletedDto: &dto.ChatDeletedDto{Id: newChatDto.Id},
@@ -123,7 +123,7 @@ func chatNotifyCommon(userIds []int64, not *eventsImpl, c echo.Context, newChatD
 				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId)
 			}
 
-			err = not.rabbitEventPublisher.Publish(dto.GlobalEvent{
+			err = not.rabbitEventPublisher.Publish(dto.UserEvent{
 				UserId:           participantId,
 				EventType:        eventType,
 				ChatNotification: copied,
@@ -157,7 +157,7 @@ func (not *eventsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, c
 			LastUpdateDateTime: lastUpdated,
 		}
 
-		err = not.rabbitEventPublisher.Publish(dto.GlobalEvent{
+		err = not.rabbitEventPublisher.Publish(dto.UserEvent{
 			UserId:                     participantId,
 			EventType:                  "chat_unread_messages_changed",
 			UnreadMessagesNotification: payload,
@@ -257,7 +257,7 @@ func (not *eventsImpl) NotifyAboutProfileChanged(user *dto.User) {
 	}
 
 	for _, participantId := range coChatters {
-		err = not.rabbitEventPublisher.Publish(dto.GlobalEvent{
+		err = not.rabbitEventPublisher.Publish(dto.UserEvent{
 			UserId:                  participantId,
 			EventType:               "user_profile_changed",
 			UserProfileNotification: user,

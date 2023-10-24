@@ -17,7 +17,7 @@ type ChatEvent struct {
 	PromoteMessageNotification   *PinnedMessageEvent           `json:"promoteMessageNotification"`
 }
 
-type GlobalEvent struct {
+type UserEvent struct {
 	EventType                     string                    `json:"eventType"`
 	UserId                        int64                     `json:"userId"`
 	ChatNotification              *ChatDtoWithAdmin         `json:"chatNotification"`
