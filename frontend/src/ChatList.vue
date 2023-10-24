@@ -96,14 +96,14 @@ import bus, {
 import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-    deepCopy,
-    dynamicSortMultiple,
-    findIndex,
-    hasLength,
-    isArrEqual, replaceInArray,
-    replaceOrAppend,
-    replaceOrPrepend,
-    setTitle
+  deepCopy,
+  dynamicSortMultiple,
+  findIndex,
+  hasLength,
+  isArrEqual, isChatRoute, replaceInArray,
+  replaceOrAppend,
+  replaceOrPrepend,
+  setTitle
 } from "@/utils";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import Mark from "mark.js";
@@ -317,13 +317,23 @@ export default {
         this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
     },
     openChat(item){
-        if (this.isSearchResult(item)) {
-            axios.put(`/api/chat/${item.id}/join`).then(() => {
-                goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: item.id}})
-            })
-        } else {
-            goToPreserving(this.$route, this.$router, { name: chat_name, params: { id: item.id}})
-        }
+      this.chatStore.incrementProgressCount();
+      const prev = deepCopy(this.$route.query);
+      if (isChatRoute(this.$route)) {
+        delete prev[SEARCH_MODE_MESSAGES]
+      }
+
+      let promise;
+      if (this.isSearchResult(item)) {
+        promise = axios.put(`/api/chat/${item.id}/join`)
+      } else {
+        promise = Promise.resolve(true)
+      }
+      promise.then(() => {
+        this.$router.push({ name: chat_name, params: {id: item.id}, query: prev }).finally(()=>{
+          this.chatStore.decrementProgressCount();
+        })
+      })
     },
     getLink(item) {
           return chat + "/" + item.id
