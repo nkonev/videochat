@@ -167,6 +167,7 @@ export default {
       });
     },
     getInfo() {
+      this.fetchPromotedMessage();
       return this.fetchAndSetChat().catch(reason => {
         if (reason.response.status == 404) {
           this.goToChatList();
@@ -182,7 +183,6 @@ export default {
             bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
             this.chatStore.videoChatUsersCount = data.usersCount;
           })
-        this.fetchPromotedMessage();
         return Promise.resolve();
       }).then(() => {
         // async call
