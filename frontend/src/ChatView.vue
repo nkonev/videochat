@@ -156,38 +156,36 @@ export default {
             this.chatStore.showGoToBlogButton = null;
         }
     },
+    fetchPromotedMessage() {
+      axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
+        if (response.status != 204) {
+          this.pinnedPromoted = response.data;
+          this.pinnedPromotedKey++
+        } else {
+          this.pinnedPromoted = null;
+        }
+      });
+    },
     getInfo() {
-      this.chatStore.incrementProgressCount();
       return this.fetchAndSetChat().catch(reason => {
         if (reason.response.status == 404) {
-          this.chatStore.decrementProgressCount();
           this.goToChatList();
           return Promise.reject();
         } else {
           return Promise.resolve();
         }
       }).then(() => {
-          // async call
-          axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
-              if (response.status != 204) {
-                  this.pinnedPromoted = response.data;
-                  this.pinnedPromotedKey++
-              } else {
-                  this.pinnedPromoted = null;
-              }
-          }).finally(()=>{
-              this.chatStore.decrementProgressCount();
-          });
-
-          return Promise.resolve();
-      }).then(() => {
         // async call
         axios.get(`/api/video/${this.chatId}/users`)
           .then(response => response.data)
           .then(data => {
-              bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
-              this.chatStore.videoChatUsersCount = data.usersCount;
-        })
+            bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
+            this.chatStore.videoChatUsersCount = data.usersCount;
+          })
+        this.fetchPromotedMessage();
+        return Promise.resolve();
+      }).then(() => {
+        // async call
         axios.get(`/api/video/${this.chatId}/record/status`).then(({data}) => {
           this.chatStore.canMakeRecord = data.canMakeRecord;
           if (data.canMakeRecord) {
@@ -196,7 +194,7 @@ export default {
               this.chatStore.showRecordStopButton = true;
             }
           }
-        });
+        })
         return Promise.resolve();
       })
     },
