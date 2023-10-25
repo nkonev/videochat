@@ -57,7 +57,7 @@ export default {
     user_is_writing: "печатает...",
     user_open_chat: "Открыть тет-а-тет диалог",
     user_online: "Онлайн",
-    user_in_video: "В звонке",
+    user_in_video_call: "В звонке",
     user_offline: "Оффлайн",
     participants_modal_title: "Участники",
     add: "Добавить",

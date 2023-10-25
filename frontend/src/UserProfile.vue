@@ -19,13 +19,16 @@
 
         <span class="ml-2 mb-2 d-flex flex-row align-self-end">
           <span v-if="online" class="text-grey d-flex flex-row">
-            <v-icon color="success">mdi-checkbox-marked-circle</v-icon>
-            <span class="ml-1">
+            <v-icon :color="getUserBadgeColor(this)">mdi-checkbox-marked-circle</v-icon>
+            <span class="ml-1" v-if="!isInVideo">
               {{ $vuetify.locale.t('$vuetify.user_online') }}
+            </span>
+            <span class="ml-1" v-else>
+              {{ $vuetify.locale.t('$vuetify.user_in_video_call') }}
             </span>
           </span>
           <span v-else class="text-grey d-flex flex-row">
-            <v-icon color="red">mdi-checkbox-marked-circle</v-icon>
+            <v-icon>mdi-checkbox-marked-circle</v-icon>
             <span class="ml-1">
               {{ $vuetify.locale.t('$vuetify.user_offline') }}
             </span>
@@ -98,17 +101,20 @@
 
 import axios from "axios";
 import {chat_name} from "./router/routes";
-import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import {deepCopy, hasLength, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
+import userStatusMixin from "@/mixins/userStatusMixin";
 
 export default {
-  mixins: [graphqlSubscriptionMixin('userOnlineInProfile')],
+  mixins: [
+    userStatusMixin('userOnlineInProfile')
+  ],
   data() {
     return {
       viewableUser: null,
       online: false,
+      isInVideo: false,
     }
   },
   computed: {
@@ -151,23 +157,26 @@ export default {
 
     onUserOnlineChanged(rawData) {
       const dtos = rawData?.data?.userOnlineEvents;
-      dtos?.forEach(dtoItem => {
-        if (dtoItem.id == this.userId) {
-          this.online = dtoItem.online;
-        }
-      })
+      if (dtos) {
+        dtos?.forEach(dtoItem => {
+          if (dtoItem.id == this.userId) {
+            this.online = dtoItem.online;
+          }
+        })
+      }
     },
-    getGraphQlSubscriptionQuery() {
-      return `
-                subscription {
-                    userOnlineEvents(userIds:[${this.userId}]) {
-                        id
-                        online
-                    }
-                }`
+    onUserVideoStatusChanged(rawData) {
+      const dtos = rawData?.data?.userVideoStatusEvents;
+      if (dtos) {
+        dtos?.forEach(dtoItem => {
+          if (dtoItem.userId == this.userId) {
+            this.isInVideo = dtoItem.isInVideo;
+          }
+        })
+      }
     },
-    onNextSubscriptionElement(items) {
-      this.onUserOnlineChanged(items);
+    getUserIdsSubscribeTo() {
+      return [this.userId];
     },
     displayShortInfo(user){
       return hasLength(user.shortInfo)
@@ -213,6 +222,7 @@ export default {
 
     this.viewableUser = null;
     this.online = false;
+    this.isInVideo = false;
   },
   watch: {
     '$vuetify.locale.current': {

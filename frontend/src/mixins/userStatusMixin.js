@@ -17,7 +17,7 @@ export default (nameForLog) => {
                     bldr += " (" + this.$vuetify.locale.t('$vuetify.user_online') + ")";
                   }
                   if (item.isInVideo) {
-                    bldr += " (" + this.$vuetify.locale.t('$vuetify.user_in_video') + ")";
+                    bldr += " (" + this.$vuetify.locale.t('$vuetify.user_in_video_call') + ")";
                   }
                 }
                 return bldr;
