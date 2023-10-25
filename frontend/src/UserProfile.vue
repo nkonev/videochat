@@ -20,11 +20,8 @@
         <span class="ml-2 mb-2 d-flex flex-row align-self-end">
           <span v-if="online" class="text-grey d-flex flex-row">
             <v-icon :color="getUserBadgeColor(this)">mdi-checkbox-marked-circle</v-icon>
-            <span class="ml-1" v-if="!isInVideo">
-              {{ $vuetify.locale.t('$vuetify.user_online') }}
-            </span>
-            <span class="ml-1" v-else>
-              {{ $vuetify.locale.t('$vuetify.user_in_video_call') }}
+            <span class="ml-1">
+              {{ isInVideo ? $vuetify.locale.t('$vuetify.user_in_video_call') : $vuetify.locale.t('$vuetify.user_online') }}
             </span>
           </span>
           <span v-else class="text-grey d-flex flex-row">
