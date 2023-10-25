@@ -69,7 +69,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				return err
 			}
 
-		case dto.GlobalEvent:
+		case dto.GeneralEvent:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
 				Logger.Errorf("Error during deserialize notification %v", err)

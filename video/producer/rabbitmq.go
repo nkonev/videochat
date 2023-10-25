@@ -66,7 +66,7 @@ func NewRabbitUserCountPublisher(connection *rabbitmq.Connection) *RabbitUserCou
 
 func (rp *RabbitUserIdsPublisher) Publish(videoCallUsersCallStatusChanged *dto.VideoCallUsersCallStatusChangedDto, ctx context.Context) error {
 
-	event := dto.GlobalEvent{
+	event := dto.GeneralEvent{
 		EventType:               "user_in_video_call_changed",
 		VideoCallUsersCallStatusChangedEvent: videoCallUsersCallStatusChanged,
 	}

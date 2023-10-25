@@ -23,7 +23,7 @@ type NotificationEvent struct {
 	MissedCallNotification *MissedCallNotification `json:"missedCallNotification"`
 }
 
-type GlobalEvent struct {
+type GeneralEvent struct {
 	EventType string `json:"eventType"`
 	VideoCallUsersCallStatusChangedEvent *VideoCallUsersCallStatusChangedDto `json:"videoCallUsersCallStatusChangedEvent"`
 }

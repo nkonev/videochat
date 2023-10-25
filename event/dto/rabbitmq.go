@@ -109,11 +109,11 @@ type FileInfoDto struct {
 	CanShowAsImage bool      `json:"canShowAsImage"`
 }
 
-type GlobalEvent struct {
+type GeneralEvent struct {
 	EventType string `json:"eventType"`
 	VideoCallUsersCallStatusChangedEvent *VideoCallUsersCallStatusChangedDto `json:"videoCallUsersCallStatusChangedEvent"`
 }
 
-func (GlobalEvent) Name() eventbus.EventName {
+func (GeneralEvent) Name() eventbus.EventName {
 	return GLOBAL
 }

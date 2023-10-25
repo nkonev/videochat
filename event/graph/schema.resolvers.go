@@ -207,7 +207,7 @@ func (r *subscriptionResolver) UserVideoStatusEvents(ctx context.Context, userId
 		}()
 
 		switch typedEvent := event.(type) {
-		case dto.GlobalEvent:
+		case dto.GeneralEvent:
 			var videoCallUsersCallStatusChangedEvent = typedEvent.VideoCallUsersCallStatusChangedEvent
 			if videoCallUsersCallStatusChangedEvent != nil {
 				var batch = []*model.UserVideoStatusEvent{}
