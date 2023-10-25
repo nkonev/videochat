@@ -75,7 +75,7 @@ import bus, {
   PREVIEW_CREATED,
   PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
   USER_TYPING,
-  VIDEO_CALL_USER_COUNT_CHANGED
+  VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED
 } from "@/bus/bus";
 import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
@@ -429,6 +429,15 @@ export default {
       this.chatStore.showRecordStopButton = false;
       this.chatStore.showChatEditButton = false;
     },
+    onChatDialStatusChange(dto) {
+      if (this.chatDto.tetATet) {
+        for (const videoDialChanged of dto.dials) {
+          if (this.chatStore.currentUser.id != videoDialChanged.userId) {
+            this.chatStore.shouldPhoneBlink = videoDialChanged.status;
+          }
+        }
+      }
+    },
   },
   watch: {
     '$route': {
@@ -471,6 +480,7 @@ export default {
     bus.on(CHAT_DELETED, this.onChatDelete);
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+    bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
 
     writingUsersTimerId = setInterval(()=>{
       const curr = + new Date();
@@ -495,6 +505,7 @@ export default {
     bus.off(CHAT_DELETED, this.onChatDelete);
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+    bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
 
     this.chatStore.title = null;
     setTitle(null);

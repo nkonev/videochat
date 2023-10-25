@@ -704,6 +704,14 @@ export default {
   opacity: settings.$list-item-icon-opacity;
 }
 
+.call-blink {
+  animation: blink 0.5s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 30% }
+}
+
 .app-title {
   width: 100%;
 
