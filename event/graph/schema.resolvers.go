@@ -199,7 +199,7 @@ func (r *subscriptionResolver) UserVideoStatusEvents(ctx context.Context, userId
 
 	var cam = make(chan []*model.UserVideoStatusEvent)
 
-	subscribeHandler, err := r.Bus.Subscribe(dto.GLOBAL, func(event eventbus.Event, t time.Time) {
+	subscribeHandler, err := r.Bus.Subscribe(dto.GENERAL, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
 				logger.GetLogEntry(ctx).Errorf("In processing UserVideoStatus panic recovered: %v", err)

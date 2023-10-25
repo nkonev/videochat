@@ -10,7 +10,7 @@ const CHAT_EVENTS = "events.chat"
 const USER_EVENTS = "events.user"
 const USER_ONLINE = "user.online"
 
-const GLOBAL = "events.global"
+const GENERAL = "events.general"
 
 type PinnedMessageEvent struct {
 	Message    DisplayMessageDto `json:"message"`
@@ -115,5 +115,5 @@ type GeneralEvent struct {
 }
 
 func (GeneralEvent) Name() eventbus.EventName {
-	return GLOBAL
+	return GENERAL
 }
