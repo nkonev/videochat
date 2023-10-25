@@ -1,6 +1,7 @@
 import {graphQlClient} from "@/graphql/graphql";
 import {hasLength} from "@/utils";
 
+// requires getUserIdsSubscribeTo(), onUserOnlineChanged(), onUserVideoStatusChanged()
 export default (nameForLog) => {
     return {
         data() {
@@ -10,9 +11,14 @@ export default (nameForLog) => {
         },
         methods: {
             getUserName(item) {
-                let bldr = item.login;
-                if (!hasLength(item.avatar) && item.online) {
+                let bldr = hasLength(item.login) ? item.login : "";
+                if (!hasLength(item.avatar)) {
+                  if (item.online) {
                     bldr += " (" + this.$vuetify.locale.t('$vuetify.user_online') + ")";
+                  }
+                  if (item.isInVideo) {
+                    bldr += " (" + this.$vuetify.locale.t('$vuetify.user_in_video') + ")";
+                  }
                 }
                 return bldr;
             },

@@ -14,7 +14,7 @@
             >
                 <template v-slot:prepend v-if="hasLength(item.avatar)">
                     <v-badge
-                        color="success accent-4"
+                        :color="getUserBadgeColor(item)"
                         dot
                         location="right bottom"
                         overlap
@@ -93,7 +93,7 @@ import bus, {
     VIDEO_CALL_SCREEN_SHARE_CHANGED,
     VIDEO_CALL_USER_COUNT_CHANGED
 } from "@/bus/bus";
-import {searchString, goToPreserving, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
+import {searchString, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
   deepCopy,
@@ -105,9 +105,9 @@ import {
   replaceOrPrepend,
   setTitle
 } from "@/utils";
-import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
+import userStatusMixin from "@/mixins/userStatusMixin";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -119,7 +119,7 @@ export default {
     infiniteScrollMixin(scrollerName),
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
-    graphqlSubscriptionMixin('userOnlineTetATetInChatList'),
+    userStatusMixin('userOnlineTetATetInChatList'),
   ],
   props:['embedded'],
   data() {
@@ -308,8 +308,8 @@ export default {
     },
     getChatName(item) {
           let bldr = item.name;
-          if (!hasLength(item.avatar) && item.online) {
-              bldr += " (" + this.$vuetify.locale.t('$vuetify.user_online') + ")";
+          if (item.tetATet) {
+              bldr += this.getUserName(item);
           }
           return bldr;
     },
@@ -405,9 +405,6 @@ export default {
               }
           });
     },
-    transformItem(item) {
-          item.online = false;
-    },
     setTopTitle() {
         this.chatStore.title = this.$vuetify.locale.t('$vuetify.chats');
         setTitle(this.$vuetify.locale.t('$vuetify.chats'));
@@ -419,17 +416,8 @@ export default {
       const tmps = deepCopy(items);
       return tmps.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.chatStore.currentUser?.id)[0]);
     },
-    getGraphQlSubscriptionQuery() {
-          return `
-                subscription {
-                    userOnlineEvents(userIds:[${this.tetAtetParticipants}]) {
-                        id
-                        online
-                    }
-                }`
-    },
-    onNextSubscriptionElement(items) {
-          this.onUserOnlineChanged(items);
+    getUserIdsSubscribeTo() {
+      return this.tetAtetParticipants
     },
     onUserOnlineChanged(rawData) {
           const dtos = rawData?.data?.userOnlineEvents;
@@ -442,6 +430,18 @@ export default {
                   })
               })
           }
+    },
+    onUserVideoStatusChanged(rawData) {
+      const dtos = rawData?.data?.userVideoStatusEvents;
+      if (dtos) {
+        this.items.forEach(item => {
+          dtos.forEach(dtoItem => {
+            if (item.tetATet && item.participants.filter((p)=> p.id == dtoItem.userId).length) {
+              item.isInVideo = dtoItem.isInVideo;
+            }
+          })
+        })
+      }
     },
     onChangeUnreadMessages(dto) {
           const chatId = dto.chatId;

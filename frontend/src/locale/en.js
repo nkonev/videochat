@@ -57,6 +57,7 @@ export default {
     user_is_writing: "is writing...",
     user_open_chat: "Open tet-a-tet chat",
     user_online: "Online",
+    user_in_video: "In call",
     user_offline: "Offline",
     participants_modal_title: "Participants",
     add: "Add",
