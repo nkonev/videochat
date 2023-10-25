@@ -64,6 +64,7 @@ onlyRoleAdminRecording: false
 recordPreset: H264_1080P_30
 
 dialExpire: 1h
+videoTokenValidTime: 1h
 
 redis:
   address: :36379

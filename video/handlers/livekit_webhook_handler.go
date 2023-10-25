@@ -68,6 +68,18 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 				Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged event=%v, %v", event, err)
 				return nil
 			}
+
+			if event.Event == "participant_joined" {
+				userId, err := utils.GetUserIdFromIdentity(event.Participant.Identity)
+				if err != nil {
+					Logger.Infof("Unable to parse Identity=%v error=%v", event.Participant.Identity, err)
+				} else {
+					err = h.notificationService.NotifyAboutUsersVideoStatusChanged([]int64{userId}, []int64{userId}, c.Request().Context())
+					if err != nil {
+						Logger.Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", userId, chatId, err)
+					}
+				}
+			}
 		} else if event.Event == "egress_started" {
 
 			chatId, err := utils.GetRoomIdFromName(event.EgressInfo.RoomName)

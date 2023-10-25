@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	. "nkonev.name/video/logger"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
@@ -147,6 +150,19 @@ func SecondsToStringMilliseconds(seconds int64) string {
 func GetRoomNameFromId(chatId int64) string {
 	return fmt.Sprintf("chat%v", chatId)
 }
+
+func MakeIdentityFromUserId(userId int64) string {
+	return fmt.Sprintf("%v_%v", userId, uuid.New().String())
+}
+
+func GetUserIdFromIdentity(identity string) (int64, error) {
+	split := strings.Split(identity, "_")
+	if len(split) != 2 {
+		return 0, errors.New("Should be 2 parts")
+	}
+	return ParseInt64(split[0])
+}
+
 
 func GetRoomIdFromName(chatName string) (int64, error) {
 	var chatId int64
