@@ -20,7 +20,7 @@ export default (nameForLog) => {
                 item.online = false;
                 item.isInVideo = false;
             },
-            getColor(item) {
+            getUserBadgeColor(item) {
                 return item.isInVideo ? 'red accent-4' : 'success accent-4'
             },
             getUserOnlineSubscriptionQuery() {

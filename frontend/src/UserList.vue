@@ -13,7 +13,7 @@
             >
                 <template v-slot:prepend v-if="hasLength(item.avatar)">
                   <v-badge
-                    :color="getColor(item)"
+                    :color="getUserBadgeColor(item)"
                     dot
                     location="right bottom"
                     overlap

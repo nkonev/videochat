@@ -14,7 +14,7 @@
                                 <template v-slot:prepend v-if="hasLength(item.avatar)">
                                     <v-badge
                                         v-if="item.avatar"
-                                        color="success accent-4"
+                                        :color="getUserBadgeColor(item)"
                                         dot
                                         location="right bottom"
                                         overlap
@@ -28,7 +28,7 @@
 
                                 <v-row no-gutters align="center" class="d-flex flex-row">
                                     <v-col class="flex-grow-0 flex-shrink-0">
-                                        <v-list-item-title><a class="colored-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{getUserName(item)}}</a></v-list-item-title>
+                                        <v-list-item-title><a class="colored-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{getUserNameWrapper(item)}}</a></v-list-item-title>
                                     </v-col>
                                     <v-col v-if="!isMobile()" class="ml-4 flex-grow-1 flex-shrink-0">
                                         <v-progress-linear
@@ -138,7 +138,7 @@
       VIDEO_DIAL_STATUS_CHANGED,
     } from "./bus/bus";
     import {profile, profile_name, videochat_name} from "./router/routes";
-    import graphqlSubscriptionMixin from "./mixins/graphqlSubscriptionMixin"
+    import userStatusMixin from "@/mixins/userStatusMixin";
     import {deepCopy, findIndex, hasLength, isArrEqual, moveToFirstPosition, replaceInArray} from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -158,7 +158,7 @@
     }
 
     export default {
-        mixins: [graphqlSubscriptionMixin('userOnlineInChatParticipants')],
+        mixins: [userStatusMixin('userOnlineInChatParticipants')],
         data () {
             return {
                 show: false,
@@ -218,7 +218,7 @@
                         })
                         .then((response) => {
                             const tmp = deepCopy(response.data);
-                            this.transformParticipants(tmp.participants);
+                            this.transformParticipantsWrapper(tmp.participants);
                             this.participantsDto = tmp;
                         }).finally(() => {
                             this.loading = false;
@@ -306,13 +306,32 @@
                 // actually it is need only to reflect canEdit and friends
                 this.dto = dto;
             },
+            getUserIdsSubscribeTo() {
+                if (this.participantsDto?.participants){
+                    return this.participantsDto.participants.map(item => item.id);
+                } else {
+                    return []
+                }
+            },
             onUserOnlineChanged(rawData) {
                 const dtos = rawData?.data?.userOnlineEvents;
-                if (this.participantsDto.participants && dtos) {
+                if (this.participantsDto?.participants && dtos) {
                     this.participantsDto.participants.forEach(item => {
                         dtos.forEach(dtoItem => {
                             if (dtoItem.id == item.id) {
                                 item.online = dtoItem.online;
+                            }
+                        })
+                    })
+                }
+            },
+            onUserVideoStatusChanged(rawData) {
+                const dtos = rawData?.data?.userVideoStatusEvents;
+                if (this.participantsDto?.participants && dtos) {
+                    this.participantsDto.participants.forEach(item => {
+                        dtos.forEach(dtoItem => {
+                            if (item.id == dtoItem.userId) {
+                                item.isInVideo = dtoItem.isInVideo;
                             }
                         })
                     })
@@ -347,26 +366,23 @@
                     this.loadParticipantsData();
                 }
             },
-            transformParticipants(participants) {
+            transformParticipantsWrapper(participants) {
                 if (participants != null) {
                     participants.forEach(item => {
                         item.adminLoading = false;
-                        item.online = false;
                         item.callingTo = false;
+                        this.transformItem(item);
                     });
                 }
             },
-            getUserName(item) {
-                let bldr = "";
-                bldr += item.login;
+            getUserNameWrapper(item) {
+                let bldr = this.getUserName(item);
                 if (item.id == this.chatStore.currentUser.id) {
                     bldr += " ";
                     bldr += this.$vuetify.locale.t('$vuetify.you_brackets');
                     bldr += " ";
                 }
-                if (!hasLength(item.avatar) && item.online) {
-                    bldr += " (" + this.$vuetify.locale.t('$vuetify.user_online') + ")";
-                }
+
                 return bldr;
             },
 
@@ -404,7 +420,7 @@
                 }
 
                 const tmp = deepCopy(users);
-                this.transformParticipants(tmp);
+                this.transformParticipantsWrapper(tmp);
                 for (const user of tmp) {
                     this.addItem(user);
                 }
@@ -415,7 +431,7 @@
                 }
 
                 const tmp = deepCopy(users);
-                this.transformParticipants(tmp);
+                this.transformParticipantsWrapper(tmp);
                 for (const user of tmp) {
                     this.removeItem(user);
                 }
@@ -424,7 +440,7 @@
                 if (!this.show) return
 
                 const tmp = deepCopy(users);
-                this.transformParticipants(tmp);
+                this.transformParticipantsWrapper(tmp);
                 for (const user of tmp) {
                     this.changeItem(user);
                 }
