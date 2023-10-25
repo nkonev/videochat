@@ -40,9 +40,9 @@
               </v-badge>
           </template>
 
-          <template v-if="chatStore.canShowMicrophoneButton">
-            <v-btn v-if="chatStore.showHangButton && !isMobile() && chatStore.showMicrophoneOnButton" icon @click="offMicrophone()" :title="$vuetify.locale.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
-            <v-btn v-if="chatStore.showHangButton && !isMobile() && chatStore.showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.locale.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
+          <template v-if="chatStore.canShowMicrophoneButton && chatStore.showHangButton && !isMobile()">
+            <v-btn v-if="chatStore.showMicrophoneOnButton" icon @click="offMicrophone()" :title="$vuetify.locale.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
+            <v-btn v-if="chatStore.showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.locale.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
           </template>
 
           <v-btn v-if="(chatStore.showCallButton || chatStore.showHangButton) && !isMobile()" icon @click="copyCallLink()" :title="$vuetify.locale.t('$vuetify.copy_video_call_link')">
