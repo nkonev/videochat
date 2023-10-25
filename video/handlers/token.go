@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/labstack/echo/v4"
 	lkauth "github.com/livekit/protocol/auth"
@@ -10,7 +9,6 @@ import (
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
-	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 )
@@ -74,18 +72,11 @@ func (h *TokenHandler) getJoinToken(apiKey, apiSecret, room string, authResult *
 		CanPublish:   &canPublish,
 		CanSubscribe: &canSubscribe,
 	}
-	md := &dto.MetadataDto{
-		UserId: authResult.UserId,
-		Login:  authResult.UserLogin,
-		Avatar: authResult.Avatar,
-	}
 
-	bytes, err := json.Marshal(md)
+	mds, err := utils.MakeMetadata(authResult.UserId, authResult.UserLogin, authResult.Avatar)
 	if err != nil {
 		return "", err
 	}
-
-	mds := string(bytes)
 
 	validFor := viper.GetDuration("videoTokenValidTime")
 	at.AddGrant(grant).

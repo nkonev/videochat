@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go"
@@ -9,7 +8,6 @@ import (
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
-	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
@@ -87,13 +85,15 @@ func (h *UserHandler) Kick(c echo.Context) error {
 	}
 
 	for _, participant := range participants.Participants {
-		md := &dto.MetadataDto{}
-		err = json.Unmarshal([]byte(participant.Metadata), md)
+		metadata, err := utils.ParseParticipantMetadataOrNull(participant)
 		if err != nil {
-			Logger.Errorf("got error during parsing metadata from kick userId=%v from chatId=%v, %v", userId, chatId, err)
+			Logger.Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
 			continue
 		}
-		if md.UserId == userId {
+		if metadata == nil {
+			continue
+		}
+		if metadata.UserId == userId {
 			var removeReq = &livekit.RoomParticipantIdentity{
 				Room:     roomName,
 				Identity: participant.Identity,
@@ -140,13 +140,16 @@ func (h *UserHandler) Mute(c echo.Context) error {
 	}
 
 	for _, participant := range participants.Participants {
-		md := &dto.MetadataDto{}
-		err = json.Unmarshal([]byte(participant.Metadata), md)
+		metadata, err := utils.ParseParticipantMetadataOrNull(participant)
 		if err != nil {
-			Logger.Errorf("got error during parsing metadata from kick userId=%v from chatId=%v, %v", userId, chatId, err)
+			Logger.Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
 			continue
 		}
-		if md.UserId == userId {
+		if metadata == nil {
+			continue
+		}
+
+		if metadata.UserId == userId {
 			Logger.Infof("Muting userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
 
 			for _, track := range participant.GetTracks() {

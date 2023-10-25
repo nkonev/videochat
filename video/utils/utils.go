@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/livekit/protocol/livekit"
+	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"regexp"
 	"strconv"
@@ -171,6 +174,35 @@ func IsNotHumanUser(identity string) bool {
 	return split[0] == "EG"
 }
 
+func MakeMetadata(userId int64, userLogin string, avatar string) (string, error) {
+	md := &dto.MetadataDto{
+		UserId: userId,
+		Login:  userLogin,
+		Avatar: avatar,
+	}
+
+	bytes, err := json.Marshal(md)
+	if err != nil {
+		return "", err
+	}
+
+	mds := string(bytes)
+	return mds, nil
+}
+
+func ParseMetadata(metadata string) (*dto.MetadataDto, error) {
+	md := &dto.MetadataDto{}
+	err := json.Unmarshal([]byte(metadata), md)
+	return md, err
+}
+
+func ParseParticipantMetadataOrNull(participant *livekit.ParticipantInfo) (*dto.MetadataDto, error) {
+	if IsNotHumanUser(participant.Identity) {
+		return nil, nil
+	}
+
+	return ParseMetadata(participant.Metadata)
+}
 
 func GetRoomIdFromName(chatName string) (int64, error) {
 	var chatId int64

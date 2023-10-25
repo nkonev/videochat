@@ -2,10 +2,8 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go"
-	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 )
@@ -58,17 +56,15 @@ func (vh *UserService) GetVideoParticipants(chatId int64, ctx context.Context) (
 	}
 
 	for _, participant := range participants.Participants {
-		if utils.IsNotHumanUser(participant.Identity) {
-			continue
-		}
-
-		md := &dto.MetadataDto{}
-		err = json.Unmarshal([]byte(participant.Metadata), md)
+		metadata, err := utils.ParseParticipantMetadataOrNull(participant)
 		if err != nil {
-			Logger.Errorf("got error during parsing metadata from chatId=%v, %v", chatId, err)
+			Logger.Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
 			continue
 		}
-		set[md.UserId] = true
+		if metadata == nil {
+			continue
+		}
+		set[metadata.UserId] = true
 	}
 
 	for key, value := range set {
