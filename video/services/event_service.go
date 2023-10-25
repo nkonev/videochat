@@ -90,7 +90,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx conte
 			Logger.Errorf("got error during counting users in scheduler, %v", err)
 			continue
 		}
-		err = h.notificationService.NotifyVideoUserIdsChanged(participantIds, videoParticipants, ctx)
+		err = h.notificationService.NotifyAboutUsersVideoStatusChanged(participantIds, videoParticipants, ctx)
 		if err != nil {
 			Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", err)
 		}

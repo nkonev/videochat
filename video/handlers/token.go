@@ -13,6 +13,7 @@ import (
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
+	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
 	"time"
 )
@@ -20,14 +21,15 @@ import (
 type TokenHandler struct {
 	chatClient *client.RestClient
 	config     *config.ExtendedConfig
+	notificationService *services.NotificationService
 }
 
 type TokenResponse struct {
 	Token string `json:"token"`
 }
 
-func NewTokenHandler(chatClient *client.RestClient, cfg *config.ExtendedConfig) *TokenHandler {
-	return &TokenHandler{chatClient: chatClient, config: cfg}
+func NewTokenHandler(chatClient *client.RestClient, cfg *config.ExtendedConfig, notificationService *services.NotificationService) *TokenHandler {
+	return &TokenHandler{chatClient: chatClient, config: cfg, notificationService: notificationService}
 }
 
 func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
@@ -57,6 +59,10 @@ func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
 	if err != nil {
 		Logger.Errorf("Error during getting token, userId=%v, chatId=%v, error=%v", userPrincipalDto.UserId, chatId, err)
 		return err
+	}
+	err = h.notificationService.NotifyAboutUsersVideoStatusChanged([]int64{userPrincipalDto.UserId}, []int64{userPrincipalDto.UserId}, c.Request().Context())
+	if err != nil {
+		Logger.Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", userPrincipalDto.UserId, chatId, err)
 	}
 	return c.JSON(http.StatusOK, TokenResponse{
 		Token: token,

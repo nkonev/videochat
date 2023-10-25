@@ -83,4 +83,4 @@ schedulers:
     notificationPeriod: 20s
   usersVideoStatusNotifierTask:
     enabled: true
-    notificationPeriod: 2s # more or less close to aaa's user online
+    notificationPeriod: 10s # more or less close to aaa's user online

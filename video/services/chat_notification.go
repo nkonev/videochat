@@ -41,7 +41,7 @@ func (h *NotificationService) NotifyVideoUserCountChanged(participantIds []int64
 	return h.rabbitMqUserCountPublisher.Publish(participantIds, &chatNotifyDto, ctx)
 }
 
-func (h *NotificationService) NotifyVideoUserIdsChanged(participantIds, videoParticipants []int64, ctx context.Context) error {
+func (h *NotificationService) NotifyAboutUsersVideoStatusChanged(participantIds, videoParticipants []int64, ctx context.Context) error {
 	Logger.Debugf("Notifying about user ids %v", participantIds)
 
 	var dtos = make([]dto.VideoCallUserCallStatusChangedDto, 0)
