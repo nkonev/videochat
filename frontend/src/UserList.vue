@@ -13,7 +13,7 @@
             >
                 <template v-slot:prepend v-if="hasLength(item.avatar)">
                   <v-badge
-                    color="success accent-4"
+                    :color="getColor(item)"
                     dot
                     location="right bottom"
                     overlap
@@ -140,7 +140,7 @@ import {
     setTitle
 } from "@/utils";
 import Mark from "mark.js";
-import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
+import userStatusMixin from "@/mixins/userStatusMixin";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -152,7 +152,7 @@ export default {
     infiniteScrollMixin(scrollerName),
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
-    graphqlSubscriptionMixin('userOnlineInUserList'),
+    userStatusMixin('userOnlineInUserList'),
   ],
   data() {
     return {
@@ -346,28 +346,8 @@ export default {
               return false
           }
     },
-    transformItem(item) {
-      item.online = false;
-    },
-    getUserName(item) {
-      let bldr = item.login;
-      if (!hasLength(item.avatar) && item.online) {
-        bldr += " (" + this.$vuetify.locale.t('$vuetify.user_online') + ")";
-      }
-      return bldr;
-    },
-    getGraphQlSubscriptionQuery() {
-      const userIds = this.items.map(item => item.id);
-      return `
-            subscription {
-                userOnlineEvents(userIds:[${userIds}]) {
-                    id
-                    online
-                }
-            }`
-    },
-    onNextSubscriptionElement(items) {
-          this.onUserOnlineChanged(items);
+    getUserIdsSubscribeTo() {
+        return this.items.map(item => item.id);
     },
     onUserOnlineChanged(rawData) {
           const dtos = rawData?.data?.userOnlineEvents;
@@ -381,7 +361,18 @@ export default {
               })
           }
     },
-
+    onUserVideoStatusChanged(rawData) {
+        const dtos = rawData?.data?.userVideoStatusEvents;
+        if (dtos) {
+            this.items.forEach(item => {
+                dtos.forEach(dtoItem => {
+                    if (item.id == dtoItem.userId) {
+                        item.isInVideo = dtoItem.isInVideo;
+                    }
+                })
+            })
+        }
+    },
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
