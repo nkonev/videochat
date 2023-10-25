@@ -88,7 +88,7 @@
             <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
           </v-btn>
 
-          <v-card v-if="!showSearchButton || !isMobile()" variant="plain" :width="isMobile() ? '100%' : null" :min-width="isMobile() ? null : '330'" :style="isMobile() ? 'margin-left: 1.2em; margin-right: 0.4em;' : 'margin-left: 1.2em; margin-right: 2px'">
+          <v-card v-if="!showSearchButton || !isMobile()" variant="plain" :class="isMobile() ? 'search-card-mobile' : 'search-card'">
             <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true" :label="searchName()">
               <template v-slot:append-inner>
                 <v-btn icon density="compact" @click.prevent="switchSearchType()" :disabled="!canSwitchSearchType()"><v-icon class="search-icon">{{ searchIcon }}</v-icon></v-btn>
@@ -752,6 +752,17 @@ export default {
   width: auto;
   height: auto;
   cursor: pointer
+}
+
+.search-card {
+  min-width: 330px;
+  margin-left: 1.2em;
+  margin-right: 2px;
+}
+.search-card-mobile {
+  width: 100%;
+  margin-left: 1.2em;
+  margin-right: 0.4em;
 }
 
 .v-card {
