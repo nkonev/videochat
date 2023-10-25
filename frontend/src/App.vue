@@ -32,10 +32,10 @@
                        offset-y="1.8em"
               >
                   <v-btn v-if="chatStore.showCallButton" icon :loading="chatStore.initializingVideoCall" @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
-                      <v-icon color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
+                      <v-icon :size="getIconSize()" color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                   </v-btn>
                   <v-btn v-if="chatStore.showHangButton" icon :loading="chatStore.initializingVideoCall" @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
-                      <v-icon :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
+                      <v-icon :size="getIconSize()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
                   </v-btn>
               </v-badge>
           </template>
@@ -73,6 +73,7 @@
             <v-icon :x-large="isMobile()">mdi-cloud-upload</v-icon>
           </v-btn>
 
+        <template v-if="showSearchButton">
           <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
           <div class="d-flex flex-column app-title mx-2" :class="isInChat() ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
             <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="chatStore.title"></div>
@@ -80,15 +81,21 @@
               {{ getSubtitle() }}
             </div>
           </div>
+        </template>
 
-          <v-card variant="plain" min-width="330" v-if="chatStore.isShowSearch" style="margin-left: 1.2em; margin-right: 2px">
-            <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" :label="searchName()">
+        <template v-if="chatStore.isShowSearch">
+          <v-btn v-if="showSearchButton && isMobile()" icon :title="searchName" @click="onOpenSearch()">
+            <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
+          </v-btn>
+
+          <v-card v-if="!showSearchButton || !isMobile()" variant="plain" :width="isMobile() ? '100%' : null" :min-width="isMobile() ? null : '330'" :style="isMobile() ? 'margin-left: 1.2em; margin-right: 0.4em;' : 'margin-left: 1.2em; margin-right: 2px'">
+            <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true" :label="searchName()">
               <template v-slot:append-inner>
                 <v-btn icon density="compact" @click.prevent="switchSearchType()" :disabled="!canSwitchSearchType()"><v-icon class="search-icon">{{ searchIcon }}</v-icon></v-btn>
               </template>
             </v-text-field>
           </v-card>
-
+        </template>
       </v-app-bar>
 
       <v-main>
@@ -293,6 +300,10 @@ export default {
         shouldShowFileUpload() {
             return !!this.chatStore.fileUploadingQueue.length
         },
+        hasSearchString() {
+          return hasLength(this.searchStringFacade)
+        },
+
     },
     methods: {
         getStore() {
@@ -616,7 +627,16 @@ export default {
         isVideoRoute() {
           return this.$route.name == videochat_name
         },
-
+        onOpenSearch() {
+          this.showSearchButton = false;
+        },
+        getIconSize() {
+            if (this.isMobile()) {
+              return 'x-large'
+            } else {
+              return undefined
+            }
+        }
     },
     components: {
         ChatEditModal,
