@@ -58,6 +58,10 @@ func (vh *UserService) GetVideoParticipants(chatId int64, ctx context.Context) (
 	}
 
 	for _, participant := range participants.Participants {
+		if utils.IsNotHumanUser(participant.Identity) {
+			continue
+		}
+
 		md := &dto.MetadataDto{}
 		err = json.Unmarshal([]byte(participant.Metadata), md)
 		if err != nil {

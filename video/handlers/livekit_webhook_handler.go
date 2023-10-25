@@ -70,13 +70,15 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 			}
 
 			if event.Event == "participant_joined" {
-				userId, err := utils.GetUserIdFromIdentity(event.Participant.Identity)
-				if err != nil {
-					Logger.Infof("Unable to parse Identity=%v error=%v", event.Participant.Identity, err)
-				} else {
-					err = h.notificationService.NotifyAboutUsersVideoStatusChanged([]int64{userId}, []int64{userId}, c.Request().Context())
+				if !utils.IsNotHumanUser(event.Participant.Identity) {
+					userId, err := utils.GetUserIdFromIdentity(event.Participant.Identity)
 					if err != nil {
-						Logger.Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", userId, chatId, err)
+						Logger.Errorf("Unable to parse Identity=%v error=%v", event.Participant.Identity, err)
+					} else {
+						err = h.notificationService.NotifyAboutUsersVideoStatusChanged([]int64{userId}, []int64{userId}, c.Request().Context())
+						if err != nil {
+							Logger.Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", userId, chatId, err)
+						}
 					}
 				}
 			}

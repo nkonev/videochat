@@ -163,6 +163,14 @@ func GetUserIdFromIdentity(identity string) (int64, error) {
 	return ParseInt64(split[0])
 }
 
+func IsNotHumanUser(identity string) bool {
+	split := strings.Split(identity, "_")
+	if len(split) != 2 {
+		return true
+	}
+	return split[0] == "EG"
+}
+
 
 func GetRoomIdFromName(chatName string) (int64, error) {
 	var chatId int64
