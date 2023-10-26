@@ -35,9 +35,9 @@ export const setIcon = (newMessages) => {
     document.getElementsByTagName('head')[0].appendChild(link);
   }
   if (newMessages) {
-    link.href = `${prefix}/favicon_new2.svg`;
+    link.href = `${prefix}/favicon_new.svg`;
   } else {
-    link.href = `${prefix}/favicon2.svg`;
+    link.href = `${prefix}/favicon.svg`;
   }
 }
 
