@@ -673,3 +673,8 @@ http://localhost:8081/front2
 # Initial multi page in Vite
 https://vitejs.dev/guide/build.html#multi-page-app
 http://localhost:8081/front2/blog/
+
+# Makefile
+https://sflanders.net/2018/11/06/makefile-basics/
+https://stackoverflow.com/questions/448910/what-is-the-difference-between-the-gnu-makefile-variable-assignments-a
+https://stackoverflow.com/questions/25185607/whats-the-difference-between-parenthesis-and-curly-bracket-syntax-in-ma
