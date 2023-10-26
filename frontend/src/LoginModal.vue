@@ -11,34 +11,6 @@
                       {{ $vuetify.locale.t('$vuetify.login_title') }}
                   </span>
 
-                  <template v-if="!isMobile()">
-                    <span class="d-flex">
-                      <v-btn
-                        id="forgot-password-btn"
-                        class="ml-2"
-                        color="primary"
-                        @click="onForgotPasswordClick"
-                        size="small"
-                        min-width="80px"
-                        variant="outlined"
-                      >
-                        {{ $vuetify.locale.t('$vuetify.forgot_password') }}
-                      </v-btn>
-                    </span>
-                    <span class="d-flex">
-                      <v-btn
-                        id="register-btn"
-                        class="ml-2"
-                        color="primary"
-                        @click="onRegisterClick"
-                        size="small"
-                        min-width="80px"
-                        variant="outlined"
-                      >
-                        {{ $vuetify.locale.t('$vuetify.registration') }}
-                      </v-btn>
-                    </span>
-                  </template>
                 </v-card-title>
 
                 <v-card-text :class="isMobile() ? 'pa-4 pt-0' : 'pl-4 pt-0'">
@@ -88,7 +60,7 @@
                                 id="login-btn"
                                 :disabled="!valid || disable"
                                 color="success"
-                                class="mr-2 mb-2"
+                                class="mr-2 mb-4"
                                 @click="loginWithUsername"
                                 min-width="80px"
                                 :loading="loadingLogin"
@@ -96,46 +68,26 @@
                             {{ $vuetify.locale.t('$vuetify.login_action') }}
                         </v-btn>
 
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('vkontakte')" class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()">
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('vkontakte')" class="mr-2 mb-4 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()">
                             <font-awesome-icon :icon="[ 'fab', 'vk']" :size="'2x'"></font-awesome-icon>
                         </v-btn>
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('facebook')" class="mr-2 mb-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()">
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('facebook')" class="mr-2 mb-4 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()">
                             <font-awesome-icon :icon="[ 'fab', 'facebook' ]" :size="'2x'"></font-awesome-icon>
                         </v-btn>
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('google')" class="mr-2 mb-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()">
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('google')" class="mr-2 mb-4 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()">
                             <font-awesome-icon :icon="[ 'fab', 'google' ]" :size="'2x'"></font-awesome-icon>
                         </v-btn>
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('keycloak')" class="mr-2 mb-2 c-btn-keycloak" :disabled="disable" :loading="loadingKeycloak" min-width="80px" @click="loginKeycloak()">
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('keycloak')" class="mr-2 mb-4 c-btn-keycloak" :disabled="disable" :loading="loadingKeycloak" min-width="80px" @click="loginKeycloak()">
                             <font-awesome-icon :icon="['fa', 'key' ]" :size="'2x'"></font-awesome-icon>
                         </v-btn>
                     </v-form>
 
-                  <template v-if="isMobile()">
                     <v-divider/>
-                    <span class="d-flex mt-4">
-                      <v-btn
-                        id="forgot-password-btn"
-                        color="primary"
-                        @click="onForgotPasswordClick"
-                        min-width="80px"
-                        variant="outlined"
-                      >
-                        {{ $vuetify.locale.t('$vuetify.forgot_password') }}
-                      </v-btn>
-
-                      <v-btn
-                        id="register-btn"
-                        class="ml-2"
-                        color="primary"
-                        @click="onRegisterClick"
-                        min-width="80px"
-                        variant="outlined"
-                      >
-                        {{ $vuetify.locale.t('$vuetify.registration') }}
-                      </v-btn>
-
-                    </span>
-                  </template>
+                    <div class="mt-2">
+                    <a :href="registration()" class="colored-link" @click.prevent="onRegisterClick">{{ $vuetify.locale.t('$vuetify.registration') }}</a>
+                    <span>{{ $vuetify.locale.t('$vuetify.or') }}</span>
+                    <a href="forgot_password()" class="colored-link" @click.prevent="onForgotPasswordClick">{{ $vuetify.locale.t('$vuetify.forgot_password') }}</a>
+                      </div>
                 </v-card-text>
 
             </v-card>
@@ -149,10 +101,10 @@
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import {
-        confirmation_pending_name,
-        forgot_password_name, password_restore_check_email_name,
-        password_restore_enter_new_name,
-        registration_name
+      confirmation_pending_name, forgot_password,
+      forgot_password_name, password_restore_check_email_name,
+      password_restore_enter_new_name, registration,
+      registration_name
     } from "@/router/routes";
 
     export default {
@@ -193,6 +145,12 @@
             ...mapStores(useChatStore),
         },
         methods: {
+            registration() {
+              return registration
+            },
+            forgot_password() {
+              return forgot_password
+            },
             showLoginModal() {
                 this.$data.show = true;
             },

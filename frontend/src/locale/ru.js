@@ -218,4 +218,5 @@ export default {
     request_password_reset: "Запросить сброс пароля",
     password_restore_check_email: "Проверьте e-mail",
     set_new_password: "Установить новый пароль",
+    or: " или "
 }

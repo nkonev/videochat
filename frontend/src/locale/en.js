@@ -218,4 +218,5 @@ export default {
     request_password_reset: "Request password reset",
     password_restore_check_email: "Check your email",
     set_new_password: "Set new password",
+    or: " or "
 }
