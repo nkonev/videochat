@@ -17,10 +17,10 @@ export const getVideoResolution = () => {
 export const NULL_SCREEN_RESOLUTION = 'null';
 
 export const getScreenResolution = () => {
-    let got = localStorage.getItem(KEY_SCREEN_RESOLUTION);
-    if (!got) {
-        localStorage.setItem(KEY_SCREEN_RESOLUTION, NULL_SCREEN_RESOLUTION);
-        got = localStorage.getItem(KEY_SCREEN_RESOLUTION);
+    let got = JSON.parse(localStorage.getItem(KEY_SCREEN_RESOLUTION));
+    if (got === null) {
+        setScreenResolution(NULL_SCREEN_RESOLUTION);
+        got = JSON.parse(localStorage.getItem(KEY_SCREEN_RESOLUTION));
     }
     return got;
 }
@@ -30,7 +30,7 @@ export const setVideoResolution = (newVideoResolution) => {
 }
 
 export const setScreenResolution = (newVideoResolution) => {
-    localStorage.setItem(KEY_SCREEN_RESOLUTION, newVideoResolution);
+    localStorage.setItem(KEY_SCREEN_RESOLUTION, JSON.stringify(newVideoResolution));
 }
 
 
