@@ -10,32 +10,35 @@
                   <span class="d-flex flex-grow-1">
                       {{ $vuetify.locale.t('$vuetify.login_title') }}
                   </span>
-                  <span class="d-flex">
-                    <v-btn
-                      id="forgot-password-btn"
-                      class="ml-2"
-                      color="primary"
-                      @click="onForgotPasswordClick"
-                      size="small"
-                      min-width="80px"
-                      variant="outlined"
-                    >
-                      {{ $vuetify.locale.t('$vuetify.forgot_password') }}
-                    </v-btn>
-                  </span>
-                  <span class="d-flex">
-                    <v-btn
-                      id="register-btn"
-                      class="ml-2"
-                      color="primary"
-                      @click="onRegisterClick"
-                      size="small"
-                      min-width="80px"
-                      variant="outlined"
-                    >
-                      {{ $vuetify.locale.t('$vuetify.registration') }}
-                    </v-btn>
-                  </span>
+
+                  <template v-if="!isMobile()">
+                    <span class="d-flex">
+                      <v-btn
+                        id="forgot-password-btn"
+                        class="ml-2"
+                        color="primary"
+                        @click="onForgotPasswordClick"
+                        size="small"
+                        min-width="80px"
+                        variant="outlined"
+                      >
+                        {{ $vuetify.locale.t('$vuetify.forgot_password') }}
+                      </v-btn>
+                    </span>
+                    <span class="d-flex">
+                      <v-btn
+                        id="register-btn"
+                        class="ml-2"
+                        color="primary"
+                        @click="onRegisterClick"
+                        size="small"
+                        min-width="80px"
+                        variant="outlined"
+                      >
+                        {{ $vuetify.locale.t('$vuetify.registration') }}
+                      </v-btn>
+                    </span>
+                  </template>
                 </v-card-title>
 
                 <v-card-text :class="isMobile() ? 'pa-4 pt-0' : 'pl-4 pt-0'">
@@ -106,6 +109,33 @@
                             <font-awesome-icon :icon="['fa', 'key' ]" :size="'2x'"></font-awesome-icon>
                         </v-btn>
                     </v-form>
+
+                  <template v-if="isMobile()">
+                    <v-divider/>
+                    <span class="d-flex mt-4">
+                      <v-btn
+                        id="forgot-password-btn"
+                        color="primary"
+                        @click="onForgotPasswordClick"
+                        min-width="80px"
+                        variant="outlined"
+                      >
+                        {{ $vuetify.locale.t('$vuetify.forgot_password') }}
+                      </v-btn>
+
+                      <v-btn
+                        id="register-btn"
+                        class="ml-2"
+                        color="primary"
+                        @click="onRegisterClick"
+                        min-width="80px"
+                        variant="outlined"
+                      >
+                        {{ $vuetify.locale.t('$vuetify.registration') }}
+                      </v-btn>
+
+                    </span>
+                  </template>
                 </v-card-text>
 
             </v-card>
