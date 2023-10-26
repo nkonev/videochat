@@ -9,10 +9,10 @@ check-env:
 BUILDDIR := ./build
 DIST := ./dist
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
-STATIC_JSON := ${DIST}/git.json
+STATIC_JSON := $(DIST)/git.json
 
 generate-git:
-	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"frontend\"}" > ${STATIC_JSON}
+	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"frontend\"}" > $(STATIC_JSON)
 
 IMAGE := nkonev/chat-frontend:latest
 
@@ -34,4 +34,4 @@ push-docker:
 	docker push $(IMAGE)
 
 clean:
-	rm -rf ${DIST} ${BUILDDIR}
+	rm -rf $(DIST) $(BUILDDIR)

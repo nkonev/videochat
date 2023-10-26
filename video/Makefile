@@ -13,7 +13,7 @@ STATIC_JSON := ./handlers/static-api/git.json
 CURR := $(shell pwd)
 
 generate-git:
-	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"video\"}" > ${STATIC_JSON}
+	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"video\"}" > $(STATIC_JSON)
 
 test:
 	go test ./... -count=1 -test.v -test.timeout=20s -p 1
@@ -38,4 +38,4 @@ push-docker:
 	docker push $(IMAGE)
 
 clean:
-	rm -rf ${STATIC_JSON} ${EXECUTABLE} ${BUILDDIR}
+	rm -rf $(STATIC_JSON) $(EXECUTABLE) $(BUILDDIR)
