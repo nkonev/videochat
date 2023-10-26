@@ -22,7 +22,7 @@ package-go:
 
 BUILDDIR := ./build
 EXECUTABLE := notification
-IMAGE = nkonev/notification:latest
+IMAGE := nkonev/notification:latest
 
 package-docker:
 	mkdir -p $(BUILDDIR) && \

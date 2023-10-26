@@ -14,7 +14,7 @@ STATIC_JSON := ${DIST}/git.json
 generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"frontend\"}" > ${STATIC_JSON}
 
-IMAGE = nkonev/chat-frontend:latest
+IMAGE := nkonev/chat-frontend:latest
 
 package-node:
 	npm run build

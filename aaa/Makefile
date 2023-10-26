@@ -19,7 +19,7 @@ package-java:
 	./mvnw package -DskipTests
 
 BUILDDIR := ./build
-IMAGE = nkonev/chat-aaa:latest
+IMAGE := nkonev/chat-aaa:latest
 
 package-docker:
 	mkdir -p $(BUILDDIR) && \

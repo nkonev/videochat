@@ -22,7 +22,7 @@ package-go:
 
 BUILDDIR := ./build
 EXECUTABLE := chat
-IMAGE = nkonev/chat:latest
+IMAGE := nkonev/chat:latest
 
 package-docker:
 	mkdir -p $(BUILDDIR) && \

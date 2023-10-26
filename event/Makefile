@@ -22,7 +22,7 @@ package-go:
 
 BUILDDIR := ./build
 EXECUTABLE := event
-IMAGE = nkonev/event:latest
+IMAGE := nkonev/event:latest
 
 package-docker:
 	mkdir -p $(BUILDDIR) && \
