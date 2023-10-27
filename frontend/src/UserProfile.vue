@@ -12,7 +12,7 @@
          class="mt-2"
       >
       </v-img>
-      <v-list-item-title class="d-flex">
+      <span class="d-flex">
         <span class="text-h3">
           {{ viewableUser.login }}
         </span>
@@ -31,11 +31,11 @@
             </span>
           </span>
         </span>
-      </v-list-item-title>
+      </span>
       <v-divider></v-divider>
-      <v-list-item-subtitle v-if="viewableUser.email" class="text-h6">{{ viewableUser.email }}</v-list-item-subtitle>
+      <span v-if="viewableUser.email" class="text-h6">{{ viewableUser.email }}</span>
       <v-divider></v-divider>
-      <v-list-item-subtitle v-if="displayShortInfo(viewableUser)" class="my-1">{{ viewableUser.shortInfo }}</v-list-item-subtitle>
+      <span v-if="displayShortInfo(viewableUser)" class="my-1">{{ viewableUser.shortInfo }}</span>
 
       <v-container class="ma-0 pa-0">
         <v-btn v-if="isNotMyself()" color="primary" @click="tetATet(viewableUser.id)">
