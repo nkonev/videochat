@@ -57,10 +57,12 @@
 
 <script>
 import bus, {
-  OPEN_FILE_UPLOAD_MODAL,
-  CLOSE_FILE_UPLOAD_MODAL,
-  SET_FILE_ITEM_UUID,
-  FILE_UPLOAD_MODAL_START_UPLOADING, INCREMENT_FILE_ITEM_FILE_COUNT, ATTACH_FILES_TO_MESSAGE_MODAL
+    OPEN_FILE_UPLOAD_MODAL,
+    CLOSE_FILE_UPLOAD_MODAL,
+    SET_FILE_ITEM_UUID,
+    FILE_UPLOAD_MODAL_START_UPLOADING,
+    ATTACH_FILES_TO_MESSAGE_MODAL,
+    LOAD_FILES_COUNT
 } from "./bus/bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
@@ -232,7 +234,7 @@ export default {
                         fileItemUuid: fileToUpload.fileItemUuid,
                         chatId: fileToUpload.chatId,
                       });
-                      bus.emit(INCREMENT_FILE_ITEM_FILE_COUNT, {
+                      bus.emit(LOAD_FILES_COUNT, {
                         chatId: fileToUpload.chatId,
                       });
                     }

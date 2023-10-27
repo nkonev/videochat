@@ -112,18 +112,18 @@
 <script>
     import axios from "axios";
     import bus, {
-      CLOSE_EDIT_MESSAGE, INCREMENT_FILE_ITEM_FILE_COUNT, LOAD_FILES_COUNT,
-      MESSAGE_EDIT_COLOR_SET,
-      MESSAGE_EDIT_LINK_SET,
-      OPEN_FILE_UPLOAD_MODAL,
-      OPEN_MESSAGE_EDIT_COLOR,
-      OPEN_MESSAGE_EDIT_LINK,
-      OPEN_MESSAGE_EDIT_MEDIA,
-      OPEN_MESSAGE_EDIT_SMILEY,
-      OPEN_VIEW_FILES_DIALOG,
-      PROFILE_SET,
-      SET_EDIT_MESSAGE, SET_EDIT_MESSAGE_MODAL,
-      SET_FILE_ITEM_UUID,
+        CLOSE_EDIT_MESSAGE, LOAD_FILES_COUNT,
+        MESSAGE_EDIT_COLOR_SET,
+        MESSAGE_EDIT_LINK_SET,
+        OPEN_FILE_UPLOAD_MODAL,
+        OPEN_MESSAGE_EDIT_COLOR,
+        OPEN_MESSAGE_EDIT_LINK,
+        OPEN_MESSAGE_EDIT_MEDIA,
+        OPEN_MESSAGE_EDIT_SMILEY,
+        OPEN_VIEW_FILES_DIALOG,
+        PROFILE_SET,
+        SET_EDIT_MESSAGE, SET_EDIT_MESSAGE_MODAL,
+        SET_FILE_ITEM_UUID,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -206,15 +206,17 @@
                   return Promise.resolve(false)
                 }
             },
-            loadFilesCountAndResetFileItemUuidIfNeed() {
-              this.loadFilesCount().then((resp) => {
-                if (resp) {
-                  if (this.fileCount === 0) {
-                    this.editMessageDto.fileItemUuid = null;
-                    this.saveToStore();
-                  }
+            loadFilesCountAndResetFileItemUuidIfNeed({chatId}) {
+                if (chatId == this.chatId) {
+                    this.loadFilesCount().then((resp) => {
+                        if (resp) {
+                            if (this.fileCount === 0) {
+                                this.editMessageDto.fileItemUuid = null;
+                                this.saveToStore();
+                            }
+                        }
+                    })
                 }
-              })
             },
 
             resetAnswer() {
@@ -307,11 +309,6 @@
             },
             onFilesClicked() {
                 bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.editMessageDto.id});
-            },
-            onIncrementFileItemFileCount({chatId}) {
-                if (this.chatId == chatId) {
-                    this.fileCount++
-                }
             },
             onFileItemUuid({fileItemUuid, chatId}) {
               if (chatId == this.chatId) {
@@ -480,7 +477,6 @@
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.on(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
             bus.on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
-            bus.on(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
@@ -490,7 +486,6 @@
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.off(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
             bus.off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
-            bus.off(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
             bus.off(PROFILE_SET, this.onProfileSet);

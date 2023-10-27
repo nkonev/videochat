@@ -128,7 +128,7 @@ export default {
             fileItemUuid: item.fileItemUuid
           }).then(()=> {
             bus.emit(SET_FILE_ITEM_UUID, {fileItemUuid: item.fileItemUuid, chatId: this.chatId});
-            bus.emit(LOAD_FILES_COUNT);
+            bus.emit(LOAD_FILES_COUNT, {chatId: this.chatId});
             this.closeModal()
           })
         },

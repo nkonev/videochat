@@ -210,7 +210,7 @@ export default {
             fileItemUuid: null
           }).then(()=>{
             bus.emit(SET_FILE_ITEM_UUID, {fileItemUuid: null, chatId: this.chatId});
-            bus.emit(LOAD_FILES_COUNT);
+            bus.emit(LOAD_FILES_COUNT, {chatId: this.chatId});
             this.closeModal();
           })
         },
@@ -231,7 +231,7 @@ export default {
                     })
                     .then((response) => {
                         if (this.$data.messageEditing) {
-                            bus.emit(LOAD_FILES_COUNT);
+                            bus.emit(LOAD_FILES_COUNT, {chatId: this.chatId});
                         }
 
                         bus.emit(CLOSE_SIMPLE_MODAL);
