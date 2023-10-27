@@ -129,7 +129,7 @@
         colorText,
         embed,
         getAnswerPreviewFields,
-        hasLength,
+        hasLength, isChatRoute,
         link_dialog_type_add_link_to_text,
         link_dialog_type_add_media_embed,
         media_image,
@@ -471,7 +471,6 @@
             bus.on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
             bus.on(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
-            this.loadFromStore();
         },
         beforeUnmount() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
@@ -505,6 +504,20 @@
                         this.loadFromStore();
                     })
                 },
+            },
+            '$route': {
+                handler: async function (newValue, oldValue) {
+                    if (isChatRoute(newValue)) {
+                        if (newValue.params.id != oldValue.params.id) {
+                            console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
+                            if (hasLength(newValue.params.id)) {
+                                this.$nextTick(() => {
+                                    this.loadFromStore();
+                                })
+                            }
+                        }
+                    }
+                }
             },
         },
         components: {
