@@ -14,7 +14,7 @@
                       <v-btn
                           class="ml-2"
                           @click="onLanguageClick"
-                          variant="text"
+                          variant="plain"
                           icon
                           :title="$vuetify.locale.t('$vuetify.language')"
                       >
