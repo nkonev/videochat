@@ -537,12 +537,15 @@ export default {
             return !!this.chatStore.chatUsersCount || !!this.chatStore.moreImportantSubtitleInfo
         },
         afterRouteInitialized() {
-            this.chatStore.fetchAvailableOauth2Providers().then(() => {
+            return this.chatStore.fetchAvailableOauth2Providers()
+        },
+        fetchProfileIfNeed() {
+            if (!this.chatStore.currentUser) {
                 if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name || this.$route.name == forgot_password_name || this.$route.name == password_restore_enter_new_name || this.$route.name == password_restore_check_email_name || this.$route.name == confirmation_pending_name) {
                     return
                 }
                 this.chatStore.fetchUserProfile();
-            })
+            }
         },
         onWsRestored() {
           this.showWebsocketRestored = true;
@@ -676,7 +679,9 @@ export default {
         // It's placed after each route in order not to have a race-condition
         this.afterRouteInitialized = once(this.afterRouteInitialized);
         this.$router.afterEach((to, from) => {
-            this.afterRouteInitialized()
+            this.afterRouteInitialized().then(()=>{
+                this.fetchProfileIfNeed();
+            })
         })
     },
     beforeUnmount() {
