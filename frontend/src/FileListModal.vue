@@ -42,6 +42,8 @@
 
                                         <v-btn size="medium" v-if="item.canPlayAsVideo" @click="fireVideoPlay(item)" :title="$vuetify.locale.t('$vuetify.play')"><v-icon size="large">mdi-play</v-icon></v-btn>
 
+                                        <v-btn size="medium" v-if="item.canPlayAsAudio" @click="fireAudioPlay(item)" :title="$vuetify.locale.t('$vuetify.play')"><v-icon size="large">mdi-play</v-icon></v-btn>
+
                                         <v-btn size="medium" v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.locale.t('$vuetify.edit')"><v-icon size="large">mdi-pencil</v-icon></v-btn>
 
                                         <v-btn size="medium" v-if="item.canShare" @click="shareFile(item, !item.publicUrl)">
@@ -246,6 +248,9 @@ export default {
             bus.emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});
         },
         fireVideoPlay(dto) {
+            bus.emit(PLAYER_MODAL, dto);
+        },
+        fireAudioPlay(dto) {
             bus.emit(PLAYER_MODAL, dto);
         },
         fireShowImage(dto) {

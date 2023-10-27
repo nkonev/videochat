@@ -1,10 +1,11 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo" width="fit-content" max-width="100%" scrollable>
+        <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo || dto?.canPlayAsAudio" width="fit-content" max-width="100%" scrollable>
             <v-card :title="getTitle()">
                 <v-card-text class="d-flex justify-center">
-                        <video class="video-custom-class" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
-                        <img class="image-custom-class" v-if="dto?.canShowAsImage" :src="dto.url"/>
+                    <video class="video-custom-class" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
+                    <img class="image-custom-class" v-if="dto?.canShowAsImage" :src="dto.url"/>
+                    <audio class="audio-control audio-custom-class" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
@@ -40,6 +41,8 @@ export default {
         getTitle() {
             if (this.$data.dto?.canPlayAsVideo) {
                 return this.$vuetify.locale.t('$vuetify.play')
+            } else if (this.$data.dto?.canPlayAsAudio) {
+                return this.$vuetify.locale.t('$vuetify.play')
             } else if (this.$data.dto?.canShowAsImage) {
                 return this.$vuetify.locale.t('$vuetify.view')
             } else {
@@ -65,4 +68,7 @@ export default {
 
 <style lang="stylus" scoped>
 @import "messageBody.styl"
+.audio-control {
+    min-width 600px
+}
 </style>
