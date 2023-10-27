@@ -1,5 +1,5 @@
 <template>
-  <v-sheet width="640" class="pl-2 pt-2">
+  <v-sheet max-width="640" class="px-2 pt-2">
     <v-form fast-fail @submit.prevent="onSubmit()">
         <v-text-field
             disabled

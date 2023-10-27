@@ -1,5 +1,5 @@
 <template>
-  <v-sheet max-width="800" class="pl-2 pt-2">
+  <v-sheet max-width="800" class="px-2 pt-2">
       {{ $vuetify.locale.t('$vuetify.registration_pending_confirmation') }}
 
       <div>
