@@ -16,13 +16,13 @@
             <v-tab value="choose_language">
               {{ $vuetify.locale.t('$vuetify.language') }}
             </v-tab>
-            <v-tab value="user_profile_self">
+            <v-tab value="user_profile_self" v-if="this.chatStore.currentUser">
               {{ $vuetify.locale.t('$vuetify.user_profile_short') }}
             </v-tab>
-            <v-tab value="a_video_settings">
+            <v-tab value="a_video_settings" v-if="this.chatStore.currentUser">
               {{ $vuetify.locale.t('$vuetify.video') }}
             </v-tab>
-            <v-tab value="the_notifications">
+            <v-tab value="the_notifications" v-if="this.chatStore.currentUser">
               {{ $vuetify.locale.t('$vuetify.notifications') }}
             </v-tab>
           </v-tabs>
