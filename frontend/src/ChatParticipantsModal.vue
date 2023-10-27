@@ -52,13 +52,13 @@
                                                 :loading="item.adminLoading ? true : false"
                                                 @click="changeChatAdmin(item)"
                                                 icon
-                                                :title="item.admin ? $vuetify.locale.t('$vuetify.revoke_admin') : $vuetify.locale.t('$vuetify.grant_admin')"
+                                                :title="item.admin ? $vuetify.locale.t('$vuetify.revoke_chat_admin') : $vuetify.locale.t('$vuetify.grant_chat_admin')"
                                             >
                                                 <v-icon :color="item.admin ? 'primary' : 'disabled'">mdi-crown</v-icon>
                                             </v-btn>
                                         </template>
                                         <template v-else-if="item.admin">
-                                              <span class="pl-1 pr-1" :title="$vuetify.locale.t('$vuetify.admin')">
+                                              <span class="pl-1 pr-1" :title="$vuetify.locale.t('$vuetify.chat_admin')">
                                                   <v-icon color="primary">mdi-crown</v-icon>
                                               </span>
                                         </template>
