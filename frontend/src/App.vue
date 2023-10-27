@@ -164,6 +164,7 @@
         <ChatEditModal/>
         <PermissionsWarningModal/>
         <VideoAddNewSourceModal/>
+        <MessageEditModal/>
     </v-main>
 
     <v-navigation-drawer :location="isMobile() ? 'left' : 'right'" v-model="chatStore.showDrawer">
@@ -239,6 +240,8 @@ import {once} from "lodash/function";
 import PermissionsWarningModal from "@/PermissionsWarningModal.vue";
 import {prefix} from "@/router/routes"
 import VideoAddNewSourceModal from "@/VideoAddNewSourceModal.vue";
+import MessageEdit from "@/MessageEdit.vue";
+import MessageEditModal from "@/MessageEditModal.vue";
 
 const reactOnAnswerThreshold = 4 * 1000; // ms
 const audio = new Audio(`${prefix}/call.mp3`);
@@ -639,6 +642,7 @@ export default {
         }
     },
     components: {
+      MessageEdit,
         ChatEditModal,
         RightPanelActions,
         LoginModal,
@@ -656,6 +660,7 @@ export default {
         PlayerModal,
         PermissionsWarningModal,
         VideoAddNewSourceModal,
+        MessageEditModal,
     },
     created() {
         createGraphQlClient();

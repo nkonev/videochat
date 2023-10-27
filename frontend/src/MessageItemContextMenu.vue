@@ -97,7 +97,7 @@ export default {
                 if (!this.menuableItem.blogPost && this.isBlog && this.menuableItem.owner.id == this.chatStore.currentUser.id) {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.make_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('makeBlogPost', this.menuableItem)});
                 }
-                if (this.menuableItem.blogPost) {
+                if (this.isBlog) {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.go_to_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('goToBlog', this.menuableItem)});
                 }
             }

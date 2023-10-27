@@ -154,6 +154,11 @@ export const getStoredChatEditMessageDto = (chatId, defVal) => {
     return v;
 }
 
+export const getStoredChatEditMessageDtoOrNull = (chatId) => {
+  let v = JSON.parse(localStorage.getItem(KEY_CHAT_EDIT_MESSAGE_DTO + '_' + chatId));
+  return v;
+}
+
 export const setStoredChatEditMessageDto = (v, chatId) => {
     if (hasLength(v.text)) {
         localStorage.setItem(KEY_CHAT_EDIT_MESSAGE_DTO + '_' + chatId, JSON.stringify(v));

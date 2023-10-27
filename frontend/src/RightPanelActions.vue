@@ -10,6 +10,7 @@
     <v-divider></v-divider>
 
     <v-list density="compact" nav>
+      <v-list-item v-if="(chatStore.showCallButton || chatStore.showHangButton) && isMobile()" @click.prevent="copyCallLink()" prepend-icon="mdi-content-copy" :title="$vuetify.locale.t('$vuetify.copy_video_call_link')"></v-list-item>
       <v-list-item @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-home" :title="$vuetify.locale.t('$vuetify.start')"></v-list-item>
       <v-list-item @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
       <v-list-item @click.prevent="goBlogs()" :href="getRouteBlogs()" prepend-icon="mdi-postage-stamp" :title="$vuetify.locale.t('$vuetify.blogs')"></v-list-item>
@@ -62,7 +63,7 @@ import bus, {
     OPEN_VIEW_FILES_DIALOG
 } from "@/bus/bus";
 import {goToPreserving} from "@/mixins/searchString";
-import {hasLength} from "@/utils";
+import {copyCallLink, hasLength} from "@/utils";
 
 export default {
   data() {
@@ -97,6 +98,9 @@ export default {
     },
     goHome() {
       this.$router.push({name: root_name} )
+    },
+    copyCallLink() {
+      copyCallLink(this.chatId)
     },
     getRouteChats() {
       return chats

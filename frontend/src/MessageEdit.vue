@@ -118,7 +118,7 @@
       OPEN_MESSAGE_EDIT_SMILEY,
       OPEN_VIEW_FILES_DIALOG,
       PROFILE_SET,
-      SET_EDIT_MESSAGE,
+      SET_EDIT_MESSAGE, SET_EDIT_MESSAGE_MODAL,
       SET_FILE_ITEM_UUID,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
@@ -136,9 +136,9 @@
         media_video
     } from "@/utils";
     import {
-        getStoredChatEditMessageDto,
-        removeStoredChatEditMessageDto,
-        setStoredChatEditMessageDto
+      getStoredChatEditMessageDto, getStoredChatEditMessageDtoOrNull,
+      removeStoredChatEditMessageDto,
+      setStoredChatEditMessageDto
     } from "@/store/localStore"
 
     import MessageEditLinkModal from "@/MessageEditLinkModal";
@@ -228,17 +228,29 @@
                     })
                 }
             },
-            onSetMessage(dto) {
-                if (!dto) {
-                    // opening modal from mobile, just from scratch
-                    this.loadFromStore();
+            onSetMessageFromModal({dto, isNew}) {
+              const mbExisting = getStoredChatEditMessageDtoOrNull(this.chatId);
+              if (isNew) {
+                if (mbExisting && !mbExisting.id) {
+                  this.onSetMessage(mbExisting)
                 } else {
-                    this.loadEmbedPreviewIfNeed(dto);
-                    this.editMessageDto = dto;
-                    this.saveToStore();
-                    this.$refs.tipTapRef.setContent(this.editMessageDto.text);
-                    this.loadFilesCount();
+                  this.onSetMessage(chatEditMessageDtoFactory())
                 }
+              } else {
+                if (mbExisting && mbExisting.id) {
+                  this.onSetMessage(mbExisting)
+                } else {
+                  this.onSetMessage(dto)
+                }
+              }
+            },
+            onSetMessage(dto) {
+                this.loadEmbedPreviewIfNeed(dto);
+                this.editMessageDto = dto;
+                this.saveToStore();
+                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+                this.loadFilesCount();
+
                 this.$nextTick(()=>{
                     this.$refs.tipTapRef.setCursorToEnd()
                 })
@@ -447,6 +459,7 @@
         },
         mounted() {
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
+            bus.on(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
             bus.on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.on(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
@@ -457,6 +470,7 @@
         },
         beforeUnmount() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
+            bus.off(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
             bus.off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.off(INCREMENT_FILE_ITEM_FILE_COUNT, this.onIncrementFileItemFileCount);
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);

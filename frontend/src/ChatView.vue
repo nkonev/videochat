@@ -34,8 +34,10 @@
                   </div>
 
                   <MessageList :chatDto="chatDto"/>
+
+                  <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
               </pane>
-              <pane size="20" class="message-edit-pane">
+              <pane size="20" class="message-edit-pane" v-if="!isMobile()">
                 <MessageEdit :chatId="this.chatId"/>
               </pane>
             </splitpanes>
@@ -66,7 +68,7 @@ import bus, {
   MESSAGE_ADD,
   MESSAGE_BROADCAST,
   MESSAGE_DELETED,
-  MESSAGE_EDITED,
+  MESSAGE_EDITED, OPEN_EDIT_MESSAGE,
   PARTICIPANT_ADDED,
   PARTICIPANT_DELETED,
   PARTICIPANT_EDITED,
@@ -438,6 +440,9 @@ export default {
         }
       }
     },
+    openNewMessageDialog() { // on mobile OPEN_EDIT_MESSAGE with the null argument
+      bus.emit(OPEN_EDIT_MESSAGE, null);
+    },
   },
   watch: {
     '$route': {
@@ -536,6 +541,13 @@ export default {
 }
 .message-pane-mobile {
     align-items: unset;
+}
+
+.new-fab {
+  position: absolute
+  bottom: 20px
+  right: 20px
+  z-index: 1000
 }
 </style>
 

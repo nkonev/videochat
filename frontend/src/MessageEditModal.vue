@@ -5,7 +5,6 @@
             <v-toolbar
                 dark
                 color="indigo"
-                :dense="!isMobile()"
             >
                 <v-btn
                     icon
@@ -18,15 +17,20 @@
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
             <div class="message-edit-dialog" :style="heightWithoutAppBar">
-                <MessageEdit ref="msgEdit" :chatId="chatId"/>
+                <MessageEdit :chatId="chatId"/>
             </div>
         </v-card>
     </v-dialog>
 </template>
 
 <script>
-    import bus, {CLOSE_EDIT_MESSAGE, OPEN_EDIT_MESSAGE, SET_EDIT_MESSAGE} from "./bus/bus";
-    import heightMixin from "@/heightMixin";
+import bus, {
+  CLOSE_EDIT_MESSAGE,
+  OPEN_EDIT_MESSAGE,
+  SET_EDIT_MESSAGE_MODAL,
+} from "./bus/bus";
+    import heightMixin from "@/mixins/heightMixin";
+    import MessageEdit from "@/MessageEdit.vue";
 
     export default {
         mixins: [
@@ -43,7 +47,7 @@
                 this.show = true;
                 this.messageId = dto?.id;
                 this.$nextTick(()=>{
-                    bus.emit(SET_EDIT_MESSAGE, dto);
+                    bus.emit(SET_EDIT_MESSAGE_MODAL, {dto, isNew: this.isNew});
                 })
             },
             closeModal() {
@@ -59,7 +63,7 @@
             }
         },
         components: {
-            MessageEdit: () => import("./MessageEdit"),
+            MessageEdit,
         },
         computed: {
             chatId() {
