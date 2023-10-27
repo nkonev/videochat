@@ -98,7 +98,7 @@ export default {
       UserSelfProfileModalContent,
   },
   methods: {
-    showLoginModal() {
+    showSettingsModal() {
       this.$data.show = true;
     },
     hideLoginModal() {
@@ -146,7 +146,7 @@ export default {
     },
   },
   created() {
-    bus.on(OPEN_SETTINGS, this.showLoginModal);
+    bus.on(OPEN_SETTINGS, this.showSettingsModal);
   },
   mounted() {
     this.fileInput = document.getElementById('image-input-profile-avatar');
@@ -159,7 +159,7 @@ export default {
     }
   },
   beforeUnmount() {
-    bus.off(OPEN_SETTINGS, this.showLoginModal);
+    bus.off(OPEN_SETTINGS, this.showSettingsModal);
     if (this.fileInput) {
       this.fileInput.onchange = null;
     }
