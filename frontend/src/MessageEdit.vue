@@ -230,6 +230,7 @@
             },
             onSetMessageFromModal({dto, isNew}) {
               const mbExisting = getStoredChatEditMessageDtoOrNull(this.chatId);
+              this.removeOwnerFromSavedMessageIfNeed(mbExisting);
               if (isNew) {
                 if (mbExisting && !mbExisting.id) {
                   this.onSetMessage(mbExisting)
@@ -245,15 +246,9 @@
               }
             },
             onSetMessage(dto) {
-                this.loadEmbedPreviewIfNeed(dto);
-                this.editMessageDto = dto;
-                this.saveToStore();
-                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
-                this.loadFilesCount();
-
-                this.$nextTick(()=>{
-                    this.$refs.tipTapRef.setCursorToEnd()
-                })
+              this.editMessageDto = dto;
+              this.saveToStore();
+              this.setContentToEditorAndLoad();
             },
             notifyAboutBroadcast(clear, val) {
                 if (clear) {
@@ -431,18 +426,28 @@
             onProfileSet(){
                 this.loadFromStore();
             },
+            removeOwnerFromSavedMessageIfNeed(editMessageDto) {
+              if (editMessageDto && editMessageDto.ownerId && editMessageDto.ownerId != this.chatStore.currentUser?.id) {
+                console.log("Removing owner from saved message")
+                editMessageDto.ownerId = null;
+                editMessageDto.id = null;
+              }
+            },
             loadFromStore() {
-                this.editMessageDto = getStoredChatEditMessageDto(this.chatId, chatEditMessageDtoFactory());
-                if (this.editMessageDto.ownerId && this.editMessageDto.ownerId != this.chatStore.currentUser?.id) {
-                    console.log("Removing owner from saved message")
-                    this.editMessageDto.ownerId = null;
-                    this.editMessageDto.id = null;
-                }
-                this.loadEmbedPreviewIfNeed(this.editMessageDto);
-                this.$nextTick(()=>{
-                    this.$refs.tipTapRef.setContent(this.editMessageDto.text);
-                });
-                this.loadFilesCount();
+                const editMessageDto = getStoredChatEditMessageDto(this.chatId, chatEditMessageDtoFactory());
+                this.removeOwnerFromSavedMessageIfNeed(editMessageDto);
+                this.editMessageDto = editMessageDto;
+
+                this.setContentToEditorAndLoad();
+            },
+            setContentToEditorAndLoad() {
+              this.loadEmbedPreviewIfNeed(this.editMessageDto);
+              this.loadFilesCount();
+              this.$nextTick(()=>{
+                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+              }).then(()=>{
+                this.$refs.tipTapRef.setCursorToEnd()
+              })
             },
             saveToStore() {
                 setStoredChatEditMessageDto(this.editMessageDto, this.chatId);
