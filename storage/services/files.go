@@ -307,6 +307,7 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		PreviewUrl:     previewUrl,
 		CanPlayAsVideo: utils.IsVideo(objInfo.Key),
 		CanShowAsImage: utils.IsImage(objInfo.Key),
+		CanPlayAsAudio: utils.IsAudio(objInfo.Key),
 	}
 	return info, nil
 }
@@ -317,6 +318,8 @@ func (h *FilesService) getBaseUrlForDownload() string {
 
 const Media_image = "image"
 const Media_video = "video"
+
+const Media_audio = "audio"
 
 func (h *FilesService) GetPreviewUrlSmart(aKey string) *string {
 	recognizedType := ""
@@ -336,6 +339,8 @@ func GetType(itemUrl string) *string {
 		recognizedType = Media_video
 	} else if utils.IsImage(itemUrl) {
 		recognizedType = Media_image
+	} else if utils.IsAudio(itemUrl) {
+		recognizedType = Media_audio
 	}
 
 	if recognizedType != "" {

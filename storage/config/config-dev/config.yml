@@ -27,6 +27,8 @@ types:
     - ".mkv"
     - ".webm"
     - ".mov"
+  audio:
+    - ".mp3"
   plainText:
     - ".txt"
 

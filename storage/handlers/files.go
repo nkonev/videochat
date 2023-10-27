@@ -791,6 +791,8 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 			return utils.IsImage(info.Key)
 		case services.Media_video:
 			return utils.IsVideo(info.Key)
+		case services.Media_audio:
+			return utils.IsAudio(info.Key)
 		default:
 			return false
 		}
