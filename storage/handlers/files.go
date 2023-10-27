@@ -276,97 +276,6 @@ func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *FilesHandler) UploadHandler(c echo.Context) error {
-	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
-		return errors.New("Error during getting auth context")
-	}
-	chatId, err := utils.ParseInt64(c.Param("chatId"))
-	if err != nil {
-		return err
-	}
-	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
-		return c.NoContent(http.StatusInternalServerError)
-	} else if !ok {
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
-	reqDto := new(UploadRequest)
-	err = c.Bind(reqDto)
-	if err != nil {
-		return err
-	}
-
-	bucketName := h.minioConfig.Files
-
-	chatFileItemUuid := uuid.New().String()
-
-	fileItemUuidString := reqDto.FileItemUuid
-	if fileItemUuidString != nil && *fileItemUuidString != "" {
-		chatFileItemUuid = *fileItemUuidString
-	}
-
-	// check this fileItem belongs to user
-	filenameChatPrefix := fmt.Sprintf("chat/%v/%v/", chatId, chatFileItemUuid)
-	belongs, err := h.checkFileItemBelongsToUser(filenameChatPrefix, c, chatId, bucketName, userPrincipalDto)
-	if err != nil {
-		return err
-	}
-	if !belongs {
-		return c.NoContent(http.StatusUnauthorized)
-	}
-	// end check
-
-	filteredFilename := cleanFilename(reqDto.FileName)
-
-	aKey := services.GetKey(filteredFilename, chatFileItemUuid, chatId)
-
-	// check that this file does not exist
-	_, err = h.minio.StatObject(context.Background(), bucketName, aKey, minio.StatObjectOptions{})
-	if err == nil {
-		GetLogEntry(c.Request().Context()).Errorf("Already exists: %v", aKey)
-		return c.NoContent(http.StatusConflict)
-	}
-
-	// check enough size taking on account free disk space probe (see LimitsHandler)
-	ok, consumption, available, err := checkUserLimit(h.minio, bucketName, userPrincipalDto, reqDto.FileSize)
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
-	}
-
-	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
-	var urlVals = url.Values{}
-
-	services.SerializeMetadataAndStore(&urlVals, userPrincipalDto.UserId, chatId, reqDto.CorrelationId)
-
-	u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, aKey, uploadDuration, urlVals)
-	if err != nil {
-		Logger.Errorf("Error during getting downlad url %v", err)
-		return err
-	}
-
-	err = services.ChangeMinioUrl(u)
-	if err != nil {
-		return err
-	}
-
-	existingCount := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
-
-
-	return c.JSON(http.StatusOK, &utils.H{
-		"status": "ok",
-		"url": fmt.Sprintf("%v", u),
-		"fileItemUuid": chatFileItemUuid,
-		"existingCount": existingCount,
-		"newFileName": filteredFilename,
-		"chatId": chatId,
-	})
-}
-
 type ReplaceTextFileDto struct {
 	Id          string `json:"id"` // file id
 	Text        string `json:"text"`
@@ -589,8 +498,6 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	}
 	// end check
 
-	formerFileItemUuid := getFileItemUuid(objectInfo.Key)
-
 	err = h.minio.RemoveObject(context.Background(), bucketName, objectInfo.Key, minio.RemoveObjectOptions{})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during removing object %v", err)
@@ -601,31 +508,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}
 
-	// TODO remove the rest
-	filesPage := utils.FixPageString(c.QueryParam("page"))
-	filesSize := utils.FixSizeString(c.QueryParam("size"))
-	filesOffset := utils.GetOffset(filesPage, filesSize)
-
-	// this fileItemUuid used for display list in response
-	fileItemUuid := c.QueryParam("fileItemUuid")
-	var filenameChatPrefix string
-	if fileItemUuid == "" {
-		filenameChatPrefix = fmt.Sprintf("chat/%v/", chatId)
-	} else {
-		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
-	}
-
-	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), nil, true, filesSize, filesOffset)
-	if err != nil {
-		return err
-	}
-
-	// this fileItemUuid used for remove orphans
-	if h.countFilesUnderFileUuid(chatId, formerFileItemUuid, bucketName) == 0 {
-		h.restClient.RemoveFileItem(chatId, formerFileItemUuid, userPrincipalDto.UserId, c.Request().Context())
-	}
-
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
@@ -694,7 +577,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	chatId, ownerId, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
+	_, ownerId, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -723,32 +606,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}
 
-	// TODO remove the rest
-	objectInfo, err = h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during stat %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	tagging, err := h.minio.GetObjectTagging(context.Background(), bucketName, fileId, minio.GetObjectTaggingOptions{})
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting tags %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	info, err := h.filesService.GetFileInfo(userPrincipalDto.UserId, objectInfo, chatId, tagging, false)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getFileInfo %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	var participantIdSet = map[int64]bool{}
-	participantIdSet[userPrincipalDto.UserId] = true
-	var users = services.GetUsersRemotelyOrEmpty(participantIdSet, h.restClient, c.Request().Context())
-	user, ok := users[userPrincipalDto.UserId]
-	if ok {
-		info.Owner = user
-	}
-
-	return c.JSON(http.StatusOK, info)
+	return c.NoContent(http.StatusOK)
 }
 
 type CountResponse struct {

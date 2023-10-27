@@ -149,7 +149,6 @@ func configureEcho(
 	e.POST("/storage/chat/:chatId/avatar", cha.PutAvatar)
 	e.GET(fmt.Sprintf("%v/:filename", cha.GetUrlPath()), cha.Download)
 	e.POST("/internal/s3", fh.S3Handler)
-	e.PUT("/storage/:chatId/url", fh.UploadHandler) // TODO remove
 	e.PUT("/storage/:chatId/upload/init", fh.InitMultipartUpload)
 	e.PUT("/storage/:chatId/upload/finish", fh.FinishMultipartUpload)
 	e.PUT("/storage/:chatId/replace/file", fh.ReplaceHandler)
