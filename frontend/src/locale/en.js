@@ -216,7 +216,10 @@ export default {
     forgot_password: "Forgot a password",
     password_restoration: "Password restoration",
     request_password_reset: "Request password reset",
-    password_restore_check_email: "Check your email",
+    check_email: "Check your email",
     set_new_password: "Set new password",
-    or: " or "
+    or: " or ",
+    request_resend_confirmation_email: "Resend confirmation email",
+    resending_confirmation_email: "Resending confirmation email",
+    request_resend_confirmation_email_text: "Didn't get a email ? You can "
 }

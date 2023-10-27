@@ -113,7 +113,7 @@ import bus, {LOGGED_IN, LOGGED_OUT, OPEN_SETTINGS} from "./bus/bus";
     import {useChatStore} from "@/store/chatStore";
     import {
       confirmation_pending_name, forgot_password,
-      forgot_password_name, password_restore_check_email_name,
+      forgot_password_name, check_email_name,
       password_restore_enter_new_name, registration,
       registration_name
     } from "@/router/routes";

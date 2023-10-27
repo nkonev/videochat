@@ -13,7 +13,7 @@ export const video_suffix = `/video`;
 
 export const registration = `${prefix}/registration`;
 
-export const confirmation_pending = `${prefix}/confirmation-pending`;
+export const confirmation_pending = `${prefix}/registration/confirmation-pending`;
 
 export const wrong_confirmation_token = `${prefix}/confirm/registration/token-not-found`;
 
@@ -21,9 +21,11 @@ export const wrong_user = `${prefix}/confirm/registration/user-not-found`;
 
 export const forgot_password = `${prefix}/password-restore`;
 
-export const password_restore_check_email = `${prefix}/password-restore/check-email`;
+export const check_email = `${prefix}/check-email`;
 
 export const password_restore_enter_new = `${prefix}/password-restore/enter-new`;
+
+export const registration_resend_email = `${prefix}/registration/resend-email`;
 
 
 
@@ -48,6 +50,8 @@ export const wrong_confirmation_token_name = `wrong_confirmation_token`;
 
 export const wrong_user_name = `wrong_user`;
 
-export const password_restore_check_email_name = "password_restore_check_email";
+export const check_email_name = "check_email";
 
 export const password_restore_enter_new_name = "password_restore_enter_new";
+
+export const registration_resend_email_name = "registration_resend_email";

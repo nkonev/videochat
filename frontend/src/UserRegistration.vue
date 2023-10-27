@@ -1,5 +1,5 @@
 <template>
-  <v-sheet width="640" class="pl-2 pt-2">
+  <v-sheet max-width="800" class="pl-2 pt-2">
     <v-form fast-fail @submit.prevent="onSubmit()">
       <v-text-field
         @input="hideAlert()"
@@ -39,6 +39,11 @@
 
       <v-btn type="submit" color="primary" block class="mt-2">{{ $vuetify.locale.t('$vuetify.registration_submit') }}</v-btn>
     </v-form>
+
+    <div class="mt-2">
+        {{ $vuetify.locale.t('$vuetify.request_resend_confirmation_email_text') }}
+        <a class="colored-link" :href="resend()" @click.prevent="onResendClick()">{{$vuetify.locale.t('$vuetify.request_resend_confirmation_email')}}</a>
+    </div>
   </v-sheet>
 </template>
 
@@ -48,7 +53,7 @@ import {hasLength, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {confirmation_pending_name} from "@/router/routes";
+import {confirmation_pending_name, registration_resend_email, registration_resend_email_name} from "@/router/routes";
 
 export default {
   mixins: [userProfileValidationRules()],
@@ -82,6 +87,12 @@ export default {
     },
     hideAlert() {
       this.error = "";
+    },
+    resend() {
+        return registration_resend_email
+    },
+    onResendClick() {
+        this.$router.push({name: registration_resend_email_name} )
     },
   },
   mounted() {

@@ -180,9 +180,9 @@ import {
     chat_list_name,
     chat_name,
     confirmation_pending_name,
-    forgot_password_name, password_restore_check_email_name, password_restore_enter_new_name,
+    forgot_password_name, check_email_name, password_restore_enter_new_name,
     registration_name,
-    videochat_name
+    videochat_name, registration_resend_email_name
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
@@ -541,7 +541,7 @@ export default {
         },
         fetchProfileIfNeed() {
             if (!this.chatStore.currentUser) {
-                if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name || this.$route.name == forgot_password_name || this.$route.name == password_restore_enter_new_name || this.$route.name == password_restore_check_email_name || this.$route.name == confirmation_pending_name) {
+                if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name || this.$route.name == forgot_password_name || this.$route.name == password_restore_enter_new_name || this.$route.name == check_email_name || this.$route.name == confirmation_pending_name || this.$route.name == registration_resend_email_name) {
                     return
                 }
                 this.chatStore.fetchUserProfile();

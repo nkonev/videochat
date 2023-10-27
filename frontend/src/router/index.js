@@ -1,27 +1,27 @@
 // Composables
 import {createRouter, createWebHistory} from 'vue-router'
 import {
-  chat,
-  chat_list_name,
-  chat_name,
-  chats,
-  confirmation_pending,
-  confirmation_pending_name,
-  forgot_password,
-  forgot_password_name, password_restore_check_email,
-  password_restore_check_email_name, password_restore_enter_new, password_restore_enter_new_name,
-  prefix,
-  profile,
-  profile_list_name,
-  profile_name,
-  profiles,
-  registration,
-  registration_name, root,
-  root_name, video_suffix, videochat_name,
-  wrong_confirmation_token,
-  wrong_confirmation_token_name,
-  wrong_user,
-  wrong_user_name
+    chat,
+    chat_list_name,
+    chat_name,
+    chats,
+    confirmation_pending,
+    confirmation_pending_name,
+    forgot_password,
+    forgot_password_name, check_email,
+    check_email_name, password_restore_enter_new, password_restore_enter_new_name,
+    prefix,
+    profile,
+    profile_list_name,
+    profile_name,
+    profiles,
+    registration,
+    registration_name, registration_resend_email, registration_resend_email_name, root,
+    root_name, video_suffix, videochat_name,
+    wrong_confirmation_token,
+    wrong_confirmation_token_name,
+    wrong_user,
+    wrong_user_name
 } from "@/router/routes";
 import vuetify from "@/plugins/vuetify";
 import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL} from "@/bus/bus";
@@ -84,14 +84,19 @@ const routes = [
       component: () => import('@/UserRestorePassword.vue'),
     },
     {
-        name: password_restore_check_email_name,
-        path: password_restore_check_email,
-        component: () => import('@/UserRestorePasswordCheckEmail.vue'),
+        name: check_email_name,
+        path: check_email,
+        component: () => import('@/CheckEmail.vue'),
     },
     {
         name: password_restore_enter_new_name,
         path: password_restore_enter_new,
         component: () => import('@/UserRestorePasswordEnterNew.vue'),
+    },
+    {
+        name: registration_resend_email_name,
+        path: registration_resend_email,
+        component: () => import('@/UserRegistrationResendEmail.vue'),
     },
 
 ]

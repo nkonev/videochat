@@ -27,7 +27,7 @@ import {hasLength, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {confirmation_pending_name, password_restore_check_email_name} from "@/router/routes";
+import {confirmation_pending_name, check_email_name} from "@/router/routes";
 
 export default {
   mixins: [userProfileValidationRules()],
@@ -47,7 +47,7 @@ export default {
               email: this.email,
           }})
         .then(() => {
-          this.$router.push({name: password_restore_check_email_name} )
+          this.$router.push({name: check_email_name} )
         })
         .catch(e => {
           this.error = e.message

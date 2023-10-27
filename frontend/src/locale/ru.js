@@ -216,7 +216,10 @@ export default {
     forgot_password: "Забыл пароль",
     password_restoration: "Восстановление пароля",
     request_password_reset: "Запросить сброс пароля",
-    password_restore_check_email: "Проверьте e-mail",
+    check_email: "Проверьте e-mail",
     set_new_password: "Установить новый пароль",
-    or: " или "
+    or: " или ",
+    request_resend_confirmation_email: "Отправить заново письмо с подтверджением",
+    resending_confirmation_email: "Переотправка письма с подтверджением",
+    request_resend_confirmation_email_text: "Не получили письмо ? Вы можете "
 }
