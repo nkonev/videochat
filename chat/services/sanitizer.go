@@ -25,6 +25,8 @@ func CreateSanitizer() *SanitizerPolicy {
 	policy.AllowElements("iframe")
 	policy.AllowAttrs("src", "class", "allowfullscreen", "frameborder").OnElements("iframe")
 	policy.AllowAttrs("class").OnElements("div")
+	policy.AllowElements("audio")
+	policy.AllowAttrs("src", "class", "controls").OnElements("audio")
 	return &SanitizerPolicy{policy}
 }
 

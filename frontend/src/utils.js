@@ -65,6 +65,8 @@ export const media_image = "image";
 
 export const media_video = "video";
 
+export const media_audio = "audio";
+
 export const embed = "embed";
 
 

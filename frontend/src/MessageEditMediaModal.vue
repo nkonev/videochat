@@ -92,7 +92,7 @@
     import axios from "axios";
 
     import bus, {OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA} from "./bus/bus";
-    import {link_dialog_type_add_media_by_link, media_image, media_video} from "@/utils";
+    import {link_dialog_type_add_media_by_link, media_audio, media_image, media_video} from "@/utils";
 
     const firstPage = 1;
     const pageSize = 20;
@@ -170,6 +170,8 @@
                         return this.$vuetify.locale.t('$vuetify.message_edit_video')
                     case media_image:
                         return this.$vuetify.locale.t('$vuetify.message_edit_image')
+                    case media_audio:
+                        return this.$vuetify.locale.t('$vuetify.message_edit_audio')
                 }
             },
             fromUrl() {

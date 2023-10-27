@@ -1,6 +1,6 @@
 <template>
   <div class="richText">
-    <input id="file-input" type="file" style="display: none;" accept="image/*,video/*" multiple="multiple" />
+    <input id="file-input" type="file" style="display: none;" accept="image/*,video/*,audio/*" multiple="multiple" />
     <div class="richText__content">
       <editor-content :editor="editor" class="editorContent" />
     </div>
@@ -37,6 +37,7 @@ import bus, {
     EMBED_LINK_SET
 } from "./bus/bus";
 import Video from "@/TipTapVideo";
+import Audio from "@/TipTapAudio";
 import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -102,8 +103,14 @@ export default {
     addVideo() {
         this.fileInput.click();
     },
+    addAudio() {
+        this.fileInput.click();
+    },
     setVideo(src, previewUrl) {
         this.editor.chain().focus().setVideo({ src: src, poster: previewUrl }).run();
+    },
+    setAudio(src) {
+        this.editor.chain().focus().setAudio({ src: src }).run();
     },
     setIframe(url) {
       if (url) {
@@ -181,6 +188,7 @@ export default {
           Text,
           imagePluginInstance,
           Video,
+          Audio,
           Italic,
           Bold,
           Strike,

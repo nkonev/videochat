@@ -221,5 +221,6 @@ export default {
     or: " или ",
     request_resend_confirmation_email: "Отправить заново письмо с подтверджением",
     resending_confirmation_email: "Переотправка письма с подтверджением",
-    request_resend_confirmation_email_text: "Не получили письмо ? Вы можете "
+    request_resend_confirmation_email_text: "Не получили письмо ? Вы можете ",
+    message_edit_audio: "Добавить аудио"
 }

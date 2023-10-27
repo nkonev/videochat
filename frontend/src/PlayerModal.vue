@@ -5,7 +5,7 @@
                 <v-card-text class="d-flex justify-center">
                     <video class="video-custom-class" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
                     <img class="image-custom-class" v-if="dto?.canShowAsImage" :src="dto.url"/>
-                    <audio class="audio-control audio-custom-class" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
+                    <audio class="audio-custom-class" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
@@ -68,7 +68,4 @@ export default {
 
 <style lang="stylus" scoped>
 @import "messageBody.styl"
-.audio-control {
-    min-width 600px
-}
 </style>

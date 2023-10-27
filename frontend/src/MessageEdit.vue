@@ -49,6 +49,10 @@
                                   <v-icon :size="getIconSize()">mdi-video</v-icon>
                               </v-btn>
 
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="audioClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_audio')">
+                                  <v-icon :size="getIconSize()">mdi-music</v-icon>
+                              </v-btn>
+
                               <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="embedClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_embed')">
                                   <v-icon :size="getIconSize()">mdi-youtube</v-icon>
                               </v-btn>
@@ -131,7 +135,7 @@
         getAnswerPreviewFields,
         hasLength, isChatRoute,
         link_dialog_type_add_link_to_text,
-        link_dialog_type_add_media_embed,
+        link_dialog_type_add_media_embed, media_audio,
         media_image,
         media_video
     } from "@/utils";
@@ -393,6 +397,16 @@
                     fromDiskCallback: () => this.$refs.tipTapRef.addVideo(),
                     setExistingMediaCallback: this.$refs.tipTapRef.setVideo
                   },
+                );
+            },
+            audioClick() {
+                bus.emit(
+                    OPEN_MESSAGE_EDIT_MEDIA,
+                    {
+                        type: media_audio,
+                        fromDiskCallback: () => this.$refs.tipTapRef.addAudio(),
+                        setExistingMediaCallback: this.$refs.tipTapRef.setAudio
+                    },
                 );
             },
             embedClick() {
