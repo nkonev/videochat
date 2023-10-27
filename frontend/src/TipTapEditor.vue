@@ -28,7 +28,7 @@ import Mention from '@tiptap/extension-mention';
 import Code from '@tiptap/extension-code';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
-import {hasLength, media_image, media_video} from "@/utils";
+import {hasLength, media_audio, media_image, media_video} from "@/utils";
 import bus, {
     FILE_UPLOAD_MODAL_START_UPLOADING,
     PREVIEW_CREATED,
@@ -123,14 +123,18 @@ export default {
                 this.setVideo(dto.url, dto.previewUrl)
             } else if (dto.aType == media_image) {
                 this.setImage(dto.url)
+            } else if (dto.aType == media_audio) {
+                this.setAudio(dto.url)
             }
         }
     },
-    onMediaLinkSet(link, mediaType) {
+    onMediaLinkSet({link, mediaType}) {
         if (mediaType == media_video) {
             this.setVideo(link)
         } else if (mediaType == media_image) {
             this.setImage(link)
+        } else if (mediaType == media_audio) {
+            this.setAudio(link)
         }
     },
     onEmbedLinkSet(link) {

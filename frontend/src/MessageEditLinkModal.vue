@@ -22,7 +22,7 @@ import bus, {EMBED_LINK_SET, MEDIA_LINK_SET, MESSAGE_EDIT_LINK_SET, OPEN_MESSAGE
 import {
     embed,
     link_dialog_type_add_link_to_text,
-    link_dialog_type_add_media_by_link, link_dialog_type_add_media_embed,
+    link_dialog_type_add_media_by_link, link_dialog_type_add_media_embed, media_audio,
     media_image,
     media_video
 } from "@/utils";
@@ -54,7 +54,7 @@ import {
                 if (this.dialogType == link_dialog_type_add_link_to_text) {
                     bus.emit(MESSAGE_EDIT_LINK_SET, this.link);
                 } else if (this.dialogType == link_dialog_type_add_media_by_link) {
-                    bus.emit(MEDIA_LINK_SET, this.link, this.mediaType);
+                    bus.emit(MEDIA_LINK_SET, {link: this.link, mediaType: this.mediaType});
                 } else if (this.dialogType == link_dialog_type_add_media_embed) {
                     bus.emit(EMBED_LINK_SET, this.link);
                 } else {
@@ -71,6 +71,8 @@ import {
                     return this.$vuetify.locale.t('$vuetify.add_media_video_by_link')
                 } else if (this.mediaType == media_image) {
                     return this.$vuetify.locale.t('$vuetify.add_media_image_by_link')
+                } else if (this.mediaType == media_audio) {
+                    return this.$vuetify.locale.t('$vuetify.add_media_audio_by_link')
                 } else if (this.mediaType == embed) {
                     return this.$vuetify.locale.t('$vuetify.add_media_embed')
                 } else {

@@ -222,5 +222,6 @@ export default {
     request_resend_confirmation_email: "Resend confirmation email",
     resending_confirmation_email: "Resending confirmation email",
     request_resend_confirmation_email_text: "Didn't get a email ? You can ",
-    message_edit_audio: "Add an audio"
+    message_edit_audio: "Add an audio",
+    add_media_audio_by_link: "Add an audio by link"
 }
