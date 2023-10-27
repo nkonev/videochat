@@ -673,6 +673,7 @@ export default {
 
         addEventListener("focus", this.onFocus);
 
+        // It's placed after each route in order not to have a race-condition
         this.afterRouteInitialized = once(this.afterRouteInitialized);
         this.$router.afterEach((to, from) => {
             this.afterRouteInitialized()
