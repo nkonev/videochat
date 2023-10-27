@@ -5,6 +5,7 @@
             <v-toolbar
                 dark
                 color="indigo"
+                height="56"
             >
                 <v-btn
                     icon
@@ -29,13 +30,9 @@ import bus, {
   OPEN_EDIT_MESSAGE,
   SET_EDIT_MESSAGE_MODAL,
 } from "./bus/bus";
-    import heightMixin from "@/mixins/heightMixin";
     import MessageEdit from "@/MessageEdit.vue";
 
     export default {
-        mixins: [
-            heightMixin()
-        ],
         data() {
             return {
                 show: false,
@@ -53,7 +50,7 @@ import bus, {
             closeModal() {
                 this.show = false;
                 this.messageId = null;
-            }
+            },
         },
         watch: {
             show(newValue) {
@@ -71,6 +68,13 @@ import bus, {
             },
             isNew() {
                 return !this.messageId;
+            },
+            heightWithoutAppBar() {
+                if (this.isMobile()) {
+                    return 'height: calc(var(--100vvh, 100vh) - 56px)'
+                } else {
+                    return  'height: calc(var(--100vvh, 100vh) - 48px)'
+                }
             },
         },
         mounted() {

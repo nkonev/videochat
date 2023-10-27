@@ -4,12 +4,16 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" href="/favicon.svg" />
+  <link rel="stylesheet" href="/viewport-fix.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to VideoChat</title>
 </head>
 
 <body>
-  <div id="app"></div>
+  <div id="viewport">
+    <div id="app"></div>
+  </div>
+  <script src="/viewport-fix.js"></script>
   <script type="module" src="/src/main.js"></script>
 </body>
 

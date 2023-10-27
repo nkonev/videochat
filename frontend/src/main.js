@@ -23,6 +23,12 @@ import FontAwesomeIcon from "@/plugins/faIcons";
 axios.defaults.xsrfCookieName = "VIDEOCHAT_XSRF_TOKEN";
 axios.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
 
+// we apply it conditionally
+// else the extraneous scrolls will appear on desktop Chrome on any pages
+if (isMobileBrowser()) {
+    new VVP()
+}
+
 const webSplitpanesCss = () => import('splitpanes/dist/splitpanes.css');
 const mobileSplitpanesCss = () => import("@/splitpanesMobile.scss");
 
