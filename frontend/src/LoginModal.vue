@@ -10,6 +10,17 @@
                   <span class="d-flex flex-grow-1">
                       {{ $vuetify.locale.t('$vuetify.login_title') }}
                   </span>
+                  <span class="d-flex">
+                      <v-btn
+                          class="ml-2"
+                          @click="onLanguageClick"
+                          variant="text"
+                          icon
+                          :title="$vuetify.locale.t('$vuetify.language')"
+                      >
+                          <v-icon>mdi-web</v-icon>
+                      </v-btn>
+                  </span>
 
                 </v-card-title>
 
@@ -86,7 +97,7 @@
                     <div class="mt-2">
                     <a :href="registration()" class="colored-link" @click.prevent="onRegisterClick">{{ $vuetify.locale.t('$vuetify.registration') }}</a>
                     <span>{{ $vuetify.locale.t('$vuetify.or') }}</span>
-                    <a href="forgot_password()" class="colored-link" @click.prevent="onForgotPasswordClick">{{ $vuetify.locale.t('$vuetify.forgot_password') }}</a>
+                    <a :href="forgot_password()" class="colored-link" @click.prevent="onForgotPasswordClick">{{ $vuetify.locale.t('$vuetify.forgot_password') }}</a>
                       </div>
                 </v-card-text>
 
@@ -96,7 +107,7 @@
 </template>
 
 <script>
-    import bus, {LOGGED_IN, LOGGED_OUT} from "./bus/bus";
+import bus, {LOGGED_IN, LOGGED_OUT, OPEN_SETTINGS} from "./bus/bus";
     import axios from "axios";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
@@ -239,7 +250,10 @@
             hideAlert() {
                 this.$data.showAlert = false;
                 this.$data.loginError = "";
-            }
+            },
+            onLanguageClick() {
+                bus.emit(OPEN_SETTINGS)
+            },
         }
     }
 </script>
