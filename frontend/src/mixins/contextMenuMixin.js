@@ -1,12 +1,17 @@
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore";
+
 export default () => {
   return {
     data(){
       return {
-        showContextMenu: false,
         menuableItem: null,
         contextMenuX: 0,
         contextMenuY: 0,
       }
+    },
+    computed: {
+        ...mapStores(useChatStore),
     },
     methods: {
       setPosition() {
@@ -38,13 +43,13 @@ export default () => {
         this.menuableItem = menuableItem;
 
         this.$nextTick(() => {
-          this.showContextMenu = true;
+            this.chatStore.contextMenuOpened = true;
         }).then(() => {
-          this.setPosition()
+          this.setPosition();
         })
       },
       onCloseContextMenuBase() {
-        this.showContextMenu = false;
+        this.chatStore.contextMenuOpened = false;
         this.menuableItem = null;
       },
       onUpdate(v) {

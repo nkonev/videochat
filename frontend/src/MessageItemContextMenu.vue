@@ -1,7 +1,7 @@
 <template>
     <v-menu
         :class="className()"
-        :model-value="showContextMenu"
+        :model-value="chatStore.contextMenuOpened"
         :transition="false"
         :open-on-click="false"
         :open-on-focus="false"

@@ -26,6 +26,7 @@ import {
 import vuetify from "@/plugins/vuetify";
 import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL} from "@/bus/bus";
 import {useChatStore} from "@/store/chatStore";
+import {isMobileBrowser} from "@/utils";
 
 const routes = [
     {
@@ -108,6 +109,12 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const chatStore = useChatStore();
+
+  if (isMobileBrowser() && chatStore.contextMenuOpened) {
+      chatStore.contextMenuOpened = false;
+      next(false)
+      return
+  }
 
   if (from.name == videochat_name && to.name != videochat_name && chatStore.leavingVideoAcceptableParam != true) {
     bus.emit(OPEN_SIMPLE_MODAL, {

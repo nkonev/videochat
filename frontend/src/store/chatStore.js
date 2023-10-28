@@ -43,6 +43,7 @@ export const useChatStore = defineStore('chat', {
         showMicrophoneOffButton: false,
         leavingVideoAcceptableParam: false,
         initializingVideoCall: false,
+        contextMenuOpened: false,
     }
   },
   actions: {
