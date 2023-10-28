@@ -20,12 +20,12 @@ public class UserTestService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserTestService.class);
 
     public void clearOauthBindingsInDb(List<String> logins) {
-        final var deleteUsersSql = "DELETE FROM users WHERE username = :username";
+        final var deleteUsersSql = "DELETE FROM user_account WHERE username = :username";
         for (var login: logins) {
             int updated = namedParameterJdbcTemplate.update(deleteUsersSql, Map.of("username", login));
             LOGGER.info("Removed {} {} oauth2 user", updated, login);
         }
-        int upd = namedParameterJdbcTemplate.update("UPDATE users SET vkontakte_id=NULL, facebook_id=NULL, google_id=NULL", Map.of());
+        int upd = namedParameterJdbcTemplate.update("UPDATE user_account SET vkontakte_id=NULL, facebook_id=NULL, google_id=NULL", Map.of());
         LOGGER.info("Updated {} oauth2 users", upd);
     }
 }

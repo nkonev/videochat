@@ -8,7 +8,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
-@Table("users")
+@Table("user_account")
 public record UserAccount(
 
     @Id Long id,

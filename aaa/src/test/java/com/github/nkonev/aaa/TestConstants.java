@@ -6,7 +6,7 @@ package com.github.nkonev.aaa;
 public class TestConstants {
 
     public static final String SQL_URL = "/sql";
-    public static final String SQL_QUERY = "select * from users;";
+    public static final String SQL_QUERY = "select * from fake_users;";
     public static final String USER_DETAILS = "/user-details-vuln";
 
     public static final String USER_ALICE = CommonTestConstants.USER_ALICE;

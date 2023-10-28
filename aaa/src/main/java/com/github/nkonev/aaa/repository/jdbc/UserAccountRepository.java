@@ -19,22 +19,22 @@ public interface UserAccountRepository extends PagingAndSortingRepository<UserAc
     Optional<UserAccount> findByEmail(String email);
 
     // https://jira.spring.io/projects/DATAJDBC/issues/DATAJDBC-101?filter=allopenissues
-    @Query("select * from users u where u.username ilike :userName order by id limit :limit offset :offset")
+    @Query("select * from user_account u where u.username ilike :userName order by id limit :limit offset :offset")
     List<UserAccount> findByUsernameContainsIgnoreCase(@Param("limit")long limit, @Param("offset")long offset, @Param("userName")String login);
 
-    @Query("select count(id) from users u where u.username ilike :userName")
+    @Query("select count(id) from user_account u where u.username ilike :userName")
     long findByUsernameContainsIgnoreCaseCount(@Param("userName")String searchString);
 
-    @Query("select * from users u where u.username ilike :userName and id not in (:excludingUserIds) order by id limit :limit offset :offset")
+    @Query("select * from user_account u where u.username ilike :userName and id not in (:excludingUserIds) order by id limit :limit offset :offset")
     List<UserAccount> findByUsernameContainsIgnoreCaseAndIdNotIn(@Param("limit")int pageSize, @Param("offset")long offset, @Param("userName") String forDbSearch, @Param("excludingUserIds")List<Long> userIds);
 
-    @Query("select count(id) from users u where u.username ilike :userName and id not in (:excludingUserIds)")
+    @Query("select count(id) from user_account u where u.username ilike :userName and id not in (:excludingUserIds)")
     long findByUsernameContainsIgnoreCaseAndIdNotInCount(@Param("userName")String searchString, @Param("excludingUserIds")List<Long> userIds);
 
-    @Query("select * from users u where u.username ilike :userName and id in (:includingUserIds) order by id limit :limit offset :offset")
+    @Query("select * from user_account u where u.username ilike :userName and id in (:includingUserIds) order by id limit :limit offset :offset")
     List<UserAccount> findByUsernameContainsIgnoreCaseAndIdIn(@Param("limit")int pageSize, @Param("offset")long offset, @Param("userName") String forDbSearch, @Param("includingUserIds")List<Long> userIds);
 
-    @Query("select count(id) from users u where u.username ilike :userName and id in (:includingUserIds)")
+    @Query("select count(id) from user_account u where u.username ilike :userName and id in (:includingUserIds)")
     long findByUsernameContainsIgnoreCaseAndIdInCount(@Param("userName")String searchString, @Param("includingUserIds")List<Long> userIds);
 
     Optional<UserAccount> findByOauth2IdentifiersFacebookId(String facebookId);
@@ -46,7 +46,7 @@ public interface UserAccountRepository extends PagingAndSortingRepository<UserAc
     Optional<UserAccount> findByOauth2IdentifiersKeycloakId(String keycloakId);
 
     @Modifying
-    @Query("update users set last_login_date_time = :newLastLoginDateTime where username = :userName")
+    @Query("update user_account set last_login_date_time = :newLastLoginDateTime where username = :userName")
     void updateLastLogin(@Param("userName") String username, @Param("newLastLoginDateTime") LocalDateTime localDateTime);
 
     List<UserAccount> findByIdInOrderById(List<Long> userIds);
@@ -57,7 +57,7 @@ public interface UserAccountRepository extends PagingAndSortingRepository<UserAc
 		    u.id as uid,
 			ROW_NUMBER () OVER() AS nrow
 		FROM
-			users u
+			user_account u
 		) al WHERE al.uid = :id
     """)
     int getUserRowNumber(@Param("id") long id);
