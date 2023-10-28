@@ -102,12 +102,28 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 		}
 
 		var leftMessageId, rightMessageId int64
-		leftLimitRes := co.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit)
+		var searchStringPercents = ""
+		if searchString != "" {
+			searchStringPercents = "%" + searchString + "%"
+		}
+
+		var leftLimitRes *sql.Row
+		if searchString != "" {
+			leftLimitRes = co.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 AND strip_tags(m.text) ILIKE $3 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit, searchStringPercents)
+		} else {
+			leftLimitRes = co.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit)
+		}
 		err := leftLimitRes.Scan(&leftMessageId)
 		if err != nil {
 			return nil, tracerr.Wrap(err)
 		}
-		rightLimitRes := co.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT m.id FROM message_chat_%v m WHERE id >= $1 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit)
+
+		var rightLimitRes *sql.Row
+		if searchString != "" {
+			rightLimitRes = co.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT m.id FROM message_chat_%v m WHERE id >= $1 AND strip_tags(m.text) ILIKE $3 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit, searchStringPercents)
+		} else {
+			rightLimitRes = co.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT m.id FROM message_chat_%v m WHERE id >= $1 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit)
+		}
 		err = rightLimitRes.Scan(&rightMessageId)
 		if err != nil {
 			return nil, tracerr.Wrap(err)
@@ -120,7 +136,6 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 
 		var rows *sql.Rows
 		if searchString != "" {
-			searchStringPercents := "%" + searchString + "%"
 			rows, err = co.Query(fmt.Sprintf(`%v
 					WHERE 
 							m.id >= $2 
