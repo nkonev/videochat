@@ -6,6 +6,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.exception.PasswordResetTokenNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import com.github.nkonev.aaa.security.SecurityUtils;
 import com.github.nkonev.aaa.services.AsyncEmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ import java.util.UUID;
 
 @RestController
 @Transactional
-public class PasswordResetController extends WithAuthentication {
+public class PasswordResetController {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
@@ -102,7 +103,7 @@ public class PasswordResetController extends WithAuthentication {
 
         userAccount = userAccount.withPassword(passwordEncoder.encode(passwordResetDto.newPassword()));
         userAccount = userAccountRepository.save(userAccount);
-        authenticate(userAccount);
+        SecurityUtils.authenticate(userAccount);
     }
 
 }

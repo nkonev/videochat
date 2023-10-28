@@ -8,6 +8,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
+import com.github.nkonev.aaa.security.SecurityUtils;
 import com.github.nkonev.aaa.services.AsyncEmailService;
 import com.github.nkonev.aaa.services.UserService;
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ import java.util.UUID;
 
 @Controller
 @Transactional
-public class RegistrationController extends WithAuthentication {
+public class RegistrationController {
     @Autowired
     private UserAccountRepository userAccountRepository;
 
@@ -110,7 +111,7 @@ public class RegistrationController extends WithAuthentication {
         userAccount = userAccountRepository.save(userAccount);
 
         userConfirmationTokenRepository.deleteById(stringUuid);
-        authenticate(userAccount);
+        SecurityUtils.authenticate(userAccount);
 
         return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
     }
