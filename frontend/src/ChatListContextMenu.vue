@@ -9,6 +9,7 @@
         :open-delay="0"
         :close-delay="0"
         :close-on-back="false"
+        @update:modelValue="onUpdate"
     >
         <v-list>
             <v-list-item

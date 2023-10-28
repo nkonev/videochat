@@ -31,7 +31,6 @@ export default () => {
         }
       },
       onShowContextMenuBase(e, menuableItem) {
-        this.showContextMenu = false;
         e.preventDefault();
         this.contextMenuX = e.clientX;
         this.contextMenuY = e.clientY;
@@ -47,6 +46,11 @@ export default () => {
       onCloseContextMenuBase() {
         this.showContextMenu = false;
         this.menuableItem = null;
+      },
+      onUpdate(v) {
+        if (!v) {
+            this.onCloseContextMenu();
+        }
       },
     }
   }
