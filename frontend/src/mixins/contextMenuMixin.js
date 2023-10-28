@@ -21,6 +21,13 @@ export default () => {
             const newTop = this.contextMenuY + bottom - 8;
             element.style.top = newTop + "px";
           }
+
+          const width = Number(getComputedStyle(element).width.replace("px", ''));
+          if (width < 260) {
+              const delta = Math.abs(260 - width);
+              const newLeft = this.contextMenuX - delta - 8;
+              element.style.left = newLeft + "px";
+          }
         }
       },
       onShowContextMenuBase(e, menuableItem) {
