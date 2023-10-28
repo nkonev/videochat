@@ -118,16 +118,31 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			order = "desc"
 		}
 
-		rows, err := co.Query(fmt.Sprintf(`%v
-		WHERE 
-			    m.id >= $2 
-			AND m.id <= $3 
-		ORDER BY m.id %s 
-		LIMIT $1`, selectMessageClause(chatId), order),
-			limit, leftMessageId, rightMessageId)
-
-		if err != nil {
-			return nil, tracerr.Wrap(err)
+		var rows *sql.Rows
+		if searchString != "" {
+			searchStringPercents := "%" + searchString + "%"
+			rows, err = co.Query(fmt.Sprintf(`%v
+					WHERE 
+							m.id >= $2 
+						AND m.id <= $3 
+						AND strip_tags(m.text) ILIKE $4
+					ORDER BY m.id %s 
+					LIMIT $1`, selectMessageClause(chatId), order),
+				limit, leftMessageId, rightMessageId, searchStringPercents)
+			if err != nil {
+				return nil, tracerr.Wrap(err)
+			}
+		} else {
+			rows, err = co.Query(fmt.Sprintf(`%v
+					WHERE 
+							m.id >= $2 
+						AND m.id <= $3 
+					ORDER BY m.id %s 
+					LIMIT $1`, selectMessageClause(chatId), order),
+				limit, leftMessageId, rightMessageId)
+			if err != nil {
+				return nil, tracerr.Wrap(err)
+			}
 		}
 		defer rows.Close()
 		list := make([]*Message, 0)

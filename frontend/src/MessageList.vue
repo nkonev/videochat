@@ -189,9 +189,9 @@
           return directionTop
         },
         async onFirstLoad() {
-            if (this.highlightMessageId && !hasLength(this.searchString)) {
+            if (this.highlightMessageId) {
               await this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
-            } else if (this.loadedHash && !hasLength(this.searchString)) {
+            } else if (this.loadedHash) {
               await this.scrollTo(messageIdHashPrefix + this.loadedHash);
             } else {
               await this.scrollDown(); // we need it to prevent browser's scrolling
@@ -209,7 +209,7 @@
           this.chatStore.incrementProgressCount();
           let startingFromItemId;
           let hasHash;
-          if (this.hasInitialHash && !hasLength(this.searchString)) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
+          if (this.hasInitialHash) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
             // how to check:
             // 1. click on hash
             // 2. reload page
@@ -217,7 +217,7 @@
             // 4. It is going to invoke this load method which will use cashed and reset hasInitialHash = false
             startingFromItemId = this.highlightMessageId;
             hasHash = this.hasInitialHash;
-          } else if (this.loadedHash && !hasLength(this.searchString)) {
+          } else if (this.loadedHash) {
             startingFromItemId = this.loadedHash;
             hasHash = !!this.loadedHash;
           } else {
