@@ -132,6 +132,7 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			if err != nil {
 				return nil, tracerr.Wrap(err)
 			}
+			defer rows.Close()
 		} else {
 			rows, err = co.Query(fmt.Sprintf(`%v
 					WHERE 
@@ -143,8 +144,8 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			if err != nil {
 				return nil, tracerr.Wrap(err)
 			}
+			defer rows.Close()
 		}
-		defer rows.Close()
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
@@ -176,6 +177,7 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			if err != nil {
 				return nil, tracerr.Wrap(err)
 			}
+			defer rows.Close()
 		} else {
 			rows, err = co.Query(fmt.Sprintf(`%v
 			WHERE 
@@ -186,9 +188,9 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			if err != nil {
 				return nil, tracerr.Wrap(err)
 			}
+			defer rows.Close()
 		}
 
-		defer rows.Close()
 		list := make([]*Message, 0)
 		for rows.Next() {
 			message := Message{ChatId: chatId}
