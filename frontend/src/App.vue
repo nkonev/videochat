@@ -80,17 +80,16 @@
         </template>
 
         <template v-if="chatStore.isShowSearch">
-          <v-btn v-if="showSearchButton && isMobile()" icon :title="searchName" @click="onOpenSearch()">
-            <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
-          </v-btn>
-
-          <v-card v-if="!showSearchButton || !isMobile()" variant="plain" :class="isMobile() ? 'search-card-mobile' : 'search-card'">
-            <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true" :label="searchName()">
-              <template v-slot:append-inner>
-                <v-btn icon density="compact" @click.prevent="switchSearchType()" :disabled="!canSwitchSearchType()"><v-icon class="search-icon">{{ searchIcon }}</v-icon></v-btn>
-              </template>
-            </v-text-field>
-          </v-card>
+          <CollapsedSearch :provider="{
+              getModelValue: this.getModelValue,
+              setModelValue: this.setModelValue,
+              getShowSearchButton: this.getShowSearchButton,
+              setShowSearchButton: this.setShowSearchButton,
+              searchName: this.searchName,
+              switchSearchType: this.switchSearchType,
+              canSwitchSearchType: this.canSwitchSearchType,
+              searchIcon: this.searchIcon,
+          }"/>
         </template>
       </v-app-bar>
 
@@ -238,6 +237,7 @@ import {prefix} from "@/router/routes"
 import VideoAddNewSourceModal from "@/VideoAddNewSourceModal.vue";
 import MessageEdit from "@/MessageEdit.vue";
 import MessageEditModal from "@/MessageEditModal.vue";
+import CollapsedSearch from "@/CollapsedSearch.vue";
 
 const reactOnAnswerThreshold = 4 * 1000; // ms
 const audio = new Audio(`${prefix}/call.mp3`);
@@ -287,24 +287,20 @@ export default {
         showNotificationBadge() {
             return this.notificationsCount != 0 && !this.chatStore.showDrawer
         },
-        searchIcon() {
-          if (this.chatStore.searchType == SEARCH_MODE_CHATS) {
-            return 'mdi-forum'
-          } else if (this.chatStore.searchType == SEARCH_MODE_MESSAGES) {
-            return 'mdi-message-text-outline'
-          } else if (this.chatStore.searchType == SEARCH_MODE_USERS) {
-            return 'mdi-account-group'
-          }
-        },
         shouldShowFileUpload() {
             return !!this.chatStore.fileUploadingQueue.length
         },
-        hasSearchString() {
-          return hasLength(this.searchStringFacade)
-        },
-
     },
     methods: {
+        searchIcon() {
+            if (this.chatStore.searchType == SEARCH_MODE_CHATS) {
+                return 'mdi-forum'
+            } else if (this.chatStore.searchType == SEARCH_MODE_MESSAGES) {
+                return 'mdi-message-text-outline'
+            } else if (this.chatStore.searchType == SEARCH_MODE_USERS) {
+                return 'mdi-account-group'
+            }
+        },
         getStore() {
             return this.chatStore
         },
@@ -626,16 +622,25 @@ export default {
         isVideoRoute() {
           return this.$route.name == videochat_name
         },
-        onOpenSearch() {
-          this.showSearchButton = false;
-        },
         getIconSize() {
             if (this.isMobile()) {
               return 'x-large'
             } else {
               return undefined
             }
-        }
+        },
+        getModelValue() {
+            return this.searchStringFacade
+        },
+        setModelValue(v) {
+            this.searchStringFacade = v
+        },
+        getShowSearchButton() {
+            return this.showSearchButton
+        },
+        setShowSearchButton(v) {
+            this.showSearchButton = v
+        },
     },
     components: {
       MessageEdit,
@@ -657,6 +662,7 @@ export default {
         PermissionsWarningModal,
         VideoAddNewSourceModal,
         MessageEditModal,
+        CollapsedSearch,
     },
     created() {
         createGraphQlClient();
@@ -756,17 +762,6 @@ export default {
   width: auto;
   height: auto;
   cursor: pointer
-}
-
-.search-card {
-  min-width: 330px;
-  margin-left: 1.2em;
-  margin-right: 2px;
-}
-.search-card-mobile {
-  width: 100%;
-  margin-left: 1.2em;
-  margin-right: 0.4em;
 }
 
 .v-card {
