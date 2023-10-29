@@ -112,18 +112,18 @@
 <script>
     import axios from "axios";
     import bus, {
-        CLOSE_EDIT_MESSAGE, LOAD_FILES_COUNT,
-        MESSAGE_EDIT_COLOR_SET,
-        MESSAGE_EDIT_LINK_SET,
-        OPEN_FILE_UPLOAD_MODAL,
-        OPEN_MESSAGE_EDIT_COLOR,
-        OPEN_MESSAGE_EDIT_LINK,
-        OPEN_MESSAGE_EDIT_MEDIA,
-        OPEN_MESSAGE_EDIT_SMILEY,
-        OPEN_VIEW_FILES_DIALOG,
-        PROFILE_SET,
-        SET_EDIT_MESSAGE, SET_EDIT_MESSAGE_MODAL,
-        SET_FILE_ITEM_UUID,
+      CLOSE_EDIT_MESSAGE, LOAD_FILES_COUNT,
+      MESSAGE_EDIT_COLOR_SET,
+      MESSAGE_EDIT_LINK_SET, MESSAGE_EDITING_BIG_TEXT_START, MESSAGE_EDITING_END,
+      OPEN_FILE_UPLOAD_MODAL,
+      OPEN_MESSAGE_EDIT_COLOR,
+      OPEN_MESSAGE_EDIT_LINK,
+      OPEN_MESSAGE_EDIT_MEDIA,
+      OPEN_MESSAGE_EDIT_SMILEY,
+      OPEN_VIEW_FILES_DIALOG,
+      PROFILE_SET,
+      SET_EDIT_MESSAGE, SET_EDIT_MESSAGE_MODAL,
+      SET_FILE_ITEM_UUID,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -191,6 +191,8 @@
               this.resetAnswer();
               this.fileCount = null;
               this.notifyAboutBroadcast(true);
+
+              bus.emit(MESSAGE_EDITING_END)
             },
             messageTextIsPresent(text) {
                 return text && text !== ""
@@ -278,6 +280,7 @@
                 } else {
                     this.notifyAboutTyping(val);
                 }
+                this.emitExpandEventIfNeed();
             },
             getBtnWidth() {
                 if (this.isMobile()) {
@@ -459,6 +462,15 @@
               }).then(()=>{
                 this.$refs.tipTapRef.setCursorToEnd()
               })
+              this.emitExpandEventIfNeed();
+            },
+            emitExpandEventIfNeed() {
+              if (hasLength(this.editMessageDto?.text)) {
+                const numRows = this.editMessageDto.text.split("<p>").length - 1;
+                if (numRows > 1) {
+                  bus.emit(MESSAGE_EDITING_BIG_TEXT_START);
+                }
+              }
             },
             saveToStore() {
                 setStoredChatEditMessageDto(this.editMessageDto, this.chatId);

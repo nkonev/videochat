@@ -6,12 +6,12 @@
       <pane>
         <splitpanes class="default-theme" :dbl-click-splitter="false">
           <pane>
-            <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal>
-              <pane v-if="videoIsOnTop() && isAllowedVideo()" min-size="15" size="30">
+            <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
+              <pane v-if="shouldShowVideoOnTop()" min-size="15" :size="onTopVideoSize">
                 <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()" />
               </pane>
 
-              <pane style="width: 100%" :class="isMobile() ? 'message-pane-mobile' : ''">
+              <pane style="width: 100%" :class="isMobile() ? 'message-pane-mobile' : ''" :size="messageListSize">
                   <v-tooltip
                     v-if="broadcastMessage"
                     :model-value="showTooltip"
@@ -37,7 +37,7 @@
 
                   <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
               </pane>
-              <pane size="20" class="message-edit-pane" v-if="!isMobile()">
+              <pane class="message-edit-pane" v-if="!isMobile()" :size="messageEditSize">
                 <MessageEdit :chatId="this.chatId"/>
               </pane>
             </splitpanes>
@@ -68,7 +68,7 @@ import bus, {
   MESSAGE_ADD,
   MESSAGE_BROADCAST,
   MESSAGE_DELETED,
-  MESSAGE_EDITED, OPEN_EDIT_MESSAGE,
+  MESSAGE_EDITED, MESSAGE_EDITING_BIG_TEXT_START, MESSAGE_EDITING_END, OPEN_EDIT_MESSAGE,
   PARTICIPANT_ADDED,
   PARTICIPANT_DELETED,
   PARTICIPANT_EDITED,
@@ -97,6 +97,9 @@ const getChatEventsData = (message) => {
 
 let writingUsersTimerId;
 
+const MESSAGE_EDIT_PANE_SIZE_INITIAL = 20; // percents
+const MESSAGE_EDIT_PANE_SIZE_EXPANDED = 60; // percents
+const ONTOP_VIDEO_PANE_SIZE = 30;
 
 export default {
   mixins: [
@@ -112,6 +115,10 @@ export default {
       writingUsers: [],
       showTooltip: true,
       broadcastMessage: null,
+      messageEditSize: MESSAGE_EDIT_PANE_SIZE_INITIAL, // percents
+      prevMessageEditSize: null, // percents
+      onTopVideoSize: ONTOP_VIDEO_PANE_SIZE,
+      messageListSize: null,
     }
   },
   components: {
@@ -443,6 +450,52 @@ export default {
     openNewMessageDialog() { // on mobile OPEN_EDIT_MESSAGE with the null argument
       bus.emit(OPEN_EDIT_MESSAGE, null);
     },
+    onEditingBigTextStart() {
+      if (!this.prevMessageEditSize) {
+        this.prevMessageEditSize = this.messageEditSize;
+        this.messageEditSize = MESSAGE_EDIT_PANE_SIZE_EXPANDED;
+        this.$nextTick(()=>{
+          this.messageListSize = this.shouldShowVideoOnTop() ? (100 - this.messageEditSize - this.onTopVideoSize) : (100 - this.messageEditSize);
+        })
+      }
+    },
+    onEditingEnd() {
+      if (this.prevMessageEditSize) {
+        this.messageEditSize = this.prevMessageEditSize;
+        this.prevMessageEditSize = null;
+        this.$nextTick(()=>{
+          this.messageListSize = this.shouldShowVideoOnTop() ? (100 - this.messageEditSize - this.onTopVideoSize) : (100 - this.messageEditSize);
+        })
+      }
+    },
+    onPanelResized(e) {
+      //console.log(">>> onPanelResized", e)
+      const pane = e[e.length - 1];
+      this.messageEditSize = pane.size;
+    },
+    shouldShowVideoOnTop() {
+        return this.videoIsOnTop() && this.isAllowedVideo()
+    },
+    onPanelAdd(e) {
+      const tmp = this.messageEditSize;
+      this.messageEditSize = null;
+      this.$nextTick(() => {
+        this.messageEditSize = tmp;
+        //console.log(">>> onPanelAdd", e, this.messageEditSize);
+      }).then(()=>{
+        this.messageListSize = 100 - tmp - this.onTopVideoSize;
+      })
+    },
+    onPanelRemove(e) {
+      const tmp = this.messageEditSize;
+      this.messageEditSize = null;
+      this.$nextTick(() => {
+        this.messageEditSize = tmp;
+        //console.log(">>> onPanelRemove", e, this.messageEditSize);
+      }).then(()=>{
+        this.messageListSize = 100 - tmp;
+      })
+    },
   },
   watch: {
     '$route': {
@@ -486,6 +539,8 @@ export default {
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+    bus.on(MESSAGE_EDITING_BIG_TEXT_START, this.onEditingBigTextStart);
+    bus.on(MESSAGE_EDITING_END, this.onEditingEnd);
 
     writingUsersTimerId = setInterval(()=>{
       const curr = + new Date();
@@ -511,6 +566,8 @@ export default {
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+    bus.off(MESSAGE_EDITING_BIG_TEXT_START, this.onEditingBigTextStart);
+    bus.on(MESSAGE_EDITING_END, this.onEditingEnd);
 
     this.chatStore.title = null;
     setTitle(null);

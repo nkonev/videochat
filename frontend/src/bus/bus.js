@@ -103,3 +103,6 @@ export const SET_LOCAL_MICROPHONE_MUTED = "setLocalMicrophoneMuted";
 
 export const REFRESH_ON_WEBSOCKET_RESTORED = "refreshOnWsRestored";
 export const OPEN_PERMISSIONS_WARNING_MODAL = "openPermissionsWarningModal";
+
+export const MESSAGE_EDITING_BIG_TEXT_START = "messageEditingBigTextStart";
+export const MESSAGE_EDITING_END = "messageEditingEnd";
