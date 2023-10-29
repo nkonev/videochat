@@ -229,15 +229,17 @@ export default {
       onUpdate: () => this.onUpdateContent(),
     });
 
-    this.fileInput = document.getElementById('file-input');
-    // triggered when we upload image or video after this.fileInput.click()
-    this.fileInput.onchange = e => {
-      this.correlationId = uuidv4();
-      if (e.target.files.length) {
-          const files = Array.from(e.target.files);
-          embedUploadFunction(this.chatId, files, this.correlationId)
-      }
-    }
+    this.$nextTick(()=>{
+        this.fileInput = document.getElementById('file-input');
+        // triggered when we upload image or video after this.fileInput.click()
+        this.fileInput.onchange = e => {
+          this.correlationId = uuidv4();
+          if (e.target.files.length) {
+              const files = Array.from(e.target.files);
+              embedUploadFunction(this.chatId, files, this.correlationId)
+          }
+        }
+    })
   },
 
   beforeUnmount() {
