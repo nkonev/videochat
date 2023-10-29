@@ -451,7 +451,7 @@ export default {
       bus.emit(OPEN_EDIT_MESSAGE, null);
     },
     onEditingBigTextStart() {
-      if (!this.prevMessageEditSize) {
+      if (!this.prevMessageEditSize && !this.isMobile()) {
         this.prevMessageEditSize = this.messageEditSize;
         this.messageEditSize = MESSAGE_EDIT_PANE_SIZE_EXPANDED;
         this.$nextTick(()=>{
@@ -460,7 +460,7 @@ export default {
       }
     },
     onEditingEnd() {
-      if (this.prevMessageEditSize) {
+      if (this.prevMessageEditSize && !this.isMobile()) {
         this.messageEditSize = this.prevMessageEditSize;
         this.prevMessageEditSize = null;
         this.$nextTick(()=>{
@@ -469,32 +469,38 @@ export default {
       }
     },
     onPanelResized(e) {
-      //console.log(">>> onPanelResized", e)
-      const pane = e[e.length - 1];
-      this.messageEditSize = pane.size;
+      if (!this.isMobile()) {
+        //console.log(">>> onPanelResized", e)
+        const pane = e[e.length - 1];
+        this.messageEditSize = pane.size;
+      }
     },
     shouldShowVideoOnTop() {
         return this.videoIsOnTop() && this.isAllowedVideo()
     },
     onPanelAdd(e) {
-      const tmp = this.messageEditSize;
-      this.messageEditSize = null;
-      this.$nextTick(() => {
-        this.messageEditSize = tmp;
-        //console.log(">>> onPanelAdd", e, this.messageEditSize);
-      }).then(()=>{
-        this.messageListSize = 100 - tmp - this.onTopVideoSize;
-      })
+      if (!this.isMobile()) {
+        const tmp = this.messageEditSize;
+        this.messageEditSize = null;
+        this.$nextTick(() => {
+          this.messageEditSize = tmp;
+          //console.log(">>> onPanelAdd", e, this.messageEditSize);
+        }).then(() => {
+          this.messageListSize = 100 - tmp - this.onTopVideoSize;
+        })
+      }
     },
     onPanelRemove(e) {
-      const tmp = this.messageEditSize;
-      this.messageEditSize = null;
-      this.$nextTick(() => {
-        this.messageEditSize = tmp;
-        //console.log(">>> onPanelRemove", e, this.messageEditSize);
-      }).then(()=>{
-        this.messageListSize = 100 - tmp;
-      })
+      if (!this.isMobile()) {
+        const tmp = this.messageEditSize;
+        this.messageEditSize = null;
+        this.$nextTick(() => {
+          this.messageEditSize = tmp;
+          //console.log(">>> onPanelRemove", e, this.messageEditSize);
+        }).then(() => {
+          this.messageListSize = 100 - tmp;
+        })
+      }
     },
   },
   watch: {
