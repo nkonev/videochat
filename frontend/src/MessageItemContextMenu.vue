@@ -40,7 +40,7 @@ import contextMenuMixin from "@/mixins/contextMenuMixin";
 export default {
     mixins: [
       searchString(SEARCH_MODE_MESSAGES),
-      contextMenuMixin('message'),
+      contextMenuMixin(),
     ],
     props: ['canResend', 'isBlog'],
     data(){

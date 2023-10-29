@@ -1,49 +1,11 @@
-import {deepCopy, isMobileBrowser} from "@/utils";
-
-export default (name) => {
-  const qName = name + "contextMenu"
+export default () => {
   return {
     data(){
       return {
-        showContextMenuObj: false,
+        showContextMenu: false,
         menuableItem: null,
         contextMenuX: 0,
         contextMenuY: 0,
-      }
-    },
-    computed: {
-      showContextMenu: {
-          get() {
-              if (isMobileBrowser()) {
-                  return !!this.$route.query[qName]
-              } else {
-                  return this.showContextMenuObj
-              }
-          },
-          set(v) {
-              if (isMobileBrowser()) {
-                  if (v) {
-                      this.$router.push({
-                          query: {
-                              [qName]: true
-                          }
-                      }).then(()=>{
-                          this.setPosition()
-                      })
-                  } else {
-                      const prev = deepCopy(this.$route.query);
-                      delete prev[qName];
-                      this.$router.push({query: prev});
-                  }
-              } else {
-                  this.showContextMenuObj = v;
-                  if (v) {
-                      this.$nextTick(()=>{
-                          this.setPosition()
-                      })
-                  }
-              }
-          }
       }
     },
     methods: {
@@ -77,6 +39,8 @@ export default (name) => {
 
         this.$nextTick(() => {
           this.showContextMenu = true;
+        }).then(() => {
+          this.setPosition()
         })
       },
       onCloseContextMenuBase() {
