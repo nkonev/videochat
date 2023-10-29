@@ -82,9 +82,9 @@
                                 <v-img v-if="hasAva"
                                        :src="ava"
                                        :aspect-ratio="16/9"
-                                       min-width="600"
-                                       min-height="600"
-                                       max-height="800"
+                                       :min-width="isMobile() ? null : 600"
+                                       :min-height="isMobile() ? null : 600"
+                                       :max-height="isMobile() ? null : 800"
                                 >
                                 </v-img>
                             </v-container>
@@ -92,28 +92,30 @@
                     </v-form>
                 </v-card-text>
 
-                <v-card-actions>
-                  <template v-if="!isNew">
-                    <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromChat()">
-                      <template v-slot:prepend>
-                        <v-icon>mdi-image-remove</v-icon>
-                      </template>
-                      <template v-slot:default>
-                        {{ $vuetify.locale.t('$vuetify.remove_avatar_btn') }}
-                      </template>
-                    </v-btn>
-                    <v-btn v-if="!hasAva" variant="outlined" @click="openAvatarDialog()">
-                      <template v-slot:prepend>
-                        <v-icon>mdi-image-outline</v-icon>
-                      </template>
-                      <template v-slot:default>
-                        {{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}
-                      </template>
-                    </v-btn>
-                  </template>
+                <v-card-actions class="d-flex flex-wrap flex-row">
+                    <template v-if="!isNew">
+                      <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromChat()">
+                        <template v-slot:prepend>
+                          <v-icon>mdi-image-remove</v-icon>
+                        </template>
+                        <template v-slot:default>
+                          {{ $vuetify.locale.t('$vuetify.remove_avatar_btn') }}
+                        </template>
+                      </v-btn>
+                      <v-btn v-if="!hasAva" variant="outlined" @click="openAvatarDialog()">
+                        <template v-slot:prepend>
+                          <v-icon>mdi-image-outline</v-icon>
+                        </template>
+                        <template v-slot:default>
+                          {{ $vuetify.locale.t('$vuetify.choose_avatar_btn') }}
+                        </template>
+                      </v-btn>
+                    </template>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" variant="flat" @click="saveChat" id="test-chat-save-btn">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
-                    <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <div :class="isMobile() ? 'mt-2' : ''">
+                      <v-btn color="primary" variant="flat" @click="saveChat" id="test-chat-save-btn">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
+                      <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    </div>
                 </v-card-actions>
             </v-card>
         </v-dialog>
