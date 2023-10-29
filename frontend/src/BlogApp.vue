@@ -23,7 +23,6 @@
               getShowSearchButton: this.getShowSearchButton,
               setShowSearchButton: this.setShowSearchButton,
               searchName: this.searchName,
-              searchIcon: this.searchIcon,
           }"/>
       </template>
 
@@ -53,7 +52,9 @@ import {useBlogStore} from "@/store/blogStore";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 
 export default {
-  components: {CollapsedSearch},
+  components: {
+      CollapsedSearch
+  },
   mixins: [
       searchStringFacade(),
   ],
@@ -89,13 +90,13 @@ export default {
       }
       return ret
     },
-    searchName() {
-        if (this.blogStore.searchType == SEARCH_MODE_POSTS) {
-            return this.$vuetify.locale.t('$vuetify.search_by_posts')
-        }
-    },
     getDensity() {
           return this.isMobile() ? "comfortable" : "compact";
+    },
+    searchName() {
+      if (this.blogStore.searchType == SEARCH_MODE_POSTS) {
+          return this.$vuetify.locale.t('$vuetify.search_by_posts')
+      }
     },
     getModelValue() {
       return this.searchStringFacade
@@ -108,11 +109,6 @@ export default {
     },
     setShowSearchButton(v) {
       this.showSearchButton = v
-    },
-    searchIcon() {
-      if (this.blogStore.searchType == SEARCH_MODE_POSTS) {
-          return 'mdi-forum'
-      }
     },
   },
   computed: {

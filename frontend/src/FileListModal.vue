@@ -3,8 +3,17 @@
         <v-dialog v-model="show" max-width="800" min-height="400" scrollable :persistent="hasSearchString()">
             <v-card>
                 <v-card-title class="d-flex align-center ml-2">
-                    {{ fileItemUuid ? $vuetify.locale.t('$vuetify.attached_message_files') : $vuetify.locale.t('$vuetify.attached_chat_files') }}
-                    <v-text-field class="ml-4" variant="outlined" density="compact" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.locale.t('$vuetify.search_by_files')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+                    <template v-if="showSearchButton">
+                        {{ fileItemUuid ? $vuetify.locale.t('$vuetify.attached_message_files') : $vuetify.locale.t('$vuetify.attached_chat_files') }}
+                    </template>
+                    <CollapsedSearch :provider="{
+                      getModelValue: this.getModelValue,
+                      setModelValue: this.setModelValue,
+                      getShowSearchButton: this.getShowSearchButton,
+                      setShowSearchButton: this.setShowSearchButton,
+                      searchName: this.searchName,
+                  }"/>
+
                 </v-card-title>
 
                 <v-card-text class="py-2">
@@ -114,7 +123,6 @@ import bus, {
 import axios from "axios";
 import {
     getHumanReadableDate,
-    replaceInArray,
     formatSize,
     hasLength,
     findIndex,
@@ -123,6 +131,7 @@ import {
 import debounce from "lodash/debounce";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
+import CollapsedSearch from "@/CollapsedSearch.vue";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -140,6 +149,7 @@ export default {
             messageEditing: false,
             page: firstPage,
             searchString: null,
+            showSearchButton: true,
         }
     },
     computed: {
@@ -262,9 +272,6 @@ export default {
         hasSearchString() {
             return hasLength(this.searchString)
         },
-        resetInput() {
-            this.searchString = null;
-        },
         onPreviewCreated(dto) {
             if (!this.show) {
                 return
@@ -323,6 +330,21 @@ export default {
         formattedSize(size) {
             return formatSize(size)
         },
+        getModelValue() {
+            return this.searchString
+        },
+        setModelValue(v) {
+            this.searchString = v
+        },
+        getShowSearchButton() {
+            return this.showSearchButton
+        },
+        setShowSearchButton(v) {
+            this.showSearchButton = v
+        },
+        searchName() {
+            return this.$vuetify.locale.t('$vuetify.search_by_files')
+        }
     },
     watch: {
         page(newValue) {
@@ -340,6 +362,9 @@ export default {
         searchString(searchString) {
             this.doSearch();
         },
+    },
+    components: {
+        CollapsedSearch
     },
     created() {
         this.doSearch = debounce(this.doSearch, 700);
