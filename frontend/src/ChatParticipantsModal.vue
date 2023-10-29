@@ -363,6 +363,7 @@
             },
             doSearch(){
                 if (this.show) {
+                    this.page = firstPage;
                     this.loadParticipantsData();
                 }
             },
