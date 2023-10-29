@@ -355,8 +355,8 @@ export default {
         },
         performMarking() {
           this.$nextTick(() => {
+            this.markInstance.unmark();
             if (hasLength(this.searchString)) {
-              this.markInstance.unmark();
               this.markInstance.mark(this.searchString);
             }
           })

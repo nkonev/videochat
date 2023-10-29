@@ -7,7 +7,7 @@
                     <v-text-field class="ml-4" variant="outlined" density="compact" prepend-icon="mdi-magnify" hide-details single-line v-model="userSearchString" :label="$vuetify.locale.t('$vuetify.search_by_users')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
                 </v-card-title>
 
-                <v-card-text class="ma-0 pa-0">
+                <v-card-text class="ma-0 pa-0 participants-list">
                     <v-list v-if="participantsDto.participants && participantsDto.participants.length > 0">
                         <template v-for="(item, index) in participantsDto.participants">
                             <v-list-item class="list-item-prepend-spacer-16">
@@ -143,6 +143,8 @@
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
+    import Mark from "mark.js";
+
     const firstPage = 1;
     const pageSize = 20;
 
@@ -168,6 +170,7 @@
                 userSearchString: null,
                 page: firstPage,
                 loading: false,
+                markInstance: null,
             }
         },
         computed: {
@@ -222,7 +225,8 @@
                             this.participantsDto = tmp;
                         }).finally(() => {
                             this.loading = false;
-                            axios.put('/api/video/' + this.chatId + '/dial/request-for-is-calling')
+                            axios.put('/api/video/' + this.chatId + '/dial/request-for-is-calling');
+                            this.performMarking();
                     })
             },
             changeChatAdmin(item) {
@@ -425,6 +429,7 @@
                 for (const user of tmp) {
                     this.addItem(user);
                 }
+                this.performMarking();
             },
             onParticipantDeleted(users) {
                 if (!this.show) {
@@ -445,6 +450,7 @@
                 for (const user of tmp) {
                     this.changeItem(user);
                 }
+                this.performMarking();
             },
             onUserProfileChanged(user) {
               this.participantsDto.participants.forEach(item => {
@@ -453,6 +459,7 @@
                   item.login = user.login;
                 }
               });
+              this.performMarking();
             },
             hasSearchString() {
                 return hasLength(this.userSearchString)
@@ -476,6 +483,14 @@
             },
             onNextSubscriptionElement(items) {
                 this.onUserOnlineChanged(items);
+            },
+            performMarking() {
+              this.$nextTick(() => {
+                this.markInstance.unmark();
+                if (hasLength(this.userSearchString)) {
+                  this.markInstance.mark(this.userSearchString);
+                }
+              })
             },
         },
         watch: {
@@ -509,14 +524,18 @@
 
         created() {
             this.doSearch = debounce(this.doSearch, 700);
-            bus.on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
-            bus.on(PARTICIPANT_ADDED, this.onParticipantAdded);
-            bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
-            bus.on(PARTICIPANT_EDITED, this.onParticipantEdited);
-            bus.on(CHAT_DELETED, this.onChatDelete);
-            bus.on(CHAT_EDITED, this.onChatEdit);
-            bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-            bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+        },
+        mounted() {
+          bus.on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
+          bus.on(PARTICIPANT_ADDED, this.onParticipantAdded);
+          bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
+          bus.on(PARTICIPANT_EDITED, this.onParticipantEdited);
+          bus.on(CHAT_DELETED, this.onChatDelete);
+          bus.on(CHAT_EDITED, this.onChatEdit);
+          bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+          bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+
+          this.markInstance = new Mark(".participants-list");
         },
         beforeUnmount() {
             bus.off(OPEN_PARTICIPANTS_DIALOG, this.showModal);
@@ -527,6 +546,8 @@
             bus.off(CHAT_EDITED, this.onChatEdit);
             bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
             bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            this.markInstance.unmark();
+            this.markInstance = null;
         },
     }
 </script>
