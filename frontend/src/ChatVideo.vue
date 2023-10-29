@@ -164,7 +164,7 @@ export default {
           return
         }
       }
-      this.setError(null, "Unable to draw track", participantTrackPublications);
+      this.setError(participantTrackPublications, "Unable to draw track");
       return
     },
 

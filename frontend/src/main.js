@@ -72,12 +72,8 @@ app.config.globalProperties.getMessageId = (hash) => {
     return hasLength(str) ? str : null;
 };
 
-app.config.globalProperties.setError = (e, txt, details) => {
-    if (details) {
-        console.error(txt, e, details);
-    } else {
-        console.error(txt, e);
-    }
+app.config.globalProperties.setError = (e, txt) => {
+    console.error(txt, e);
     const messageText = e ? (txt + ": " + e) : txt;
     chatStore.lastError = messageText;
     chatStore.showAlert = true;
