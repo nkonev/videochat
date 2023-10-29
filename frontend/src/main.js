@@ -72,9 +72,18 @@ app.config.globalProperties.getMessageId = (hash) => {
     return hasLength(str) ? str : null;
 };
 
-app.config.globalProperties.setError = (e, txt) => {
+app.config.globalProperties.setError = (e, txt, traceId) => {
     console.error(txt, e);
-    const messageText = e ? (txt + ": " + e) : txt;
+    let messageText = "";
+    messageText += txt;
+    if (e) {
+      messageText += ": ";
+      messageText += e;
+    }
+    if (traceId) {
+      messageText += ", traceId=";
+      messageText += traceId;
+    }
     chatStore.lastError = messageText;
     chatStore.showAlert = true;
     chatStore.errorColor = "error";
@@ -117,7 +126,12 @@ axios.interceptors.response.use((response) => {
         console.error(consoleErrorMessage);
         const maybeBusinessMessage = error.response?.data?.message;
         const errorMessage = hasLength(maybeBusinessMessage) ? "Business error" : "Http error. Check the console";
-        app.config.globalProperties.setError(maybeBusinessMessage, errorMessage);
+        const respHeaders = error.response?.headers;
+        let traceId;
+        if (respHeaders) {
+          traceId = respHeaders['trace-id']
+        }
+        app.config.globalProperties.setError(maybeBusinessMessage, errorMessage, traceId);
         return Promise.reject(error)
     }
 });
