@@ -87,7 +87,7 @@ func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
 					ctx.SetRequest(r)
 					ctx.SetResponse(echo.NewResponse(w, ctx.Echo()))
 					existsSpan := trace.SpanFromContext(ctx.Request().Context())
-					if existsSpan.SpanContext().HasSpanID() {
+					if existsSpan.SpanContext().HasTraceID() {
 						w.Header().Set(EXTERNAL_TRACE_ID_HEADER, existsSpan.SpanContext().TraceID().String())
 					}
 					err = next(ctx)
