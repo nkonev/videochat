@@ -63,6 +63,15 @@ export default {
         getContextMenuItems() {
             const ret = [];
             if (this.menuableItem) {
+                if (this.isMobile()) {
+                    ret.push({
+                        title: this.$vuetify.locale.t('$vuetify.close'),
+                        icon: 'mdi-close',
+                        action: () => {
+                            this.onCloseContextMenu()
+                        }
+                    });
+                }
                 if (hasLength(this.selection)) {
                     ret.push({
                         title: this.$vuetify.locale.t('$vuetify.copy_selected'),

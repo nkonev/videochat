@@ -49,6 +49,15 @@ export default {
         getContextMenuItems() {
             const ret = [];
             if (this.menuableItem) {
+                if (this.isMobile()) {
+                    ret.push({
+                        title: this.$vuetify.locale.t('$vuetify.close'),
+                        icon: 'mdi-close',
+                        action: () => {
+                            this.onCloseContextMenu()
+                        }
+                    });
+                }
                 if (!this.menuableItem.isResultFromSearch) {
                     if (this.menuableItem.pinned) {
                         ret.push({
