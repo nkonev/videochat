@@ -18,7 +18,7 @@
 
                 </v-card-title>
 
-                <v-card-text class="py-2">
+                <v-card-text class="py-2 files-list">
                     <v-row v-if="!loading">
                         <template v-if="dto.count > 0">
                             <v-col
@@ -134,6 +134,7 @@ import debounce from "lodash/debounce";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import CollapsedSearch from "@/CollapsedSearch.vue";
+import Mark from "mark.js";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -152,6 +153,7 @@ export default {
             page: firstPage,
             searchString: null,
             showSearchButton: true,
+            markInstance: null,
         }
     },
     computed: {
@@ -199,6 +201,7 @@ export default {
                 })
                 .finally(() => {
                     this.loading = false;
+                    this.performMarking();
                 })
         },
         closeModal() {
@@ -211,6 +214,7 @@ export default {
             this.dto = dtoFactory();
         },
         doSearch(){
+            this.page = firstPage;
             this.updateFiles();
         },
         openUploadModal() {
@@ -307,6 +311,7 @@ export default {
                 }
                 this.replaceItem(dto.fileInfoDto);
             }
+            this.performMarking();
         },
         onFileUpdated(dto) {
             console.log("onFileUpdated", dto);
@@ -319,6 +324,7 @@ export default {
                 }
                 this.replaceItem(dto.fileInfoDto);
             }
+            this.performMarking();
         },
         onFileRemoved(dto) {
             if (!this.show) {
@@ -346,7 +352,15 @@ export default {
         },
         searchName() {
             return this.$vuetify.locale.t('$vuetify.search_by_files')
-        }
+        },
+        performMarking() {
+          this.$nextTick(() => {
+            if (hasLength(this.searchString)) {
+              this.markInstance.unmark();
+              this.markInstance.mark(this.searchString);
+            }
+          })
+        },
     },
     watch: {
         page(newValue) {
@@ -377,6 +391,7 @@ export default {
       bus.on(FILE_CREATED, this.onFileCreated);
       bus.on(FILE_UPDATED, this.onFileUpdated);
       bus.on(FILE_REMOVED, this.onFileRemoved);
+      this.markInstance = new Mark(".files-list");
     },
     beforeUnmount() {
         bus.off(OPEN_VIEW_FILES_DIALOG, this.showModal);
@@ -384,6 +399,8 @@ export default {
         bus.off(FILE_CREATED, this.onFileCreated);
         bus.off(FILE_UPDATED, this.onFileUpdated);
         bus.off(FILE_REMOVED, this.onFileRemoved);
+        this.markInstance.unmark();
+        this.markInstance = null;
     },
 }
 </script>
