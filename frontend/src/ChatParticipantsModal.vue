@@ -477,9 +477,6 @@
             hasSearchString() {
                 return hasLength(this.userSearchString)
             },
-            resetInput() {
-                this.userSearchString = null;
-            },
             isVideo() {
                 return this.$route.name == videochat_name
             },
