@@ -3,8 +3,19 @@
         <v-dialog v-model="show" max-width="640" scrollable :persistent="hasSearchString()">
             <v-card>
                 <v-card-title class="d-flex align-center ml-2">
-                    {{ $vuetify.locale.t('$vuetify.participants_modal_title') }}
-                    <v-text-field class="ml-4" variant="outlined" density="compact" prepend-icon="mdi-magnify" hide-details single-line v-model="userSearchString" :label="$vuetify.locale.t('$vuetify.search_by_users')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+                    <template v-if="showSearchButton">
+                      {{ $vuetify.locale.t('$vuetify.participants_modal_title') }}
+                    </template>
+                    <v-spacer/>
+                    <CollapsedSearch :provider="{
+                        getModelValue: this.getModelValue,
+                        setModelValue: this.setModelValue,
+                        getShowSearchButton: this.getShowSearchButton,
+                        setShowSearchButton: this.setShowSearchButton,
+                        searchName: this.searchName,
+                        textFieldVariant: 'outlined',
+                    }"/>
+
                 </v-card-title>
 
                 <v-card-text class="ma-0 pa-0 participants-list">
@@ -144,6 +155,7 @@
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import Mark from "mark.js";
+    import CollapsedSearch from "@/CollapsedSearch.vue";
 
     const firstPage = 1;
     const pageSize = 20;
@@ -170,6 +182,7 @@
                 userSearchString: null,
                 page: firstPage,
                 loading: false,
+                showSearchButton: true,
                 markInstance: null,
             }
         },
@@ -492,6 +505,22 @@
                 }
               })
             },
+            getModelValue() {
+              return this.userSearchString
+            },
+            setModelValue(v) {
+              this.userSearchString = v
+            },
+            getShowSearchButton() {
+              return this.showSearchButton
+            },
+            setShowSearchButton(v) {
+              this.showSearchButton = v
+            },
+            searchName() {
+              return this.$vuetify.locale.t('$vuetify.search_by_users')
+            },
+
         },
         watch: {
             userSearchString (searchString) {
@@ -520,6 +549,9 @@
                     }
                 }
             }
+        },
+        components: {
+          CollapsedSearch
         },
 
         created() {
