@@ -26,7 +26,9 @@ axios.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
 // we apply it conditionally
 // else the extraneous scrolls will appear on desktop Chrome on any pages
 if (isMobileBrowser()) {
-    new VVP()
+    new VVP();
+    // to make close-context-menu-on-back working we add an extra
+    history.pushState({}, "", new URL(window.location));
 }
 
 const webSplitpanesCss = () => import('splitpanes/dist/splitpanes.css');

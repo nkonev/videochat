@@ -34,7 +34,7 @@ import contextMenuMixin from "@/mixins/contextMenuMixin";
 
 export default {
     mixins: [
-      contextMenuMixin(),
+      contextMenuMixin('chat'),
     ],
     methods:{
         className() {
