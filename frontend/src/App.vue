@@ -89,6 +89,7 @@
               switchSearchType: this.switchSearchType,
               canSwitchSearchType: this.canSwitchSearchType,
               searchIcon: this.searchIcon,
+              textFieldVariant: 'solo',
           }"/>
         </template>
       </v-app-bar>

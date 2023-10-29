@@ -6,12 +6,14 @@
                     <template v-if="showSearchButton">
                         {{ fileItemUuid ? $vuetify.locale.t('$vuetify.attached_message_files') : $vuetify.locale.t('$vuetify.attached_chat_files') }}
                     </template>
+                    <v-spacer/>
                     <CollapsedSearch :provider="{
                       getModelValue: this.getModelValue,
                       setModelValue: this.setModelValue,
                       getShowSearchButton: this.getShowSearchButton,
                       setShowSearchButton: this.setShowSearchButton,
                       searchName: this.searchName,
+                      textFieldVariant: 'outlined',
                   }"/>
 
                 </v-card-title>

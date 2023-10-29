@@ -1,10 +1,19 @@
 <template>
-    <v-btn v-if="provider.getShowSearchButton() && isMobile()" icon :title="provider.searchName()" @click="onOpenSearch()">
+    <v-btn v-if="provider.getShowSearchButton() && isMobile()"
+           icon
+           :title="provider.searchName()"
+           @click="onOpenSearch()"
+           variant="text"
+    >
         <v-icon>{{ hasSearchString() ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
     </v-btn>
 
     <v-card v-if="!provider.getShowSearchButton() || !isMobile()" variant="plain" :class="isMobile() ? 'search-card-mobile' : 'search-card'">
-        <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line
+        <v-text-field density="compact"
+                      :variant="provider.textFieldVariant"
+                      :autofocus="isMobile()"
+                      hide-details
+                      single-line
                       :model-value="provider.getModelValue()"
                       @update:model-value="provider.setModelValue"
                       clearable clear-icon="mdi-close-circle"
@@ -23,7 +32,7 @@ import {hasLength} from "@/utils";
 
 export default {
     props: [
-        'provider', // .getModelValue, .setModelValue, .getShowSearchButton, .setShowSearchButton, .searchName, .switchSearchType, .canSwitchSearchType, .searchIcon
+        'provider', // .getModelValue, .setModelValue, .getShowSearchButton, .setShowSearchButton, .searchName, .switchSearchType, .canSwitchSearchType, .searchIcon, .textFieldVariant
     ],
     methods: {
         onOpenSearch() {

@@ -23,6 +23,7 @@
               getShowSearchButton: this.getShowSearchButton,
               setShowSearchButton: this.setShowSearchButton,
               searchName: this.searchName,
+              textFieldVariant: 'solo',
           }"/>
       </template>
 
