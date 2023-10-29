@@ -42,7 +42,7 @@
 
     <div class="mt-2">
         {{ $vuetify.locale.t('$vuetify.request_resend_confirmation_email_text') }}
-        <a class="colored-link" :href="resend()" @click.prevent="onResendClick()">{{$vuetify.locale.t('$vuetify.request_resend_confirmation_email')}}</a>
+        <a class="colored-link" :href="resend()" @click.prevent="onResendClick()">{{$vuetify.locale.t('$vuetify.request_resend_confirmation_email_full')}}</a>
     </div>
   </v-sheet>
 </template>

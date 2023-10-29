@@ -219,8 +219,9 @@ export default {
     check_email: "Check your email",
     set_new_password: "Set new password",
     or: " or ",
-    request_resend_confirmation_email: "Resend confirmation email",
-    resending_confirmation_email: "Resending confirmation email",
+    request_resend_confirmation_email: "Resend email",
+    request_resend_confirmation_email_full: "Resend a confirmation email",
+    resending_confirmation_email: "Confirmation by email",
     request_resend_confirmation_email_text: "Didn't get a email ? You can ",
     message_edit_audio: "Add an audio",
     add_media_audio_by_link: "Add an audio by link"

@@ -219,8 +219,9 @@ export default {
     check_email: "Проверьте e-mail",
     set_new_password: "Установить новый пароль",
     or: " или ",
-    request_resend_confirmation_email: "Отправить заново письмо с подтверджением",
-    resending_confirmation_email: "Переотправка письма с подтверджением",
+    request_resend_confirmation_email: "Переотправить письмо",
+    request_resend_confirmation_email_full: "Отправить заново письмо с подтверджением",
+    resending_confirmation_email: "Подтверждение по почте",
     request_resend_confirmation_email_text: "Не получили письмо ? Вы можете ",
     message_edit_audio: "Добавить аудио",
     add_media_audio_by_link: "Добавить аудио по ссылке"
