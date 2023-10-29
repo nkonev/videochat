@@ -613,9 +613,7 @@ export default {
     setTitle(null);
     this.chatStore.title = null;
 
-    if (this.$route.name == chat_list_name) {
-      this.chatStore.isShowSearch = false;
-    }
+    this.chatStore.isShowSearch = false;
   }
 }
 </script>
