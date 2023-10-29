@@ -41,6 +41,10 @@
                                   <v-icon :size="getIconSize()">mdi-link-variant</v-icon>
                               </v-btn>
 
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="embedClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_embed')">
+                                <v-icon :size="getIconSize()">mdi-youtube</v-icon>
+                              </v-btn>
+
                               <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="imageClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_image')">
                                   <v-icon :size="getIconSize()">mdi-image-outline</v-icon>
                               </v-btn>
@@ -51,10 +55,6 @@
 
                               <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="audioClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_audio')">
                                   <v-icon :size="getIconSize()">mdi-music</v-icon>
-                              </v-btn>
-
-                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="embedClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_embed')">
-                                  <v-icon :size="getIconSize()">mdi-youtube</v-icon>
                               </v-btn>
 
                               <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="textColorClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_text_color')">
