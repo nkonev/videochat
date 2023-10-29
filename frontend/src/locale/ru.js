@@ -182,7 +182,7 @@ export default {
     video_position_on_the_top: "Наверху",
     video_position_side: "На стороне",
     video_position_auto: "Авто",
-    copy_video_call_link: "Скопировать ссылку на видеоконференцию",
+    copy_video_call_link: "Скопир. видео. ссылку",
     blog: "Блог",
     blogs: "Блоги",
     make_blog_post: "Сделать постом в блоге",
