@@ -45,10 +45,6 @@
             <v-btn v-if="chatStore.showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.locale.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
           </template>
 
-          <v-btn v-if="(chatStore.showCallButton || chatStore.showHangButton) && !isMobile()" icon @click="copyCallLink()" :title="$vuetify.locale.t('$vuetify.copy_video_call_link')">
-            <v-icon>mdi-content-copy</v-icon>
-          </v-btn>
-
           <v-btn v-if="chatStore.showGoToBlogButton && !isMobile()" icon :href="goToBlogLink()" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')">
             <v-icon>mdi-postage-stamp</v-icon>
           </v-btn>
@@ -175,7 +171,7 @@
 
 <script>
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
-import {copyCallLink, getBlogLink, hasLength, isChatRoute} from "@/utils";
+import {getBlogLink, hasLength, isChatRoute} from "@/utils";
 import {
     chat_list_name,
     chat_name,
@@ -597,9 +593,6 @@ export default {
         },
         offMicrophone() {
           bus.emit(SET_LOCAL_MICROPHONE_MUTED, true);
-        },
-        copyCallLink() {
-          copyCallLink(this.chatId)
         },
         addVideoSource() {
           bus.emit(ADD_VIDEO_SOURCE_DIALOG);

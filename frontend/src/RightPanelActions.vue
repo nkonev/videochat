@@ -18,6 +18,7 @@
       <v-list-item @click.prevent="goBlogs()" :href="getRouteBlogs()" prepend-icon="mdi-postage-stamp" :title="$vuetify.locale.t('$vuetify.blogs')"></v-list-item>
       <v-list-item v-if="shouldDisplayCreateChat()" @click="createChat()" prepend-icon="mdi-plus" id="test-new-chat-dialog-button" :title="$vuetify.locale.t('$vuetify.new_chat')"></v-list-item>
       <v-list-item @click="editChat()" v-if="shouldDisplayEditChat()" prepend-icon="mdi-lead-pencil" :title="$vuetify.locale.t('$vuetify.edit_chat')"></v-list-item>
+      <v-list-item v-if="shouldDisplayCopyCallLinkDesktop()" @click.prevent="copyCallLink()" prepend-icon="mdi-content-copy" :title="$vuetify.locale.t('$vuetify.copy_video_call_link')"></v-list-item>
       <v-list-item v-if="canShowFiles()" @click.prevent="openFiles()" prepend-icon="mdi-file-download" :title="$vuetify.locale.t('$vuetify.files')"></v-list-item>
       <v-list-item @click="openPinnedMessages()" v-if="shouldPinnedMessages()" prepend-icon="mdi-pin" :title="$vuetify.locale.t('$vuetify.pinned_messages')"></v-list-item>
       <v-list-item @click.prevent="onNotificationsClicked()" v-if="shouldDisplayNotifications()">
@@ -95,6 +96,9 @@ export default {
     },
     shouldDisplayCopyCallLink() {
       return (this.chatStore.showCallButton || this.chatStore.showHangButton) && this.isMobile()
+    },
+    shouldDisplayCopyCallLinkDesktop() {
+      return (this.chatStore.showCallButton || this.chatStore.showHangButton) && !this.isMobile()
     },
     shouldDisplayAddVideoSource() {
       return this.$route.name == videochat_name && this.isMobile()
