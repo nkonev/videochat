@@ -304,9 +304,6 @@ export default {
         getStore() {
             return this.chatStore
         },
-        resetInput() {
-          this.searchStringFacade = null
-        },
 
         refreshPage() {
           location.reload();

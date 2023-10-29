@@ -9,7 +9,7 @@
                       @update:model-value="provider.setModelValue"
                       clearable clear-icon="mdi-close-circle"
                       @keyup.esc="resetInput()" @blur="provider.setShowSearchButton(true)" :label="provider.searchName()">
-            <template v-slot:append-inner>
+            <template v-slot:append-inner v-if="provider.switchSearchType">
                 <v-btn icon density="compact" @click.prevent="provider.switchSearchType()" :disabled="!provider.canSwitchSearchType()"><v-icon class="search-icon">{{ provider.searchIcon() }}</v-icon></v-btn>
             </template>
         </v-text-field>

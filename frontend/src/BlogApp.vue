@@ -17,13 +17,16 @@
       <v-spacer></v-spacer>
 
       <template v-if="blogStore.isShowSearch">
-        <v-btn v-if="showSearchButton && isMobile()" icon :title="searchName()" @click="onOpenSearch()">
-          <v-icon>{{ hasSearchString ? 'mdi-magnify-close' : 'mdi-magnify'}}</v-icon>
-        </v-btn>
-        <v-card v-if="!showSearchButton || !isMobile()" variant="plain" :class="isMobile() ? 'search-card-mobile' : 'search-card'">
-          <v-text-field density="compact" variant="solo" :autofocus="isMobile()" hide-details single-line v-model="searchStringFacade" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput" @blur="showSearchButton=true" :label="searchName()"></v-text-field>
-        </v-card>
+        <CollapsedSearch :provider="{
+              getModelValue: this.getModelValue,
+              setModelValue: this.setModelValue,
+              getShowSearchButton: this.getShowSearchButton,
+              setShowSearchButton: this.setShowSearchButton,
+              searchName: this.searchName,
+              searchIcon: this.searchIcon,
+          }"/>
       </template>
+
     </v-app-bar>
 
     <v-main>
@@ -47,8 +50,10 @@ import {
 import {root} from "@/router/routes";
 import {mapStores} from "pinia";
 import {useBlogStore} from "@/store/blogStore";
+import CollapsedSearch from "@/CollapsedSearch.vue";
 
 export default {
+  components: {CollapsedSearch},
   mixins: [
       searchStringFacade(),
   ],
@@ -58,10 +63,6 @@ export default {
   methods: {
     getStore() {
         return this.blogStore
-    },
-    resetInput() {
-      this.searchStringFacade = null;
-      this.showSearchButton = true;
     },
     getBreadcrumbs() {
       const ret = [
@@ -88,9 +89,6 @@ export default {
       }
       return ret
     },
-    onOpenSearch() {
-      this.showSearchButton = false;
-    },
     searchName() {
         if (this.blogStore.searchType == SEARCH_MODE_POSTS) {
             return this.$vuetify.locale.t('$vuetify.search_by_posts')
@@ -99,15 +97,27 @@ export default {
     getDensity() {
           return this.isMobile() ? "comfortable" : "compact";
     },
-  },
-  computed: {
-    // https://pinia.vuejs.org/cookbook/options-api.html#usage-without-setup
-    ...mapStores(useBlogStore),
+    getModelValue() {
+      return this.searchStringFacade
+    },
+    setModelValue(v) {
+      this.searchStringFacade = v
+    },
+    getShowSearchButton() {
+      return this.showSearchButton
+    },
+    setShowSearchButton(v) {
+      this.showSearchButton = v
+    },
     searchIcon() {
       if (this.blogStore.searchType == SEARCH_MODE_POSTS) {
           return 'mdi-forum'
       }
     },
+  },
+  computed: {
+    // https://pinia.vuejs.org/cookbook/options-api.html#usage-without-setup
+    ...mapStores(useBlogStore),
     hasSearchString() {
       return hasLength(this.searchStringFacade)
     },
@@ -120,17 +130,6 @@ export default {
 
 <style lang="stylus">
 @import "constants.styl"
-
-.search-card {
-    min-width: 330px;
-    margin-left: 1.2em;
-    margin-right: 2px;
-}
-.search-card-mobile {
-    width: 100%;
-    margin-left: 1.2em;
-    margin-right: 0.4em;
-}
 
 .colored-link {
     color: $linkColor;
