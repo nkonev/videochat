@@ -4,16 +4,46 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" href="/favicon.svg" />
-  <link rel="stylesheet" href="/viewport-fix.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to VideoChat</title>
 </head>
 
 <body>
-  <div id="viewport">
-    <div id="app">Videochat app will be loaded soon. Press <button onclick="location.reload()" style=" background-color: revert; border: revert; outline: revert;">Refresh</button> if not.</div>
-  </div>
-  <script src="/viewport-fix.js"></script>
+  <div id="app">Videochat app will be loaded soon. Press <button onclick="location.reload()" style=" background-color: revert; border: revert; outline: revert;">Refresh</button> if not.</div>
+  <script type="text/javascript">
+      const isMobileBrowser = () => {
+          return navigator.userAgent.indexOf('Mobile') !== -1
+      }
+      if (isMobileBrowser()) {
+          console.log("Detected mobile, adding viewport fix");
+
+          const head = document.getElementsByTagName('head')[0];
+          const body = document.getElementsByTagName('body')[0];
+
+          // add styles
+          const link = document.createElement('link');
+          link.href = '/viewport-fix.css';
+          link.rel = 'stylesheet';
+          head.appendChild(link);
+
+          // add js
+          const js = document.createElement('script');
+          js.src = '/viewport-fix.js';
+          body.appendChild(js);
+
+          // element that will be wrapped
+          const el = document.querySelector('div#app');
+          // create wrapper container
+          const wrapper = document.createElement('div');
+          wrapper.id = 'viewport';
+          // insert wrapper before el in the DOM tree
+          el.parentNode.insertBefore(wrapper, el);
+          // move el into wrapper
+          wrapper.appendChild(el);
+      } else {
+          console.log("Detected desktop");
+      }
+  </script>
   <script type="module" src="/src/main.js"></script>
 </body>
 
