@@ -49,6 +49,8 @@
                                     </v-img>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
+                                        <a :href="item.url" download class="colored-link mr-2"><v-icon :title="$vuetify.locale.t('$vuetify.file_download')">mdi-download</v-icon></a>
+
                                         <v-btn size="medium" v-if="item.canShowAsImage" @click="fireShowImage(item)" :title="$vuetify.locale.t('$vuetify.view')"><v-icon size="large">mdi-image</v-icon></v-btn>
 
                                         <v-btn size="medium" v-if="item.canPlayAsVideo" @click="fireVideoPlay(item)" :title="$vuetify.locale.t('$vuetify.play')"><v-icon size="large">mdi-play</v-icon></v-btn>

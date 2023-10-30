@@ -224,5 +224,6 @@ export default {
     resending_confirmation_email: "Подтверждение по почте",
     request_resend_confirmation_email_text: "Не получили письмо ? Вы можете ",
     message_edit_audio: "Добавить аудио",
-    add_media_audio_by_link: "Добавить аудио по ссылке"
+    add_media_audio_by_link: "Добавить аудио по ссылке",
+    file_download: "Скачать файл"
 }
