@@ -104,68 +104,68 @@ export default {
       return !!userVideoComponents.filter(e => e.getAudioStreamId() == audioStream.trackSid).length
     },
     drawNewComponentOrInsertIntoExisting(participant, participantTrackPublications, position, localVideoProperties) {
-      const md = JSON.parse((participant.metadata));
-      const prefix = localVideoProperties ? 'local-' : 'remote-';
-      const videoTagId = prefix + this.getNewId();
+      try {
+        const md = JSON.parse((participant.metadata));
+        const prefix = localVideoProperties ? 'local-' : 'remote-';
+        const videoTagId = prefix + this.getNewId();
 
-      const participantIdentityString = participant.identity;
-      const components = this.getByUser(participantIdentityString).map(c => c.component);
-      const candidatesWithoutVideo = components.filter(e => !e.getVideoStreamId());
-      const candidatesWithoutAudio = components.filter(e => !e.getAudioStreamId());
+        const participantIdentityString = participant.identity;
+        const components = this.getByUser(participantIdentityString).map(c => c.component);
+        const candidatesWithoutVideo = components.filter(e => !e.getVideoStreamId());
+        const candidatesWithoutAudio = components.filter(e => !e.getAudioStreamId());
 
-      for (const track of participantTrackPublications) {
-        if (track.kind == 'video') {
-          console.debug("Processing video track", track);
-          if (this.videoPublicationIsPresent(track, components)) {
-            console.debug("Skipping video", track);
-            continue;
+        for (const track of participantTrackPublications) {
+          if (track.kind == 'video') {
+            console.debug("Processing video track", track);
+            if (this.videoPublicationIsPresent(track, components)) {
+              console.debug("Skipping video", track);
+              continue;
+            }
+            let candidateToAppendVideo = candidatesWithoutVideo.length ? candidatesWithoutVideo[0] : null;
+            console.debug("candidatesWithoutVideo", candidatesWithoutVideo, "candidateToAppendVideo", candidateToAppendVideo);
+            if (!candidateToAppendVideo) {
+              candidateToAppendVideo = this.createComponent(participantIdentityString, position, videoTagId, localVideoProperties);
+            }
+            const cameraEnabled = track && !track.isMuted;
+            if (!track.isSubscribed) {
+              console.warn("Video track is not subscribed");
+            }
+            candidateToAppendVideo.setVideoStream(track, cameraEnabled);
+            console.log("Video track was set", track.trackSid, "to", candidateToAppendVideo.getId());
+            candidateToAppendVideo.setUserName(md.login);
+            candidateToAppendVideo.setAvatar(md.avatar);
+            candidateToAppendVideo.setUserId(md.userId);
+            return
+          } else if (track.kind == 'audio') {
+            console.debug("Processing audio track", track);
+            if (this.audioPublicationIsPresent(track, components)) {
+              console.debug("Skipping audio", track);
+              continue;
+            }
+            let candidateToAppendAudio = candidatesWithoutAudio.length ? candidatesWithoutAudio[0] : null;
+            console.debug("candidatesWithoutAudio", candidatesWithoutAudio, "candidateToAppendAudio", candidateToAppendAudio);
+            if (!candidateToAppendAudio) {
+              candidateToAppendAudio = this.createComponent(participantIdentityString, position, videoTagId, localVideoProperties);
+            }
+            const micEnabled = track && !track.isMuted;
+            if (!track.isSubscribed) {
+              console.warn("Audio track is not subscribed");
+            }
+            candidateToAppendAudio.setAudioStream(track, micEnabled);
+            console.log("Audio track was set", track.trackSid, "to", candidateToAppendAudio.getId());
+            candidateToAppendAudio.setUserName(md.login);
+            candidateToAppendAudio.setAvatar(md.avatar);
+            candidateToAppendAudio.setUserId(md.userId);
+            return
           }
-          let candidateToAppendVideo = candidatesWithoutVideo.length ? candidatesWithoutVideo[0] : null;
-          console.debug("candidatesWithoutVideo", candidatesWithoutVideo, "candidateToAppendVideo", candidateToAppendVideo);
-          if (!candidateToAppendVideo) {
-            candidateToAppendVideo = this.createComponent(participantIdentityString, position, videoTagId, localVideoProperties);
-          }
-          const cameraEnabled = track && !track.isMuted;
-          if (!track.isSubscribed) {
-            console.warn("Video track is not subscribed");
-          }
-          candidateToAppendVideo.setVideoStream(track, cameraEnabled);
-          console.log("Video track was set", track.trackSid, "to", candidateToAppendVideo.getId());
-          candidateToAppendVideo.setUserName(md.login);
-          candidateToAppendVideo.setAvatar(md.avatar);
-          candidateToAppendVideo.setUserId(md.userId);
-          if (localVideoProperties) {
-            this.chatStore.initializingVideoCall = false;
-          }
-          return
-        } else if (track.kind == 'audio') {
-          console.debug("Processing audio track", track);
-          if (this.audioPublicationIsPresent(track, components)) {
-            console.debug("Skipping audio", track);
-            continue;
-          }
-          let candidateToAppendAudio = candidatesWithoutAudio.length ? candidatesWithoutAudio[0] : null;
-          console.debug("candidatesWithoutAudio", candidatesWithoutAudio, "candidateToAppendAudio", candidateToAppendAudio);
-          if (!candidateToAppendAudio) {
-            candidateToAppendAudio = this.createComponent(participantIdentityString, position, videoTagId, localVideoProperties);
-          }
-          const micEnabled = track && !track.isMuted;
-          if (!track.isSubscribed) {
-            console.warn("Audio track is not subscribed");
-          }
-          candidateToAppendAudio.setAudioStream(track, micEnabled);
-          console.log("Audio track was set", track.trackSid, "to", candidateToAppendAudio.getId());
-          candidateToAppendAudio.setUserName(md.login);
-          candidateToAppendAudio.setAvatar(md.avatar);
-          candidateToAppendAudio.setUserId(md.userId);
-          if (localVideoProperties) {
-            this.chatStore.initializingVideoCall = false;
-          }
-          return
+        }
+        this.setError(participantTrackPublications, "Unable to draw track");
+        return
+      } finally {
+        if (localVideoProperties) {
+          this.chatStore.initializingVideoCall = false;
         }
       }
-      this.setError(participantTrackPublications, "Unable to draw track");
-      return
     },
 
     handleTrackUnsubscribed(
@@ -444,6 +444,8 @@ export default {
         }
       } catch (e) {
         this.setError(e, "Error during creating local tracks");
+        this.chatStore.initializingVideoCall = false;
+        return Promise.reject("Error during creating local tracks");
       }
 
       try {
@@ -467,6 +469,8 @@ export default {
         }
       } catch (e) {
         this.setError(e, "Error during publishing local tracks");
+        this.chatStore.initializingVideoCall = false;
+        return Promise.reject("Error during publishing local tracks");
       }
     },
     onAddScreenSource() {
