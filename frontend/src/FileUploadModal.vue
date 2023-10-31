@@ -66,7 +66,7 @@ import bus, {
 } from "./bus/bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
-import { formatSize } from "./utils";
+import {formatSize, renameFilePart} from "./utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {v4 as uuidv4} from "uuid";
@@ -84,10 +84,11 @@ export default {
             shouldSetFileUuidToMessage: false,
             correlationId: null,
             messageIdToAttachFiles: null,
+            shouldAddDateToTheFilename: null,
         }
     },
     methods: {
-        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles}) {
+        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles, shouldAddDateToTheFilename}) {
             this.$data.show = true;
             this.$data.fileItemUuid = fileItemUuid;
             this.$data.showFileInput = showFileInput;
@@ -97,7 +98,8 @@ export default {
             }
             this.messageIdToAttachFiles = messageIdToAttachFiles;
             this.correlationId = correlationId;
-            console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId);
+            this.shouldAddDateToTheFilename = shouldAddDateToTheFilename;
+            console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId, ", shouldAddDateToTheFilename=", shouldAddDateToTheFilename);
         },
         hideModal() {
             this.$data.show = false;
@@ -109,6 +111,7 @@ export default {
             this.$data.shouldSetFileUuidToMessage = false;
             this.correlationId = null;
             this.messageIdToAttachFiles = null;
+            this.shouldAddDateToTheFilename = null;
         },
         onAttachFilesToMessage() {
           bus.emit(ATTACH_FILES_TO_MESSAGE_MODAL, {messageId: this.messageIdToAttachFiles})
@@ -162,6 +165,7 @@ export default {
                     fileSize: file.size,
                     fileName: file.name,
                     correlationId: this.correlationId, // nullable
+                    shouldAddDateToTheFilename: this.shouldAddDateToTheFilename, // nullable
                 })
                 console.log("For", file.name, "got init response: ", response.data)
 
@@ -194,10 +198,7 @@ export default {
             for (const fileToUpload of fileUploadingQueueCopy) {
                 try {
                     // renaming a file
-                    const formData = new FormData();
-                    const partName = "File";
-                    formData.append(partName, fileToUpload.file, fileToUpload.newFileName);
-                    const renamedFile = formData.get(partName);
+                    const renamedFile = renameFilePart(fileToUpload.file, fileToUpload.newFileName);
 
                     const config = {
                         cancelToken: fileToUpload.cancelSource.token

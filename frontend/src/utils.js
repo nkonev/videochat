@@ -231,3 +231,11 @@ export const isChatRoute = (route) => {
 }
 
 export const defaultAudioMute = true;
+
+export const renameFilePart = (file, newFileName) => {
+  const formData = new FormData();
+  const partName = "File";
+  formData.append(partName, file, newFileName);
+  const renamedFile = formData.get(partName);
+  return renamedFile
+}

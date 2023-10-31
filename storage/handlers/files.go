@@ -65,6 +65,7 @@ type UploadRequest struct {
 	FileItemUuid  *string `json:"fileItemUuid"`
 	FileSize      int64   `json:"fileSize"`
 	FileName      string  `json:"fileName"`
+	ShouldAddDateToTheFilename bool `json:"shouldAddDateToTheFilename"`
 }
 
 type UploadResponse struct {
@@ -76,10 +77,21 @@ func nonLetterSplit(c rune) bool {
 }
 
 // output of this fun eventually goes to sanitizer in chat
-func cleanFilename(input string) string {
+func cleanFilename(input string, shouldAddDateToTheFilename bool) string {
 	words := strings.FieldsFunc(input, nonLetterSplit)
 	tmp := strings.Join(words, "")
-	return strings.TrimSpace(tmp)
+	trimmedFilename := strings.TrimSpace(tmp)
+
+	filenameParts := strings.Split(trimmedFilename, ".")
+
+	newFileName := ""
+	if len(filenameParts) == 2 && shouldAddDateToTheFilename {
+		newFileName = filenameParts[0] + "_" + time.Now().Format("20060102150405") + "." + filenameParts[1]
+	} else {
+		newFileName = trimmedFilename
+	}
+
+	return newFileName
 }
 
 type PresignedUrl struct {
@@ -139,7 +151,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	}
 	// end check
 
-	filteredFilename := cleanFilename(reqDto.FileName)
+	filteredFilename := cleanFilename(reqDto.FileName, reqDto.ShouldAddDateToTheFilename)
 
 	aKey := services.GetKey(filteredFilename, chatFileItemUuid, chatId)
 

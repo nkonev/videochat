@@ -192,7 +192,8 @@
               this.fileCount = null;
               this.notifyAboutBroadcast(true);
 
-              bus.emit(MESSAGE_EDITING_END)
+              bus.emit(MESSAGE_EDITING_END);
+              this.$refs.tipTapRef.regenerateNewFileItemUuid();
             },
             messageTextIsPresent(text) {
                 return text && text !== ""

@@ -65,7 +65,7 @@ export const buildImageHandler = (uploadFunction) => {
                                           event.preventDefault();
 
                                           const image = item.getAsFile();
-                                          uploadFunction(image);
+                                          uploadFunction(image, true);
                                       }
                                   }
                                   if (imageSet) {

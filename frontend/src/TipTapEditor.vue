@@ -43,8 +43,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 const empty = "";
 
-const embedUploadFunction = (chatId, files, correlationId) => {
-    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: uuidv4(), shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId});
+const embedUploadFunction = (chatId, files, correlationId, fileItemId, shouldAddDateToTheFilename) => {
+    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemId, shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: shouldAddDateToTheFilename});
     bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 }
 
@@ -60,6 +60,7 @@ export default {
       editor: null,
       fileInput: null,
       correlationId: null,
+      preallocatedCandidateFileItemId: null,
     };
   },
 
@@ -117,6 +118,12 @@ export default {
           this.editor.chain().focus().setIframe({ src: url }).run()
       }
     },
+    regenerateNewFileItemUuid() {
+      this.preallocatedCandidateFileItemId = uuidv4();
+    },
+    resetFileItemUuid() {
+      this.preallocatedCandidateFileItemId = null;
+    },
     onPreviewCreated(dto) {
         if (hasLength(this.correlationId) && this.correlationId == dto.correlationId) {
             if (dto.aType == media_video) {
@@ -158,11 +165,12 @@ export default {
     bus.on(PREVIEW_CREATED, this.onPreviewCreated);
     bus.on(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.on(EMBED_LINK_SET, this.onEmbedLinkSet);
+    this.regenerateNewFileItemUuid();
 
     const imagePluginInstance = buildImageHandler(
-    (image) => {
+    (image, shouldAddDateToTheFilename) => {
         this.correlationId = uuidv4();
-        embedUploadFunction(this.chatId, [image], this.correlationId);
+        embedUploadFunction(this.chatId, [image], this.correlationId, this.preallocatedCandidateFileItemId, shouldAddDateToTheFilename);
     })
         .configure({
             inline: true,
@@ -236,7 +244,7 @@ export default {
           this.correlationId = uuidv4();
           if (e.target.files.length) {
               const files = Array.from(e.target.files);
-              embedUploadFunction(this.chatId, files, this.correlationId)
+              embedUploadFunction(this.chatId, files, this.correlationId, this.preallocatedCandidateFileItemId)
           }
         }
     })
@@ -246,6 +254,7 @@ export default {
     bus.off(PREVIEW_CREATED, this.onPreviewCreated);
     bus.off(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.off(EMBED_LINK_SET, this.onEmbedLinkSet);
+    this.resetFileItemUuid();
 
     this.editor.destroy();
     if (this.fileInput) {
