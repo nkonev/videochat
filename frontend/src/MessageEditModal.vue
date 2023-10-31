@@ -31,6 +31,7 @@ import bus, {
   SET_EDIT_MESSAGE_MODAL,
 } from "./bus/bus";
     import MessageEdit from "@/MessageEdit.vue";
+    import heightMixin from "@/mixins/heightMixin";
 
     export default {
         data() {
@@ -39,6 +40,9 @@ import bus, {
                 messageId: null,
             }
         },
+        mixins:[
+          heightMixin(),
+        ],
         methods: {
             showModal(dto) {
                 this.show = true;
@@ -68,13 +72,6 @@ import bus, {
             },
             isNew() {
                 return !this.messageId;
-            },
-            heightWithoutAppBar() {
-                if (this.isMobile()) {
-                    return 'height: calc(var(--100vvh, 100vh) - 56px)'
-                } else {
-                    return  'height: calc(var(--100vvh, 100vh) - 48px)'
-                }
             },
         },
         mounted() {
