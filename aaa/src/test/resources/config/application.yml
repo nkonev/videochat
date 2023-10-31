@@ -12,8 +12,8 @@ logging:
   pattern:
     console: "%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @aaa [%thread] %logger{36}:%line %msg%n"
 
-custom.base-url: "http://localhost:${server.port}/api/aaa"
-custom.template-engine-url-prefix: "http://localhost:${server.port}"
+custom.base-url: "http://localhost:${local.server.port}/api/aaa"
+custom.template-engine-url-prefix: "http://localhost:${local.server.port}"
 custom.registration-confirm-exit-token-not-found-url: "http://localhost:8081/confirm/registration/token-not-found"
 custom.registration-confirm-exit-user-not-found-url: "http://localhost:8081/confirm/registration/user-not-found"
 custom.registration-confirm-exit-success-url: "http://localhost:8081"

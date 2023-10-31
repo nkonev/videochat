@@ -51,14 +51,12 @@ import static org.springframework.http.HttpHeaders.COOKIE;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
         classes = {AaaApplication.class, AbstractTestRunner.UtConfig.class},
-        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         // also see in run-with-oauth2.sh
         properties = {
                 "spring.config.location=classpath:/config/application.yml,classpath:/config/oauth2-basic.yml,classpath:/config/oauth2-keycloak.yml,classpath:/config/demo-migration.yml,classpath:/config/user-test-controller.yml"
         }
 )
-@Import(UserTestService.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractTestRunner {
 
     @Configuration
@@ -69,12 +67,17 @@ public abstract class AbstractTestRunner {
             return new DefaultStringRedisConnection(redisConnectionFactory.getConnection());
         }
 
+        @Bean
+        public TestRestTemplate testRestTemplate() {
+            return new TestRestTemplate();
+        }
+
     }
 
     @Autowired
     protected UserConfirmationTokenRepository userConfirmationTokenRepository;
 
-    @Autowired(required = false)
+    @Autowired
     protected TestRestTemplate testRestTemplate;
 
     @Autowired
