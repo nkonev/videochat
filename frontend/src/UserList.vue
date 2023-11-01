@@ -108,8 +108,10 @@
 
                     </v-list-item-subtitle>
                 </template>
-
             </v-list-item>
+            <template v-if="items.length == 0">
+              <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.users_not_found')}}</v-sheet>
+            </template>
             <div class="user-last-element" style="min-height: 1px; background: white"></div>
       </v-list>
   </v-container>

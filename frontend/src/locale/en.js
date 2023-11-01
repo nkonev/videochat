@@ -225,5 +225,8 @@ export default {
     request_resend_confirmation_email_text: "Didn't get a email ? You can ",
     message_edit_audio: "Add an audio",
     add_media_audio_by_link: "Add an audio by link",
-    file_download: "Download the file"
+    file_download: "Download the file",
+    chats_not_found: "Chats not found",
+    users_not_found: "Users not found",
+    messages_not_found: "Messages not found"
 }

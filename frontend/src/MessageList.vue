@@ -18,6 +18,10 @@
             @removedFromPinned="removedFromPinned"
             @shareMessage="shareMessage"
           ></MessageItem>
+          <template v-if="items.length == 0">
+            <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.messages_not_found')}}</v-sheet>
+          </template>
+
           <div class="message-last-element" style="min-height: 1px; background: white"></div>
           <MessageItemContextMenu
             ref="contextMenuRef"

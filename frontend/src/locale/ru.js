@@ -150,7 +150,7 @@ export default {
     search_in_messages: "Поиск по сообщениям",
     video_is_not_shown: "Если вы не видите видео участника a) попробуйте перезагрузить вкладку b) используйте Firefox >= 115",
     link: "Ссылка",
-    participants_not_found: "Пользователи не найдены",
+    participants_not_found: "Участники не найдены",
     search_by_participants: "Поиск по участникам",
     search_by_files: "Поиск по файлам",
     reply: "Ответить",
@@ -225,5 +225,8 @@ export default {
     request_resend_confirmation_email_text: "Не получили письмо ? Вы можете ",
     message_edit_audio: "Добавить аудио",
     add_media_audio_by_link: "Добавить аудио по ссылке",
-    file_download: "Скачать файл"
+    file_download: "Скачать файл",
+    chats_not_found: "Чаты не найдены",
+    users_not_found: "Пользователи не найдены",
+    messages_not_found: "Сообщения не найдены"
 }

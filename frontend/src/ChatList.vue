@@ -52,6 +52,9 @@
                     </v-list-item-action>
                 </template>
             </v-list-item>
+            <template v-if="items.length == 0">
+              <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.chats_not_found')}}</v-sheet>
+            </template>
             <div class="chat-last-element" style="min-height: 1px; background: white"></div>
       </v-list>
       <ChatListContextMenu
