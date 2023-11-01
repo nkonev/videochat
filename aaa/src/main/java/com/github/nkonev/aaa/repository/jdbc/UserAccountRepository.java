@@ -53,12 +53,13 @@ public interface UserAccountRepository extends PagingAndSortingRepository<UserAc
 
     @Query("""
 		SELECT al.nrow FROM (
-		SELECT
-		    u.id as uid,
-			ROW_NUMBER () OVER() AS nrow
-		FROM
-			user_account u
+            SELECT
+                u.id as uid,
+                ROW_NUMBER () OVER() AS nrow
+            FROM
+                user_account u
+                WHERE u.username ILIKE :userName
 		) al WHERE al.uid = :id
     """)
-    int getUserRowNumber(@Param("id") long id);
+    int getUserRowNumber(@Param("id") long id, @Param("userName") String searchString);
 }

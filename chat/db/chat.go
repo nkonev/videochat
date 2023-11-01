@@ -117,21 +117,23 @@ func provideScanToChat(chat *Chat) []any {
 }
 
 // rowNumber is in [1, count]
-func (tx *Tx) GetChatRowNumber(itemId, userId int64) (int, error) {
+func (tx *Tx) GetChatRowNumber(itemId, userId int64, searchString string) (int, error) {
 
+	var dbSearchString = "%" + searchString + "%"
 	var theQuery = `
 		SELECT al.nrow FROM (
-		SELECT 
-		    ch.id as cid,
-			ROW_NUMBER () OVER (ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC) as nrow
-		FROM 
-			chat ch 
-			LEFT JOIN chat_pinned cp ON (ch.id = cp.chat_id AND cp.user_id = $1) 
-		WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 )
+			SELECT 
+				ch.id as cid,
+				ROW_NUMBER () OVER (ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC) as nrow
+			FROM 
+				chat ch 
+				LEFT JOIN chat_pinned cp ON (ch.id = cp.chat_id AND cp.user_id = $1)
+			WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 )
+				AND ch.title ILIKE $3
 		) al WHERE al.cid = $2
 	`
 	var position int
-	row := tx.QueryRow(theQuery, userId, itemId)
+	row := tx.QueryRow(theQuery, userId, itemId, dbSearchString)
 	err := row.Scan(&position)
 	if err != nil {
 		return 0, tracerr.Wrap(err)
@@ -140,20 +142,22 @@ func (tx *Tx) GetChatRowNumber(itemId, userId int64) (int, error) {
 	}
 }
 
-func (tx *Tx) GetBlogRowNumber(itemId int64) (int, error) {
+func (tx *Tx) GetBlogRowNumber(itemId int64, searchString string) (int, error) {
+	var dbSearchString = "%" + searchString + "%"
 
 	var theQuery = `
 		SELECT al.nrow FROM (
-		SELECT 
-		    ch.id as cid,
-			ROW_NUMBER () OVER (ORDER BY (ch.create_date_time, ch.id) DESC) as nrow
-		FROM 
-			chat ch 
-		WHERE ch.blog IS true
+			SELECT 
+				ch.id as cid,
+				ROW_NUMBER () OVER (ORDER BY (ch.create_date_time, ch.id) DESC) as nrow
+			FROM 
+				chat ch 
+			WHERE ch.blog IS true
+				AND ch.title ILIKE $2
 		) al WHERE al.cid = $1
 	`
 	var position int
-	row := tx.QueryRow(theQuery, itemId)
+	row := tx.QueryRow(theQuery, itemId, dbSearchString)
 	err := row.Scan(&position)
 	if err != nil {
 		return 0, tracerr.Wrap(err)

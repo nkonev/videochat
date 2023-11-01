@@ -176,10 +176,17 @@ public class UserProfileController {
     record GetPageResponse(int page) {}
 
     @GetMapping(Constants.Urls.PUBLIC_API + Constants.Urls.USER + "/get-page")
-    public GetPageResponse getPage(@RequestParam("id") long id, @RequestParam("size") int rawSize) {
+    public GetPageResponse getPage(
+        @RequestParam("id") long id,
+        @RequestParam("size") int rawSize,
+        @RequestParam(value = "searchString", required = false) String rawSearchString
+    ) {
+        var searchString = rawSearchString != null ? rawSearchString.trim() : "";
+        var dbSearchString = "%" + searchString + "%";
+
         // copy from ChatHandler.GetChatPage
         var size = PageUtils.fixSize(rawSize);
-        int rowNumber = userAccountRepository.getUserRowNumber(id);
+        int rowNumber = userAccountRepository.getUserRowNumber(id, dbSearchString);
 
         var returnPage = (rowNumber + 1) / size;
 

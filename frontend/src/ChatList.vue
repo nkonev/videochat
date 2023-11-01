@@ -187,7 +187,7 @@ export default {
           const id = this.findTopElementId();
           //console.log("Going to get top page", aDirection, id);
           this.pageTop = await axios
-              .get(`/api/chat/get-page`, {params: {id: id, size: PAGE_SIZE,}})
+              .get(`/api/chat/get-page`, {params: {id: id, size: PAGE_SIZE, searchString: this.searchString}})
               .then(({data}) => data.page) - 1; // as in load() -> axios.get().then()
           if (this.pageTop == -1) {
               this.pageTop = 0
@@ -197,7 +197,7 @@ export default {
           const id = this.findBottomElementId();
           //console.log("Going to get bottom page", aDirection, id);
           this.pageBottom = await axios
-              .get(`/api/chat/get-page`, {params: {id: id, size: PAGE_SIZE,}})
+              .get(`/api/chat/get-page`, {params: {id: id, size: PAGE_SIZE, searchString: this.searchString}})
               .then(({data}) => data.page);
           console.log("Set page bottom", this.pageBottom, "for id", id);
       }

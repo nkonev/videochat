@@ -188,11 +188,12 @@ func (ch *ChatHandler) GetChatPage(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
 	size := utils.FixSizeString(c.QueryParam("size"))
+	searchString := c.QueryParam("searchString")
+	searchString = strings.TrimSpace(searchString)
 
 	return db.Transact(ch.db, func(tx *db.Tx) error {
-		rowNumber, err := tx.GetChatRowNumber(itemId, userPrincipalDto.UserId)
+		rowNumber, err := tx.GetChatRowNumber(itemId, userPrincipalDto.UserId, searchString)
 		if err != nil {
 			return err
 		}

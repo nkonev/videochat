@@ -161,11 +161,12 @@ func (h *BlogHandler) GetBlogPage(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
 	size := utils.FixSizeString(c.QueryParam("size"))
+	searchString := c.QueryParam("searchString")
+	searchString = strings.TrimSpace(searchString)
 
 	return db.Transact(h.db, func(tx *db.Tx) error {
-		rowNumber, err := tx.GetBlogRowNumber(itemId)
+		rowNumber, err := tx.GetBlogRowNumber(itemId, searchString)
 		if err != nil {
 			return err
 		}
