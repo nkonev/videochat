@@ -29,6 +29,7 @@
 
 <script>
 import {hasLength} from "@/utils";
+const VIEWPORT_VS_CLIENT_HEIGHT_RATIO = 0.75;
 
 export default {
     props: [
@@ -44,6 +45,28 @@ export default {
         hasSearchString() {
             return hasLength(this.provider.getModelValue())
         },
+        reactOnKeyboardChange(event) {
+            if (
+                (event.target.height * event.target.scale) / window.screen.height <
+                VIEWPORT_VS_CLIENT_HEIGHT_RATIO
+            ) {
+                console.log('keyboard is shown');
+            } else {
+                console.log('keyboard is hidden');
+                // close search line when user on mobile presses Back button
+                this.provider.setShowSearchButton(true);
+            }
+        },
+    },
+    mounted() {
+        if ('visualViewport' in window) {
+            window.visualViewport.addEventListener('resize', this.reactOnKeyboardChange);
+        }
+    },
+    beforeUnmount() {
+        if ('visualViewport' in window) {
+            window.visualViewport.removeEventListener('resize', this.reactOnKeyboardChange);
+        }
     },
 }
 </script>
