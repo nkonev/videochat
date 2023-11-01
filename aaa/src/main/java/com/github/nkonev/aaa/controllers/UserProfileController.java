@@ -270,7 +270,7 @@ public class UserProfileController {
         return UserAccountConverter.convertToEditUserDto(exists);
     }
 
-    private UserAccount findUserAccount(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) {
+    private UserAccount findUserAccount(UserAccountDetailsDTO userAccount) {
         return userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
     }
 
