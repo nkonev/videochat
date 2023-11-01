@@ -3,8 +3,19 @@
         <v-dialog v-model="show" max-width="640" scrollable :persistent="hasSearchString()">
             <v-card>
                 <v-card-title class="d-flex align-center ml-2">
-                    {{ $vuetify.locale.t('$vuetify.share_to') }}
-                    <v-text-field class="ml-4" variant="outlined" density="compact" prepend-icon="mdi-magnify" hide-details single-line v-model="searchString" :label="$vuetify.locale.t('$vuetify.search_by_chats')" clearable clear-icon="mdi-close-circle" @keyup.esc="resetInput"></v-text-field>
+                    <template v-if="showSearchButton">
+                        {{ $vuetify.locale.t('$vuetify.share_to') }}
+                    </template>
+
+                    <CollapsedSearch :provider="{
+                      getModelValue: this.getModelValue,
+                      setModelValue: this.setModelValue,
+                      getShowSearchButton: this.getShowSearchButton,
+                      setShowSearchButton: this.setShowSearchButton,
+                      searchName: this.searchName,
+                      textFieldVariant: 'outlined',
+                    }"/>
+
                 </v-card-title>
 
                 <v-card-text class="ma-0 pa-0">
@@ -58,6 +69,7 @@ import bus, {
 import {hasLength} from "./utils";
 import axios from "axios";
 import debounce from "lodash/debounce";
+import CollapsedSearch from "@/CollapsedSearch.vue";
 
 export default {
     data () {
@@ -67,6 +79,7 @@ export default {
             chats: [ ], // max 20 items and search
             loading: false,
             messageDto: null,
+            showSearchButton: true,
         }
     },
 
@@ -83,6 +96,7 @@ export default {
             this.loading = false;
             this.searchString = null;
             this.messageDto = null;
+            this.showSearchButton = true;
         },
         loadData() {
             if (!this.show) {
@@ -123,13 +137,30 @@ export default {
                 this.closeModal()
             })
         },
+        getModelValue() {
+            return this.searchString
+        },
+        setModelValue(v) {
+            this.searchString = v
+        },
+        getShowSearchButton() {
+            return this.showSearchButton
+        },
+        setShowSearchButton(v) {
+            this.showSearchButton = v
+        },
+        searchName() {
+            return this.$vuetify.locale.t('$vuetify.search_by_chats')
+        },
     },
     computed: {
         chatId() {
             return this.$route.params.id
         },
     },
-
+    components: {
+        CollapsedSearch
+    },
     watch: {
         show(newValue) {
             if (!newValue) {

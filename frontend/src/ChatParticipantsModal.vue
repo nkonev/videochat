@@ -321,6 +321,7 @@
                 this.participantsDto = participantsDtoFactory();
                 this.userSearchString = null;
                 this.page = firstPage;
+                this.showSearchButton = true;
             },
             addParticipants() {
                 bus.emit(OPEN_CHAT_EDIT, this.chatId);

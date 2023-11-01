@@ -14,7 +14,7 @@
                       setShowSearchButton: this.setShowSearchButton,
                       searchName: this.searchName,
                       textFieldVariant: 'outlined',
-                  }"/>
+                    }"/>
 
                 </v-card-title>
 
@@ -214,6 +214,7 @@ export default {
             this.page = firstPage;
             this.searchString = null;
             this.dto = dtoFactory();
+            this.showSearchButton = true;
         },
         doSearch(){
             this.page = firstPage;
