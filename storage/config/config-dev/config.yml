@@ -65,7 +65,7 @@ chat:
     base: "http://localhost:1235"
     access: "/internal/access"
     removeFileItem: "/internal/remove-file-item"
-    checkChatExistsPath: "/internal/is-chat-exists"
+    checkChatExistsPath: "/internal/does-chat-exist"
     chatParticipants: "/internal/participant-ids"
 
 aaa:
