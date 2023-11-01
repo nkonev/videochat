@@ -17,55 +17,55 @@
                               multiple
                               show-arrows
                           >
-                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="boldValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="boldValue()" @click="boldClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_bold')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="boldValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="boldValue()" @click="boldClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_bold')">
                                   <v-icon :size="getIconSize()">mdi-format-bold</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="italicValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="italicValue()" @click="italicClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_italic')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="italicValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="italicValue()" @click="italicClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_italic')">
                                   <v-icon :size="getIconSize()">mdi-format-italic</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="underlineValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="underlineValue()" @click="underlineClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_underline')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="underlineValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="underlineValue()" @click="underlineClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_underline')">
                                   <v-icon :size="getIconSize()">mdi-format-underline</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="strikeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="strikeValue()" @click="strikeClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_strike')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="strikeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="strikeValue()" @click="strikeClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_strike')">
                                   <v-icon :size="getIconSize()">mdi-format-strikethrough-variant</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="codeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="codeValue()" @click="codeClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_code')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="codeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="codeValue()" @click="codeClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_code')">
                                   <v-icon :size="getIconSize()">mdi-code-braces</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="linkValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_link')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" :variant="linkValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_link')">
                                   <v-icon :size="getIconSize()">mdi-link-variant</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="embedClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_embed')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="embedClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_embed')">
                                 <v-icon :size="getIconSize()">mdi-youtube</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="imageClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_image')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="imageClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_image')">
                                   <v-icon :size="getIconSize()">mdi-image-outline</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="videoClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_video')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="videoClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_video')">
                                   <v-icon :size="getIconSize()">mdi-video</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="audioClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_audio')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="audioClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_audio')">
                                   <v-icon :size="getIconSize()">mdi-music</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="textColorClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_text_color')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="textColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_text_color')">
                                   <v-icon :size="getIconSize()">mdi-invert-colors</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="backgroundColorClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_background_color')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="backgroundColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_background_color')">
                                   <v-icon :size="getIconSize()">mdi-format-color-fill</v-icon>
                               </v-btn>
 
-                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="smileyClick" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_edit_smiley')">
+                              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="smileyClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_smiley')">
                                   <v-icon :size="getIconSize()">mdi-emoticon-outline</v-icon>
                               </v-btn>
 
@@ -73,7 +73,7 @@
                       </div>
 
                       <div class="custom-toolbar-send">
-                          <v-btn v-if="!this.editMessageDto.fileItemUuid" icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" @click="openFileUploadForAddingFiles()" :title="$vuetify.locale.t('$vuetify.message_edit_file')">
+                          <v-btn v-if="!this.editMessageDto.fileItemUuid" icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="openFileUploadForAddingFiles()" :title="$vuetify.locale.t('$vuetify.message_edit_file')">
                             <v-icon :size="getIconSize()" color="primary">mdi-file-upload</v-icon>
                           </v-btn>
                           <template v-if="this.editMessageDto.fileItemUuid">
@@ -84,18 +84,18 @@
                                   overlap
                                   left
                               >
-                                  <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" @click="onFilesClicked()" :title="$vuetify.locale.t('$vuetify.message_edit_attached_files')">
+                                  <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="onFilesClicked()" :title="$vuetify.locale.t('$vuetify.message_edit_attached_files')">
                                     <v-icon :size="getIconSize()">mdi-file-document-multiple</v-icon>
                                   </v-btn>
                               </v-badge>
                           </template>
-                          <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" @click="resetInput()" :title="$vuetify.locale.t('$vuetify.message_edit_clear')">
+                          <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="resetInput()" :title="$vuetify.locale.t('$vuetify.message_edit_clear')">
                             <v-icon :size="getIconSize()">mdi-delete</v-icon>
                           </v-btn>
-                          <v-btn v-if="chatStore.canBroadcastTextMessage" icon rounded="0" :size="getBtnSize()" :variant="sendBroadcast ? 'tonal' : 'plain'" density="comfortable" @click="sendBroadcast = !sendBroadcast" :width="getBtnWidth()" :title="$vuetify.locale.t('$vuetify.message_broadcast')">
+                          <v-btn v-if="chatStore.canBroadcastTextMessage" icon rounded="0" :size="getBtnSize()" :variant="sendBroadcast ? 'tonal' : 'plain'" density="comfortable" @click="sendBroadcast = !sendBroadcast" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_broadcast')">
                             <v-icon :size="getIconSize()">mdi-broadcast</v-icon>
                           </v-btn>
-                        <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" width="64" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
+                        <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="isMobile() ? 72 : 64" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
                       </div>
 
                   </div>
@@ -290,6 +290,13 @@
                     return '64px'
                 } else {
                     return '48px'
+                }
+            },
+            getBtnHeight() {
+                if (this.isMobile()) {
+                    return '48px'
+                } else {
+                    return undefined
                 }
             },
             getBtnSize() {
