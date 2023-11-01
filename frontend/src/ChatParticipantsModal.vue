@@ -21,7 +21,10 @@
                 <v-card-text class="ma-0 pa-0 participants-list">
                     <v-list v-if="participantsDto.participants && participantsDto.participants.length > 0">
                         <template v-for="(item, index) in participantsDto.participants">
-                            <v-list-item class="list-item-prepend-spacer-16">
+                            <v-list-item
+                              class="list-item-prepend-spacer-16"
+                              @contextmenu.stop="onShowContextMenu($event, item)"
+                            >
                                 <template v-slot:prepend v-if="hasLength(item.avatar)">
                                     <v-badge
                                         v-if="item.avatar"
@@ -57,7 +60,7 @@
 
                                 <template v-slot:append>
                                     <template v-if="item.admin || dto.canChangeChatAdmins">
-                                        <template v-if="dto.canChangeChatAdmins && (item.id != chatStore.currentUser.id)">
+                                        <template v-if="dto.canChangeChatAdmins && item.id != chatStore.currentUser.id && !isMobile()">
                                             <v-btn
                                                 variant="flat"
                                                 :loading="item.adminLoading ? true : false"
@@ -74,15 +77,18 @@
                                               </span>
                                         </template>
                                     </template>
-                                    <template v-if="dto.canEdit && item.id != chatStore.currentUser.id">
-                                        <v-btn variant="flat" icon @click="deleteParticipant(item)" :title="$vuetify.locale.t('$vuetify.delete_from_chat')"><v-icon color="red">mdi-delete</v-icon></v-btn>
+                                    <template v-if="!isMobile()">
+                                        <template v-if="dto.canEdit && item.id != chatStore.currentUser.id">
+                                            <v-btn variant="flat" icon @click="deleteParticipant(item)" :title="$vuetify.locale.t('$vuetify.delete_from_chat')"><v-icon color="red">mdi-delete</v-icon></v-btn>
+                                        </template>
+                                        <template v-if="dto.canVideoKick && item.id != chatStore.currentUser.id && isVideo()">
+                                            <v-btn variant="flat" icon @click="kickFromVideoCall(item)" :title="$vuetify.locale.t('$vuetify.kick')"><v-icon color="red">mdi-block-helper</v-icon></v-btn>
+                                        </template>
+                                        <template v-if="dto.canAudioMute && item.id != chatStore.currentUser.id && isVideo()">
+                                            <v-btn variant="flat" icon @click="forceMute(item)" :title="$vuetify.locale.t('$vuetify.force_mute')"><v-icon color="red">mdi-microphone-off</v-icon></v-btn>
+                                        </template>
                                     </template>
-                                    <template v-if="dto.canVideoKick && item.id != chatStore.currentUser.id && isVideo()">
-                                        <v-btn variant="flat" icon @click="kickFromVideoCall(item.id)" :title="$vuetify.locale.t('$vuetify.kick')"><v-icon color="red">mdi-block-helper</v-icon></v-btn>
-                                    </template>
-                                    <template v-if="dto.canAudioMute && item.id != chatStore.currentUser.id && isVideo()">
-                                        <v-btn variant="flat" icon @click="forceMute(item.id)" :title="$vuetify.locale.t('$vuetify.force_mute')"><v-icon color="red">mdi-microphone-off</v-icon></v-btn>
-                                    </template>
+
                                     <template v-if="item.id != chatStore.currentUser.id">
                                         <v-btn variant="flat" icon @click="startCalling(item)" :title="item.callingTo ? $vuetify.locale.t('$vuetify.stop_call') : $vuetify.locale.t('$vuetify.call')"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
                                     </template>
@@ -94,6 +100,13 @@
                     <template v-else-if="!loading">
                         <v-card-text>{{ $vuetify.locale.t('$vuetify.participants_not_found') }}</v-card-text>
                     </template>
+                    <ChatParticipantsContextMenu
+                      ref="contextMenuRef"
+                      @deleteParticipantFromChat="this.deleteParticipant"
+                      @kickParticipantFromChat="this.kickFromVideoCall"
+                      @forceMuteParticipantInChat="this.forceMute"
+                      @changeChatAdmin="this.changeChatAdmin"
+                    />
 
                     <v-progress-circular
                         class="ma-4"
@@ -156,6 +169,8 @@
     import {useChatStore} from "@/store/chatStore";
     import Mark from "mark.js";
     import CollapsedSearch from "@/CollapsedSearch.vue";
+    import ChatParticipantsContextMenu from "@/ChatParticipantsContextMenu.vue";
+    import ChatListContextMenu from "@/ChatListContextMenu.vue";
 
     const firstPage = 1;
     const pageSize = 20;
@@ -268,11 +283,11 @@
                     }
                 })
             },
-            kickFromVideoCall(userId) {
-                axios.put(`/api/video/${this.dto.id}/kick?userId=${userId}`)
+            kickFromVideoCall(item) {
+                axios.put(`/api/video/${this.dto.id}/kick?userId=${item.id}`)
             },
-            forceMute(userId) {
-                axios.put(`/api/video/${this.dto.id}/mute?userId=${userId}`)
+            forceMute(item) {
+                axios.put(`/api/video/${this.dto.id}/mute?userId=${item.id}`)
             },
             deleteParticipant(participant) {
                 bus.emit(OPEN_SIMPLE_MODAL, {
@@ -517,6 +532,9 @@
             searchName() {
               return this.$vuetify.locale.t('$vuetify.search_by_users')
             },
+            onShowContextMenu(e, menuableItem) {
+              this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem, this.dto);
+            },
 
         },
         watch: {
@@ -548,6 +566,8 @@
             }
         },
         components: {
+          ChatListContextMenu,
+          ChatParticipantsContextMenu,
           CollapsedSearch
         },
 
