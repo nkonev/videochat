@@ -530,7 +530,7 @@
               this.showSearchButton = v
             },
             searchName() {
-              return this.$vuetify.locale.t('$vuetify.search_by_users')
+              return this.$vuetify.locale.t('$vuetify.search_by_participants')
             },
             onShowContextMenu(e, menuableItem) {
               this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem, this.dto);

@@ -365,7 +365,7 @@ export default {
             } else if (this.chatStore.searchType == SEARCH_MODE_MESSAGES) {
               return this.$vuetify.locale.t('$vuetify.search_in_messages')
             } else if (this.chatStore.searchType == SEARCH_MODE_USERS) {
-              return this.$vuetify.locale.t('$vuetify.find_user')
+              return this.$vuetify.locale.t('$vuetify.search_by_users')
             }
         },
         getGraphQlSubscriptionQuery() {
