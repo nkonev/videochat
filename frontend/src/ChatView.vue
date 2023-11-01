@@ -26,7 +26,6 @@
                       closable
                       color="red-lighten-4"
                       elevation="2"
-                      density="compact"
                     >
                       <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text">
                       </router-link>
@@ -599,6 +598,12 @@ export default {
   position: fixed
   z-index: 4;
   margin-right: 284px;
+
+  .v-alert {
+    height 38px
+    padding-top 2px
+    padding-bottom 2px
+  }
 }
 .pinned-promoted-mobile {
     margin-right: unset;
