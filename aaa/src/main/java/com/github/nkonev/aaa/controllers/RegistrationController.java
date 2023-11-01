@@ -70,7 +70,6 @@ public class RegistrationController {
 
         userService.checkLoginIsFree(userAccountDTO);
         if(!userService.checkEmailIsFree(userAccountDTO)){
-            LOGGER.warn("Skipping the whole registration process because email '{}' is already taken", userAccountDTO.email());
             return; // we care for user email leak
         }
 
