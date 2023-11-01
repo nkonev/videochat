@@ -2,8 +2,8 @@ package com.github.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.nkonev.aaa.AbstractUtTestRunner;
-import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.TestConstants;
+import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.security.SecurityConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -96,7 +96,7 @@ public class AaaErrorControllerTest extends AbstractUtTestRunner {
 
     @Test
     public void testUserDetailsWithPasswordIsNotSerialized() throws Exception {
-        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.PUBLIC_API +TestConstants.USER_DETAILS, String.class);
+        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.PUBLIC_API + TestConstants.USER_DETAILS, String.class);
         String str = responseEntity.getBody();
         Assertions.assertEquals(500, responseEntity.getStatusCodeValue());
 

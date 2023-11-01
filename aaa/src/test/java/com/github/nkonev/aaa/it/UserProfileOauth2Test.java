@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 
-import static com.github.nkonev.aaa.CommonTestConstants.*;
+import static com.github.nkonev.aaa.TestConstants.*;
 import static com.github.nkonev.aaa.Constants.Urls.PUBLIC_API;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.http.HttpHeaders.COOKIE;

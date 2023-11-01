@@ -3,9 +3,8 @@ package com.github.nkonev.aaa.controllers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.nkonev.aaa.AbstractUtTestRunner;
-import com.github.nkonev.aaa.CommonTestConstants;
-import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.TestConstants;
+import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.EditUserDTO;
 import com.github.nkonev.aaa.dto.LockDTO;
@@ -271,12 +270,12 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     public void userCanSeeTheirOwnEmail() throws Exception {
         String xsrf = "xsrf";
         String session = getSession(xsrf, TestConstants.USER_ADMIN, password);
-        String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
+        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
 
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_ADMIN);
         RequestEntity requestEntity = RequestEntity
             .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API +Constants.Urls.USER + "/" + foreignUserAccount.id()))
-            .header(CommonTestConstants.HEADER_COOKIE, headerValue).build();
+            .header(TestConstants.HEADER_COOKIE, headerValue).build();
         ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
         var response = objectMapper.readValue(responseEntity.getBody(), JsonNode.class);
         Assertions.assertEquals(foreignUserAccount.id(), response.get("id").asLong());
@@ -327,12 +326,12 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     public void userCanSeeOnlyOwnProfileEmail() throws Exception {
         String xsrf = "xsrf";
         String session = getSession(xsrf, TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
-        String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
+        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
 
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_BOB);
         RequestEntity requestEntity = RequestEntity
             .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API +Constants.Urls.USER + "/" + foreignUserAccount.id()))
-            .header(CommonTestConstants.HEADER_COOKIE, headerValue).build();
+            .header(TestConstants.HEADER_COOKIE, headerValue).build();
         ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
         var response = objectMapper.readValue(responseEntity.getBody(), JsonNode.class);
         Assertions.assertEquals(foreignUserAccount.id(), response.get("id").asLong());
@@ -345,11 +344,11 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         String session = getSession(xsrf, TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
 
-        String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
+        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
 
         RequestEntity requestEntity = RequestEntity
                 .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API + Constants.Urls.SESSIONS + "?userId=1"))
-                .header(CommonTestConstants.HEADER_COOKIE, headerValue).build();
+                .header(TestConstants.HEADER_COOKIE, headerValue).build();
 
         ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
         String str = responseEntity.getBody();
@@ -365,11 +364,11 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String xsrf = "xsrf";
         String session = getSession(xsrf, username, password);
 
-        String headerValue = buildCookieHeader(new HttpCookie(CommonTestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
+        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
 
         RequestEntity requestEntity = RequestEntity
                 .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API + Constants.Urls.SESSIONS + "?userId=1"))
-                .header(CommonTestConstants.HEADER_COOKIE, headerValue).build();
+                .header(TestConstants.HEADER_COOKIE, headerValue).build();
 
         ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
         String str = responseEntity.getBody();

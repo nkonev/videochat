@@ -1,6 +1,6 @@
 package com.github.nkonev.aaa.it;
 
-import com.github.nkonev.aaa.CommonTestConstants;
+import com.github.nkonev.aaa.TestConstants;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.dto.LockDTO;
 import com.github.nkonev.aaa.dto.SuccessfulLoginDTO;
@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.net.URI;
 
-import static com.github.nkonev.aaa.CommonTestConstants.*;
+import static com.github.nkonev.aaa.TestConstants.*;
 import static com.github.nkonev.aaa.Constants.Urls.PUBLIC_API;
 import static com.github.nkonev.aaa.Constants.Urls.LOCK;
 import static org.springframework.http.HttpHeaders.COOKIE;
@@ -34,7 +34,7 @@ public class SessionTest extends OAuth2EmulatorTests {
     // This test won't works if you call .with(csrf()) before.
     @Test
     public void userCannotRequestProfileAfterLock() throws Exception {
-        SessionHolder userAliceSession = login(CommonTestConstants.USER_LOCKED, CommonTestConstants.COMMON_PASSWORD);
+        SessionHolder userAliceSession = login(TestConstants.USER_LOCKED, TestConstants.COMMON_PASSWORD);
 
         RequestEntity myPostsRequest1 = RequestEntity
                 .get(new URI(urlWithContextPath()+ PUBLIC_API + Constants.Urls.PROFILE))
@@ -67,7 +67,7 @@ public class SessionTest extends OAuth2EmulatorTests {
         Assertions.assertEquals(401, myPostsResponse3.getStatusCodeValue());
 
 
-        ResponseEntity<SuccessfulLoginDTO> newAliceLogin = rawLogin(CommonTestConstants.USER_LOCKED, CommonTestConstants.COMMON_PASSWORD);
+        ResponseEntity<SuccessfulLoginDTO> newAliceLogin = rawLogin(TestConstants.USER_LOCKED, TestConstants.COMMON_PASSWORD);
         Assertions.assertEquals(401, newAliceLogin.getStatusCodeValue());
     }
 

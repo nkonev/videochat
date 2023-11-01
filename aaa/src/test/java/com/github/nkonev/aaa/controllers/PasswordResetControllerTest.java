@@ -1,8 +1,8 @@
 package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.AbstractUtTestRunner;
-import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.TestConstants;
+import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
 import com.github.nkonev.aaa.security.SecurityConfig;
 import com.github.nkonev.aaa.util.UrlParser;

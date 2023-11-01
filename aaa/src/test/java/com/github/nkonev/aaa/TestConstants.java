@@ -1,19 +1,25 @@
 package com.github.nkonev.aaa;
 
-/**
- * Created by nik on 28.05.17.
- */
 public class TestConstants {
+    public static final String USER = "${custom.it.user}";
+    public static final String PASSWORD = "${custom.it.password}";
+    public static final String USER_ID = "${custom.it.user.id}";
+
+    public static final String USER_ALICE = "alice";
+    public static final String USER_ALICE_PASSWORD = "password";
+    public static final String USER_ADMIN = "admin";
+    public static final String USER_BOB = "bob";
+    public static final String USER_NIKITA = "nikita";
+
+    public static final String USER_LOCKED = "generated_user_66";
+    public static final String COMMON_PASSWORD = "generated_user_password";
+    public static final String COOKIE_XSRF = "VIDEOCHAT_XSRF_TOKEN";
+    public static final String HEADER_XSRF_TOKEN = "X-XSRF-TOKEN";
+    public static final String HEADER_COOKIE = "Cookie";
+    public static final String HEADER_SET_COOKIE = "Set-Cookie";
 
     public static final String SQL_URL = "/sql";
     public static final String SQL_QUERY = "select * from fake_users;";
     public static final String USER_DETAILS = "/user-details-vuln";
 
-    public static final String USER_ALICE = CommonTestConstants.USER_ALICE;
-    public static final String USER_ALICE_PASSWORD = CommonTestConstants.USER_ALICE_PASSWORD;
-    public static final String USER_ADMIN  = CommonTestConstants.USER_ADMIN;
-    public static final String USER_BOB = CommonTestConstants.USER_BOB;
-    public static final String USER_NIKITA = CommonTestConstants.USER_NIKITA;
-
-    public static final String ALLOW_IFRAME_SRC_STRING = "^(https://www\\.youtube\\.com.*)|(https://coub\\.com/.*)|(https://player\\.vimeo\\.com.*)$";
 }

@@ -35,7 +35,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -44,7 +43,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.github.nkonev.aaa.CommonTestConstants.*;
+import static com.github.nkonev.aaa.TestConstants.*;
 import static com.github.nkonev.aaa.security.SecurityConfig.*;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.COOKIE;
@@ -94,13 +93,13 @@ public abstract class AbstractTestRunner {
         return ContextPathHelper.urlWithContextPath(abstractConfigurableEmbeddedServletContainer);
     }
 
-    @Value(CommonTestConstants.USER)
+    @Value(TestConstants.USER)
     protected String username;
 
-    @Value(CommonTestConstants.PASSWORD)
+    @Value(TestConstants.PASSWORD)
     protected String password;
 
-    @Value(CommonTestConstants.USER_ID)
+    @Value(TestConstants.USER_ID)
     protected String userId;
 
     @Autowired
