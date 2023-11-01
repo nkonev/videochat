@@ -24,7 +24,7 @@
                             <v-col
                                 v-for="item in dto.files"
                                 :key="item.id"
-                                :cols="6"
+                                :cols="isMobile() ? 12 : 6"
                             >
                                 <v-card>
                                     <v-img
@@ -86,7 +86,7 @@
 
                   <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
                   <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
-                    <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                    <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0" :class="isMobile() ? 'mb-2' : ''">
                       <v-pagination
                           variant="elevated"
                           active-color="primary"

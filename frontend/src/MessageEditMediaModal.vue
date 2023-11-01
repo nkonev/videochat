@@ -15,7 +15,7 @@
                           v-for="(mediaFile, i) in dto.files"
                           :key="mediaFile.id"
                         >
-                            <v-col :cols="6">
+                            <v-col :cols="isMobile() ? 12 : 6">
                                 <v-hover v-slot="{ isHovering, props }">
 
                                     <v-card v-bind="props" @click="accept(mediaFile)">
@@ -64,7 +64,7 @@
 
                   <!-- Pagination is shuddering / flickering on the second page without this wrapper -->
                   <v-row no-gutters class="ma-0 pa-0 d-flex flex-row">
-                      <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0">
+                      <v-col class="ma-0 pa-0 flex-grow-1 flex-shrink-0" :class="isMobile() ? 'mb-2' : ''">
                           <v-pagination
                               variant="elevated"
                               active-color="primary"
