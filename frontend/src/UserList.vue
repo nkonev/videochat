@@ -109,7 +109,7 @@
                     </v-list-item-subtitle>
                 </template>
             </v-list-item>
-            <template v-if="items.length == 0">
+            <template v-if="items.length == 0 && !showProgress">
               <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.users_not_found')}}</v-sheet>
             </template>
             <div class="user-last-element" style="min-height: 1px; background: white"></div>
@@ -165,6 +165,9 @@ export default {
   },
   computed: {
     ...mapStores(useChatStore),
+    showProgress() {
+      return this.chatStore.progressCount > 0
+    },
   },
 
   methods: {

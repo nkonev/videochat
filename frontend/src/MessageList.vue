@@ -18,7 +18,7 @@
             @removedFromPinned="removedFromPinned"
             @shareMessage="shareMessage"
           ></MessageItem>
-          <template v-if="items.length == 0">
+          <template v-if="items.length == 0 && !showProgress">
             <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.messages_not_found')}}</v-sheet>
           </template>
 
@@ -111,6 +111,9 @@
         },
         highlightMessageId() {
             return this.getMessageId(this.$route.hash);
+        },
+        showProgress() {
+          return this.chatStore.progressCount > 0
         },
       },
 
