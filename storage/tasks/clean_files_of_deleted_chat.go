@@ -98,7 +98,7 @@ func (srv *CleanFilesOfDeletedChatService) processChats(c context.Context) {
 	}
 
 
-	logger.Logger.Infof("End of processChats job")
+	logger.Logger.Infof("End of cleaning files of deleted chats job")
 }
 
 func NewCleanFilesOfDeletedChatService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {
