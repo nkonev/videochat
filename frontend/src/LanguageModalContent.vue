@@ -27,7 +27,7 @@
             }
         },
         methods: {
-            showModal() {
+            init() {
                 this.language = getStoredLanguage();
                 this.setToVuetify(this.language);
             },
@@ -42,7 +42,7 @@
             },
         },
         mounted() {
-          this.showModal()
+          this.init()
         }
     }
 </script>
