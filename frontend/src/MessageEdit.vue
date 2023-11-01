@@ -258,6 +258,9 @@
             },
             onSetMessage(dto) {
               this.editMessageDto = dto;
+              if (hasLength(this.editMessageDto.fileItemUuid)) {
+                  this.$refs.tipTapRef.setFileItemUuid(this.editMessageDto.fileItemUuid)
+              }
               this.saveToStore();
               this.setContentToEditorAndLoad();
             },

@@ -160,6 +160,9 @@ export default {
     addText(text) {
         this.editor.commands.insertContent(text)
     },
+    setFileItemUuid(fileItemUuid) {
+        this.preallocatedCandidateFileItemId = fileItemUuid;
+    },
   },
   mounted() {
     bus.on(PREVIEW_CREATED, this.onPreviewCreated);
