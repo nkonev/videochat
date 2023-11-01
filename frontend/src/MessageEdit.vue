@@ -243,6 +243,8 @@
               if (isNew) {
                 if (mbExisting && !mbExisting.id) {
                   this.onSetMessage(mbExisting)
+                } else if (dto.embedMessage) {
+                    this.onSetMessage(dto)
                 } else {
                   this.onSetMessage(chatEditMessageDtoFactory())
                 }
