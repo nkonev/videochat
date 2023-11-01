@@ -36,11 +36,11 @@
                       <v-pagination
                         variant="elevated"
                         active-color="primary"
-                        :density="isMobile() ? 'compact' : 'comfortable'"
+                        density="comfortable"
                         v-if="shouldShowPagination"
                         v-model="page"
                         :length="pagesCount"
-                        :total-visible="isMobile() ? 3 : 7"
+                        :total-visible="getTotalVisible()"
                       ></v-pagination>
                     </v-col>
                     <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-1 flex-shrink-0 align-self-end justify-end">
@@ -137,6 +137,15 @@ export default {
         getLink(user) {
             let url = profile + "/" + user.id;
             return url;
+        },
+        getTotalVisible() {
+            if (!this.isMobile()) {
+                return 7
+            } else if (this.page == firstPage || this.page == this.pagesCount) {
+                return 3
+            } else {
+                return 1
+            }
         },
     },
     computed: {
