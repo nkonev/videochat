@@ -598,12 +598,6 @@ export default {
   position: fixed
   z-index: 4;
   margin-right: 284px;
-
-  .v-alert {
-    height 38px
-    padding-top 2px
-    padding-bottom 2px
-  }
 }
 .pinned-promoted-mobile {
     margin-right: unset;
@@ -625,5 +619,19 @@ export default {
   .v-alert__content{
     text-overflow: ellipsis;
   }
+  .v-alert {
+    padding-top 2px
+    padding-bottom 2px
+
+    // apply only for Chrome
+    @supports (not (-moz-appearance:button)) and (contain:paint) and (-webkit-appearance:none) {
+      .v-alert__close {
+          .v-btn__content {
+              margin-top 3px
+          }
+      }
+    }
+  }
+
 }
 </style>
