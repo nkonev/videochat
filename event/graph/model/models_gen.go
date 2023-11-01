@@ -100,6 +100,7 @@ type FileInfoDto struct {
 	Owner          *User     `json:"owner"`
 	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
 	CanShowAsImage bool      `json:"canShowAsImage"`
+	CanPlayAsAudio bool      `json:"canPlayAsAudio"`
 }
 
 type GlobalEvent struct {

@@ -269,14 +269,12 @@ func convertToUserOnline(u *dto.UserOnline) *model.UserOnline {
 		Online: u.Online,
 	}
 }
-
 func convertToUserCallStatusChanged(u *dto.VideoCallUserCallStatusChangedDto) *model.UserVideoStatusEvent {
 	return &model.UserVideoStatusEvent{
 		UserID:    u.UserId,
 		IsInVideo: u.IsInVideo,
 	}
 }
-
 func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	var result = &model.ChatEvent{
 		EventType: e.EventType,
@@ -350,6 +348,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				Owner:          convertUser(fileEvent.FileInfoDto.Owner),
 				CanPlayAsVideo: fileEvent.FileInfoDto.CanPlayAsVideo,
 				CanShowAsImage: fileEvent.FileInfoDto.CanShowAsImage,
+				CanPlayAsAudio: fileEvent.FileInfoDto.CanPlayAsAudio,
 			},
 			Count:        fileEvent.Count,
 			FileItemUUID: &fileEvent.FileItemUuid,
