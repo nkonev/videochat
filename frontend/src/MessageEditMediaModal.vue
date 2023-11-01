@@ -68,14 +68,14 @@
                           <v-pagination
                               variant="elevated"
                               active-color="primary"
-                              density="comfortable"
+                              :density="isMobile() ? 'compact' : 'comfortable'"
                               v-if="shouldShowPagination"
                               v-model="page"
                               :length="pagesCount"
                               :total-visible="isMobile() ? 3 : 7"
                           ></v-pagination>
                       </v-col>
-                      <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                      <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-1 flex-shrink-0 align-self-end justify-end">
                           <v-btn variant="outlined" @click="fromUrl()" min-width="0" :title="$vuetify.locale.t('$vuetify.from_link')"><v-icon size="large">mdi-link-variant</v-icon></v-btn>
                           <v-btn color="primary" variant="flat" @click="fromDisk()"><v-icon color="white">mdi-file-upload</v-icon>{{ $vuetify.locale.t('$vuetify.choose_file_from_disk') }}</v-btn>
                           <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>

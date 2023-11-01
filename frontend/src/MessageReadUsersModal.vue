@@ -36,14 +36,14 @@
                       <v-pagination
                         variant="elevated"
                         active-color="primary"
-                        density="comfortable"
+                        :density="isMobile() ? 'compact' : 'comfortable'"
                         v-if="shouldShowPagination"
                         v-model="page"
                         :length="pagesCount"
                         :total-visible="isMobile() ? 3 : 7"
                       ></v-pagination>
                     </v-col>
-                    <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-0 flex-shrink-0 align-self-end">
+                    <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-1 flex-shrink-0 align-self-end justify-end">
                       <v-btn
                         variant="elevated"
                         color="red"
