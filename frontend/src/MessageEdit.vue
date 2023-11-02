@@ -249,7 +249,7 @@
                   this.onSetMessage(chatEditMessageDtoFactory())
                 }
               } else {
-                if (mbExisting && mbExisting.id) {
+                if (mbExisting && mbExisting.id == dto.id) {
                   this.onSetMessage(mbExisting)
                 } else {
                   this.onSetMessage(dto)
