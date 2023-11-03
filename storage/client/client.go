@@ -187,15 +187,25 @@ func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 
 type ChatExists struct {
 	Exists bool `json:"exists"`
+	ChatId int64 `json:"chatId"`
 }
 
-func (h *RestClient) CheckIsChatExists(chatId int64, c context.Context) (bool, error) {
-	fullUrl := fmt.Sprintf("%v%v/%v", h.baseUrl, h.checkChatExistsPath, chatId)
+
+func (h *RestClient) CheckIsChatExists(chatIds []int64, c context.Context) (*[]ChatExists, error) {
+
+	var chatIdsString []string
+	for _, chatIdInt := range chatIds {
+		chatIdsString = append(chatIdsString, utils.Int64ToString(chatIdInt))
+	}
+
+	join := strings.Join(chatIdsString, ",")
+
+	fullUrl := fmt.Sprintf("%v%v?chatId=%v", h.baseUrl, h.checkChatExistsPath, join)
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
 		GetLogEntry(c).Errorln("Failed during parse chat url:", err)
-		return false, err
+		return nil, err
 	}
 
 	request := &http.Request{
@@ -213,26 +223,26 @@ func (h *RestClient) CheckIsChatExists(chatId int64, c context.Context) (bool, e
 	response, err := h.client.Do(request)
 	if err != nil {
 		GetLogEntry(c).Error(err, "Transport error during checking chat presence")
-		return false, err
+		return nil, err
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		err = errors.New(fmt.Sprintf("Unexpected status checking chat presence %v", response.StatusCode))
-		return false, err
+		return nil, err
 	}
 
 	bodyBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		GetLogEntry(c).Errorln("Failed to decode get chat presence response:", err)
-		return false, err
+		return nil, err
 	}
 
-	resultMap := new(ChatExists)
+	resultMap := new([]ChatExists)
 	if err := json.Unmarshal(bodyBytes, resultMap); err != nil {
 		GetLogEntry(c).Errorln("Failed to parse result:", err)
-		return false, err
+		return nil, err
 	}
-	return resultMap.Exists, nil
+	return resultMap, nil
 }
 
 func (h *RestClient) GetChatParticipantIds(chatId int64, c context.Context) ([]int64, error) {

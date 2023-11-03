@@ -159,7 +159,7 @@ func configureEcho(
 	e.GET("/internal/access", ch.CheckAccess)
 	e.GET("/internal/participant-ids", ch.GetChatParticipants)
 	e.GET("/internal/is-admin", ch.IsAdmin)
-	e.GET("/internal/does-chat-exist/:id", ch.IsExists)
+	e.GET("/internal/does-chat-exist", ch.IsExists)
 	e.GET("/internal/name-for-invite", ch.GetNameForInvite)
 	e.GET("/internal/basic/:id", ch.GetBasicInfo)
 

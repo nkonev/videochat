@@ -91,6 +91,7 @@ schedulers:
   cleanFilesOfDeletedChatTask:
     enabled: true
     interval: 60s
+    batchChats: 20
   actualizePreviewsTask:
     enabled: true
     interval: 60s

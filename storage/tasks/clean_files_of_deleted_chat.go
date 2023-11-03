@@ -53,6 +53,7 @@ func (srv *CleanFilesOfDeletedChatService) processChats(c context.Context) {
 		Recursive: false,
 	})
 
+	chatIds := make([]int64, 0)
 	for chatObjInfo := range objectsChats {
 		// here in minio 'chat/108/'
 		logger.Logger.Debugf("Start processing minio key '%v'", chatObjInfo.Key)
@@ -63,15 +64,33 @@ func (srv *CleanFilesOfDeletedChatService) processChats(c context.Context) {
 		}
 		logger.Logger.Debugf("Successfully got chatId '%v'", chatId)
 
-
-		// check chat's existence
-		chatExists, err := srv.chatClient.CheckIsChatExists(chatId, c)
-		if err != nil {
-			logger.Logger.Errorf("Unable to chech existence of chat id %v", chatId)
-			continue
+		chatIds = append(chatIds, chatId)
+		if len(chatIds) >= viper.GetInt("schedulers.cleanFilesOfDeletedChatTask.batchChats") {
+			srv.processBatch(c, chatIds)
+			chatIds = make([]int64, 0)
 		}
 
+	}
 
+	// process leftovers
+	if len(chatIds) > 0 {
+		srv.processBatch(c, chatIds)
+	}
+
+	logger.Logger.Infof("End of cleaning files of deleted chats job")
+}
+
+func(srv *CleanFilesOfDeletedChatService) processBatch(c context.Context, chatIds []int64) {
+	// check chat's existence
+	chatsExists, err := srv.chatClient.CheckIsChatExists(chatIds, c)
+	if err != nil {
+		logger.Logger.Errorf("Unable to chech existence of chat id %v", chatIds)
+		return
+	}
+
+	for _, chatExists := range *chatsExists {
+		chatId := chatExists.ChatId
+		doesChatExists := chatExists.Exists
 		// performing cleanup in minio - getting subfolders (recursively)
 		filenameChatFilesPrefix := fmt.Sprintf("chat/%v/", chatId)
 		var objectsOfChat <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
@@ -82,7 +101,7 @@ func (srv *CleanFilesOfDeletedChatService) processChats(c context.Context) {
 			// here in minio 'chat/108/'
 			logger.Logger.Debugf("Start processing minio key '%v'", objInfo.Key)
 
-			if !chatExists {
+			if !doesChatExists {
 				logger.Logger.Infof("Deleting file(directory) object %v", objInfo.Key)
 				err := srv.minioClient.RemoveObject(c, srv.minioBucketsConfig.Files, objInfo.Key, minio.RemoveObjectOptions{})
 				if err != nil {
@@ -94,11 +113,7 @@ func (srv *CleanFilesOfDeletedChatService) processChats(c context.Context) {
 				logger.Logger.Debugf("Chat %v is present, skipping", chatId)
 			}
 		}
-
 	}
-
-
-	logger.Logger.Infof("End of cleaning files of deleted chats job")
 }
 
 func NewCleanFilesOfDeletedChatService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {

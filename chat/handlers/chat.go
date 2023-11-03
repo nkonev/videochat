@@ -1173,18 +1173,33 @@ func (ch *ChatHandler) CreatePreview(c echo.Context) error {
 
 type ChatExists struct {
 	Exists bool `json:"exists"`
+	ChatId int64 `json:"chatId"`
 }
 
 func (ch *ChatHandler) IsExists(c echo.Context) error {
-	chatId, err := GetPathParamAsInt64(c, "id")
+	chatIds, err := GetQueryParamsAsInt64Slice(c, "chatId")
 	if err != nil {
 		return err
 	}
-	exists, err := ch.db.IsChatExists(chatId)
+
+	responseList := make([]ChatExists, 0)
+	if len(chatIds) == 0 {
+		return c.JSON(http.StatusOK, responseList)
+	}
+
+	existsFromDb, err := ch.db.GetExistingChatIds(chatIds)
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, ChatExists{exists})
+
+	for _, ce := range chatIds {
+		responseList = append(responseList, ChatExists{
+			ChatId: ce,
+			Exists: utils.Contains(*existsFromDb, ce),
+		})
+	}
+
+	return c.JSON(http.StatusOK, responseList)
 }
 
 type simpleChat struct {

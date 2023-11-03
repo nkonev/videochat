@@ -714,16 +714,40 @@ func (tx *Tx) GetChatLastDatetimeChat(chatId int64) (time.Time, error) {
 	}
 }
 
-func (db *DB) IsChatExists(chatId int64) (bool, error) {
-	row := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM chat WHERE id = $1)`, chatId)
-	exists := false
-	err := row.Scan(&exists)
-	if err != nil {
-		return false, tracerr.Wrap(err)
-	} else {
-		return exists, nil
+
+func (db *DB) GetExistingChatIds(chatIds []int64) (*[]int64, error) {
+	list := make([]int64, 0)
+
+	if len(chatIds) == 0 {
+		return &list, nil
 	}
 
+	var additionalChatIds = ""
+	first := true
+	for _, chatId := range chatIds {
+		if !first {
+			additionalChatIds = additionalChatIds + ","
+		}
+		additionalChatIds = additionalChatIds + utils.Int64ToString(chatId)
+		first = false
+	}
+
+	rows, err := db.Query(fmt.Sprintf(`SELECT id FROM chat WHERE id IN (%s)`, additionalChatIds))
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var chatId int64
+		if err := rows.Scan(&chatId); err != nil {
+			return nil, tracerr.Wrap(err)
+		} else {
+			list = append(list, chatId)
+		}
+	}
+
+	return &list, nil
 }
 
 func pinChatCommon(co CommonOperations, chatId int64, userId int64, pin bool) error {
