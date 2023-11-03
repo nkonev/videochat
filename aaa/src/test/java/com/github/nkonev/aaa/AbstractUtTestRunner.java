@@ -65,6 +65,6 @@ public abstract class AbstractUtTestRunner extends AbstractTestRunner {
     private static final ServerSetup[] SMTP_IMAP = new ServerSetup[]{SMTP, IMAP};
 
     @RegisterExtension
-    protected GreenMailExtension greenMail = new GreenMailExtension(SMTP_IMAP).withConfiguration(GreenMailConfiguration.aConfig().withDisabledAuthentication());
+    protected static GreenMailExtension greenMail = new GreenMailExtension(SMTP_IMAP).withConfiguration(GreenMailConfiguration.aConfig().withDisabledAuthentication());
 
 }
