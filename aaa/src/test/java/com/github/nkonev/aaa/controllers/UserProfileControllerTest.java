@@ -38,6 +38,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.github.nkonev.aaa.TestConstants.XSRF_TOKEN_VALUE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -268,9 +269,8 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @org.junit.jupiter.api.Test
     public void userCanSeeTheirOwnEmail() throws Exception {
-        String xsrf = "xsrf";
-        String session = getSession(xsrf, TestConstants.USER_ADMIN, password);
-        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
+        String session = getSession(TestConstants.USER_ADMIN, password);
+        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, XSRF_TOKEN_VALUE), new HttpCookie(getAuthCookieName(), session));
 
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_ADMIN);
         RequestEntity requestEntity = RequestEntity
@@ -324,9 +324,8 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @org.junit.jupiter.api.Test
     public void userCanSeeOnlyOwnProfileEmail() throws Exception {
-        String xsrf = "xsrf";
-        String session = getSession(xsrf, TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
-        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
+        String session = getSession(TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
+        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, XSRF_TOKEN_VALUE), new HttpCookie(getAuthCookieName(), session));
 
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_BOB);
         RequestEntity requestEntity = RequestEntity
@@ -340,11 +339,9 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @org.junit.jupiter.api.Test
     public void userCannotManageSessions() throws Exception {
-        String xsrf = "xsrf";
+        String session = getSession(TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
 
-        String session = getSession(xsrf, TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
-
-        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
+        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, XSRF_TOKEN_VALUE), new HttpCookie(getAuthCookieName(), session));
 
         RequestEntity requestEntity = RequestEntity
                 .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API + Constants.Urls.SESSIONS + "?userId=1"))
@@ -361,10 +358,9 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @org.junit.jupiter.api.Test
     public void adminCanManageSessions() throws Exception {
-        String xsrf = "xsrf";
-        String session = getSession(xsrf, username, password);
+        String session = getSession(username, password);
 
-        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, xsrf), new HttpCookie(getAuthCookieName(), session));
+        String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, XSRF_TOKEN_VALUE), new HttpCookie(getAuthCookieName(), session));
 
         RequestEntity requestEntity = RequestEntity
                 .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API + Constants.Urls.SESSIONS + "?userId=1"))
@@ -544,8 +540,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @Test
     public void testMySessions() throws Exception {
-        String xsrf = "xsrf";
-        String session = getSession(xsrf, "admin", "admin");
+        String session = getSession("admin", "admin");
 
         mockMvc.perform(
                         get(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS+"/my")
@@ -559,9 +554,8 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @Test
     public void ldapLoginTest() throws Exception {
-        String xsrf = "xsrf";
         // https://spring.io/guides/gs/authenticating-ldap/
-        String session = getSession(xsrf, "bob", "bobspassword");
+        getSession("bob", "bobspassword");
         Optional<UserAccount> bob = userAccountRepository.findByUsername("bob");
         Assertions.assertTrue(bob.isPresent());
         Map<String, Session> bobRedisSessions = aaaUserDetailsService.getSessions("bob");

@@ -43,7 +43,7 @@ public abstract class AbstractUtTestRunner extends AbstractTestRunner {
      * @return
      * @throws Exception
      */
-    protected String getSession(String xsrf, String username, String password) throws Exception {
+    protected String getSession(String username, String password) throws Exception {
         MvcResult mvcResult = mockMvc.perform(
                 post(SecurityConfig.API_LOGIN_URL)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)

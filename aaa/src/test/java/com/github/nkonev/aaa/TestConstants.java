@@ -22,4 +22,6 @@ public class TestConstants {
     public static final String SQL_QUERY = "select * from fake_users;";
     public static final String USER_DETAILS = "/user-details-vuln";
 
+    public static final String XSRF_TOKEN_VALUE = "xsrf";
+
 }
