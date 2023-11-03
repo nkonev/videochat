@@ -13,6 +13,7 @@ import (
 	"github.com/ztrue/tracerr"
 	"go.uber.org/fx"
 	"net/http"
+	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"time"
 )
@@ -55,6 +56,11 @@ type CommonOperations interface {
 	GetBlogPostsByLimitOffset(limit int, offset int) ([]*Blog, error)
 	BlogPosts(ids []int64) ([]*BlogPost, error)
 	GetMessageBasic(chatId int64, messageId int64) (*string, *int64, error)
+	GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, searchString string, additionalFoundUserIds []int64) ([]*Chat, error)
+	GetChatsByLimitOffset(participantId int64, limit int, offset int) ([]*Chat, error)
+	GetChatsWithParticipants(participantId int64, limit, offset int, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error)
+	GetChatsWithMe(userId int64) ([]int64, error)
+	CountChatsPerUser(userId int64) (int64, error)
 }
 
 func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {

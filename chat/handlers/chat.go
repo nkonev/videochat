@@ -104,7 +104,6 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 
 	searchString := c.QueryParam("searchString")
 	searchString = strings.TrimSpace(searchString)
-	var dbChats []*db.ChatWithParticipants
 	var additionalFoundUserIds = []int64{}
 
 	if searchString != "" && searchString != db.ReservedPublicallyAvailableForSearchChats {
@@ -120,61 +119,64 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		}
 	}
 
-	dbChats, err := ch.db.GetChatsWithParticipants(userPrincipalDto.UserId, size, offset, searchString, additionalFoundUserIds, userPrincipalDto, 0, 0)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error get chats from db %v", err)
-		return err
-	}
+	return db.Transact(ch.db, func(tx *db.Tx) error {
 
-	chatsWithMe, err := ch.db.GetChatsWithMe(userPrincipalDto.UserId)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error get chats with me from db %v", err)
-		return err
-	}
-
-	var chatIds []int64 = make([]int64, 0)
-	for _, cc := range dbChats {
-		chatIds = append(chatIds, cc.Id)
-	}
-	unreadMessageBatch, err := ch.db.GetUnreadMessagesCountBatch(chatIds, userPrincipalDto.UserId)
-	if err != nil {
-		return err
-	}
-
-	chatDtos := make([]*dto.ChatDto, 0)
-	for _, cc := range dbChats {
-		messages := unreadMessageBatch[cc.Id]
-
-		isParticipant := utils.Contains(chatsWithMe, cc.Id)
-
-		cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
-
-		chatDtos = append(chatDtos, cd)
-	}
-
-	var participantIdSet = map[int64]bool{}
-	for _, chatDto := range chatDtos {
-		for _, participantId := range chatDto.ParticipantIds {
-			participantIdSet[participantId] = true
+		dbChats, err := tx.GetChatsWithParticipants(userPrincipalDto.UserId, size, offset, searchString, additionalFoundUserIds, userPrincipalDto, 0, 0)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error get chats from db %v", err)
+			return err
 		}
-	}
-	var users = getUsersRemotelyOrEmpty(participantIdSet, ch.restClient, c)
-	for _, chatDto := range chatDtos {
-		for _, participantId := range chatDto.ParticipantIds {
-			user := users[participantId]
-			if user != nil {
-				chatDto.Participants = append(chatDto.Participants, user)
-				utils.ReplaceChatNameToLoginForTetATet(chatDto, user, userPrincipalDto.UserId)
+
+		chatsWithMe, err := tx.GetChatsWithMe(userPrincipalDto.UserId)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error get chats with me from db %v", err)
+			return err
+		}
+
+		var chatIds []int64 = make([]int64, 0)
+		for _, cc := range dbChats {
+			chatIds = append(chatIds, cc.Id)
+		}
+		unreadMessageBatch, err := tx.GetUnreadMessagesCountBatch(chatIds, userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+
+		chatDtos := make([]*dto.ChatDto, 0)
+		for _, cc := range dbChats {
+			messages := unreadMessageBatch[cc.Id]
+
+			isParticipant := utils.Contains(chatsWithMe, cc.Id)
+
+			cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
+
+			chatDtos = append(chatDtos, cd)
+		}
+
+		var participantIdSet = map[int64]bool{}
+		for _, chatDto := range chatDtos {
+			for _, participantId := range chatDto.ParticipantIds {
+				participantIdSet[participantId] = true
 			}
 		}
-	}
+		var users = getUsersRemotelyOrEmpty(participantIdSet, ch.restClient, c)
+		for _, chatDto := range chatDtos {
+			for _, participantId := range chatDto.ParticipantIds {
+				user := users[participantId]
+				if user != nil {
+					chatDto.Participants = append(chatDto.Participants, user)
+					utils.ReplaceChatNameToLoginForTetATet(chatDto, user, userPrincipalDto.UserId)
+				}
+			}
+		}
 
-	userChatCount, err := ch.db.CountChatsPerUser(userPrincipalDto.UserId)
-	if err != nil {
-		return errors.New("Error during getting user chat count")
-	}
-	GetLogEntry(c.Request().Context()).Infof("Successfully returning %v chats", len(chatDtos))
-	return c.JSON(http.StatusOK, ChatWrapper{Data: chatDtos, Count: userChatCount})
+		userChatCount, err := tx.CountChatsPerUser(userPrincipalDto.UserId)
+		if err != nil {
+			return errors.New("Error during getting user chat count")
+		}
+		GetLogEntry(c.Request().Context()).Infof("Successfully returning %v chats", len(chatDtos))
+		return c.JSON(http.StatusOK, ChatWrapper{Data: chatDtos, Count: userChatCount})
+	})
 }
 
 func (ch *ChatHandler) GetChatPage(c echo.Context) error {

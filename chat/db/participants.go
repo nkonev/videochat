@@ -317,8 +317,8 @@ func (db *DB) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
 	return setAdminCommon(db, userId, chatId, newAdmin)
 }
 
-func (db *DB) GetChatsWithMe(userId int64) ([]int64, error) {
-	if rows, err := db.Query("SELECT DISTINCT chat_id FROM chat_participant WHERE user_id = $1", userId); err != nil {
+func getChatsWithMeCommon(qq CommonOperations, userId int64) ([]int64, error) {
+	if rows, err := qq.Query("SELECT DISTINCT chat_id FROM chat_participant WHERE user_id = $1", userId); err != nil {
 		return nil, tracerr.Wrap(err)
 	} else {
 		defer rows.Close()
@@ -334,4 +334,12 @@ func (db *DB) GetChatsWithMe(userId int64) ([]int64, error) {
 		return list, nil
 	}
 
+}
+
+func (db *DB) GetChatsWithMe(userId int64) ([]int64, error) {
+	return getChatsWithMeCommon(db, userId)
+}
+
+func (tx *Tx) GetChatsWithMe(userId int64) ([]int64, error) {
+	return getChatsWithMeCommon(tx, userId)
 }
