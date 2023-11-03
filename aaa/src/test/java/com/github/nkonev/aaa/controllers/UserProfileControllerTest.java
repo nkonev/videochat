@@ -38,7 +38,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.github.nkonev.aaa.TestConstants.XSRF_TOKEN_VALUE;
+import static com.github.nkonev.aaa.TestConstants.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -185,7 +185,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
      * @throws Exception
      */
     @org.junit.jupiter.api.Test
-    @WithUserDetails(TestConstants.USER_BOB)
+    @WithUserDetails(USER_BOB)
     public void fullyAuthenticatedUserCannotChangeForeignProfile() throws Exception {
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_ALICE);
         String foreignUserAccountLogin = foreignUserAccount.username();
@@ -215,7 +215,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     public void fullyAuthenticatedUserCannotTakeForeignLogin() throws Exception {
         UserAccount userAccount = getUserFromBd(TestConstants.USER_ALICE);
 
-        final String newLogin = TestConstants.USER_BOB;
+        final String newLogin = USER_BOB;
 
         EditUserDTO edit = UserAccountConverter.convertToEditUserDto(userAccount);
         edit = edit.withLogin(newLogin);
@@ -239,7 +239,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     public void fullyAuthenticatedUserCannotTakeForeignEmail() throws Exception {
         UserAccount userAccount = getUserFromBd(TestConstants.USER_ALICE);
 
-        final String newEmail = TestConstants.USER_BOB+"@example.com";
+        final String newEmail = USER_BOB+"@example.com";
         final Optional<UserAccount> foreignBobAccountOptional = userAccountRepository.findByEmail(newEmail);
         final UserAccount foreignBobAccount = foreignBobAccountOptional.orElseThrow(()->new RuntimeException("foreign email '"+newEmail+"' must be present"));
         final long foreingId = foreignBobAccount.id();
@@ -260,7 +260,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         LOGGER.info(mvcResult.getResponse().getContentAsString());
 
-        UserAccount foreignAccountAfter = getUserFromBd(TestConstants.USER_BOB);
+        UserAccount foreignAccountAfter = getUserFromBd(USER_BOB);
         Assertions.assertEquals(foreingId, foreignAccountAfter.id().longValue());
         Assertions.assertEquals(foreignEmail, foreignAccountAfter.email());
         Assertions.assertEquals(foreignPassword, foreignAccountAfter.password());
@@ -289,7 +289,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @WithUserDetails(TestConstants.USER_ALICE)
     @org.junit.jupiter.api.Test
     public void userCannotSeeAnybodyProfileEmail() throws Exception {
-        UserAccount bob = getUserFromBd(TestConstants.USER_BOB);
+        UserAccount bob = getUserFromBd(USER_BOB);
         String bobEmail = bob.email();
 
         MvcResult mvcResult = mockMvc.perform(
@@ -297,7 +297,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].email").doesNotExist())
-                .andExpect(jsonPath("$[0].login").value(TestConstants.USER_BOB))
+                .andExpect(jsonPath("$[0].login").value(USER_BOB))
                 .andExpect(content().string(CoreMatchers.not(CoreMatchers.containsString(bobEmail))))
                 .andReturn();
 
@@ -306,7 +306,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @WithUserDetails(TestConstants.USER_ALICE)
     @org.junit.jupiter.api.Test
     public void testGetManyUsers() throws Exception {
-        UserAccount bob = getUserFromBd(TestConstants.USER_BOB);
+        UserAccount bob = getUserFromBd(USER_BOB);
         UserAccount alice = getUserFromBd(TestConstants.USER_ALICE);
 
         String bobEmail = bob.email();
@@ -316,7 +316,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].login").value(TestConstants.USER_ALICE))
-                .andExpect(jsonPath("$[1].login").value(TestConstants.USER_BOB))
+                .andExpect(jsonPath("$[1].login").value(USER_BOB))
                 .andReturn();
 
     }
@@ -327,7 +327,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String session = getSession(TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
         String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, XSRF_TOKEN_VALUE), new HttpCookie(getAuthCookieName(), session));
 
-        UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_BOB);
+        UserAccount foreignUserAccount = getUserFromBd(USER_BOB);
         RequestEntity requestEntity = RequestEntity
             .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API +Constants.Urls.USER + "/" + foreignUserAccount.id()))
             .header(TestConstants.HEADER_COOKIE, headerValue).build();
@@ -555,10 +555,10 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @Test
     public void ldapLoginTest() throws Exception {
         // https://spring.io/guides/gs/authenticating-ldap/
-        getSession("bob", "bobspassword");
-        Optional<UserAccount> bob = userAccountRepository.findByUsername("bob");
+        getSession(USER_BOB, USER_BOB_LDAP_PASSWORD);
+        Optional<UserAccount> bob = userAccountRepository.findByUsername(USER_BOB);
         Assertions.assertTrue(bob.isPresent());
-        Map<String, Session> bobRedisSessions = aaaUserDetailsService.getSessions("bob");
+        Map<String, Session> bobRedisSessions = aaaUserDetailsService.getSessions(USER_BOB);
         Assertions.assertEquals(1, bobRedisSessions.size());
     }
 }
