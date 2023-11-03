@@ -39,6 +39,10 @@ func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int6
 	copied.CanAudioMute = admin
 	copied.CanChangeChatAdmins = admin && !copied.IsTetATet
 	copied.CanBroadcast = admin
+
+	if !participant {
+		copied.IsResultFromSearch = null.BoolFrom(true)
+	}
 }
 
 type ChatDeletedDto struct {

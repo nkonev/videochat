@@ -331,10 +331,6 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 
 	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
 
-	if !participant {
-		b.IsResultFromSearch = null.BoolFrom(true)
-	}
-
 	return &dto.ChatDto{
 		BaseChatDto:  b,
 		Participants: users,
@@ -544,7 +540,12 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 			ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{userPrincipalDto.UserId})
 
 			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, tx)
+
+			// send duplicated event to the former user to re-draw chat on their search results
+			ch.notificator.NotifyAboutRedrawLeftChat(c, copiedChat, userPrincipalDto.UserId, tx)
+
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})

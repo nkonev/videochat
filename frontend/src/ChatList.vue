@@ -81,20 +81,20 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
-    CHAT_ADD,
-    CHAT_DELETED,
-    CHAT_EDITED,
-    CLOSE_SIMPLE_MODAL,
-    LOGGED_OUT,
-    OPEN_CHAT_EDIT,
-    OPEN_SIMPLE_MODAL,
-    PROFILE_SET,
-    REFRESH_ON_WEBSOCKET_RESTORED,
-    SEARCH_STRING_CHANGED,
-    UNREAD_MESSAGES_CHANGED,
-    USER_PROFILE_CHANGED,
-    VIDEO_CALL_SCREEN_SHARE_CHANGED,
-    VIDEO_CALL_USER_COUNT_CHANGED
+  CHAT_ADD,
+  CHAT_DELETED,
+  CHAT_EDITED, CHAT_REDRAW,
+  CLOSE_SIMPLE_MODAL,
+  LOGGED_OUT,
+  OPEN_CHAT_EDIT,
+  OPEN_SIMPLE_MODAL,
+  PROFILE_SET,
+  REFRESH_ON_WEBSOCKET_RESTORED,
+  SEARCH_STRING_CHANGED,
+  UNREAD_MESSAGES_CHANGED,
+  USER_PROFILE_CHANGED,
+  VIDEO_CALL_SCREEN_SHARE_CHANGED,
+  VIDEO_CALL_USER_COUNT_CHANGED
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -103,7 +103,7 @@ import {
   dynamicSortMultiple,
   findIndex,
   hasLength,
-  isArrEqual, isChatRoute, replaceInArray,
+  isArrEqual, isChatRoute, publicallyAvailableForSearchChatsQuery, replaceInArray,
   replaceOrAppend,
   replaceOrPrepend,
   setTitle
@@ -513,6 +513,11 @@ export default {
           this.sort(this.items);
           this.performMarking();
     },
+    redrawItem(dto) {
+      if (this.searchString == publicallyAvailableForSearchChatsQuery) {
+          this.changeItem(dto)
+      }
+    },
     removeItem(dto) {
           if (this.hasItem(dto)) {
               console.log("Removing item", dto);
@@ -588,6 +593,7 @@ export default {
     bus.on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
     bus.on(CHAT_ADD, this.addItem);
     bus.on(CHAT_EDITED, this.changeItem);
+    bus.on(CHAT_REDRAW, this.redrawItem);
     bus.on(CHAT_DELETED, this.removeItem);
     bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
@@ -610,6 +616,7 @@ export default {
     bus.off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
     bus.off(CHAT_ADD, this.addItem);
     bus.off(CHAT_EDITED, this.changeItem);
+    bus.off(CHAT_REDRAW, this.redrawItem);
     bus.off(CHAT_DELETED, this.removeItem);
     bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);

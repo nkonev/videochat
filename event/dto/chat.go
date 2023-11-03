@@ -24,6 +24,8 @@ type BaseChatDto struct {
 	CanAudioMute        bool        `json:"canAudioMute"`
 	ParticipantsCount   int         `json:"participantsCount"`
 	CanResend           bool        `json:"canResend"`
+	AvailableToSearch   bool        `json:"availableToSearch"`
+	IsResultFromSearch  null.Bool   `json:"isResultFromSearch"`
 	Pinned              bool        `json:"pinned"`
 	Blog                bool        `json:"blog"`
 }

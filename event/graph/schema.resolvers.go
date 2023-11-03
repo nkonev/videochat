@@ -420,6 +420,8 @@ func convertToGlobalEvent(e *dto.UserEvent) *model.GlobalEvent {
 			ParticipantsCount:   chatDtoWithAdmin.ParticipantsCount,
 			Participants:        convertUsersWithAdmin(chatDtoWithAdmin.Participants),
 			CanResend:           chatDtoWithAdmin.CanResend,
+			AvailableToSearch:   chatDtoWithAdmin.AvailableToSearch,
+			IsResultFromSearch:  chatDtoWithAdmin.IsResultFromSearch.Ptr(),
 			Pinned:              chatDtoWithAdmin.Pinned,
 			Blog:                chatDtoWithAdmin.Blog,
 		}

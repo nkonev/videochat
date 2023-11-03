@@ -185,7 +185,7 @@ import bus, {
   ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG,
   CHAT_ADD,
   CHAT_DELETED,
-  CHAT_EDITED,
+  CHAT_EDITED, CHAT_REDRAW,
   FOCUS,
   LOGGED_OUT,
   NOTIFICATION_ADD,
@@ -399,6 +399,8 @@ export default {
                           shortInfo
                         }
                         canResend
+                        availableToSearch
+                        isResultFromSearch
                         pinned
                         blog
                       }
@@ -463,6 +465,9 @@ export default {
           } else if (getGlobalEventsData(e).eventType === 'chat_edited') {
             const d = getGlobalEventsData(e).chatEvent;
             bus.emit(CHAT_EDITED, d);
+          } else if (getGlobalEventsData(e).eventType === 'chat_redraw') {
+            const d = getGlobalEventsData(e).chatEvent;
+            bus.emit(CHAT_REDRAW, d);
           } else if (getGlobalEventsData(e).eventType === 'chat_deleted') {
             const d = getGlobalEventsData(e).chatDeletedEvent;
             bus.emit(CHAT_DELETED, d);

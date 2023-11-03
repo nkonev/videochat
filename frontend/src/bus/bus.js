@@ -63,6 +63,7 @@ export const WEBSOCKET_RESTORED = "wsRestored";
 
 export const CHAT_ADD = "chatAdd";
 export const CHAT_EDITED = "chatEdited";
+export const CHAT_REDRAW = "chatRedraw";
 export const CHAT_DELETED = "chatDeleted";
 
 export const MESSAGE_ADD = "messageAdd";

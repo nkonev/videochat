@@ -74,6 +74,8 @@ type ChatDto {
     participants:             [UserWithAdmin!]!
     participantsCount:        Int!
     canResend:           Boolean!
+    availableToSearch:   Boolean!
+    isResultFromSearch:  Boolean
     pinned:              Boolean!
     blog:              Boolean!
 }

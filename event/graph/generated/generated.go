@@ -56,6 +56,7 @@ type ComplexityRoot struct {
 	}
 
 	ChatDto struct {
+		AvailableToSearch   func(childComplexity int) int
 		Avatar              func(childComplexity int) int
 		AvatarBig           func(childComplexity int) int
 		Blog                func(childComplexity int) int
@@ -68,6 +69,7 @@ type ComplexityRoot struct {
 		CanResend           func(childComplexity int) int
 		CanVideoKick        func(childComplexity int) int
 		ID                  func(childComplexity int) int
+		IsResultFromSearch  func(childComplexity int) int
 		LastUpdateDateTime  func(childComplexity int) int
 		Name                func(childComplexity int) int
 		ParticipantIds      func(childComplexity int) int
@@ -310,6 +312,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatDeletedDto.ID(childComplexity), true
 
+	case "ChatDto.availableToSearch":
+		if e.complexity.ChatDto.AvailableToSearch == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.AvailableToSearch(childComplexity), true
+
 	case "ChatDto.avatar":
 		if e.complexity.ChatDto.Avatar == nil {
 			break
@@ -393,6 +402,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatDto.ID(childComplexity), true
+
+	case "ChatDto.isResultFromSearch":
+		if e.complexity.ChatDto.IsResultFromSearch == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.IsResultFromSearch(childComplexity), true
 
 	case "ChatDto.lastUpdateDateTime":
 		if e.complexity.ChatDto.LastUpdateDateTime == nil {
@@ -1429,6 +1445,8 @@ type ChatDto {
     participants:             [UserWithAdmin!]!
     participantsCount:        Int!
     canResend:           Boolean!
+    availableToSearch:   Boolean!
+    isResultFromSearch:  Boolean
     pinned:              Boolean!
     blog:              Boolean!
 }
@@ -2591,6 +2609,91 @@ func (ec *executionContext) _ChatDto_canResend(ctx context.Context, field graphq
 }
 
 func (ec *executionContext) fieldContext_ChatDto_canResend(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatDto_availableToSearch(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_availableToSearch(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AvailableToSearch, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_availableToSearch(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatDto_isResultFromSearch(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_isResultFromSearch(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsResultFromSearch, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_isResultFromSearch(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ChatDto",
 		Field:      field,
@@ -4998,6 +5101,10 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(ctx context.Conte
 				return ec.fieldContext_ChatDto_participantsCount(ctx, field)
 			case "canResend":
 				return ec.fieldContext_ChatDto_canResend(ctx, field)
+			case "availableToSearch":
+				return ec.fieldContext_ChatDto_availableToSearch(ctx, field)
+			case "isResultFromSearch":
+				return ec.fieldContext_ChatDto_isResultFromSearch(ctx, field)
 			case "pinned":
 				return ec.fieldContext_ChatDto_pinned(ctx, field)
 			case "blog":
@@ -10235,6 +10342,17 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "availableToSearch":
+
+			out.Values[i] = ec._ChatDto_availableToSearch(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "isResultFromSearch":
+
+			out.Values[i] = ec._ChatDto_isResultFromSearch(ctx, field, obj)
+
 		case "pinned":
 
 			out.Values[i] = ec._ChatDto_pinned(ctx, field, obj)
