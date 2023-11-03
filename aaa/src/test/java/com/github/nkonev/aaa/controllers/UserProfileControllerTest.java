@@ -171,8 +171,8 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                         .with(csrf())
         )
                 .andExpect(status().isBadRequest())
-//                .andExpect(jsonPath("$.validationErrors[0].field").value("login"))
-//                .andExpect(jsonPath("$.validationErrors[0].message").value("must not be empty"))
+                .andExpect(jsonPath("$.error").value("validation error"))
+                .andExpect(jsonPath("$.message").value("empty login"))
                 .andReturn();
 
         LOGGER.info(mvcResult.getResponse().getContentAsString());

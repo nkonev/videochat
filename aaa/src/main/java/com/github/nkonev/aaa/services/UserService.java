@@ -38,7 +38,7 @@ public class UserService {
 
     public boolean checkEmailIsFree(EditUserDTO userAccountDTO, UserAccount exists) {
         if (exists.email() != null && !exists.email().equals(userAccountDTO.email()) && userAccountDTO.email() != null && userAccountRepository.findByEmail(userAccountDTO.email()).isPresent()) {
-            LOGGER.error("user with email '{}' already present. exiting...", exists.email());
+            LOGGER.warn("user with email '{}' already present. exiting...", exists.email());
             return false;
         } else {
             return true;
