@@ -22,9 +22,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import static com.github.nkonev.aaa.Constants.Urls.ROOT;
-import static com.github.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
-
 /**
  * Created by nik on 09.07.17.
  *

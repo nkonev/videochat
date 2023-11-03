@@ -29,7 +29,7 @@ public class ServletUtils {
                 .stream()
                 .flatMap(s -> Arrays.stream(s.split(",")))
                 .map(s -> s.trim())
-                .filter(s -> !StringUtils.isEmpty(s))
+                .filter(s -> StringUtils.hasLength(s))
                 .collect(Collectors.toList());
         return acceptValues;
     }

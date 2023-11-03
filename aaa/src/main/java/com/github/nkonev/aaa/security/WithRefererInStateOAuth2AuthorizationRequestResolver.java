@@ -41,7 +41,7 @@ class WithRefererInStateOAuth2AuthorizationRequestResolver implements OAuth2Auth
         HttpServletRequest currentHttpRequest = getCurrentHttpRequest();
         if (currentHttpRequest!=null){
             String referer = currentHttpRequest.getHeader("Referer");
-            if (!StringUtils.isEmpty(referer)){
+            if (StringUtils.hasLength(referer)){
                 return OAuth2AuthenticationSuccessHandler.SEPARATOR+referer;
             }
         }

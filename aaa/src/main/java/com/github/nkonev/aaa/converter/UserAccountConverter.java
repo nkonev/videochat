@@ -174,7 +174,7 @@ public class UserAccountConverter {
     public static String validateAndTrimLogin(String login){
         login = login != null ? login.trim() : null;
 
-        if (StringUtils.isEmpty(login)) {
+        if (!StringUtils.hasLength(login)) {
             throw new BadRequestException("empty login");
         }
         if (FORBIDDEN_USERNAMES.contains(login)) {
@@ -333,7 +333,7 @@ public class UserAccountConverter {
         Assert.hasLength(userAccountDTO.login(), "login should have length");
         userAccountDTO = trimAndValidateNonAouth2Login(userAccountDTO);
         String password = userAccountDTO.password();
-        if (!StringUtils.isEmpty(password)) {
+        if (StringUtils.hasLength(password)) {
             validateUserPassword(password);
             userAccount = userAccount.withPassword(passwordEncoder.encode(password));
         }
@@ -345,12 +345,12 @@ public class UserAccountConverter {
             userAccount = userAccount.withAvatar(userAccountDTO.avatar());
             userAccount = userAccount.withAvatarBig(userAccountDTO.avatarBig());
         }
-        if (!StringUtils.isEmpty(userAccountDTO.email())) {
+        if (StringUtils.hasLength(userAccountDTO.email())) {
             String email = userAccountDTO.email();
             email = email.trim();
             userAccount = userAccount.withEmail(email);
         }
-        if (!StringUtils.isEmpty(userAccountDTO.shortInfo())) {
+        if (StringUtils.hasLength(userAccountDTO.shortInfo())) {
             userAccount = userAccount.withShortInfo(userAccountDTO.shortInfo());
         } else {
             userAccount = userAccount.withShortInfo(null);
@@ -359,28 +359,28 @@ public class UserAccountConverter {
     }
 
     public static UserAccount updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
-        if (!StringUtils.isEmpty(userAccountDTO.login())) {
+        if (StringUtils.hasLength(userAccountDTO.login())) {
             userAccountDTO = trimAndValidateNonAouth2Login(userAccountDTO);
             userAccount = userAccount.withUsername(userAccountDTO.login());
         }
         String password = userAccountDTO.password();
-        if (!StringUtils.isEmpty(password)) {
+        if (StringUtils.hasLength(password)) {
             validateUserPassword(password);
             userAccount = userAccount.withPassword(passwordEncoder.encode(password));
         }
         if (Boolean.TRUE.equals(userAccountDTO.removeAvatar())){
             userAccount = userAccount.withAvatar(null);
             userAccount = userAccount.withAvatarBig(null);
-        } else if (!StringUtils.isEmpty(userAccountDTO.avatar())) {
+        } else if (StringUtils.hasLength(userAccountDTO.avatar())) {
             userAccount = userAccount.withAvatar(userAccountDTO.avatar());
             userAccount = userAccount.withAvatarBig(userAccountDTO.avatarBig());
         }
-        if (!StringUtils.isEmpty(userAccountDTO.email())) {
+        if (StringUtils.hasLength(userAccountDTO.email())) {
             String email = userAccountDTO.email();
             email = email.trim();
             userAccount = userAccount.withEmail(email);
         }
-        if (!StringUtils.isEmpty(userAccountDTO.shortInfo())) {
+        if (StringUtils.hasLength(userAccountDTO.shortInfo())) {
             userAccount = userAccount.withShortInfo(userAccountDTO.shortInfo());
         }
 
