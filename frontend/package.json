@@ -31,25 +31,25 @@
     "axios": "^1.4.0",
     "core-js": "^3.31.1",
     "date-fns": "^2.30.0",
-    "graphql-ws": "^5.11.2",
+    "graphql-ws": "5.14.2",
     "livekit-client": "1.14.1",
     "lodash": "^4.17.21",
     "mark.js": "^8.11.1",
     "mitt": "^3.0.1",
-    "pinia": "^2.1.4",
+    "pinia": "2.1.7",
     "splitpanes": "^3.1.5",
     "uuid": "^9.0.0",
-    "vue": "^3.3.4",
-    "vue-router": "^4.2.4",
-    "vuetify": "3.3.22"
+    "vue": "3.3.7",
+    "vue-router": "4.2.5",
+    "vuetify": "3.3.23"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.2.3",
+    "@vitejs/plugin-vue": "4.4.0",
     "eslint": "^8.45.0",
     "eslint-plugin-vue": "^9.15.1",
     "sass": "^1.63.6",
     "stylus": "^0.59.0",
-    "vite": "^4.4.4",
+    "vite": "4.5.0",
     "vite-plugin-vuetify": "^1.0.2"
   }
 }
