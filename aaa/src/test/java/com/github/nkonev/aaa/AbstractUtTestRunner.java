@@ -59,9 +59,9 @@ public abstract class AbstractUtTestRunner extends AbstractTestRunner {
         return mvcResult.getResponse().getCookie(getAuthCookieName()).getValue();
     }
 
-    private static final int portOffset = 3100;
-    private static final ServerSetup SMTP = new ServerSetup(25+portOffset, null, ServerSetup.PROTOCOL_SMTP);
-    private static final ServerSetup IMAP = new ServerSetup(143+portOffset, null, ServerSetup.PROTOCOL_IMAP);
+    private static final int portOffset = 30000; // see also spring.mail.port in src/test/resources/config/application.yml
+    private static final ServerSetup SMTP = new ServerSetup(portOffset + 25, null, ServerSetup.PROTOCOL_SMTP);
+    private static final ServerSetup IMAP = new ServerSetup(portOffset + 143, null, ServerSetup.PROTOCOL_IMAP);
     private static final ServerSetup[] SMTP_IMAP = new ServerSetup[]{SMTP, IMAP};
 
     @RegisterExtension

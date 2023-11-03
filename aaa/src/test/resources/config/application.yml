@@ -24,7 +24,7 @@ custom.password-reset-enter-new-url: "http://localhost:8081/password-restore/ent
 spring.mail:
   testConnection: false
   host: 127.0.0.1
-  port: 3125
+  port: 30025
   username: testEmailUsername
   password: testEmailPassword
   properties:
