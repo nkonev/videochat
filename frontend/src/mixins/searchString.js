@@ -8,7 +8,7 @@ export const SEARCH_MODE_POSTS = "qp"
 
 export const goToPreserving = (route, router, to) => {
     const prev = deepCopy(route.query);
-    router.push({ ...to, query: prev })
+    return router.push({ ...to, query: prev })
 }
 
 

@@ -118,6 +118,7 @@ export default {
       prevMessageEditSize: null, // percents
       onTopVideoSize: ONTOP_VIDEO_PANE_SIZE,
       messageListSize: null,
+      isSwitching: false,
     }
   },
   components: {
@@ -136,8 +137,9 @@ export default {
   },
   methods: {
     onProfileSet() {
-      this.getInfo();
+      const promise = this.getInfo();
       this.graphQlSubscribe();
+      return promise
     },
     onLogout() {
       this.partialReset();
@@ -419,7 +421,7 @@ export default {
       }
     },
     isAllowedVideo() {
-      return this.chatStore.currentUser && this.$route.name == videochat_name && this.chatDto?.participantIds?.length
+      return this.chatStore.currentUser && this.$route.name == videochat_name && !this.isSwitching && this.chatDto?.participantIds?.length
     },
     onVideoCallChanged(dto) {
       if (dto.chatId == this.chatId) {
@@ -505,12 +507,15 @@ export default {
   },
   watch: {
     '$route': {
-      handler: async function (newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (isChatRoute(newValue)) {
           if (newValue.params.id != oldValue.params.id) {
             console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
             if (hasLength(newValue.params.id)) {
-              await this.onProfileSet();
+              this.isSwitching = true; // used to prevent opening ChatVideo with old (previous) chatDto that contains old chatId
+              this.onProfileSet().finally(()=>{
+                this.isSwitching = false;
+              });
             }
           }
         }
@@ -586,6 +591,8 @@ export default {
 
     this.partialReset();
     clearInterval(writingUsersTimerId);
+
+    this.isSwitching = false;
   }
 }
 </script>
