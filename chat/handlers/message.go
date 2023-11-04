@@ -710,13 +710,11 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 }
 
 func (mc *MessageHandler) addMessageReadAndSendIt(tx *db.Tx, c echo.Context, chatId int64, messageId int64, userId int64) error {
-	wasAdded, err := tx.AddMessageRead(messageId, userId, chatId)
+	_, err := tx.AddMessageRead(messageId, userId, chatId)
 	if err != nil {
 		return err
 	}
-	if wasAdded {
-		mc.notificator.ChatNotifyMessageCount([]int64{userId}, c, chatId, tx)
-	}
+	mc.notificator.ChatNotifyMessageCount([]int64{userId}, c, chatId, tx)
 
 	return nil
 }
