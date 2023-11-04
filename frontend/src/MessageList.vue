@@ -519,16 +519,17 @@
           // 6. Without this single handler, both handlers would invoke what leads us to resetting yellow highlight
           '$route': {
             handler: async function (newValue, oldValue) {
-              if (isChatRoute(newValue)) {
-                // chatId
-                if (newValue.params.id != oldValue.params.id) {
-                  console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
-                  this.saveLastVisibleElement(oldValue.params.id); // for case exiting, e. g. to the Welcome page
-                  if (hasLength(newValue.params.id)) {
-                    await this.onProfileSet();
-                    return
-                  }
+              // chatId
+              if (newValue.params.id != oldValue.params.id) {
+                // save the top message id always, including exiting case, e.g. to the Welcome page
+                console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
+                this.saveLastVisibleElement(oldValue.params.id);
+                if (isChatRoute(newValue) && hasLength(newValue.params.id)) { // filtering out the case when we go to profile - it also has route id
+                  await this.onProfileSet();
+                  return
                 }
+              }
+              if (isChatRoute(newValue)) {
                 // hash
                 if (hasLength(newValue.hash)) {
                   console.log("Changed route hash, going to scroll", newValue.hash)
