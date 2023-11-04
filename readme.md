@@ -22,7 +22,7 @@ so you can lose your messages, files, discussions, contacts, customers, clients,
 They show you annoying or inappropriate ads, you have no option to disable it.
 
 This project offers you a self-hosted solution, that you can incorporate into your infrastructure, 
-so you are going to possess your data and can you apply your own security policies, 
+so you will possess your data and can you apply your own security policies, 
 whether to expose this service to the Internet or not, to hide it behind your corporate VPN and so on.
 
 # Screenshots
