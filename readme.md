@@ -8,19 +8,22 @@ Today Web is ubiquitous. Most of computer's users have web browsers.
 Usually they are modern versions of either Chrome- or Firefox-based browsers.
 It seems enough to make video calls. But...
 
-Many of popular video platforms ignore this fact. 
-They force you to install their Electron-based application on your computer.
+Many of popular communication platforms ignore this fact. 
+Typically, they force you to install their Electron-based application on your computer.
 Hence, along with web browser you open their heavy application, the resource consumption grows.
 
-Many of popular video platforms store your data in their servers, they control your data.
-This increases risks of any kind of data leak, selling some data or metadata about you, 
-tracking and observing your actions.
+Many of popular video platforms store your data on their servers, it means they actually control your data.
+This increases risks of data leak, also it makes it possible for them to sell your data, 
+to track your actions and watch you. 
+
+Moreover, they can remove all your data in some moment, 
+so you can lose your messages, files, discussions, contacts, customers, clients, etc...
 
 They show you annoying or inappropriate ads, you have no option to disable it.
 
-This project offers you a self-hosted solution, which you can embed into your infrastructure, 
-so you will possess your data, and you can apply needed security policies, 
-whether to expose or not this service to the Internet, hide it behind your corporate VPN and so on.
+This project offers you a self-hosted solution, that you can incorporate into your infrastructure, 
+so you are going to possess your data and can you apply your own security policies, 
+whether to expose this service to the Internet or not, to hide it behind your corporate VPN and so on.
 
 # Screenshots
 Click on image to open a screenshot gallery.
