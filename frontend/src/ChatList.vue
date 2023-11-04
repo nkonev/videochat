@@ -255,6 +255,12 @@ export default {
           return this.$nextTick();
         })
     },
+    afterScrollRestored(el) {
+        el?.parentElement?.scrollBy({
+          top: !this.isTopDirection() ? 10 : -10,
+          behavior: "instant",
+        });
+    },
 
     bottomElementSelector() {
       return ".chat-last-element"
