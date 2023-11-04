@@ -25,4 +25,7 @@ public class TestConstants {
 
     public static final String XSRF_TOKEN_VALUE = "xsrf";
 
+    public static final String SESSION_COOKIE_NAME = "VIDEOCHAT_SESSION"; // see in src/test/resources/config/application.yml under server.servlet.session.cookie.name
+
+
 }

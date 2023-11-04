@@ -8,6 +8,7 @@ import com.github.nkonev.aaa.security.SecurityConfig;
 import com.github.nkonev.aaa.util.UrlParser;
 import com.icegreen.greenmail.util.Retriever;
 import com.sun.mail.imap.IMAPMessage;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -17,11 +18,11 @@ import javax.mail.Message;
 import java.net.URI;
 import java.util.UUID;
 
+import static com.github.nkonev.aaa.TestConstants.SESSION_COOKIE_NAME;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class PasswordResetControllerTest extends AbstractUtTestRunner {
 
@@ -65,7 +66,10 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
                 .content(objectMapper.writeValueAsString(passwordResetDto))
                 .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .with(csrf())
-        ).andExpect(status().isOk());
+        )
+            .andExpect(status().isOk())
+            // assert server returns session id
+            .andExpect(cookie().value(SESSION_COOKIE_NAME, Matchers.notNullValue()));
 
 
         // ... this is changes his password
@@ -77,7 +81,9 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
                     .param(SecurityConfig.PASSWORD_PARAMETER, newPassword)
                     .with(csrf())
             )
-            .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            // assert server returns session id
+            .andExpect(cookie().value(SESSION_COOKIE_NAME, Matchers.notNullValue()));
 
 
     }

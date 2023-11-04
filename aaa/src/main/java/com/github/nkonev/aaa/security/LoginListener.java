@@ -34,8 +34,13 @@ public class LoginListener implements ApplicationListener<AuthenticationSuccessE
     @Override
     public void onApplicationEvent(AuthenticationSuccessEvent event) {
         UserAccountDetailsDTO userDetails = (UserAccountDetailsDTO) event.getAuthentication().getPrincipal();
+        onApplicationEvent(userDetails);
+    }
+
+    public void onApplicationEvent(UserAccountDetailsDTO userDetails) {
         LOGGER.info("User '{}' logged in", userDetails.getUsername());
         userAccountRepository.updateLastLogin(userDetails.getUsername(), getNowUTC());
         eventService.notifyOnlineChanged(List.of(new UserProfileController.UserOnlineResponse(userDetails.getId(), true)));
     }
+
 }

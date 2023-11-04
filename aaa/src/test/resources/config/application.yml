@@ -8,6 +8,7 @@ logging:
     org.springframework.test.context.support.AbstractContextLoader: WARN
     org.springframework.security: WARN
     org.mockserver: WARN
+    com.gargoylesoftware.htmlunit: ERROR
   pattern:
     console: "%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @aaa [%thread] %logger{36}:%line %msg%n"
 

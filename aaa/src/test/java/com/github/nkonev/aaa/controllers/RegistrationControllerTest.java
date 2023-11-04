@@ -13,6 +13,7 @@ import com.github.nkonev.aaa.util.UrlParser;
 import com.icegreen.greenmail.util.Retriever;
 import com.sun.mail.imap.IMAPMessage;
 import org.awaitility.Awaitility;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.mail.Message;
@@ -30,7 +32,9 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.UUID;
 
+import static com.github.nkonev.aaa.TestConstants.SESSION_COOKIE_NAME;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.Matchers.blankString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -88,6 +92,8 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
             mockMvc.perform(get(parsedUrl))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string(HttpHeaders.LOCATION, customConfig.getRegistrationConfirmExitSuccessUrl()))
+                // assert server returns session id
+                .andExpect(cookie().value(SESSION_COOKIE_NAME, Matchers.notNullValue()))
             ;
             Assertions.assertFalse(userConfirmationTokenRepository.existsById(tokenUuidString));
         }
@@ -100,7 +106,10 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
                         .param(SecurityConfig.PASSWORD_PARAMETER, password)
                         .with(csrf())
         )
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                // assert server returns session id
+                .andExpect(cookie().value(SESSION_COOKIE_NAME, Matchers.notNullValue()));
+
 
     }
 

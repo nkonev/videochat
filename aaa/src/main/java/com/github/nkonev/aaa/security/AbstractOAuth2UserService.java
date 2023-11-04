@@ -55,11 +55,13 @@ public abstract class AbstractOAuth2UserService {
             }
 
             principal = setOauthIdToPrincipal(principal, oauthId);
-            SecurityContextHolder.getContext().setAuthentication(new AaaAuthenticationToken(principal));
 
             setOauthIdToEntity(principal.getId(), oauthId);
 
             logger().info("{}Id successfully merged to exists user '{}', id={}", getOauthName(), principal.getUsername(), principal.getId());
+
+            SecurityUtils.authenticate(principal);
+
             return principal;
         } else {
             return null;

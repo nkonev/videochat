@@ -8,6 +8,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
+import com.github.nkonev.aaa.security.LoginListener;
 import com.github.nkonev.aaa.security.SecurityUtils;
 import com.github.nkonev.aaa.services.AsyncEmailService;
 import com.github.nkonev.aaa.services.UserService;
@@ -49,6 +50,9 @@ public class RegistrationController {
 
     @Autowired
     private CustomConfig customConfig;
+
+    @Autowired
+    private LoginListener loginListener;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationController.class);
 
@@ -111,7 +115,10 @@ public class RegistrationController {
         userAccount = userAccountRepository.save(userAccount);
 
         userConfirmationTokenRepository.deleteById(stringUuid);
-        SecurityUtils.authenticate(userAccount);
+
+        var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
+        SecurityUtils.authenticate(auth);
+        loginListener.onApplicationEvent(auth);
 
         return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
     }
