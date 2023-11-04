@@ -40,7 +40,7 @@
       </v-list-item>
       <v-list-item @click.prevent="openUsers()" :href="getRouteUsers()" prepend-icon="mdi-account-group" :title="$vuetify.locale.t('$vuetify.users')"></v-list-item>
       <v-list-item @click.prevent="openSettings()" prepend-icon="mdi-cog" :title="$vuetify.locale.t('$vuetify.settings')"></v-list-item>
-      <v-list-item :disabled="loading" @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
+      <v-list-item :disabled="isLoggingOut" @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
     </v-list>
 
 </template>
@@ -72,7 +72,7 @@ import {copyCallLink, hasLength, isChatRoute} from "@/utils";
 export default {
   data() {
       return {
-          loading: false
+          isLoggingOut: false
       }
   },
   computed: {
@@ -146,12 +146,14 @@ export default {
       bus.emit(OPEN_SETTINGS)
     },
     logout(){
-      this.loading = true;
+      this.isLoggingOut = true;
+      this.chatStore.incrementProgressCount();
       axios.post(`/api/aaa/logout`).then(() => {
         this.chatStore.unsetUser();
         bus.emit(LOGGED_OUT, null);
       }).finally(()=>{
-          this.loading = false;
+          this.isLoggingOut = false
+          this.chatStore.decrementProgressCount();
       });
     },
     shouldDisplayLogout() {
