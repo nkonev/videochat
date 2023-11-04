@@ -32,6 +32,9 @@ export default () => {
       },
       onShowContextMenuBase(e, menuableItem) {
         e.preventDefault();
+        if (this.showContextMenu) {
+          return
+        }
         this.contextMenuX = e.clientX;
         this.contextMenuY = e.clientY;
 
