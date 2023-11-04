@@ -496,17 +496,6 @@
             isVideo() {
                 return this.$route.name == videochat_name
             },
-
-            getGraphQlSubscriptionQuery() {
-                return `
-                    subscription {
-                        userOnlineEvents(userIds:[${this.participantsDto.participants.map((p)=> p.id ).join(", ")}]) {
-                            id
-                            online
-                        }
-                    }
-                `
-            },
             onNextSubscriptionElement(items) {
                 this.onUserOnlineChanged(items);
             },
