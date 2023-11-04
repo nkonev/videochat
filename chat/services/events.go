@@ -264,7 +264,7 @@ func (not *eventsImpl) NotifyAboutProfileChanged(user *dto.User) {
 	for _, participantId := range coChatters {
 		err = not.rabbitEventPublisher.Publish(dto.UserEvent{
 			UserId:                  participantId,
-			EventType:               "user_profile_changed",
+			EventType:               "participant_changed",
 			UserProfileNotification: user,
 		})
 		if err != nil {

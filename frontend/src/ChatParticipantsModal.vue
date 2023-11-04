@@ -158,7 +158,7 @@
       PARTICIPANT_ADDED,
       PARTICIPANT_DELETED,
       PARTICIPANT_EDITED,
-      USER_PROFILE_CHANGED,
+      PARTICIPANT_CHANGED,
       VIDEO_DIAL_STATUS_CHANGED,
     } from "./bus/bus";
     import {profile, profile_name, videochat_name} from "./router/routes";
@@ -572,7 +572,7 @@
           bus.on(CHAT_DELETED, this.onChatDelete);
           bus.on(CHAT_EDITED, this.onChatEdit);
           bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-          bus.on(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+          bus.on(PARTICIPANT_CHANGED, this.onUserProfileChanged);
 
           this.markInstance = new Mark(".participants-list");
         },
@@ -584,7 +584,7 @@
             bus.off(CHAT_DELETED, this.onChatDelete);
             bus.off(CHAT_EDITED, this.onChatEdit);
             bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-            bus.off(USER_PROFILE_CHANGED, this.onUserProfileChanged);
+            bus.off(PARTICIPANT_CHANGED, this.onUserProfileChanged);
             this.markInstance.unmark();
             this.markInstance = null;
         },

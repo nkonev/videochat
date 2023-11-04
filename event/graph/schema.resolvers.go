@@ -253,8 +253,8 @@ func convertToUserCallStatusChanged(event dto.GeneralEvent, u dto.VideoCallUserC
 func convertToUserOnline(userOnline dto.UserOnline) *model.UserEvent {
 	return &model.UserEvent{
 		EventType: "user_online",
-		UserID: userOnline.UserId,
-		Online: &userOnline.Online,
+		UserID:    userOnline.UserId,
+		Online:    &userOnline.Online,
 	}
 }
 func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
@@ -304,7 +304,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 
 	participants := e.Participants
 	if participants != nil {
-		result.ParticipantsEvent = convertUsersWithAdmin(*participants)
+		result.ParticipantsEvent = convertParticipantsWithAdmin(*participants)
 	}
 
 	promotePinnedMessageEvent := e.PromoteMessageNotification
@@ -327,7 +327,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				CanShare:       fileEvent.FileInfoDto.CanShare,
 				LastModified:   fileEvent.FileInfoDto.LastModified,
 				OwnerID:        fileEvent.FileInfoDto.OwnerId,
-				Owner:          convertUser(fileEvent.FileInfoDto.Owner),
+				Owner:          convertParticipant(fileEvent.FileInfoDto.Owner),
 				CanPlayAsVideo: fileEvent.FileInfoDto.CanPlayAsVideo,
 				CanShowAsImage: fileEvent.FileInfoDto.CanShowAsImage,
 				CanPlayAsAudio: fileEvent.FileInfoDto.CanPlayAsAudio,
@@ -347,7 +347,7 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 		OwnerID:        messageDto.OwnerId,
 		CreateDateTime: messageDto.CreateDateTime,
 		EditDateTime:   messageDto.EditDateTime.Ptr(),
-		Owner:          convertUser(messageDto.Owner),
+		Owner:          convertParticipant(messageDto.Owner),
 		CanEdit:        messageDto.CanEdit,
 		CanDelete:      messageDto.CanDelete,
 		FileItemUUID:   messageDto.FileItemUuid,
@@ -362,7 +362,7 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 			ChatID:        embedMessageDto.ChatId,
 			ChatName:      embedMessageDto.ChatName,
 			Text:          embedMessageDto.Text,
-			Owner:         convertUser(embedMessageDto.Owner),
+			Owner:         convertParticipant(embedMessageDto.Owner),
 			EmbedType:     embedMessageDto.EmbedType,
 			IsParticipant: embedMessageDto.IsParticipant,
 		}
@@ -400,7 +400,7 @@ func convertToGlobalEvent(e *dto.UserEvent) *model.GlobalEvent {
 			CanChangeChatAdmins: chatDtoWithAdmin.CanChangeChatAdmins,
 			TetATet:             chatDtoWithAdmin.IsTetATet,
 			ParticipantsCount:   chatDtoWithAdmin.ParticipantsCount,
-			Participants:        convertUsersWithAdmin(chatDtoWithAdmin.Participants),
+			Participants:        convertParticipantsWithAdmin(chatDtoWithAdmin.Participants),
 			CanResend:           chatDtoWithAdmin.CanResend,
 			AvailableToSearch:   chatDtoWithAdmin.AvailableToSearch,
 			IsResultFromSearch:  chatDtoWithAdmin.IsResultFromSearch.Ptr(),
@@ -418,10 +418,11 @@ func convertToGlobalEvent(e *dto.UserEvent) *model.GlobalEvent {
 
 	userProfileDto := e.UserProfileNotification
 	if userProfileDto != nil {
-		ret.UserEvent = &model.User{
-			ID:     userProfileDto.Id,
-			Login:  userProfileDto.Login,
-			Avatar: userProfileDto.Avatar.Ptr(),
+		ret.ParticipantEvent = &model.Participant{
+			ID:        userProfileDto.Id,
+			Login:     userProfileDto.Login,
+			Avatar:    userProfileDto.Avatar.Ptr(),
+			ShortInfo: userProfileDto.ShortInfo.Ptr(),
 		}
 	}
 
@@ -498,32 +499,32 @@ func convertToGlobalEvent(e *dto.UserEvent) *model.GlobalEvent {
 
 	return ret
 }
-func convertUser(owner *dto.User) *model.User {
+func convertParticipant(owner *dto.User) *model.Participant {
 	if owner == nil {
 		return nil
 	}
-	return &model.User{
+	return &model.Participant{
 		ID:        owner.Id,
 		Login:     owner.Login,
 		Avatar:    owner.Avatar.Ptr(),
 		ShortInfo: owner.ShortInfo.Ptr(),
 	}
 }
-func convertUsers(participants []*dto.User) []*model.User {
+func convertParticipants(participants []*dto.User) []*model.Participant {
 	if participants == nil {
 		return nil
 	}
-	usrs := []*model.User{}
+	usrs := []*model.Participant{}
 	for _, user := range participants {
-		usrs = append(usrs, convertUser(user))
+		usrs = append(usrs, convertParticipant(user))
 	}
 	return usrs
 }
-func convertUserWithAdmin(owner *dto.UserWithAdmin) *model.UserWithAdmin {
+func convertParticipantWithAdmin(owner *dto.UserWithAdmin) *model.ParticipantWithAdmin {
 	if owner == nil {
 		return nil
 	}
-	return &model.UserWithAdmin{
+	return &model.ParticipantWithAdmin{
 		ID:        owner.Id,
 		Login:     owner.Login,
 		Avatar:    owner.Avatar.Ptr(),
@@ -531,13 +532,13 @@ func convertUserWithAdmin(owner *dto.UserWithAdmin) *model.UserWithAdmin {
 		ShortInfo: owner.ShortInfo.Ptr(),
 	}
 }
-func convertUsersWithAdmin(participants []*dto.UserWithAdmin) []*model.UserWithAdmin {
+func convertParticipantsWithAdmin(participants []*dto.UserWithAdmin) []*model.ParticipantWithAdmin {
 	if participants == nil {
 		return nil
 	}
-	usrs := []*model.UserWithAdmin{}
+	usrs := []*model.ParticipantWithAdmin{}
 	for _, user := range participants {
-		usrs = append(usrs, convertUserWithAdmin(user))
+		usrs = append(usrs, convertParticipantWithAdmin(user))
 	}
 	return usrs
 }

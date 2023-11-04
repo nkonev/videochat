@@ -17,29 +17,29 @@ type ChatDeletedDto struct {
 }
 
 type ChatDto struct {
-	ID                  int64            `json:"id"`
-	Name                string           `json:"name"`
-	Avatar              *string          `json:"avatar"`
-	AvatarBig           *string          `json:"avatarBig"`
-	ShortInfo           *string          `json:"shortInfo"`
-	LastUpdateDateTime  time.Time        `json:"lastUpdateDateTime"`
-	ParticipantIds      []int64          `json:"participantIds"`
-	CanEdit             *bool            `json:"canEdit"`
-	CanDelete           *bool            `json:"canDelete"`
-	CanLeave            *bool            `json:"canLeave"`
-	UnreadMessages      int64            `json:"unreadMessages"`
-	CanBroadcast        bool             `json:"canBroadcast"`
-	CanVideoKick        bool             `json:"canVideoKick"`
-	CanChangeChatAdmins bool             `json:"canChangeChatAdmins"`
-	TetATet             bool             `json:"tetATet"`
-	CanAudioMute        bool             `json:"canAudioMute"`
-	Participants        []*UserWithAdmin `json:"participants"`
-	ParticipantsCount   int              `json:"participantsCount"`
-	CanResend           bool             `json:"canResend"`
-	AvailableToSearch   bool             `json:"availableToSearch"`
-	IsResultFromSearch  *bool            `json:"isResultFromSearch"`
-	Pinned              bool             `json:"pinned"`
-	Blog                bool             `json:"blog"`
+	ID                  int64                   `json:"id"`
+	Name                string                  `json:"name"`
+	Avatar              *string                 `json:"avatar"`
+	AvatarBig           *string                 `json:"avatarBig"`
+	ShortInfo           *string                 `json:"shortInfo"`
+	LastUpdateDateTime  time.Time               `json:"lastUpdateDateTime"`
+	ParticipantIds      []int64                 `json:"participantIds"`
+	CanEdit             *bool                   `json:"canEdit"`
+	CanDelete           *bool                   `json:"canDelete"`
+	CanLeave            *bool                   `json:"canLeave"`
+	UnreadMessages      int64                   `json:"unreadMessages"`
+	CanBroadcast        bool                    `json:"canBroadcast"`
+	CanVideoKick        bool                    `json:"canVideoKick"`
+	CanChangeChatAdmins bool                    `json:"canChangeChatAdmins"`
+	TetATet             bool                    `json:"tetATet"`
+	CanAudioMute        bool                    `json:"canAudioMute"`
+	Participants        []*ParticipantWithAdmin `json:"participants"`
+	ParticipantsCount   int                     `json:"participantsCount"`
+	CanResend           bool                    `json:"canResend"`
+	AvailableToSearch   bool                    `json:"availableToSearch"`
+	IsResultFromSearch  *bool                   `json:"isResultFromSearch"`
+	Pinned              bool                    `json:"pinned"`
+	Blog                bool                    `json:"blog"`
 }
 
 type ChatEvent struct {
@@ -49,7 +49,7 @@ type ChatEvent struct {
 	UserTypingEvent       *UserTypingDto                `json:"userTypingEvent"`
 	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
 	PreviewCreatedEvent   *PreviewCreatedEvent          `json:"previewCreatedEvent"`
-	ParticipantsEvent     []*UserWithAdmin              `json:"participantsEvent"`
+	ParticipantsEvent     []*ParticipantWithAdmin       `json:"participantsEvent"`
 	PromoteMessageEvent   *PinnedMessageEvent           `json:"promoteMessageEvent"`
 	FileEvent             *WrappedFileInfoDto           `json:"fileEvent"`
 }
@@ -67,7 +67,7 @@ type DisplayMessageDto struct {
 	OwnerID        int64                 `json:"ownerId"`
 	CreateDateTime time.Time             `json:"createDateTime"`
 	EditDateTime   *time.Time            `json:"editDateTime"`
-	Owner          *User                 `json:"owner"`
+	Owner          *Participant          `json:"owner"`
 	CanEdit        bool                  `json:"canEdit"`
 	CanDelete      bool                  `json:"canDelete"`
 	FileItemUUID   *uuid.UUID            `json:"fileItemUuid"`
@@ -78,38 +78,38 @@ type DisplayMessageDto struct {
 }
 
 type EmbedMessageResponse struct {
-	ID            int64   `json:"id"`
-	ChatID        *int64  `json:"chatId"`
-	ChatName      *string `json:"chatName"`
-	Text          string  `json:"text"`
-	Owner         *User   `json:"owner"`
-	EmbedType     string  `json:"embedType"`
-	IsParticipant bool    `json:"isParticipant"`
+	ID            int64        `json:"id"`
+	ChatID        *int64       `json:"chatId"`
+	ChatName      *string      `json:"chatName"`
+	Text          string       `json:"text"`
+	Owner         *Participant `json:"owner"`
+	EmbedType     string       `json:"embedType"`
+	IsParticipant bool         `json:"isParticipant"`
 }
 
 type FileInfoDto struct {
-	ID             string    `json:"id"`
-	Filename       string    `json:"filename"`
-	URL            string    `json:"url"`
-	PublicURL      *string   `json:"publicUrl"`
-	PreviewURL     *string   `json:"previewUrl"`
-	Size           int64     `json:"size"`
-	CanDelete      bool      `json:"canDelete"`
-	CanEdit        bool      `json:"canEdit"`
-	CanShare       bool      `json:"canShare"`
-	LastModified   time.Time `json:"lastModified"`
-	OwnerID        int64     `json:"ownerId"`
-	Owner          *User     `json:"owner"`
-	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
-	CanShowAsImage bool      `json:"canShowAsImage"`
-	CanPlayAsAudio bool      `json:"canPlayAsAudio"`
+	ID             string       `json:"id"`
+	Filename       string       `json:"filename"`
+	URL            string       `json:"url"`
+	PublicURL      *string      `json:"publicUrl"`
+	PreviewURL     *string      `json:"previewUrl"`
+	Size           int64        `json:"size"`
+	CanDelete      bool         `json:"canDelete"`
+	CanEdit        bool         `json:"canEdit"`
+	CanShare       bool         `json:"canShare"`
+	LastModified   time.Time    `json:"lastModified"`
+	OwnerID        int64        `json:"ownerId"`
+	Owner          *Participant `json:"owner"`
+	CanPlayAsVideo bool         `json:"canPlayAsVideo"`
+	CanShowAsImage bool         `json:"canShowAsImage"`
+	CanPlayAsAudio bool         `json:"canPlayAsAudio"`
 }
 
 type GlobalEvent struct {
 	EventType                      string                          `json:"eventType"`
 	ChatEvent                      *ChatDto                        `json:"chatEvent"`
 	ChatDeletedEvent               *ChatDeletedDto                 `json:"chatDeletedEvent"`
-	UserEvent                      *User                           `json:"userEvent"`
+	ParticipantEvent               *Participant                    `json:"participantEvent"`
 	VideoUserCountChangedEvent     *VideoUserCountChangedDto       `json:"videoUserCountChangedEvent"`
 	VideoRecordingChangedEvent     *VideoRecordingChangedDto       `json:"videoRecordingChangedEvent"`
 	VideoCallInvitation            *VideoCallInvitationDto         `json:"videoCallInvitation"`
@@ -143,6 +143,21 @@ type NotificationDto struct {
 	ChatTitle        string    `json:"chatTitle"`
 }
 
+type Participant struct {
+	ID        int64   `json:"id"`
+	Login     string  `json:"login"`
+	Avatar    *string `json:"avatar"`
+	ShortInfo *string `json:"shortInfo"`
+}
+
+type ParticipantWithAdmin struct {
+	ID        int64   `json:"id"`
+	Login     string  `json:"login"`
+	Avatar    *string `json:"avatar"`
+	Admin     bool    `json:"admin"`
+	ShortInfo *string `json:"shortInfo"`
+}
+
 type PinnedMessageEvent struct {
 	Message    *DisplayMessageDto `json:"message"`
 	TotalCount int64              `json:"totalCount"`
@@ -156,13 +171,6 @@ type PreviewCreatedEvent struct {
 	CorrelationID *string `json:"correlationId"`
 }
 
-type User struct {
-	ID        int64   `json:"id"`
-	Login     string  `json:"login"`
-	Avatar    *string `json:"avatar"`
-	ShortInfo *string `json:"shortInfo"`
-}
-
 type UserEvent struct {
 	UserID    int64  `json:"userId"`
 	Online    *bool  `json:"online"`
@@ -173,14 +181,6 @@ type UserEvent struct {
 type UserTypingDto struct {
 	Login         string `json:"login"`
 	ParticipantID int64  `json:"participantId"`
-}
-
-type UserWithAdmin struct {
-	ID        int64   `json:"id"`
-	Login     string  `json:"login"`
-	Avatar    *string `json:"avatar"`
-	Admin     bool    `json:"admin"`
-	ShortInfo *string `json:"shortInfo"`
 }
 
 type VideoCallInvitationDto struct {

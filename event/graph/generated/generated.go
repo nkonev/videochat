@@ -150,8 +150,8 @@ type ComplexityRoot struct {
 		ChatEvent                      func(childComplexity int) int
 		EventType                      func(childComplexity int) int
 		NotificationEvent              func(childComplexity int) int
+		ParticipantEvent               func(childComplexity int) int
 		UnreadMessagesNotification     func(childComplexity int) int
-		UserEvent                      func(childComplexity int) int
 		VideoCallInvitation            func(childComplexity int) int
 		VideoCallScreenShareChangedDto func(childComplexity int) int
 		VideoParticipantDialEvent      func(childComplexity int) int
@@ -182,6 +182,21 @@ type ComplexityRoot struct {
 		NotificationType func(childComplexity int) int
 	}
 
+	Participant struct {
+		Avatar    func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Login     func(childComplexity int) int
+		ShortInfo func(childComplexity int) int
+	}
+
+	ParticipantWithAdmin struct {
+		Admin     func(childComplexity int) int
+		Avatar    func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Login     func(childComplexity int) int
+		ShortInfo func(childComplexity int) int
+	}
+
 	PinnedMessageEvent struct {
 		Message    func(childComplexity int) int
 		TotalCount func(childComplexity int) int
@@ -205,13 +220,6 @@ type ComplexityRoot struct {
 		UserEvents   func(childComplexity int, userIds []int64) int
 	}
 
-	User struct {
-		Avatar    func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Login     func(childComplexity int) int
-		ShortInfo func(childComplexity int) int
-	}
-
 	UserEvent struct {
 		EventType func(childComplexity int) int
 		IsInVideo func(childComplexity int) int
@@ -222,14 +230,6 @@ type ComplexityRoot struct {
 	UserTypingDto struct {
 		Login         func(childComplexity int) int
 		ParticipantID func(childComplexity int) int
-	}
-
-	UserWithAdmin struct {
-		Admin     func(childComplexity int) int
-		Avatar    func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Login     func(childComplexity int) int
-		ShortInfo func(childComplexity int) int
 	}
 
 	VideoCallInvitationDto struct {
@@ -839,19 +839,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalEvent.NotificationEvent(childComplexity), true
 
+	case "GlobalEvent.participantEvent":
+		if e.complexity.GlobalEvent.ParticipantEvent == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.ParticipantEvent(childComplexity), true
+
 	case "GlobalEvent.unreadMessagesNotification":
 		if e.complexity.GlobalEvent.UnreadMessagesNotification == nil {
 			break
 		}
 
 		return e.complexity.GlobalEvent.UnreadMessagesNotification(childComplexity), true
-
-	case "GlobalEvent.userEvent":
-		if e.complexity.GlobalEvent.UserEvent == nil {
-			break
-		}
-
-		return e.complexity.GlobalEvent.UserEvent(childComplexity), true
 
 	case "GlobalEvent.videoCallInvitation":
 		if e.complexity.GlobalEvent.VideoCallInvitation == nil {
@@ -986,6 +986,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NotificationDto.NotificationType(childComplexity), true
 
+	case "Participant.avatar":
+		if e.complexity.Participant.Avatar == nil {
+			break
+		}
+
+		return e.complexity.Participant.Avatar(childComplexity), true
+
+	case "Participant.id":
+		if e.complexity.Participant.ID == nil {
+			break
+		}
+
+		return e.complexity.Participant.ID(childComplexity), true
+
+	case "Participant.login":
+		if e.complexity.Participant.Login == nil {
+			break
+		}
+
+		return e.complexity.Participant.Login(childComplexity), true
+
+	case "Participant.shortInfo":
+		if e.complexity.Participant.ShortInfo == nil {
+			break
+		}
+
+		return e.complexity.Participant.ShortInfo(childComplexity), true
+
+	case "ParticipantWithAdmin.admin":
+		if e.complexity.ParticipantWithAdmin.Admin == nil {
+			break
+		}
+
+		return e.complexity.ParticipantWithAdmin.Admin(childComplexity), true
+
+	case "ParticipantWithAdmin.avatar":
+		if e.complexity.ParticipantWithAdmin.Avatar == nil {
+			break
+		}
+
+		return e.complexity.ParticipantWithAdmin.Avatar(childComplexity), true
+
+	case "ParticipantWithAdmin.id":
+		if e.complexity.ParticipantWithAdmin.ID == nil {
+			break
+		}
+
+		return e.complexity.ParticipantWithAdmin.ID(childComplexity), true
+
+	case "ParticipantWithAdmin.login":
+		if e.complexity.ParticipantWithAdmin.Login == nil {
+			break
+		}
+
+		return e.complexity.ParticipantWithAdmin.Login(childComplexity), true
+
+	case "ParticipantWithAdmin.shortInfo":
+		if e.complexity.ParticipantWithAdmin.ShortInfo == nil {
+			break
+		}
+
+		return e.complexity.ParticipantWithAdmin.ShortInfo(childComplexity), true
+
 	case "PinnedMessageEvent.message":
 		if e.complexity.PinnedMessageEvent.Message == nil {
 			break
@@ -1073,34 +1136,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.UserEvents(childComplexity, args["userIds"].([]int64)), true
 
-	case "User.avatar":
-		if e.complexity.User.Avatar == nil {
-			break
-		}
-
-		return e.complexity.User.Avatar(childComplexity), true
-
-	case "User.id":
-		if e.complexity.User.ID == nil {
-			break
-		}
-
-		return e.complexity.User.ID(childComplexity), true
-
-	case "User.login":
-		if e.complexity.User.Login == nil {
-			break
-		}
-
-		return e.complexity.User.Login(childComplexity), true
-
-	case "User.shortInfo":
-		if e.complexity.User.ShortInfo == nil {
-			break
-		}
-
-		return e.complexity.User.ShortInfo(childComplexity), true
-
 	case "UserEvent.eventType":
 		if e.complexity.UserEvent.EventType == nil {
 			break
@@ -1142,41 +1177,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserTypingDto.ParticipantID(childComplexity), true
-
-	case "UserWithAdmin.admin":
-		if e.complexity.UserWithAdmin.Admin == nil {
-			break
-		}
-
-		return e.complexity.UserWithAdmin.Admin(childComplexity), true
-
-	case "UserWithAdmin.avatar":
-		if e.complexity.UserWithAdmin.Avatar == nil {
-			break
-		}
-
-		return e.complexity.UserWithAdmin.Avatar(childComplexity), true
-
-	case "UserWithAdmin.id":
-		if e.complexity.UserWithAdmin.ID == nil {
-			break
-		}
-
-		return e.complexity.UserWithAdmin.ID(childComplexity), true
-
-	case "UserWithAdmin.login":
-		if e.complexity.UserWithAdmin.Login == nil {
-			break
-		}
-
-		return e.complexity.UserWithAdmin.Login(childComplexity), true
-
-	case "UserWithAdmin.shortInfo":
-		if e.complexity.UserWithAdmin.ShortInfo == nil {
-			break
-		}
-
-		return e.complexity.UserWithAdmin.ShortInfo(childComplexity), true
 
 	case "VideoCallInvitationDto.chatId":
 		if e.complexity.VideoCallInvitationDto.ChatID == nil {
@@ -1356,7 +1356,7 @@ var sources = []*ast.Source{
 scalar Int64
 scalar UUID
 
-type User {
+type Participant {
     id:     Int64!
     login:  String!
     avatar: String
@@ -1368,7 +1368,7 @@ type EmbedMessageResponse {
     chatId: Int64
     chatName: String
     text:   String!
-    owner:  User
+    owner:  Participant
     embedType: String!
     isParticipant: Boolean!
 }
@@ -1380,7 +1380,7 @@ type DisplayMessageDto {
     ownerId:        Int64!
     createDateTime: Time!
     editDateTime:   Time
-    owner:          User
+    owner:          Participant
     canEdit:        Boolean!
     canDelete:      Boolean!
     fileItemUuid:   UUID
@@ -1395,7 +1395,7 @@ type MessageDeletedDto {
     chatId:             Int64!
 }
 
-type UserWithAdmin {
+type ParticipantWithAdmin {
     id:     Int64!
     login:  String!
     avatar: String
@@ -1420,7 +1420,7 @@ type ChatDto {
     canChangeChatAdmins: Boolean!
     tetATet:             Boolean!
     canAudioMute:        Boolean!
-    participants:             [UserWithAdmin!]!
+    participants:             [ParticipantWithAdmin!]!
     participantsCount:        Int!
     canResend:           Boolean!
     availableToSearch:   Boolean!
@@ -1469,7 +1469,7 @@ type FileInfoDto {
     canShare:             Boolean!
     lastModified: Time!
     ownerId: Int64!
-    owner:  User
+    owner:  Participant
     canPlayAsVideo:           Boolean!
     canShowAsImage:  Boolean!
     canPlayAsAudio:  Boolean!
@@ -1488,7 +1488,7 @@ type ChatEvent {
     userTypingEvent: UserTypingDto
     messageBroadcastEvent: MessageBroadcastNotification
     previewCreatedEvent: PreviewCreatedEvent
-    participantsEvent: [UserWithAdmin!]
+    participantsEvent: [ParticipantWithAdmin!]
     promoteMessageEvent: PinnedMessageEvent
     fileEvent: WrappedFileInfoDto
 }
@@ -1549,7 +1549,7 @@ type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
     chatDeletedEvent: ChatDeletedDto
-    userEvent: User
+    participantEvent: Participant
     videoUserCountChangedEvent: VideoUserCountChangedDto
     videoRecordingChangedEvent: VideoRecordingChangedDto
     videoCallInvitation: VideoCallInvitationDto
@@ -2467,9 +2467,9 @@ func (ec *executionContext) _ChatDto_participants(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.UserWithAdmin)
+	res := resTmp.([]*model.ParticipantWithAdmin)
 	fc.Result = res
-	return ec.marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx, field.Selections, res)
+	return ec.marshalNParticipantWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantWithAdminᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatDto_participants(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2481,17 +2481,17 @@ func (ec *executionContext) fieldContext_ChatDto_participants(ctx context.Contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_UserWithAdmin_id(ctx, field)
+				return ec.fieldContext_ParticipantWithAdmin_id(ctx, field)
 			case "login":
-				return ec.fieldContext_UserWithAdmin_login(ctx, field)
+				return ec.fieldContext_ParticipantWithAdmin_login(ctx, field)
 			case "avatar":
-				return ec.fieldContext_UserWithAdmin_avatar(ctx, field)
+				return ec.fieldContext_ParticipantWithAdmin_avatar(ctx, field)
 			case "admin":
-				return ec.fieldContext_UserWithAdmin_admin(ctx, field)
+				return ec.fieldContext_ParticipantWithAdmin_admin(ctx, field)
 			case "shortInfo":
-				return ec.fieldContext_UserWithAdmin_shortInfo(ctx, field)
+				return ec.fieldContext_ParticipantWithAdmin_shortInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserWithAdmin", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ParticipantWithAdmin", field.Name)
 		},
 	}
 	return fc, nil
@@ -3092,9 +3092,9 @@ func (ec *executionContext) _ChatEvent_participantsEvent(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.UserWithAdmin)
+	res := resTmp.([]*model.ParticipantWithAdmin)
 	fc.Result = res
-	return ec.marshalOUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx, field.Selections, res)
+	return ec.marshalOParticipantWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantWithAdminᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChatEvent_participantsEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3106,17 +3106,17 @@ func (ec *executionContext) fieldContext_ChatEvent_participantsEvent(ctx context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_UserWithAdmin_id(ctx, field)
+				return ec.fieldContext_ParticipantWithAdmin_id(ctx, field)
 			case "login":
-				return ec.fieldContext_UserWithAdmin_login(ctx, field)
+				return ec.fieldContext_ParticipantWithAdmin_login(ctx, field)
 			case "avatar":
-				return ec.fieldContext_UserWithAdmin_avatar(ctx, field)
+				return ec.fieldContext_ParticipantWithAdmin_avatar(ctx, field)
 			case "admin":
-				return ec.fieldContext_UserWithAdmin_admin(ctx, field)
+				return ec.fieldContext_ParticipantWithAdmin_admin(ctx, field)
 			case "shortInfo":
-				return ec.fieldContext_UserWithAdmin_shortInfo(ctx, field)
+				return ec.fieldContext_ParticipantWithAdmin_shortInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserWithAdmin", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ParticipantWithAdmin", field.Name)
 		},
 	}
 	return fc, nil
@@ -3634,9 +3634,9 @@ func (ec *executionContext) _DisplayMessageDto_owner(ctx context.Context, field 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model.Participant)
 	fc.Result = res
-	return ec.marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3648,15 +3648,15 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_owner(ctx context.Con
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_User_id(ctx, field)
+				return ec.fieldContext_Participant_id(ctx, field)
 			case "login":
-				return ec.fieldContext_User_login(ctx, field)
+				return ec.fieldContext_Participant_login(ctx, field)
 			case "avatar":
-				return ec.fieldContext_User_avatar(ctx, field)
+				return ec.fieldContext_Participant_avatar(ctx, field)
 			case "shortInfo":
-				return ec.fieldContext_User_shortInfo(ctx, field)
+				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
 	}
 	return fc, nil
@@ -4170,9 +4170,9 @@ func (ec *executionContext) _EmbedMessageResponse_owner(ctx context.Context, fie
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model.Participant)
 	fc.Result = res
-	return ec.marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EmbedMessageResponse_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4184,15 +4184,15 @@ func (ec *executionContext) fieldContext_EmbedMessageResponse_owner(ctx context.
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_User_id(ctx, field)
+				return ec.fieldContext_Participant_id(ctx, field)
 			case "login":
-				return ec.fieldContext_User_login(ctx, field)
+				return ec.fieldContext_Participant_login(ctx, field)
 			case "avatar":
-				return ec.fieldContext_User_avatar(ctx, field)
+				return ec.fieldContext_Participant_avatar(ctx, field)
 			case "shortInfo":
-				return ec.fieldContext_User_shortInfo(ctx, field)
+				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
 	}
 	return fc, nil
@@ -4787,9 +4787,9 @@ func (ec *executionContext) _FileInfoDto_owner(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model.Participant)
 	fc.Result = res
-	return ec.marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FileInfoDto_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4801,15 +4801,15 @@ func (ec *executionContext) fieldContext_FileInfoDto_owner(ctx context.Context, 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_User_id(ctx, field)
+				return ec.fieldContext_Participant_id(ctx, field)
 			case "login":
-				return ec.fieldContext_User_login(ctx, field)
+				return ec.fieldContext_Participant_login(ctx, field)
 			case "avatar":
-				return ec.fieldContext_User_avatar(ctx, field)
+				return ec.fieldContext_Participant_avatar(ctx, field)
 			case "shortInfo":
-				return ec.fieldContext_User_shortInfo(ctx, field)
+				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
 	}
 	return fc, nil
@@ -5125,8 +5125,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatDeletedEvent(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _GlobalEvent_userEvent(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GlobalEvent_userEvent(ctx, field)
+func (ec *executionContext) _GlobalEvent_participantEvent(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_participantEvent(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5139,7 +5139,7 @@ func (ec *executionContext) _GlobalEvent_userEvent(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UserEvent, nil
+		return obj.ParticipantEvent, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5148,12 +5148,12 @@ func (ec *executionContext) _GlobalEvent_userEvent(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model.Participant)
 	fc.Result = res
-	return ec.marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GlobalEvent_userEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GlobalEvent_participantEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GlobalEvent",
 		Field:      field,
@@ -5162,15 +5162,15 @@ func (ec *executionContext) fieldContext_GlobalEvent_userEvent(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_User_id(ctx, field)
+				return ec.fieldContext_Participant_id(ctx, field)
 			case "login":
-				return ec.fieldContext_User_login(ctx, field)
+				return ec.fieldContext_Participant_login(ctx, field)
 			case "avatar":
-				return ec.fieldContext_User_avatar(ctx, field)
+				return ec.fieldContext_Participant_avatar(ctx, field)
 			case "shortInfo":
-				return ec.fieldContext_User_shortInfo(ctx, field)
+				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
 	}
 	return fc, nil
@@ -6179,6 +6179,390 @@ func (ec *executionContext) fieldContext_NotificationDto_chatTitle(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Participant_id(ctx context.Context, field graphql.CollectedField, obj *model.Participant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Participant_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Participant_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Participant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Participant_login(ctx context.Context, field graphql.CollectedField, obj *model.Participant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Participant_login(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Login, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Participant_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Participant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Participant_avatar(ctx context.Context, field graphql.CollectedField, obj *model.Participant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Participant_avatar(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Avatar, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Participant_avatar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Participant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Participant_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.Participant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Participant_shortInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShortInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Participant_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Participant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParticipantWithAdmin_id(ctx context.Context, field graphql.CollectedField, obj *model.ParticipantWithAdmin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParticipantWithAdmin_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParticipantWithAdmin_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParticipantWithAdmin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParticipantWithAdmin_login(ctx context.Context, field graphql.CollectedField, obj *model.ParticipantWithAdmin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParticipantWithAdmin_login(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Login, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParticipantWithAdmin_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParticipantWithAdmin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParticipantWithAdmin_avatar(ctx context.Context, field graphql.CollectedField, obj *model.ParticipantWithAdmin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParticipantWithAdmin_avatar(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Avatar, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParticipantWithAdmin_avatar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParticipantWithAdmin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParticipantWithAdmin_admin(ctx context.Context, field graphql.CollectedField, obj *model.ParticipantWithAdmin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParticipantWithAdmin_admin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Admin, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParticipantWithAdmin_admin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParticipantWithAdmin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParticipantWithAdmin_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.ParticipantWithAdmin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParticipantWithAdmin_shortInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShortInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParticipantWithAdmin_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParticipantWithAdmin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PinnedMessageEvent_message(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PinnedMessageEvent_message(ctx, field)
 	if err != nil {
@@ -6826,8 +7210,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 				return ec.fieldContext_GlobalEvent_chatEvent(ctx, field)
 			case "chatDeletedEvent":
 				return ec.fieldContext_GlobalEvent_chatDeletedEvent(ctx, field)
-			case "userEvent":
-				return ec.fieldContext_GlobalEvent_userEvent(ctx, field)
+			case "participantEvent":
+				return ec.fieldContext_GlobalEvent_participantEvent(ctx, field)
 			case "videoUserCountChangedEvent":
 				return ec.fieldContext_GlobalEvent_videoUserCountChangedEvent(ctx, field)
 			case "videoRecordingChangedEvent":
@@ -6926,176 +7310,6 @@ func (ec *executionContext) fieldContext_Subscription_userEvents(ctx context.Con
 	if fc.Args, err = ec.field_Subscription_userEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_login(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_login(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Login, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_avatar(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_avatar(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Avatar, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_avatar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_shortInfo(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ShortInfo, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
 	}
 	return fc, nil
 }
@@ -7353,220 +7567,6 @@ func (ec *executionContext) fieldContext_UserTypingDto_participantId(ctx context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserWithAdmin_id(ctx context.Context, field graphql.CollectedField, obj *model.UserWithAdmin) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserWithAdmin_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserWithAdmin_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserWithAdmin",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserWithAdmin_login(ctx context.Context, field graphql.CollectedField, obj *model.UserWithAdmin) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserWithAdmin_login(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Login, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserWithAdmin_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserWithAdmin",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserWithAdmin_avatar(ctx context.Context, field graphql.CollectedField, obj *model.UserWithAdmin) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserWithAdmin_avatar(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Avatar, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserWithAdmin_avatar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserWithAdmin",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserWithAdmin_admin(ctx context.Context, field graphql.CollectedField, obj *model.UserWithAdmin) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserWithAdmin_admin(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Admin, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserWithAdmin_admin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserWithAdmin",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserWithAdmin_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.UserWithAdmin) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserWithAdmin_shortInfo(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ShortInfo, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserWithAdmin_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserWithAdmin",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10674,9 +10674,9 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._GlobalEvent_chatDeletedEvent(ctx, field, obj)
 
-		case "userEvent":
+		case "participantEvent":
 
-			out.Values[i] = ec._GlobalEvent_userEvent(ctx, field, obj)
+			out.Values[i] = ec._GlobalEvent_participantEvent(ctx, field, obj)
 
 		case "videoUserCountChangedEvent":
 
@@ -10879,6 +10879,99 @@ func (ec *executionContext) _NotificationDto(ctx context.Context, sel ast.Select
 	return out
 }
 
+var participantImplementors = []string{"Participant"}
+
+func (ec *executionContext) _Participant(ctx context.Context, sel ast.SelectionSet, obj *model.Participant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, participantImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Participant")
+		case "id":
+
+			out.Values[i] = ec._Participant_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "login":
+
+			out.Values[i] = ec._Participant_login(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "avatar":
+
+			out.Values[i] = ec._Participant_avatar(ctx, field, obj)
+
+		case "shortInfo":
+
+			out.Values[i] = ec._Participant_shortInfo(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var participantWithAdminImplementors = []string{"ParticipantWithAdmin"}
+
+func (ec *executionContext) _ParticipantWithAdmin(ctx context.Context, sel ast.SelectionSet, obj *model.ParticipantWithAdmin) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, participantWithAdminImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ParticipantWithAdmin")
+		case "id":
+
+			out.Values[i] = ec._ParticipantWithAdmin_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "login":
+
+			out.Values[i] = ec._ParticipantWithAdmin_login(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "avatar":
+
+			out.Values[i] = ec._ParticipantWithAdmin_avatar(ctx, field, obj)
+
+		case "admin":
+
+			out.Values[i] = ec._ParticipantWithAdmin_admin(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "shortInfo":
+
+			out.Values[i] = ec._ParticipantWithAdmin_shortInfo(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var pinnedMessageEventImplementors = []string{"PinnedMessageEvent"}
 
 func (ec *executionContext) _PinnedMessageEvent(ctx context.Context, sel ast.SelectionSet, obj *model.PinnedMessageEvent) graphql.Marshaler {
@@ -11047,49 +11140,6 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 }
 
-var userImplementors = []string{"User"}
-
-func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *model.User) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, userImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("User")
-		case "id":
-
-			out.Values[i] = ec._User_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "login":
-
-			out.Values[i] = ec._User_login(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "avatar":
-
-			out.Values[i] = ec._User_avatar(ctx, field, obj)
-
-		case "shortInfo":
-
-			out.Values[i] = ec._User_shortInfo(ctx, field, obj)
-
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var userEventImplementors = []string{"UserEvent"}
 
 func (ec *executionContext) _UserEvent(ctx context.Context, sel ast.SelectionSet, obj *model.UserEvent) graphql.Marshaler {
@@ -11157,56 +11207,6 @@ func (ec *executionContext) _UserTypingDto(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var userWithAdminImplementors = []string{"UserWithAdmin"}
-
-func (ec *executionContext) _UserWithAdmin(ctx context.Context, sel ast.SelectionSet, obj *model.UserWithAdmin) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, userWithAdminImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("UserWithAdmin")
-		case "id":
-
-			out.Values[i] = ec._UserWithAdmin_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "login":
-
-			out.Values[i] = ec._UserWithAdmin_login(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "avatar":
-
-			out.Values[i] = ec._UserWithAdmin_avatar(ctx, field, obj)
-
-		case "admin":
-
-			out.Values[i] = ec._UserWithAdmin_admin(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "shortInfo":
-
-			out.Values[i] = ec._UserWithAdmin_shortInfo(ctx, field, obj)
-
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11900,6 +11900,60 @@ func (ec *executionContext) marshalNInt642ᚕint64ᚄ(ctx context.Context, sel a
 	return ret
 }
 
+func (ec *executionContext) marshalNParticipantWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ParticipantWithAdmin) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNParticipantWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantWithAdmin(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNParticipantWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantWithAdmin(ctx context.Context, sel ast.SelectionSet, v *model.ParticipantWithAdmin) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ParticipantWithAdmin(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -12003,60 +12057,6 @@ func (ec *executionContext) marshalNUserEvent2ᚖnkonevᚗnameᚋeventᚋgraph�
 		return graphql.Null
 	}
 	return ec._UserEvent(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserWithAdmin) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUserWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdmin(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNUserWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdmin(ctx context.Context, sel ast.SelectionSet, v *model.UserWithAdmin) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._UserWithAdmin(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNVideoDialChanged2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoDialChangedᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.VideoDialChanged) graphql.Marshaler {
@@ -12478,6 +12478,60 @@ func (ec *executionContext) marshalONotificationDto2ᚖnkonevᚗnameᚋeventᚋg
 	return ec._NotificationDto(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx context.Context, sel ast.SelectionSet, v *model.Participant) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Participant(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOParticipantWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ParticipantWithAdmin) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNParticipantWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantWithAdmin(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalOPinnedMessageEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐPinnedMessageEvent(ctx context.Context, sel ast.SelectionSet, v *model.PinnedMessageEvent) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -12540,65 +12594,11 @@ func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(
 	return res
 }
 
-func (ec *executionContext) marshalOUser2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._User(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalOUserTypingDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserTypingDto(ctx context.Context, sel ast.SelectionSet, v *model.UserTypingDto) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._UserTypingDto(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOUserWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserWithAdmin) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUserWithAdmin2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserWithAdmin(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalOVideoCallInvitationDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐVideoCallInvitationDto(ctx context.Context, sel ast.SelectionSet, v *model.VideoCallInvitationDto) graphql.Marshaler {

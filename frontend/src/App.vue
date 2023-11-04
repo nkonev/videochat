@@ -198,7 +198,7 @@ import bus, {
   REFRESH_ON_WEBSOCKET_RESTORED,
   SCROLL_DOWN, SET_LOCAL_MICROPHONE_MUTED,
   UNREAD_MESSAGES_CHANGED,
-  USER_PROFILE_CHANGED,
+  PARTICIPANT_CHANGED,
   VIDEO_CALL_INVITED,
   VIDEO_CALL_SCREEN_SHARE_CHANGED,
   VIDEO_CALL_USER_COUNT_CHANGED,
@@ -407,10 +407,11 @@ export default {
                       chatDeletedEvent {
                         id
                       }
-                      userEvent {
+                      participantEvent {
                         id
                         login
                         avatar
+                        shortInfo
                       }
                       videoUserCountChangedEvent {
                         usersCount
@@ -471,9 +472,9 @@ export default {
           } else if (getGlobalEventsData(e).eventType === 'chat_deleted') {
             const d = getGlobalEventsData(e).chatDeletedEvent;
             bus.emit(CHAT_DELETED, d);
-          } else if (getGlobalEventsData(e).eventType === 'user_profile_changed') {
-            const d = getGlobalEventsData(e).userEvent;
-            bus.emit(USER_PROFILE_CHANGED, d);
+          } else if (getGlobalEventsData(e).eventType === 'participant_changed') {
+            const d = getGlobalEventsData(e).participantEvent;
+            bus.emit(PARTICIPANT_CHANGED, d);
           } else if (getGlobalEventsData(e).eventType === "video_user_count_changed") {
             const d = getGlobalEventsData(e).videoUserCountChangedEvent;
             bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, d);

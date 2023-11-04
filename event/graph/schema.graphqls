@@ -2,7 +2,7 @@ scalar Time
 scalar Int64
 scalar UUID
 
-type User {
+type Participant {
     id:     Int64!
     login:  String!
     avatar: String
@@ -14,7 +14,7 @@ type EmbedMessageResponse {
     chatId: Int64
     chatName: String
     text:   String!
-    owner:  User
+    owner:  Participant
     embedType: String!
     isParticipant: Boolean!
 }
@@ -26,7 +26,7 @@ type DisplayMessageDto {
     ownerId:        Int64!
     createDateTime: Time!
     editDateTime:   Time
-    owner:          User
+    owner:          Participant
     canEdit:        Boolean!
     canDelete:      Boolean!
     fileItemUuid:   UUID
@@ -41,7 +41,7 @@ type MessageDeletedDto {
     chatId:             Int64!
 }
 
-type UserWithAdmin {
+type ParticipantWithAdmin {
     id:     Int64!
     login:  String!
     avatar: String
@@ -66,7 +66,7 @@ type ChatDto {
     canChangeChatAdmins: Boolean!
     tetATet:             Boolean!
     canAudioMute:        Boolean!
-    participants:             [UserWithAdmin!]!
+    participants:             [ParticipantWithAdmin!]!
     participantsCount:        Int!
     canResend:           Boolean!
     availableToSearch:   Boolean!
@@ -115,7 +115,7 @@ type FileInfoDto {
     canShare:             Boolean!
     lastModified: Time!
     ownerId: Int64!
-    owner:  User
+    owner:  Participant
     canPlayAsVideo:           Boolean!
     canShowAsImage:  Boolean!
     canPlayAsAudio:  Boolean!
@@ -134,7 +134,7 @@ type ChatEvent {
     userTypingEvent: UserTypingDto
     messageBroadcastEvent: MessageBroadcastNotification
     previewCreatedEvent: PreviewCreatedEvent
-    participantsEvent: [UserWithAdmin!]
+    participantsEvent: [ParticipantWithAdmin!]
     promoteMessageEvent: PinnedMessageEvent
     fileEvent: WrappedFileInfoDto
 }
@@ -195,7 +195,7 @@ type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
     chatDeletedEvent: ChatDeletedDto
-    userEvent: User
+    participantEvent: Participant
     videoUserCountChangedEvent: VideoUserCountChangedDto
     videoRecordingChangedEvent: VideoRecordingChangedDto
     videoCallInvitation: VideoCallInvitationDto
